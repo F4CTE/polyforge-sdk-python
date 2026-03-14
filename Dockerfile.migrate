@@ -9,6 +9,8 @@ COPY prisma/prisma.config.ts   ./prisma/prisma.config.ts
 RUN npm install --save-dev prisma
 RUN npm install @prisma/client dotenv
 
+ENV DIRECT_DATABASE_URL="postgresql://poly:devpass@postgres:5432/polyforge"
+
 RUN npx prisma generate \
       --schema ./prisma/schema.prisma \
       --config ./prisma/prisma.config.ts
@@ -19,5 +21,7 @@ WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma       ./prisma
 COPY prisma/migrations                ./prisma/migrations
+
+ENV DIRECT_DATABASE_URL="postgresql://poly:devpass@postgres:5432/polyforge"
 
 CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema ./prisma/schema.prisma --config ./prisma/prisma.config.ts"]
