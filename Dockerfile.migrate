@@ -1,0 +1,23 @@
+# Dockerfile.migrate — User DB migrations (Prisma 7)
+
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+COPY prisma/schema.prisma      ./prisma/schema.prisma
+COPY prisma/prisma.config.ts   ./prisma/prisma.config.ts
+
+RUN npm install --save-dev prisma
+RUN npm install @prisma/client dotenv
+
+RUN npx prisma generate \
+      --schema ./prisma/schema.prisma \
+      --config ./prisma/prisma.config.ts
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma       ./prisma
+COPY prisma/migrations                ./prisma/migrations
+
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema ./prisma/schema.prisma --config ./prisma/prisma.config.ts"]

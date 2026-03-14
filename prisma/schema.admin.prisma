@@ -1,0 +1,76 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Polyforge — Admin Database Schema
+// File: prisma/schema.admin.prisma
+// Database: polyforge_admin (admin services only)
+// Accessed by: admin-auth-service, admin-api-service ONLY
+// NOT accessed by: any user-facing service
+// ─────────────────────────────────────────────────────────────────────────────
+
+generator adminClient {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/admin-client"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  VIEWER
+}
+
+// ─────────────────────────────────────────────
+// ADMIN TABLES
+// ─────────────────────────────────────────────
+
+model Admin {
+  id           String    @id @default(uuid())
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @db.VarChar(255)
+  displayName  String    @db.VarChar(100)
+  role         AdminRole
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  lastSeen     DateTime  @default(now())
+
+  sessions  AdminSession[]
+  auditLogs AuditLog[]
+
+  @@map("admins")
+}
+
+model AdminSession {
+  id        String   @id @default(uuid())
+  adminId   String
+  ip        String   @db.VarChar(45)
+  userAgent String
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  admin Admin @relation(fields: [adminId], references: [id])
+
+  @@map("admin_sessions")
+}
+
+// Insert only — never update, never delete, never truncate
+model AuditLog {
+  id         BigInt   @id @default(autoincrement())
+  adminId    String
+  action     String   @db.VarChar(100)
+  targetType String   @db.VarChar(50)  // user, strategy, comment, admin
+  targetId   String?                    // UUID from user DB — no FK constraint (cross-DB)
+  payload    Json?                      // before/after state snapshot
+  ip         String   @db.VarChar(45)
+  createdAt  DateTime @default(now())
+
+  admin Admin @relation(fields: [adminId], references: [id])
+
+  @@map("audit_logs")
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": ["dist/**"]
+    },
+    "build:swagger": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**"],
+      "outputs": ["dist/swagger.json", "dist/swagger-admin.json"],
+      "cache": false
+    },
+    "generate:api": {
+      "dependsOn": ["build:swagger"],
+      "inputs": [
+        "dist/swagger.json",
+        "../../openapi-ts.config.ts",
+        "../../openapi-ts.admin.config.ts"
+      ],
+      "outputs": ["src/app/api/**"],
+      "cache": false
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "inputs": ["src/**", "tsconfig*.json"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "test/**"],
+      "outputs": ["coverage/**"]
+    }
+  }
+}

@@ -1,0 +1,607 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Polyforge — User Database Schema
+// File: prisma/schema.prisma
+// Database: polyforge (user-facing services only)
+// Accessed by: auth-service, api-service, strategy-engine, order-service,
+//              paper-order-service, backtest-service, notification-service,
+//              bot-service, signer-service, market-data-service
+// NOT accessed by: admin-auth-service, admin-api-service
+// ─────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum StrategyVisibility {
+  PRIVATE
+  PUBLIC
+  UNLISTED
+}
+
+enum ExecMode {
+  EVENT
+  TICK
+  HYBRID
+}
+
+enum StrategyStatus {
+  IDLE
+  RUNNING
+  PAUSED
+  ERROR
+  PAPER
+  ARCHIVED
+}
+
+enum OrderSide {
+  BUY
+  SELL
+}
+
+enum OrderOutcome {
+  YES
+  NO
+}
+
+enum OrderType {
+  GTC
+  GTD
+  FOK
+  FAK
+}
+
+enum OrderStatus {
+  PENDING
+  SUBMITTED
+  LIVE
+  MATCHED
+  DELAYED
+  MINED
+  CONFIRMED
+  PARTIAL
+  CANCELLED
+  UNMATCHED
+  FAILED
+  ERROR
+}
+
+enum ResolutionStatus {
+  UNRESOLVED
+  RESOLVING
+  RESOLVED
+  DISPUTED
+}
+
+enum ResolutionOutcome {
+  YES_WIN
+  NO_WIN
+  FIFTY_FIFTY
+  CANCELLED
+}
+
+enum NotificationFrequency {
+  IMMEDIATE
+  HOURLY
+  DAILY
+}
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE
+  MISLEADING
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED_REMOVED
+  REVIEWED_KEPT
+}
+
+enum BotChannel {
+  TELEGRAM
+  DISCORD
+}
+
+// ─────────────────────────────────────────────
+// AUTH TABLES
+// ─────────────────────────────────────────────
+
+model User {
+  id                  String    @id @default(uuid())
+  email               String    @unique @db.VarChar(255)
+  passwordHash        String    @db.VarChar(255)
+  username            String    @unique @db.VarChar(30)
+  displayName         String?   @db.VarChar(50)
+  bio                 String?   @db.VarChar(500)
+  avatarUrl           String?
+  twitterHandle       String?   @db.VarChar(50)
+  showPnl             Boolean   @default(false)
+  showWinrate         Boolean   @default(false)
+  totpSecret          String?   @db.VarChar(255)
+  totpEnabled         Boolean   @default(false)
+  totpBackupCodes     String[]
+  totpEnabledAt       DateTime?
+  polymarketConnected Boolean   @default(false)
+  polymarketSigType   Int?      @db.SmallInt
+  polymarketAddress   String?   @db.VarChar(42)
+  tosAcceptedAt       DateTime?
+  emailVerified       Boolean   @default(false)
+  emailVerifiedAt     DateTime?
+  suspended           Boolean   @default(false)
+  suspendedReason     String?
+  deleted             Boolean   @default(false)
+  deletedAt           DateTime?
+  createdAt           DateTime  @default(now())
+  lastSeen            DateTime  @default(now())
+
+  strategies          Strategy[]
+  orders              Order[]
+  positions           Position[]
+  paperOrders         PaperOrder[]
+  paperPositions      PaperPosition[]
+  backtestRuns        BacktestRun[]
+  strategyLikes       StrategyLike[]
+  strategyComments    StrategyComment[]
+  strategyForks       StrategyFork[]         @relation("ForkBy")
+  reports             Report[]
+  followers           Follow[]               @relation("Following")
+  following           Follow[]               @relation("Follower")
+  priceAlerts         PriceAlert[]
+  notificationPrefs   NotificationPreference?
+  notificationHistory NotificationHistory[]
+  loginHistory        UserLoginHistory[]
+  limits              UserLimit?
+  botConnections      BotConnection[]
+  emailVerifications  EmailVerification[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@map("users")
+}
+
+// Accessible ONLY by signer-service — no other service may query this table
+model UserCredential {
+  userId           String   @id
+  encryptedDek     Bytes
+  dekIv            Bytes
+  privateKeyCt     Bytes
+  privateKeyIv     Bytes
+  privateKeyTag    Bytes
+  apiKeyCt         Bytes
+  apiKeyIv         Bytes
+  apiKeyTag        Bytes
+  apiSecretCt      Bytes
+  apiSecretIv      Bytes
+  apiSecretTag     Bytes
+  apiPassphraseCt  Bytes
+  apiPassphraseIv  Bytes
+  apiPassphraseTag Bytes
+  safeAddress      String?  @db.VarChar(42)
+  sigType          Int      @db.SmallInt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("user_credentials")
+}
+
+model UserLoginHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  ip        String   @db.VarChar(45)
+  userAgent String
+  country   String?  @db.VarChar(2)
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("user_login_history")
+}
+
+model NotificationPreference {
+  userId             String                @id
+  emailEnabled       Boolean               @default(false)
+  telegramEnabled    Boolean               @default(false)
+  discordEnabled     Boolean               @default(false)
+  onStrategyError    Boolean               @default(true)
+  onOrderFilled      Boolean               @default(true)
+  onDailyLossLimit   Boolean               @default(true)
+  onBacktestComplete Boolean               @default(true)
+  onMarketResolved   Boolean               @default(true)
+  onSomeoneFelked    Boolean               @default(false)
+  onSomeoneFollowed  Boolean               @default(false)
+  onSomeoneLiked     Boolean               @default(false)
+  onSomeoneCommented Boolean               @default(false)
+  minFillNotifyUsdc  Decimal               @default(0) @db.Decimal(10, 2)
+  notificationFreq   NotificationFrequency @default(IMMEDIATE)
+  updatedAt          DateTime              @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notification_preferences")
+}
+
+model BotConnection {
+  id        String     @id @default(uuid())
+  userId    String
+  channel   BotChannel
+  chatId    String
+  tokenHash String
+  linkedAt  DateTime   @default(now())
+  active    Boolean    @default(true)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([channel, chatId])
+  @@map("bot_connections")
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Follower",  fields: [followerId],  references: [id])
+  following User @relation("Following", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId])
+  @@map("follows")
+}
+
+model UserLimit {
+  userId                String   @id
+  maxRunningStrategies  Int      @default(5)
+  maxOrdersPerDay       Int      @default(500)
+  maxOrderSizeUsdc      Decimal  @default(1000) @db.Decimal(20, 6)
+  maxBacktestRunsPerDay Int      @default(10)
+  circuitBreakerErrors  Int      @default(5)
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("user_limits")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  usedAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("password_reset_tokens")
+}
+
+model EmailVerification {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  usedAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("email_verifications")
+}
+
+model NotificationHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  channel   String   @db.VarChar(20)
+  eventType String   @db.VarChar(50)
+  payload   Json
+  sentAt    DateTime @default(now())
+  success   Boolean
+  error     String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notification_history")
+}
+
+// ─────────────────────────────────────────────
+// TRADING TABLES
+// ─────────────────────────────────────────────
+
+model Strategy {
+  id               String             @id @default(uuid())
+  userId           String
+  name             String             @db.VarChar(255)
+  description      String?
+  visibility       StrategyVisibility @default(PRIVATE)
+  execMode         ExecMode           @default(TICK)
+  tickMs           Int?
+  triggers         Json
+  conditions       Json
+  actions          Json
+  safety           Json               @default("[]")
+  status           StrategyStatus     @default(IDLE)
+  errorMessage     String?
+  forkedFromId     String?
+  forkedFromUserId String?
+  forkCount        Int                @default(0)
+  likeCount        Int                @default(0)
+  template         Boolean            @default(false)
+  tags             String[]
+  version          Int                @default(1)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  user          User                    @relation(fields: [userId],       references: [id])
+  forkedFrom    Strategy?               @relation("Forks",   fields: [forkedFromId], references: [id])
+  forks         Strategy[]              @relation("Forks")
+  orders        Order[]
+  paperOrders   PaperOrder[]
+  backtestRuns  BacktestRun[]
+  likes         StrategyLike[]
+  comments      StrategyComment[]
+  versions      StrategyVersion[]
+  statusHistory StrategyStatusHistory[]
+  events        StrategyEvent[]
+  reports       Report[]
+
+  @@map("strategies")
+}
+
+model StrategyVersion {
+  id         String   @id @default(uuid())
+  strategyId String
+  version    Int
+  triggers   Json
+  conditions Json
+  actions    Json
+  safety     Json
+  changedBy  String
+  createdAt  DateTime @default(now())
+
+  strategy Strategy @relation(fields: [strategyId], references: [id])
+
+  @@map("strategy_versions")
+}
+
+model StrategyLike {
+  userId     String
+  strategyId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId],     references: [id])
+  strategy Strategy @relation(fields: [strategyId], references: [id])
+
+  @@id([userId, strategyId])
+  @@map("strategy_likes")
+}
+
+model StrategyComment {
+  id         String    @id @default(uuid())
+  strategyId String
+  userId     String
+  parentId   String?
+  content    String
+  deleted    Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  strategy Strategy         @relation(fields: [strategyId], references: [id])
+  user     User             @relation(fields: [userId],     references: [id])
+  parent   StrategyComment? @relation("Replies", fields: [parentId], references: [id])
+  replies  StrategyComment[] @relation("Replies")
+
+  @@map("strategy_comments")
+}
+
+model StrategyFork {
+  id         String   @id @default(uuid())
+  originalId String
+  forkId     String
+  forkedById String
+  createdAt  DateTime @default(now())
+
+  forkedBy User @relation("ForkBy", fields: [forkedById], references: [id])
+
+  @@map("strategy_forks")
+}
+
+model StrategyStatusHistory {
+  id          String         @id @default(uuid())
+  strategyId  String
+  fromStatus  StrategyStatus
+  toStatus    StrategyStatus
+  reason      String?
+  triggeredBy String?
+  createdAt   DateTime       @default(now())
+
+  strategy Strategy @relation(fields: [strategyId], references: [id])
+
+  @@map("strategy_status_history")
+}
+
+model StrategyEvent {
+  id         String   @id @default(uuid())
+  strategyId String
+  eventType  String   @db.VarChar(50)
+  payload    Json
+  createdAt  DateTime @default(now())
+
+  strategy Strategy @relation(fields: [strategyId], references: [id])
+
+  @@map("strategy_events")
+}
+
+model Order {
+  id           String       @id @default(uuid())
+  intentId     String       @unique
+  clobOrderId  String?      @db.VarChar(255)
+  clobStatus   String?      @db.VarChar(20)
+  userId       String
+  strategyId   String?
+  marketId     String       @db.VarChar(255)
+  tokenId      String       @db.VarChar(255)
+  side         OrderSide
+  outcome      OrderOutcome
+  size         Decimal      @db.Decimal(20, 6)
+  price        Decimal      @db.Decimal(10, 6)
+  orderType    OrderType
+  status       OrderStatus  @default(PENDING)
+  fillSize     Decimal?     @db.Decimal(20, 6)
+  fillPrice    Decimal?     @db.Decimal(10, 6)
+  fee          Decimal?     @db.Decimal(20, 6)
+  errorMessage String?
+  placedAt     DateTime?
+  filledAt     DateTime?
+  createdAt    DateTime     @default(now())
+
+  user     User      @relation(fields: [userId],     references: [id])
+  strategy Strategy? @relation(fields: [strategyId], references: [id])
+
+  @@map("orders")
+}
+
+model Position {
+  id                String             @id @default(uuid())
+  userId            String
+  marketId          String             @db.VarChar(255)
+  tokenId           String             @db.VarChar(255)
+  outcome           OrderOutcome
+  size              Decimal            @db.Decimal(20, 6)
+  avgPrice          Decimal            @db.Decimal(10, 6)
+  currentPrice      Decimal            @db.Decimal(10, 6)
+  unrealizedPnl     Decimal            @db.Decimal(20, 6)
+  realizedPnl       Decimal            @default(0) @db.Decimal(20, 6)
+  resolutionStatus  ResolutionStatus   @default(UNRESOLVED)
+  resolutionOutcome ResolutionOutcome?
+  redemptionValue   Decimal?           @db.Decimal(10, 6)
+  redeemed          Boolean            @default(false)
+  redeemedAt        DateTime?
+  redemptionTxHash  String?            @db.VarChar(66)
+  updatedAt         DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, tokenId])
+  @@map("positions")
+}
+
+model PaperOrder {
+  id         String       @id @default(uuid())
+  userId     String
+  strategyId String?
+  marketId   String       @db.VarChar(255)
+  tokenId    String       @db.VarChar(255)
+  side       OrderSide
+  outcome    OrderOutcome
+  size       Decimal      @db.Decimal(20, 6)
+  price      Decimal      @db.Decimal(10, 6)
+  orderType  OrderType
+  status     OrderStatus  @default(CONFIRMED)
+  fillSize   Decimal?     @db.Decimal(20, 6)
+  fillPrice  Decimal?     @db.Decimal(10, 6)
+  createdAt  DateTime     @default(now())
+
+  user     User      @relation(fields: [userId],     references: [id])
+  strategy Strategy? @relation(fields: [strategyId], references: [id])
+
+  @@map("paper_orders")
+}
+
+model PaperPosition {
+  id            String       @id @default(uuid())
+  userId        String
+  marketId      String       @db.VarChar(255)
+  tokenId       String       @db.VarChar(255)
+  outcome       OrderOutcome
+  size          Decimal      @db.Decimal(20, 6)
+  avgPrice      Decimal      @db.Decimal(10, 6)
+  currentPrice  Decimal      @db.Decimal(10, 6)
+  unrealizedPnl Decimal      @db.Decimal(20, 6)
+  realizedPnl   Decimal      @default(0) @db.Decimal(20, 6)
+  updatedAt     DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, tokenId])
+  @@map("paper_positions")
+}
+
+model BacktestRun {
+  id             String    @id @default(uuid())
+  userId         String
+  strategyId     String
+  dateRangeStart DateTime
+  dateRangeEnd   DateTime
+  status         String    @db.VarChar(20)
+  progress       Int       @default(0)
+  totalOrders    Int?
+  filledOrders   Int?
+  totalPnl       Decimal?  @db.Decimal(20, 6)
+  winRate        Decimal?  @db.Decimal(6, 4)
+  maxDrawdown    Decimal?  @db.Decimal(20, 6)
+  sharpeRatio    Decimal?  @db.Decimal(10, 4)
+  hasDataGaps    Boolean   @default(false)
+  errorMessage   String?
+  createdAt      DateTime  @default(now())
+  completedAt    DateTime?
+
+  user     User     @relation(fields: [userId],     references: [id])
+  strategy Strategy @relation(fields: [strategyId], references: [id])
+
+  @@map("backtest_runs")
+}
+
+model Report {
+  id          String       @id @default(uuid())
+  reporterId  String
+  targetType  String       @db.VarChar(20)
+  targetId    String
+  strategyId  String?
+  reason      ReportReason
+  description String?
+  status      ReportStatus @default(PENDING)
+  reviewedBy  String?      // Admin UUID — from admin DB, no FK constraint (cross-DB)
+  reviewedAt  DateTime?
+  createdAt   DateTime     @default(now())
+
+  reporter User      @relation(fields: [reporterId], references: [id])
+  strategy Strategy? @relation(fields: [strategyId], references: [id])
+
+  @@map("reports")
+}
+
+model PriceAlert {
+  id          String    @id @default(uuid())
+  userId      String
+  tokenId     String    @db.VarChar(255)
+  direction   String    @db.VarChar(5)
+  price       Decimal   @db.Decimal(10, 6)
+  persistent  Boolean   @default(false)
+  triggered   Boolean   @default(false)
+  triggeredAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("price_alerts")
+}
+
+model DataGap {
+  id        String   @id @default(uuid())
+  tokenId   String   @db.VarChar(255)
+  gapStart  DateTime
+  gapEnd    DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@map("data_gaps")
+}

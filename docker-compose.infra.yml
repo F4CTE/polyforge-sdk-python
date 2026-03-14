@@ -1,0 +1,142 @@
+name: polyforge-dev
+
+# ─────────────────────────────────────────────────────────────────────────────
+# INFRASTRUCTURE ONLY
+# Use this file until NestJS services are implemented.
+# Once services exist, switch to docker-compose.dev.yml
+#
+# Usage:
+#   docker compose -f docker-compose.infra.yml up -d
+#
+# Migrations run automatically via multi-stage containers (migrate-user,
+# migrate-admin). They build, generate the Prisma client, then apply
+# all pending migrations before exiting.
+# ─────────────────────────────────────────────────────────────────────────────
+
+networks:
+  public:
+  internal:
+  signer-only:
+  admin-only:
+
+volumes:
+  postgres-data:
+  postgres-admin-data:
+  redis-data:
+
+services:
+
+  # ─── USER DATABASE ─────────────────────────────────────────────────────────
+
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_USER: poly
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: polyforge
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U poly -d polyforge"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    environment:
+      DATABASE_URL: postgres://poly:devpass@postgres:5432/polyforge
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 100
+      DEFAULT_POOL_SIZE: 20
+      SERVER_RESET_QUERY: DISCARD ALL
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks: [internal]
+
+  # ─── USER DB MIGRATION ─────────────────────────────────────────────────────
+  # Multi-stage: builds Prisma client then runs migrate deploy inside Docker.
+  # Runs once and exits. NestJS services depend on this being complete.
+
+  migrate-user:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    environment:
+      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+    networks: [internal]
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+
+  # ─── ADMIN DATABASE ────────────────────────────────────────────────────────
+
+  postgres-admin:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: poly_admin
+      POSTGRES_PASSWORD: devpass_admin
+      POSTGRES_DB: polyforge_admin
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-admin-data:/var/lib/postgresql/data
+    networks: [admin-only]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U poly_admin -d polyforge_admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgbouncer-admin:
+    image: edoburu/pgbouncer:latest
+    environment:
+      DATABASE_URL: postgres://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 20
+      DEFAULT_POOL_SIZE: 5
+      SERVER_RESET_QUERY: DISCARD ALL
+    depends_on:
+      postgres-admin: { condition: service_healthy }
+    networks: [admin-only]
+
+  # ─── ADMIN DB MIGRATION ────────────────────────────────────────────────────
+
+  migrate-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate.admin
+    environment:
+      DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
+    networks: [admin-only]
+    depends_on:
+      postgres-admin: { condition: service_healthy }
+    restart: "no"
+
+  # ─── REDIS ─────────────────────────────────────────────────────────────────
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --appendfsync everysec
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks: [internal, signer-only]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ─── MAILHOG ───────────────────────────────────────────────────────────────
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks: [internal]

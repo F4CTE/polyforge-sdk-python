@@ -1,0 +1,23 @@
+# Dockerfile.migrate.admin — Admin DB migrations (Prisma 7)
+
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+COPY prisma/schema.admin.prisma    ./prisma/schema.admin.prisma
+COPY prisma/prisma.admin.config.ts ./prisma/prisma.admin.config.ts
+
+RUN npm install --save-dev prisma
+RUN npm install @prisma/client dotenv
+
+RUN npx prisma generate \
+      --schema ./prisma/schema.admin.prisma \
+      --config ./prisma/prisma.admin.config.ts
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma       ./prisma
+COPY prisma/migrations-admin          ./prisma/migrations-admin
+
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema ./prisma/schema.admin.prisma --config ./prisma/prisma.admin.config.ts"]
