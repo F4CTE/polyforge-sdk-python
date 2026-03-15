@@ -204,6 +204,7 @@ model UserLoginHistory {
 
   user User @relation(fields: [userId], references: [id])
 
+  @@index([userId, createdAt(sort: Desc)])
   @@map("user_login_history")
 }
 
@@ -353,6 +354,10 @@ model Strategy {
   events        StrategyEvent[]
   reports       Report[]
 
+  @@index([userId])
+  @@index([status])
+  @@index([userId, status])
+  @@index([template])
   @@map("strategies")
 }
 
@@ -466,6 +471,11 @@ model Order {
   user     User      @relation(fields: [userId],     references: [id])
   strategy Strategy? @relation(fields: [strategyId], references: [id])
 
+  @@index([userId])
+  @@index([userId, status])
+  @@index([strategyId])
+  @@index([tokenId])
+  @@index([createdAt])
   @@map("orders")
 }
 
@@ -491,6 +501,8 @@ model Position {
   user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, tokenId])
+  @@index([userId])
+  @@index([tokenId])
   @@map("positions")
 }
 
@@ -513,6 +525,8 @@ model PaperOrder {
   user     User      @relation(fields: [userId],     references: [id])
   strategy Strategy? @relation(fields: [strategyId], references: [id])
 
+  @@index([userId])
+  @@index([userId, status])
   @@map("paper_orders")
 }
 
@@ -558,6 +572,8 @@ model BacktestRun {
   strategy       Strategy        @relation(fields: [strategyId], references: [id])
   backtestOrders BacktestOrder[]
 
+  @@index([userId])
+  @@index([strategyId])
   @@map("backtest_runs")
 }
 
@@ -593,6 +609,8 @@ model PriceAlert {
 
   user User @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+  @@index([tokenId, triggered])
   @@map("price_alerts")
 }
 
@@ -627,6 +645,9 @@ model Market {
 
   tokens Token[]
 
+  @@index([category])
+  @@index([closed])
+  @@index([seriesSlug])
   @@map("markets")
 }
 
@@ -654,6 +675,7 @@ model PriceSnapshot {
   volume  Decimal  @db.Decimal(20, 6)
 
   @@id([time, tokenId])
+  @@index([tokenId, time(sort: Desc)])
   @@map("price_snapshots")
 }
 
@@ -668,6 +690,7 @@ model PnlSnapshot {
   positionCount Int      @default(0)
 
   @@id([time, userId])
+  @@index([userId, time(sort: Desc)])
   @@map("pnl_snapshots")
 }
 
@@ -705,5 +728,8 @@ model EventLog {
   source    String   @db.VarChar(50)   // which service emitted this
   createdAt DateTime @default(now())
 
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt(sort: Desc)])
   @@map("event_log")
 }
