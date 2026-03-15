@@ -35,7 +35,7 @@
 
 - [x] Prisma 7.5.0 configured (two schemas: `polyforge` + `polyforge_admin`)
 - [x] Initial migration applied
-- [ ] Complete schema (all 29 tables per [`Polyforge-Database-Schema.pdf`](./Polyforge-Database-Schema.pdf))
+- [x] Complete schema (all 29 tables per [`Polyforge-Database-Schema.pdf`](./Polyforge-Database-Schema.pdf))
 - [ ] TimescaleDB hypertables (`price_snapshots`, `portfolio_snapshots`)
 - [ ] Critical indexes
 - [ ] `seed.ts` (5 test accounts + consistent test data)
