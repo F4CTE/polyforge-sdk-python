@@ -1,8 +1,12 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { MailService } from '../mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtPayload } from '@polyforge/shared-types';
 
 function deriveUserStatus(user: {
@@ -18,10 +22,15 @@ function deriveUserStatus(user: {
 
 @Injectable()
 export class AuthService {
+    private readonly logger = new Logger(AuthService.name);
+
     constructor(
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
+        private readonly mailService: MailService,
     ) { }
+
+    // ─── Register ─────────────────────────────────────────────────────────────────
 
     async register(dto: RegisterDto) {
         const user = await this.usersService.create({
@@ -31,6 +40,11 @@ export class AuthService {
         });
 
         const token = this.generateToken(user);
+
+        // Send verification email — fire-and-forget, never fail registration
+        this.usersService.createEmailVerificationToken(user.id)
+            .then(verifyToken => this.mailService.sendVerificationEmail(user.email, verifyToken))
+            .catch(err => this.logger.error('Failed to send verification email', err));
 
         return {
             token,
@@ -43,6 +57,8 @@ export class AuthService {
             },
         };
     }
+
+    // ─── Login ────────────────────────────────────────────────────────────────────
 
     async login(dto: LoginDto) {
         const user = await this.usersService.findByEmail(dto.email);
@@ -76,7 +92,7 @@ export class AuthService {
                     HttpStatus.BAD_REQUEST,
                 );
             }
-            // TODO: validate TOTP code against user.totpSecret once 2FA is implemented
+            // TODO: validate TOTP code once 2FA setup is implemented
         }
 
         const token = this.generateToken(user);
@@ -95,6 +111,63 @@ export class AuthService {
             requiresTotp: user.totpEnabled,
         };
     }
+
+    // ─── Me ───────────────────────────────────────────────────────────────────────
+
+    async me(userId: string) {
+        const user = await this.usersService.findById(userId);
+
+        if (!user || user.deleted) {
+            throw new HttpException(
+                { code: 'UNAUTHORIZED', message: 'User not found' },
+                HttpStatus.UNAUTHORIZED,
+            );
+        }
+
+        return {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            displayName: user.displayName,
+            bio: user.bio,
+            avatarUrl: user.avatarUrl,
+            status: deriveUserStatus(user),
+            polymarketConnected: user.polymarketConnected,
+            emailVerified: user.emailVerified,
+            totpEnabled: user.totpEnabled,
+            createdAt: user.createdAt,
+            lastSeen: user.lastSeen,
+        };
+    }
+
+    // ─── Verify email ─────────────────────────────────────────────────────────────
+
+    async verifyEmail(dto: VerifyEmailDto) {
+        await this.usersService.verifyEmail(dto.token);
+        return { message: 'Email verified successfully' };
+    }
+
+    // ─── Forgot password ──────────────────────────────────────────────────────────
+
+    async forgotPassword(dto: ForgotPasswordDto) {
+        // Always return 200 — prevents email enumeration
+        const user = await this.usersService.findByEmail(dto.email);
+        if (user && !user.deleted) {
+            this.usersService.createPasswordResetToken(user.id)
+                .then(token => this.mailService.sendPasswordResetEmail(user.email, token))
+                .catch(err => this.logger.error('Failed to send password reset email', err));
+        }
+        return { message: 'If that email exists, a reset link has been sent' };
+    }
+
+    // ─── Reset password ───────────────────────────────────────────────────────────
+
+    async resetPassword(dto: ResetPasswordDto) {
+        await this.usersService.resetPassword(dto.token, dto.newPassword);
+        return { message: 'Password reset successfully' };
+    }
+
+    // ─── Token ────────────────────────────────────────────────────────────────────
 
     private generateToken(user: { id: string; email: string; username: string }): string {
         const payload: JwtPayload = {
