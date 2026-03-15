@@ -1,159 +1,190 @@
-# Turborepo starter
+# Polyforge
 
-This Turborepo starter is maintained by the Turborepo core team.
+Strategy automation platform for [Polymarket](https://polymarket.com) — users build automated trading strategies using a drag-and-drop block interface, backtest them against historical data, paper trade in simulation, and deploy live strategies that trade on their behalf.
 
-## Using this example
+---
 
-Run the following command:
+## Stack
 
-```sh
-npx create-turbo@latest
+| Layer | Technology |
+|---|---|
+| Backend framework | NestJS 11.1.16 + Fastify adapter |
+| Language | TypeScript 5 (strict mode everywhere) |
+| ORM | Prisma 7.5.0 (two databases: `polyforge` + `polyforge_admin`) |
+| Validation | Zod (streams/internal) + class-validator (HTTP controllers) |
+| Redis client | ioredis |
+| Logging | pino + nestjs-pino |
+| Testing | Vitest + Supertest |
+| Frontend | Angular 17 + PrimeNG |
+| Build system | Turborepo 2 + pnpm workspaces |
+| Containers | Docker + Docker Compose |
+| Runtime | Node.js 24 |
+
+---
+
+## Monorepo Structure
+
+```
+polyforge/
+├── services/
+│   ├── auth-service/              # ✅ Registration, login — port 3001
+│   ├── api-service/               # 🔜 User REST + WebSocket
+│   ├── admin-auth-service/        # 🔜 Admin login
+│   ├── admin-api-service/         # 🔜 Admin REST
+│   ├── market-data-service/       # 🔜 Polymarket feed + Redis cache writer
+│   ├── strategy-engine/           # 🔜 Block evaluator + tick runner
+│   ├── order-service/             # 🔜 CLOB order submission
+│   ├── paper-order-service/       # 🔜 Simulated fills
+│   ├── backtest-service/          # 🔜 Historical replay
+│   ├── notification-service/      # 🔜 Email + Telegram + Discord
+│   ├── bot-service/               # 🔜 Interactive bots
+│   ├── signer-service/            # 🔜 Credential vault + EIP712 signing
+│   └── mock-polymarket/           # 🔜 Dev-only fake Polymarket APIs
+│
+└── packages/
+    ├── shared-types/              # ✅ All TypeScript interfaces and enums
+    ├── shared-auth/               # ✅ JWT guards + internal service client
+    ├── shared-db/                 # ✅ Prisma client NestJS module
+    ├── shared-redis/              # ✅ ioredis factory + stream helpers
+    ├── logger/                    # ✅ pino + nestjs-pino
+    └── shared-schemas/            # 🔜 Zod validation schemas
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## Prerequisites
 
-### Apps and Packages
+| Tool | Version |
+|---|---|
+| Node.js | 24.x |
+| pnpm | 9.x |
+| Docker Desktop | 4.x |
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+---
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+## Getting Started
 
-### Utilities
+### 1. Install dependencies
 
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```bash
+pnpm install
 ```
 
-Without global `turbo`, use your package manager:
+### 2. Start infrastructure (Postgres, Redis, MailHog, PgBouncer)
 
-```sh
-cd my-turborepo
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+docker compose up -d
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+### 3. Build shared packages
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+Packages compile to `dist/` before services can run. Run once, and again after any package change.
 
-```sh
-turbo build --filter=docs
+```bash
+pnpm --filter "./packages/**" build
 ```
 
-Without global `turbo`:
+### 4. Run database migrations
 
-```sh
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+```bash
+pnpm migrate
 ```
 
-### Develop
+### 5. Start a service in dev mode
 
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
+```bash
+pnpm --filter "@polyforge/auth-service" start:dev
 ```
 
-Without global `turbo`, use your package manager:
+Or via Turborepo (auto-builds dependencies first):
 
-```sh
-cd my-turborepo
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+```bash
+turbo dev --filter="@polyforge/auth-service"
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+## Package Build Convention
 
-```sh
-turbo dev --filter=web
+Workspace packages always compile TypeScript to `dist/` — the `main` field in `package.json` must point to the compiled output, never to TypeScript source.
+
+```json
+{
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}
 ```
 
-Without global `turbo`:
+This is required because NestJS CLI compiles services to JavaScript before running them with Node.js. Node cannot execute `.ts` files at runtime.
 
-```sh
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+---
+
+## Common Commands
+
+```bash
+# Build all packages
+pnpm --filter "./packages/**" build
+
+# Build a single package
+pnpm --filter "@polyforge/shared-db" build
+
+# Start auth-service in watch mode
+pnpm --filter "@polyforge/auth-service" start:dev
+
+# Typecheck entire monorepo
+pnpm typecheck
+
+# Run all tests
+pnpm test
+
+# Build all services
+pnpm build
 ```
 
-### Remote Caching
+---
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+## Service Ports (dev)
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+| Service | Port |
+|---|---|
+| auth-service | 3001 |
+| api-service | 3002 |
+| admin-auth-service | 3003 |
+| admin-api-service | 3004 |
+| PostgreSQL | 5432 |
+| Redis | 6379 |
+| MailHog UI | 8025 |
+| PgBouncer | 6432 |
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+## Auth Service Endpoints
 
-```sh
-cd my-turborepo
-turbo login
+The auth-service is currently running at `http://localhost:3001`.
+
+```
+POST /api/v1/auth/register   — create account
+POST /api/v1/auth/login      — authenticate
 ```
 
-Without global `turbo`, use your package manager:
+See [`docs/06-api-catalog.md`](./docs/06-api-catalog.md) for the full endpoint reference.
 
-```sh
-cd my-turborepo
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+---
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+## Documentation
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+| File | Contents |
+|---|---|
+| [`docs/01-architecture.md`](./docs/01-architecture.md) | System architecture, services, networks, auth flows |
+| [`docs/02-codebase-guide.md`](./docs/02-codebase-guide.md) | How to add features, conventions, code style |
+| [`docs/03-openapi-codegen.md`](./docs/03-openapi-codegen.md) | OpenAPI generation pipeline |
+| [`docs/04-database-and-redis.md`](./docs/04-database-and-redis.md) | Prisma schema, Redis keys, migrations |
+| [`docs/05-testing-and-practices.md`](./docs/05-testing-and-practices.md) | Testing conventions |
+| [`docs/06-api-catalog.md`](./docs/06-api-catalog.md) | Complete REST + WebSocket endpoint reference |
+| [`docs/07-deployment.md`](./docs/07-deployment.md) | Production deployment guide |
+| [`docs/09-dev-setup.md`](./docs/09-dev-setup.md) | Local development setup |
+| [`docs/10-env-reference.md`](./docs/10-env-reference.md) | Environment variable reference |
+| [`docs/11-roadmap.md`](./docs/11-roadmap.md) | Feature roadmap |

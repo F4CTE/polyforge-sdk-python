@@ -1,7 +1,9 @@
 # Polyforge — Developer Setup Guide
 
-> Get from zero to a fully running local Polyforge instance.  
+> Get from zero to a fully running local Polyforge instance.
 > Estimated time: **20–30 minutes**
+
+> **Current implementation status:** `auth-service` (register + login) is the only service implemented so far. Steps 8–10 relating to seeding, Angular apps, and other services describe the full target state — skip them until those services exist.
 
 ---
 
@@ -28,7 +30,7 @@
 
 | Tool | Minimum Version | Install |
 |---|---|---|
-| Node.js | 20.x LTS | https://nodejs.org |
+| Node.js | 24.x | https://nodejs.org |
 | pnpm | 9.x | `npm install -g pnpm` |
 | Docker Desktop | 4.x | https://docker.com/products/docker-desktop |
 | Docker Compose | v2 (bundled with Docker Desktop) | — |
@@ -38,8 +40,8 @@
 ### Verify your setup
 
 ```bash
-node --version         # v20.x.x
-pnpm --version          # 10.x.x
+node --version         # v24.x.x
+pnpm --version         # 9.x.x
 docker --version       # Docker version 24+
 docker compose version # Docker Compose version v2+
 git --version          # git version 2+
@@ -91,11 +93,23 @@ pnpm install
 This installs dependencies for all packages and services in one go via pnpm workspaces. Expect 2–3 minutes on first run.
 
 **What gets installed:**
-- All shared packages (`shared-types`, `shared-schemas`, `shared-auth`, `shared-db`, `shared-redis`, `logger`)
-- All 13 NestJS services
-- Both Angular apps (`user-app`, `admin-app`)
-- `@hey-api/openapi-ts` (API client generation)
-- Dev tooling (`mock-polymarket`, scripts)
+- All shared packages (`shared-types`, `shared-auth`, `shared-db`, `shared-redis`, `logger`)
+- All NestJS services (currently: `auth-service`)
+- Dev tooling
+
+---
+
+## 3b. Build Shared Packages
+
+Shared packages must be compiled to `dist/` before any service can start. Node.js cannot execute TypeScript source at runtime.
+
+```bash
+pnpm --filter "./packages/**" build
+```
+
+Run this once after `pnpm install`, and again whenever you change code inside a package.
+
+> **Why:** Each package has `"main": "./dist/index.js"`. When NestJS compiles `auth-service` to JavaScript and runs it with Node, the `require('@polyforge/shared-db')` call resolves through the pnpm symlink to the package's `dist/index.js`. If `dist/` doesn't exist, Node throws `ERR_MODULE_NOT_FOUND`.
 
 ---
 
@@ -312,23 +326,23 @@ ws.onmessage = (e) => console.log(JSON.parse(e.data));
 ## 11. Daily Development Commands
 
 ```bash
-# Start everything
-docker compose -f docker-compose.dev.yml up
+# Build all shared packages (run once, and after any package change)
+pnpm --filter "./packages/**" build
 
-# Start in background
-docker compose -f docker-compose.dev.yml up -d
+# Start a single service in watch mode
+pnpm --filter "@polyforge/auth-service" start:dev
+
+# Start a service via Turborepo (auto-builds package deps first)
+turbo dev --filter="@polyforge/auth-service"
+
+# Start Docker infrastructure
+docker compose up -d
 
 # View logs for a specific service
-docker compose -f docker-compose.dev.yml logs -f strategy-engine
+docker compose logs -f auth-service
 
-# View all logs
-docker compose -f docker-compose.dev.yml logs -f
-
-# Restart a single service after a code change
-docker compose -f docker-compose.dev.yml restart api-service
-
-# Stop everything
-docker compose -f docker-compose.dev.yml down
+# Stop infrastructure
+docker compose down
 
 # Wipe database and reseed from scratch
 pnpm reset
@@ -336,7 +350,7 @@ pnpm reset
 # Regenerate Angular API clients (run after any endpoint change)
 pnpm generate:api
 
-# TypeScript check all apps and services
+# TypeScript check all packages and services
 pnpm typecheck
 
 # Run all tests across the monorepo
@@ -348,7 +362,7 @@ cd services/auth-service && pnpm test
 # Run tests in watch mode
 cd services/strategy-engine && pnpm test -- --watch
 
-# Build all packages and services
+# Build everything
 pnpm build
 ```
 
@@ -447,9 +461,17 @@ pnpm generate:api
 Run locally and commit:
 ```bash
 pnpm generate:api
-git add apps/user-app/src/app/api apps/admin-app/src/app/api
+git add apps/user-app/src/app/api apps/admin-app/src/app/api swagger.json swagger-admin.json
 git commit -m "chore: regenerate API clients"
 ```
+
+### `ERR_MODULE_NOT_FOUND` when starting a service
+
+Packages are not built. Run:
+```bash
+pnpm --filter "./packages/**" build
+```
+Then retry `start:dev`.
 
 ---
 
@@ -458,34 +480,34 @@ git commit -m "chore: regenerate API clients"
 ```
 polyforge/
 ├── apps/
-│   ├── user-app/                  # Angular 17 — user interface
+│   ├── user-app/                  # 🔜 Angular 17 — user interface
 │   │   └── src/app/api/           # ← GENERATED — never edit manually
-│   └── admin-app/                 # Angular 17 — admin dashboard
+│   └── admin-app/                 # 🔜 Angular 17 — admin dashboard
 │       └── src/app/api/           # ← GENERATED — never edit manually
 │
 ├── services/
-│   ├── gateway/                   # Nginx config + SSL certs
-│   ├── auth-service/              # Registration, login, 2FA, credentials
-│   ├── api-service/               # User REST API + WebSocket
-│   ├── admin-auth-service/        # Admin login
-│   ├── admin-api-service/         # Admin REST API
-│   ├── market-data-service/       # Polymarket data feed + cache writer
-│   ├── strategy-engine/           # Block evaluator + tick runner
-│   ├── order-service/             # CLOB order submission
-│   ├── paper-order-service/       # Simulated order fills
-│   ├── backtest-service/          # Historical replay
-│   ├── notification-service/      # Email + Telegram + Discord outbound
-│   ├── bot-service/               # Interactive Telegram + Discord bots
-│   ├── signer-service/            # Credential vault + EIP712 signing
-│   └── mock-polymarket/           # (dev only) Fake Polymarket APIs
+│   ├── gateway/                   # 🔜 Nginx config + SSL certs
+│   ├── auth-service/              # ✅ Registration + login (port 3001)
+│   ├── api-service/               # 🔜 User REST API + WebSocket
+│   ├── admin-auth-service/        # 🔜 Admin login
+│   ├── admin-api-service/         # 🔜 Admin REST API
+│   ├── market-data-service/       # 🔜 Polymarket data feed + cache writer
+│   ├── strategy-engine/           # 🔜 Block evaluator + tick runner
+│   ├── order-service/             # 🔜 CLOB order submission
+│   ├── paper-order-service/       # 🔜 Simulated order fills
+│   ├── backtest-service/          # 🔜 Historical replay
+│   ├── notification-service/      # 🔜 Email + Telegram + Discord outbound
+│   ├── bot-service/               # 🔜 Interactive Telegram + Discord bots
+│   ├── signer-service/            # 🔜 Credential vault + EIP712 signing
+│   └── mock-polymarket/           # 🔜 (dev only) Fake Polymarket APIs
 │
 ├── packages/
-│   ├── shared-types/              # All TypeScript interfaces and enums
-│   ├── shared-schemas/            # Zod validation schemas
-│   ├── shared-auth/               # JWT guards + internal service client
-│   ├── shared-db/                 # Prisma client NestJS module
-│   ├── shared-redis/              # ioredis factory + stream helpers
-│   └── logger/                   # pino + nestjs-pino
+│   ├── shared-types/              # ✅ All TypeScript interfaces and enums
+│   ├── shared-schemas/            # 🔜 Zod validation schemas
+│   ├── shared-auth/               # ✅ JWT guards + internal service client
+│   ├── shared-db/                 # ✅ Prisma client NestJS module
+│   ├── shared-redis/              # ✅ ioredis factory + stream helpers
+│   └── logger/                    # ✅ pino + nestjs-pino
 │
 ├── prisma/
 │   ├── schema.prisma              # Database schema (source of truth)
@@ -502,18 +524,13 @@ polyforge/
 │   ├── nginx.prod.conf            # Prod Nginx config
 │   └── certs/                     # ← GENERATED by mkcert (gitignored)
 │
-├── swagger.json                   # ← GENERATED — user API spec (committed)
-├── swagger-admin.json             # ← GENERATED — admin API spec (committed)
-├── openapi-ts.config.ts           # hey-api config for user-app
-├── openapi-ts.admin.config.ts    # hey-api config for admin-app
-├── docker-compose.dev.yml         # Dev environment (all services + infra)
-├── docker-compose.prod.yml        # Production environment
-├── docker-compose.test.yml        # Integration test environment
+├── docker-compose.yml             # Infrastructure (Postgres, Redis, MailHog, PgBouncer)
 ├── turbo.json                     # Turborepo task graph
-├── package.json                   # Root — workspace definition + scripts
+├── pnpm-workspace.yaml            # pnpm workspace definition
+├── package.json                   # Root — scripts
+├── tsconfig.json                  # Shared TypeScript base config
 ├── .env.example                   # Environment template (committed)
-├── .env                           # Local env (gitignored)
-└── tsconfig.base.json             # Shared TypeScript config
+└── .env                           # Local env (gitignored)
 ```
 
 ---

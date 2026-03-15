@@ -888,7 +888,7 @@ Retention jobs run nightly at 3am UTC via `@Cron` decorator in `admin-api-servic
 
 ## 15. Build System
 
-### Monorepo Structure (Turborepo + npm Workspaces)
+### Monorepo Structure (Turborepo + pnpm Workspaces)
 
 ```
 polyforge/
@@ -948,20 +948,21 @@ See `03-openapi-codegen.md` for the full OpenAPI generation pipeline.
 
 | Layer | Technology |
 |---|---|
-| Backend framework | NestJS 10 + Fastify adapter |
+| Backend framework | NestJS 11.1.16 + Fastify adapter |
 | Language | TypeScript 5 (strict mode everywhere) |
-| ORM | Prisma (schema-first, type-safe) |
+| ORM | Prisma 7.5.0 (schema-first, type-safe) |
 | Validation | Zod (streams/internal) + class-validator (HTTP controllers) |
 | API documentation | @nestjs/swagger — OpenAPI 3.1 spec generated at build time |
-| API client generation | @openapitools/openapi-generator-cli (typescript-angular generator) |
+| API client generation | @hey-api/openapi-ts (typescript-angular generator) |
 | Redis client | ioredis |
 | Logging | pino + nestjs-pino |
 | Testing | Vitest + Supertest |
 | Frontend | Angular 17 |
 | UI library | PrimeNG |
 | Real-time | Socket.io (WebSocket) |
-| Build system | Turborepo + npm workspaces |
+| Build system | Turborepo 2 + pnpm workspaces |
 | Containers | Docker + Docker Compose |
+| Runtime | Node.js 24 |
 
 ---
 

@@ -283,7 +283,7 @@ describe('VolumeSpikeEvaluator', () => {
 
 ```bash
 cd services/strategy-engine
-npm run test -- --reporter=verbose volume-spike
+pnpm test -- --reporter=verbose volume-spike
 ```
 
 ---
@@ -406,7 +406,7 @@ async getPriceHistory(
 **Step 6 — Regenerate the Angular client:**
 
 ```bash
-npm run generate:api
+pnpm generate:api
 ```
 
 See `03-openapi-codegen.md` for details on the full generation pipeline.
@@ -414,7 +414,7 @@ See `03-openapi-codegen.md` for details on the full generation pipeline.
 **Step 7 — Verify TypeScript compiles in Angular apps:**
 
 ```bash
-npm run typecheck
+pnpm typecheck
 ```
 
 TypeScript errors here mean the frontend was using a field that has changed. Fix them before committing.
@@ -430,27 +430,27 @@ Always commit `swagger.json` and the generated `api/` files alongside your backe
 ### All tests across the monorepo
 
 ```bash
-npm run test
+pnpm test
 ```
 
 ### Single service
 
 ```bash
 cd services/auth-service
-npm run test
+pnpm test
 
 # With watch mode:
-npm run test -- --watch
+pnpm test -- --watch
 
 # With coverage:
-npm run test -- --coverage
+pnpm test -- --coverage
 ```
 
 ### Single test file
 
 ```bash
 cd services/strategy-engine
-npm run test -- src/blocks/triggers/volume-spike.block.spec.ts
+pnpm test -- src/blocks/triggers/volume-spike.block.spec.ts
 ```
 
 ### Integration tests (requires Docker)
@@ -605,12 +605,12 @@ This is the most critical workflow to internalize:
 1. Update the NestJS DTO / controller
    └─► Add/modify @ApiProperty and @ApiResponse decorators
 
-2. Run npm run generate:api
+2. Run pnpm generate:api
    └─► swagger.json is regenerated
    └─► Angular services are regenerated
 
 3. Check for TypeScript errors in Angular apps
-   └─► npm run typecheck
+   └─► pnpm typecheck
    └─► Errors = the frontend used a field that no longer exists
 
 4. Fix any Angular code that broke
