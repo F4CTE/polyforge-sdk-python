@@ -7,7 +7,7 @@
 
 ## Next Up
 
-1. Complete Prisma schema (all 29 tables) + TimescaleDB hypertables + seed data
+1. Prisma seed data (5 test accounts + consistent test data)
 2. 2FA/TOTP for auth-service (setup, confirm, backup codes, disable)
 3. Polymarket credentials import + bot-link + rate limiting for auth-service
 4. `mock-polymarket` service — Gamma/CLOB/Data REST mocks + WebSocket feed
@@ -29,6 +29,7 @@
 - [x] Package build pipeline — `dist/` output, `main`/`types` pointing to compiled JS
 - [x] Docker Compose — Postgres, PgBouncer, Redis, MailHog, migrations container
 - [x] `.env.example` — all variables documented
+- [x] Vitest test infrastructure — auth-service (64 tests, 99% cov) + admin-auth-service (15 tests, 100% cov)
 - [ ] CI/CD — GitHub Actions: lint → typecheck → test → build
 
 ### Prisma Schema & Migrations
@@ -36,7 +37,7 @@
 - [x] Prisma 7.5.0 configured (two schemas: `polyforge` + `polyforge_admin`)
 - [x] Initial migration applied
 - [x] Complete schema (all 29 tables per [`Polyforge-Database-Schema.pdf`](./Polyforge-Database-Schema.pdf))
-- [ ] TimescaleDB hypertables (`price_snapshots`, `portfolio_snapshots`)
+- [x] TimescaleDB hypertables (`price_snapshots`, `pnl_snapshots`)
 - [ ] Critical indexes
 - [ ] `seed.ts` (5 test accounts + consistent test data)
 
