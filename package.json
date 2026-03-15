@@ -9,6 +9,7 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:cov": "turbo run test:cov",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "generate": "dotenv -e .env -- prisma generate --schema prisma/schema.prisma --config prisma/prisma.config.ts && dotenv -e .env -- prisma generate --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts",
     "migrate:dev": "prisma migrate dev --schema prisma/schema.prisma --config prisma/prisma.config.ts",

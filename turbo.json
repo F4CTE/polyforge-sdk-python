@@ -39,6 +39,11 @@
       "dependsOn": ["^build"],
       "inputs": ["src/**", "test/**"],
       "outputs": ["coverage/**"]
+    },
+    "test:cov": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "test/**"],
+      "outputs": ["coverage/**"]
     }
   }
 }
