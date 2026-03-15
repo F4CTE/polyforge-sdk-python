@@ -7,9 +7,10 @@
 
 ## Next Up
 
-1. Complete `auth-service` — `GET /auth/v1/me`, `POST /auth/v1/logout`, email verification, password reset, 2FA/TOTP, credentials import
-2. Complete Prisma schema (all 29 tables) + TimescaleDB hypertables + seed data
-3. Build `packages/shared-schemas` blocks schemas once strategy-engine begins
+1. Complete Prisma schema (all 29 tables) + TimescaleDB hypertables + seed data
+2. 2FA/TOTP for auth-service (setup, confirm, backup codes, disable)
+3. Polymarket credentials import + bot-link + rate limiting for auth-service
+4. `mock-polymarket` service — Gamma/CLOB/Data REST mocks + WebSocket feed
 
 ---
 
@@ -57,10 +58,10 @@
 - [x] `POST /auth/v1/login` — JWT (7 days), spec-compliant response + error codes, suspended/TOTP handling
 - [x] `GlobalExceptionFilter`, `ValidationPipe`
 - [x] `GET /health` endpoint
-- [ ] `GET /auth/v1/me`
-- [ ] `POST /auth/v1/logout`
-- [ ] Email verification (send on register, `POST /auth/v1/verify-email`)
-- [ ] `POST /auth/v1/forgot-password` + `POST /auth/v1/reset-password`
+- [x] `GET /auth/v1/me`
+- [x] `POST /auth/v1/logout`
+- [x] Email verification (send on register, `POST /auth/v1/verify-email`)
+- [x] `POST /auth/v1/forgot-password` + `POST /auth/v1/reset-password`
 - [ ] 2FA/TOTP: setup, confirm, 10 backup codes, disable
 - [ ] Polymarket credentials import (AES-256-GCM, forward to signer-service)
 - [ ] Credentials delete (stop running strategies first)
