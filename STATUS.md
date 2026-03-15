@@ -7,10 +7,9 @@
 
 ## Next Up
 
-1. Prisma seed data (5 test accounts + consistent test data)
-2. 2FA/TOTP for auth-service (setup, confirm, backup codes, disable)
-3. Polymarket credentials import + bot-link + rate limiting for auth-service
-4. `mock-polymarket` service — Gamma/CLOB/Data REST mocks + WebSocket feed
+1. `mock-polymarket` service — Gamma/CLOB/Data REST mocks + WebSocket feed
+2. Critical DB indexes (Prisma migration)
+3. CI/CD — GitHub Actions: lint → typecheck → test → build
 
 ---
 
@@ -39,7 +38,7 @@
 - [x] Complete schema (all 29 tables per [`Polyforge-Database-Schema.pdf`](./Polyforge-Database-Schema.pdf))
 - [x] TimescaleDB hypertables (`price_snapshots`, `pnl_snapshots`)
 - [ ] Critical indexes
-- [ ] `seed.ts` (5 test accounts + consistent test data)
+- [x] `seed.ts` (alice, bob, charlie + strategies, orders, positions, social, backtest)
 
 ### mock-polymarket
 
@@ -63,11 +62,11 @@
 - [x] `POST /auth/v1/logout`
 - [x] Email verification (send on register, `POST /auth/v1/verify-email`)
 - [x] `POST /auth/v1/forgot-password` + `POST /auth/v1/reset-password`
-- [ ] 2FA/TOTP: setup, confirm, 10 backup codes, disable
-- [ ] Polymarket credentials import (AES-256-GCM, forward to signer-service)
-- [ ] Credentials delete (stop running strategies first)
-- [ ] Bot-link (6-digit code, TTL 5 min)
-- [ ] Rate limiting per IP on sensitive routes
+- [x] 2FA/TOTP: setup, confirm, 10 backup codes, disable
+- [x] Polymarket credentials import (forward to signer-service, marks user CONNECTED)
+- [x] Credentials delete (marks user disconnected, notifies signer-service)
+- [x] Bot-link (6-digit code, TTL 5 min, one-time consume)
+- [x] Rate limiting per IP on sensitive routes
 
 ### market-data-service
 
