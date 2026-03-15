@@ -140,3 +140,23 @@ services:
       - "8025:8025"
       - "1025:1025"
     networks: [internal]
+
+  # ─── MOCK POLYMARKET ─────────────────────────────────────────────────────
+
+  mock-polymarket:
+    build:
+      context: .
+      dockerfile: services/mock-polymarket/Dockerfile
+    environment:
+      SCENARIO: ${SCENARIO:-normal}
+      GAMMA_PORT: "3096"
+      DATA_PORT: "3097"
+      WS_PORT: "3098"
+      CLOB_PORT: "3099"
+    ports:
+      - "3096:3096"   # Gamma API
+      - "3097:3097"   # Data API
+      - "3098:3098"   # WebSocket feed
+      - "3099:3099"   # CLOB REST
+    networks: [internal]
+    restart: unless-stopped
