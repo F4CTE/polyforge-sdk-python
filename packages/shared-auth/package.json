@@ -1,0 +1,30 @@
+{
+  "name": "@polyforge/shared-auth",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/passport": "^11.0.5",
+    "@polyforge/shared-redis": "workspace:*",
+    "@polyforge/shared-types": "workspace:*",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^11.1.16",
+    "@nestjs/core": "^11.1.16",
+    "@types/node": "^25.5.0",
+    "@types/passport-jwt": "^4.0.1",
+    "typescript": "^5.9.2"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.16",
+    "@nestjs/core": "^11.1.16"
+  }
+}

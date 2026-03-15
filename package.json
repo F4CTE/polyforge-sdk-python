@@ -18,10 +18,12 @@
     "generate:api": "openapi-ts --config openapi-ts.config.ts && openapi-ts --config openapi-ts.admin.config.ts"
   },
   "dependencies": {
-    "@prisma/client": "7.5.0"
+    "@prisma/client": "7.5.0",
+    "bcrypt": "^6.0.0"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "0.94.1",
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "25.5.0",
     "dotenv-cli": "11.0.0",
     "prettier": "^3.7.4",

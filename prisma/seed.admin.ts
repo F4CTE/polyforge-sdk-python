@@ -14,12 +14,10 @@
  *     Dev passwords are intentionally weak — change in production via the UI.
  */
 
-import { PrismaClient } from '@prisma/admin-client';
+import { PrismaClient } from '.prisma/admin-client';
 import * as bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient({
-  datasources: { db: { url: process.env.ADMIN_DIRECT_DATABASE_URL } },
-});
+const prisma = new PrismaClient();
 
 const BCRYPT_COST = 12;
 
