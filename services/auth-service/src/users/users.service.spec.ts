@@ -170,7 +170,7 @@ describe('UsersService', () => {
             const after = Date.now();
 
             const callArg = db.emailVerification.create.mock.calls[0][0];
-            const expiresAt: Date = callArg.data.expiresAt;
+            const expiresAt = callArg.data.expiresAt as Date;
             const ttlMs = expiresAt.getTime();
 
             expect(ttlMs).toBeGreaterThanOrEqual(before + 24 * 60 * 60 * 1000 - 100);
@@ -255,7 +255,7 @@ describe('UsersService', () => {
             const after = Date.now();
 
             const callArg = db.passwordResetToken.create.mock.calls[0][0];
-            const expiresAt: Date = callArg.data.expiresAt;
+            const expiresAt = callArg.data.expiresAt as Date;
             const ttlMs = expiresAt.getTime();
 
             expect(ttlMs).toBeGreaterThanOrEqual(before + 60 * 60 * 1000 - 100);
@@ -281,12 +281,14 @@ describe('UsersService', () => {
             const token = rawToken();
             const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
             db.passwordResetToken.findUnique.mockResolvedValue(record as any);
-            db.$transaction.mockImplementation(async (ops: any[]) => ops);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (db.$transaction as any).mockImplementation(async (ops: any[]) => ops);
 
             await service.resetPassword(token, 'NewPassw0rd!');
 
             // The second operation in the transaction updates the user's passwordHash
-            const txOps = db.$transaction.mock.calls[0][0] as any[];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const txOps = (db.$transaction as any).mock.calls[0][0] as any[];
             // We can't inspect the deferred Prisma operations directly, but we verify
             // that $transaction was called with an array of operations.
             expect(Array.isArray(txOps)).toBe(true);

@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
+import { TotpService } from '../totp/totp.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
@@ -28,6 +29,7 @@ export class AuthService {
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
         private readonly mailService: MailService,
+        private readonly totpService: TotpService,
     ) { }
 
     // ─── Register ─────────────────────────────────────────────────────────────────
@@ -92,7 +94,13 @@ export class AuthService {
                     HttpStatus.BAD_REQUEST,
                 );
             }
-            // TODO: validate TOTP code once 2FA setup is implemented
+            const totpValid = await this.totpService.verify(user.id, dto.totpCode);
+            if (!totpValid) {
+                throw new HttpException(
+                    { code: 'TOTP_INVALID', message: 'Invalid 2FA code' },
+                    HttpStatus.BAD_REQUEST,
+                );
+            }
         }
 
         const token = this.generateToken(user);

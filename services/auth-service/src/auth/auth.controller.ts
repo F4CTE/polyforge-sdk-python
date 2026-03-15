@@ -1,5 +1,6 @@
 import { Controller, Post, Get, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
 import { AuthService } from './auth.service';
@@ -15,6 +16,7 @@ export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
     @Post('register')
+    @Throttle({ default: { limit: 5, ttl: 3600000 } })  // 5 per hour
     @ApiOperation({ summary: 'Register a new user account' })
     @ApiResponse({ status: 201, description: 'Account created. Returns JWT + user profile.' })
     @ApiResponse({ status: 409, description: 'EMAIL_TAKEN or USERNAME_TAKEN' })
@@ -25,6 +27,7 @@ export class AuthController {
 
     @Post('login')
     @HttpCode(HttpStatus.OK)
+    @Throttle({ default: { limit: 10, ttl: 900000 } })  // 10 per 15 min
     @ApiOperation({ summary: 'Login with email and password' })
     @ApiResponse({ status: 200, description: 'Login successful. Returns JWT + user profile.' })
     @ApiResponse({ status: 400, description: 'INVALID_CREDENTIALS or TOTP_REQUIRED' })
@@ -64,6 +67,7 @@ export class AuthController {
 
     @Post('forgot-password')
     @HttpCode(HttpStatus.OK)
+    @Throttle({ default: { limit: 3, ttl: 3600000 } })  // 3 per hour
     @ApiOperation({ summary: 'Request a password reset email (always returns 200 to prevent email enumeration)' })
     @ApiResponse({ status: 200, description: 'Reset email sent if account exists.' })
     async forgotPassword(@Body() dto: ForgotPasswordDto) {

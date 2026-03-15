@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
+import { TotpService } from '../totp/totp.service';
 import { createMockMailService } from '../../test/helpers/mock-mail';
 import { userFactory } from '../../test/factories';
 
@@ -24,6 +25,7 @@ describe('AuthService', () => {
     let usersService: UsersService;
     let jwtService: JwtService;
     let mailService: MailService;
+    let totpService: TotpService;
 
     beforeEach(() => {
         usersService = {
@@ -44,7 +46,11 @@ describe('AuthService', () => {
 
         mailService = createMockMailService() as MailService;
 
-        service = new AuthService(usersService, jwtService, mailService);
+        totpService = {
+            verify: vi.fn().mockResolvedValue(true),
+        } as unknown as TotpService;
+
+        service = new AuthService(usersService, jwtService, mailService, totpService);
     });
 
     afterEach(() => {
@@ -193,10 +199,23 @@ describe('AuthService', () => {
             const user = userFactory({ totpEnabled: true });
             vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
             vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+            vi.mocked(totpService.verify).mockResolvedValue(true);
 
             // Provide a totpCode so the TOTP_REQUIRED guard passes
             const result = await service.login(makeLoginDto({ totpCode: '123456' }) as any);
             expect(result.requiresTotp).toBe(true);
+        });
+
+        it('throws TOTP_INVALID (400) when 2FA code is wrong', async () => {
+            const user = userFactory({ totpEnabled: true });
+            vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+            vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+            vi.mocked(totpService.verify).mockResolvedValue(false);
+
+            await expect(service.login(makeLoginDto({ totpCode: '999999' }) as any)).rejects.toMatchObject({
+                response: { code: 'TOTP_INVALID' },
+                status: HttpStatus.BAD_REQUEST,
+            });
         });
 
         it('never exposes passwordHash in the response', async () => {

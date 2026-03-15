@@ -14,10 +14,13 @@
  *     Dev passwords are intentionally weak — change in production via the UI.
  */
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { PrismaPg } = require('@prisma/adapter-pg');
 import { PrismaClient } from '.prisma/admin-client';
 import * as bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+const adminAdapter = new PrismaPg({ connectionString: process.env.ADMIN_DIRECT_DATABASE_URL ?? process.env.ADMIN_DATABASE_URL });
+const prisma = new PrismaClient({ adapter: adminAdapter });
 
 const BCRYPT_COST = 12;
 

@@ -1,0 +1,136 @@
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '@polyforge/shared-db';
+import { ImportCredentialsDto } from './dto/import-credentials.dto';
+
+/**
+ * Forwards encrypted credential storage to signer-service.
+ *
+ * Security boundary: auth-service NEVER sees or stores the raw private key beyond
+ * the duration of this HTTP forwarding request. signer-service owns all encryption.
+ */
+@Injectable()
+export class CredentialsService {
+    private readonly logger = new Logger(CredentialsService.name);
+    private readonly signerUrl: string;
+
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly config: ConfigService,
+    ) {
+        this.signerUrl = this.config.get<string>('SIGNER_SERVICE_URL', 'http://signer-service:3004');
+    }
+
+    // ─── Import ───────────────────────────────────────────────────────────────────
+
+    async import(userId: string, dto: ImportCredentialsDto): Promise<void> {
+        const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+
+        if (!user.emailVerified) {
+            throw new HttpException(
+                { code: 'EMAIL_NOT_VERIFIED', message: 'You must verify your email before connecting Polymarket' },
+                HttpStatus.FORBIDDEN,
+            );
+        }
+
+        // Forward to signer-service — it handles AES-256-GCM encryption + storage
+        await this.forwardToSigner(userId, dto);
+
+        // Mark user as connected
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                polymarketConnected: true,
+                polymarketAddress: dto.walletAddress,
+                polymarketSigType: dto.sigType,
+            },
+        });
+
+        this.logger.log(`Polymarket credentials imported for user ${userId}`);
+    }
+
+    // ─── Delete ───────────────────────────────────────────────────────────────────
+
+    async delete(userId: string): Promise<void> {
+        const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+
+        if (!user.polymarketConnected) {
+            throw new HttpException(
+                { code: 'CREDENTIALS_NOT_FOUND', message: 'No Polymarket credentials found' },
+                HttpStatus.NOT_FOUND,
+            );
+        }
+
+        // TODO: Check for running strategies before deletion (requires strategy-service)
+        // For now, notify signer-service to remove the stored credentials
+        await this.deleteFromSigner(userId);
+
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                polymarketConnected: false,
+                polymarketAddress: null,
+                polymarketSigType: null,
+            },
+        });
+
+        this.logger.log(`Polymarket credentials deleted for user ${userId}`);
+    }
+
+    // ─── Internal HTTP to signer-service ─────────────────────────────────────────
+
+    private async forwardToSigner(userId: string, dto: ImportCredentialsDto): Promise<void> {
+        const url = `${this.signerUrl}/internal/v1/credentials`;
+
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, ...dto }),
+                signal: AbortSignal.timeout(10_000),
+            });
+
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                this.logger.error(`signer-service rejected credentials: ${res.status}`, body);
+                throw new HttpException(
+                    { code: 'SIGNER_ERROR', message: 'Failed to store credentials securely' },
+                    HttpStatus.BAD_GATEWAY,
+                );
+            }
+        } catch (err) {
+            if (err instanceof HttpException) throw err;
+            this.logger.error('signer-service unreachable', err);
+            throw new HttpException(
+                { code: 'SIGNER_UNAVAILABLE', message: 'Credential storage service is unavailable' },
+                HttpStatus.SERVICE_UNAVAILABLE,
+            );
+        }
+    }
+
+    private async deleteFromSigner(userId: string): Promise<void> {
+        const url = `${this.signerUrl}/internal/v1/credentials/${userId}`;
+
+        try {
+            const res = await fetch(url, {
+                method: 'DELETE',
+                signal: AbortSignal.timeout(10_000),
+            });
+
+            if (!res.ok && res.status !== 404) {
+                this.logger.error(`signer-service credential delete failed: ${res.status}`);
+                throw new HttpException(
+                    { code: 'SIGNER_ERROR', message: 'Failed to remove credentials' },
+                    HttpStatus.BAD_GATEWAY,
+                );
+            }
+        } catch (err) {
+            if (err instanceof HttpException) throw err;
+            this.logger.error('signer-service unreachable during delete', err);
+            throw new HttpException(
+                { code: 'SIGNER_UNAVAILABLE', message: 'Credential storage service is unavailable' },
+                HttpStatus.SERVICE_UNAVAILABLE,
+            );
+        }
+    }
+}

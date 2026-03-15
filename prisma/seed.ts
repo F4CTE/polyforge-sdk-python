@@ -16,10 +16,13 @@
  * Reset: pnpm reset (drops DB and re-runs migrations + seed)
  */
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { PrismaPg } = require('@prisma/adapter-pg');
 import { PrismaClient } from '.prisma/client';
 import * as bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 const BCRYPT_COST = 12;
 
 // ─────────────────────────────────────────────────────────────────────────────
