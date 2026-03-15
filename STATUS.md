@@ -7,10 +7,9 @@
 
 ## Next Up
 
-1. Test `POST /api/v1/auth/register` and `POST /api/v1/auth/login` end-to-end
-2. Create `admin-auth-service` (NestJS + Fastify, `/auth/v1/login`, admin JWT)
-3. Create `packages/shared-schemas` (Zod validation schemas)
-4. Complete `auth-service` — email verification, password reset, 2FA/TOTP, credentials import
+1. Create `admin-auth-service` (NestJS + Fastify, port 3003, `POST /api/v1/auth/login`, admin JWT 1h)
+2. Create `packages/shared-schemas` (Zod validation schemas)
+3. Complete `auth-service` — `GET /api/v1/auth/me`, email verification, password reset, 2FA/TOTP, credentials import
 
 ---
 
@@ -28,7 +27,7 @@
 - [ ] `packages/shared-schemas` — Zod validation schemas
 - [x] Package build pipeline — `dist/` output, `main`/`types` pointing to compiled JS
 - [x] Docker Compose — Postgres, PgBouncer, Redis, MailHog, migrations container
-- [ ] `.env.example` — all variables documented
+- [x] `.env.example` — all variables documented
 - [ ] CI/CD — GitHub Actions: lint → typecheck → test → build
 
 ### Prisma Schema & Migrations
@@ -54,9 +53,10 @@
 ### auth-service (port 3001)
 
 - [x] NestJS 11 + Fastify, global prefix `api/v1`
-- [x] `POST /api/v1/auth/register` — create account, bcrypt password
-- [x] `POST /api/v1/auth/login` — JWT (7 days)
+- [x] `POST /api/v1/auth/register` — create account, bcrypt password, spec-compliant response + error codes
+- [x] `POST /api/v1/auth/login` — JWT (7 days), spec-compliant response + error codes, suspended/TOTP handling
 - [x] `GlobalExceptionFilter`, `ValidationPipe`
+- [x] `GET /health` endpoint
 - [ ] `GET /api/v1/auth/me`
 - [ ] `POST /api/v1/auth/logout`
 - [ ] Email verification (send on register, `POST /api/v1/auth/verify-email`)
@@ -66,7 +66,6 @@
 - [ ] Credentials delete (stop running strategies first)
 - [ ] Bot-link (6-digit code, TTL 5 min)
 - [ ] Rate limiting per IP on sensitive routes
-- [ ] `GET /health` endpoint
 
 ### market-data-service
 

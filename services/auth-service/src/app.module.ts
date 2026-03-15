@@ -5,6 +5,7 @@ import { SharedAuthModule } from '@polyforge/shared-auth';
 import { LoggerModule } from '@polyforge/logger';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { HealthController } from './common/health.controller';
 
 @Module({
   imports: [
@@ -15,5 +16,6 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     UsersModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule { }

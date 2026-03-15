@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '@polyforge/shared-db';
 import * as bcrypt from 'bcrypt';
 
@@ -29,16 +29,20 @@ export class UsersService {
         password: string;
         username: string;
     }) {
-        // Check email uniqueness
         const existingEmail = await this.findByEmail(data.email);
         if (existingEmail) {
-            throw new ConflictException('Email already in use');
+            throw new HttpException(
+                { code: 'EMAIL_TAKEN', message: 'Email is already registered' },
+                HttpStatus.CONFLICT,
+            );
         }
 
-        // Check username uniqueness
         const existingUsername = await this.findByUsername(data.username);
         if (existingUsername) {
-            throw new ConflictException('Username already taken');
+            throw new HttpException(
+                { code: 'USERNAME_TAKEN', message: 'Username is already taken' },
+                HttpStatus.CONFLICT,
+            );
         }
 
         const passwordHash = await bcrypt.hash(data.password, 12);

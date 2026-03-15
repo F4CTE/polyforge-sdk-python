@@ -28,8 +28,8 @@ async function bootstrap() {
   // Global exception filter
   app.useGlobalFilters(new GlobalExceptionFilter());
 
-  // API prefix
-  app.setGlobalPrefix('api/v1');
+  // API prefix (health check excluded so it stays at /health)
+  app.setGlobalPrefix('api/v1', { exclude: ['health'] });
 
   const port = process.env.AUTH_SERVICE_PORT ?? 3001;
   await app.listen(port, '0.0.0.0');
