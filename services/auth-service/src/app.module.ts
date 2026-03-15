@@ -1,10 +1,19 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { SharedDbModule } from '@polyforge/shared-db';
+import { RedisModule } from '@polyforge/shared-redis';
+import { SharedAuthModule } from '@polyforge/shared-auth';
+import { LoggerModule } from '@polyforge/logger';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    LoggerModule,
+    SharedDbModule,
+    RedisModule,
+    SharedAuthModule,
+    AuthModule,
+    UsersModule,
+  ],
 })
-export class AppModule {}
+export class AppModule { }
