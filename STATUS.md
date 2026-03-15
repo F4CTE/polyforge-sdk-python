@@ -7,9 +7,9 @@
 
 ## Next Up
 
-1. `mock-polymarket` service — Gamma/CLOB/Data REST mocks + WebSocket feed
-2. Critical DB indexes (Prisma migration)
-3. CI/CD — GitHub Actions: lint → typecheck → test → build
+1. `market-data-service` — Polymarket WebSocket consumer, Redis price cache, TimescaleDB writer
+2. `admin-auth-service` Swagger docs + missing test coverage for edge cases
+3. Prisma seed data: add `dave` (VERIFIED) and `carol` (SUSPENDED) per dev-setup spec
 
 ---
 
@@ -29,7 +29,7 @@
 - [x] Docker Compose — Postgres, PgBouncer, Redis, MailHog, migrations container
 - [x] `.env.example` — all variables documented
 - [x] Vitest test infrastructure — auth-service (64 tests, 99% cov) + admin-auth-service (15 tests, 100% cov)
-- [ ] CI/CD — GitHub Actions: lint → typecheck → test → build
+- [x] CI/CD — GitHub Actions: lint → typecheck → test → build
 
 ### Prisma Schema & Migrations
 
@@ -37,15 +37,15 @@
 - [x] Initial migration applied
 - [x] Complete schema (all 29 tables per [`Polyforge-Database-Schema.pdf`](./Polyforge-Database-Schema.pdf))
 - [x] TimescaleDB hypertables (`price_snapshots`, `pnl_snapshots`)
-- [ ] Critical indexes
+- [x] Critical indexes (31 indexes across 10 tables)
 - [x] `seed.ts` (alice, bob, charlie + strategies, orders, positions, social, backtest)
 
 ### mock-polymarket
 
-- [ ] REST mock: Gamma API, CLOB API, Data API
-- [ ] WebSocket mock: price feed, order book, order lifecycle events
-- [ ] 5 scenarios (`normal`, `volatile`, `api_down`, `rate_limited`, `slow`)
-- [ ] 10 fixture markets aligned with seed data
+- [x] REST mock: Gamma API, CLOB API, Data API
+- [x] WebSocket mock: price feed, order book, order lifecycle events
+- [x] 5 scenarios (`normal`, `volatile`, `api_down`, `rate_limited`, `slow`)
+- [x] 10 fixture markets aligned with seed data
 
 ---
 
