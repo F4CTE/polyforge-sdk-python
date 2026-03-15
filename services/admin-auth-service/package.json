@@ -5,6 +5,9 @@
   "scripts": {
     "build": "nest build",
     "build:swagger": "nest build && ts-node -r tsconfig-paths/register src/generate-swagger.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
@@ -32,12 +35,19 @@
     "rxjs": "^7.8.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.3.0",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.1.16",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^25.5.0",
+    "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.1.0",
+    "supertest": "^7.2.2",
     "ts-node": "^10.9.0",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.0",
+    "vitest-mock-extended": "^3.1.0"
   }
 }
