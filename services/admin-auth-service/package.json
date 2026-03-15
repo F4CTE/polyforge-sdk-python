@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nest build",
+    "build:swagger": "nest build && ts-node -r tsconfig-paths/register src/generate-swagger.ts",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
@@ -15,6 +16,7 @@
     "@nestjs/core": "^11.1.16",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/platform-fastify": "^11.1.16",
+    "@nestjs/swagger": "^11.2.6",
     "@polyforge/logger": "workspace:*",
     "@polyforge/shared-db": "workspace:*",
     "@polyforge/shared-redis": "workspace:*",
