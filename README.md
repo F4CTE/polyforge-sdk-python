@@ -1,5 +1,7 @@
 # Polyforge
 
+> **Build status:** [`STATUS.md`](./STATUS.md)
+
 Strategy automation platform for [Polymarket](https://polymarket.com) — users build automated trading strategies using a drag-and-drop block interface, backtest them against historical data, paper trade in simulation, and deploy live strategies that trade on their behalf.
 
 ---
