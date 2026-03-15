@@ -554,8 +554,9 @@ model BacktestRun {
   createdAt      DateTime  @default(now())
   completedAt    DateTime?
 
-  user     User     @relation(fields: [userId],     references: [id])
-  strategy Strategy @relation(fields: [strategyId], references: [id])
+  user           User            @relation(fields: [userId],     references: [id])
+  strategy       Strategy        @relation(fields: [strategyId], references: [id])
+  backtestOrders BacktestOrder[]
 
   @@map("backtest_runs")
 }
@@ -604,4 +605,105 @@ model DataGap {
   createdAt DateTime @default(now())
 
   @@map("data_gaps")
+}
+
+// ─────────────────────────────────────────────
+// MARKET DATA TABLES
+// ─────────────────────────────────────────────
+
+model Market {
+  id            String    @id @db.VarChar(255)  // Polymarket condition ID
+  slug          String    @unique @db.VarChar(255)
+  title         String
+  description   String?
+  category      String?   @db.VarChar(100)
+  seriesSlug    String?   @db.VarChar(255)
+  endDate       DateTime?
+  closed        Boolean   @default(false)
+  negRisk       Boolean   @default(false)
+  volume24h     Decimal   @default(0) @db.Decimal(20, 6)
+  firstSeenAt   DateTime  @default(now())
+  lastUpdatedAt DateTime  @updatedAt
+
+  tokens Token[]
+
+  @@map("markets")
+}
+
+model Token {
+  id        String  @id @db.VarChar(255)  // Polymarket token ID
+  marketId  String  @db.VarChar(255)
+  outcome   String  @db.VarChar(10)       // YES or NO
+  price     Decimal @default(0) @db.Decimal(10, 6)
+  liquidity Decimal @default(0) @db.Decimal(20, 6)
+
+  market Market @relation(fields: [marketId], references: [id])
+
+  @@map("tokens")
+}
+
+// TimescaleDB hypertable — partitioned by time
+// Run after migration: SELECT create_hypertable('price_snapshots', 'time');
+model PriceSnapshot {
+  time    DateTime @db.Timestamptz
+  tokenId String   @db.VarChar(255)
+  open    Decimal  @db.Decimal(10, 6)
+  high    Decimal  @db.Decimal(10, 6)
+  low     Decimal  @db.Decimal(10, 6)
+  close   Decimal  @db.Decimal(10, 6)
+  volume  Decimal  @db.Decimal(20, 6)
+
+  @@id([time, tokenId])
+  @@map("price_snapshots")
+}
+
+// TimescaleDB hypertable — partitioned by time
+// Run after migration: SELECT create_hypertable('pnl_snapshots', 'time');
+model PnlSnapshot {
+  time          DateTime @db.Timestamptz
+  userId        String
+  strategyId    String?
+  pnl           Decimal  @db.Decimal(20, 6)
+  realizedPnl   Decimal  @db.Decimal(20, 6)
+  positionCount Int      @default(0)
+
+  @@id([time, userId])
+  @@map("pnl_snapshots")
+}
+
+// ─────────────────────────────────────────────
+// BACKTEST DETAIL
+// ─────────────────────────────────────────────
+
+model BacktestOrder {
+  id          String       @id @default(uuid())
+  runId       String
+  tokenId     String       @db.VarChar(255)
+  side        OrderSide
+  outcome     OrderOutcome
+  size        Decimal      @db.Decimal(20, 6)
+  price       Decimal      @db.Decimal(10, 6)
+  fillPrice   Decimal?     @db.Decimal(10, 6)
+  pnl         Decimal?     @db.Decimal(20, 6)
+  equityCurve Decimal      @db.Decimal(20, 6)  // cumulative P&L at this point
+  simulatedAt DateTime
+
+  run BacktestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@map("backtest_orders")
+}
+
+// ─────────────────────────────────────────────
+// EVENT LOG
+// ─────────────────────────────────────────────
+
+model EventLog {
+  id        BigInt   @id @default(autoincrement())
+  eventType String   @db.VarChar(50)
+  userId    String?
+  payload   Json
+  source    String   @db.VarChar(50)   // which service emitted this
+  createdAt DateTime @default(now())
+
+  @@map("event_log")
 }
