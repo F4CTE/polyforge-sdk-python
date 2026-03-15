@@ -331,9 +331,11 @@ pnpm --filter "./packages/**" build
 
 # Start a single service in watch mode
 pnpm --filter "@polyforge/auth-service" start:dev
+pnpm --filter "@polyforge/admin-auth-service" start:dev
 
 # Start a service via Turborepo (auto-builds package deps first)
 turbo dev --filter="@polyforge/auth-service"
+turbo dev --filter="@polyforge/admin-auth-service"
 
 # Start Docker infrastructure
 docker compose up -d
@@ -488,8 +490,8 @@ polyforge/
 ├── services/
 │   ├── gateway/                   # 🔜 Nginx config + SSL certs
 │   ├── auth-service/              # ✅ Registration + login (port 3001)
+│   ├── admin-auth-service/        # ✅ Admin login (port 3003)
 │   ├── api-service/               # 🔜 User REST API + WebSocket
-│   ├── admin-auth-service/        # 🔜 Admin login
 │   ├── admin-api-service/         # 🔜 Admin REST API
 │   ├── market-data-service/       # 🔜 Polymarket data feed + cache writer
 │   ├── strategy-engine/           # 🔜 Block evaluator + tick runner
@@ -503,7 +505,7 @@ polyforge/
 │
 ├── packages/
 │   ├── shared-types/              # ✅ All TypeScript interfaces and enums
-│   ├── shared-schemas/            # 🔜 Zod validation schemas
+│   ├── shared-schemas/            # ✅ Zod schemas (streams, WebSocket, orders)
 │   ├── shared-auth/               # ✅ JWT guards + internal service client
 │   ├── shared-db/                 # ✅ Prisma client NestJS module
 │   ├── shared-redis/              # ✅ ioredis factory + stream helpers

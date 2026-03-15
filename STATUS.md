@@ -7,9 +7,9 @@
 
 ## Next Up
 
-1. Create `admin-auth-service` (NestJS + Fastify, port 3003, `POST /api/v1/auth/login`, admin JWT 1h)
-2. Create `packages/shared-schemas` (Zod validation schemas)
-3. Complete `auth-service` — `GET /api/v1/auth/me`, email verification, password reset, 2FA/TOTP, credentials import
+1. Complete `auth-service` — `GET /auth/v1/me`, `POST /auth/v1/logout`, email verification, password reset, 2FA/TOTP, credentials import
+2. Complete Prisma schema (all 29 tables) + TimescaleDB hypertables + seed data
+3. Build `packages/shared-schemas` blocks schemas once strategy-engine begins
 
 ---
 
@@ -24,7 +24,7 @@
 - [x] `packages/shared-redis` — ioredis factory + stream helpers
 - [x] `packages/shared-auth` — JWT guards + internal service client
 - [x] `packages/logger` — pino + nestjs-pino
-- [ ] `packages/shared-schemas` — Zod validation schemas
+- [x] `packages/shared-schemas` — Zod validation schemas (orders, streams, WebSocket)
 - [x] Package build pipeline — `dist/` output, `main`/`types` pointing to compiled JS
 - [x] Docker Compose — Postgres, PgBouncer, Redis, MailHog, migrations container
 - [x] `.env.example` — all variables documented
@@ -52,15 +52,15 @@
 
 ### auth-service (port 3001)
 
-- [x] NestJS 11 + Fastify, global prefix `api/v1`
-- [x] `POST /api/v1/auth/register` — create account, bcrypt password, spec-compliant response + error codes
-- [x] `POST /api/v1/auth/login` — JWT (7 days), spec-compliant response + error codes, suspended/TOTP handling
+- [x] NestJS 11 + Fastify, global prefix `auth/v1`
+- [x] `POST /auth/v1/register` — create account, bcrypt password, spec-compliant response + error codes
+- [x] `POST /auth/v1/login` — JWT (7 days), spec-compliant response + error codes, suspended/TOTP handling
 - [x] `GlobalExceptionFilter`, `ValidationPipe`
 - [x] `GET /health` endpoint
-- [ ] `GET /api/v1/auth/me`
-- [ ] `POST /api/v1/auth/logout`
-- [ ] Email verification (send on register, `POST /api/v1/auth/verify-email`)
-- [ ] `POST /api/v1/auth/forgot-password` + `POST /api/v1/auth/reset-password`
+- [ ] `GET /auth/v1/me`
+- [ ] `POST /auth/v1/logout`
+- [ ] Email verification (send on register, `POST /auth/v1/verify-email`)
+- [ ] `POST /auth/v1/forgot-password` + `POST /auth/v1/reset-password`
 - [ ] 2FA/TOTP: setup, confirm, 10 backup codes, disable
 - [ ] Polymarket credentials import (AES-256-GCM, forward to signer-service)
 - [ ] Credentials delete (stop running strategies first)
@@ -77,10 +77,10 @@
 
 ### admin-auth-service (port 3003)
 
-- [ ] NestJS 11 + Fastify, `POST /auth/v1/login`
-- [ ] Admin JWT (TTL 1 hour)
-- [ ] `POST /auth/v1/logout` (Redis revocation)
-- [ ] `GET /health` endpoint
+- [x] NestJS 11 + Fastify, global prefix `auth/v1`
+- [x] `POST /auth/v1/login` — admin JWT (1 hour), Redis session storage
+- [x] `POST /auth/v1/logout` — Redis session revocation
+- [x] `GET /health` endpoint
 
 ---
 

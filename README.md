@@ -30,9 +30,9 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 polyforge/
 ├── services/
 │   ├── auth-service/              # ✅ Registration, login — port 3001
-│   ├── api-service/               # 🔜 User REST + WebSocket
-│   ├── admin-auth-service/        # 🔜 Admin login
-│   ├── admin-api-service/         # 🔜 Admin REST
+│   ├── admin-auth-service/        # ✅ Admin login — port 3003
+│   ├── api-service/               # 🔜 User REST + WebSocket — port 3002
+│   ├── admin-api-service/         # 🔜 Admin REST — port 3004
 │   ├── market-data-service/       # 🔜 Polymarket feed + Redis cache writer
 │   ├── strategy-engine/           # 🔜 Block evaluator + tick runner
 │   ├── order-service/             # 🔜 CLOB order submission
@@ -45,11 +45,11 @@ polyforge/
 │
 └── packages/
     ├── shared-types/              # ✅ All TypeScript interfaces and enums
+    ├── shared-schemas/            # ✅ Zod schemas (streams, WebSocket, orders)
     ├── shared-auth/               # ✅ JWT guards + internal service client
     ├── shared-db/                 # ✅ Prisma client NestJS module
     ├── shared-redis/              # ✅ ioredis factory + stream helpers
-    ├── logger/                    # ✅ pino + nestjs-pino
-    └── shared-schemas/            # 🔜 Zod validation schemas
+    └── logger/                    # ✅ pino + nestjs-pino
 ```
 
 ---
@@ -163,13 +163,22 @@ pnpm build
 
 ---
 
-## Auth Service Endpoints
+## Implemented Endpoints
 
-The auth-service is currently running at `http://localhost:3001`.
+### auth-service — `http://localhost:3001`
 
 ```
-POST /api/v1/auth/register   — create account
-POST /api/v1/auth/login      — authenticate
+POST /auth/v1/register   — create account
+POST /auth/v1/login      — authenticate
+GET  /health             — health check
+```
+
+### admin-auth-service — `http://localhost:3003`
+
+```
+POST /auth/v1/login    — authenticate admin (returns 1h JWT)
+POST /auth/v1/logout   — revoke admin session
+GET  /health           — health check
 ```
 
 See [`docs/06-api-catalog.md`](./docs/06-api-catalog.md) for the full endpoint reference.

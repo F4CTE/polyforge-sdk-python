@@ -15,26 +15,20 @@ async function bootstrap() {
     { bufferLogs: true },
   );
 
-  // Logger
   app.useLogger(app.get(Logger));
 
-  // Global validation pipe
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
     transform: true,
   }));
 
-  // Global exception filter
   app.useGlobalFilters(new GlobalExceptionFilter());
 
-  // Prefix: auth/v1 — Nginx routes /auth/v1/* to this service
-  // Health check excluded so it stays at /health
   app.setGlobalPrefix('auth/v1', { exclude: ['health'] });
 
-  const port = process.env.AUTH_SERVICE_PORT ?? 3001;
+  const port = process.env.ADMIN_AUTH_SERVICE_PORT ?? 3003;
   await app.listen(port, '0.0.0.0');
-  console.log(`auth-service running on port ${port}`);
 }
 
 bootstrap();
