@@ -323,6 +323,32 @@ services:
       mailhog: { condition: service_started }
     restart: unless-stopped
 
+  # ─── BOT SERVICE ─────────────────────────────────────────────────────────
+
+  bot-service:
+    build:
+      context: .
+      dockerfile: services/bot-service/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      REDIS_URL: redis://redis:6379
+      STRATEGY_ENGINE_URL: http://strategy-engine:3006
+      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
+      BOT_JWT_SECRET: ${BOT_JWT_SECRET:-dev-bot-jwt-secret-change-in-production}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-dev-disabled}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-dev-disabled}
+      PORT: "3011"
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3011:3011"
+    networks: [internal]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      migrate-user: { condition: service_completed_successfully }
+    restart: unless-stopped
+
   # ─── MARKET DATA SERVICE ─────────────────────────────────────────────────
 
   market-data-service:

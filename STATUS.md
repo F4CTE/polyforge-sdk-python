@@ -7,9 +7,8 @@
 
 ## Next Up
 
-1. `bot-service` — Telegram + Discord interactive bots
-2. `admin-api-service` — admin dashboard + moderation
-3. Angular user app (Phase 5)
+1. `admin-api-service` — admin dashboard, user management, moderation
+2. Angular user app (Phase 5)
 
 ---
 
@@ -199,12 +198,16 @@
 - [x] HTML email templates per event type with severity colour coding
 - [x] Docker image + docker-compose integration
 
-### bot-service
+### bot-service (port 3011)
 
-- [ ] Telegram + Discord linking flow (`/connect <code>`)
-- [ ] 14 commands (start, status, stop, pause, resume, pnl, orders, positions, paper, alerts, disconnect, help)
-- [ ] Push notifications from notification-service
-- [ ] JWT bot tokens (30 days, scoped claims)
+- [x] Telegram long-polling (fetch-based, no library, disabled when `TELEGRAM_BOT_TOKEN=dev-disabled`)
+- [x] Discord gateway via discord.js v14 (DM-only, disabled when `DISCORD_BOT_TOKEN=dev-disabled`)
+- [x] Linking flow: `/connect <code>` reads `bot:link:{code}` from Redis, deactivates old connections, issues 30-day bot JWT, writes `BotConnection`
+- [x] `/disconnect` → marks `BotConnection.active = false`
+- [x] 14 commands: `/start`, `/connect`, `/disconnect`, `/help`, `/status`, `/stop`, `/pause`, `/resume`, `/pnl`, `/orders`, `/positions`, `/paper`, `/alerts` (14 total matching spec)
+- [x] Strategy control via internal JWT → strategy-engine `/internal/strategies/:id/{pause|resume}` + DELETE
+- [x] Push-out via `TelegramService.send()` / `DiscordService.send()` — called by notification-service
+- [x] Docker image + docker-compose integration
 
 ### admin-api-service
 
