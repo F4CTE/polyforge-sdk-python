@@ -1,0 +1,89 @@
+<p-toast />
+
+<div class="pf-page">
+
+  @if (loading()) {
+    <div class="profile-card">
+      <div class="profile-identity">
+        <p-skeleton shape="circle" size="80px" />
+        <div style="flex:1">
+          <p-skeleton height="18px" width="160px" styleClass="mb-2" />
+          <p-skeleton height="12px" width="100px" />
+        </div>
+      </div>
+      <p-skeleton height="12px" width="80%" styleClass="mt-3" />
+    </div>
+  } @else if (profile()) {
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <p-button icon="pi pi-arrow-left" severity="secondary" [text]="true" size="small"
+          onclick="history.back()" />
+        <h1>{{ profile()!.displayName ?? profile()!.username }}</h1>
+      </div>
+      @if (!isOwn) {
+        <p-button
+          [label]="profile()!.isFollowing ? 'Unfollow' : 'Follow'"
+          [icon]="profile()!.isFollowing ? 'pi pi-user-minus' : 'pi pi-user-plus'"
+          [severity]="profile()!.isFollowing ? 'secondary' : 'primary'"
+          size="small"
+          [loading]="followLoading()"
+          (onClick)="toggleFollow()" />
+      } @else {
+        <a routerLink="/settings">
+          <p-button label="Edit Profile" icon="pi pi-pencil" severity="secondary" size="small" />
+        </a>
+      }
+    </div>
+
+    <div class="profile-card">
+
+      <!-- Avatar + identity -->
+      <div class="profile-identity">
+        @if (profile()!.avatarUrl) {
+          <p-avatar [image]="profile()!.avatarUrl!" shape="circle" size="xlarge" />
+        } @else {
+          <p-avatar [label]="initials" shape="circle" size="xlarge"
+            [style]="{'background':'var(--pf-bg-raised)','color':'var(--pf-cyan-400)','font-size':'24px','width':'80px','height':'80px'}" />
+        }
+        <div class="profile-name-block">
+          <div class="profile-display-name">{{ profile()!.displayName ?? profile()!.username }}</div>
+          @if (profile()!.displayName) {
+            <div class="profile-username">&#64;{{ profile()!.username }}</div>
+          }
+          <div class="profile-joined pf-mono">Joined {{ profile()!.joinedAt | date:'MMMM yyyy' }}</div>
+        </div>
+      </div>
+
+      <!-- Bio -->
+      @if (profile()!.bio) {
+        <p class="profile-bio">{{ profile()!.bio }}</p>
+      }
+
+      <!-- Stats row -->
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <span class="profile-stat-value pf-mono">{{ profile()!.followersCount }}</span>
+          <span class="profile-stat-label">Followers</span>
+        </div>
+        <div class="profile-stat-divider"></div>
+        <div class="profile-stat">
+          <span class="profile-stat-value pf-mono">{{ profile()!.followingCount }}</span>
+          <span class="profile-stat-label">Following</span>
+        </div>
+        <div class="profile-stat-divider"></div>
+        <div class="profile-stat">
+          <span class="profile-stat-value pf-mono">{{ profile()!.publicStrategyCount }}</span>
+          <span class="profile-stat-label">Strategies</span>
+        </div>
+      </div>
+
+    </div>
+  } @else {
+    <div class="pf-empty-state" style="padding:80px">
+      <i class="pi pi-user pf-empty-icon"></i>
+      <p class="pf-empty-title">User not found</p>
+      <p class="pf-empty-desc">This profile doesn't exist or has been removed.</p>
+    </div>
+  }
+
+</div>

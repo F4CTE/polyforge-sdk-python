@@ -1,0 +1,95 @@
+<p-toast />
+
+<div class="pf-page">
+
+  <div class="page-header">
+    <div style="display:flex;align-items:center;gap:8px">
+      <a routerLink="/settings">
+        <p-button icon="pi pi-arrow-left" severity="secondary" [text]="true" size="small" />
+      </a>
+      <h1>Trading Account</h1>
+    </div>
+    <span class="trading-status-badge" [class.connected]="isConnected">
+      <i class="pi" [class.pi-check-circle]="isConnected" [class.pi-times-circle]="!isConnected"></i>
+      {{ isConnected ? 'Connected' : 'Not Connected' }}
+    </span>
+  </div>
+
+  <!-- ─── Import / Delete credentials ────────────────────────────────── -->
+  <div class="settings-panel">
+    @if (isConnected) {
+      <div class="settings-section-title">Polymarket Credentials</div>
+      <p class="settings-desc">Your Polymarket account is connected. You can disconnect it at any time — your strategies will stop trading until you reconnect.</p>
+      <div class="settings-actions">
+        <p-button
+          label="Disconnect Account"
+          icon="pi pi-unlink"
+          severity="danger"
+          [loading]="deleting()"
+          (onClick)="deleteCredentials()" />
+      </div>
+    } @else {
+      <div class="settings-section-title">Import Polymarket Credentials</div>
+      <p class="settings-desc">Enter your Polymarket API credentials to enable live trading. These are encrypted at rest.</p>
+
+      <div class="settings-field">
+        <label class="settings-label">Private Key <span class="settings-required">*</span></label>
+        <p-password [(ngModel)]="privateKey" [feedback]="false" [toggleMask]="true"
+          placeholder="0x…" styleClass="settings-input w-full" inputStyleClass="w-full" />
+      </div>
+      <div class="settings-field">
+        <label class="settings-label">API Key <span class="settings-required">*</span></label>
+        <input pInputText [(ngModel)]="apiKey" placeholder="API Key" class="settings-input" />
+      </div>
+      <div class="settings-field">
+        <label class="settings-label">API Secret <span class="settings-required">*</span></label>
+        <p-password [(ngModel)]="apiSecret" [feedback]="false" [toggleMask]="true"
+          placeholder="API Secret" styleClass="settings-input w-full" inputStyleClass="w-full" />
+      </div>
+      <div class="settings-field">
+        <label class="settings-label">API Passphrase <span class="settings-required">*</span></label>
+        <p-password [(ngModel)]="apiPassphrase" [feedback]="false" [toggleMask]="true"
+          placeholder="Passphrase" styleClass="settings-input w-full" inputStyleClass="w-full" />
+      </div>
+      <div class="settings-field">
+        <label class="settings-label">Safe Address <span class="settings-optional">(optional)</span></label>
+        <input pInputText [(ngModel)]="safeAddress" placeholder="0x…" class="settings-input" />
+      </div>
+
+      <div class="settings-actions">
+        <p-button
+          label="Connect Account"
+          icon="pi pi-link"
+          [loading]="importing()"
+          [disabled]="!privateKey || !apiKey || !apiSecret || !apiPassphrase"
+          (onClick)="importCredentials()" />
+      </div>
+    }
+  </div>
+
+  <!-- ─── Bot link code ────────────────────────────────────────────────── -->
+  <div class="settings-panel" style="margin-top:16px">
+    <div class="settings-section-title">Bot Link Code</div>
+    <p class="settings-desc">Generate a one-time code to link the PolyForge Telegram bot to your account. The code expires after 10 minutes.</p>
+
+    @if (botCode()) {
+      <div class="bot-code-display">
+        <span class="bot-code pf-mono">{{ botCode() }}</span>
+        <p-button icon="pi pi-copy" severity="secondary" size="small" [text]="true" (onClick)="copyBotCode()" />
+      </div>
+      @if (botCodeExpiry()) {
+        <p class="settings-desc" style="margin-top:6px">Expires: <span class="pf-mono">{{ botCodeExpiry() }}</span></p>
+      }
+    }
+
+    <div class="settings-actions" style="margin-top:12px">
+      <p-button
+        [label]="botCode() ? 'Regenerate Code' : 'Generate Code'"
+        icon="pi pi-qrcode"
+        severity="secondary"
+        [loading]="botCodeLoading()"
+        (onClick)="generateBotCode()" />
+    </div>
+  </div>
+
+</div>

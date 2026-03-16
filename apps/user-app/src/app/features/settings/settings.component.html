@@ -1,0 +1,178 @@
+<p-toast />
+
+<div class="pf-page">
+
+  <div class="page-header">
+    <h1>Settings</h1>
+  </div>
+
+  <!-- ─── Tabs ──────────────────────────────────────────────────────────── -->
+  <div class="strategy-filter-tabs">
+    <button class="filter-tab" [class.active]="activeTab() === 'profile'"       (click)="setTab('profile')">Profile</button>
+    <button class="filter-tab" [class.active]="activeTab() === 'security'"      (click)="setTab('security')">Security</button>
+    <button class="filter-tab" [class.active]="activeTab() === 'notifications'" (click)="setTab('notifications')">Notifications</button>
+  </div>
+
+  <!-- ─── Profile Tab ───────────────────────────────────────────────────── -->
+  @if (activeTab() === 'profile') {
+    <div class="settings-panel">
+      <div class="settings-section-title">Public Profile</div>
+
+      <div class="settings-field">
+        <label class="settings-label">Display Name</label>
+        <input pInputText [(ngModel)]="displayName" placeholder="Your display name" class="settings-input" />
+      </div>
+
+      <div class="settings-field">
+        <label class="settings-label">Bio</label>
+        <textarea pTextarea [(ngModel)]="bio" placeholder="Tell others about yourself…" rows="3" class="settings-input"></textarea>
+      </div>
+
+      <div class="settings-field">
+        <label class="settings-label">Avatar URL</label>
+        <input pInputText [(ngModel)]="avatarUrl" placeholder="https://…" class="settings-input" />
+      </div>
+
+      <div class="settings-field">
+        <label class="settings-label">Twitter / X Handle</label>
+        <input pInputText [(ngModel)]="twitterHandle" placeholder="&#64;handle" class="settings-input" />
+      </div>
+
+      <div class="settings-actions">
+        <p-button label="Save Profile" icon="pi pi-check" (onClick)="saveProfile()" [loading]="profileSaving()" />
+      </div>
+    </div>
+  }
+
+  <!-- ─── Security Tab ──────────────────────────────────────────────────── -->
+  @if (activeTab() === 'security') {
+    <div class="settings-panel">
+
+      <!-- Change Password -->
+      <div class="settings-section-title">Change Password</div>
+
+      <div class="settings-field">
+        <label class="settings-label">Current Password</label>
+        <p-password [(ngModel)]="currentPassword" [feedback]="false" [toggleMask]="true" styleClass="settings-input" inputStyleClass="w-full" />
+      </div>
+      <div class="settings-field">
+        <label class="settings-label">New Password</label>
+        <p-password [(ngModel)]="newPassword" [feedback]="true" [toggleMask]="true" styleClass="settings-input" inputStyleClass="w-full" />
+      </div>
+      <div class="settings-field">
+        <label class="settings-label">Confirm New Password</label>
+        <p-password [(ngModel)]="confirmPassword" [feedback]="false" [toggleMask]="true" styleClass="settings-input" inputStyleClass="w-full" />
+      </div>
+      <div class="settings-actions">
+        <p-button label="Change Password" icon="pi pi-lock" (onClick)="savePassword()" [loading]="pwSaving()" />
+      </div>
+
+      <!-- TOTP -->
+      <div class="settings-divider"></div>
+      <div class="settings-section-title">Two-Factor Authentication (TOTP)</div>
+
+      @if (totpEnabled) {
+        <p class="settings-desc">2FA is currently <strong style="color:var(--pf-success)">enabled</strong>.</p>
+        <div class="settings-field">
+          <label class="settings-label">Enter your TOTP code to disable</label>
+          <input pInputText [(ngModel)]="totpCode" placeholder="6-digit code" maxlength="6" class="settings-input" style="max-width:200px" />
+        </div>
+        <div class="settings-actions">
+          <p-button label="Disable 2FA" icon="pi pi-shield" severity="danger" (onClick)="disableTotp()" [loading]="totpSaving()" />
+        </div>
+      } @else if (totpSetupData()) {
+        <p class="settings-desc">Scan this QR code with your authenticator app, then enter the 6-digit code to confirm.</p>
+        <div class="totp-qr-wrapper">
+          <img [src]="totpSetupData()!.qrCodeUri" alt="TOTP QR Code" class="totp-qr" />
+        </div>
+        <div class="settings-field" style="margin-top:12px">
+          <label class="settings-label">Verification Code</label>
+          <input pInputText [(ngModel)]="totpCode" placeholder="6-digit code" maxlength="6" class="settings-input" style="max-width:200px" />
+        </div>
+        @if (totpSetupData()!.backupCodes.length > 0) {
+          <div class="totp-backup-codes">
+            <div class="settings-label" style="margin-bottom:8px">Backup Codes (save these!)</div>
+            <div class="totp-backup-grid">
+              @for (code of totpSetupData()!.backupCodes; track code) {
+                <span class="totp-backup-code pf-mono">{{ code }}</span>
+              }
+            </div>
+          </div>
+        }
+        <div class="settings-actions">
+          <p-button label="Confirm & Enable 2FA" icon="pi pi-check" (onClick)="confirmTotp()" [loading]="totpSaving()" />
+        </div>
+      } @else {
+        <p class="settings-desc">2FA is currently <strong style="color:var(--pf-text-muted)">disabled</strong>. Add an extra layer of security to your account.</p>
+        <div class="settings-actions">
+          <p-button label="Enable 2FA" icon="pi pi-shield" severity="secondary" (onClick)="startTotpSetup()" />
+        </div>
+      }
+
+    </div>
+  }
+
+  <!-- ─── Notifications Tab ─────────────────────────────────────────────── -->
+  @if (activeTab() === 'notifications') {
+    <div class="settings-panel">
+      <div class="settings-section-title">Email &amp; In-App Notifications</div>
+
+      <div class="notif-list">
+        <div class="notif-row">
+          <div class="notif-label-block">
+            <span class="notif-label">Order Filled</span>
+            <span class="notif-desc">When one of your orders is matched and filled</span>
+          </div>
+          <p-toggleswitch [(ngModel)]="notifPrefs.orderFilled" />
+        </div>
+        <div class="notif-row">
+          <div class="notif-label-block">
+            <span class="notif-label">Strategy Error</span>
+            <span class="notif-desc">When a strategy encounters a runtime error</span>
+          </div>
+          <p-toggleswitch [(ngModel)]="notifPrefs.strategyError" />
+        </div>
+        <div class="notif-row">
+          <div class="notif-label-block">
+            <span class="notif-label">Backtest Complete</span>
+            <span class="notif-desc">When a backtest run finishes</span>
+          </div>
+          <p-toggleswitch [(ngModel)]="notifPrefs.backtestComplete" />
+        </div>
+        <div class="notif-row">
+          <div class="notif-label-block">
+            <span class="notif-label">Price Alert</span>
+            <span class="notif-desc">When a watched market crosses your price target</span>
+          </div>
+          <p-toggleswitch [(ngModel)]="notifPrefs.priceAlert" />
+        </div>
+        <div class="notif-row">
+          <div class="notif-label-block">
+            <span class="notif-label">Daily Loss Limit</span>
+            <span class="notif-desc">When you approach your configured daily loss limit</span>
+          </div>
+          <p-toggleswitch [(ngModel)]="notifPrefs.dailyLossLimit" />
+        </div>
+        <div class="notif-row">
+          <div class="notif-label-block">
+            <span class="notif-label">Market Resolved</span>
+            <span class="notif-desc">When a market you hold positions in resolves</span>
+          </div>
+          <p-toggleswitch [(ngModel)]="notifPrefs.marketResolved" />
+        </div>
+        <div class="notif-row">
+          <div class="notif-label-block">
+            <span class="notif-label">New Follower</span>
+            <span class="notif-desc">When someone follows your profile</span>
+          </div>
+          <p-toggleswitch [(ngModel)]="notifPrefs.follow" />
+        </div>
+      </div>
+
+      <div class="settings-actions">
+        <p-button label="Save Preferences" icon="pi pi-check" (onClick)="saveNotifications()" [loading]="notifSaving()" />
+      </div>
+    </div>
+  }
+
+</div>
