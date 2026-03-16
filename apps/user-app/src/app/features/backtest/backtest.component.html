@@ -1,0 +1,201 @@
+<p-toast />
+
+<div class="pf-page">
+
+  <div class="page-header">
+    <h1>Backtest</h1>
+    @if (!loading()) {
+      <span class="pf-mono" style="font-size:12px;color:var(--pf-text-muted)">{{ total() }} runs</span>
+    }
+  </div>
+
+  <!-- ─── New run panel ────────────────────────────────────────────────── -->
+  <div class="backtest-run-panel">
+    <div class="backtest-run-title">
+      <i class="pi pi-play-circle" style="color:var(--pf-cyan-500)"></i>
+      New Backtest
+    </div>
+    <div class="backtest-run-fields">
+      <div class="backtest-field">
+        <label class="settings-label">Strategy</label>
+        <p-select
+          [(ngModel)]="selectedStratId"
+          [options]="strategyOptions()"
+          placeholder="Select strategy"
+          styleClass="backtest-select" />
+      </div>
+      <div class="backtest-field">
+        <label class="settings-label">Start Date</label>
+        <input pInputText type="date" [(ngModel)]="dateStart" class="backtest-date-input" />
+      </div>
+      <div class="backtest-field">
+        <label class="settings-label">End Date</label>
+        <input pInputText type="date" [(ngModel)]="dateEnd" class="backtest-date-input" />
+      </div>
+      <div class="backtest-field backtest-field-action">
+        <p-button
+          label="Run Backtest"
+          icon="pi pi-play"
+          [disabled]="!canSubmit()"
+          [loading]="submitting()"
+          (onClick)="submit()" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Results panel (expanded run) ────────────────────────────────── -->
+  @if (selectedRun()) {
+    <div class="backtest-results-panel">
+      <div class="backtest-results-header">
+        <div>
+          <div class="backtest-results-title">{{ selectedRun()!.strategyName ?? 'Unnamed Strategy' }}</div>
+          <div class="backtest-results-range pf-mono">{{ dateRangeLabel(selectedRun()!) }}</div>
+        </div>
+        <p-button icon="pi pi-times" severity="secondary" [text]="true" size="small" (onClick)="selectedRun.set(null)" />
+      </div>
+
+      @if (selectedRun()!.status === 'RUNNING' || selectedRun()!.status === 'QUEUED') {
+        <div class="backtest-progress-wrap">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:12px;color:var(--pf-text-muted)">
+              {{ selectedRun()!.status === 'QUEUED' ? 'Waiting in queue…' : 'Running…' }}
+            </span>
+            <span class="pf-mono" style="font-size:12px;color:var(--pf-cyan-400)">{{ selectedRun()!.progress }}%</span>
+          </div>
+          <p-progressbar [value]="selectedRun()!.progress" [showValue]="false" styleClass="backtest-progress" />
+        </div>
+      } @else if (selectedRun()!.status === 'COMPLETED') {
+        <div class="backtest-metrics-grid">
+          <div class="backtest-metric">
+            <span class="backtest-metric-label">Total P&L</span>
+            <span class="backtest-metric-value pf-mono" [style.color]="pnlColor(selectedRun()!.totalPnl)">
+              {{ pnlSign(selectedRun()!.totalPnl) }}
+            </span>
+          </div>
+          <div class="backtest-metric">
+            <span class="backtest-metric-label">Win Rate</span>
+            <span class="backtest-metric-value pf-mono" style="color:var(--pf-text-primary)">
+              {{ winRatePct(selectedRun()!.winRate) }}
+            </span>
+          </div>
+          <div class="backtest-metric">
+            <span class="backtest-metric-label">Orders Placed</span>
+            <span class="backtest-metric-value pf-mono" style="color:var(--pf-text-primary)">
+              {{ selectedRun()!.totalOrders ?? '—' }}
+            </span>
+          </div>
+          <div class="backtest-metric">
+            <span class="backtest-metric-label">Orders Filled</span>
+            <span class="backtest-metric-value pf-mono" style="color:var(--pf-text-primary)">
+              {{ selectedRun()!.filledOrders ?? '—' }}
+            </span>
+          </div>
+          @if (selectedRun()!.hasDataGaps) {
+            <div class="backtest-data-gap-warning">
+              <i class="pi pi-exclamation-triangle"></i>
+              Results may be affected by data gaps in the selected date range.
+            </div>
+          }
+        </div>
+      } @else if (selectedRun()!.status === 'FAILED') {
+        <div class="backtest-error">
+          <i class="pi pi-times-circle"></i>
+          <span>{{ selectedRun()!.error ?? 'Backtest failed.' }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ─── History table ────────────────────────────────────────────────── -->
+  <div class="portfolio-table-panel">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="pf-col-label" style="min-width:140px">Strategy</th>
+            <th class="pf-col-label" style="min-width:200px">Date Range</th>
+            <th class="pf-col-label" style="min-width:100px">Status</th>
+            <th class="pf-col-label" style="min-width:120px">Progress</th>
+            <th class="pf-col-label" style="min-width:100px;text-align:right">P&L</th>
+            <th class="pf-col-label" style="min-width:90px;text-align:right">Win Rate</th>
+            <th class="pf-col-label" style="min-width:120px;text-align:right">Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (s of skeletons; track $index) {
+              <tr class="table-row">
+                @for (c of [1,2,3,4,5,6,7]; track c) {
+                  <td><p-skeleton height="12px" /></td>
+                }
+              </tr>
+            }
+          } @else if (runs().length === 0) {
+            <tr>
+              <td colspan="7">
+                <div class="pf-empty-state" style="padding:48px">
+                  <i class="pi pi-history pf-empty-icon"></i>
+                  <p class="pf-empty-title">No backtest runs yet</p>
+                  <p class="pf-empty-desc">Run a backtest above to see results here.</p>
+                </div>
+              </td>
+            </tr>
+          } @else {
+            @for (run of runs(); track run.id) {
+              <tr class="table-row backtest-history-row"
+                  [class.selected]="selectedRun()?.id === run.id"
+                  (click)="selectRun(run)">
+                <td>
+                  <span style="font-size:13px;font-weight:500">{{ run.strategyName ?? '—' }}</span>
+                </td>
+                <td>
+                  <span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ dateRangeLabel(run) }}</span>
+                </td>
+                <td>
+                  <span class="order-status-badge"
+                        [style.color]="statusColor(run.status)"
+                        [style.background]="statusBg(run.status)">
+                    {{ run.status }}
+                  </span>
+                </td>
+                <td>
+                  @if (run.status === 'RUNNING') {
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <p-progressbar [value]="run.progress" [showValue]="false" styleClass="backtest-row-progress" />
+                      <span class="pf-mono" style="font-size:11px;color:var(--pf-cyan-400)">{{ run.progress }}%</span>
+                    </div>
+                  } @else if (run.status === 'COMPLETED') {
+                    <span class="pf-mono" style="font-size:11px;color:var(--pf-success)">100%</span>
+                  } @else {
+                    <span style="color:var(--pf-text-muted)">—</span>
+                  }
+                </td>
+                <td style="text-align:right">
+                  <span class="pf-mono" [style.color]="pnlColor(run.totalPnl)">{{ pnlSign(run.totalPnl) }}</span>
+                </td>
+                <td style="text-align:right">
+                  <span class="pf-mono" style="color:var(--pf-text-secondary)">{{ winRatePct(run.winRate) }}</span>
+                </td>
+                <td style="text-align:right">
+                  <span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">
+                    {{ run.createdAt | date:'MMM d, HH:mm' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ─── Pagination ──────────────────────────────────────────────────── -->
+  @if (totalPages() > 1) {
+    <div class="markets-pagination">
+      <p-button icon="pi pi-chevron-left"  severity="secondary" [text]="true" size="small" [disabled]="page() === 1"            (onClick)="prevPage()" />
+      <span class="pf-mono" style="font-size:13px;color:var(--pf-text-secondary)">{{ page() }} / {{ totalPages() }}</span>
+      <p-button icon="pi pi-chevron-right" severity="secondary" [text]="true" size="small" [disabled]="page() === totalPages()" (onClick)="nextPage()" />
+    </div>
+  }
+
+</div>

@@ -18,6 +18,18 @@ export interface StrategyEvent {
   blockType?: string;
 }
 
+export interface BacktestEvent {
+  type: 'BACKTEST_PROGRESS' | 'BACKTEST_COMPLETED' | 'BACKTEST_FAILED';
+  runId: string;
+  progress?: number;
+  winRate?: string;
+  totalPnl?: string;
+  totalOrders?: number;
+  filledOrders?: number;
+  hasDataGaps?: boolean;
+  error?: string;
+}
+
 export interface WsMessage {
   type: string;
   [key: string]: unknown;
@@ -25,6 +37,10 @@ export interface WsMessage {
 
 const STRATEGY_EVENT_TYPES = new Set([
   'STRATEGY_STARTED', 'STRATEGY_STOPPED', 'STRATEGY_PAUSED', 'STRATEGY_RESUMED', 'STRATEGY_ERROR',
+]);
+
+const BACKTEST_EVENT_TYPES = new Set([
+  'BACKTEST_PROGRESS', 'BACKTEST_COMPLETED', 'BACKTEST_FAILED',
 ]);
 
 @Injectable({ providedIn: 'root' })
@@ -49,6 +65,11 @@ export class WebSocketService implements OnDestroy {
   readonly strategyEvents$: Observable<StrategyEvent> = this.messages$.pipe(
     filter(m => STRATEGY_EVENT_TYPES.has(m['type'] as string)),
     map(m => m as unknown as StrategyEvent),
+  );
+
+  readonly backtestEvents$: Observable<BacktestEvent> = this.messages$.pipe(
+    filter(m => BACKTEST_EVENT_TYPES.has(m['type'] as string)),
+    map(m => m as unknown as BacktestEvent),
   );
 
   connect(): void {

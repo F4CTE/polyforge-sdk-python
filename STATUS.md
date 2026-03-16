@@ -7,7 +7,7 @@
 
 ## Next Up
 
-1. Angular user app (Phase 5)
+1. Angular admin app (Phase 6 / admin panel)
 
 ---
 
@@ -216,10 +216,21 @@
 - [x] `PortfolioComponent` — Live/Paper tabs, P&L chart (color-coded), positions table with close button, paper summary
 - [x] `OrdersComponent` — status filter tabs, full order table (side/outcome/size/price/fill/status), pagination
 
-### Pending
-- [ ] Social (discover, leaderboard, profiles, comments)
-- [ ] Settings + notifications centre + price alerts
-- [ ] Backtest runner + results
+### Social + Settings (done)
+
+- [x] `SocialApiService` — discover, leaderboard, profile, follow, update profile/notifications/password
+- [x] `DiscoverComponent` — public strategy grid with sort tabs (popular/newest/top_pnl/most_forked), pagination
+- [x] `LeaderboardComponent` — trader rank table (7d/30d/allTime), P&L/win-rate/trade count, profile links
+- [x] `MyProfileComponent` — own profile view (avatar, display name, bio, status chips, quick links)
+- [x] `PublicProfileComponent` — any user profile with follow/unfollow, follower/following/strategy counts
+- [x] `SettingsComponent` — tabbed: Profile (displayName/bio/avatar/twitter), Security (password + TOTP enable/disable), Notifications (toggle list)
+- [x] `TradingAccountComponent` — Polymarket credentials import/delete, bot link code generator
+
+### Backtest (done)
+
+- [x] `BacktestApiService` — list, run, get
+- [x] `WebSocketService` — backtest event types (PROGRESS/COMPLETED/FAILED)
+- [x] `BacktestComponent` — run panel (strategy picker, date range), live progress via WS, history table with expandable results (P&L/win-rate/order counts)
 
 ---
 
