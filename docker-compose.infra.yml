@@ -349,6 +349,33 @@ services:
       migrate-user: { condition: service_completed_successfully }
     restart: unless-stopped
 
+  # ─── ADMIN API SERVICE ───────────────────────────────────────────────────
+
+  admin-api-service:
+    build:
+      context: .
+      dockerfile: services/admin-api-service/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      ADMIN_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
+      REDIS_URL: redis://redis:6379
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-dev-admin-secret}
+      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
+      STRATEGY_ENGINE_URL: http://strategy-engine:3006
+      PORT: "3004"
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3004:3004"
+    networks: [internal, admin-only]
+    depends_on:
+      postgres: { condition: service_healthy }
+      postgres-admin: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      migrate-user: { condition: service_completed_successfully }
+      migrate-admin: { condition: service_completed_successfully }
+    restart: unless-stopped
+
   # ─── MARKET DATA SERVICE ─────────────────────────────────────────────────
 
   market-data-service:

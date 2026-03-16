@@ -7,8 +7,7 @@
 
 ## Next Up
 
-1. `admin-api-service` — admin dashboard, user management, moderation
-2. Angular user app (Phase 5)
+1. Angular user app (Phase 5)
 
 ---
 
@@ -209,14 +208,36 @@
 - [x] Push-out via `TelegramService.send()` / `DiscordService.send()` — called by notification-service
 - [x] Docker image + docker-compose integration
 
-### admin-api-service
+### admin-api-service (port 3004)
 
-- [ ] Health dashboard
-- [ ] User management (suspend, limits)
-- [ ] Strategy force-stop + unpublish
-- [ ] DLQ viewer + backtest queue
-- [ ] Content moderation queue
-- [ ] Builder Program dashboard
+- [x] NestJS 11 + Fastify, global prefix `api/v1`, admin JWT guard (Redis session check)
+- [x] `GET /api/v1/health` — polls all 11 services every 10s (cached in Redis TTL 15s), DB + Redis stats
+- [x] `GET /api/v1/users` — paginated list with search, status, suspended filter
+- [x] `GET /api/v1/users/:id` — full detail (login history, strategies, counts); audit-logs VIEW_USER_DETAIL
+- [x] `PATCH /api/v1/users/:id/suspend` + `/unsuspend` — audit-logs SUSPEND_USER / UNSUSPEND_USER
+- [x] `PATCH /api/v1/users/:id/limits` — upsert UserLimit; audit-logs UPDATE_USER_LIMITS
+- [x] `GET /api/v1/strategies` — all strategies across all users (paginated, filterable)
+- [x] `POST /api/v1/strategies/:id/force-stop` — calls strategy-engine via internal JWT, updates DB; audit-logs FORCE_STOP_STRATEGY
+- [x] `PATCH /api/v1/strategies/:id/unpublish` — sets visibility PRIVATE; audit-logs UNPUBLISH_STRATEGY
+- [x] `GET /api/v1/orders` — all orders (paginated, filterable by user/status/date)
+- [x] `GET /api/v1/orders/dlq` — reads stream:orders:dlq entries
+- [x] `POST /api/v1/orders/dlq/:intentId/replay` — re-publishes to stream:orders
+- [x] `POST /api/v1/orders/dlq/:intentId/discard` — removes from DLQ stream
+- [x] `GET /api/v1/cache/stats` — Redis memory, key counts by prefix
+- [x] `DELETE /api/v1/cache/:pattern` — flush keys matching pattern (cache:* only)
+- [x] `GET /api/v1/backtests` — all backtest runs (paginated)
+- [x] `GET /api/v1/reports` — report moderation queue (filterable by status)
+- [x] `PATCH /api/v1/reports/:id` — review/dismiss; audit-logs REVIEW_REPORT
+- [x] `POST /api/v1/notifications/broadcast` — publishes NOTIFICATION events to stream:events for all/subset users
+- [x] `GET /api/v1/notifications/stats` — total/last24h/failed counts from notification_history
+- [x] `GET /api/v1/logs/audit` — audit_logs from admin DB (paginated, filterable)
+- [x] `GET /api/v1/logs/events` — event_log from user DB
+- [x] `GET /api/v1/logs/logins` — user_login_history
+- [x] `GET /api/v1/logs/notifications` — notification_history
+- [x] `GET /api/v1/builder/stats` — attributed volume, active strategies, connected users
+- [x] Nightly retention cron (3am UTC): login_history 90d, notification_history 90d, paper_orders 90d, strategy_events 7d, event_log 30d/1y
+- [x] AuditService — writes to audit_logs (admin DB) for all destructive admin actions
+- [x] Docker image + docker-compose integration
 
 ### Angular admin-app
 
