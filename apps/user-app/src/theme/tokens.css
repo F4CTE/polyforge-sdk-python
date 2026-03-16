@@ -1,0 +1,83 @@
+/* Polyforge Design Tokens — CSS custom properties */
+:root {
+  /* Backgrounds */
+  --pf-bg-base:       #080C14;
+  --pf-bg-surface:    #0D1421;
+  --pf-bg-elevated:   #111D2E;
+  --pf-bg-overlay:    #162030;
+
+  /* Borders */
+  --pf-border-subtle:  #1A2840;
+  --pf-border-default: #1E3350;
+  --pf-border-strong:  #264060;
+
+  /* Text */
+  --pf-text-primary:   #E8EDF5;
+  --pf-text-secondary: #7A94B4;
+  --pf-text-muted:     #445E7A;
+  --pf-text-disabled:  #2A3D52;
+
+  /* Cyan accent */
+  --pf-cyan-300:  #67E8F9;
+  --pf-cyan-400:  #22D3EE;
+  --pf-cyan-500:  #06B6D4;
+  --pf-cyan-600:  #0891B2;
+  --pf-cyan-700:  #0E7490;
+  --pf-cyan-glow: rgba(6, 182, 212, 0.15);
+
+  /* Semantic */
+  --pf-success:     #10B981;
+  --pf-success-bg:  rgba(16, 185, 129, 0.08);
+  --pf-danger:      #EF4444;
+  --pf-danger-bg:   rgba(239, 68, 68, 0.08);
+  --pf-warning:     #F59E0B;
+  --pf-warning-bg:  rgba(245, 158, 11, 0.08);
+  --pf-info:        #3B82F6;
+  --pf-info-bg:     rgba(59, 130, 246, 0.08);
+
+  /* P&L */
+  --pf-pnl-positive: #10B981;
+  --pf-pnl-negative: #EF4444;
+  --pf-pnl-neutral:  #7A94B4;
+
+  /* Price tokens */
+  --pf-price-yes: #06B6D4;
+  --pf-price-no:  #7A94B4;
+
+  /* Spacing */
+  --pf-space-1:  4px;
+  --pf-space-2:  8px;
+  --pf-space-3:  12px;
+  --pf-space-4:  16px;
+  --pf-space-5:  20px;
+  --pf-space-6:  24px;
+  --pf-space-8:  32px;
+  --pf-space-10: 40px;
+  --pf-space-12: 48px;
+  --pf-space-16: 64px;
+
+  /* Border radius */
+  --pf-radius-sm:   4px;
+  --pf-radius-md:   6px;
+  --pf-radius-lg:   8px;
+  --pf-radius-xl:   12px;
+  --pf-radius-full: 9999px;
+
+  /* Shadows */
+  --pf-shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.4);
+  --pf-shadow-md:   0 4px 12px rgba(0, 0, 0, 0.5);
+  --pf-shadow-lg:   0 8px 24px rgba(0, 0, 0, 0.6);
+  --pf-shadow-cyan: 0 0 16px rgba(6, 182, 212, 0.2);
+
+  /* Icons */
+  --pf-icon-xs: 12px;
+  --pf-icon-sm: 14px;
+  --pf-icon-md: 16px;
+  --pf-icon-lg: 20px;
+  --pf-icon-xl: 24px;
+
+  /* Animation */
+  --pf-duration-fast:   100ms;
+  --pf-duration-normal: 200ms;
+  --pf-duration-slow:   300ms;
+}

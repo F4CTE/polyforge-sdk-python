@@ -248,7 +248,9 @@ Served at `admin.polyforge.app` — IP allowlisted at the Nginx level.
 
 ### Angular HTTP clients
 
-**Angular apps must never contain hand-written HTTP calls.** All API communication goes through services generated from the OpenAPI spec. See `03-openapi-codegen.md` for the full pipeline.
+**Angular apps use `@hey-api/openapi-ts` generated clients.** All API communication goes through services generated from the OpenAPI spec (`swagger.json` / `swagger-admin.json`). See `03-openapi-codegen.md` for the full pipeline.
+
+> During initial development (before the OpenAPI pipeline is wired up), hand-written `HttpClient` services are acceptable as a temporary measure and must be replaced with generated clients before the feature is considered complete.
 
 ### PrimeNG Components
 
@@ -935,9 +937,9 @@ api-service build:swagger     admin-api-service build:swagger
                ▼
      swagger.json  swagger-admin.json
                ↓
-     openapi-generator-cli (typescript-angular)
+     @hey-api/openapi-ts + @hey-api/client-angular
                ↓
-both Angular apps (parallel — import generated api/ clients)
+both Angular apps (parallel — import generated src/app/api/ clients)
 ```
 
 See `03-openapi-codegen.md` for the full OpenAPI generation pipeline.

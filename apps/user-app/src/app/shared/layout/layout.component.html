@@ -54,10 +54,10 @@
       <div style="display:flex;align-items:center;gap:0.5rem;cursor:pointer"
            (click)="userMenuRef.toggle($event)">
         <p-avatar [label]="initials" shape="circle" size="normal" />
-        <span style="font-size:0.875rem;font-weight:500">
+        <span style="font-size:14px;font-weight:500;color:var(--pf-text-primary)">
           {{ auth.user()?.username }}
         </span>
-        <i class="pi pi-angle-down" style="font-size:0.75rem;color:var(--p-text-muted-color)"></i>
+        <i class="pi pi-angle-down" style="font-size:12px;color:var(--pf-text-muted)"></i>
       </div>
     </header>
 

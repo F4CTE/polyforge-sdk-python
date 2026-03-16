@@ -30,9 +30,9 @@ export class LayoutComponent {
     {
       title: 'Trade',
       items: [
-        { label: 'Markets',    icon: 'pi pi-chart-bar',  route: '/markets' },
-        { label: 'Strategies', icon: 'pi pi-cog',        route: '/strategies' },
-        { label: 'Portfolio',  icon: 'pi pi-wallet',     route: '/portfolio' },
+        { label: 'Markets',    icon: 'pi pi-th-large',  route: '/markets' },
+        { label: 'Strategies', icon: 'pi pi-code',      route: '/strategies' },
+        { label: 'Portfolio',  icon: 'pi pi-chart-line', route: '/portfolio' },
         { label: 'Orders',     icon: 'pi pi-list',       route: '/orders' },
         { label: 'Backtest',   icon: 'pi pi-history',    route: '/backtest' },
       ],
@@ -40,8 +40,8 @@ export class LayoutComponent {
     {
       title: 'Social',
       items: [
-        { label: 'Discover',     icon: 'pi pi-compass',  route: '/discover' },
-        { label: 'Leaderboard',  icon: 'pi pi-trophy',   route: '/leaderboard' },
+        { label: 'Discover',    icon: 'pi pi-compass', route: '/discover' },
+        { label: 'Leaderboard', icon: 'pi pi-trophy',  route: '/leaderboard' },
       ],
     },
   ];
