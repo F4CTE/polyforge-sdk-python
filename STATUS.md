@@ -7,8 +7,9 @@
 
 ## Next Up
 
-1. Angular user app (Phase 5)
-2. `notification-service`, `bot-service`, `admin-api-service` (Phase 6)
+1. `bot-service` — Telegram + Discord interactive bots
+2. `admin-api-service` — admin dashboard + moderation
+3. Angular user app (Phase 5)
 
 ---
 
@@ -183,10 +184,40 @@
 
 ## Phase 6 — Admin, Bots & Notifications
 
-- [ ] `notification-service` (AWS SES, Telegram, Discord, in-app WebSocket)
-- [ ] `bot-service` (Telegram + Discord, 14 commands, JWT bot tokens)
-- [ ] `admin-api-service` (health dashboard, user management, DLQ, moderation, Builder Program)
-- [ ] Angular `admin-app`
+### notification-service (port 3010)
+
+- [x] Consumes `stream:events` (consumer group `notification-service`)
+- [x] Routes events to NotificationEventType: ORDER_FILLED, STRATEGY_ERROR, BACKTEST_COMPLETE, PRICE_ALERT, DAILY_LOSS_LIMIT, MARKET_RESOLVED, social events
+- [x] Checks `notification_preferences` per user (Redis-cached 5min, TTL)
+- [x] `minFillNotifyUsdc` threshold respected for ORDER_FILLED
+- [x] Email dispatch: nodemailer → MailHog in dev, SES SMTP in prod
+- [x] Telegram dispatch: Bot API via fetch (disabled when `TELEGRAM_BOT_TOKEN=dev-disabled`)
+- [x] Discord dispatch: Bot API via fetch (disabled when `DISCORD_BOT_TOKEN=dev-disabled`)
+- [x] In-app push: always emits `NOTIFICATION` event to `stream:events` (relayed by api-service WebSocket)
+- [x] Frequency modes: IMMEDIATE (dispatch now), HOURLY/DAILY (Redis list digest, flush on timer)
+- [x] Writes `notification_history` per send attempt (success + error)
+- [x] HTML email templates per event type with severity colour coding
+- [x] Docker image + docker-compose integration
+
+### bot-service
+
+- [ ] Telegram + Discord linking flow (`/connect <code>`)
+- [ ] 14 commands (start, status, stop, pause, resume, pnl, orders, positions, paper, alerts, disconnect, help)
+- [ ] Push notifications from notification-service
+- [ ] JWT bot tokens (30 days, scoped claims)
+
+### admin-api-service
+
+- [ ] Health dashboard
+- [ ] User management (suspend, limits)
+- [ ] Strategy force-stop + unpublish
+- [ ] DLQ viewer + backtest queue
+- [ ] Content moderation queue
+- [ ] Builder Program dashboard
+
+### Angular admin-app
+
+- [ ] All admin views
 
 ---
 
