@@ -187,11 +187,25 @@
 - [x] Dev proxy (`proxy.conf.json`) — `/auth/v1` → `:3001`, `/api/v1` → `:3002` (with WS)
 - [x] Lazy-loaded route skeleton for all features (markets, strategies, portfolio, orders, backtest, discover, leaderboard, profile, settings)
 
+### Design System (done)
+
+- [x] `PolyforgeTheme` PrimeNG preset (cyan primary, dark blue-night surface, component overrides)
+- [x] `tokens.css` — all `--pf-*` CSS custom properties
+- [x] `chart.config.ts` — Chart.js defaults (Polyforge palette)
+- [x] `styles.scss` — Outfit + JetBrains Mono fonts, `--pf-*` variables, all global utilities
+- [x] Always-dark mode (`darkModeSelector: false`)
+
+### Markets (done)
+
+- [x] `MarketsApiService` — list, get, price-history, order-book
+- [x] `WebSocketService` — connect, reconnect, subscribe/unsubscribe prices, ping
+- [x] `MarketsListComponent` — searchable/sortable table, live YES/NO prices, pagination
+- [x] `MarketDetailComponent` — OHLCV line chart (1m/1h/1d), order book depth, live prices, market info
+
 ### Pending
 
-- [ ] Market browser + OHLCV charts
 - [ ] Strategy Builder (drag-and-drop, 36 blocks, quick backtest)
-- [ ] Strategy management (status badges, live logs)
+- [ ] Strategy management (list with status badges, live logs, start/stop/pause)
 - [ ] Portfolio + orders
 - [ ] Social (discover, leaderboard, profiles, comments)
 - [ ] Settings + notifications centre + price alerts

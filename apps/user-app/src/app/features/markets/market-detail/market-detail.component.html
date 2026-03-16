@@ -1,0 +1,162 @@
+<div class="pf-page">
+
+  <!-- ─── Back ────────────────────────────────────────────────────────── -->
+  <div style="margin-bottom:16px">
+    <a routerLink="/markets" style="font-size:13px;color:var(--pf-text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+      <i class="pi pi-arrow-left" style="font-size:12px"></i> Markets
+    </a>
+  </div>
+
+  @if (loadingMarket()) {
+    <!-- Loading skeleton -->
+    <div style="display:flex;gap:24px;flex-wrap:wrap">
+      <div style="flex:1;min-width:300px">
+        <p-skeleton height="28px" width="60%" styleClass="mb-3" />
+        <p-skeleton height="14px" width="40%" styleClass="mb-2" />
+        <p-skeleton height="14px" width="80%" />
+      </div>
+    </div>
+  } @else if (market(); as m) {
+
+    <!-- ─── Market header ──────────────────────────────────────────────── -->
+    <div class="market-header">
+      <div class="market-header-info">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span class="category-badge">{{ m.category }}</span>
+          @if (daysUntil(m.endDate) <= 7 && daysUntil(m.endDate) >= 0) {
+            <span class="closing-soon-badge">Closing soon</span>
+          }
+        </div>
+        <h1 style="font-size:20px;font-weight:600;color:var(--pf-text-primary);margin:0 0 8px;line-height:1.3">
+          {{ m.title }}
+        </h1>
+        <p style="font-size:13px;color:var(--pf-text-secondary);margin:0">
+          Closes {{ formatDate(m.endDate) }}
+          @if (daysUntil(m.endDate) > 0) {
+            <span style="color:var(--pf-text-muted)"> · {{ daysUntil(m.endDate) }} days remaining</span>
+          }
+        </p>
+      </div>
+
+      <!-- Live price pills -->
+      <div class="market-price-pills">
+        <div class="price-pill yes">
+          <span class="price-pill-label">YES</span>
+          <span class="price-pill-value pf-mono">{{ liveYesPrice() ?? '—' }}</span>
+        </div>
+        <div class="price-pill no">
+          <span class="price-pill-label">NO</span>
+          <span class="price-pill-value pf-mono">{{ liveNoPrice() ?? '—' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Main grid ─────────────────────────────────────────────────── -->
+    <div class="market-detail-grid">
+
+      <!-- Chart panel -->
+      <div class="market-chart-panel">
+        <div class="panel-header">
+          <span class="panel-title">Price History — YES</span>
+          <div style="display:flex;gap:4px">
+            @for (opt of resolutionOptions; track opt.value) {
+              <button
+                class="res-btn"
+                [class.active]="resolution() === opt.value"
+                (click)="onResolutionChange(opt.value)">
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="chart-wrap">
+          @if (loadingChart()) {
+            <p-skeleton height="100%" />
+          } @else if (chartData()) {
+            <p-chart type="line" [data]="chartData()" [options]="chartOptions()" height="300px" />
+          } @else {
+            <div class="pf-empty-state" style="padding:40px">
+              <i class="pi pi-chart-line pf-empty-icon"></i>
+              <p class="pf-empty-desc">No price data available</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Order book panel -->
+      <div class="market-book-panel">
+        <div class="panel-header">
+          <span class="panel-title">Order Book</span>
+          @if (orderBook(); as book) {
+            <span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">
+              spread {{ book.spread }}
+            </span>
+          }
+        </div>
+
+        @if (loadingBook()) {
+          @for (s of [1,2,3,4,5]; track s) {
+            <p-skeleton height="24px" styleClass="mb-1" />
+          }
+        } @else if (orderBook(); as book) {
+          <!-- Asks (reversed — lowest ask at bottom, near mid) -->
+          <div class="book-side asks">
+            @for (ask of book.asks.slice(0, 8).reverse(); track $index) {
+              <div class="book-row">
+                <span class="pf-mono book-price ask-price">{{ ask.price }}</span>
+                <span class="pf-mono book-size">{{ ask.size }}</span>
+                <div class="book-depth-bar ask-bar"
+                     [style.width.%]="bookDepth(book, 'asks', book.asks.slice(0,8).length - 1 - $index)">
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Midpoint -->
+          <div class="book-mid">
+            <span class="pf-mono">{{ book.midpoint }}</span>
+            <span style="font-size:11px;color:var(--pf-text-muted);margin-left:8px">mid</span>
+          </div>
+
+          <!-- Bids -->
+          <div class="book-side bids">
+            @for (bid of book.bids.slice(0, 8); track $index) {
+              <div class="book-row">
+                <span class="pf-mono book-price bid-price">{{ bid.price }}</span>
+                <span class="pf-mono book-size">{{ bid.size }}</span>
+                <div class="book-depth-bar bid-bar"
+                     [style.width.%]="bookDepth(book, 'bids', $index)">
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="pf-empty-state" style="padding:24px">
+            <p class="pf-empty-desc">No book data</p>
+          </div>
+        }
+      </div>
+
+    </div><!-- /market-detail-grid -->
+
+    <!-- ─── Description ────────────────────────────────────────────────── -->
+    @if (m.description) {
+      <div class="market-description-panel">
+        <div class="panel-header"><span class="panel-title">About</span></div>
+        <p style="font-size:14px;color:var(--pf-text-secondary);line-height:1.6;margin:0">
+          {{ m.description }}
+        </p>
+      </div>
+    }
+
+  } @else {
+    <div class="pf-empty-state">
+      <i class="pi pi-exclamation-circle pf-empty-icon"></i>
+      <p class="pf-empty-title">Market not found</p>
+      <p class="pf-empty-desc">This market may have been removed or the link is incorrect.</p>
+      <p-button label="Back to Markets" icon="pi pi-arrow-left" severity="secondary" routerLink="/markets" />
+    </div>
+  }
+
+</div>
