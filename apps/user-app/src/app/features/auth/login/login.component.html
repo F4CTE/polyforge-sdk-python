@@ -1,0 +1,66 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <i class="pi pi-bolt logo-icon"></i>
+      <span class="logo-text">Polyforge</span>
+    </div>
+
+    <p-card>
+      <h2>Welcome back</h2>
+      <p class="auth-subtitle">Sign in to your account</p>
+
+      @if (error()) {
+        <p-message severity="error" [text]="error()" styleClass="w-full mb-3" />
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-field">
+          <label class="field-label" for="email">Email</label>
+          <input pInputText id="email" type="email" formControlName="email"
+                 placeholder="you@example.com" class="w-full"
+                 [class.ng-invalid]="form.get('email')?.invalid && form.get('email')?.touched" />
+          @if (form.get('email')?.hasError('required') && form.get('email')?.touched) {
+            <small class="field-error">Email is required</small>
+          }
+          @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
+            <small class="field-error">Enter a valid email address</small>
+          }
+        </div>
+
+        <div class="form-field">
+          <label class="field-label" for="password">Password</label>
+          <p-password id="password" formControlName="password"
+                      placeholder="Your password"
+                      [feedback]="false" [toggleMask]="true"
+                      styleClass="w-full" inputStyleClass="w-full"
+                      [class.ng-invalid]="form.get('password')?.invalid && form.get('password')?.touched" />
+          @if (form.get('password')?.invalid && form.get('password')?.touched) {
+            <small class="field-error">Password is required</small>
+          }
+        </div>
+
+        @if (requireTotp()) {
+          <div class="form-field">
+            <label class="field-label">Two-Factor Code</label>
+            <p class="text-muted" style="font-size:0.8125rem;margin-bottom:0.75rem">
+              Enter the 6-digit code from your authenticator app.
+            </p>
+            <p-inputotp formControlName="totp" [length]="6" integerOnly />
+          </div>
+        }
+
+        <p-button type="submit" label="Sign in" styleClass="w-full"
+                  [loading]="loading()" [disabled]="loading()" />
+      </form>
+
+      <p-divider />
+
+      <div class="auth-footer">
+        <a [routerLink]="'/forgot-password'">Forgot password?</a>
+      </div>
+      <div class="auth-footer" style="margin-top:0.5rem">
+        Don't have an account?&nbsp;<a [routerLink]="'/register'">Create one</a>
+      </div>
+    </p-card>
+  </div>
+</div>

@@ -1,0 +1,69 @@
+<div class="app-layout">
+  <!-- ─── Sidebar ──────────────────────────────────────────────────── -->
+  <aside class="app-sidebar" [class.collapsed]="collapsed()">
+    <div class="sidebar-logo">
+      <i class="pi pi-bolt logo-icon"></i>
+      @if (!collapsed()) {
+        <span class="logo-label">Polyforge</span>
+      }
+    </div>
+
+    @for (section of navSections; track section.title) {
+      <div class="nav-section">
+        @if (!collapsed()) {
+          <div class="nav-section-title">{{ section.title }}</div>
+        }
+        @for (item of section.items; track item.route) {
+          <a class="nav-item"
+             [routerLink]="item.route"
+             routerLinkActive="active"
+             [title]="collapsed() ? item.label : ''">
+            <i [class]="item.icon"></i>
+            @if (!collapsed()) {
+              <span>{{ item.label }}</span>
+            }
+          </a>
+        }
+      </div>
+    }
+
+    <div class="sidebar-bottom">
+      <a class="nav-item" routerLink="/settings" routerLinkActive="active">
+        <i class="pi pi-cog"></i>
+        @if (!collapsed()) { <span>Settings</span> }
+      </a>
+    </div>
+  </aside>
+
+  <!-- ─── Main ─────────────────────────────────────────────────────── -->
+  <div class="app-main">
+    <!-- Top bar -->
+    <header class="app-topbar">
+      <p-button
+        [icon]="collapsed() ? 'pi pi-bars' : 'pi pi-times'"
+        [text]="true"
+        [rounded]="true"
+        severity="secondary"
+        size="small"
+        (onClick)="toggleSidebar()" />
+
+      <div style="flex:1"></div>
+
+      <!-- User menu -->
+      <p-menu #userMenuRef [model]="userMenu" [popup]="true" />
+      <div style="display:flex;align-items:center;gap:0.5rem;cursor:pointer"
+           (click)="userMenuRef.toggle($event)">
+        <p-avatar [label]="initials" shape="circle" size="normal" />
+        <span style="font-size:0.875rem;font-weight:500">
+          {{ auth.user()?.username }}
+        </span>
+        <i class="pi pi-angle-down" style="font-size:0.75rem;color:var(--p-text-muted-color)"></i>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="app-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

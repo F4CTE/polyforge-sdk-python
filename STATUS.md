@@ -167,9 +167,28 @@
 
 ## Phase 5 — Angular User App
 
-- [ ] Routing + guards (`AuthGuard`, `ConnectedGuard`, `VerifiedGuard`)
-- [ ] PrimeNG theme + design system
-- [ ] Auth pages (register, login, 2FA, credentials import)
+### Scaffold + Auth (done)
+
+- [x] Angular 21 + PrimeNG 21 standalone app (`apps/user-app/`)
+- [x] Aura theme preset with custom dark surface palette (`#0d1117` base)
+- [x] `app.config.ts` — `provideRouter` (view transitions), `provideHttpClient` (fetch + interceptors), `provideAnimationsAsync`, `providePrimeNG`
+- [x] `AuthStore` — signals (`user`, `loading`, `isAuthenticated`, `isVerified`, `isConnected`), bootstraps from token on init
+- [x] `TokenService` — localStorage JWT, decode/expiry check
+- [x] `AuthApiService` — all auth-service endpoints (login, register, logout, me, verify-email, forgot/reset-password, TOTP, credentials, bot-link)
+- [x] `authInterceptor` — attaches Bearer token to all requests
+- [x] `errorInterceptor` — redirects to /login on 401
+- [x] Guards: `authGuard`, `verifiedGuard`, `connectedGuard`
+- [x] `LayoutComponent` — collapsible sidebar nav (Trade + Social sections), top bar with user menu, `<router-outlet>`
+- [x] `LoginComponent` — email+password form, inline TOTP step on `TOTP_REQUIRED` error
+- [x] `RegisterComponent` — email/username/password/ToS form with inline validation
+- [x] `VerifyEmailComponent` — auto-verifies from `?token=` query param, waiting/resend state
+- [x] `ForgotPasswordComponent` — email form, always-200 response handling
+- [x] `ResetPasswordComponent` — password+confirm form with match validation, reads `?token=`
+- [x] Dev proxy (`proxy.conf.json`) — `/auth/v1` → `:3001`, `/api/v1` → `:3002` (with WS)
+- [x] Lazy-loaded route skeleton for all features (markets, strategies, portfolio, orders, backtest, discover, leaderboard, profile, settings)
+
+### Pending
+
 - [ ] Market browser + OHLCV charts
 - [ ] Strategy Builder (drag-and-drop, 36 blocks, quick backtest)
 - [ ] Strategy management (status badges, live logs)

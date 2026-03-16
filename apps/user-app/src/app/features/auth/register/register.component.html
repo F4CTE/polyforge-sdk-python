@@ -1,0 +1,70 @@
+<div class="auth-page">
+  <div class="auth-card" style="max-width:460px">
+    <div class="auth-logo">
+      <i class="pi pi-bolt logo-icon"></i>
+      <span class="logo-text">Polyforge</span>
+    </div>
+
+    <p-card>
+      <h2>Create account</h2>
+      <p class="auth-subtitle">Start trading on autopilot</p>
+
+      @if (error()) {
+        <p-message severity="error" [text]="error()" styleClass="w-full mb-3" />
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-field">
+          <label class="field-label" for="email">Email</label>
+          <input pInputText id="email" type="email" formControlName="email"
+                 placeholder="you@example.com" class="w-full" />
+          @if (fieldError('email')) { <small class="field-error">{{ fieldError('email') }}</small> }
+        </div>
+
+        <div class="form-field">
+          <label class="field-label" for="username">Username</label>
+          <input pInputText id="username" type="text" formControlName="username"
+                 placeholder="alice" class="w-full" />
+          @if (fieldError('username')) { <small class="field-error">{{ fieldError('username') }}</small> }
+        </div>
+
+        <div class="form-field">
+          <label class="field-label" for="password">Password</label>
+          <p-password id="password" formControlName="password"
+                      placeholder="At least 8 characters"
+                      [toggleMask]="true"
+                      styleClass="w-full" inputStyleClass="w-full">
+            <ng-template pTemplate="footer">
+              <ul style="padding-left:1rem;margin:0.5rem 0 0;font-size:0.8rem;line-height:1.8">
+                <li>Minimum 8 characters</li>
+                <li>One uppercase letter</li>
+                <li>One lowercase letter</li>
+                <li>One number</li>
+              </ul>
+            </ng-template>
+          </p-password>
+          @if (fieldError('password')) { <small class="field-error">{{ fieldError('password') }}</small> }
+        </div>
+
+        <div class="form-field" style="display:flex;align-items:flex-start;gap:0.5rem">
+          <p-checkbox formControlName="tosAccepted" [binary]="true" inputId="tos" />
+          <label for="tos" style="font-size:0.875rem;line-height:1.5;cursor:pointer">
+            I agree to the <a href="/terms" target="_blank" style="color:var(--p-primary-400)">Terms of Service</a>
+          </label>
+        </div>
+        @if (form.get('tosAccepted')?.touched && form.get('tosAccepted')?.invalid) {
+          <small class="field-error">You must accept the Terms of Service</small>
+        }
+
+        <p-button type="submit" label="Create account" styleClass="w-full mt-2"
+                  [loading]="loading()" [disabled]="loading()" />
+      </form>
+
+      <p-divider />
+
+      <div class="auth-footer">
+        Already have an account?&nbsp;<a [routerLink]="'/login'">Sign in</a>
+      </div>
+    </p-card>
+  </div>
+</div>
