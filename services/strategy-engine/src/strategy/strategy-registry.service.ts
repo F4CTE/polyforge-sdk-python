@@ -6,7 +6,8 @@ import { StrategyRunner, StrategyRunnerStatus } from './strategy-runner';
 import { StateService } from '../state/state.service';
 import { OrderIntent } from '../blocks/block.types';
 
-const ORDER_STREAM = 'stream:orders';
+const ORDER_STREAM       = 'stream:orders';
+const PAPER_ORDER_STREAM = 'stream:paper_orders';
 
 @Injectable()
 export class StrategyRegistryService {
@@ -27,8 +28,10 @@ export class StrategyRegistryService {
         const strategy = await this.prisma.strategy.findUnique({ where: { id: strategyId } });
         if (!strategy) throw new NotFoundException(`Strategy ${strategyId} not found`);
 
-        // Allow restart from any state (no-op check)
-        void strategy.status;
+        // Paper strategies use a separate Redis stream; status stays PAPER
+        const isPaper  = strategy.status === StrategyStatus.PAPER;
+        const stream   = isPaper ? PAPER_ORDER_STREAM : ORDER_STREAM;
+        const newStatus = isPaper ? StrategyStatus.PAPER : StrategyStatus.RUNNING;
 
         const runner = new StrategyRunner(
             strategyId,
@@ -42,7 +45,7 @@ export class StrategyRegistryService {
             this.redis,
             this.prisma,
             this.state,
-            (intents) => this.publishIntents(intents),
+            (intents) => this.publishIntents(intents, stream),
             (status, reason) => this.onRunnerStatusChange(strategyId, strategy.userId, status, reason),
         );
 
@@ -51,7 +54,7 @@ export class StrategyRegistryService {
 
         await this.prisma.strategy.update({
             where: { id: strategyId },
-            data: { status: StrategyStatus.RUNNING },
+            data: { status: newStatus },
         });
 
         await this.emitEvent(strategyId, strategy.userId, 'STRATEGY_STARTED');
@@ -68,7 +71,9 @@ export class StrategyRegistryService {
     async resume(strategyId: string): Promise<void> {
         const runner = this.getRunner(strategyId);
         runner.resume();
-        await this.prisma.strategy.update({ where: { id: strategyId }, data: { status: StrategyStatus.RUNNING } });
+        const s = await this.prisma.strategy.findUnique({ where: { id: strategyId }, select: { status: true } });
+        const resumeStatus = s?.status === StrategyStatus.PAPER ? StrategyStatus.PAPER : StrategyStatus.RUNNING;
+        await this.prisma.strategy.update({ where: { id: strategyId }, data: { status: resumeStatus } });
         await this.emitEvent(strategyId, await this.getUserId(strategyId), 'STRATEGY_STARTED');
     }
 
@@ -101,9 +106,9 @@ export class StrategyRegistryService {
         return runner;
     }
 
-    private async publishIntents(intents: OrderIntent[]): Promise<void> {
+    private async publishIntents(intents: OrderIntent[], stream: string): Promise<void> {
         for (const intent of intents) {
-            await this.redis.xadd(ORDER_STREAM, {
+            await this.redis.xadd(stream, {
                 intentId:   intent.intentId,
                 userId:     intent.userId,
                 strategyId: intent.strategyId,

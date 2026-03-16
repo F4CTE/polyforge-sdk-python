@@ -143,6 +143,11 @@ export class StrategiesService {
             }
         }
 
+        // Set PAPER status before calling engine so the engine routes to stream:paper_orders
+        if (dto.mode === 'paper') {
+            await this.prisma.strategy.update({ where: { id }, data: { status: StrategyStatus.PAPER } });
+        }
+
         const res = await this.client.post(this.engineUrl, 'strategy-engine', `/internal/strategies/${id}/start`);
         if (!res.ok && res.status !== 204) {
             const body: any = await res.json().catch(() => ({}));

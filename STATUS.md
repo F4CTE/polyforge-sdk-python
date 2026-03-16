@@ -7,8 +7,7 @@
 
 ## Next Up
 
-1. `paper-order-service` — simulated fills using Redis price cache
-2. `backtest-service` — historical replay, async queue, progress events
+1. `backtest-service` — historical replay, async queue, progress events
 
 ---
 
@@ -125,12 +124,16 @@
 
 ## Phase 4 — API, Paper & Backtest
 
-### paper-order-service
+### paper-order-service (port 3008)
 
-- [ ] Simulated fills using real Redis price cache
-- [ ] Price improvement applied from order book
-- [ ] Paper P&L tracked separately from real P&L
-- [ ] Paper reset endpoint
+- [x] Redis Stream consumer (`stream:paper_orders`) with consumer group + at-least-once ACK
+- [x] Price improvement: fill at best ask/bid when better than intent price (from `cache:book:{tokenId}`)
+- [x] Falls back to `cache:price:{tokenId}` or intent price when no book data
+- [x] Writes to `paper_orders` + upserts `paper_positions` (weighted avg, close tracking)
+- [x] Realized P&L tracked in Redis `paper:{userId}:pnl` (real-time incrbyfloat)
+- [x] Emits `PAPER_ORDER_FILLED` to `stream:events` (relayed to WebSocket by api-service)
+- [x] strategy-engine routes PAPER strategies to `stream:paper_orders` (not `stream:orders`)
+- [x] Docker image + docker-compose integration
 
 ### backtest-service
 
