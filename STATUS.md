@@ -7,9 +7,9 @@
 
 ## Next Up
 
-1. `signer-service` — AES-256-GCM envelope encryption, EIP712 signing, Builder Program HMAC
-2. `order-service` — Redis Stream consumer, order batching, full lifecycle
-3. `api-service` — markets REST, strategies CRUD, WebSocket gateway
+1. `strategy-engine` — tick loop, event loop, 36 blocks, OrderIntent publisher
+2. `api-service` — markets REST, strategies CRUD, WebSocket gateway
+3. `paper-order-service` — simulated fills using Redis price cache
 
 ---
 
@@ -99,14 +99,16 @@
 - [x] Internal JWT auth guard with jti replay protection
 - [x] Docker image + docker-compose integration
 
-### order-service
+### order-service (port 3007)
 
-- [ ] Redis Stream consumer (`stream:orders`)
-- [ ] Order batching (up to 15 per request)
-- [ ] Full order lifecycle (PENDING → CONFIRMED)
-- [ ] Exponential backoff retry (3 attempts) → DLQ
-- [ ] WebSocket event emission (ORDER_PLACED, ORDER_FILLED, etc.)
-- [ ] Manual close position (FOK sell, partial size)
+- [x] Redis Stream consumer (`stream:orders`) with consumer group + at-least-once ACK
+- [x] Order batching (up to 15 per user per request, concurrent by userId)
+- [x] Full order lifecycle (PENDING → SUBMITTED → LIVE/MATCHED → CONFIRMED)
+- [x] Exponential backoff retry (3 attempts, base 1s) → DLQ (`stream:orders:dlq`)
+- [x] Event emission to `stream:events` (ORDER_PLACED, ORDER_FILLED, ORDER_FAILED, ORDER_CANCELLED)
+- [x] Manual close position (FOK SELL via internal endpoint)
+- [x] Internal JWT auth guard (aud: order-service) on close endpoint
+- [x] Docker image + docker-compose integration
 
 ### strategy-engine
 
