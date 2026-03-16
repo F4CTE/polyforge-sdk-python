@@ -7,9 +7,9 @@
 
 ## Next Up
 
-1. `market-data-service` — Polymarket WebSocket consumer, Redis price cache, TimescaleDB writer
-2. `admin-auth-service` Swagger docs + missing test coverage for edge cases
-3. Prisma seed data: add `dave` (VERIFIED) and `carol` (SUSPENDED) per dev-setup spec
+1. `signer-service` — AES-256-GCM envelope encryption, EIP712 signing, Builder Program HMAC
+2. `order-service` — Redis Stream consumer, order batching, full lifecycle
+3. `api-service` — markets REST, strategies CRUD, WebSocket gateway
 
 ---
 
@@ -38,7 +38,7 @@
 - [x] Complete schema (all 29 tables per [`Polyforge-Database-Schema.pdf`](./Polyforge-Database-Schema.pdf))
 - [x] TimescaleDB hypertables (`price_snapshots`, `pnl_snapshots`)
 - [x] Critical indexes (31 indexes across 10 tables)
-- [x] `seed.ts` (alice, bob, charlie + strategies, orders, positions, social, backtest)
+- [x] `seed.ts` (alice, bob, charlie, carol, dave + strategies, orders, positions, social, backtest)
 
 ### mock-polymarket
 
@@ -68,13 +68,15 @@
 - [x] Bot-link (6-digit code, TTL 5 min, one-time consume)
 - [x] Rate limiting per IP on sensitive routes
 
-### market-data-service
+### market-data-service (port 3005)
 
-- [ ] Polymarket WebSocket with exponential reconnect
-- [ ] Write price snapshots to TimescaleDB
-- [ ] Redis cache: `cache:price:{tokenId}` (TTL 10s), `cache:book:{tokenId}` (TTL 5s)
-- [ ] Data gap detection and recording
-- [ ] Binary-only market filter (exclude neg-risk)
+- [x] Polymarket WebSocket with exponential reconnect (1s→30s, factor 2)
+- [x] Write price snapshots to TimescaleDB (5s batch flush, OHLCV)
+- [x] Redis cache: `cache:price:{tokenId}` (TTL 10s), `cache:book:{tokenId}` (TTL 5s)
+- [x] Data gap detection and recording (30s threshold, writes `dataGap` records)
+- [x] Binary-only market filter (exclude neg-risk)
+- [x] Gamma API polling every 60s — upserts markets + tokens, subscribes WS
+- [x] Docker image + docker-compose integration
 
 ### admin-auth-service (port 3003)
 

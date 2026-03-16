@@ -250,9 +250,48 @@ async function main() {
     },
   });
 
-  console.log(`  ✓ alice (id: ${alice.id})`);
-  console.log(`  ✓ bob   (id: ${bob.id})`);
+  // carol — VERIFIED, paper trading only (no polymarket connection)
+  const carol = await prisma.user.upsert({
+    where: { email: 'carol@dev.local' },
+    update: {},
+    create: {
+      email: 'carol@dev.local',
+      passwordHash: await hashPassword('Test1234!'),
+      username: 'carol',
+      displayName: 'Carol Paper',
+      bio: 'Paper trading while I learn the ropes.',
+      emailVerified: true,
+      emailVerifiedAt: daysAgo(7),
+      tosAcceptedAt: daysAgo(7),
+      createdAt: daysAgo(7),
+      lastSeen: hoursAgo(6),
+    },
+  });
+
+  // dave — VERIFIED but SUSPENDED
+  const dave = await prisma.user.upsert({
+    where: { email: 'dave@dev.local' },
+    update: {},
+    create: {
+      email: 'dave@dev.local',
+      passwordHash: await hashPassword('Test1234!'),
+      username: 'dave',
+      displayName: 'Dave Suspended',
+      emailVerified: true,
+      emailVerifiedAt: daysAgo(14),
+      tosAcceptedAt: daysAgo(14),
+      suspended: true,
+      suspendedReason: 'Violation of terms of service (dev seed)',
+      createdAt: daysAgo(14),
+      lastSeen: daysAgo(3),
+    },
+  });
+
+  console.log(`  ✓ alice   (id: ${alice.id})`);
+  console.log(`  ✓ bob     (id: ${bob.id})`);
   console.log(`  ✓ charlie (id: ${charlie.id})`);
+  console.log(`  ✓ carol   (id: ${carol.id}) — verified, paper only`);
+  console.log(`  ✓ dave    (id: ${dave.id}) — suspended`);
 
   // ───────────────────────────────────────────────
   // USER LIMITS
@@ -299,6 +338,32 @@ async function main() {
     },
   });
 
+  await prisma.userLimit.upsert({
+    where: { userId: carol.id },
+    update: {},
+    create: {
+      userId: carol.id,
+      maxRunningStrategies: 2,
+      maxOrdersPerDay: 50,
+      maxOrderSizeUsdc: 100,
+      maxBacktestRunsPerDay: 5,
+      circuitBreakerErrors: 3,
+    },
+  });
+
+  await prisma.userLimit.upsert({
+    where: { userId: dave.id },
+    update: {},
+    create: {
+      userId: dave.id,
+      maxRunningStrategies: 0,
+      maxOrdersPerDay: 0,
+      maxOrderSizeUsdc: 0,
+      maxBacktestRunsPerDay: 0,
+      circuitBreakerErrors: 0,
+    },
+  });
+
   console.log('  ✓ limits set for all users');
 
   // ───────────────────────────────────────────────
@@ -307,7 +372,7 @@ async function main() {
 
   console.log('\n🔔 Setting notification preferences...');
 
-  for (const user of [alice, bob, charlie]) {
+  for (const user of [alice, bob, charlie, carol, dave]) {
     await prisma.notificationPreference.upsert({
       where: { userId: user.id },
       update: {},
@@ -790,11 +855,13 @@ async function main() {
 
   console.log('\n✅ User database seed complete!\n');
   console.log('  Dev credentials:');
-  console.log('  ┌─────────────────────────────────────────────┐');
-  console.log('  │  alice@dev.local   / password123  (connected) │');
-  console.log('  │  bob@dev.local     / password123  (verified)  │');
-  console.log('  │  charlie@dev.local / password123  (verified)  │');
-  console.log('  └─────────────────────────────────────────────┘\n');
+  console.log('  ┌──────────────────────────────────────────────────────┐');
+  console.log('  │  alice@dev.local   / password123  (connected)        │');
+  console.log('  │  bob@dev.local     / password123  (verified)         │');
+  console.log('  │  charlie@dev.local / password123  (verified)         │');
+  console.log('  │  carol@dev.local   / Test1234!    (verified, paper)  │');
+  console.log('  │  dave@dev.local    / Test1234!    (suspended)        │');
+  console.log('  └──────────────────────────────────────────────────────┘\n');
 }
 
 main()

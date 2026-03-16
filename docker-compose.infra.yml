@@ -160,3 +160,25 @@ services:
       - "3099:3099"   # CLOB REST
     networks: [internal]
     restart: unless-stopped
+
+  # ─── MARKET DATA SERVICE ─────────────────────────────────────────────────
+
+  market-data-service:
+    build:
+      context: .
+      dockerfile: services/market-data-service/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
+      DIRECT_DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
+      REDIS_URL: redis://redis:6379
+      CLOB_WS_URL: ws://mock-polymarket:3098
+      GAMMA_API_URL: http://mock-polymarket:3096
+      PORT: "3005"
+    ports:
+      - "3005:3005"
+    networks: [internal]
+    depends_on:
+      postgres-user: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      mock-polymarket: { condition: service_started }
+    restart: unless-stopped
