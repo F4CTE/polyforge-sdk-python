@@ -1,0 +1,153 @@
+<p-toast position="top-right" />
+
+<div class="pf-page">
+
+  <!-- ─── Header ──────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <h1>My Strategies</h1>
+    <p-button label="New Strategy" icon="pi pi-plus" routerLink="new" />
+  </div>
+
+  <!-- ─── Filter tabs ──────────────────────────────────────────────────── -->
+  <div class="strategy-filter-tabs">
+    @for (f of filters; track f.value) {
+      <button class="filter-tab" [class.active]="filter() === f.value" (click)="setFilter(f.value)">
+        {{ f.label }}
+      </button>
+    }
+  </div>
+
+  <!-- ─── List ─────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="strategy-grid">
+      @for (s of skeletons; track $index) {
+        <div class="strategy-card">
+          <p-skeleton height="20px" width="60%" styleClass="mb-3" />
+          <p-skeleton height="12px" width="40%" styleClass="mb-2" />
+          <p-skeleton height="12px" width="80%" />
+        </div>
+      }
+    </div>
+  } @else if (strategies().length === 0) {
+    <div class="pf-empty-state" style="margin-top:48px">
+      <i class="pi pi-code pf-empty-icon"></i>
+      <p class="pf-empty-title">No strategies yet</p>
+      <p class="pf-empty-desc">Create your first strategy to start trading.</p>
+      <p-button label="New Strategy" icon="pi pi-plus" routerLink="new" />
+    </div>
+  } @else {
+    <div class="strategy-grid">
+      @for (strategy of strategies(); track strategy.id) {
+        <div class="strategy-card" [routerLink]="['/strategies', strategy.id]" style="cursor:pointer">
+
+          <!-- Card header: name + status -->
+          <div class="strategy-card-header">
+            <span class="strategy-name">{{ strategy.name }}</span>
+            <span class="status-badge {{ strategy.status | lowercase }}">
+              <span class="status-dot"></span>
+              {{ strategy.status }}
+            </span>
+          </div>
+
+          <!-- Meta row -->
+          <div class="strategy-meta">
+            <span class="meta-chip">{{ execLabel(strategy) }}</span>
+            <span class="meta-chip">{{ blocksCount(strategy) }} blocks</span>
+            @if (strategy.tags.length > 0) {
+              <span class="meta-chip">{{ strategy.tags[0] }}</span>
+            }
+            <span class="meta-chip" style="margin-left:auto">
+              v{{ strategy.version }}
+            </span>
+          </div>
+
+          <!-- Description -->
+          @if (strategy.description) {
+            <p class="strategy-desc">{{ strategy.description }}</p>
+          }
+
+          <!-- Footer: last updated + actions -->
+          <div class="strategy-card-footer" (click)="$event.stopPropagation()">
+            <span class="strategy-date pf-mono">
+              {{ strategy.updatedAt | date:'MMM d, y' }}
+            </span>
+            <div class="strategy-actions">
+
+              @if (isIdle(strategy) || isError(strategy)) {
+                <!-- Start Live / Paper -->
+                <p-button
+                  label="Live"
+                  icon="pi pi-bolt"
+                  size="small"
+                  [loading]="!!actionLoading()[strategy.id]"
+                  (onClick)="start(strategy, 'live', $event.originalEvent!)" />
+                <p-button
+                  label="Paper"
+                  icon="pi pi-file"
+                  size="small"
+                  severity="secondary"
+                  [loading]="!!actionLoading()[strategy.id]"
+                  (onClick)="start(strategy, 'paper', $event.originalEvent!)" />
+              }
+
+              @if (isActive(strategy)) {
+                <!-- Pause + Stop -->
+                <p-button
+                  icon="pi pi-pause"
+                  severity="secondary"
+                  size="small"
+                  pTooltip="Pause"
+                  tooltipPosition="top"
+                  [loading]="!!actionLoading()[strategy.id]"
+                  (onClick)="pause(strategy, $event.originalEvent!)" />
+                <p-button
+                  icon="pi pi-stop-circle"
+                  severity="danger"
+                  size="small"
+                  [text]="true"
+                  pTooltip="Stop"
+                  tooltipPosition="top"
+                  [loading]="!!actionLoading()[strategy.id]"
+                  (onClick)="stop(strategy, $event.originalEvent!)" />
+              }
+
+              @if (isPaused(strategy)) {
+                <!-- Resume + Stop -->
+                <p-button
+                  icon="pi pi-play"
+                  size="small"
+                  pTooltip="Resume"
+                  tooltipPosition="top"
+                  [loading]="!!actionLoading()[strategy.id]"
+                  (onClick)="resume(strategy, $event.originalEvent!)" />
+                <p-button
+                  icon="pi pi-stop-circle"
+                  severity="danger"
+                  size="small"
+                  [text]="true"
+                  pTooltip="Stop"
+                  tooltipPosition="top"
+                  [loading]="!!actionLoading()[strategy.id]"
+                  (onClick)="stop(strategy, $event.originalEvent!)" />
+              }
+
+              <!-- Edit -->
+              <p-button
+                icon="pi pi-pencil"
+                severity="secondary"
+                size="small"
+                [text]="true"
+                pTooltip="Edit"
+                tooltipPosition="top"
+                [routerLink]="['/strategies', strategy.id, 'edit']"
+                (onClick)="$event.originalEvent!.stopPropagation()" />
+
+            </div>
+          </div>
+
+        </div>
+      }
+    </div>
+  }
+
+</div>

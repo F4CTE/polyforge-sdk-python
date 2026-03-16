@@ -10,10 +10,22 @@ export interface PriceUpdate {
   timestamp: number;
 }
 
+export interface StrategyEvent {
+  type: 'STRATEGY_STARTED' | 'STRATEGY_STOPPED' | 'STRATEGY_PAUSED' | 'STRATEGY_RESUMED' | 'STRATEGY_ERROR';
+  strategyId: string;
+  reason?: string;
+  error?: string;
+  blockType?: string;
+}
+
 export interface WsMessage {
   type: string;
   [key: string]: unknown;
 }
+
+const STRATEGY_EVENT_TYPES = new Set([
+  'STRATEGY_STARTED', 'STRATEGY_STOPPED', 'STRATEGY_PAUSED', 'STRATEGY_RESUMED', 'STRATEGY_ERROR',
+]);
 
 @Injectable({ providedIn: 'root' })
 export class WebSocketService implements OnDestroy {
@@ -23,13 +35,20 @@ export class WebSocketService implements OnDestroy {
   private reconnectDelay = 1000;
   private pingInterval: ReturnType<typeof setInterval> | null = null;
   private destroyed = false;
-  private readonly subscribedTokens = new Set<string>();
+
+  private readonly subscribedTokens     = new Set<string>();
+  private readonly subscribedStrategies = new Set<string>();
 
   private readonly messages$ = new Subject<WsMessage>();
 
   readonly priceUpdates$: Observable<PriceUpdate> = this.messages$.pipe(
     filter(m => m['type'] === 'PRICE_UPDATE'),
     map(m => m as unknown as PriceUpdate),
+  );
+
+  readonly strategyEvents$: Observable<StrategyEvent> = this.messages$.pipe(
+    filter(m => STRATEGY_EVENT_TYPES.has(m['type'] as string)),
+    map(m => m as unknown as StrategyEvent),
   );
 
   connect(): void {
@@ -44,6 +63,9 @@ export class WebSocketService implements OnDestroy {
       this.startPing();
       if (this.subscribedTokens.size > 0) {
         this.send({ type: 'SUBSCRIBE_PRICES', tokenIds: [...this.subscribedTokens] });
+      }
+      for (const id of this.subscribedStrategies) {
+        this.send({ type: 'SUBSCRIBE_STRATEGY', strategyId: id });
       }
     };
 
@@ -73,6 +95,20 @@ export class WebSocketService implements OnDestroy {
     tokenIds.forEach(id => this.subscribedTokens.delete(id));
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.send({ type: 'UNSUBSCRIBE_PRICES', tokenIds });
+    }
+  }
+
+  subscribeStrategy(strategyId: string): void {
+    this.subscribedStrategies.add(strategyId);
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.send({ type: 'SUBSCRIBE_STRATEGY', strategyId });
+    }
+  }
+
+  unsubscribeStrategy(strategyId: string): void {
+    this.subscribedStrategies.delete(strategyId);
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.send({ type: 'UNSUBSCRIBE_STRATEGY', strategyId });
     }
   }
 

@@ -1,0 +1,187 @@
+<p-toast position="top-right" />
+
+<div class="pf-page builder-page">
+
+  <!-- ─── Top bar ─────────────────────────────────────────────────────── -->
+  <div class="builder-topbar">
+    <a routerLink="/strategies" style="font-size:13px;color:var(--pf-text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+      <i class="pi pi-arrow-left" style="font-size:12px"></i> Strategies
+    </a>
+    <h1 class="builder-title">{{ isEdit() ? 'Edit Strategy' : 'New Strategy' }}</h1>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <p-button label="Cancel" severity="secondary" [text]="true" routerLink="/strategies" />
+      <p-button
+        [label]="isEdit() ? 'Save Changes' : 'Create Strategy'"
+        icon="pi pi-check"
+        [loading]="saving()"
+        (onClick)="save()" />
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div style="padding:48px;text-align:center;color:var(--pf-text-muted)">Loading strategy…</div>
+  } @else {
+
+  <!-- ─── Builder body ─────────────────────────────────────────────────── -->
+  <div class="builder-body">
+
+    <!-- ── Left: meta form ─────────────────────────────────────────────── -->
+    <div class="builder-meta">
+      <div class="form-field">
+        <label class="field-label">Strategy Name *</label>
+        <input pInputText type="text" style="width:100%" placeholder="My Strategy"
+               [value]="form().name" (input)="updateForm('name', $any($event.target).value)" />
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Description</label>
+        <textarea pTextarea rows="3" style="width:100%" placeholder="What does this strategy do?"
+                  [value]="form().description"
+                  (input)="updateForm('description', $any($event.target).value)"></textarea>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Exec Mode</label>
+        <p-select [options]="execModeOptions" [value]="form().execMode" optionLabel="label" optionValue="value"
+                  style="width:100%" (onChange)="updateForm('execMode', $event.value)" />
+      </div>
+
+      @if (form().execMode !== 'EVENT') {
+        <div class="form-field">
+          <label class="field-label">Tick Interval (ms)</label>
+          <input pInputText type="number" style="width:100%" placeholder="1000" min="200"
+                 [value]="form().tickMs" (input)="updateForm('tickMs', +$any($event.target).value)" />
+        </div>
+      }
+
+      <div class="form-field">
+        <label class="field-label">Visibility</label>
+        <p-select [options]="visibilityOptions" [value]="form().visibility" optionLabel="label" optionValue="value"
+                  style="width:100%" (onChange)="updateForm('visibility', $event.value)" />
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Tags <span style="color:var(--pf-text-muted);font-weight:400">(comma separated)</span></label>
+        <input pInputText type="text" style="width:100%" placeholder="momentum, politics"
+               [value]="form().tagsInput" (input)="updateForm('tagsInput', $any($event.target).value)" />
+      </div>
+
+      <!-- Block summary -->
+      <div class="builder-summary">
+        @for (sec of sections; track sec.key) {
+          <div class="summary-row" [class.active]="activeSection() === sec.key" (click)="setSection(sec.key)">
+            <i class="pi {{ sec.icon }}" style="font-size:14px;color:var(--pf-text-muted)"></i>
+            <span>{{ sec.label }}</span>
+            @if (sectionCount(sec.key) > 0) {
+              <span class="summary-count">{{ sectionCount(sec.key) }}</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ── Right: block builder ─────────────────────────────────────────── -->
+    <div class="builder-blocks">
+
+      <!-- Section tabs -->
+      <div class="builder-section-tabs">
+        @for (sec of sections; track sec.key) {
+          <button class="section-tab" [class.active]="activeSection() === sec.key" (click)="setSection(sec.key)">
+            <i class="pi {{ sec.icon }}"></i>
+            {{ sec.label }}
+            @if (sectionCount(sec.key) > 0) {
+              <span class="section-count">{{ sectionCount(sec.key) }}</span>
+            }
+          </button>
+        }
+      </div>
+
+      <!-- Active section blocks -->
+      <div class="blocks-area">
+
+        @if (blocks()[activeSection()].length === 0 && !paletteOpen()) {
+          <div class="blocks-empty">
+            <i class="pi pi-plus-circle" style="font-size:28px;color:var(--pf-text-muted)"></i>
+            <p style="color:var(--pf-text-secondary);font-size:14px;margin:0">No {{ activeSection() }} blocks yet.</p>
+            <p-button label="Add Block" icon="pi pi-plus" severity="secondary" size="small" (onClick)="togglePalette()" />
+          </div>
+        }
+
+        <!-- Added blocks -->
+        @for (block of blocks()[activeSection()]; track block.id) {
+          <div class="block-card">
+            <div class="block-card-header">
+              <span class="block-card-title">{{ getBlockDef(block.type)?.label ?? block.type }}</span>
+              <div style="display:flex;gap:4px">
+                <button class="block-ctrl-btn" pTooltip="Move up" (click)="moveBlock(activeSection(), block.id, -1)">
+                  <i class="pi pi-chevron-up"></i>
+                </button>
+                <button class="block-ctrl-btn" pTooltip="Move down" (click)="moveBlock(activeSection(), block.id, 1)">
+                  <i class="pi pi-chevron-down"></i>
+                </button>
+                <button class="block-ctrl-btn danger" pTooltip="Remove" (click)="removeBlock(activeSection(), block.id)">
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+            </div>
+
+            @if (getBlockDef(block.type)?.description; as desc) {
+              <p class="block-card-desc">{{ desc }}</p>
+            }
+
+            <!-- Config fields -->
+            @if (getBlockDef(block.type)?.fields.length ?? 0 > 0) {
+              <div class="block-fields">
+                @for (field of getBlockDef(block.type)?.fields ?? []; track field.key) {
+                  <div class="block-field-row">
+                    <label class="field-label" style="font-size:12px;min-width:140px">{{ field.label }}</label>
+                    <input pInputText [type]="field.type === 'number' ? 'number' : 'text'"
+                           [placeholder]="field.placeholder"
+                           [value]="block.config[field.key] ?? ''"
+                           (input)="updateBlockConfig(activeSection(), block.id, field.key, $event)"
+                           style="flex:1" />
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Add block button (when blocks exist) -->
+        @if (blocks()[activeSection()].length > 0 && !paletteOpen()) {
+          <button class="add-block-btn" (click)="togglePalette()">
+            <i class="pi pi-plus"></i> Add {{ activeSection() }} block
+          </button>
+        }
+
+        <!-- Block palette -->
+        @if (paletteOpen()) {
+          <div class="block-palette">
+            <div class="palette-header">
+              <span style="font-size:13px;font-weight:600;color:var(--pf-text-secondary)">
+                Choose a {{ activeSection() }} block
+              </span>
+              <button class="block-ctrl-btn" (click)="togglePalette()">
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
+            <div class="palette-grid">
+              @for (def of paletteDefs(); track def.type) {
+                <div class="palette-item" (click)="addBlock(def)">
+                  <span class="palette-item-label">{{ def.label }}</span>
+                  <span class="palette-item-desc">{{ def.description }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+      </div><!-- /blocks-area -->
+
+    </div><!-- /builder-blocks -->
+
+  </div><!-- /builder-body -->
+
+  } <!-- /loading -->
+
+</div>

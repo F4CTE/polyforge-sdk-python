@@ -202,10 +202,16 @@
 - [x] `MarketsListComponent` — searchable/sortable table, live YES/NO prices, pagination
 - [x] `MarketDetailComponent` — OHLCV line chart (1m/1h/1d), order book depth, live prices, market info
 
+### Strategies (done)
+
+- [x] `StrategiesApiService` — list, get, create, update, delete, start/stop/pause/resume, fork
+- [x] `WebSocketService` — strategy event subscription (STARTED/STOPPED/PAUSED/RESUMED/ERROR)
+- [x] `StrategiesListComponent` — filter tabs, status badges with pulse dot, inline start/stop/pause/resume actions
+- [x] `StrategyDetailComponent` — block summary, live event log via WebSocket, action buttons
+- [x] `StrategyBuilderComponent` — all 36 blocks (safety/triggers/conditions/actions), config forms, create + edit mode
+
 ### Pending
 
-- [ ] Strategy Builder (drag-and-drop, 36 blocks, quick backtest)
-- [ ] Strategy management (list with status badges, live logs, start/stop/pause)
 - [ ] Portfolio + orders
 - [ ] Social (discover, leaderboard, profiles, comments)
 - [ ] Settings + notifications centre + price alerts
