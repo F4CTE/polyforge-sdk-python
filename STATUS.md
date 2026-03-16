@@ -7,7 +7,7 @@
 
 ## Next Up
 
-1. Angular admin app (Phase 6 / admin panel)
+1. Phase 7 — QA & Production
 
 ---
 
@@ -295,7 +295,25 @@
 
 ### Angular admin-app
 
-- [ ] All admin views
+- [x] Angular 21 + PrimeNG 21 standalone app (`apps/admin-app/`)
+- [x] `AdminTheme` — same dark blue-night palette, cyan primary, always-dark
+- [x] `AdminAuthStore` — decodes JWT payload to restore session (no server call, 1h JWT)
+- [x] `AdminAuthApiService` — login/logout → `/auth/v1` (port 3003)
+- [x] `AdminApiService` — all admin API methods (health, users, strategies, orders, DLQ, backtests, cache, rate limits, reports, builder stats, audit/event/login logs)
+- [x] `TokenService`, `authInterceptor`, `errorInterceptor`, `authGuard`
+- [x] `LayoutComponent` — collapsible sidebar (Monitor / Manage / Moderation sections), user menu
+- [x] `LoginComponent` — email + password, IP restriction note
+- [x] `DashboardComponent` — health status banner + service grid + infra cards (DB/Redis), auto-refresh 15s
+- [x] `UsersListComponent` — search + status + suspended filters, paginated table with user detail links
+- [x] `UserDetailComponent` — identity / security / limits / activity cards; suspend/unsuspend + edit limits dialogs
+- [x] `StrategiesComponent` — all strategies table with force-stop (ConfirmationService) + unpublish
+- [x] `OrdersComponent` — orders table + DLQ tab (replay/discard per entry)
+- [x] `BacktestsComponent` — all backtest runs with status badges and progress bars
+- [x] `CacheComponent` — cache stats + pattern hit-rate breakdown + manual flush + rate limits table
+- [x] `ReportsComponent` — moderation queue; approve/dismiss with admin note dialog
+- [x] `LogsComponent` — three tabs: Audit / Events / Logins, paginated
+- [x] `BuilderComponent` — tier card + weekly reward + attributed volume + bar chart + weekly breakdown table
+- [x] `styles.scss` — all admin-specific utility classes and component styles
 
 ---
 

@@ -1,0 +1,67 @@
+/* ── Polyforge Admin Design Tokens ───────────────────────────────────────── */
+
+:root {
+  /* Backgrounds */
+  --pf-bg-base:    #080C14;
+  --pf-bg-surface: #111820;
+  --pf-bg-raised:  #162030;
+  --pf-bg-overlay: rgba(8, 12, 20, 0.85);
+
+  /* Borders */
+  --pf-border-subtle:  rgba(42, 61, 82, 0.6);
+  --pf-border-default: rgba(42, 61, 82, 1);
+  --pf-border-strong:  rgba(68, 94, 122, 1);
+
+  /* Text */
+  --pf-text-primary:   #E8EDF5;
+  --pf-text-secondary: #B0C0D4;
+  --pf-text-muted:     #7A94B4;
+  --pf-text-disabled:  #445E7A;
+
+  /* Cyan accent */
+  --pf-cyan-300: #67E8F9;
+  --pf-cyan-400: #22D3EE;
+  --pf-cyan-500: #06B6D4;
+  --pf-cyan-glow: rgba(6, 182, 212, 0.15);
+
+  /* Semantic */
+  --pf-success:    #10B981;
+  --pf-warning:    #F59E0B;
+  --pf-danger:     #EF4444;
+  --pf-info:       #3B82F6;
+  --pf-success-bg: rgba(16, 185, 129, 0.1);
+  --pf-warning-bg: rgba(245, 158, 11, 0.1);
+  --pf-danger-bg:  rgba(239, 68, 68, 0.1);
+  --pf-info-bg:    rgba(59, 130, 246, 0.1);
+
+  /* P&L */
+  --pf-pnl-positive: #10B981;
+  --pf-pnl-negative: #EF4444;
+
+  /* Spacing scale */
+  --pf-space-1: 4px;
+  --pf-space-2: 8px;
+  --pf-space-3: 12px;
+  --pf-space-4: 16px;
+  --pf-space-5: 24px;
+  --pf-space-6: 32px;
+
+  /* Radius */
+  --pf-radius-sm: 4px;
+  --pf-radius-md: 6px;
+  --pf-radius-lg: 10px;
+
+  /* Shadows */
+  --pf-shadow-sm: 0 1px 4px rgba(0,0,0,0.4);
+  --pf-shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --pf-shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+
+  /* Animation */
+  --pf-duration-fast:   120ms;
+  --pf-duration-normal: 200ms;
+
+  /* Status colors */
+  --pf-healthy:  #10B981;
+  --pf-degraded: #F59E0B;
+  --pf-down:     #EF4444;
+}

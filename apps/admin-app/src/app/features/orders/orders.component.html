@@ -1,0 +1,121 @@
+<p-toast />
+
+<div class="pf-page">
+  <div class="page-header">
+    <h1>Orders</h1>
+    @if (activeTab() === 'orders' && !ordLoading()) {
+      <span class="pf-mono" style="font-size:12px;color:var(--pf-text-muted)">{{ ordTotal() }} total</span>
+    }
+    @if (activeTab() === 'dlq') {
+      <span class="admin-badge danger">{{ dlq().length }} in DLQ</span>
+    }
+  </div>
+
+  <div class="strategy-filter-tabs" style="margin-bottom:16px">
+    <button class="filter-tab" [class.active]="activeTab() === 'orders'" (click)="setTab('orders')">All Orders</button>
+    <button class="filter-tab" [class.active]="activeTab() === 'dlq'"    (click)="setTab('dlq')">
+      Dead Letter Queue @if (dlq().length > 0) { <span class="dlq-count">{{ dlq().length }}</span> }
+    </button>
+  </div>
+
+  <!-- ─── Orders tab ───────────────────────────────────────────────────── -->
+  @if (activeTab() === 'orders') {
+    <div class="admin-filters">
+      <p-select [(ngModel)]="ordStatus" [options]="statusOptions" (onChange)="onOrdFilter()" styleClass="admin-filter-select" />
+    </div>
+    <div class="admin-table-panel">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="pf-col-label">User</th>
+              <th class="pf-col-label">Strategy</th>
+              <th class="pf-col-label">Side</th>
+              <th class="pf-col-label">Outcome</th>
+              <th class="pf-col-label" style="text-align:right">Size</th>
+              <th class="pf-col-label" style="text-align:right">Price</th>
+              <th class="pf-col-label">Status</th>
+              <th class="pf-col-label" style="text-align:right">Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (ordLoading()) {
+              @for (s of skeletons; track $index) { <tr class="table-row">@for (c of [1,2,3,4,5,6,7,8]; track c) { <td><p-skeleton height="12px" /></td> }</tr> }
+            } @else if (orders().length === 0) {
+              <tr><td colspan="8"><div class="pf-empty-state" style="padding:40px"><i class="pi pi-list pf-empty-icon"></i><p class="pf-empty-title">No orders found</p></div></td></tr>
+            } @else {
+              @for (o of orders(); track o.id) {
+                <tr class="table-row admin-table-row">
+                  <td><span class="pf-mono" style="font-size:12px">{{ o.username }}</span></td>
+                  <td><span style="font-size:12px;color:var(--pf-text-muted)">{{ o.strategyName ?? '—' }}</span></td>
+                  <td><span class="side-badge {{ o.side | lowercase }}">{{ o.side }}</span></td>
+                  <td><span class="outcome-badge {{ o.outcome | lowercase }}">{{ o.outcome }}</span></td>
+                  <td style="text-align:right"><span class="pf-mono">{{ o.size }}</span></td>
+                  <td style="text-align:right"><span class="pf-mono">{{ o.price }}</span></td>
+                  <td><span class="order-status-badge" [style.color]="statusColor(o.status)" [style.background]="statusBg(o.status)">{{ o.status }}</span></td>
+                  <td style="text-align:right"><span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ o.createdAt | date:'MMM d, HH:mm' }}</span></td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    @if (ordPages() > 1) {
+      <div class="markets-pagination">
+        <p-button icon="pi pi-chevron-left"  severity="secondary" [text]="true" size="small" [disabled]="ordPage() === 1"        (onClick)="prevPage()" />
+        <span class="pf-mono" style="font-size:13px;color:var(--pf-text-secondary)">{{ ordPage() }} / {{ ordPages() }}</span>
+        <p-button icon="pi pi-chevron-right" severity="secondary" [text]="true" size="small" [disabled]="ordPage() === ordPages()" (onClick)="nextPage()" />
+      </div>
+    }
+  }
+
+  <!-- ─── DLQ tab ──────────────────────────────────────────────────────── -->
+  @if (activeTab() === 'dlq') {
+    @if (dlqLoading()) {
+      <p-skeleton height="200px" />
+    } @else if (dlq().length === 0) {
+      <div class="pf-empty-state" style="padding:64px">
+        <i class="pi pi-check-circle pf-empty-icon" style="color:var(--pf-success)"></i>
+        <p class="pf-empty-title">Dead letter queue is empty</p>
+        <p class="pf-empty-desc">All order intents processed successfully.</p>
+      </div>
+    } @else {
+      <div class="admin-table-panel">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="pf-col-label">Intent ID</th>
+                <th class="pf-col-label">User</th>
+                <th class="pf-col-label" style="text-align:center">Attempts</th>
+                <th class="pf-col-label">Last Error</th>
+                <th class="pf-col-label" style="text-align:right">Enqueued</th>
+                <th class="pf-col-label" style="min-width:140px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of dlq(); track entry.intentId) {
+                <tr class="table-row">
+                  <td><span class="pf-mono" style="font-size:11px">{{ entry.intentId.slice(0,8) }}…</span></td>
+                  <td><span class="pf-mono" style="font-size:12px">{{ entry.username }}</span></td>
+                  <td style="text-align:center"><span class="admin-badge danger">{{ entry.attempts }}</span></td>
+                  <td><span style="font-size:12px;color:var(--pf-danger)">{{ entry.lastError }}</span></td>
+                  <td style="text-align:right"><span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ entry.enqueuedAt | date:'MMM d, HH:mm' }}</span></td>
+                  <td>
+                    <div style="display:flex;gap:6px;justify-content:flex-end">
+                      <p-button label="Replay" icon="pi pi-refresh" size="small" [text]="true"
+                        [loading]="!!dlqActions()[entry.intentId]" (onClick)="replay(entry)" />
+                      <p-button label="Discard" severity="secondary" size="small" [text]="true"
+                        [loading]="!!dlqActions()['d_' + entry.intentId]" (onClick)="discard(entry)" />
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  }
+</div>

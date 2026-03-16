@@ -1,0 +1,72 @@
+<div class="pf-page">
+
+  <div class="page-header">
+    <h1>Builder Program</h1>
+    <p-button icon="pi pi-refresh" severity="secondary" [text]="true" size="small" [loading]="loading()" (onClick)="load()" />
+  </div>
+
+  @if (loading()) {
+    <div class="builder-stats-grid">
+      @for (s of [1,2,3]; track s) { <p-skeleton height="80px" /> }
+    </div>
+    <p-skeleton height="300px" styleClass="mt-4" />
+  } @else if (stats()) {
+
+    <!-- ─── Metric cards ──────────────────────────────────────────────── -->
+    <div class="builder-stats-grid">
+      <div class="admin-card">
+        <div class="admin-card-title">Current Tier</div>
+        <div class="builder-metric-value" style="color:var(--pf-cyan-400)">{{ stats()!.tier }}</div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title">Weekly Reward</div>
+        <div class="builder-metric-value" [style.color]="pnlColor(stats()!.weeklyRewardUsdc)">
+          +{{ stats()!.weeklyRewardUsdc | number:'1.2-2' }} USDC
+        </div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title">Attributed Volume</div>
+        <div class="builder-metric-value pf-mono">{{ stats()!.attributedVolume | number:'1.0-0' }} USDC</div>
+      </div>
+    </div>
+
+    <!-- ─── Weekly chart ─────────────────────────────────────────────── -->
+    @if (chartData()) {
+      <div class="admin-card" style="margin-top:16px">
+        <div class="admin-card-title">Weekly Volume Attribution</div>
+        <div style="height:280px;padding-top:12px">
+          <p-chart type="bar" [data]="chartData()" [options]="chartOptions" />
+        </div>
+      </div>
+    }
+
+    <!-- ─── Weekly breakdown table ───────────────────────────────────── -->
+    <div class="admin-table-panel" style="margin-top:16px">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="pf-col-label">Week</th>
+              <th class="pf-col-label" style="text-align:right">Volume (USDC)</th>
+              <th class="pf-col-label" style="text-align:right">Reward (USDC)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (w of stats()!.weekly; track w.week) {
+              <tr class="table-row">
+                <td><span class="pf-mono" style="font-size:12px">{{ w.week }}</span></td>
+                <td style="text-align:right"><span class="pf-mono">{{ w.volume | number:'1.0-0' }}</span></td>
+                <td style="text-align:right"><span class="pf-mono" style="color:var(--pf-success)">+{{ w.reward | number:'1.2-2' }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  } @else {
+    <div class="pf-empty-state" style="padding:80px">
+      <i class="pi pi-chart-bar pf-empty-icon"></i>
+      <p class="pf-empty-title">No builder data available</p>
+    </div>
+  }
+</div>

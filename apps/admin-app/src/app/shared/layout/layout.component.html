@@ -1,0 +1,63 @@
+<div class="admin-shell" [class.collapsed]="collapsed()">
+
+  <!-- ─── Sidebar ──────────────────────────────────────────────────────── -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      @if (!collapsed()) {
+        <span class="brand-logo">⬡</span>
+        <span class="brand-text">Polyforge <span class="brand-admin">Admin</span></span>
+      } @else {
+        <span class="brand-logo">⬡</span>
+      }
+    </div>
+
+    <nav class="sidebar-nav">
+      @for (section of nav; track section.title) {
+        @if (!collapsed()) {
+          <div class="nav-section-title">{{ section.title }}</div>
+        }
+        @for (item of section.items; track item.route) {
+          <a class="nav-item" [routerLink]="item.route" routerLinkActive="active"
+             [title]="collapsed() ? item.label : ''">
+            <i class="{{ item.icon }}"></i>
+            @if (!collapsed()) { <span>{{ item.label }}</span> }
+          </a>
+        }
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user">
+        <p-avatar [label]="initials" shape="circle" size="normal"
+          [style]="{'background':'var(--pf-bg-raised)','color':'var(--pf-cyan-400)','font-size':'11px'}" />
+        @if (!collapsed()) {
+          <div class="admin-user-info">
+            <span class="admin-user-name">{{ auth.admin()?.displayName }}</span>
+            <span class="admin-user-role">{{ roleLabel }}</span>
+          </div>
+          <p-menu #menu [model]="userMenu" [popup]="true" />
+          <p-button icon="pi pi-ellipsis-v" severity="secondary" [text]="true" size="small"
+            (onClick)="menu.toggle($event)" />
+        }
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── Main ─────────────────────────────────────────────────────────── -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <p-button [icon]="collapsed() ? 'pi pi-bars' : 'pi pi-bars'" severity="secondary" [text]="true"
+        size="small" (onClick)="collapsed.update(v => !v)" />
+      <span class="topbar-title">Polyforge Admin Console</span>
+      <div class="topbar-right">
+        <span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">
+          {{ auth.admin()?.role }}
+        </span>
+      </div>
+    </header>
+    <main class="admin-content">
+      <router-outlet />
+    </main>
+  </div>
+
+</div>

@@ -1,0 +1,70 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="pf-page">
+  <div class="page-header">
+    <h1>Strategies</h1>
+    @if (!loading()) { <span class="pf-mono" style="font-size:12px;color:var(--pf-text-muted)">{{ total() }} total</span> }
+  </div>
+
+  <div class="admin-filters">
+    <p-select [(ngModel)]="status"     [options]="statusOptions"     (onChange)="onFilter()" styleClass="admin-filter-select" />
+    <p-select [(ngModel)]="visibility" [options]="visibilityOptions" (onChange)="onFilter()" styleClass="admin-filter-select" />
+  </div>
+
+  <div class="admin-table-panel">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="pf-col-label">Name</th>
+            <th class="pf-col-label">Owner</th>
+            <th class="pf-col-label">Status</th>
+            <th class="pf-col-label">Visibility</th>
+            <th class="pf-col-label" style="text-align:right">Forks</th>
+            <th class="pf-col-label" style="text-align:right">Likes</th>
+            <th class="pf-col-label" style="text-align:right">Updated</th>
+            <th class="pf-col-label" style="min-width:80px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (s of skeletons; track $index) {
+              <tr class="table-row">@for (c of [1,2,3,4,5,6,7,8]; track c) { <td><p-skeleton height="12px" /></td> }</tr>
+            }
+          } @else if (strategies().length === 0) {
+            <tr><td colspan="8"><div class="pf-empty-state" style="padding:40px"><i class="pi pi-code pf-empty-icon"></i><p class="pf-empty-title">No strategies found</p></div></td></tr>
+          } @else {
+            @for (s of strategies(); track s.id) {
+              <tr class="table-row admin-table-row">
+                <td><span style="font-size:13px;font-weight:500">{{ s.name }}</span></td>
+                <td><span class="pf-mono" style="font-size:12px;color:var(--pf-text-muted)">{{ s.username }}</span></td>
+                <td>
+                  <span class="order-status-badge" [style.color]="statusColor(s.status)" [style.background]="statusBg(s.status)">{{ s.status }}</span>
+                </td>
+                <td><span class="admin-badge muted">{{ s.visibility }}</span></td>
+                <td style="text-align:right"><span class="pf-mono">{{ s.forkCount }}</span></td>
+                <td style="text-align:right"><span class="pf-mono">{{ s.likeCount }}</span></td>
+                <td style="text-align:right"><span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ s.updatedAt | date:'MMM d, HH:mm' }}</span></td>
+                <td>
+                  @if (s.status === 'RUNNING' || s.status === 'PAPER' || s.status === 'PAUSED') {
+                    <p-button icon="pi pi-stop-circle" label="Stop" severity="danger" size="small" [text]="true"
+                      [loading]="!!stopLoading()[s.id]" (onClick)="forceStop(s, $event)" />
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  @if (totalPages() > 1) {
+    <div class="markets-pagination">
+      <p-button icon="pi pi-chevron-left"  severity="secondary" [text]="true" size="small" [disabled]="page() === 1"            (onClick)="prevPage()" />
+      <span class="pf-mono" style="font-size:13px;color:var(--pf-text-secondary)">{{ page() }} / {{ totalPages() }}</span>
+      <p-button icon="pi pi-chevron-right" severity="secondary" [text]="true" size="small" [disabled]="page() === totalPages()" (onClick)="nextPage()" />
+    </div>
+  }
+</div>

@@ -1,0 +1,60 @@
+<div class="pf-page">
+  <div class="page-header">
+    <h1>Backtests</h1>
+    @if (!loading()) { <span class="pf-mono" style="font-size:12px;color:var(--pf-text-muted)">{{ total() }} total</span> }
+  </div>
+
+  <div class="admin-table-panel">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="pf-col-label">User</th>
+            <th class="pf-col-label">Strategy</th>
+            <th class="pf-col-label">Status</th>
+            <th class="pf-col-label" style="min-width:120px">Progress</th>
+            <th class="pf-col-label" style="text-align:right">P&L</th>
+            <th class="pf-col-label" style="text-align:right">Win Rate</th>
+            <th class="pf-col-label" style="text-align:right">Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (s of skeletons; track $index) { <tr class="table-row">@for (c of [1,2,3,4,5,6,7]; track c) { <td><p-skeleton height="12px" /></td> }</tr> }
+          } @else if (runs().length === 0) {
+            <tr><td colspan="7"><div class="pf-empty-state" style="padding:40px"><i class="pi pi-history pf-empty-icon"></i><p class="pf-empty-title">No backtest runs</p></div></td></tr>
+          } @else {
+            @for (r of runs(); track r.id) {
+              <tr class="table-row admin-table-row">
+                <td><span class="pf-mono" style="font-size:12px">{{ r.username }}</span></td>
+                <td><span style="font-size:12px;color:var(--pf-text-secondary)">{{ r.strategyName ?? '—' }}</span></td>
+                <td><span class="order-status-badge" [style.color]="statusColor(r.status)" [style.background]="statusBg(r.status)">{{ r.status }}</span></td>
+                <td>
+                  @if (r.status === 'RUNNING') {
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <p-progressbar [value]="r.progress" [showValue]="false" styleClass="backtest-row-progress" />
+                      <span class="pf-mono" style="font-size:11px;color:var(--pf-cyan-400)">{{ r.progress }}%</span>
+                    </div>
+                  } @else if (r.status === 'COMPLETED') {
+                    <span class="pf-mono" style="font-size:11px;color:var(--pf-success)">100%</span>
+                  } @else { <span style="color:var(--pf-text-muted)">—</span> }
+                </td>
+                <td style="text-align:right"><span class="pf-mono" [style.color]="pnlColor(r.totalPnl)">{{ r.totalPnl ?? '—' }}</span></td>
+                <td style="text-align:right"><span class="pf-mono" style="color:var(--pf-text-secondary)">{{ r.winRate ? (r.winRate | number:'1.0-1') + '%' : '—' }}</span></td>
+                <td style="text-align:right"><span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ r.createdAt | date:'MMM d, HH:mm' }}</span></td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  @if (totalPages() > 1) {
+    <div class="markets-pagination">
+      <p-button icon="pi pi-chevron-left"  severity="secondary" [text]="true" size="small" [disabled]="page() === 1"            (onClick)="prevPage()" />
+      <span class="pf-mono" style="font-size:13px;color:var(--pf-text-secondary)">{{ page() }} / {{ totalPages() }}</span>
+      <p-button icon="pi pi-chevron-right" severity="secondary" [text]="true" size="small" [disabled]="page() === totalPages()" (onClick)="nextPage()" />
+    </div>
+  }
+</div>

@@ -1,0 +1,91 @@
+<div class="pf-page">
+
+  <div class="page-header">
+    <h1>Dashboard</h1>
+    <div style="display:flex;align-items:center;gap:12px">
+      @if (lastRefresh()) {
+        <span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">
+          Last refresh: {{ lastRefresh() | date:'HH:mm:ss' }}
+        </span>
+      }
+      <p-button icon="pi pi-refresh" severity="secondary" size="small" [text]="true"
+        [loading]="loading()" (onClick)="load()" />
+    </div>
+  </div>
+
+  @if (loading() && !health()) {
+    <div class="health-grid">
+      @for (s of [1,2,3,4,5,6]; track s) {
+        <div class="health-card"><p-skeleton height="60px" /></div>
+      }
+    </div>
+  } @else if (health()) {
+
+    <!-- ─── Overall status banner ─────────────────────────────────────── -->
+    <div class="overall-status" [style.border-color]="statusColor(health()!.status)" [style.background]="statusBg(health()!.status)">
+      <i class="pi {{ overallIcon(health()!.status) }}" [style.color]="statusColor(health()!.status)" style="font-size:20px"></i>
+      <div>
+        <div class="overall-status-label" [style.color]="statusColor(health()!.status)">
+          System {{ health()!.status | titlecase }}
+        </div>
+        <div class="overall-status-sub">
+          DB: {{ health()!.db.connections }} connections ·
+          Redis: {{ health()!.redis.memoryUsageMb | number:'1.0-1' }} MB
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Service grid ─────────────────────────────────────────────── -->
+    <div class="health-grid">
+      @for (svc of serviceEntries(); track svc.name) {
+        <div class="health-card" [style.border-color]="statusColor(svc.status)">
+          <div class="health-card-header">
+            <div class="health-status-dot" [style.background]="statusColor(svc.status)"></div>
+            <span class="health-service-name">{{ formatServiceName(svc.name) }}</span>
+          </div>
+          <div class="health-card-footer">
+            <span class="health-status-badge" [style.color]="statusColor(svc.status)" [style.background]="statusBg(svc.status)">
+              {{ svc.status }}
+            </span>
+            <span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ svc.latencyMs }}ms</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- ─── Infrastructure ────────────────────────────────────────────── -->
+    <div class="infra-grid">
+      <div class="infra-card">
+        <div class="infra-card-title"><i class="pi pi-database"></i> Database</div>
+        <div class="infra-card-body">
+          <div class="infra-row">
+            <span class="infra-label">Status</span>
+            <span class="health-status-badge" [style.color]="statusColor(health()!.db.status)" [style.background]="statusBg(health()!.db.status)">
+              {{ health()!.db.status }}
+            </span>
+          </div>
+          <div class="infra-row">
+            <span class="infra-label">Connections</span>
+            <span class="pf-mono">{{ health()!.db.connections }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="infra-card">
+        <div class="infra-card-title"><i class="pi pi-server"></i> Redis</div>
+        <div class="infra-card-body">
+          <div class="infra-row">
+            <span class="infra-label">Status</span>
+            <span class="health-status-badge" [style.color]="statusColor(health()!.redis.status)" [style.background]="statusBg(health()!.redis.status)">
+              {{ health()!.redis.status }}
+            </span>
+          </div>
+          <div class="infra-row">
+            <span class="infra-label">Memory</span>
+            <span class="pf-mono">{{ health()!.redis.memoryUsageMb | number:'1.0-1' }} MB</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  }
+</div>

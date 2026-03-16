@@ -1,0 +1,37 @@
+<div class="admin-login-page">
+  <div class="admin-login-card">
+
+    <div class="admin-login-brand">
+      <span class="brand-logo-lg">⬡</span>
+      <div>
+        <div class="admin-login-title">Polyforge</div>
+        <div class="admin-login-subtitle">Admin Console</div>
+      </div>
+    </div>
+
+    @if (error()) {
+      <p-message severity="error" [text]="error()" styleClass="admin-login-error" />
+    }
+
+    <form (ngSubmit)="submit()" class="admin-login-form">
+      <div class="admin-form-field">
+        <label class="admin-form-label">Email</label>
+        <input pInputText type="email" [(ngModel)]="email" name="email"
+          placeholder="admin@polyforge.app" autocomplete="email" class="w-full" />
+      </div>
+      <div class="admin-form-field">
+        <label class="admin-form-label">Password</label>
+        <p-password [(ngModel)]="password" name="password"
+          [feedback]="false" [toggleMask]="true"
+          placeholder="Password" styleClass="w-full" inputStyleClass="w-full"
+          autocomplete="current-password" />
+      </div>
+      <p-button type="submit" label="Sign In" icon="pi pi-sign-in"
+        styleClass="w-full" [loading]="loading()" />
+    </form>
+
+    <p class="admin-login-note">
+      Access is restricted to allowlisted IP addresses.
+    </p>
+  </div>
+</div>
