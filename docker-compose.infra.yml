@@ -273,6 +273,27 @@ services:
       migrate-user: { condition: service_completed_successfully }
     restart: unless-stopped
 
+  # ─── BACKTEST SERVICE ────────────────────────────────────────────────────
+
+  backtest-service:
+    build:
+      context: .
+      dockerfile: services/backtest-service/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      REDIS_URL: redis://redis:6379
+      PORT: "3009"
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3009:3009"
+    networks: [internal]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      migrate-user: { condition: service_completed_successfully }
+    restart: unless-stopped
+
   # ─── MARKET DATA SERVICE ─────────────────────────────────────────────────
 
   market-data-service:

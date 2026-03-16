@@ -7,7 +7,8 @@
 
 ## Next Up
 
-1. `backtest-service` — historical replay, async queue, progress events
+1. Angular user app (Phase 5)
+2. `notification-service`, `bot-service`, `admin-api-service` (Phase 6)
 
 ---
 
@@ -135,13 +136,16 @@
 - [x] strategy-engine routes PAPER strategies to `stream:paper_orders` (not `stream:orders`)
 - [x] Docker image + docker-compose integration
 
-### backtest-service
+### backtest-service (port 3009)
 
-- [ ] Historical replay on TimescaleDB `price_snapshots`
-- [ ] Async queue + WebSocket progress (`BACKTEST_PROGRESS` 0–100%)
-- [ ] Quick mode (synchronous, last 7 days, inline result)
-- [ ] Metrics: P&L, win rate, max drawdown, Sharpe ratio, equity curve
-- [ ] Data gap warning in results
+- [x] Historical replay on TimescaleDB `price_snapshots`
+- [x] Async queue (`stream:backtests`) with consumer group + at-least-once ACK
+- [x] Progress updates: Redis `backtest:{runId}:progress` + `BACKTEST_PROGRESS` events to `stream:events`
+- [x] Metrics: total P&L, win rate, max drawdown, annualised Sharpe ratio, equity curve per fill
+- [x] Data gap detection from `data_gaps` table (warns in result)
+- [x] Writes `backtest_orders` with per-fill equityCurve (batch flush, 500/flush)
+- [x] Block evaluator: 30 supported blocks, pure in-memory (no live Redis touched)
+- [x] Docker image + docker-compose integration
 
 ### api-service (port 3002)
 
