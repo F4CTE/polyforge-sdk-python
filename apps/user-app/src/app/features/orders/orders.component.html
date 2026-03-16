@@ -1,0 +1,117 @@
+<div class="pf-page">
+
+  <!-- ─── Header ──────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <h1>Orders</h1>
+    @if (!loading()) {
+      <span class="pf-mono" style="font-size:12px;color:var(--pf-text-muted)">{{ total() }} orders</span>
+    }
+  </div>
+
+  <!-- ─── Filter tabs ──────────────────────────────────────────────────── -->
+  <div class="strategy-filter-tabs">
+    @for (f of filters; track f.value) {
+      <button class="filter-tab" [class.active]="filter() === f.value" (click)="setFilter(f.value)">
+        {{ f.label }}
+      </button>
+    }
+  </div>
+
+  <!-- ─── Table ────────────────────────────────────────────────────────── -->
+  <div class="portfolio-table-panel">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="pf-col-label" style="min-width:40px">#</th>
+            <th class="pf-col-label" style="min-width:60px">Side</th>
+            <th class="pf-col-label" style="min-width:60px">Outcome</th>
+            <th class="pf-col-label" style="min-width:100px;text-align:right">Size</th>
+            <th class="pf-col-label" style="min-width:80px;text-align:right">Price</th>
+            <th class="pf-col-label" style="min-width:140px;text-align:right">Filled / Total</th>
+            <th class="pf-col-label" style="min-width:90px;text-align:right">Avg Fill</th>
+            <th class="pf-col-label" style="min-width:80px">Type</th>
+            <th class="pf-col-label" style="min-width:100px">Status</th>
+            <th class="pf-col-label" style="min-width:130px;text-align:right">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (s of skeletons; track $index) {
+              <tr class="table-row">
+                @for (c of [1,2,3,4,5,6,7,8,9,10]; track c) {
+                  <td><p-skeleton height="12px" /></td>
+                }
+              </tr>
+            }
+          } @else if (orders().length === 0) {
+            <tr>
+              <td colspan="10">
+                <div class="pf-empty-state" style="padding:48px">
+                  <i class="pi pi-list pf-empty-icon"></i>
+                  <p class="pf-empty-title">No orders found</p>
+                  <p class="pf-empty-desc">Orders placed by your strategies will appear here.</p>
+                </div>
+              </td>
+            </tr>
+          } @else {
+            @for (order of orders(); track order.id; let i = $index) {
+              <tr class="table-row">
+                <td>
+                  <span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">
+                    {{ (page() - 1) * 25 + i + 1 }}
+                  </span>
+                </td>
+                <td>
+                  <span class="side-badge {{ order.side | lowercase }}">{{ order.side }}</span>
+                </td>
+                <td>
+                  <span class="outcome-badge {{ order.outcome | lowercase }}">{{ order.outcome }}</span>
+                </td>
+                <td style="text-align:right">
+                  <span class="pf-mono">{{ order.size }}</span>
+                </td>
+                <td style="text-align:right">
+                  <span class="pf-mono">{{ order.price }}</span>
+                </td>
+                <td style="text-align:right">
+                  <span class="pf-mono" style="color:var(--pf-text-secondary)">{{ fillRatio(order) }}</span>
+                </td>
+                <td style="text-align:right">
+                  <span class="pf-mono">{{ order.avgFillPrice ?? '—' }}</span>
+                </td>
+                <td>
+                  <span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">
+                    {{ order.orderType }}
+                  </span>
+                </td>
+                <td>
+                  <span class="order-status-badge"
+                        [style.color]="statusColor(order.status)"
+                        [style.background]="statusBg(order.status)">
+                    {{ order.status }}
+                  </span>
+                </td>
+                <td style="text-align:right">
+                  <span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">
+                    {{ order.createdAt | date:'MMM d, HH:mm:ss' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ─── Pagination ──────────────────────────────────────────────────── -->
+  @if (totalPages() > 1) {
+    <div class="markets-pagination">
+      <p-button icon="pi pi-chevron-left"  severity="secondary" [text]="true" size="small" [disabled]="page() === 1"            (onClick)="prevPage()" />
+      <span class="pf-mono" style="font-size:13px;color:var(--pf-text-secondary)">{{ page() }} / {{ totalPages() }}</span>
+      <p-button icon="pi pi-chevron-right" severity="secondary" [text]="true" size="small" [disabled]="page() === totalPages()" (onClick)="nextPage()" />
+    </div>
+  }
+
+</div>

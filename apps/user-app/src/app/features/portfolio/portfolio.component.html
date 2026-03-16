@@ -1,0 +1,230 @@
+<p-toast position="top-right" />
+
+<div class="pf-page">
+
+  <!-- ─── Header ──────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <h1>Portfolio</h1>
+    <div class="portfolio-tabs">
+      <button class="filter-tab" [class.active]="tab() === 'live'"  (click)="setTab('live')">Live</button>
+      <button class="filter-tab" [class.active]="tab() === 'paper'" (click)="setTab('paper')">Paper</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════ LIVE TAB ════════════════════ -->
+  @if (tab() === 'live') {
+
+    <!-- ─── Summary cards ──────────────────────────────────────────────── -->
+    <div class="portfolio-summary-row">
+      @if (loadingPortfolio()) {
+        @for (s of [1,2,3]; track s) { <div class="summary-card"><p-skeleton height="40px" /></div> }
+      } @else if (portfolio(); as p) {
+        <div class="summary-card">
+          <span class="summary-label">Unrealized P&L</span>
+          <span class="summary-value pf-mono" [style.color]="pnlColor(p.totalUnrealizedPnl)">
+            {{ formatPnl(p.totalUnrealizedPnl) }}
+          </span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Realized P&L</span>
+          <span class="summary-value pf-mono" [style.color]="pnlColor(p.totalRealizedPnl)">
+            {{ formatPnl(p.totalRealizedPnl) }}
+          </span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Win Rate</span>
+          <span class="summary-value pf-mono" style="color:var(--pf-text-primary)">
+            {{ winRatePct(pnl()?.winRate ?? '0') }}
+          </span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Open Positions</span>
+          <span class="summary-value pf-mono" style="color:var(--pf-text-primary)">
+            {{ p.positions.length }}
+          </span>
+        </div>
+      }
+    </div>
+
+    <!-- ─── P&L Chart ────────────────────────────────────────────────────── -->
+    <div class="portfolio-chart-panel">
+      <div class="panel-header">
+        <span class="panel-title">P&L Over Time</span>
+        <div style="display:flex;gap:4px">
+          @for (p of periods; track p.value) {
+            <button class="res-btn" [class.active]="period() === p.value" (click)="setPeriod(p.value)">
+              {{ p.label }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:260px">
+        @if (loadingChart()) {
+          <p-skeleton height="100%" />
+        } @else if (chartData()) {
+          <p-chart type="line" [data]="chartData()" [options]="chartOptions()" height="260px" />
+        } @else {
+          <div class="pf-empty-state"><p class="pf-empty-desc">No P&L data yet.</p></div>
+        }
+      </div>
+    </div>
+
+    <!-- ─── Positions table ──────────────────────────────────────────────── -->
+    <div class="portfolio-table-panel">
+      <div class="panel-header">
+        <span class="panel-title">Open Positions</span>
+      </div>
+
+      @if (loadingPortfolio()) {
+        <div style="padding:16px">
+          @for (s of [1,2,3]; track s) { <p-skeleton height="40px" styleClass="mb-2" /> }
+        </div>
+      } @else if ((portfolio()?.positions ?? []).length === 0) {
+        <div class="pf-empty-state" style="padding:40px">
+          <i class="pi pi-wallet pf-empty-icon"></i>
+          <p class="pf-empty-title">No open positions</p>
+          <p class="pf-empty-desc">Start a strategy to build positions.</p>
+        </div>
+      } @else {
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="pf-col-label">Market</th>
+                <th class="pf-col-label">Side</th>
+                <th class="pf-col-label" style="text-align:right">Size</th>
+                <th class="pf-col-label" style="text-align:right">Avg Entry</th>
+                <th class="pf-col-label" style="text-align:right">Current</th>
+                <th class="pf-col-label" style="text-align:right">Unreal. P&L</th>
+                <th class="pf-col-label" style="text-align:right">Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (pos of portfolio()!.positions; track pos.id) {
+                <tr class="table-row">
+                  <td class="market-title-cell">
+                    <span class="market-title" [title]="pos.marketTitle">{{ pos.marketTitle }}</span>
+                  </td>
+                  <td>
+                    <span class="outcome-badge" [class]="pos.side | lowercase">{{ pos.side }}</span>
+                  </td>
+                  <td style="text-align:right">
+                    <span class="pf-mono">{{ pos.size | number:'1.0-0' }}</span>
+                  </td>
+                  <td style="text-align:right">
+                    <span class="pf-mono">{{ pos.avgEntryPrice | number:'1.3-3' }}</span>
+                  </td>
+                  <td style="text-align:right">
+                    <span class="pf-mono" style="color:var(--pf-cyan-500)">
+                      {{ pos.currentPrice | number:'1.3-3' }}
+                    </span>
+                  </td>
+                  <td style="text-align:right">
+                    <span class="pf-mono" [style.color]="pnlColor(pos.unrealizedPnl)">
+                      {{ formatPnl(pos.unrealizedPnl) }}
+                    </span>
+                  </td>
+                  <td style="text-align:right">
+                    <span class="resolution-badge {{ pos.resolutionStatus | lowercase }}">
+                      {{ pos.resolutionStatus }}
+                    </span>
+                  </td>
+                  <td style="text-align:right">
+                    @if (pos.resolutionStatus === 'UNRESOLVED') {
+                      <p-button
+                        label="Close"
+                        size="small"
+                        severity="danger"
+                        [text]="true"
+                        [loading]="!!closingPosition()[pos.id]"
+                        pTooltip="Close full position"
+                        (onClick)="closePosition(pos)" />
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+  }<!-- /live tab -->
+
+  <!-- ════════════════════ PAPER TAB ════════════════════ -->
+  @if (tab() === 'paper') {
+
+    @if (loadingPaper()) {
+      <div style="padding:48px;text-align:center"><p-skeleton height="200px" /></div>
+    } @else if (paper(); as p) {
+
+      <!-- Summary -->
+      <div class="portfolio-summary-row" style="margin-bottom:24px">
+        <div class="summary-card">
+          <span class="summary-label">Paper P&L</span>
+          <span class="summary-value pf-mono" [style.color]="pnlColor(p.pnl)">{{ formatPnl(p.pnl) }}</span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Positions</span>
+          <span class="summary-value pf-mono">{{ p.positions.length }}</span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Total Orders</span>
+          <span class="summary-value pf-mono">{{ p.orderCount }}</span>
+        </div>
+        <div class="summary-card" style="justify-content:flex-end">
+          <p-button
+            label="Reset Paper Account"
+            icon="pi pi-refresh"
+            severity="danger"
+            [text]="true"
+            size="small"
+            [loading]="resettingPaper()"
+            (onClick)="resetPaper()" />
+        </div>
+      </div>
+
+      <!-- Paper positions -->
+      @if (p.positions.length === 0) {
+        <div class="pf-empty-state" style="padding:48px">
+          <i class="pi pi-file pf-empty-icon"></i>
+          <p class="pf-empty-title">No paper positions</p>
+          <p class="pf-empty-desc">Start a strategy in Paper mode to simulate trades.</p>
+        </div>
+      } @else {
+        <div class="portfolio-table-panel">
+          <div class="panel-header"><span class="panel-title">Paper Positions</span></div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="pf-col-label">Token</th>
+                  <th class="pf-col-label">Side</th>
+                  <th class="pf-col-label" style="text-align:right">Size</th>
+                  <th class="pf-col-label" style="text-align:right">Unreal. P&L</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (pos of p.positions; track pos.tokenId) {
+                  <tr class="table-row">
+                    <td><span class="pf-mono" style="font-size:12px;color:var(--pf-text-secondary)">{{ pos.tokenId }}</span></td>
+                    <td><span class="outcome-badge {{ pos.side | lowercase }}">{{ pos.side }}</span></td>
+                    <td style="text-align:right"><span class="pf-mono">{{ pos.size | number:'1.0-0' }}</span></td>
+                    <td style="text-align:right">
+                      <span class="pf-mono" [style.color]="pnlColor(pos.unrealizedPnl)">
+                        {{ formatPnl(pos.unrealizedPnl) }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    }
+
+  }<!-- /paper tab -->
+
+</div>

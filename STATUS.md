@@ -210,9 +210,13 @@
 - [x] `StrategyDetailComponent` — block summary, live event log via WebSocket, action buttons
 - [x] `StrategyBuilderComponent` — all 36 blocks (safety/triggers/conditions/actions), config forms, create + edit mode
 
-### Pending
+### Portfolio + Orders (done)
 
-- [ ] Portfolio + orders
+- [x] `PortfolioApiService` — portfolio, pnl, paper summary/reset, orders, close-position
+- [x] `PortfolioComponent` — Live/Paper tabs, P&L chart (color-coded), positions table with close button, paper summary
+- [x] `OrdersComponent` — status filter tabs, full order table (side/outcome/size/price/fill/status), pagination
+
+### Pending
 - [ ] Social (discover, leaderboard, profiles, comments)
 - [ ] Settings + notifications centre + price alerts
 - [ ] Backtest runner + results
