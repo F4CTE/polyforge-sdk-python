@@ -7,9 +7,9 @@
 
 ## Next Up
 
-1. `strategy-engine` — tick loop, event loop, 36 blocks, OrderIntent publisher
-2. `api-service` — markets REST, strategies CRUD, WebSocket gateway
-3. `paper-order-service` — simulated fills using Redis price cache
+1. `api-service` — markets REST, strategies CRUD, WebSocket gateway (Phase 4)
+2. `paper-order-service` — simulated fills using Redis price cache
+3. `backtest-service` — historical replay, async queue, progress events
 
 ---
 
@@ -110,15 +110,17 @@
 - [x] Internal JWT auth guard (aud: order-service) on close endpoint
 - [x] Docker image + docker-compose integration
 
-### strategy-engine
+### strategy-engine (port 3006)
 
-- [ ] Tick loop (min 200ms)
-- [ ] Event loop (price event triggers)
-- [ ] Block evaluation order: SAFETY → TRIGGER → CONDITION → ACTION
-- [ ] All 36 blocks implemented (6 safety, 6 event triggers, 7 tick triggers, 9 conditions, 8 actions)
-- [ ] Stale data detection (pause if cache > 5s)
-- [ ] `OrderIntent` publish to `stream:orders`
-- [ ] Start / Stop / Pause / Resume per strategy
+- [x] Tick loop (floor 200ms, configurable tickMs per strategy)
+- [x] Event loop (price event triggers for EVENT/HYBRID mode)
+- [x] Block evaluation order: SAFETY → TRIGGER → CONDITION → ACTION
+- [x] All 36 blocks implemented (6 safety, 6 event triggers, 7 tick triggers, 9 conditions, 8 actions)
+- [x] Stale data detection — auto-pause if cache:price > 5s, auto-resume when fresh
+- [x] `OrderIntent` publish to `stream:orders` (XADD)
+- [x] Start / Stop / Pause / Resume per strategy (internal JWT endpoints)
+- [x] Per-strategy Redis state (betsToday, dailyPnl, consecutive losses, etc.) — resets at midnight UTC
+- [x] Docker image + docker-compose integration
 
 ---
 

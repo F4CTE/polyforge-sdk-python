@@ -184,6 +184,26 @@ services:
       postgres-user: { condition: service_healthy }
     restart: unless-stopped
 
+  # ─── STRATEGY ENGINE ─────────────────────────────────────────────────────
+
+  strategy-engine:
+    build:
+      context: .
+      dockerfile: services/strategy-engine/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
+      DIRECT_DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
+      REDIS_URL: redis://redis:6379
+      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
+      PORT: "3006"
+    ports:
+      - "3006:3006"
+    networks: [internal]
+    depends_on:
+      postgres-user: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+
   # ─── ORDER SERVICE ───────────────────────────────────────────────────────
 
   order-service:
