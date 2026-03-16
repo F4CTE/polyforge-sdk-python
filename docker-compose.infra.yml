@@ -161,6 +161,29 @@ services:
     networks: [internal]
     restart: unless-stopped
 
+  # ─── SIGNER SERVICE ──────────────────────────────────────────────────────
+  # NO published ports — only reachable on the signer-only network.
+
+  signer-service:
+    build:
+      context: .
+      dockerfile: services/signer-service/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
+      DIRECT_DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
+      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
+      MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
+      POLY_BUILDER_API_KEY: ${POLY_BUILDER_API_KEY:-dev-builder-api-key}
+      POLY_BUILDER_SECRET: ${POLY_BUILDER_SECRET:-dev-builder-secret}
+      POLY_BUILDER_PASSPHRASE: ${POLY_BUILDER_PASSPHRASE:-dev-builder-passphrase}
+      CHAIN_ID: ${CHAIN_ID:-137}
+      PORT: "3012"
+      NODE_ENV: ${NODE_ENV:-development}
+    networks: [signer-only]
+    depends_on:
+      postgres-user: { condition: service_healthy }
+    restart: unless-stopped
+
   # ─── MARKET DATA SERVICE ─────────────────────────────────────────────────
 
   market-data-service:

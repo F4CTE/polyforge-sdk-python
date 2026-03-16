@@ -89,13 +89,15 @@
 
 ## Phase 3 — Trading Critical Path
 
-### signer-service
+### signer-service (port 3012)
 
-- [ ] AES-256-GCM envelope encryption (DEK per user, KEK in AWS Secrets Manager)
-- [ ] EIP712 signing with `@polymarket/clob-client`
-- [ ] Builder Program HMAC attribution on every order
-- [ ] `signer-only` network isolation
-- [ ] Canary credential honeypot
+- [x] AES-256-GCM envelope encryption (DEK per user, KEK from env / AWS Secrets Manager)
+- [x] EIP712 signing — stub in dev, `@polymarket/clob-client` in prod (dynamic import)
+- [x] Builder Program HMAC attribution on every order
+- [x] `signer-only` network isolation (no published Docker ports)
+- [x] Canary credential honeypot (seeded on startup)
+- [x] Internal JWT auth guard with jti replay protection
+- [x] Docker image + docker-compose integration
 
 ### order-service
 
