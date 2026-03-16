@@ -7,9 +7,8 @@
 
 ## Next Up
 
-1. `api-service` — markets REST, strategies CRUD, WebSocket gateway (Phase 4)
-2. `paper-order-service` — simulated fills using Redis price cache
-3. `backtest-service` — historical replay, async queue, progress events
+1. `paper-order-service` — simulated fills using Redis price cache
+2. `backtest-service` — historical replay, async queue, progress events
 
 ---
 
@@ -143,17 +142,19 @@
 
 ### api-service (port 3002)
 
-- [ ] Markets REST: list, detail, price-history, order book
-- [ ] Strategies REST: CRUD, start/stop/pause/resume/fork/like
-- [ ] Comments, reports, templates
-- [ ] Discover feed + leaderboard
-- [ ] Orders REST + close position
-- [ ] Portfolio + P&L charts
-- [ ] Price alerts (max 50 per user)
-- [ ] Paper summary + reset
-- [ ] Backtests REST
-- [ ] Social: profiles, follow, settings
-- [ ] WebSocket gateway (auth, prices, strategies, orders, backtests, markets)
+- [x] NestJS 11 + Fastify, global prefix `api/v1`
+- [x] Markets REST: list, detail, price-history (TimescaleDB), order book (Redis cache)
+- [x] Strategies REST: CRUD, start/stop/pause/resume/fork/like
+- [x] Comments, reports, templates
+- [x] Discover feed + leaderboard
+- [x] Orders REST + close position (FOK via stream:orders)
+- [x] Portfolio + P&L charts (pnl_snapshots TimescaleDB)
+- [x] Price alerts (max 50 per user)
+- [x] Paper summary + reset (PaperOrder/PaperPosition models)
+- [x] Backtests REST (list + create, quickMode stub)
+- [x] Social: profiles, follow/unfollow, settings (profile/notifications/password)
+- [x] WebSocket gateway (native ws on /ws — auth, prices, strategies, orders, events relay from stream:events)
+- [x] Docker image + docker-compose integration
 - [ ] OpenAPI pipeline: `swagger.json` generated at build time
 
 ---

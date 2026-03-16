@@ -228,6 +228,30 @@ services:
       mock-polymarket: { condition: service_started }
     restart: unless-stopped
 
+  # ─── API SERVICE ─────────────────────────────────────────────────────────
+
+  api-service:
+    build:
+      context: .
+      dockerfile: services/api-service/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret}
+      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
+      STRATEGY_ENGINE_URL: http://strategy-engine:3006
+      PORT: "3002"
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3002:3002"
+    networks: [internal]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      migrate-user: { condition: service_completed_successfully }
+    restart: unless-stopped
+
   # ─── MARKET DATA SERVICE ─────────────────────────────────────────────────
 
   market-data-service:
