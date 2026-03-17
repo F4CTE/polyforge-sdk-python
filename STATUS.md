@@ -324,6 +324,6 @@
 - [x] E2E tests (Playwright): smoke (7 tests) + auth-flow (10 tests) + credentials (5 tests) + strategy-lifecycle (8 tests), POMs for login/register/builder/trading-account/strategies-list, MailHog + direct-API helpers
 - [x] Load tests: k6 suite — auth (50 VUs), REST (130 VUs), WebSocket (200 VUs), strategy pipeline (100 strats × 1000 ticks/sec), resilience (api_down + WS reconnect)
 - [ ] AWS infrastructure (EC2, RDS, ElastiCache, ECR, Secrets Manager, SES, CloudWatch)
-- [ ] Production deploy (`docker-compose.prod.yml`)
+- [x] Production deploy (`docker-compose.prod.yml` + gateway Dockerfile + nginx.prod.conf + scripts/deploy.sh + fetch-secrets.sh + issue-certs.sh)
 - [ ] Builder Program registration with Polymarket (start in Phase 3 — external delay)
 - [ ] Soft launch (invite only)

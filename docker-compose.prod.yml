@@ -1,0 +1,393 @@
+name: polyforge-prod
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PRODUCTION DOCKER COMPOSE
+#
+# Prerequisites:
+#   - AWS RDS (PostgreSQL 16 + TimescaleDB) provisioned
+#   - AWS ElastiCache (Redis 7) provisioned
+#   - AWS ECR images built and pushed (see scripts/deploy.sh)
+#   - Let's Encrypt certs issued (see scripts/issue-certs.sh)
+#   - .env.prod populated (see scripts/fetch-secrets.sh)
+#
+# All NestJS services pull images from ECR.
+# Secrets come from .env.prod (never committed).
+# No dev-only services (mock-polymarket, mailhog) are present.
+#
+# Usage:
+#   bash scripts/deploy.sh           # full deploy (build + push + compose up)
+#   docker compose -f docker-compose.prod.yml up -d --no-build
+#   docker compose -f docker-compose.prod.yml ps
+#   docker compose -f docker-compose.prod.yml logs -f api-service
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ECR_REGISTRY is set by the deploy script, e.g.:
+#   123456789012.dkr.ecr.us-east-1.amazonaws.com
+# IMAGE_TAG defaults to "latest" — CI should set a commit SHA tag.
+
+x-image: &ecr_image "${ECR_REGISTRY:-missing-ecr-registry}/polyforge"
+
+x-logging: &awslogs
+  driver: awslogs
+  options:
+    awslogs-region: "${AWS_REGION:-us-east-1}"
+    awslogs-group:  "/polyforge/prod"
+    awslogs-stream-prefix: "docker"
+
+x-common: &common
+  env_file: .env.prod
+  restart: unless-stopped
+  logging: *awslogs
+
+# ─── Networks ────────────────────────────────────────────────────────────────
+
+networks:
+  public:
+    driver: bridge
+  internal:
+    driver: bridge
+    internal: true
+  signer-only:
+    driver: bridge
+    internal: true
+  admin-only:
+    driver: bridge
+    internal: true
+
+# ─── Volumes ─────────────────────────────────────────────────────────────────
+
+volumes:
+  certbot-www:   # ACME challenge files (shared with gateway)
+  certbot-conf:  # Let's Encrypt certs (shared with gateway)
+
+# ─── Services ─────────────────────────────────────────────────────────────────
+
+services:
+
+  # ─── Gateway (Nginx) ───────────────────────────────────────────────────────
+  # Only service with published ports.
+
+  gateway:
+    image: "${ECR_REGISTRY}/polyforge-gateway:${IMAGE_TAG:-latest}"
+    <<: *common
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certbot-conf:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+    networks: [public, admin-only]
+    depends_on:
+      auth-service:       { condition: service_healthy }
+      api-service:        { condition: service_healthy }
+      admin-auth-service: { condition: service_healthy }
+      admin-api-service:  { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  # ─── PgBouncer (user DB) ───────────────────────────────────────────────────
+  # Pools connections to AWS RDS — reduces RDS connection count.
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    <<: *common
+    environment:
+      DATABASE_URL: "${DATABASE_DIRECT_URL}"     # RDS connection string from .env.prod
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 200
+      DEFAULT_POOL_SIZE: 25
+      SERVER_RESET_QUERY: DISCARD ALL
+      SERVER_TLS_SSLMODE: require
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  # ─── PgBouncer (admin DB) ──────────────────────────────────────────────────
+
+  pgbouncer-admin:
+    image: edoburu/pgbouncer:latest
+    <<: *common
+    environment:
+      DATABASE_URL: "${ADMIN_DATABASE_DIRECT_URL}"
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 50
+      DEFAULT_POOL_SIZE: 10
+      SERVER_RESET_QUERY: DISCARD ALL
+      SERVER_TLS_SSLMODE: require
+    networks: [internal, admin-only]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+
+  # ─── Auth Service ──────────────────────────────────────────────────────────
+
+  auth-service:
+    image: "${ECR_REGISTRY}/polyforge-auth-service:${IMAGE_TAG:-latest}"
+    <<: *common
+    networks: [public, internal, signer-only]
+    depends_on:
+      pgbouncer: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # ─── API Service ───────────────────────────────────────────────────────────
+
+  api-service:
+    image: "${ECR_REGISTRY}/polyforge-api-service:${IMAGE_TAG:-latest}"
+    <<: *common
+    networks: [public, internal]
+    depends_on:
+      pgbouncer: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3002/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  # ─── Admin Auth Service ────────────────────────────────────────────────────
+
+  admin-auth-service:
+    image: "${ECR_REGISTRY}/polyforge-admin-auth-service:${IMAGE_TAG:-latest}"
+    <<: *common
+    networks: [admin-only, internal]
+    depends_on:
+      pgbouncer-admin: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3003/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  # ─── Admin API Service ─────────────────────────────────────────────────────
+
+  admin-api-service:
+    image: "${ECR_REGISTRY}/polyforge-admin-api-service:${IMAGE_TAG:-latest}"
+    <<: *common
+    networks: [admin-only, internal]
+    depends_on:
+      pgbouncer:       { condition: service_healthy }
+      pgbouncer-admin: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3004/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # ─── Market Data Service ───────────────────────────────────────────────────
+
+  market-data-service:
+    image: "${ECR_REGISTRY}/polyforge-market-data-service:${IMAGE_TAG:-latest}"
+    <<: *common
+    networks: [internal]
+    depends_on:
+      pgbouncer: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3005/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # ─── Strategy Engine ───────────────────────────────────────────────────────
+  # Most CPU-intensive service — gets the most resources.
+
+  strategy-engine:
+    image: "${ECR_REGISTRY}/polyforge-strategy-engine:${IMAGE_TAG:-latest}"
+    <<: *common
+    networks: [internal]
+    depends_on:
+      pgbouncer: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3006/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+
+  # ─── Order Service ─────────────────────────────────────────────────────────
+
+  order-service:
+    image: "${ECR_REGISTRY}/polyforge-order-service:${IMAGE_TAG:-latest}"
+    <<: *common
+    networks: [internal, signer-only]
+    depends_on:
+      pgbouncer:       { condition: service_healthy }
+      signer-service:  { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3007/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # ─── Paper Order Service ───────────────────────────────────────────────────
+
+  paper-order-service:
+    image: "${ECR_REGISTRY}/polyforge-paper-order-service:${IMAGE_TAG:-latest}"
+    <<: *common
+    networks: [internal]
+    depends_on:
+      pgbouncer: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3008/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # ─── Backtest Service ──────────────────────────────────────────────────────
+
+  backtest-service:
+    image: "${ECR_REGISTRY}/polyforge-backtest-service:${IMAGE_TAG:-latest}"
+    <<: *common
+    networks: [internal]
+    depends_on:
+      pgbouncer: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3009/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  # ─── Notification Service ──────────────────────────────────────────────────
+
+  notification-service:
+    image: "${ECR_REGISTRY}/polyforge-notification-service:${IMAGE_TAG:-latest}"
+    <<: *common
+    networks: [internal]
+    depends_on:
+      pgbouncer: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3010/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  # ─── Bot Service ───────────────────────────────────────────────────────────
+
+  bot-service:
+    image: "${ECR_REGISTRY}/polyforge-bot-service:${IMAGE_TAG:-latest}"
+    <<: *common
+    networks: [internal]
+    depends_on:
+      pgbouncer: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3011/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  # ─── Signer Service ────────────────────────────────────────────────────────
+  # Hardened: read-only filesystem, tmpfs for /tmp, signer-only network.
+  # NO published ports. Only reachable by auth-service and order-service.
+
+  signer-service:
+    image: "${ECR_REGISTRY}/polyforge-signer-service:${IMAGE_TAG:-latest}"
+    <<: *common
+    networks: [signer-only]
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      pgbouncer: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3012/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
