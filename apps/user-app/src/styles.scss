@@ -1978,3 +1978,86 @@ html, body {
 .legal-footer-sep {
   color: var(--pf-border-default);
 }
+
+// ─── 404 page ─────────────────────────────────────────────────────────────
+
+.not-found-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pf-bg-base);
+  padding: 24px;
+}
+
+.not-found-inner {
+  text-align: center;
+  max-width: 400px;
+}
+
+.not-found-code {
+  font-size: 120px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -4px;
+  background: linear-gradient(135deg, var(--pf-border-strong) 0%, var(--pf-bg-raised) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  font-family: 'Outfit', sans-serif;
+}
+
+.not-found-bolt {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.not-found-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--pf-text-primary);
+  margin-bottom: 12px;
+}
+
+.not-found-desc {
+  font-size: 14px;
+  color: var(--pf-text-secondary);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.not-found-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.nf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s;
+  border: none;
+  cursor: pointer;
+}
+
+.nf-btn-primary {
+  background: var(--pf-cyan-500);
+  color: #000;
+  &:hover { background: var(--pf-cyan-400); }
+}
+
+.nf-btn-ghost {
+  background: transparent;
+  color: var(--pf-text-secondary);
+  border: 1px solid var(--pf-border-strong);
+  &:hover { color: var(--pf-text-primary); background: var(--pf-bg-raised); }
+}

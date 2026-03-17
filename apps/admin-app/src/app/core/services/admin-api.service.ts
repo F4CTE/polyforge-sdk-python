@@ -159,6 +159,16 @@ export class AdminApiService {
     return this.http.delete<void>(`${this.base}/invites/${encodeURIComponent(code)}`);
   }
 
+  // ─── Waitlist ────────────────────────────────────────────────────────────────
+
+  listWaitlist(): Observable<{ total: number; data: { email: string; joinedAt: string }[] }> {
+    return this.http.get<{ total: number; data: { email: string; joinedAt: string }[] }>(`${this.base}/waitlist`);
+  }
+
+  removeFromWaitlist(email: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/waitlist/${encodeURIComponent(email)}`);
+  }
+
   // ─── Logs ───────────────────────────────────────────────────────────────────
 
   auditLogs(q: { page?: number; limit?: number; userId?: string; adminId?: string; action?: string; from?: string; to?: string } = {}): Observable<PaginatedResponse<AuditLog>> {

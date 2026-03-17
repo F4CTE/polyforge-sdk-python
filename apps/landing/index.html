@@ -121,15 +121,41 @@
         and deploy them to run 24/7 — without writing a single line of code.
       </p>
 
-      <div class="hero-actions">
-        <a href="/register" class="btn btn-primary btn-lg">
-          Request early access
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="margin-left:6px">
-            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Waitlist form -->
+      <form class="waitlist-form" id="waitlist-form" novalidate>
+        <div class="waitlist-input-wrap">
+          <input
+            type="email"
+            id="waitlist-email"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+            class="waitlist-input"
+            aria-label="Email address" />
+          <button type="submit" class="btn btn-primary btn-lg waitlist-submit" id="waitlist-btn">
+            <span id="waitlist-btn-text">Request access</span>
+            <svg id="waitlist-spinner" width="16" height="16" viewBox="0 0 16 16"
+                 fill="none" aria-hidden="true" style="display:none;margin-left:6px;animation:spin 0.8s linear infinite">
+              <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="28" stroke-dashoffset="10"/>
+            </svg>
+          </button>
+        </div>
+        <p class="waitlist-hint" id="waitlist-hint">Join the early-access list — no spam, ever.</p>
+        <p class="waitlist-success" id="waitlist-success" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="vertical-align:-3px;margin-right:6px">
+            <path d="M3 8l3.5 3.5L13 5" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
+          You're on the list! We'll be in touch soon.
+        </p>
+        <p class="waitlist-error" id="waitlist-error" style="display:none"></p>
+      </form>
+
+      <p style="margin-top:14px">
+        <a href="#how-it-works" style="font-size:13px;color:var(--text-muted);text-decoration:none">
+          See how it works ↓
         </a>
-        <a href="#how-it-works" class="btn btn-ghost btn-lg">See how it works</a>
-      </div>
+      </p>
 
       <!-- Hero terminal mock-up -->
       <div class="hero-terminal" aria-hidden="true">
@@ -352,12 +378,18 @@
           Polyforge is in early access. Request your invite and start trading smarter
           today — no credit card required.
         </p>
-        <a href="/register" class="btn btn-primary btn-lg">
-          Request early access
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="margin-left:6px">
-            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
+        <form class="waitlist-form waitlist-form--inline" id="waitlist-form-cta" novalidate>
+          <div class="waitlist-input-wrap">
+            <input type="email" name="email" placeholder="you@example.com"
+                   autocomplete="email" required class="waitlist-input" aria-label="Email address"/>
+            <button type="submit" class="btn btn-primary btn-lg waitlist-submit">Request access</button>
+          </div>
+          <p class="waitlist-hint" style="text-align:center">Join the early-access list — no spam, ever.</p>
+          <p class="waitlist-success" style="display:none;text-align:center;color:#4ade80">
+            You're on the list! We'll be in touch soon.
+          </p>
+          <p class="waitlist-error" style="display:none;text-align:center"></p>
+        </form>
       </div>
     </div>
   </section>
@@ -405,6 +437,57 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    (function () {
+      const API = '/auth/v1/waitlist';
+
+      async function submitWaitlist(form) {
+        const emailInput = form.querySelector('input[type="email"]');
+        const btn        = form.querySelector('.waitlist-submit');
+        const hint       = form.querySelector('.waitlist-hint');
+        const success    = form.querySelector('.waitlist-success');
+        const error      = form.querySelector('.waitlist-error');
+        const spinner    = form.querySelector('#waitlist-spinner');
+
+        const email = emailInput ? emailInput.value.trim() : '';
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          if (error) { error.textContent = 'Please enter a valid email address.'; error.style.display = 'block'; }
+          return;
+        }
+
+        btn.disabled = true;
+        if (spinner) spinner.style.display = 'inline-block';
+        if (error)   error.style.display   = 'none';
+
+        try {
+          const res = await fetch(API, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ email }),
+          });
+          if (res.ok || res.status === 409) {
+            form.querySelector('.waitlist-input-wrap').style.display = 'none';
+            if (hint)    hint.style.display    = 'none';
+            if (success) success.style.display = 'block';
+          } else {
+            throw new Error('server error');
+          }
+        } catch {
+          btn.disabled = false;
+          if (spinner) spinner.style.display = 'none';
+          if (error) { error.textContent = 'Something went wrong. Please try again.'; error.style.display = 'block'; }
+        }
+      }
+
+      document.addEventListener('submit', function (e) {
+        if (e.target.classList.contains('waitlist-form')) {
+          e.preventDefault();
+          submitWaitlist(e.target);
+        }
+      });
+    })();
+  </script>
 
 </body>
 </html>

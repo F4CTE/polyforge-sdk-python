@@ -17,6 +17,11 @@ interface InviteRow {
   ttl: number; // -1 = no expiry
 }
 
+interface WaitlistRow {
+  email: string;
+  joinedAt: string;
+}
+
 @Component({
   selector: 'app-invites',
   standalone: true,
@@ -34,10 +39,15 @@ export class InvitesComponent implements OnInit {
   private readonly confirm      = inject(ConfirmationService);
   private readonly destroyRef   = inject(DestroyRef);
 
+  activeTab   = signal<'invites' | 'waitlist'>('invites');
+
   invites     = signal<InviteRow[]>([]);
   loading     = signal(true);
   generating  = signal(false);
   copiedCode  = signal('');
+
+  waitlist        = signal<WaitlistRow[]>([]);
+  waitlistLoading = signal(false);
 
   // Generate form state
   genCount   = 10;
@@ -47,7 +57,39 @@ export class InvitesComponent implements OnInit {
   // Generated batch (shown until next load)
   lastBatch = signal<string[]>([]);
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void { this.load(); this.loadWaitlist(); }
+
+  setTab(tab: 'invites' | 'waitlist'): void { this.activeTab.set(tab); }
+
+  loadWaitlist(): void {
+    this.waitlistLoading.set(true);
+    this.api.listWaitlist()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => { this.waitlist.set(res.data); this.waitlistLoading.set(false); },
+        error: () => this.waitlistLoading.set(false),
+      });
+  }
+
+  removeWaitlist(email: string): void {
+    this.confirm.confirm({
+      message: `Remove <strong>${email}</strong> from the waitlist?`,
+      header: 'Remove from waitlist',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.api.removeFromWaitlist(email)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: () => {
+              this.toast.add({ severity: 'success', summary: 'Removed', detail: `${email} removed` });
+              this.loadWaitlist();
+            },
+            error: () => this.toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove' }),
+          });
+      },
+    });
+  }
 
   load(): void {
     this.loading.set(true);

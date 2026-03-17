@@ -1,10 +1,26 @@
 import { Injectable } from '@nestjs/common';
 
+const FRONTEND = process.env.FRONTEND_URL ?? 'https://polyforge.app';
+
 export interface NotificationContent {
     title: string;
     body: string;
     severity: 'info' | 'success' | 'warning' | 'error';
 }
+
+const SEVERITY_COLOR: Record<NotificationContent['severity'], string> = {
+    info:    '#3b82f6',
+    success: '#22c55e',
+    warning: '#f59e0b',
+    error:   '#ef4444',
+};
+
+const SEVERITY_LABEL: Record<NotificationContent['severity'], string> = {
+    info:    'Info',
+    success: 'Success',
+    warning: 'Warning',
+    error:   'Alert',
+};
 
 @Injectable()
 export class TemplatesService {
@@ -90,25 +106,134 @@ export class TemplatesService {
     }
 
     toHtml(content: NotificationContent): string {
-        const color = {
-            info:    '#3b82f6',
-            success: '#22c55e',
-            warning: '#f59e0b',
-            error:   '#ef4444',
-        }[content.severity];
+        const accent  = SEVERITY_COLOR[content.severity];
+        const label   = SEVERITY_LABEL[content.severity];
 
         return `<!DOCTYPE html>
-<html>
-<body style="font-family: sans-serif; background: #f9fafb; padding: 24px;">
-  <div style="max-width: 480px; background: #fff; border-radius: 8px; padding: 24px; border-left: 4px solid ${color};">
-    <h2 style="color: ${color}; margin: 0 0 12px;">${content.title}</h2>
-    <p style="color: #374151; margin: 0;">${content.body}</p>
-    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 16px 0;">
-    <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-      Manage your notification preferences at
-      <a href="${process.env.FRONTEND_URL ?? 'https://polyforge.app'}/settings/notifications">polyforge.app/settings</a>
-    </p>
-  </div>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <title>${content.title}</title>
+  <style>
+    body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
+    body{margin:0;padding:0;background:#f4f4f7;
+         font-family:'Helvetica Neue',Helvetica,Arial,sans-serif}
+    table{border-collapse:collapse}
+    a{color:#06b6d4}
+  </style>
+</head>
+<body>
+  <!-- Preheader -->
+  <span style="display:none;font-size:1px;color:#f4f4f7;max-height:0;max-width:0;opacity:0;overflow:hidden">
+    ${content.title} — ${content.body}
+  </span>
+
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#f4f4f7">
+    <tr>
+      <td align="center" style="padding:32px 16px 0">
+
+        <table width="100%" border="0" cellspacing="0" cellpadding="0"
+               style="max-width:560px;background:#ffffff;border-radius:12px;
+                      box-shadow:0 2px 16px rgba(0,0,0,0.06);overflow:hidden">
+
+          <!-- Header -->
+          <tr>
+            <td bgcolor="#0a0a0f" align="center" style="padding:24px 32px">
+              <table border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding-right:10px;vertical-align:middle">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                         xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stop-color="#67e8f9"/>
+                          <stop offset="100%" stop-color="#06b6d4"/>
+                        </linearGradient>
+                      </defs>
+                      <path d="M13 2L4.09 12.96H11L10 22L20.91 11.04H14L13 2Z"
+                            fill="url(#bg)"/>
+                    </svg>
+                  </td>
+                  <td style="vertical-align:middle">
+                    <span style="font-size:22px;font-weight:700;color:#f0f0f5;
+                                 font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
+                                 letter-spacing:-0.5px">Polyforge</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Severity stripe -->
+          <tr>
+            <td height="4" bgcolor="${accent}" style="font-size:0;line-height:0">&nbsp;</td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px 40px 28px">
+
+              <!-- Severity badge -->
+              <p style="margin:0 0 16px">
+                <span style="display:inline-block;padding:3px 10px;border-radius:999px;
+                             font-size:11px;font-weight:700;text-transform:uppercase;
+                             letter-spacing:0.06em;
+                             background:${accent}1a;color:${accent}">${label}</span>
+              </p>
+
+              <!-- Title -->
+              <h2 style="margin:0 0 14px;font-size:20px;font-weight:700;color:#111827;
+                         font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+                ${content.title}
+              </h2>
+
+              <!-- Message -->
+              <p style="margin:0 0 28px;font-size:15px;color:#4b5563;line-height:1.7">
+                ${content.body}
+              </p>
+
+              <!-- CTA -->
+              <p style="margin:0">
+                <a href="${FRONTEND}"
+                   style="background:#06b6d4;border-radius:8px;color:#000;display:inline-block;
+                          font-size:14px;font-weight:600;padding:10px 24px;text-decoration:none">
+                  Open Polyforge
+                </a>
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td bgcolor="#f9fafb"
+                style="padding:18px 40px;border-top:1px solid #e5e7eb;
+                       font-size:12px;color:#9ca3af;line-height:1.6;
+                       font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+              <p style="margin:0 0 6px">
+                You received this because you have notifications enabled for this event type.
+              </p>
+              <p style="margin:0">
+                <a href="${FRONTEND}/settings" style="color:#06b6d4;text-decoration:none">Manage preferences</a>
+                &nbsp;&middot;&nbsp;
+                <a href="${FRONTEND}/terms" style="color:#9ca3af;text-decoration:none">Terms</a>
+                &nbsp;&middot;&nbsp;
+                <a href="${FRONTEND}/privacy" style="color:#9ca3af;text-decoration:none">Privacy</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+        <p style="font-size:12px;color:#9ca3af;margin:16px 0 32px;text-align:center">
+          &copy; ${new Date().getFullYear()} Polyforge. All rights reserved.
+        </p>
+
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
     }

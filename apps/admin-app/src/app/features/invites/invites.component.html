@@ -2,112 +2,182 @@
 <p-confirmDialog />
 
 <div class="page-header">
-  <h1 class="page-title">Invite Codes</h1>
-  <p class="page-subtitle">Generate and manage invite codes for soft-launch access control.</p>
+  <h1 class="page-title">Invites &amp; Waitlist</h1>
+  <p class="page-subtitle">Manage early-access invite codes and the waitlist.</p>
 </div>
 
-<!-- ─── Generate panel ──────────────────────────────────────────────────── -->
-<div class="card mb-4">
-  <h3 class="section-title">Generate codes</h3>
-
-  <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
-    <div class="form-field" style="flex:0 0 120px">
-      <label class="field-label">Count</label>
-      <p-inputNumber [(ngModel)]="genCount" [min]="1" [max]="100" [showButtons]="true"
-                     inputStyleClass="w-full" styleClass="w-full" />
-    </div>
-
-    <div class="form-field" style="flex:0 0 120px">
-      <label class="field-label">Uses per code</label>
-      <p-inputNumber [(ngModel)]="genUses" [min]="1" [max]="50" [showButtons]="true"
-                     inputStyleClass="w-full" styleClass="w-full" />
-    </div>
-
-    <div class="form-field" style="flex:0 0 140px">
-      <label class="field-label">TTL (days, blank = ∞)</label>
-      <p-inputNumber [(ngModel)]="genTtlDays" [min]="1" [max]="365" [showButtons]="false"
-                     placeholder="No expiry" inputStyleClass="w-full" styleClass="w-full" />
-    </div>
-
-    <p-button label="Generate" icon="pi pi-plus" (onClick)="generate()"
-              [loading]="generating()" [disabled]="generating()" />
-  </div>
+<!-- ─── Tabs ─────────────────────────────────────────────────────────────── -->
+<div class="section-tabs" style="margin-bottom:1.5rem">
+  <button class="section-tab" [class.active]="activeTab() === 'invites'" (click)="setTab('invites')">
+    <i class="pi pi-ticket"></i> Invite Codes
+    <span class="section-count">{{ invites().length }}</span>
+  </button>
+  <button class="section-tab" [class.active]="activeTab() === 'waitlist'" (click)="setTab('waitlist')">
+    <i class="pi pi-list"></i> Waitlist
+    <span class="section-count">{{ waitlist().length }}</span>
+  </button>
 </div>
 
-<!-- ─── Last generated batch ────────────────────────────────────────────── -->
-@if (lastBatch().length) {
+<!-- ════════════════════════════════════════════════════════════════════════
+     INVITES TAB
+═════════════════════════════════════════════════════════════════════════ -->
+@if (activeTab() === 'invites') {
+
+  <!-- ─── Generate panel ────────────────────────────────────────────────── -->
   <div class="card mb-4">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-      <h3 class="section-title" style="margin:0">Last generated ({{ lastBatch().length }} codes)</h3>
-      <p-button label="Copy all" icon="pi pi-copy" size="small" severity="secondary"
-                (onClick)="copyAll()" />
-    </div>
+    <h3 class="section-title">Generate codes</h3>
 
-    <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
-      @for (code of lastBatch(); track code) {
-        <span class="invite-code-chip"
-              [class.copied]="copiedCode() === code"
-              [pTooltip]="copiedCode() === code ? 'Copied!' : 'Click to copy'"
-              tooltipPosition="top"
-              (click)="copy(code)">
-          {{ code }}
-        </span>
-      }
+    <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
+      <div class="form-field" style="flex:0 0 120px">
+        <label class="field-label">Count</label>
+        <p-inputNumber [(ngModel)]="genCount" [min]="1" [max]="100" [showButtons]="true"
+                       inputStyleClass="w-full" styleClass="w-full" />
+      </div>
+
+      <div class="form-field" style="flex:0 0 120px">
+        <label class="field-label">Uses per code</label>
+        <p-inputNumber [(ngModel)]="genUses" [min]="1" [max]="50" [showButtons]="true"
+                       inputStyleClass="w-full" styleClass="w-full" />
+      </div>
+
+      <div class="form-field" style="flex:0 0 140px">
+        <label class="field-label">TTL (days, blank = ∞)</label>
+        <p-inputNumber [(ngModel)]="genTtlDays" [min]="1" [max]="365" [showButtons]="false"
+                       placeholder="No expiry" inputStyleClass="w-full" styleClass="w-full" />
+      </div>
+
+      <p-button label="Generate" icon="pi pi-plus" (onClick)="generate()"
+                [loading]="generating()" [disabled]="generating()" />
     </div>
   </div>
-}
 
-<!-- ─── Active codes table ──────────────────────────────────────────────── -->
-<div class="card">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-    <h3 class="section-title" style="margin:0">Active codes ({{ invites().length }})</h3>
-    <p-button icon="pi pi-refresh" severity="secondary" size="small" [rounded]="true"
-              [loading]="loading()" (onClick)="load()" pTooltip="Refresh" tooltipPosition="left" />
-  </div>
+  <!-- ─── Last generated batch ──────────────────────────────────────────── -->
+  @if (lastBatch().length) {
+    <div class="card mb-4">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+        <h3 class="section-title" style="margin:0">Last generated ({{ lastBatch().length }} codes)</h3>
+        <p-button label="Copy all" icon="pi pi-copy" size="small" severity="secondary"
+                  (onClick)="copyAll()" />
+      </div>
 
-  @if (loading() && !invites().length) {
-    <div style="text-align:center;padding:2rem;color:var(--pf-text-secondary)">Loading…</div>
-  } @else if (!invites().length) {
-    <div style="text-align:center;padding:2rem;color:var(--pf-text-secondary)">
-      No active invite codes. Generate some above.
-    </div>
-  } @else {
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Code</th>
-          <th style="text-align:center">Uses left</th>
-          <th style="text-align:center">Expires</th>
-          <th style="text-align:right">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (inv of invites(); track inv.code) {
-          <tr>
-            <td>
-              <span class="invite-code-chip small"
-                    [class.copied]="copiedCode() === inv.code"
-                    [pTooltip]="copiedCode() === inv.code ? 'Copied!' : 'Click to copy'"
-                    tooltipPosition="right"
-                    (click)="copy(inv.code)">
-                {{ inv.code }}
-              </span>
-            </td>
-            <td style="text-align:center">
-              <span [style.color]="inv.remainingUses <= 1 ? 'var(--pf-warning)' : 'inherit'">
-                {{ inv.remainingUses }}
-              </span>
-            </td>
-            <td style="text-align:center;color:var(--pf-text-secondary)">
-              {{ ttlLabel(inv.ttl) }}
-            </td>
-            <td style="text-align:right">
-              <p-button icon="pi pi-trash" severity="danger" size="small" [text]="true"
-                        (onClick)="revoke(inv.code)" pTooltip="Revoke" tooltipPosition="left" />
-            </td>
-          </tr>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
+        @for (code of lastBatch(); track code) {
+          <span class="invite-code-chip"
+                [class.copied]="copiedCode() === code"
+                [pTooltip]="copiedCode() === code ? 'Copied!' : 'Click to copy'"
+                tooltipPosition="top"
+                (click)="copy(code)">
+            {{ code }}
+          </span>
         }
-      </tbody>
-    </table>
+      </div>
+    </div>
   }
-</div>
+
+  <!-- ─── Active codes table ────────────────────────────────────────────── -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <h3 class="section-title" style="margin:0">Active codes ({{ invites().length }})</h3>
+      <p-button icon="pi pi-refresh" severity="secondary" size="small" [rounded]="true"
+                [loading]="loading()" (onClick)="load()" pTooltip="Refresh" tooltipPosition="left" />
+    </div>
+
+    @if (loading() && !invites().length) {
+      <div style="text-align:center;padding:2rem;color:var(--pf-text-secondary)">Loading…</div>
+    } @else if (!invites().length) {
+      <div style="text-align:center;padding:2rem;color:var(--pf-text-secondary)">
+        No active invite codes. Generate some above.
+      </div>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th style="text-align:center">Uses left</th>
+            <th style="text-align:center">Expires</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (inv of invites(); track inv.code) {
+            <tr>
+              <td>
+                <span class="invite-code-chip small"
+                      [class.copied]="copiedCode() === inv.code"
+                      [pTooltip]="copiedCode() === inv.code ? 'Copied!' : 'Click to copy'"
+                      tooltipPosition="right"
+                      (click)="copy(inv.code)">
+                  {{ inv.code }}
+                </span>
+              </td>
+              <td style="text-align:center">
+                <span [style.color]="inv.remainingUses <= 1 ? 'var(--pf-warning)' : 'inherit'">
+                  {{ inv.remainingUses }}
+                </span>
+              </td>
+              <td style="text-align:center;color:var(--pf-text-secondary)">
+                {{ ttlLabel(inv.ttl) }}
+              </td>
+              <td style="text-align:right">
+                <p-button icon="pi pi-trash" severity="danger" size="small" [text]="true"
+                          (onClick)="revoke(inv.code)" pTooltip="Revoke" tooltipPosition="left" />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+} <!-- /invites tab -->
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     WAITLIST TAB
+═════════════════════════════════════════════════════════════════════════ -->
+@if (activeTab() === 'waitlist') {
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <h3 class="section-title" style="margin:0">
+        Waitlist ({{ waitlist().length }} entries)
+      </h3>
+      <p-button icon="pi pi-refresh" severity="secondary" size="small" [rounded]="true"
+                [loading]="waitlistLoading()" (onClick)="loadWaitlist()"
+                pTooltip="Refresh" tooltipPosition="left" />
+    </div>
+
+    @if (waitlistLoading() && !waitlist().length) {
+      <div style="text-align:center;padding:2rem;color:var(--pf-text-secondary)">Loading…</div>
+    } @else if (!waitlist().length) {
+      <div style="text-align:center;padding:2rem;color:var(--pf-text-secondary)">
+        No waitlist entries yet.
+      </div>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th style="text-align:right">Joined</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of waitlist(); track entry.email) {
+            <tr>
+              <td style="font-family:'JetBrains Mono',monospace;font-size:12px">{{ entry.email }}</td>
+              <td style="text-align:right;color:var(--pf-text-secondary);font-size:12px">
+                {{ entry.joinedAt | date:'MMM d, yyyy HH:mm' }}
+              </td>
+              <td style="text-align:right">
+                <p-button icon="pi pi-trash" severity="danger" size="small" [text]="true"
+                          (onClick)="removeWaitlist(entry.email)"
+                          pTooltip="Remove" tooltipPosition="left" />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+} <!-- /waitlist tab -->

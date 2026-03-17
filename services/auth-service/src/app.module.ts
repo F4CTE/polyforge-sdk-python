@@ -11,6 +11,7 @@ import { UsersModule } from './users/users.module';
 import { TotpModule } from './totp/totp.module';
 import { CredentialsModule } from './credentials/credentials.module';
 import { BotLinkModule } from './bot-link/bot-link.module';
+import { WaitlistModule } from './waitlist/waitlist.module';
 import { HealthController } from './common/health.controller';
 
 @Module({
@@ -28,6 +29,7 @@ import { HealthController } from './common/health.controller';
     TotpModule,
     CredentialsModule,
     BotLinkModule,
+    WaitlistModule,
   ],
   controllers: [HealthController],
   providers: [

@@ -94,5 +94,8 @@ export const routes: Routes = [
   },
 
   // ─── Fallback ────────────────────────────────────────────────────────────
-  { path: '**', redirectTo: 'login' },
+  {
+    path: '**',
+    loadComponent: () => import('./features/not-found/not-found.component').then(m => m.NotFoundComponent),
+  },
 ];
