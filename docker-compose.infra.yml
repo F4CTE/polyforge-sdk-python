@@ -238,7 +238,7 @@ services:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret}
+      USER_JWT_SECRET: ${USER_JWT_SECRET:-dev-user-jwt-secret-change-in-production}
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
       STRATEGY_ENGINE_URL: http://strategy-engine:3006
       PORT: "3002"
@@ -373,6 +373,61 @@ services:
       postgres-admin: { condition: service_healthy }
       redis: { condition: service_healthy }
       migrate-user: { condition: service_completed_successfully }
+      migrate-admin: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  # ─── MARKET DATA SERVICE ─────────────────────────────────────────────────
+
+  # ─── AUTH SERVICE ────────────────────────────────────────────────────────
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      REDIS_URL: redis://redis:6379
+      USER_JWT_SECRET: ${USER_JWT_SECRET:-dev-user-jwt-secret-change-in-production}
+      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
+      MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
+      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
+      EMAIL_DRIVER: ${EMAIL_DRIVER:-mailhog}
+      MAILHOG_HOST: mailhog
+      MAILHOG_PORT: "1025"
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
+      INVITE_ONLY: ${INVITE_ONLY:-false}
+      AUTH_SERVICE_PORT: "3001"
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3001:3001"
+    networks: [internal]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      mailhog: { condition: service_started }
+      migrate-user: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  # ─── ADMIN AUTH SERVICE ───────────────────────────────────────────────────
+
+  admin-auth-service:
+    build:
+      context: .
+      dockerfile: services/admin-auth-service/Dockerfile
+    environment:
+      ADMIN_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
+      ADMIN_DIRECT_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
+      REDIS_URL: redis://redis:6379
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-dev-admin-jwt-secret-change-in-production}
+      ADMIN_AUTH_SERVICE_PORT: "3003"
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3003:3003"
+    networks: [internal, admin-only]
+    depends_on:
+      postgres-admin: { condition: service_healthy }
+      redis: { condition: service_healthy }
       migrate-admin: { condition: service_completed_successfully }
     restart: unless-stopped
 
