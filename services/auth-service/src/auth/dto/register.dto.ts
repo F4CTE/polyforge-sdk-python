@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength, MaxLength, Matches, IsBoolean, Equals } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsString, MinLength, MaxLength, Matches, IsBoolean, Equals, IsOptional } from 'class-validator';
 
 export class RegisterDto {
     @ApiProperty({ example: 'alice@example.com', maxLength: 255 })
@@ -27,4 +27,10 @@ export class RegisterDto {
     @IsBoolean()
     @Equals(true, { message: 'You must accept the terms of service' })
     tosAccepted: boolean;
+
+    @ApiPropertyOptional({ example: 'POLY-ABC123', description: 'Invite code — required when INVITE_ONLY=true' })
+    @IsOptional()
+    @IsString()
+    @MaxLength(20)
+    inviteCode?: string;
 }

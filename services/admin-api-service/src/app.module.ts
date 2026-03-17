@@ -16,6 +16,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { LogsModule } from './logs/logs.module';
 import { BuilderModule } from './builder/builder.module';
 import { RetentionModule } from './retention/retention.module';
+import { InvitesModule } from './invites/invites.module';
 import { AuditModule } from './common/audit/audit.module';
 
 @Module({
@@ -37,6 +38,7 @@ import { AuditModule } from './common/audit/audit.module';
         LogsModule,
         BuilderModule,
         RetentionModule,
+        InvitesModule,
     ],
     controllers: [HealthController],
 })

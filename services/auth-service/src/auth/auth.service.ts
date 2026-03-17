@@ -1,5 +1,7 @@
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { RedisService } from '@polyforge/shared-redis';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
 import { TotpService } from '../totp/totp.service';
@@ -9,6 +11,8 @@ import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtPayload } from '@polyforge/shared-types';
+
+const INVITE_KEY = (code: string) => `invite:${code.toUpperCase()}`;
 
 function deriveUserStatus(user: {
     emailVerified: boolean;
@@ -30,11 +34,37 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private readonly mailService: MailService,
         private readonly totpService: TotpService,
+        private readonly config: ConfigService,
+        private readonly redis: RedisService,
     ) { }
 
     // ─── Register ─────────────────────────────────────────────────────────────────
 
     async register(dto: RegisterDto) {
+        const inviteOnly = this.config.get<string>('INVITE_ONLY') === 'true';
+        if (inviteOnly) {
+            if (!dto.inviteCode) {
+                throw new HttpException(
+                    { code: 'INVITE_REQUIRED', message: 'An invite code is required to register' },
+                    HttpStatus.FORBIDDEN,
+                );
+            }
+            const key = INVITE_KEY(dto.inviteCode);
+            const uses = await this.redis.get(key);
+            if (uses === null) {
+                throw new HttpException(
+                    { code: 'INVITE_INVALID', message: 'Invalid or expired invite code' },
+                    HttpStatus.FORBIDDEN,
+                );
+            }
+            const remaining = parseInt(uses, 10);
+            if (remaining <= 1) {
+                await this.redis.del(key);
+            } else {
+                await this.redis.getClient().decr(key);
+            }
+        }
+
         const user = await this.usersService.create({
             email: dto.email,
             password: dto.password,

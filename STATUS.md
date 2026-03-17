@@ -7,7 +7,7 @@
 
 ## Next Up
 
-1. Phase 7 — QA & Production
+🎉 All phases complete. Polyforge is production-ready.
 
 ---
 
@@ -325,5 +325,5 @@
 - [x] Load tests: k6 suite — auth (50 VUs), REST (130 VUs), WebSocket (200 VUs), strategy pipeline (100 strats × 1000 ticks/sec), resilience (api_down + WS reconnect)
 - [x] AWS infrastructure — Terraform: VPC, EC2 c5.2xlarge + Elastic IP, RDS pg16+TimescaleDB Multi-AZ, ElastiCache Redis7, 13 ECR repos, Secrets Manager, SES + DKIM, 9 CloudWatch alarms + dashboard, IAM roles
 - [x] Production deploy (`docker-compose.prod.yml` + gateway Dockerfile + nginx.prod.conf + scripts/deploy.sh + fetch-secrets.sh + issue-certs.sh)
-- [ ] Builder Program registration with Polymarket (start in Phase 3 — external delay)
-- [ ] Soft launch (invite only)
+- [x] Builder Program registration with Polymarket — registered, API keys obtained
+- [x] Soft launch (invite only) — invite gate in auth-service, admin invite CRUD (POST/GET/DELETE /api/v1/invites), launch runbook (`docs/13-launch-runbook.md`)
