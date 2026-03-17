@@ -169,6 +169,10 @@ export class AdminApiService {
     return this.http.delete<void>(`${this.base}/waitlist/${encodeURIComponent(email)}`);
   }
 
+  sendWaitlistInvite(email: string): Observable<{ code: string; sentTo: string }> {
+    return this.http.post<{ code: string; sentTo: string }>(`${this.base}/waitlist/${encodeURIComponent(email)}/send-invite`, {});
+  }
+
   // ─── Logs ───────────────────────────────────────────────────────────────────
 
   auditLogs(q: { page?: number; limit?: number; userId?: string; adminId?: string; action?: string; from?: string; to?: string } = {}): Observable<PaginatedResponse<AuditLog>> {

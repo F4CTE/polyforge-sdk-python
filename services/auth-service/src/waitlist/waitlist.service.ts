@@ -1,19 +1,29 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { RedisService } from '@polyforge/shared-redis';
+import { MailService } from '../mail/mail.service';
 import { JoinWaitlistDto } from './dto/join-waitlist.dto';
 
 const KEY = 'waitlist:emails';
 
 @Injectable()
 export class WaitlistService {
-    constructor(private readonly redis: RedisService) {}
+    private readonly logger = new Logger(WaitlistService.name);
+
+    constructor(
+        private readonly redis: RedisService,
+        private readonly mail: MailService,
+    ) {}
 
     async join(dto: JoinWaitlistDto): Promise<{ joined: boolean }> {
         const email = dto.email.toLowerCase().trim();
         const client = this.redis.getClient();
-        // zadd NX — only add if not already member
         const added = await client.zadd(KEY, 'NX', Date.now(), email);
-        // added is 1 if inserted, 0 if already present — both are OK responses
+        // Send confirmation only on first signup (added === 1)
+        if (added === 1) {
+            this.mail.sendWaitlistConfirmationEmail(email).catch(err =>
+                this.logger.error(`Failed to send waitlist confirmation to ${email}: ${err.message}`),
+            );
+        }
         return { joined: true };
     }
 

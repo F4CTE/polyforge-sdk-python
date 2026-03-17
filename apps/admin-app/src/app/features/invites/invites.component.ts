@@ -48,6 +48,7 @@ export class InvitesComponent implements OnInit {
 
   waitlist        = signal<WaitlistRow[]>([]);
   waitlistLoading = signal(false);
+  sendingInvite   = signal('');
 
   // Generate form state
   genCount   = 10;
@@ -68,6 +69,23 @@ export class InvitesComponent implements OnInit {
       .subscribe({
         next: res => { this.waitlist.set(res.data); this.waitlistLoading.set(false); },
         error: () => this.waitlistLoading.set(false),
+      });
+  }
+
+  sendInvite(email: string): void {
+    if (this.sendingInvite()) return;
+    this.sendingInvite.set(email);
+    this.api.sendWaitlistInvite(email)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.toast.add({ severity: 'success', summary: 'Invite sent', detail: `${res.code} sent to ${res.sentTo}` });
+          this.sendingInvite.set('');
+        },
+        error: () => {
+          this.toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to send invite' });
+          this.sendingInvite.set('');
+        },
       });
   }
 
