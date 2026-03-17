@@ -319,7 +319,7 @@
 
 ## Phase 7 — QA & Production
 
-- [ ] Unit tests: strategy-engine 36 blocks coverage
+- [x] Unit tests: strategy-engine 36 blocks coverage (169 tests, 98%+ stmts/lines/funcs, 79% branches)
 - [ ] Integration tests: auth → signer → order end-to-end
 - [ ] E2E tests (Playwright): register → credentials → strategy → live order
 - [ ] Load tests: 100 strategies, 1000 ticks/sec
