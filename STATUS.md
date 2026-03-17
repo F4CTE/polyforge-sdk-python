@@ -345,3 +345,8 @@
 - [x] nginx landing routing — `location = /` serves `apps/landing/index.html`; regex block for landing static assets; Angular SPA as fallback
 - [x] INVITE_ONLY runtime toggle — `config:invite_only` Redis key; `GET /api/v1/config` + `PATCH /api/v1/config/invite-only`; auth-service checks Redis first, falls back to env var; admin dashboard "Launch Control" card
 - [x] Retention docs — `waitlist:emails` and `config:invite_only` noted as excluded from retention jobs
+- [x] CORS — api-service, admin-auth-service, admin-api-service all have `app.enableCors()` with correct origin allowlists
+- [x] Register page invite-code field — reads `?invite=CODE` query param, auto-fills + uppercases, shows on `INVITE_REQUIRED`/`INVITE_INVALID` errors
+- [x] `robots.txt` — user-app serves `public/robots.txt` blocking `/login`, `/register`, `/settings`, `/portfolio` from crawlers
+- [x] Cookie consent banner — `CookieBannerComponent` fixed-bottom bar, localStorage-dismissed, links to Privacy Policy
+- [x] Launch runbook updated — Step 12 uses runtime toggle via admin panel / API instead of env var + restart; waitlist send-invite steps added

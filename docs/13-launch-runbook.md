@@ -246,15 +246,34 @@ aws cloudwatch set-alarm-state \
 
 ---
 
-## Step 12 — Generate Initial Invite Codes
+## Step 12 — Enable Invite-Only Mode & Generate Initial Codes
 
-Use the admin panel or API to generate the first batch of invite codes:
+### Enable invite-only via the admin panel (no restart needed)
 
-### Via Admin API
+Log in to `https://admin.polyforge.app`, go to **Dashboard → Launch Control**, and toggle **"Enable invite-only"**.
+
+Or via API:
 
 ```bash
-ADMIN_TOKEN="<admin_jwt>"  # log in to admin panel first
+ADMIN_TOKEN="<admin_jwt>"
 
+# Turn on invite-only (takes effect immediately — Redis-backed, no restart)
+curl -s -X PATCH https://admin.polyforge.app/api/v1/config/invite-only \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"enabled": true}' | jq .
+# → {"inviteOnly": true}
+
+# Confirm
+curl -s https://admin.polyforge.app/api/v1/config \
+  -H "Authorization: Bearer $ADMIN_TOKEN" | jq .
+```
+
+> **Note:** The `INVITE_ONLY` env var in `.env.prod` serves as a cold-start default only. The Redis flag (`config:invite_only`) overrides it at runtime and persists across service restarts. No restart is needed when toggling via the admin panel.
+
+### Generate the first batch of invite codes
+
+```bash
 # Generate 20 single-use codes (7-day TTL)
 curl -s -X POST https://admin.polyforge.app/api/v1/invites \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
@@ -266,19 +285,18 @@ curl -s https://admin.polyforge.app/api/v1/invites \
   -H "Authorization: Bearer $ADMIN_TOKEN" | jq .
 ```
 
-### Enable Invite-Only Mode
+Or use the **Invites & Waitlist → Invite Codes** tab in the admin panel to generate and copy codes directly.
 
-Set `INVITE_ONLY=true` in `/opt/polyforge/.env.prod` on the EC2 instance, then restart auth-service:
+### Send invites to waitlist members
+
+View the waitlist at **Invites & Waitlist → Waitlist**. For each entry you want to onboard:
+- Click **Send invite** (generates a single-use code and emails it automatically)
+- Or use the API: `POST /api/v1/waitlist/:email/send-invite`
 
 ```bash
-ssh -i ~/.ssh/polyforge.pem ec2-user@$EC2_HOST
-sudo sed -i 's/INVITE_ONLY=false/INVITE_ONLY=true/' /opt/polyforge/.env.prod
-# Or add the line if not present:
-echo "INVITE_ONLY=true" | sudo tee -a /opt/polyforge/.env.prod
-
-cd /opt/polyforge
-docker compose -f docker-compose.prod.yml restart auth-service
-docker compose -f docker-compose.prod.yml logs auth-service --tail 20
+curl -s -X POST "https://admin.polyforge.app/api/v1/waitlist/user%40example.com/send-invite" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" | jq .
+# → {"code": "XYZ789", "sentTo": "user@example.com"}
 ```
 
 ---
