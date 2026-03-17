@@ -33,6 +33,7 @@ export interface RegisterRequest {
   password: string;
   username: string;
   tosAccepted: boolean;
+  inviteCode?: string;
 }
 
 export interface ApiError {

@@ -23,6 +23,7 @@ export const routes: Routes = [
       { path: 'reports',    loadComponent: () => import('./features/reports/reports.component').then(m => m.ReportsComponent) },
       { path: 'logs',       loadComponent: () => import('./features/logs/logs.component').then(m => m.LogsComponent) },
       { path: 'builder',    loadComponent: () => import('./features/builder/builder.component').then(m => m.BuilderComponent) },
+      { path: 'invites',    loadComponent: () => import('./features/invites/invites.component').then(m => m.InvitesComponent) },
     ],
   },
 

@@ -872,3 +872,25 @@ html, body {
 
 // InputNumber full-width
 p-inputnumber.w-full .p-inputnumber { width: 100%; }
+
+
+// ─── Invite code chips ────────────────────────────────────────────────────────
+
+.invite-code-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--pf-bg-raised);
+  border: 1px solid var(--pf-border);
+  font-family: var(--pf-font-mono);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+
+  &:hover { border-color: var(--pf-cyan-400); }
+  &.copied { border-color: var(--pf-success); background: rgba(34,197,94,0.08); }
+  &.small { font-size: 12px; padding: 2px 8px; }
+}

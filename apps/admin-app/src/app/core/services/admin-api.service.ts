@@ -145,6 +145,20 @@ export class AdminApiService {
     return this.http.post<{ jobId: string; status: string; totalUsers: number }>(`${this.base}/key-rotation/start`, {});
   }
 
+  // ─── Invites ────────────────────────────────────────────────────────────────
+
+  generateInvites(count: number, uses: number, ttlDays?: number): Observable<{ codes: string[] }> {
+    return this.http.post<{ codes: string[] }>(`${this.base}/invites`, { count, uses, ...(ttlDays ? { ttlDays } : {}) });
+  }
+
+  listInvites(): Observable<{ code: string; remainingUses: number; ttl: number }[]> {
+    return this.http.get<{ code: string; remainingUses: number; ttl: number }[]>(`${this.base}/invites`);
+  }
+
+  revokeInvite(code: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/invites/${encodeURIComponent(code)}`);
+  }
+
   // ─── Logs ───────────────────────────────────────────────────────────────────
 
   auditLogs(q: { page?: number; limit?: number; userId?: string; adminId?: string; action?: string; from?: string; to?: string } = {}): Observable<PaginatedResponse<AuditLog>> {

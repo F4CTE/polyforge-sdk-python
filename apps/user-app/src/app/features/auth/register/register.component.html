@@ -46,6 +46,16 @@
           @if (fieldError('password')) { <small class="field-error">{{ fieldError('password') }}</small> }
         </div>
 
+        @if (inviteOnly() || form.get('inviteCode')?.value) {
+          <div class="form-field">
+            <label class="field-label" for="inviteCode">Invite code</label>
+            <input pInputText id="inviteCode" type="text" formControlName="inviteCode"
+                   placeholder="POLY-XXXXXX" class="w-full" style="text-transform:uppercase"
+                   (input)="form.get('inviteCode')!.setValue($any($event.target).value.toUpperCase(), {emitEvent:false})" />
+            @if (fieldError('inviteCode')) { <small class="field-error">{{ fieldError('inviteCode') }}</small> }
+          </div>
+        }
+
         <div class="form-field" style="display:flex;align-items:flex-start;gap:0.5rem">
           <p-checkbox formControlName="tosAccepted" [binary]="true" inputId="tos" />
           <label for="tos" style="font-size:0.875rem;line-height:1.5;cursor:pointer">
