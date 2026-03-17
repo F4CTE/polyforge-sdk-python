@@ -323,7 +323,7 @@
 - [x] Integration tests: signer-service (72 tests, AES-256-GCM roundtrip, signing pipeline) + order-service (46 tests, full lifecycle, retry/DLQ, CLOB/signer clients)
 - [x] E2E tests (Playwright): smoke (7 tests) + auth-flow (10 tests) + credentials (5 tests) + strategy-lifecycle (8 tests), POMs for login/register/builder/trading-account/strategies-list, MailHog + direct-API helpers
 - [x] Load tests: k6 suite — auth (50 VUs), REST (130 VUs), WebSocket (200 VUs), strategy pipeline (100 strats × 1000 ticks/sec), resilience (api_down + WS reconnect)
-- [ ] AWS infrastructure (EC2, RDS, ElastiCache, ECR, Secrets Manager, SES, CloudWatch)
+- [x] AWS infrastructure — Terraform: VPC, EC2 c5.2xlarge + Elastic IP, RDS pg16+TimescaleDB Multi-AZ, ElastiCache Redis7, 13 ECR repos, Secrets Manager, SES + DKIM, 9 CloudWatch alarms + dashboard, IAM roles
 - [x] Production deploy (`docker-compose.prod.yml` + gateway Dockerfile + nginx.prod.conf + scripts/deploy.sh + fetch-secrets.sh + issue-certs.sh)
 - [ ] Builder Program registration with Polymarket (start in Phase 3 — external delay)
 - [ ] Soft launch (invite only)
