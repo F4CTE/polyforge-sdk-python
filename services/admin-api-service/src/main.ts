@@ -25,6 +25,26 @@ async function bootstrap() {
 
     app.useGlobalFilters(new GlobalExceptionFilter());
 
+    // CORS — admin subdomain only
+    app.enableCors({
+        origin: (origin, cb) => {
+            const allowed = [
+                'https://admin.polyforge.app',
+                ...(process.env.NODE_ENV !== 'production'
+                    ? ['http://localhost:4300']
+                    : []),
+            ];
+            if (!origin || allowed.includes(origin)) {
+                cb(null, true);
+            } else {
+                cb(new Error(`CORS: origin ${origin} not allowed`), false);
+            }
+        },
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true,
+    });
+
     app.setGlobalPrefix('api/v1', { exclude: ['health'] });
 
     const port = process.env.PORT ?? 3004;
