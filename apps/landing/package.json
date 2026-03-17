@@ -4,6 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "npx serve . -l 4200",
-    "build": "echo 'Static site — no build step required'"
+    "build": "node scripts/generate-og.mjs",
+    "generate:og": "node scripts/generate-og.mjs"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2"
   }
 }

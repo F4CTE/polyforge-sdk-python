@@ -1,0 +1,221 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <!-- Background radial glow -->
+    <radialGradient id="bg-glow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#0d1520"/>
+      <stop offset="100%" stop-color="#0a0a0f"/>
+    </radialGradient>
+    <!-- Cyan glow behind bolt -->
+    <radialGradient id="cyan-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Bolt gradient -->
+    <linearGradient id="bolt-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <!-- Headline gradient -->
+    <linearGradient id="text-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <!-- Card shadow filter -->
+    <filter id="card-shadow" x="-5%" y="-5%" width="110%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="20" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg-glow)"/>
+
+  <!-- Subtle grid lines -->
+  <g stroke="#ffffff" stroke-opacity="0.025" stroke-width="1">
+    <line x1="0" y1="105" x2="1200" y2="105"/>
+    <line x1="0" y1="210" x2="1200" y2="210"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="525" x2="1200" y2="525"/>
+    <line x1="150" y1="0" x2="150" y2="630"/>
+    <line x1="300" y1="0" x2="300" y2="630"/>
+    <line x1="450" y1="0" x2="450" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="750" y1="0" x2="750" y2="630"/>
+    <line x1="900" y1="0" x2="900" y2="630"/>
+    <line x1="1050" y1="0" x2="1050" y2="630"/>
+  </g>
+
+  <!-- Top + bottom border accent lines -->
+  <line x1="0" y1="0" x2="1200" y2="0" stroke="#06b6d4" stroke-width="3" stroke-opacity="0.6"/>
+  <line x1="0" y1="630" x2="1200" y2="630" stroke="#06b6d4" stroke-width="1" stroke-opacity="0.2"/>
+
+  <!-- Cyan glow blob (left of center) -->
+  <ellipse cx="420" cy="300" rx="320" ry="260" fill="url(#cyan-glow)"/>
+
+  <!-- ── LEFT SIDE: Logomark + wordmark + tagline ─────────────────────── -->
+
+  <!-- Bolt icon background circle -->
+  <circle cx="148" cy="195" r="52" fill="#12121a" stroke="#22d3ee" stroke-opacity="0.25" stroke-width="1.5"/>
+
+  <!-- Bolt icon -->
+  <path d="M157 164l-18 26h12l-2 18 21-26h-12L157 164Z"
+        fill="url(#bolt-grad)"/>
+
+  <!-- Wordmark: Polyforge -->
+  <text x="220" y="208"
+        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-size="52"
+        font-weight="700"
+        letter-spacing="-1"
+        fill="#f0f0f5">Polyforge</text>
+
+  <!-- Tagline -->
+  <text x="148" y="270"
+        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-size="20"
+        font-weight="400"
+        fill="#9898b0">Algorithmic trading for prediction markets</text>
+
+  <!-- Divider line -->
+  <line x1="148" y1="310" x2="740" y2="310" stroke="#ffffff" stroke-opacity="0.07" stroke-width="1"/>
+
+  <!-- Headline -->
+  <text x="148" y="380"
+        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-size="40"
+        font-weight="700"
+        fill="#f0f0f5">Build. Backtest.</text>
+  <text x="148" y="432"
+        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-size="40"
+        font-weight="700"
+        fill="url(#text-grad)">Deploy on autopilot.</text>
+
+  <!-- Sub-copy -->
+  <text x="148" y="488"
+        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-size="18"
+        fill="#9898b0">No code required — from idea to live strategy in minutes.</text>
+
+  <!-- CTA pill -->
+  <rect x="148" y="522" width="210" height="44" rx="8" fill="#06b6d4"/>
+  <text x="253" y="549"
+        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-size="16"
+        font-weight="600"
+        fill="#000000"
+        text-anchor="middle">Get early access</text>
+
+  <!-- ── RIGHT SIDE: Terminal card ────────────────────────────────────── -->
+
+  <!-- Card -->
+  <rect x="800" y="90" width="340" height="440" rx="12"
+        fill="#12121a" stroke="#22d3ee" stroke-opacity="0.15" stroke-width="1"
+        filter="url(#card-shadow)"/>
+
+  <!-- Title bar -->
+  <rect x="800" y="90" width="340" height="44" rx="12" fill="#1a1a26"/>
+  <rect x="800" y="122" width="340" height="12" fill="#1a1a26"/><!-- square off bottom corners -->
+
+  <!-- Traffic lights -->
+  <circle cx="826" cy="112" r="6" fill="#ff5f57"/>
+  <circle cx="846" cy="112" r="6" fill="#febc2e"/>
+  <circle cx="866" cy="112" r="6" fill="#28c840"/>
+
+  <!-- Terminal title -->
+  <text x="970" y="117"
+        font-family="'JetBrains Mono', 'Courier New', monospace"
+        font-size="12"
+        fill="#5a5a72"
+        text-anchor="middle">strategy-runner</text>
+
+  <!-- Terminal content -->
+  <g font-family="'JetBrains Mono', 'Courier New', monospace" font-size="13">
+    <text x="824" y="164" fill="#5a5a72">$ polyforge run </text>
+    <text x="984" y="164" fill="#22d3ee">momentum-v3</text>
+
+    <text x="824" y="192" fill="#5a5a72">Loading market data…  </text>
+    <text x="1058" y="192" fill="#4ade80">✓</text>
+
+    <text x="824" y="216" fill="#5a5a72">Connecting WebSocket…  </text>
+    <text x="1068" y="216" fill="#4ade80">✓</text>
+
+    <text x="824" y="240" fill="#5a5a72">Strategy started        </text>
+    <text x="1058" y="240" fill="#4ade80">✓</text>
+
+    <!-- Divider -->
+    <line x1="816" y1="256" x2="1128" y2="256" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1"/>
+
+    <text x="824" y="282" fill="#22d3ee">→ </text>
+    <text x="844" y="282" fill="#f0f0f5">YES/TRUMP-WIN </text>
+    <text x="1000" y="282" fill="#4ade80">+0.041 </text>
+    <text x="1072" y="282" fill="#5a5a72">$250</text>
+
+    <text x="824" y="310" fill="#22d3ee">→ </text>
+    <text x="844" y="310" fill="#f0f0f5">NO/FED-HIKE    </text>
+    <text x="1000" y="310" fill="#4ade80">+0.017 </text>
+    <text x="1072" y="310" fill="#5a5a72">$180</text>
+
+    <text x="824" y="338" fill="#22d3ee">→ </text>
+    <text x="844" y="338" fill="#f0f0f5">YES/BTC-100K   </text>
+    <text x="1000" y="338" fill="#5a5a72">waiting…</text>
+
+    <!-- Divider -->
+    <line x1="816" y1="354" x2="1128" y2="354" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1"/>
+
+    <!-- Stats row -->
+    <text x="824" y="380" fill="#5a5a72">P&amp;L today</text>
+    <text x="960" y="380" fill="#4ade80">+$312.40</text>
+
+    <text x="824" y="404" fill="#5a5a72">Orders placed</text>
+    <text x="960" y="404" fill="#f0f0f5">14</text>
+
+    <text x="824" y="428" fill="#5a5a72">Win rate</text>
+    <text x="960" y="428" fill="#f0f0f5">78.5%</text>
+
+    <text x="824" y="456" fill="#5a5a72">Status</text>
+    <text x="960" y="456" fill="#4ade80">● LIVE</text>
+
+    <!-- Blinking cursor -->
+    <rect x="824" y="490" width="9" height="14" fill="#22d3ee" opacity="0.8"/>
+  </g>
+
+  <!-- ── Bottom: feature pills ─────────────────────────────────────────── -->
+
+  <!-- Pill 1 -->
+  <rect x="148" y="594" width="130" height="26" rx="13"
+        fill="#12121a" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="1"/>
+  <text x="213" y="611"
+        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-size="12"
+        fill="#9898b0"
+        text-anchor="middle">No-code builder</text>
+
+  <!-- Pill 2 -->
+  <rect x="292" y="594" width="120" height="26" rx="13"
+        fill="#12121a" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="1"/>
+  <text x="352" y="611"
+        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-size="12"
+        fill="#9898b0"
+        text-anchor="middle">Backtesting</text>
+
+  <!-- Pill 3 -->
+  <rect x="426" y="594" width="120" height="26" rx="13"
+        fill="#12121a" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="1"/>
+  <text x="486" y="611"
+        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-size="12"
+        fill="#9898b0"
+        text-anchor="middle">24/7 execution</text>
+
+  <!-- Pill 4 -->
+  <rect x="560" y="594" width="130" height="26" rx="13"
+        fill="#12121a" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="1"/>
+  <text x="625" y="611"
+        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-size="12"
+        fill="#9898b0"
+        text-anchor="middle">Free beta access</text>
+
+</svg>
