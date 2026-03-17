@@ -62,7 +62,7 @@ export class StrategyDetailComponent implements OnInit, OnDestroy {
     const entry = this.toLogEntry(event);
     this.liveLog.update(log => [entry, ...log].slice(0, 100));
 
-    const statusMap: Partial<Record<string['type'], StrategyStatus>> = {
+    const statusMap: Partial<Record<string, StrategyStatus>> = {
       STRATEGY_STARTED: 'RUNNING',
       STRATEGY_STOPPED: 'IDLE',
       STRATEGY_PAUSED:  'PAUSED',

@@ -46,7 +46,7 @@
             <p-avatar
               [label]="authorInitials(s)"
               shape="circle"
-              size="small"
+              size="normal"
               [style]="{'background':'var(--pf-bg-raised)','color':'var(--pf-cyan-400)','font-size':'10px'}" />
             <a [routerLink]="['/profile', s.author.username]" class="discover-author-link" (click)="$event.stopPropagation()">
               {{ s.author.displayName ?? s.author.username }}

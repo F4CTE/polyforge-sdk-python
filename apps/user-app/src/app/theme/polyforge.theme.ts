@@ -48,7 +48,8 @@ export const PolyforgeTheme = definePreset(Aura, {
     },
   },
 
-  components: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  components: ({
     button: {
       colorScheme: {
         dark: {
@@ -321,5 +322,5 @@ export const PolyforgeTheme = definePreset(Aura, {
         },
       },
     },
-  },
+  } as any),
 });

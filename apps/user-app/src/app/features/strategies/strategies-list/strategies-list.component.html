@@ -80,14 +80,14 @@
                   icon="pi pi-bolt"
                   size="small"
                   [loading]="!!actionLoading()[strategy.id]"
-                  (onClick)="start(strategy, 'live', $event.originalEvent!)" />
+                  (onClick)="start(strategy, 'live', $event)" />
                 <p-button
                   label="Paper"
                   icon="pi pi-file"
                   size="small"
                   severity="secondary"
                   [loading]="!!actionLoading()[strategy.id]"
-                  (onClick)="start(strategy, 'paper', $event.originalEvent!)" />
+                  (onClick)="start(strategy, 'paper', $event)" />
               }
 
               @if (isActive(strategy)) {
@@ -99,7 +99,7 @@
                   pTooltip="Pause"
                   tooltipPosition="top"
                   [loading]="!!actionLoading()[strategy.id]"
-                  (onClick)="pause(strategy, $event.originalEvent!)" />
+                  (onClick)="pause(strategy, $event)" />
                 <p-button
                   icon="pi pi-stop-circle"
                   severity="danger"
@@ -108,7 +108,7 @@
                   pTooltip="Stop"
                   tooltipPosition="top"
                   [loading]="!!actionLoading()[strategy.id]"
-                  (onClick)="stop(strategy, $event.originalEvent!)" />
+                  (onClick)="stop(strategy, $event)" />
               }
 
               @if (isPaused(strategy)) {
@@ -119,7 +119,7 @@
                   pTooltip="Resume"
                   tooltipPosition="top"
                   [loading]="!!actionLoading()[strategy.id]"
-                  (onClick)="resume(strategy, $event.originalEvent!)" />
+                  (onClick)="resume(strategy, $event)" />
                 <p-button
                   icon="pi pi-stop-circle"
                   severity="danger"
@@ -128,7 +128,7 @@
                   pTooltip="Stop"
                   tooltipPosition="top"
                   [loading]="!!actionLoading()[strategy.id]"
-                  (onClick)="stop(strategy, $event.originalEvent!)" />
+                  (onClick)="stop(strategy, $event)" />
               }
 
               <!-- Edit -->
@@ -140,7 +140,7 @@
                 pTooltip="Edit"
                 tooltipPosition="top"
                 [routerLink]="['/strategies', strategy.id, 'edit']"
-                (onClick)="$event.originalEvent!.stopPropagation()" />
+                (onClick)="$event.stopPropagation()" />
 
             </div>
           </div>

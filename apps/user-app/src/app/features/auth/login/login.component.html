@@ -45,7 +45,7 @@
             <p class="text-muted" style="font-size:0.8125rem;margin-bottom:0.75rem">
               Enter the 6-digit code from your authenticator app.
             </p>
-            <p-inputotp formControlName="totp" [length]="6" integerOnly />
+            <p-inputotp formControlName="totp" [length]="6" [integerOnly]="true" />
           </div>
         }
 

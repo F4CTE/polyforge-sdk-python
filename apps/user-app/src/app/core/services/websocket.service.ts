@@ -79,7 +79,7 @@ export class WebSocketService implements OnDestroy {
 
     this.ws.onopen = () => {
       this.reconnectDelay = 1000;
-      const token = this.tokenSvc.get();
+      const token = this.tokenSvc.getToken();
       if (token) this.send({ type: 'AUTH', token: `Bearer ${token}` });
       this.startPing();
       if (this.subscribedTokens.size > 0) {

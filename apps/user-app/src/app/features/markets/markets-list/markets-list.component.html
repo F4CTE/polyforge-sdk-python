@@ -27,8 +27,8 @@
       <span style="font-size:12px;color:var(--pf-text-muted)">Sort by</span>
       <p-select
         [options]="sortOptions"
-        [value]="sort()"
-        (onChange)="onSortChange($event.value)"
+        [ngModel]="sort()"
+        (ngModelChange)="onSortChange($event)"
         optionLabel="label"
         optionValue="value"
         [style]="{ width: '150px' }" />

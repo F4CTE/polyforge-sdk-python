@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
@@ -19,6 +20,7 @@ import { WebSocketService } from '../../../core/services/websocket.service';
   imports: [
     RouterLink,
     DecimalPipe,
+    FormsModule,
     ButtonModule,
     SelectModule,
     InputTextModule,

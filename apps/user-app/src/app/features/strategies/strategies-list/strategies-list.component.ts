@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DatePipe } from '@angular/common';
+import { DatePipe, LowerCasePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
@@ -14,7 +14,7 @@ type FilterStatus = 'ALL' | StrategyStatus;
 @Component({
   selector: 'app-strategies-list',
   standalone: true,
-  imports: [RouterLink, DatePipe, ButtonModule, SkeletonModule, ToastModule],
+  imports: [RouterLink, DatePipe, LowerCasePipe, ButtonModule, SkeletonModule, ToastModule],
   providers: [MessageService],
   templateUrl: './strategies-list.component.html',
 })

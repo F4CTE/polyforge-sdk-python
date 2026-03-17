@@ -42,8 +42,8 @@
 
       <div class="form-field">
         <label class="field-label">Exec Mode</label>
-        <p-select [options]="execModeOptions" [value]="form().execMode" optionLabel="label" optionValue="value"
-                  style="width:100%" (onChange)="updateForm('execMode', $event.value)" />
+        <p-select [options]="execModeOptions" [ngModel]="form().execMode" optionLabel="label" optionValue="value"
+                  style="width:100%" (ngModelChange)="updateForm('execMode', $event)" />
       </div>
 
       @if (form().execMode !== 'EVENT') {
@@ -56,8 +56,8 @@
 
       <div class="form-field">
         <label class="field-label">Visibility</label>
-        <p-select [options]="visibilityOptions" [value]="form().visibility" optionLabel="label" optionValue="value"
-                  style="width:100%" (onChange)="updateForm('visibility', $event.value)" />
+        <p-select [options]="visibilityOptions" [ngModel]="form().visibility" optionLabel="label" optionValue="value"
+                  style="width:100%" (ngModelChange)="updateForm('visibility', $event)" />
       </div>
 
       <div class="form-field">
@@ -130,14 +130,14 @@
             }
 
             <!-- Config fields -->
-            @if (getBlockDef(block.type)?.fields.length ?? 0 > 0) {
+            @if ((getBlockDef(block.type)?.fields?.length ?? 0) > 0) {
               <div class="block-fields">
                 @for (field of getBlockDef(block.type)?.fields ?? []; track field.key) {
                   <div class="block-field-row">
                     <label class="field-label" style="font-size:12px;min-width:140px">{{ field.label }}</label>
                     <input pInputText [type]="field.type === 'number' ? 'number' : 'text'"
                            [placeholder]="field.placeholder"
-                           [value]="block.config[field.key] ?? ''"
+                           [value]="$any(block.config)?.[field.key] ?? ''"
                            (input)="updateBlockConfig(activeSection(), block.id, field.key, $event)"
                            style="flex:1" />
                   </div>
