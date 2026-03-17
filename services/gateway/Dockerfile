@@ -67,6 +67,15 @@ COPY services/gateway/nginx.prod.conf /etc/nginx/nginx.conf
 COPY --from=user-app-builder /build/apps/user-app/dist/user-app/browser /usr/share/nginx/html/user-app
 COPY --from=admin-app-builder /build/apps/admin-app/dist/admin-app/browser /usr/share/nginx/html/admin-app
 
+# Landing page — static files copied directly (no build step)
+COPY apps/landing/index.html      /usr/share/nginx/html/landing/
+COPY apps/landing/styles.css      /usr/share/nginx/html/landing/
+COPY apps/landing/favicon.svg     /usr/share/nginx/html/landing/
+COPY apps/landing/og-image.png    /usr/share/nginx/html/landing/
+COPY apps/landing/og-image.svg    /usr/share/nginx/html/landing/
+COPY apps/landing/robots.txt      /usr/share/nginx/html/landing/
+COPY apps/landing/sitemap.xml     /usr/share/nginx/html/landing/
+
 # Create certbot ACME challenge directory
 RUN mkdir -p /var/www/certbot
 

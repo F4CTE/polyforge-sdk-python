@@ -41,7 +41,11 @@ export class AuthService {
     // ─── Register ─────────────────────────────────────────────────────────────────
 
     async register(dto: RegisterDto) {
-        const inviteOnly = this.config.get<string>('INVITE_ONLY') === 'true';
+        // Check Redis runtime flag first; fall back to env var
+        const redisFlagRaw = await this.redis.get('config:invite_only');
+        const inviteOnly = redisFlagRaw !== null
+            ? redisFlagRaw === 'true'
+            : this.config.get<string>('INVITE_ONLY') === 'true';
         if (inviteOnly) {
             if (!dto.inviteCode) {
                 throw new HttpException(

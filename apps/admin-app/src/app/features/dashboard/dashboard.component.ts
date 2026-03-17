@@ -3,27 +3,36 @@ import { DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { HealthResponse, ServiceHealth } from '../../core/models/admin.model';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, TitleCasePipe, ButtonModule, SkeletonModule],
+  imports: [DatePipe, DecimalPipe, TitleCasePipe, ButtonModule, SkeletonModule, ToastModule],
+  providers: [MessageService],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private readonly api        = inject(AdminApiService);
+  private readonly toast      = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
 
   health      = signal<HealthResponse | null>(null);
   loading     = signal(true);
   lastRefresh = signal<Date | null>(null);
 
+  inviteOnly        = signal<boolean | null>(null);
+  inviteOnlyLoading = signal(false);
+  inviteOnlyToggling = signal(false);
+
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
     this.load();
+    this.loadConfig();
     this.refreshTimer = setInterval(() => this.load(), 15_000);
   }
 
@@ -41,6 +50,42 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.loading.set(false);
         },
         error: () => this.loading.set(false),
+      });
+  }
+
+  loadConfig(): void {
+    this.inviteOnlyLoading.set(true);
+    this.api.getConfig()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: cfg => { this.inviteOnly.set(cfg.inviteOnly); this.inviteOnlyLoading.set(false); },
+        error: () => this.inviteOnlyLoading.set(false),
+      });
+  }
+
+  toggleInviteOnly(): void {
+    const current = this.inviteOnly();
+    if (current === null || this.inviteOnlyToggling()) return;
+    const next = !current;
+    this.inviteOnlyToggling.set(true);
+    this.api.setInviteOnly(next)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: cfg => {
+          this.inviteOnly.set(cfg.inviteOnly);
+          this.inviteOnlyToggling.set(false);
+          this.toast.add({
+            severity: cfg.inviteOnly ? 'warn' : 'success',
+            summary: cfg.inviteOnly ? 'Invite-only ON' : 'Open registration',
+            detail: cfg.inviteOnly
+              ? 'Registration now requires an invite code'
+              : 'Registration is now open to everyone',
+          });
+        },
+        error: () => {
+          this.toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update flag' });
+          this.inviteOnlyToggling.set(false);
+        },
       });
   }
 

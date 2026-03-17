@@ -18,6 +18,7 @@ import { BuilderModule } from './builder/builder.module';
 import { RetentionModule } from './retention/retention.module';
 import { InvitesModule } from './invites/invites.module';
 import { WaitlistAdminModule } from './waitlist/waitlist.module';
+import { ConfigFlagsModule } from './config-flags/config-flags.module';
 import { AuditModule } from './common/audit/audit.module';
 
 @Module({
@@ -41,6 +42,7 @@ import { AuditModule } from './common/audit/audit.module';
         RetentionModule,
         InvitesModule,
         WaitlistAdminModule,
+        ConfigFlagsModule,
     ],
     controllers: [HealthController],
 })

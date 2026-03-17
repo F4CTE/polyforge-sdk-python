@@ -299,11 +299,11 @@
 - [x] `AdminTheme` — same dark blue-night palette, cyan primary, always-dark
 - [x] `AdminAuthStore` — decodes JWT payload to restore session (no server call, 1h JWT)
 - [x] `AdminAuthApiService` — login/logout → `/auth/v1` (port 3003)
-- [x] `AdminApiService` — all admin API methods (health, users, strategies, orders, DLQ, backtests, cache, rate limits, reports, builder stats, audit/event/login logs)
+- [x] `AdminApiService` — all admin API methods (health, users, strategies, orders, DLQ, backtests, cache, rate limits, reports, builder stats, audit/event/login logs, invites, waitlist, config flags)
 - [x] `TokenService`, `authInterceptor`, `errorInterceptor`, `authGuard`
 - [x] `LayoutComponent` — collapsible sidebar (Monitor / Manage / Moderation sections), user menu
 - [x] `LoginComponent` — email + password, IP restriction note
-- [x] `DashboardComponent` — health status banner + service grid + infra cards (DB/Redis), auto-refresh 15s
+- [x] `DashboardComponent` — health status banner + service grid + infra cards (DB/Redis), auto-refresh 15s, Launch Control card (invite-only toggle)
 - [x] `UsersListComponent` — search + status + suspended filters, paginated table with user detail links
 - [x] `UserDetailComponent` — identity / security / limits / activity cards; suspend/unsuspend + edit limits dialogs
 - [x] `StrategiesComponent` — all strategies table with force-stop (ConfirmationService) + unpublish
@@ -327,3 +327,21 @@
 - [x] Production deploy (`docker-compose.prod.yml` + gateway Dockerfile + nginx.prod.conf + scripts/deploy.sh + fetch-secrets.sh + issue-certs.sh)
 - [x] Builder Program registration with Polymarket — registered, API keys obtained
 - [x] Soft launch (invite only) — invite gate in auth-service, admin invite CRUD (POST/GET/DELETE /api/v1/invites), launch runbook (`docs/13-launch-runbook.md`)
+
+---
+
+## Pre-launch Polish
+
+- [x] Legal pages — `/terms` (Terms of Service, 14 sections) and `/privacy` (Privacy Policy, 12 sections) in user-app
+- [x] 404 page — `NotFoundComponent` with gradient "404", bolt icon, links to `/markets` and `/strategies`
+- [x] Landing page (`apps/landing/`) — full SEO static page: OG meta, Twitter Card, JSON-LD, hero + feature grid + how-it-works + CTA, zero-JS waitlist form
+- [x] Favicon — SVG favicon (32×32 dark rounded square + cyan bolt) in landing, user-app, admin-app
+- [x] OG image — `og-image.png` (1200×630) generated from SVG via `@resvg/resvg-js` script
+- [x] Waitlist backend — `POST /auth/v1/waitlist` (throttled 3/hr), Redis ZSET `waitlist:emails`, confirmation email on first join
+- [x] Admin waitlist panel — `Invites & Waitlist` page: Waitlist tab with list, send-invite, and remove; `GET/DELETE/POST /api/v1/waitlist`
+- [x] Admin send-invite — `POST /api/v1/waitlist/:email/send-invite` generates 1-use code + emails it via `AdminMailService`
+- [x] Branded email templates — shared `emailLayout()` function (dark header + bolt logo + footer); verification, password reset, waitlist confirmation, invite emails all using layout
+- [x] CORS — `app.enableCors()` in auth-service `main.ts` with allowed origins: `polyforge.app`, `www.polyforge.app`, dev `localhost:42xx`
+- [x] nginx landing routing — `location = /` serves `apps/landing/index.html`; regex block for landing static assets; Angular SPA as fallback
+- [x] INVITE_ONLY runtime toggle — `config:invite_only` Redis key; `GET /api/v1/config` + `PATCH /api/v1/config/invite-only`; auth-service checks Redis first, falls back to env var; admin dashboard "Launch Control" card
+- [x] Retention docs — `waitlist:emails` and `config:invite_only` noted as excluded from retention jobs

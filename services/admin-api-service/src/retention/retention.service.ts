@@ -2,6 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '@polyforge/shared-db';
 
+// NOTE: `waitlist:emails` (Redis ZSET) and `config:invite_only` (Redis string) are
+// intentionally excluded from automated retention jobs. Waitlist entries are managed
+// manually by admins via the admin panel (invite & remove). The invite-only flag is
+// a runtime toggle that must persist until explicitly changed.
+
 @Injectable()
 export class RetentionService {
     private readonly logger = new Logger(RetentionService.name);

@@ -145,6 +145,16 @@ export class AdminApiService {
     return this.http.post<{ jobId: string; status: string; totalUsers: number }>(`${this.base}/key-rotation/start`, {});
   }
 
+  // ─── Config flags ───────────────────────────────────────────────────────────
+
+  getConfig(): Observable<{ inviteOnly: boolean }> {
+    return this.http.get<{ inviteOnly: boolean }>(`${this.base}/config`);
+  }
+
+  setInviteOnly(enabled: boolean): Observable<{ inviteOnly: boolean }> {
+    return this.http.patch<{ inviteOnly: boolean }>(`${this.base}/config/invite-only`, { enabled });
+  }
+
   // ─── Invites ────────────────────────────────────────────────────────────────
 
   generateInvites(count: number, uses: number, ttlDays?: number): Observable<{ codes: string[] }> {

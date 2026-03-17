@@ -28,6 +28,28 @@ async function bootstrap() {
   // Global exception filter
   app.useGlobalFilters(new GlobalExceptionFilter());
 
+  // CORS
+  app.enableCors({
+    origin: (origin, cb) => {
+      const allowed = [
+        'https://polyforge.app',
+        'https://www.polyforge.app',
+        // dev origins — stripped in production by env check
+        ...(process.env.NODE_ENV !== 'production'
+          ? ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:4300']
+          : []),
+      ];
+      if (!origin || allowed.includes(origin)) {
+        cb(null, true);
+      } else {
+        cb(new Error(`CORS: origin ${origin} not allowed`), false);
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  });
+
   // Prefix: auth/v1 — Nginx routes /auth/v1/* to this service
   // Health check excluded so it stays at /health
   app.setGlobalPrefix('auth/v1', { exclude: ['health'] });

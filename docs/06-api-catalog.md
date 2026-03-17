@@ -1302,6 +1302,105 @@ Triggers the master key rotation job. SUPER_ADMIN only.
 
 ---
 
+### Config Flags
+
+#### GET /api/v1/config
+
+Returns all runtime configuration flags.
+
+**Response `200`:**
+```json
+{ "inviteOnly": false }
+```
+
+---
+
+#### PATCH /api/v1/config/invite-only
+
+Toggle invite-only registration mode. Changes take effect immediately (Redis-backed).
+
+**Body:**
+```json
+{ "enabled": true }
+```
+
+**Response `200`:**
+```json
+{ "inviteOnly": true }
+```
+
+---
+
+### Invites
+
+#### POST /api/v1/invites
+
+Generate a batch of invite codes.
+
+**Body:**
+```json
+{ "count": 10, "uses": 1, "ttlDays": 7 }
+```
+
+**Response `201`:**
+```json
+{ "codes": ["ABC123", "DEF456", "..."] }
+```
+
+---
+
+#### GET /api/v1/invites
+
+List all active invite codes with remaining uses and TTL.
+
+**Response `200`:**
+```json
+[{ "code": "ABC123", "remainingUses": 1, "ttl": 604800 }]
+```
+TTL is in seconds; `-1` means no expiry.
+
+---
+
+#### DELETE /api/v1/invites/:code
+
+Revoke an invite code immediately.
+
+**Response `204`:** No content.
+
+---
+
+### Waitlist
+
+#### GET /api/v1/waitlist
+
+List all waitlist entries ordered by join date (oldest first).
+
+**Response `200`:**
+```json
+{ "total": 42, "data": [{ "email": "user@example.com", "joinedAt": "2026-03-01T10:00:00Z" }] }
+```
+
+---
+
+#### DELETE /api/v1/waitlist/:email
+
+Remove an email from the waitlist.
+
+**Response `204`:** No content.
+
+---
+
+#### POST /api/v1/waitlist/:email/send-invite
+
+Generate a single-use invite code and email it to a waitlist entry.
+
+**Response `200`:**
+```json
+{ "code": "XYZ789", "sentTo": "user@example.com" }
+```
+
+---
+
 ### Audit & Logs
 
 #### GET /api/v1/logs/audit

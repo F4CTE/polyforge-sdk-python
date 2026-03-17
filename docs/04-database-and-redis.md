@@ -437,6 +437,16 @@ SELECT add_retention_policy('cache_stats', INTERVAL '30 days');
 | `bot:link:{code}` | userId | 10min | Bot account linking |
 | `ratelimit:{userId}:{window}` | count | window | Per-user API rate limiting |
 
+### Invite & Waitlist Keys
+
+| Key | Type | Value | TTL | Writer | Notes |
+|---|---|---|---|---|---|
+| `invite:{CODE}` | string | remaining uses (integer) | set at creation | admin-api-service | Uppercase code; deleted when uses reach 0 |
+| `waitlist:emails` | ZSET | score = epoch-ms joined | none | auth-service | `ZADD NX` deduplication; admin reads via `ZRANGE WITHSCORES` |
+| `config:invite_only` | string | `'true'` / `'false'` | none | admin-api-service | Runtime override for `INVITE_ONLY` env var; auth-service checks this first |
+
+> **Retention note:** `waitlist:emails` and `config:invite_only` are excluded from nightly retention jobs. Waitlist entries are managed manually by admins; the invite-only flag persists until explicitly toggled.
+
 ### Miscellaneous Keys
 
 | Key | Value | TTL |

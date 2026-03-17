@@ -1,3 +1,5 @@
+<p-toast />
+
 <div class="pf-page">
 
   <div class="page-header">
@@ -88,4 +90,43 @@
     </div>
 
   }
+
+  <!-- ─── Launch Control ──────────────────────────────────────────────── -->
+  <div class="card" style="margin-top:1.5rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <div>
+        <h3 class="section-title" style="margin:0 0 4px">
+          <i class="pi pi-sliders-h" style="margin-right:6px"></i>Launch Control
+        </h3>
+        <p style="margin:0;font-size:12px;color:var(--pf-text-secondary)">Runtime flags — changes take effect immediately without restart.</p>
+      </div>
+    </div>
+
+    @if (inviteOnlyLoading() && inviteOnly() === null) {
+      <p-skeleton height="48px" />
+    } @else {
+      <div class="infra-row" style="padding:12px 0;border-top:1px solid var(--pf-border)">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:14px;font-weight:500;color:var(--pf-text)">Invite-only registration</span>
+          <span style="font-size:12px;color:var(--pf-text-secondary)">
+            When ON, new accounts require a valid invite code.
+            @if (inviteOnly()) {
+              <span style="color:var(--pf-warning);font-weight:600"> Currently: ON</span>
+            } @else {
+              <span style="color:var(--pf-healthy);font-weight:600"> Currently: OFF (open registration)</span>
+            }
+          </span>
+        </div>
+        <p-button
+          [label]="inviteOnly() ? 'Disable invite-only' : 'Enable invite-only'"
+          [icon]="inviteOnly() ? 'pi pi-lock-open' : 'pi pi-lock'"
+          [severity]="inviteOnly() ? 'secondary' : 'warn'"
+          size="small"
+          [loading]="inviteOnlyToggling()"
+          [disabled]="inviteOnly() === null || inviteOnlyToggling()"
+          (onClick)="toggleInviteOnly()" />
+      </div>
+    }
+  </div>
+
 </div>
