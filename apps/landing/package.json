@@ -1,0 +1,9 @@
+{
+  "name": "@polyforge/landing",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve . -l 4200",
+    "build": "echo 'Static site — no build step required'"
+  }
+}

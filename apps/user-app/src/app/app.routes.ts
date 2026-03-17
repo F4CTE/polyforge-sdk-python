@@ -25,6 +25,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
   },
 
+  // ─── Legal pages (public) ───────────────────────────────────────────────
+  {
+    path: 'terms',
+    loadComponent: () => import('./features/legal/terms/terms.component').then(m => m.TermsComponent),
+  },
+  {
+    path: 'privacy',
+    loadComponent: () => import('./features/legal/privacy/privacy.component').then(m => m.PrivacyComponent),
+  },
+
   // ─── Protected app shell ────────────────────────────────────────────────
   {
     path: '',

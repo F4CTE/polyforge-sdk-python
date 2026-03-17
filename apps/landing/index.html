@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ─── Primary SEO ─────────────────────────────────────────── -->
+  <title>Polyforge — Algorithmic Trading for Prediction Markets</title>
+  <meta name="description" content="Build, backtest, and deploy automated trading strategies on prediction markets. No-code strategy builder, live execution, real-time analytics." />
+  <meta name="keywords" content="prediction markets, algorithmic trading, strategy builder, automated trading, Polymarket, trading bot" />
+  <link rel="canonical" href="https://polyforge.app/" />
+
+  <!-- ─── Open Graph ───────────────────────────────────────────── -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://polyforge.app/" />
+  <meta property="og:title" content="Polyforge — Algorithmic Trading for Prediction Markets" />
+  <meta property="og:description" content="Build, backtest, and deploy automated trading strategies on prediction markets. No-code strategy builder, live execution, real-time analytics." />
+  <meta property="og:image" content="https://polyforge.app/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:site_name" content="Polyforge" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- ─── Twitter Card ─────────────────────────────────────────── -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@polyforge" />
+  <meta name="twitter:title" content="Polyforge — Algorithmic Trading for Prediction Markets" />
+  <meta name="twitter:description" content="Build, backtest, and deploy automated trading strategies on prediction markets." />
+  <meta name="twitter:image" content="https://polyforge.app/og-image.png" />
+
+  <!-- ─── Structured Data (JSON-LD) ────────────────────────────── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Polyforge",
+    "url": "https://polyforge.app",
+    "description": "Algorithmic trading platform for prediction markets. Build, backtest, and deploy automated strategies with a no-code builder.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Early access — free during beta"
+    },
+    "featureList": [
+      "No-code strategy builder",
+      "Historical backtesting",
+      "Live automated execution",
+      "Real-time market data",
+      "Strategy discovery and community sharing"
+    ]
+  }
+  </script>
+
+  <!-- ─── Fonts ─────────────────────────────────────────────────── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- ─── Favicon ───────────────────────────────────────────────── -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  <!-- ─── Styles ────────────────────────────────────────────────── -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ─────────────────────────────────────────────────────────────
+       NAV
+  ──────────────────────────────────────────────────────────────── -->
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo" aria-label="Polyforge home">
+        <svg class="nav-bolt" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M13 2L4.09 12.96H11L10 22L20.91 11.04H14L13 2Z" fill="currentColor"/>
+        </svg>
+        <span>Polyforge</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="/terms">Terms</a>
+        <a href="/privacy">Privacy</a>
+      </div>
+      <div class="nav-cta">
+        <a href="/login" class="btn btn-ghost">Sign in</a>
+        <a href="/register" class="btn btn-primary">Get early access</a>
+      </div>
+      <button class="nav-mobile-toggle" aria-label="Open menu" onclick="this.classList.toggle('open'); document.getElementById('mobile-menu').classList.toggle('open')">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="nav-mobile" id="mobile-menu">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="/login">Sign in</a>
+      <a href="/register" class="btn btn-primary" style="margin-top:8px;display:block;text-align:center">Get early access</a>
+    </div>
+  </nav>
+
+  <!-- ─────────────────────────────────────────────────────────────
+       HERO
+  ──────────────────────────────────────────────────────────────── -->
+  <header class="hero" role="banner">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Early Access — Limited Invites
+      </div>
+
+      <h1 class="hero-headline">
+        Automate your edge on<br />
+        <span class="gradient-text">prediction markets</span>
+      </h1>
+
+      <p class="hero-sub">
+        Polyforge lets you build no-code trading strategies, backtest them against historical data,
+        and deploy them to run 24/7 — without writing a single line of code.
+      </p>
+
+      <div class="hero-actions">
+        <a href="/register" class="btn btn-primary btn-lg">
+          Request early access
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="margin-left:6px">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href="#how-it-works" class="btn btn-ghost btn-lg">See how it works</a>
+      </div>
+
+      <!-- Hero terminal mock-up -->
+      <div class="hero-terminal" aria-hidden="true">
+        <div class="terminal-bar">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+          <span class="terminal-title">strategy-runner</span>
+        </div>
+        <div class="terminal-body">
+          <p><span class="t-muted">$</span> polyforge strategy run <span class="t-cyan">momentum-v3</span></p>
+          <p class="t-muted">Loading market data…  <span class="t-green">✓</span></p>
+          <p class="t-muted">Connecting WebSocket…  <span class="t-green">✓</span></p>
+          <p class="t-muted">Strategy started       <span class="t-green">✓</span></p>
+          <p>&nbsp;</p>
+          <p><span class="t-cyan">→</span> YES/TRUMP-WIN  <span class="t-green">+0.041</span>  filled $250</p>
+          <p><span class="t-cyan">→</span> NO/FED-HIKE    <span class="t-green">+0.017</span>  filled $180</p>
+          <p><span class="t-cyan">→</span> YES/BTC-100K   <span class="t-muted">waiting…</span></p>
+          <p class="blink t-muted">▋</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─────────────────────────────────────────────────────────────
+       SOCIAL PROOF STRIP
+  ──────────────────────────────────────────────────────────────── -->
+  <section class="proof-strip" aria-label="Platform statistics">
+    <div class="container">
+      <div class="proof-grid">
+        <div class="proof-item">
+          <span class="proof-number">500+</span>
+          <span class="proof-label">Markets tracked</span>
+        </div>
+        <div class="proof-divider" aria-hidden="true"></div>
+        <div class="proof-item">
+          <span class="proof-number">24/7</span>
+          <span class="proof-label">Automated execution</span>
+        </div>
+        <div class="proof-divider" aria-hidden="true"></div>
+        <div class="proof-item">
+          <span class="proof-number">&lt; 50 ms</span>
+          <span class="proof-label">Order latency</span>
+        </div>
+        <div class="proof-divider" aria-hidden="true"></div>
+        <div class="proof-item">
+          <span class="proof-number">Free</span>
+          <span class="proof-label">During beta</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────
+       FEATURES
+  ──────────────────────────────────────────────────────────────── -->
+  <section class="features" id="features" aria-labelledby="features-heading">
+    <div class="container">
+      <div class="section-header">
+        <h2 id="features-heading">Everything you need to trade smarter</h2>
+        <p>From idea to live strategy in minutes, not months.</p>
+      </div>
+
+      <div class="features-grid">
+
+        <article class="feature-card feature-card--highlight">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="3" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/>
+              <rect x="13" y="3" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/>
+              <rect x="3" y="13" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M17 13v8M13 17h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>No-code Strategy Builder</h3>
+          <p>
+            Drag-and-drop blocks to compose entry signals, risk rules, and exit conditions.
+            No programming knowledge required — just your market thesis.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Historical Backtesting</h3>
+          <p>
+            Replay your strategy against months of real market data before risking a single
+            dollar. Get detailed P&amp;L curves, Sharpe ratio, drawdown, and fill analytics.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>Live 24/7 Execution</h3>
+          <p>
+            Deploy strategies to our cloud runner. Polyforge monitors markets around the clock
+            and places orders the instant your conditions are met — even while you sleep.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M3 3v18h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M7 14l4-4 4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Real-Time Market Data</h3>
+          <p>
+            Live order-book prices stream directly to your dashboard via WebSocket. Track
+            YES/NO prices, 24-hour volume, and market sentiment at a glance.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.85" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>Community Strategies</h3>
+          <p>
+            Discover and fork top-performing public strategies from the community. Build on
+            what works and share your own edge with the Polyforge leaderboard.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Security First</h3>
+          <p>
+            JWT authentication with short-lived tokens, optional two-factor auth, and
+            role-based access controls. Your account and API keys stay under your control.
+          </p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────
+       HOW IT WORKS
+  ──────────────────────────────────────────────────────────────── -->
+  <section class="how-it-works" id="how-it-works" aria-labelledby="hiw-heading">
+    <div class="container">
+      <div class="section-header">
+        <h2 id="hiw-heading">From idea to live in three steps</h2>
+        <p>No servers to manage, no code to write, no delay.</p>
+      </div>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-number" aria-hidden="true">01</div>
+          <div class="step-content">
+            <h3>Build your strategy</h3>
+            <p>
+              Use the visual block builder to define your entry triggers (price thresholds,
+              volume spikes, time-based rules), sizing logic, and exit conditions. Preview
+              the logic in plain English before you run anything.
+            </p>
+          </div>
+        </div>
+
+        <div class="step-connector" aria-hidden="true"></div>
+
+        <div class="step">
+          <div class="step-number" aria-hidden="true">02</div>
+          <div class="step-content">
+            <h3>Backtest against history</h3>
+            <p>
+              Run your strategy across months of real market data in seconds. Review the
+              equity curve, per-trade breakdown, and risk metrics. Tune parameters until
+              the numbers satisfy your conviction.
+            </p>
+          </div>
+        </div>
+
+        <div class="step-connector" aria-hidden="true"></div>
+
+        <div class="step">
+          <div class="step-number" aria-hidden="true">03</div>
+          <div class="step-content">
+            <h3>Deploy and monitor</h3>
+            <p>
+              Hit Deploy. Polyforge's execution engine watches the markets and fires orders
+              automatically. Track live P&amp;L, position sizing, and fill quality from your
+              portfolio dashboard.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────
+       CTA BANNER
+  ──────────────────────────────────────────────────────────────── -->
+  <section class="cta-banner" aria-labelledby="cta-heading">
+    <div class="container">
+      <div class="cta-inner">
+        <div class="cta-glow" aria-hidden="true"></div>
+        <h2 id="cta-heading">Ready to put your edge on autopilot?</h2>
+        <p>
+          Polyforge is in early access. Request your invite and start trading smarter
+          today — no credit card required.
+        </p>
+        <a href="/register" class="btn btn-primary btn-lg">
+          Request early access
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="margin-left:6px">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────
+       FOOTER
+  ──────────────────────────────────────────────────────────────── -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-top">
+        <a href="/" class="footer-logo" aria-label="Polyforge home">
+          <svg class="nav-bolt" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M13 2L4.09 12.96H11L10 22L20.91 11.04H14L13 2Z" fill="currentColor"/>
+          </svg>
+          <span>Polyforge</span>
+        </a>
+        <p class="footer-tagline">Algorithmic trading for prediction markets.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How it works</a></li>
+            <li><a href="/register">Early access</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/terms">Terms of Service</a></li>
+            <li><a href="/privacy">Privacy Policy</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Account</h4>
+          <ul>
+            <li><a href="/login">Sign in</a></li>
+            <li><a href="/register">Register</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 Polyforge. All rights reserved.</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
