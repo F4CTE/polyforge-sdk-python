@@ -320,8 +320,8 @@
 ## Phase 7 — QA & Production
 
 - [x] Unit tests: strategy-engine 36 blocks coverage (169 tests, 98%+ stmts/lines/funcs, 79% branches)
-- [ ] Integration tests: auth → signer → order end-to-end
-- [ ] E2E tests (Playwright): register → credentials → strategy → live order
+- [x] Integration tests: signer-service (72 tests, AES-256-GCM roundtrip, signing pipeline) + order-service (46 tests, full lifecycle, retry/DLQ, CLOB/signer clients)
+- [x] E2E tests (Playwright): smoke (7 tests) + auth-flow (10 tests) + credentials (5 tests) + strategy-lifecycle (8 tests), POMs for login/register/builder/trading-account/strategies-list, MailHog + direct-API helpers
 - [ ] Load tests: 100 strategies, 1000 ticks/sec
 - [ ] AWS infrastructure (EC2, RDS, ElastiCache, ECR, Secrets Manager, SES, CloudWatch)
 - [ ] Production deploy (`docker-compose.prod.yml`)
