@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Param, Query, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { IsOptional, IsString } from 'class-validator';
 import { BacktestsService } from './backtests.service';
@@ -15,6 +16,8 @@ class BacktestQueryDto extends PaginationDto {
     status?: string;
 }
 
+@ApiTags('backtests')
+@ApiBearerAuth('jwt')
 @Controller('backtests')
 @UseGuards(JwtAuthGuard)
 export class BacktestsController {

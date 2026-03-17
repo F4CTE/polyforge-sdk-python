@@ -1,4 +1,5 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { IsOptional, IsIn, IsString } from 'class-validator';
 import { PortfolioService } from './portfolio.service';
@@ -13,6 +14,8 @@ class PnlQueryDto {
     strategyId?: string;
 }
 
+@ApiTags('portfolio')
+@ApiBearerAuth('jwt')
 @Controller('portfolio')
 @UseGuards(JwtAuthGuard)
 export class PortfolioController {

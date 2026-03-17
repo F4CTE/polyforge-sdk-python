@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Query, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { IsOptional, IsString } from 'class-validator';
 import { OrdersService } from './orders.service';
@@ -23,6 +24,8 @@ class OrderQueryDto extends PaginationDto {
     to?: string;
 }
 
+@ApiTags('orders')
+@ApiBearerAuth('jwt')
 @Controller('orders')
 @UseGuards(JwtAuthGuard)
 export class OrdersController {

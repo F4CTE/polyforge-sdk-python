@@ -1,8 +1,11 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@polyforge/shared-auth';
 import { MarketsService } from './markets.service';
 import { MarketQueryDto, PriceHistoryQueryDto } from './dto/market-query.dto';
 
+@ApiTags('markets')
+@ApiBearerAuth('jwt')
 @Controller('markets')
 @UseGuards(JwtAuthGuard)
 export class MarketsController {

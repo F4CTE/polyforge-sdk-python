@@ -2,6 +2,7 @@ import {
     Controller, Get, Post, Patch, Delete, Param, Body, Query,
     UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { StrategiesService } from './strategies.service';
 import { CreateStrategyDto } from './dto/create-strategy.dto';
@@ -12,6 +13,8 @@ import { ReportStrategyDto } from './dto/report-strategy.dto';
 import { StrategyQueryDto } from './dto/strategy-query.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 
+@ApiTags('strategies')
+@ApiBearerAuth('jwt')
 @Controller('strategies')
 @UseGuards(JwtAuthGuard)
 export class StrategiesController {

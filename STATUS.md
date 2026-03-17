@@ -161,7 +161,7 @@
 - [x] Social: profiles, follow/unfollow, settings (profile/notifications/password)
 - [x] WebSocket gateway (native ws on /ws — auth, prices, strategies, orders, events relay from stream:events)
 - [x] Docker image + docker-compose integration
-- [ ] OpenAPI pipeline: `swagger.json` generated at build time
+- [x] OpenAPI pipeline: `swagger.json` written to `dist/` on every startup; Swagger UI at `/api/v1/docs` in dev; all 11 controllers tagged + JWT bearer auth documented
 
 ---
 

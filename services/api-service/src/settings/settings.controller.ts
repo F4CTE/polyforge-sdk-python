@@ -1,9 +1,12 @@
 import { Controller, Patch, Body, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { SettingsService } from './settings.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 
+@ApiTags('settings')
+@ApiBearerAuth('jwt')
 @Controller('settings')
 @UseGuards(JwtAuthGuard)
 export class SettingsController {

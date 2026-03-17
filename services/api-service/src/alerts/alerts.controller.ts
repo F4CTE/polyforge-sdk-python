@@ -1,8 +1,11 @@
 import { Controller, Get, Post, Delete, Param, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { AlertsService } from './alerts.service';
 import { CreateAlertDto } from './dto/create-alert.dto';
 
+@ApiTags('alerts')
+@ApiBearerAuth('jwt')
 @Controller('alerts')
 @UseGuards(JwtAuthGuard)
 export class AlertsController {

@@ -1,4 +1,5 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { IsOptional, IsIn, IsString } from 'class-validator';
 import { DiscoverService } from './discover.service';
@@ -20,6 +21,8 @@ class LeaderboardQueryDto extends PaginationDto {
     period?: string = '30d';
 }
 
+@ApiTags('discover')
+@ApiBearerAuth('jwt')
 @Controller()
 @UseGuards(JwtAuthGuard)
 export class DiscoverController {
