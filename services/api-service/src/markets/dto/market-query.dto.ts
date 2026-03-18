@@ -1,14 +1,16 @@
-import { IsOptional, IsString, IsBoolean, IsIn, IsInt, Min, Max } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsIn, IsInt, Min, Max, MaxLength } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 export class MarketQueryDto extends PaginationDto {
     @IsOptional()
     @IsString()
+    @MaxLength(255)
     search?: string;
 
     @IsOptional()
     @IsString()
+    @MaxLength(100)
     category?: string;
 
     @IsOptional()

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsString, MinLength, MaxLength } from 'class-validator';
 
 export class AdminLoginDto {
   @ApiProperty({ example: 'admin@polyforge.app' })
@@ -8,6 +8,7 @@ export class AdminLoginDto {
 
   @ApiProperty({ example: 'AdminPassw0rd!' })
   @IsString()
-  @MinLength(1)
+  @MinLength(8)
+  @MaxLength(100)
   password: string;
 }

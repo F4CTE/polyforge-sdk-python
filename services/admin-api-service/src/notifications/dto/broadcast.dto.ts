@@ -1,4 +1,4 @@
-import { IsString, IsIn, IsOptional, IsArray, IsObject } from 'class-validator';
+import { IsString, IsIn, IsOptional, IsArray, IsObject, MaxLength } from 'class-validator';
 
 export class BroadcastDto {
     @IsString()
@@ -6,9 +6,11 @@ export class BroadcastDto {
     channel: string;
 
     @IsString()
+    @MaxLength(255)
     templateId: string;
 
     @IsString()
+    @MaxLength(255)
     subject: string;
 
     @IsOptional()

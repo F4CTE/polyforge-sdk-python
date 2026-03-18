@@ -43,7 +43,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         private readonly jwt: JwtService,
         private readonly config: ConfigService,
     ) {
-        this.jwtSecret = this.config.get<string>('JWT_SECRET', 'dev-jwt-secret');
+        this.jwtSecret = this.config.getOrThrow<string>('JWT_SECRET');
     }
 
     afterInit() {

@@ -9,6 +9,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.0] — 2026-03-18
+
+### Security
+
+- **CRITICAL** — `AdminLoginDto` password `@MinLength` raised 1→8; added `@MaxLength(100)` (matched user LoginDto policy)
+- **CRITICAL** — `UpdatePasswordDto` `currentPassword` now has `@MinLength(8)` + `@MaxLength(100)` (was unvalidated)
+- **CRITICAL** — `UpdateProfileDto` `avatarUrl` now validated with `@IsUrl({ require_protocol: true, protocols: ['https'] })` + `@MaxLength(2048)` (prevents stored XSS / SSRF via arbitrary URLs)
+- **HIGH** — `order-service` `InternalAuthGuard` JTI replay protection migrated from in-process `Set` (lost on restart, broken under horizontal scaling) to Redis `SET NX EX 60`; `RedisModule` added to `AppModule`
+- **MEDIUM** — `MarketQueryDto` `search` + `category` fields now have `@MaxLength(255)` / `@MaxLength(100)` (unbounded query DoS)
+- **MEDIUM** — `BroadcastDto` `templateId` + `subject` now have `@MaxLength(255)`
+- **LOW** — WebSocket gateway `JWT_SECRET` fallback `'dev-jwt-secret'` replaced with `config.getOrThrow()` — fails fast at startup if env var missing
+- **LOW** — `SignOrderDto` `userId`, `requestId`, `tokenId` now have `@MaxLength(255)`
+- **LOW** — `CreateAlertDto` `tokenId` now has `@MaxLength(255)`
+
+---
+
 ## [1.4.0] — 2026-03-18
 
 ### Security

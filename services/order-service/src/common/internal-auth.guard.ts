@@ -6,18 +6,18 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { RedisService } from '@polyforge/shared-redis';
 import { FastifyRequest } from 'fastify';
 
 @Injectable()
 export class InternalAuthGuard implements CanActivate {
-    private readonly seenJtis = new Set<string>();
-
     constructor(
         private readonly jwt: JwtService,
         private readonly config: ConfigService,
+        private readonly redis: RedisService,
     ) {}
 
-    canActivate(ctx: ExecutionContext): boolean {
+    async canActivate(ctx: ExecutionContext): Promise<boolean> {
         const req = ctx.switchToHttp().getRequest<FastifyRequest>();
         const auth = req.headers['authorization'];
 
@@ -37,14 +37,16 @@ export class InternalAuthGuard implements CanActivate {
             throw new UnauthorizedException('Invalid service token');
         }
 
-        if (!payload.jti || this.seenJtis.has(payload.jti)) {
-            throw new UnauthorizedException('Token already used or missing jti');
+        if (!payload.jti) {
+            throw new UnauthorizedException('Token missing jti');
         }
-        this.seenJtis.add(payload.jti);
 
-        if (this.seenJtis.size > 1000) {
-            const [first] = this.seenJtis;
-            this.seenJtis.delete(first);
+        // Redis SET NX — atomic replay protection, survives restarts and scales horizontally.
+        // TTL = 60s (2× the max JWT expiry for internal tokens).
+        const key = `jti:order:${payload.jti}`;
+        const set = await this.redis.getClient().set(key, '1', 'EX', 60, 'NX');
+        if (set === null) {
+            throw new UnauthorizedException('Token already used');
         }
 
         return true;

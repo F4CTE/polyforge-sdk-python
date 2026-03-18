@@ -1,7 +1,9 @@
-import { IsString, MinLength, Matches } from 'class-validator';
+import { IsString, MinLength, MaxLength, Matches } from 'class-validator';
 
 export class UpdatePasswordDto {
     @IsString()
+    @MinLength(8)
+    @MaxLength(100)
     declare currentPassword: string;
 
     @IsString()

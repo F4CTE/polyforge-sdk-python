@@ -1,7 +1,8 @@
-import { IsString, IsIn, IsNumberString, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsIn, IsNumberString, IsOptional, IsBoolean, MaxLength } from 'class-validator';
 
 export class CreateAlertDto {
     @IsString()
+    @MaxLength(255)
     declare tokenId: string;
 
     @IsIn(['above', 'below'])

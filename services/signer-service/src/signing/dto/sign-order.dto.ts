@@ -1,17 +1,20 @@
-import { IsString, IsNotEmpty, IsNumber, IsIn, IsOptional, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsIn, IsOptional, Min, MaxLength } from 'class-validator';
 
 export class SignOrderDto {
     @IsString()
     @IsNotEmpty()
+    @MaxLength(255)
     userId!: string;
 
     @IsString()
     @IsNotEmpty()
+    @MaxLength(255)
     requestId!: string;
 
     /** Token ID (Polymarket condition ID + outcome index) */
     @IsString()
     @IsNotEmpty()
+    @MaxLength(255)
     tokenId!: string;
 
     @IsIn(['BUY', 'SELL'])
