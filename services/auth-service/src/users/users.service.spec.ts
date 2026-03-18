@@ -125,6 +125,31 @@ describe('UsersService', () => {
         });
     });
 
+    // ── rehashIfNeeded ────────────────────────────────────────────────────────
+
+    describe('rehashIfNeeded', () => {
+        it('rehashes and updates DB when rounds < 12', async () => {
+            // bcryptjs with cost 10 — below the MIN_ROUNDS threshold
+            const weakHash = await bcrypt.hash('Passw0rd!', 10);
+            db.user.update.mockResolvedValue({} as any);
+
+            await service.rehashIfNeeded('user-id', 'Passw0rd!', weakHash);
+
+            expect(db.user.update).toHaveBeenCalledOnce();
+            const newHash = db.user.update.mock.calls[0][0].data.passwordHash as string;
+            expect(newHash).toMatch(/^\$2[ab]\$/);
+            expect(bcrypt.getRounds(newHash)).toBe(12);
+        });
+
+        it('does nothing when rounds are already >= 12', async () => {
+            const strongHash = await bcrypt.hash('Passw0rd!', 12);
+
+            await service.rehashIfNeeded('user-id', 'Passw0rd!', strongHash);
+
+            expect(db.user.update).not.toHaveBeenCalled();
+        });
+    });
+
     // ── validatePassword ─────────────────────────────────────────────────────
 
     describe('validatePassword', () => {

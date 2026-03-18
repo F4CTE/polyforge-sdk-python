@@ -3,7 +3,7 @@ import { HttpStatus } from '@nestjs/common';
 import { TotpService } from './totp.service';
 import { createMockDb, MockDb } from '../../test/helpers/mock-db';
 import { userFactory } from '../../test/factories';
-import { verifySync } from 'otplib';
+import { generateSync, generateSecret } from 'otplib';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -48,6 +48,16 @@ describe('TotpService', () => {
 
     afterEach(() => {
         vi.restoreAllMocks();
+    });
+
+    // ── constructor ───────────────────────────────────────────────────────────
+
+    describe('constructor', () => {
+        it('throws when TOTP_ENCRYPTION_KEY is not 32 bytes (64 hex chars)', () => {
+            const badConfig = { getOrThrow: vi.fn().mockReturnValue('deadbeef') }; // 4 bytes
+            expect(() => new TotpService(db as any, redis as any, badConfig as any))
+                .toThrow('TOTP_ENCRYPTION_KEY must be a 64-character hex string (32 bytes)');
+        });
     });
 
     // ── setup ─────────────────────────────────────────────────────────────────
@@ -110,46 +120,28 @@ describe('TotpService', () => {
             });
         });
 
-        it('returns 10 backup codes on success', async () => {
-            // Generate a real secret and a valid code to test confirm
-            const { secret } = await service.setup('user-id').catch(() => {
-                // setup requires db, so mock it
-                return { secret: 'JBSWY3DPEHPK3PXP' };
-            });
-            // Mock a valid TOTP verification by spying on verifySync indirectly —
-            // instead test that 10 backup codes are returned when confirm succeeds
-            // by mocking the entire flow with a known-valid secret + code.
-            // Since we can't control time easily, we just verify the error path
-            // tested above and trust the success path via integration (backup code format).
-            const user = userFactory({ totpEnabled: false });
-            db.user.findUniqueOrThrow.mockResolvedValue(user as any);
-            db.user.update.mockResolvedValue(user as any);
-            (db.$transaction as any).mockImplementation(async (ops: any[]) => ops);
+        it('returns 10 backup codes and commits to DB on success', async () => {
+            const secret = generateSecret({ length: 20 }); // 160-bit, valid for otplib v13
+            const validCode = generateSync({ secret, strategy: 'totp' });
+            redis.get.mockResolvedValue(secret);
+            (db.$transaction as any).mockResolvedValue([]);
 
-            // We need a real pending secret + matching code — use a known pair
-            // The setup must have generated a secret stored in redis.get
-            // Since we can't generate a valid TOTP code easily in a unit test,
-            // we verify the structure via a real secret and mock verify to pass.
-            const realSecret = 'JBSWY3DPEHPK3PXP';
-            redis.get.mockResolvedValue(realSecret);
+            const result = await service.confirm('user-id', validCode);
 
-            // Generate a valid code for this secret at this moment
-            // This only works if the test runs within the 30s window
-            // For deterministic tests we'd mock the clock, but since this is a unit test
-            // let's just use verifySync directly to get a real current code
-            // We can't easily get the "current" code from otplib without the old API
-            // Instead we test that the error case is covered and trust the crypto
-
-            // Skip the actual confirm integration test since we can't mock time easily
-            // The real integration is covered by the e2e tests
-            expect(true).toBe(true);
+            expect(result.backupCodes).toHaveLength(10);
+            expect(result.backupCodes[0]).toMatch(/^[0-9A-F]{8}$/);
+            expect(db.$transaction).toHaveBeenCalledOnce();
         });
 
-        it('burns the pending Redis key on success', async () => {
-            // Test del is called on success path by mocking verifySync to pass
-            // We achieve this by ensuring redis.get returns null (already tested in error path)
-            // Real success path covered by integration tests
-            expect(redis.del).not.toHaveBeenCalled();
+        it('deletes the pending Redis key on success', async () => {
+            const secret = generateSecret({ length: 20 });
+            const validCode = generateSync({ secret, strategy: 'totp' });
+            redis.get.mockResolvedValue(secret);
+            (db.$transaction as any).mockResolvedValue([]);
+
+            await service.confirm('user-id', validCode);
+
+            expect(redis.del).toHaveBeenCalledWith('totp:pending:user-id');
         });
     });
 
@@ -258,23 +250,21 @@ describe('TotpService', () => {
             expect(redis._ioClient.expire).not.toHaveBeenCalled();
         });
 
-        it('clears fail counter on successful TOTP verify', async () => {
+        it('returns true and clears fail counter when TOTP code matches', async () => {
             redis._ioClient.get.mockResolvedValue('2'); // had 2 prior failures
 
-            const encrypted = (service as any).encrypt('JBSWY3DPEHPK3PXP');
-            const { createHash } = await import('crypto');
-            const code = 'ABCD1234';
-            const hash = createHash('sha256').update(code).digest('hex');
+            const secret = generateSecret({ length: 20 });
+            const validCode = generateSync({ secret, strategy: 'totp' });
+            const encrypted = (service as any).encrypt(secret);
 
             const user = {
                 ...userFactory({ totpEnabled: true }),
                 totpSecret: encrypted,
-                totpBackupCodes: [hash],
+                totpBackupCodes: [],
             };
             db.user.findUnique.mockResolvedValue(user as any);
-            db.user.update.mockResolvedValue(user as any);
 
-            const result = await service.verify(user.id, code);
+            const result = await service.verify(user.id, validCode);
             expect(result).toBe(true);
             expect(redis._ioClient.del).toHaveBeenCalledWith(`totp:fail:${user.id}`);
         });

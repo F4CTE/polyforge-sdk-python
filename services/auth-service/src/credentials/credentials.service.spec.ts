@@ -134,5 +134,27 @@ describe('CredentialsService', () => {
 
             await expect(service.delete(user.id)).resolves.toBeUndefined();
         });
+
+        it('throws SIGNER_ERROR (502) when signer-service DELETE returns non-OK non-404', async () => {
+            const user = connectedUser();
+            db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+            fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+
+            await expect(service.delete(user.id)).rejects.toMatchObject({
+                response: { code: 'SIGNER_ERROR' },
+                status: HttpStatus.BAD_GATEWAY,
+            });
+        });
+
+        it('throws SIGNER_UNAVAILABLE (503) when signer-service is unreachable on delete', async () => {
+            const user = connectedUser();
+            db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+            fetchSpy.mockRejectedValue(new Error('ECONNREFUSED'));
+
+            await expect(service.delete(user.id)).rejects.toMatchObject({
+                response: { code: 'SIGNER_UNAVAILABLE' },
+                status: HttpStatus.SERVICE_UNAVAILABLE,
+            });
+        });
     });
 });
