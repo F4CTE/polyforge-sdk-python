@@ -9,6 +9,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.7.0] — 2026-03-18
+
+### Security
+
+- **CRITICAL** — `admin-api-service` `InvitesController`: replaced `@Req() req.user.sub` (always `undefined` — `AdminJwtGuard` sets `request.admin`, not `request.user`) with `@CurrentAdmin()` decorator; audit log `adminId` was silently `undefined` on every invite action
+- **HIGH** — Added `ParseUUIDPipe` to all `:id` params in `api-service` controllers (`strategies`, `alerts`, `backtests`) and `admin-api-service` controllers (`users`, `reports`, `strategies`) — rejects non-UUID path params with 400 instead of passing them to Prisma
+- **MEDIUM** — Added `validateEnv()` startup checks to `api-service`, `order-service`, `strategy-engine`, `backtest-service`, `notification-service`, `paper-order-service`, `bot-service`, `market-data-service` — services now exit immediately if required env vars are missing
+- **MEDIUM** — Replaced `console.error` with `process.stderr.write` in bootstrap error handlers for `order-service`, `strategy-engine`, `backtest-service`, `notification-service`, `bot-service`, `market-data-service`, `paper-order-service`
+- **MEDIUM** — `admin-api-service` waitlist controller `:email` path param now validated via `ParseEmailParamPipe` (`isEmail()` from class-validator) — rejects malformed email params with 400 before they reach the service or mail sender
+
+---
+
 ## [1.6.0] — 2026-03-18
 
 ### Security

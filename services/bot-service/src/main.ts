@@ -5,7 +5,19 @@ import { AppModule } from './app.module';
 
 const PORT = parseInt(process.env.PORT ?? '3011', 10);
 
+const REQUIRED_ENV = ['DATABASE_URL', 'REDIS_URL', 'INTERNAL_JWT_SECRET'];
+
+function validateEnv() {
+    const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
+    if (missing.length) {
+        process.stderr.write(`[bot-service] Missing required env vars: ${missing.join(', ')}\n`);
+        process.exit(1);
+    }
+}
+
 async function bootstrap() {
+    validateEnv();
+
     const app = await NestFactory.create<NestFastifyApplication>(
         AppModule,
         new FastifyAdapter(),
@@ -20,6 +32,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch(err => {
-    console.error('Failed to start bot-service', err);
+    process.stderr.write(`[bot-service] Fatal startup error: ${String(err)}\n`);
     process.exit(1);
 });

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Query, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { IsOptional, IsString } from 'class-validator';
@@ -35,7 +35,7 @@ export class BacktestsController {
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
         return this.backtests.findOne(id, user.sub);
     }
 }

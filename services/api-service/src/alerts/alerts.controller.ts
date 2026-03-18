@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { AlertsService } from './alerts.service';
@@ -24,7 +24,7 @@ export class AlertsController {
 
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
-    remove(@Param('id') id: string, @CurrentUser() user: any) {
+    remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
         return this.alerts.remove(id, user.sub);
     }
 }

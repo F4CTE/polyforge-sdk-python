@@ -8,6 +8,7 @@ import {
     UseGuards,
     ParseIntPipe,
     DefaultValuePipe,
+    ParseUUIDPipe,
 } from '@nestjs/common';
 import { StrategiesService } from './strategies.service';
 import { AdminJwtGuard } from '../common/guard/admin-jwt.guard';
@@ -36,7 +37,7 @@ export class StrategiesController {
 
     @Post(':id/force-stop')
     async forceStop(
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @CurrentAdmin() admin: AdminJwtPayload,
         @AdminIp() ip: string,
     ) {
@@ -53,7 +54,7 @@ export class StrategiesController {
 
     @Patch(':id/unpublish')
     async unpublish(
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @CurrentAdmin() admin: AdminJwtPayload,
         @AdminIp() ip: string,
     ) {

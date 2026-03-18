@@ -8,6 +8,7 @@ import {
     UseGuards,
     ParseIntPipe,
     DefaultValuePipe,
+    ParseUUIDPipe,
 } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { ReviewReportDto } from './dto/review-report.dto';
@@ -35,7 +36,7 @@ export class ReportsController {
 
     @Patch(':id')
     async review(
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @Body() dto: ReviewReportDto,
         @CurrentAdmin() admin: AdminJwtPayload,
         @AdminIp() ip: string,

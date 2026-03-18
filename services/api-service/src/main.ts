@@ -12,7 +12,18 @@ import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 
 const PORT = parseInt(process.env.PORT ?? '3002', 10);
 
+const REQUIRED_ENV = ['JWT_SECRET', 'DATABASE_URL', 'REDIS_URL'];
+
+function validateEnv() {
+    const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
+    if (missing.length) {
+        process.stderr.write(`[api-service] Missing required env vars: ${missing.join(', ')}\n`);
+        process.exit(1);
+    }
+}
+
 async function bootstrap() {
+    validateEnv();
     const app = await NestFactory.create<NestFastifyApplication>(
         AppModule,
         new FastifyAdapter(),

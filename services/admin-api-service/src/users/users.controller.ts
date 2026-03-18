@@ -10,6 +10,7 @@ import {
     DefaultValuePipe,
     ParseBoolPipe,
     Optional,
+    ParseUUIDPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { SuspendUserDto } from './dto/suspend.dto';
@@ -43,7 +44,7 @@ export class UsersController {
 
     @Get(':id')
     async findOne(
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @CurrentAdmin() admin: AdminJwtPayload,
         @AdminIp() ip: string,
     ) {
@@ -60,7 +61,7 @@ export class UsersController {
 
     @Patch(':id/suspend')
     async suspend(
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @Body() dto: SuspendUserDto,
         @CurrentAdmin() admin: AdminJwtPayload,
         @AdminIp() ip: string,
@@ -79,7 +80,7 @@ export class UsersController {
 
     @Patch(':id/unsuspend')
     async unsuspend(
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @CurrentAdmin() admin: AdminJwtPayload,
         @AdminIp() ip: string,
     ) {
@@ -96,7 +97,7 @@ export class UsersController {
 
     @Patch(':id/limits')
     async updateLimits(
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @Body() dto: UpdateLimitsDto,
         @CurrentAdmin() admin: AdminJwtPayload,
         @AdminIp() ip: string,
