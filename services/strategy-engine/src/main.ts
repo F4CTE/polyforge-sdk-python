@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { Logger } from '@nestjs/common';
+import { Logger, RequestMethod } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 const PORT = parseInt(process.env.PORT ?? '3006', 10);
@@ -25,7 +25,9 @@ async function bootstrap() {
         { bufferLogs: true },
     );
 
-    app.setGlobalPrefix('', { exclude: ['/health'] });
+    app.setGlobalPrefix('', {
+        exclude: [{ path: 'health', method: RequestMethod.GET }],
+    });
 
     await app.listen(PORT, '0.0.0.0');
     logger.log(`strategy-engine listening on port ${PORT}`);

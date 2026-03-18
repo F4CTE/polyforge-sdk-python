@@ -3,7 +3,7 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, RequestMethod } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
 import fastifyCookie from '@fastify/cookie';
 import { AppModule } from './app.module';
@@ -86,7 +86,9 @@ async function bootstrap() {
 
   // Prefix: auth/v1 — Nginx routes /auth/v1/* to this service
   // Health check excluded so it stays at /health
-  app.setGlobalPrefix('auth/v1', { exclude: ['health'] });
+  app.setGlobalPrefix('auth/v1', {
+    exclude: [{ path: 'health', method: RequestMethod.GET }],
+  });
 
   const port = process.env.AUTH_SERVICE_PORT ?? 3001;
   await app.listen(port, '0.0.0.0');

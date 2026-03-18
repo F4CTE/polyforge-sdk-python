@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { RequestMethod } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
@@ -25,7 +26,9 @@ async function bootstrap() {
     );
 
     app.useLogger(app.get(Logger));
-    app.setGlobalPrefix('', { exclude: ['health'] });
+    app.setGlobalPrefix('', {
+        exclude: [{ path: 'health', method: RequestMethod.GET }],
+    });
 
     await app.listen(PORT, '0.0.0.0');
     app.get(Logger).log(`notification-service listening on port ${PORT}`);

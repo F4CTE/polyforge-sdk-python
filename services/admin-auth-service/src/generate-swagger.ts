@@ -4,6 +4,7 @@
  */
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
+import { RequestMethod } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { writeFile, mkdir } from 'fs/promises';
@@ -17,7 +18,9 @@ async function generate() {
         { logger: false },
     );
 
-    app.setGlobalPrefix('auth/v1', { exclude: ['health'] });
+    app.setGlobalPrefix('auth/v1', {
+        exclude: [{ path: 'health', method: RequestMethod.GET }],
+    });
 
     const config = new DocumentBuilder()
         .setTitle('Polyforge Admin Auth API')

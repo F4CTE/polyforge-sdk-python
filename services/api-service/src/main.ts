@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, RequestMethod } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -66,7 +66,9 @@ async function bootstrap() {
 
     app.useWebSocketAdapter(new WsAdapter(app));
 
-    app.setGlobalPrefix('api/v1', { exclude: ['health'] });
+    app.setGlobalPrefix('api/v1', {
+        exclude: [{ path: 'health', method: RequestMethod.GET }],
+    });
 
     // ─── Swagger ────────────────────────────────────────────────────────────────
 

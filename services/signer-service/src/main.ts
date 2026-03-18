@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { Logger } from '@nestjs/common';
+import { Logger, RequestMethod } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 const PORT = parseInt(process.env.PORT ?? '3012', 10);
@@ -25,7 +25,9 @@ async function bootstrap() {
     );
 
     // Health is at /health (no prefix), all other routes are internal-only
-    app.setGlobalPrefix('', { exclude: ['/health'] });
+    app.setGlobalPrefix('', {
+        exclude: [{ path: 'health', method: RequestMethod.GET }],
+    });
 
     // Bind only to localhost — this service MUST NOT be reachable from the
     // internet. In Docker it's on the signer-only network with no published ports.

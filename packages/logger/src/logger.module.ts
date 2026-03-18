@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, RequestMethod } from '@nestjs/common';
 import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
 
 @Module({
     imports: [
         PinoLoggerModule.forRoot({
+            forRoutes: [{ path: '{*path}', method: RequestMethod.ALL }],
             pinoHttp: {
                 level: process.env.LOG_LEVEL ?? 'info',
                 transport: process.env.NODE_ENV === 'development'
