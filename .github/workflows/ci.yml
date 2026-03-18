@@ -12,6 +12,7 @@ concurrency:
 
 env:
   NODE_VERSION: '24'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   # Dummy URLs — prisma generate reads the schema only, never connects
   DIRECT_DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci'
   ADMIN_DIRECT_DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci_admin'
@@ -33,6 +34,11 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma clients
+        run: |
+          pnpm prisma generate --schema prisma/schema.prisma --config prisma/prisma.config.ts
+          pnpm prisma generate --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts
 
       - name: Lint
         run: pnpm lint

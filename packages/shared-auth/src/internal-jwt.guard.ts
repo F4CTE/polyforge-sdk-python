@@ -19,7 +19,7 @@ export class InternalJwtGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Record<string, unknown>>();
     const token = this.extractToken(request);
 
     if (!token) {
@@ -27,9 +27,9 @@ export class InternalJwtGuard implements CanActivate {
     }
 
     try {
-      const payload = this.jwtService.verify<InternalJwtPayload>(token, {
+      const payload = this.jwtService.verify(token, {
         secret: process.env.INTERNAL_JWT_SECRET,
-      });
+      }) as InternalJwtPayload;
 
       // Replay protection — check jti not already used
       const jtiKey = `jti:${payload.jti}`;
