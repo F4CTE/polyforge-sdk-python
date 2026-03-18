@@ -299,9 +299,9 @@
 - [x] `AdminTheme` — same dark blue-night palette, cyan primary, always-dark
 - [x] `AdminAuthStore` — decodes JWT payload to restore session (no server call, 1h JWT)
 - [x] `AdminAuthApiService` — login/logout → `/auth/v1` (port 3003)
-- [x] `AdminApiService` — all admin API methods (health, users, strategies, orders, DLQ, backtests, cache, rate limits, reports, builder stats, audit/event/login logs, invites, waitlist, config flags)
+- [x] `AdminApiService` — all admin API methods (health, users, strategies, orders, DLQ, backtests, cache, rate limits, reports, builder stats, audit/event/login logs, invites, waitlist, config flags, admin management)
 - [x] `TokenService`, `authInterceptor`, `errorInterceptor`, `authGuard`
-- [x] `LayoutComponent` — collapsible sidebar (Monitor / Manage / Moderation sections), user menu
+- [x] `LayoutComponent` — collapsible sidebar (Monitor / Manage / Moderation / System sections); System section visible to SUPER_ADMIN only
 - [x] `LoginComponent` — email + password, IP restriction note
 - [x] `DashboardComponent` — health status banner + service grid + infra cards (DB/Redis), auto-refresh 15s, Launch Control card (invite-only toggle)
 - [x] `UsersListComponent` — search + status + suspended filters, paginated table with user detail links
@@ -313,6 +313,8 @@
 - [x] `ReportsComponent` — moderation queue; approve/dismiss with admin note dialog
 - [x] `LogsComponent` — three tabs: Audit / Events / Logins, paginated
 - [x] `BuilderComponent` — tier card + weekly reward + attributed volume + bar chart + weekly breakdown table
+- [x] `InvitesComponent` — invite code generation + active codes table + waitlist management (send invite, remove); correct admin CSS class names
+- [x] `AdminsComponent` — SUPER_ADMIN-only; list all admins, create admin (dialog), edit name/role/active/password (dialog), deactivate/reactivate; every action audit-logged
 - [x] `styles.scss` — all admin-specific utility classes and component styles
 
 ---
@@ -350,3 +352,61 @@
 - [x] `robots.txt` — user-app serves `public/robots.txt` blocking `/login`, `/register`, `/settings`, `/portfolio` from crawlers
 - [x] Cookie consent banner — `CookieBannerComponent` fixed-bottom bar, localStorage-dismissed, links to Privacy Policy
 - [x] Launch runbook updated — Step 12 uses runtime toggle via admin panel / API instead of env var + restart; waitlist send-invite steps added
+
+---
+
+## Post-Launch Polish & Fixes (2026-03-18)
+
+### Docker Frontend Serving
+
+- [x] `apps/user-app/Dockerfile` — multi-stage (Node 24 + `npm install` + `ng build --configuration production`) → nginx:1.27-alpine serving `dist/user-app/browser/`
+- [x] `apps/admin-app/Dockerfile` — same pattern, serves `dist/admin-app/browser/`
+- [x] `apps/landing/Dockerfile` — nginx:1.27-alpine serving static files directly (no build step)
+- [x] `apps/user-app/nginx.conf` + `apps/admin-app/nginx.conf` + `apps/landing/nginx.conf` — per-app nginx configs with `try_files $uri $uri/ /index.html` for SPA routing
+- [x] `.dockerignore` — excludes `**/node_modules`, `**/dist`, `**/.angular`, `**/.turbo` from Docker build context
+- [x] `docker-compose.infra.yml` — added `user-app`, `admin-app`, `landing` services; all on `internal` network
+- [x] `services/gateway/nginx.dev.conf` — dev nginx gateway: port 80 → user app (landing + SPA + api-service + auth-service + WebSocket), port 8080 → admin app (admin-app + admin-api-service + admin-auth-service)
+- [x] Docker DNS auto-resolution — `resolver 127.0.0.11 valid=10s ipv6=off` + `set $upstream` variables in all nginx location blocks; no manual reload needed after service rebuilds
+- [x] `gateway` service added to docker-compose: image `nginx:1.27-alpine`, ports `80:80` + `8080:8080`
+
+### Bug Fixes
+
+- [x] `environment.prod.ts` (user-app) — `authApiUrl`, `apiUrl`, `wsUrl` set to `''` (relative) so API calls route through the gateway in Docker dev
+- [x] `app.config.ts` (user-app) — `MessageService` added to global providers, fixing `NG0201` crash that caused blank pages
+- [x] CORS — `http://localhost` added to allowed origins in `auth-service` + `api-service`; `http://localhost:8080` added to `admin-auth-service` + `admin-api-service`
+- [x] `.env` — `FRONTEND_URL` changed from `http://localhost:4200` to `http://localhost` so invite email links work through the gateway
+- [x] `admin-api-service` docker-compose env — added `EMAIL_DRIVER`, `MAILHOG_HOST`, `MAILHOG_PORT`, `FRONTEND_URL`, `mailhog` depends_on (fixes send-invite)
+- [x] `InvitesComponent` — corrected CSS class names from user-app style to admin-app style (`admin-card`, `admin-section-title`, `admin-form-field`, `admin-form-label`, `strategy-filter-tabs`, `filter-tab`)
+- [x] `RegisterComponent` — added "Confirm password" field with cross-field validator; blocks submission if passwords don't match
+
+### Admin Management Feature
+
+- [x] `services/admin-api-service/src/admins/` — new module: `GET/POST /api/v1/admins`, `PATCH/DELETE /api/v1/admins/:id`; SUPER_ADMIN-only; bcryptjs password hashing; every action audit-logged
+- [x] `apps/admin-app/features/admins/` — `AdminsComponent`: table of all admins, create dialog, edit dialog (name/role/active/password reset), deactivate/reactivate with confirmation; SUPER_ADMIN sidebar item only
+- [x] `admin.model.ts` — added `AdminView` interface
+- [x] `AdminApiService` — added `listAdmins`, `createAdmin`, `updateAdmin`, `deactivateAdmin` methods
+
+### Security Audit & Fixes (2026-03-18)
+
+- [x] **C1** — Removed all hardcoded JWT secret fallbacks (`?? 'dev-secret'`, `?? 'dev-admin-secret'`) from `shared-auth`, `admin-auth-service`, `admin-api-service`; startup env validation (exits if secrets missing) added to `auth-service`, `admin-auth-service`, `admin-api-service`, `signer-service`
+- [x] **C4** — Added `@nestjs/throttler` to `admin-auth-service`; 10 req/15 min rate limit on `POST /auth/v1/login`
+- [x] **H1** — Explicit `expiresIn: '1h'` on `jwtService.sign()` call in admin-auth-service (defence-in-depth over module config)
+- [x] **H2** — Fixed X-Forwarded-For spoofing: `adminIp` now uses only the first IP in the chain
+- [x] **H4** — Added `@MaxLength(100)` to `password` field in `auth-service` LoginDto
+- [x] **H5** — `AdminsService.update/deactivate` now invalidate all Redis sessions for the target admin immediately
+- [x] **H6** — Added `@Matches(/^POLY-[A-Z0-9]{6}$/)` to `inviteCode` in RegisterDto
+- [x] **H7** — Signer-service `InternalAuthGuard` JTI replay protection migrated from in-process `Set` to Redis `SET NX` (60s TTL); added `@polyforge/shared-redis` dependency
+- [x] **M1** — Tightened CORS in `auth-service` and `api-service` dev origins: removed `4201`, `4300`; kept `localhost` (gateway) + `localhost:4200` (ng serve)
+- [x] **M2** — Startup validation rejects all-zero `TOTP_ENCRYPTION_KEY` in production
+- [x] **M3** — Added `@Matches(/^\d{6}$/)` to `totpCode` in LoginDto
+- [x] **M4** — Audit log sanitization: IP sanitized (strip non-printable chars, max 64 chars); `@Param('id')` now uses `ParseUUIDPipe` in admins controller
+- [x] **M5** — Added `@Throttle()` (10/hr) to `verify-email` and `reset-password` endpoints in auth-service
+- [x] **M6** — Transparent bcrypt re-hash on login for accounts with < 12 rounds (fire-and-forget in `UsersService.rehashIfNeeded`)
+- [x] **L1** — Security headers (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`) added to all services via Fastify `onSend` hook, and globally in nginx gateway
+- [x] **L2** — Swagger `persistAuthorization` set to `false`
+- [x] **L4** — Replaced `console.error` in bootstrap catch handlers with `process.stderr.write`; all `main.ts` files use `bootstrap().catch(...)` pattern
+- [x] **C2** — HttpOnly `pf_token` / `pf_admin_token` cookies replace localStorage; `@fastify/cookie` registered in all 4 services; JWT strategy and admin guard accept cookie OR Bearer header; WebSocket gateway authenticates from upgrade-request cookie; Angular interceptors send `withCredentials: true` instead of injecting Bearer header; auth stores call `/me` on init; admin-auth-service gains `GET /auth/v1/me` endpoint
+- [x] **C3** — HSTS already present in `nginx.prod.conf` (`max-age=63072000; includeSubDomains; preload`); confirmed
+- [x] **H3** — CSRF: `SameSite=Lax` cookies prevent cross-origin state-changing requests in all modern browsers; no additional CSRF token needed
+- [x] **L3** — JWT secret rotation SOP documented in `docs/07-deployment.md` (zero-downtime procedure, grace period, per-secret TTL guidance)
+- [x] **M7** — DB least-privilege documented in `docs/04-database-and-redis.md` (poly_app / poly_admin / poly_migrate roles, audit_logs INSERT-only rule)

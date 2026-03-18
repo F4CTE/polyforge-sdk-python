@@ -46,6 +46,18 @@
           @if (fieldError('password')) { <small class="field-error">{{ fieldError('password') }}</small> }
         </div>
 
+        <div class="form-field">
+          <label class="field-label" for="confirmPassword">Confirm password</label>
+          <p-password id="confirmPassword" formControlName="confirmPassword"
+                      placeholder="Repeat your password"
+                      [toggleMask]="true"
+                      [feedback]="false"
+                      styleClass="w-full" inputStyleClass="w-full" />
+          @if (form.get('confirmPassword')?.touched && (form.hasError('passwordMismatch') || form.get('confirmPassword')?.hasError('passwordMismatch'))) {
+            <small class="field-error">Passwords do not match</small>
+          }
+        </div>
+
         @if (inviteOnly() || form.get('inviteCode')?.value) {
           <div class="form-field">
             <label class="field-label" for="inviteCode">Invite code</label>

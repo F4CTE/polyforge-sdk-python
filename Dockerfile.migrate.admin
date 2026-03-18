@@ -6,8 +6,7 @@ WORKDIR /app
 COPY prisma/schema.admin.prisma    ./prisma/schema.admin.prisma
 COPY prisma/prisma.admin.config.ts ./prisma/prisma.admin.config.ts
 
-RUN npm install --save-dev prisma
-RUN npm install @prisma/client dotenv
+RUN npm install --save-dev prisma @prisma/client dotenv
 
 ENV ADMIN_DIRECT_DATABASE_URL="postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin"
 

@@ -50,10 +50,36 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         this.logger.log('WebSocket gateway initialized on /ws');
     }
 
-    handleConnection(client: AuthedSocket) {
+    /** Parse a single cookie value from a raw Cookie header string. */
+    private parseCookie(cookieHeader: string, name: string): string | null {
+        for (const part of cookieHeader.split(';')) {
+            const [k, v] = part.trim().split('=');
+            if (k === name && v) return decodeURIComponent(v);
+        }
+        return null;
+    }
+
+    handleConnection(client: AuthedSocket, req: any) {
         client.isAuthenticated = false;
         client.subscribedTokens = new Set();
         client.subscribedStrategies = new Set();
+
+        // Try cookie auth from the HTTP upgrade request (browser clients)
+        const cookieHeader: string = req?.headers?.cookie ?? '';
+        if (cookieHeader) {
+            const cookieToken = this.parseCookie(cookieHeader, 'pf_token');
+            if (cookieToken) {
+                try {
+                    const decoded = this.jwt.verify(cookieToken, { secret: this.jwtSecret }) as any;
+                    client.userId = decoded.sub;
+                    client.isAuthenticated = true;
+                    this.clients.set(decoded.sub, client);
+                    this.send(client, { type: 'AUTH_OK', userId: decoded.sub });
+                } catch {
+                    // Cookie present but invalid — will require explicit AUTH message
+                }
+            }
+        }
 
         client.on('message', (raw: Buffer) => {
             try {

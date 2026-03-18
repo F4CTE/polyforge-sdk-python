@@ -7,9 +7,13 @@ import { JwtPayload } from '@polyforge/shared-types';
 export class JwtStrategy extends PassportStrategy(Strategy) {
     constructor() {
         super({
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+            // Accept token from HttpOnly cookie (browser) or Authorization header (API clients)
+            jwtFromRequest: ExtractJwt.fromExtractors([
+                (req: any) => req?.cookies?.pf_token ?? null,
+                ExtractJwt.fromAuthHeaderAsBearerToken(),
+            ]),
             ignoreExpiration: false,
-            secretOrKey: process.env.USER_JWT_SECRET ?? 'dev-secret',
+            secretOrKey: process.env.USER_JWT_SECRET!,
         });
     }
 

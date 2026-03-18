@@ -80,7 +80,7 @@ export class MailService {
         const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
 
         const html = emailLayout({
-            preheader: 'You're on the Polyforge waitlist — we'll be in touch soon.',
+            preheader: "You're on the Polyforge waitlist — we'll be in touch soon.",
             body: `
                 <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827">
                   You're on the list!
@@ -111,7 +111,7 @@ export class MailService {
         await this.transporter.sendMail({
             from: this.from,
             to,
-            subject: 'You're on the Polyforge waitlist',
+            subject: "You're on the Polyforge waitlist",
             text: `You're on the Polyforge early-access waitlist!\n\nWe'll email your personal invite code as soon as your spot opens up.\n\nVisit ${base} to learn more.\n\nIf you didn't sign up, you can ignore this email.`,
             html,
         });

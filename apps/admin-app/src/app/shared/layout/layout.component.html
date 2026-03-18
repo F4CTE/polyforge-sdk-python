@@ -13,15 +13,17 @@
 
     <nav class="sidebar-nav">
       @for (section of nav; track section.title) {
-        @if (!collapsed()) {
-          <div class="nav-section-title">{{ section.title }}</div>
-        }
-        @for (item of section.items; track item.route) {
-          <a class="nav-item" [routerLink]="item.route" routerLinkActive="active"
-             [title]="collapsed() ? item.label : ''">
-            <i class="{{ item.icon }}"></i>
-            @if (!collapsed()) { <span>{{ item.label }}</span> }
-          </a>
+        @if (!section.superAdminOnly || auth.isSuperAdmin()) {
+          @if (!collapsed()) {
+            <div class="nav-section-title">{{ section.title }}</div>
+          }
+          @for (item of section.items; track item.route) {
+            <a class="nav-item" [routerLink]="item.route" routerLinkActive="active"
+               [title]="collapsed() ? item.label : ''">
+              <i class="{{ item.icon }}"></i>
+              @if (!collapsed()) { <span>{{ item.label }}</span> }
+            </a>
+          }
         }
       }
     </nav>

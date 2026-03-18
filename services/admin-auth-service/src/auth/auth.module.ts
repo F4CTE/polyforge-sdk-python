@@ -6,7 +6,7 @@ import { AuthController } from './auth.controller';
 @Module({
   imports: [
     JwtModule.register({
-      secret: process.env.ADMIN_JWT_SECRET ?? 'dev-admin-secret',
+      secret: process.env.ADMIN_JWT_SECRET!,
       signOptions: { expiresIn: '1h' },
     }),
   ],

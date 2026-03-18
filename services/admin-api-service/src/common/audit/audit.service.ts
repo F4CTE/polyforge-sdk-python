@@ -13,14 +13,19 @@ export class AuditService {
         payload?: Record<string, unknown>;
         ip: string;
     }) {
+        // Strip control characters and newlines to prevent log injection.
+        // Keep printable ASCII + common IP/IPv6 characters only.
+        // eslint-disable-next-line no-control-regex
+        const safeIp = params.ip.replace(/[^\x20-\x7E]/g, '').slice(0, 64);
+
         await this.adminDb.auditLog.create({
             data: {
-                adminId: params.adminId,
-                action: params.action,
+                adminId:    params.adminId,
+                action:     params.action,
                 targetType: params.targetType,
-                targetId: params.targetId,
-                payload: params.payload as any,
-                ip: params.ip,
+                targetId:   params.targetId,
+                payload:    params.payload as any,
+                ip:         safeIp,
             },
         });
     }

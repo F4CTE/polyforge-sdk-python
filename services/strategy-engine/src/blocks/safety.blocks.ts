@@ -9,7 +9,7 @@ async function getUserExposure(userId: string, prisma: PrismaService): Promise<n
         select: { size: true, currentPrice: true },
     });
     return positions.reduce((sum, p) => {
-        return sum + parseFloat(p.size) * parseFloat(p.currentPrice);
+        return sum + parseFloat(p.size.toString()) * parseFloat(p.currentPrice.toString());
     }, 0);
 }
 

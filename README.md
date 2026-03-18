@@ -17,7 +17,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 | Redis client | ioredis |
 | Logging | pino + nestjs-pino |
 | Testing | Vitest + Supertest |
-| Frontend | Angular 17 + PrimeNG |
+| Frontend | Angular 21 + PrimeNG 21 |
 | Build system | Turborepo 2 + pnpm workspaces |
 | Containers | Docker + Docker Compose |
 | Runtime | Node.js 24 |
@@ -28,20 +28,26 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 
 ```
 polyforge/
+├── apps/
+│   ├── user-app/                  # ✅ Angular 21 user SPA — served at http://localhost
+│   ├── admin-app/                 # ✅ Angular 21 admin console — served at http://localhost:8080
+│   └── landing/                   # ✅ Static landing page with waitlist form
+│
 ├── services/
+│   ├── gateway/                   # ✅ nginx dev gateway (ports 80 + 8080)
 │   ├── auth-service/              # ✅ Registration, login — port 3001
 │   ├── admin-auth-service/        # ✅ Admin login — port 3003
-│   ├── api-service/               # 🔜 User REST + WebSocket — port 3002
-│   ├── admin-api-service/         # 🔜 Admin REST — port 3004
-│   ├── market-data-service/       # 🔜 Polymarket feed + Redis cache writer
-│   ├── strategy-engine/           # 🔜 Block evaluator + tick runner
-│   ├── order-service/             # 🔜 CLOB order submission
-│   ├── paper-order-service/       # 🔜 Simulated fills
-│   ├── backtest-service/          # 🔜 Historical replay
-│   ├── notification-service/      # 🔜 Email + Telegram + Discord
-│   ├── bot-service/               # 🔜 Interactive bots
-│   ├── signer-service/            # 🔜 Credential vault + EIP712 signing
-│   └── mock-polymarket/           # 🔜 Dev-only fake Polymarket APIs
+│   ├── api-service/               # ✅ User REST + WebSocket — port 3002
+│   ├── admin-api-service/         # ✅ Admin REST — port 3004
+│   ├── market-data-service/       # ✅ Polymarket feed + Redis cache writer
+│   ├── strategy-engine/           # ✅ Block evaluator + tick runner
+│   ├── order-service/             # ✅ CLOB order submission
+│   ├── paper-order-service/       # ✅ Simulated fills
+│   ├── backtest-service/          # ✅ Historical replay
+│   ├── notification-service/      # ✅ Email + Telegram + Discord
+│   ├── bot-service/               # ✅ Interactive bots
+│   ├── signer-service/            # ✅ Credential vault + EIP712 signing
+│   └── mock-polymarket/           # ✅ Dev-only fake Polymarket APIs
 │
 └── packages/
     ├── shared-types/              # ✅ All TypeScript interfaces and enums
@@ -72,10 +78,10 @@ polyforge/
 pnpm install
 ```
 
-### 2. Start infrastructure (Postgres, Redis, MailHog, PgBouncer)
+### 2. Start the full stack (infrastructure + services + frontends)
 
 ```bash
-docker compose up -d
+docker compose -f docker-compose.infra.yml up --build -d
 ```
 
 ### 3. Build shared packages
@@ -148,7 +154,15 @@ pnpm build
 
 ---
 
-## Service Ports (dev)
+## Access (dev)
+
+| URL | What you get |
+|---|---|
+| http://localhost | User app (landing at `/`, Angular SPA, api-service, auth-service, WebSocket) |
+| http://localhost:8080 | Admin console (admin-app, admin-api-service, admin-auth-service) |
+| http://localhost:8025 | MailHog — inspect all outbound emails |
+
+## Service Ports (direct, dev)
 
 | Service | Port |
 |---|---|
@@ -162,24 +176,6 @@ pnpm build
 | PgBouncer | 6432 |
 
 ---
-
-## Implemented Endpoints
-
-### auth-service — `http://localhost:3001`
-
-```
-POST /auth/v1/register   — create account
-POST /auth/v1/login      — authenticate
-GET  /health             — health check
-```
-
-### admin-auth-service — `http://localhost:3003`
-
-```
-POST /auth/v1/login    — authenticate admin (returns 1h JWT)
-POST /auth/v1/logout   — revoke admin session
-GET  /health           — health check
-```
 
 See [`docs/06-api-catalog.md`](./docs/06-api-catalog.md) for the full endpoint reference.
 
@@ -199,3 +195,4 @@ See [`docs/06-api-catalog.md`](./docs/06-api-catalog.md) for the full endpoint r
 | [`docs/09-dev-setup.md`](./docs/09-dev-setup.md) | Local development setup |
 | [`docs/10-env-reference.md`](./docs/10-env-reference.md) | Environment variable reference |
 | [`docs/11-roadmap.md`](./docs/11-roadmap.md) | Feature roadmap |
+| [`CHANGELOG.md`](./CHANGELOG.md) | Release history |

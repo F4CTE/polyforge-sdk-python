@@ -76,15 +76,15 @@ export const SetStopLossAction: ActionEvaluator = {
         const position = await prisma.position.findUnique({
             where: { userId_tokenId: { userId: ctx.userId, tokenId } },
         });
-        if (!position || parseFloat(position.size) === 0) return { intents: [] };
+        if (!position || parseFloat(position.size.toString()) === 0) return { intents: [] };
 
-        const stopPrice = parseFloat(position.avgPrice) * (1 - parseFloat(pct ?? '0.1'));
+        const stopPrice = parseFloat(position.avgPrice.toString()) * (1 - parseFloat(pct ?? '0.1'));
         const resolved = await resolveMarket(tokenId, prisma);
         if (!resolved) return { intents: [] };
 
         return {
             intents: [makeIntent(ctx, tokenId, resolved.marketId, resolved.outcome, 'SELL',
-                position.size, String(stopPrice.toFixed(4)), 'GTC')],
+                position.size.toString(), String(stopPrice.toFixed(4)), 'GTC')],
         };
     },
 };
@@ -96,15 +96,15 @@ export const TakeProfitAction: ActionEvaluator = {
         const position = await prisma.position.findUnique({
             where: { userId_tokenId: { userId: ctx.userId, tokenId } },
         });
-        if (!position || parseFloat(position.size) === 0) return { intents: [] };
+        if (!position || parseFloat(position.size.toString()) === 0) return { intents: [] };
 
-        const tpPrice = parseFloat(position.avgPrice) * (1 + parseFloat(pct ?? '0.1'));
+        const tpPrice = parseFloat(position.avgPrice.toString()) * (1 + parseFloat(pct ?? '0.1'));
         const resolved = await resolveMarket(tokenId, prisma);
         if (!resolved) return { intents: [] };
 
         return {
             intents: [makeIntent(ctx, tokenId, resolved.marketId, resolved.outcome, 'SELL',
-                position.size, String(Math.min(tpPrice, 0.99).toFixed(4)), 'GTC')],
+                position.size.toString(), String(Math.min(tpPrice, 0.99).toFixed(4)), 'GTC')],
         };
     },
 };

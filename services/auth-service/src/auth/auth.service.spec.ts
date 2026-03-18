@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
 import { TotpService } from '../totp/totp.service';
+import { RedisService } from '@polyforge/shared-redis';
 import { createMockMailService } from '../../test/helpers/mock-mail';
 import { userFactory } from '../../test/factories';
 
@@ -26,6 +28,8 @@ describe('AuthService', () => {
     let jwtService: JwtService;
     let mailService: MailService;
     let totpService: TotpService;
+    let config: ConfigService;
+    let redis: RedisService;
 
     beforeEach(() => {
         usersService = {
@@ -33,6 +37,7 @@ describe('AuthService', () => {
             findByEmail: vi.fn(),
             findById: vi.fn(),
             validatePassword: vi.fn(),
+            rehashIfNeeded: vi.fn().mockResolvedValue(undefined),
             createEmailVerificationToken: vi.fn().mockResolvedValue('a'.repeat(64)),
             verifyEmail: vi.fn(),
             createPasswordResetToken: vi.fn().mockResolvedValue('b'.repeat(64)),
@@ -50,7 +55,18 @@ describe('AuthService', () => {
             verify: vi.fn().mockResolvedValue(true),
         } as unknown as TotpService;
 
-        service = new AuthService(usersService, jwtService, mailService, totpService);
+        config = {
+            get: vi.fn().mockReturnValue(undefined),
+        } as unknown as ConfigService;
+
+        redis = {
+            get: vi.fn().mockResolvedValue(null),
+            set: vi.fn().mockResolvedValue(undefined),
+            del: vi.fn().mockResolvedValue(undefined),
+            getClient: vi.fn().mockReturnValue({ decr: vi.fn() }),
+        } as unknown as RedisService;
+
+        service = new AuthService(usersService, jwtService, mailService, totpService, config, redis);
     });
 
     afterEach(() => {

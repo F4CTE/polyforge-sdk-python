@@ -3,6 +3,7 @@ import { provideRouter, withViewTransitions } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
+import { MessageService } from 'primeng/api';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
@@ -25,6 +26,7 @@ export const appConfig: ApplicationConfig = {
       },
       ripple: true,
     }),
+    MessageService,
     provideAppInitializer(() => {
       inject(AuthStore).init();
     }),

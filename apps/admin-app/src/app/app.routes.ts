@@ -24,6 +24,7 @@ export const routes: Routes = [
       { path: 'logs',       loadComponent: () => import('./features/logs/logs.component').then(m => m.LogsComponent) },
       { path: 'builder',    loadComponent: () => import('./features/builder/builder.component').then(m => m.BuilderComponent) },
       { path: 'invites',    loadComponent: () => import('./features/invites/invites.component').then(m => m.InvitesComponent) },
+      { path: 'admins',     loadComponent: () => import('./features/admins/admins.component').then(m => m.AdminsComponent) },
     ],
   },
 

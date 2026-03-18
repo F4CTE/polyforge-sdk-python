@@ -169,8 +169,8 @@ services:
       context: .
       dockerfile: services/signer-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
-      DIRECT_DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
+      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
       MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
       POLY_BUILDER_API_KEY: ${POLY_BUILDER_API_KEY:-dev-builder-api-key}
@@ -179,9 +179,9 @@ services:
       CHAIN_ID: ${CHAIN_ID:-137}
       PORT: "3012"
       NODE_ENV: ${NODE_ENV:-development}
-    networks: [signer-only]
+    networks: [internal, signer-only]
     depends_on:
-      postgres-user: { condition: service_healthy }
+      postgres: { condition: service_healthy }
     restart: unless-stopped
 
   # ─── STRATEGY ENGINE ─────────────────────────────────────────────────────
@@ -191,8 +191,8 @@ services:
       context: .
       dockerfile: services/strategy-engine/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
-      DIRECT_DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
+      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       REDIS_URL: redis://redis:6379
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
       PORT: "3006"
@@ -200,7 +200,7 @@ services:
       - "3006:3006"
     networks: [internal]
     depends_on:
-      postgres-user: { condition: service_healthy }
+      postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
     restart: unless-stopped
 
@@ -211,8 +211,8 @@ services:
       context: .
       dockerfile: services/order-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
-      DIRECT_DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
+      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       REDIS_URL: redis://redis:6379
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
       SIGNER_SERVICE_URL: http://signer-service:3012
@@ -222,7 +222,7 @@ services:
       - "3007:3007"
     networks: [internal, signer-only]
     depends_on:
-      postgres-user: { condition: service_healthy }
+      postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
       signer-service: { condition: service_started }
       mock-polymarket: { condition: service_started }
@@ -363,6 +363,10 @@ services:
       ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-dev-admin-secret}
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
       STRATEGY_ENGINE_URL: http://strategy-engine:3006
+      EMAIL_DRIVER: ${EMAIL_DRIVER:-mailhog}
+      MAILHOG_HOST: mailhog
+      MAILHOG_PORT: "1025"
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       PORT: "3004"
       NODE_ENV: ${NODE_ENV:-development}
     ports:
@@ -372,6 +376,7 @@ services:
       postgres: { condition: service_healthy }
       postgres-admin: { condition: service_healthy }
       redis: { condition: service_healthy }
+      mailhog: { condition: service_started }
       migrate-user: { condition: service_completed_successfully }
       migrate-admin: { condition: service_completed_successfully }
     restart: unless-stopped
@@ -431,6 +436,51 @@ services:
       migrate-admin: { condition: service_completed_successfully }
     restart: unless-stopped
 
+  # ─── FRONTEND APPS ───────────────────────────────────────────────────────
+
+  user-app:
+    build:
+      context: .
+      dockerfile: apps/user-app/Dockerfile
+    networks: [internal]
+    restart: unless-stopped
+
+  admin-app:
+    build:
+      context: .
+      dockerfile: apps/admin-app/Dockerfile
+    networks: [internal, admin-only]
+    restart: unless-stopped
+
+  landing:
+    build:
+      context: .
+      dockerfile: apps/landing/Dockerfile
+    networks: [internal]
+    restart: unless-stopped
+
+  # ─── GATEWAY ─────────────────────────────────────────────────────────────
+  # Port 80  → user app (landing + SPA + api-service + auth-service)
+  # Port 8080 → admin app (SPA + admin-api-service + admin-auth-service)
+
+  gateway:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./services/gateway/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+      - "8080:8080"
+    networks: [internal, admin-only]
+    depends_on:
+      - user-app
+      - admin-app
+      - landing
+      - api-service
+      - auth-service
+      - admin-api-service
+      - admin-auth-service
+    restart: unless-stopped
+
   # ─── MARKET DATA SERVICE ─────────────────────────────────────────────────
 
   market-data-service:
@@ -438,8 +488,8 @@ services:
       context: .
       dockerfile: services/market-data-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
-      DIRECT_DATABASE_URL: postgresql://poly_user:devpass@postgres-user:5432/polyforge_user
+      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       REDIS_URL: redis://redis:6379
       CLOB_WS_URL: ws://mock-polymarket:3098
       GAMMA_API_URL: http://mock-polymarket:3096
@@ -448,7 +498,7 @@ services:
       - "3005:3005"
     networks: [internal]
     depends_on:
-      postgres-user: { condition: service_healthy }
+      postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
       mock-polymarket: { condition: service_started }
     restart: unless-stopped

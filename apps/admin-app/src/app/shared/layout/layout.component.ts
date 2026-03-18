@@ -22,7 +22,7 @@ export class LayoutComponent {
   readonly auth = inject(AdminAuthStore);
   collapsed     = signal(false);
 
-  readonly nav: { title: string; items: NavItem[] }[] = [
+  readonly nav: { title: string; superAdminOnly?: boolean; items: NavItem[] }[] = [
     {
       title: 'Monitor',
       items: [
@@ -46,6 +46,13 @@ export class LayoutComponent {
       items: [
         { label: 'Reports',    icon: 'pi pi-flag',       route: '/reports' },
         { label: 'Logs',       icon: 'pi pi-book',       route: '/logs' },
+      ],
+    },
+    {
+      title: 'System',
+      superAdminOnly: true,
+      items: [
+        { label: 'Admins',     icon: 'pi pi-shield',     route: '/admins' },
       ],
     },
   ];

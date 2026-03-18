@@ -3,7 +3,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { userFactory } from '../../test/factories';
 
-// ─── Stub AuthService ─────────────────────────────────────────────────────────
+// ─── Stubs ────────────────────────────────────────────────────────────────────
 
 function makeAuthService(): AuthService {
     return {
@@ -14,6 +14,10 @@ function makeAuthService(): AuthService {
         forgotPassword: vi.fn(),
         resetPassword: vi.fn(),
     } as unknown as AuthService;
+}
+
+function makeReply() {
+    return { setCookie: vi.fn(), clearCookie: vi.fn() } as any;
 }
 
 // ─── Suite ───────────────────────────────────────────────────────────────────
@@ -28,25 +32,29 @@ describe('AuthController', () => {
     });
 
     describe('POST register', () => {
-        it('delegates to authService.register and returns the result', async () => {
-            const expected = { token: 'jwt', user: { id: '1' } };
-            vi.mocked(authService.register).mockResolvedValue(expected as any);
+        it('delegates to authService.register, sets cookie, and returns user', async () => {
+            const serviceResult = { token: 'jwt', user: { id: '1' } };
+            vi.mocked(authService.register).mockResolvedValue(serviceResult as any);
             const dto = { email: 'a@b.com', password: 'Passw0rd!', username: 'alice', tosAccepted: true };
+            const reply = makeReply();
 
-            const result = await controller.register(dto as any);
-            expect(result).toBe(expected);
+            const result = await controller.register(dto as any, reply);
+            expect(result).toBe(serviceResult.user);
+            expect(reply.setCookie).toHaveBeenCalledWith('pf_token', 'jwt', expect.any(Object));
             expect(authService.register).toHaveBeenCalledWith(dto);
         });
     });
 
     describe('POST login', () => {
-        it('delegates to authService.login and returns the result', async () => {
-            const expected = { token: 'jwt', user: { id: '1' }, requiresTotp: false };
-            vi.mocked(authService.login).mockResolvedValue(expected as any);
+        it('delegates to authService.login, sets cookie, and returns user', async () => {
+            const serviceResult = { token: 'jwt', user: { id: '1' }, requiresTotp: false };
+            vi.mocked(authService.login).mockResolvedValue(serviceResult as any);
             const dto = { email: 'a@b.com', password: 'Passw0rd!' };
+            const reply = makeReply();
 
-            const result = await controller.login(dto as any);
-            expect(result).toBe(expected);
+            const result = await controller.login(dto as any, reply);
+            expect(result).toBe(serviceResult.user);
+            expect(reply.setCookie).toHaveBeenCalledWith('pf_token', 'jwt', expect.any(Object));
             expect(authService.login).toHaveBeenCalledWith(dto);
         });
     });
@@ -65,9 +73,10 @@ describe('AuthController', () => {
     });
 
     describe('POST logout', () => {
-        it('returns undefined (client drops the token)', async () => {
-            const result = await controller.logout();
-            expect(result).toBeUndefined();
+        it('clears the cookie', async () => {
+            const reply = makeReply();
+            await controller.logout(reply);
+            expect(reply.clearCookie).toHaveBeenCalledWith('pf_token', { path: '/' });
         });
     });
 

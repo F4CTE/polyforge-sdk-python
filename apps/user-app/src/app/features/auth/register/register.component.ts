@@ -29,6 +29,13 @@ function usernameValidator(control: AbstractControl): ValidationErrors | null {
   return null;
 }
 
+function confirmPasswordValidator(group: AbstractControl): ValidationErrors | null {
+  const pw  = group.get('password')?.value;
+  const cpw = group.get('confirmPassword')?.value;
+  if (!cpw) return null;
+  return pw === cpw ? null : { passwordMismatch: true };
+}
+
 @Component({
   selector: 'app-register',
   standalone: true,
@@ -56,12 +63,13 @@ export class RegisterComponent {
   readonly inviteOnly = signal(false);
 
   readonly form = this.fb.group({
-    email:       ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
-    username:    ['', [Validators.required, Validators.minLength(3), Validators.maxLength(30), usernameValidator]],
-    password:    ['', [Validators.required, Validators.minLength(8), passwordValidator]],
-    tosAccepted: [false, Validators.requiredTrue],
-    inviteCode:  ['', [Validators.maxLength(20)]],
-  });
+    email:           ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
+    username:        ['', [Validators.required, Validators.minLength(3), Validators.maxLength(30), usernameValidator]],
+    password:        ['', [Validators.required, Validators.minLength(8), passwordValidator]],
+    confirmPassword: ['', Validators.required],
+    tosAccepted:     [false, Validators.requiredTrue],
+    inviteCode:      ['', [Validators.maxLength(20)]],
+  }, { validators: confirmPasswordValidator });
 
   constructor() {
     // Pre-fill invite code from ?invite= query param and show the field
@@ -78,6 +86,11 @@ export class RegisterComponent {
     this.error.set('');
 
     const { email, username, password, tosAccepted, inviteCode } = this.form.value;
+    if (this.form.hasError('passwordMismatch')) {
+      this.form.get('confirmPassword')!.setErrors({ passwordMismatch: true });
+      this.loading.set(false);
+      return;
+    }
     const body: Parameters<typeof this.auth.register>[0] = {
       email: email!, username: username!, password: password!, tosAccepted: tosAccepted!,
     };

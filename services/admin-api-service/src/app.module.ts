@@ -20,6 +20,7 @@ import { InvitesModule } from './invites/invites.module';
 import { WaitlistAdminModule } from './waitlist/waitlist.module';
 import { ConfigFlagsModule } from './config-flags/config-flags.module';
 import { AuditModule } from './common/audit/audit.module';
+import { AdminsModule } from './admins/admins.module';
 
 @Module({
     imports: [
@@ -43,6 +44,7 @@ import { AuditModule } from './common/audit/audit.module';
         InvitesModule,
         WaitlistAdminModule,
         ConfigFlagsModule,
+        AdminsModule,
     ],
     controllers: [HealthController],
 })

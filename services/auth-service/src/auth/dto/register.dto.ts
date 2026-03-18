@@ -31,6 +31,6 @@ export class RegisterDto {
     @ApiPropertyOptional({ example: 'POLY-ABC123', description: 'Invite code — required when INVITE_ONLY=true' })
     @IsOptional()
     @IsString()
-    @MaxLength(20)
+    @Matches(/^POLY-[A-Z0-9]{6}$/, { message: 'inviteCode must be in the format POLY-XXXXXX' })
     inviteCode?: string;
 }

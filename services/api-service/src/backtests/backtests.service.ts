@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@polyforge/shared-db';
+import { RedisService } from '@polyforge/shared-redis';
 import { paginate, PaginatedResponse, PaginationDto } from '../common/dto/pagination.dto';
 import { CreateBacktestDto } from './dto/create-backtest.dto';
 
@@ -10,7 +11,10 @@ export interface BacktestQueryDto extends PaginationDto {
 
 @Injectable()
 export class BacktestsService {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly redis: RedisService,
+    ) {}
 
     async list(userId: string, query: BacktestQueryDto): Promise<PaginatedResponse<any>> {
         const { page, limit, strategyId, status } = query;
@@ -53,6 +57,14 @@ export class BacktestsService {
                 dateRangeEnd: dto.dateRangeEnd ? new Date(dto.dateRangeEnd) : new Date(),
                 status: 'QUEUED' as any,
             },
+        });
+
+        // Publish to stream:backtests so backtest-service picks it up
+        await this.redis.xadd('stream:backtests', {
+            runId:      run.id,
+            userId,
+            strategyId: dto.strategyId ?? '',
+            ts:         String(Date.now()),
         });
 
         return { runId: run.id, status: 'QUEUED' };

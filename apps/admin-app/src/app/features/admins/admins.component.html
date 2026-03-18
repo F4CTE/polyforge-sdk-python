@@ -1,0 +1,160 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Admin Accounts</h1>
+    <p class="page-subtitle" style="margin-top:4px;color:var(--pf-text-muted);font-size:13px">
+      Manage who has access to this console.
+    </p>
+  </div>
+  <p-button label="New admin" icon="pi pi-plus" (onClick)="openCreate()" />
+</div>
+
+<!-- ─── Table ──────────────────────────────────────────────────────────────── -->
+<div class="admin-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+    <h3 class="admin-section-title" style="margin:0">All admins ({{ admins().length }})</h3>
+    <p-button icon="pi pi-refresh" severity="secondary" size="small" [rounded]="true"
+              [loading]="loading()" (onClick)="load()"
+              pTooltip="Refresh" tooltipPosition="left" />
+  </div>
+
+  @if (loading() && !admins().length) {
+    <div style="text-align:center;padding:2rem;color:var(--pf-text-muted)">Loading…</div>
+  } @else {
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th style="text-align:center">Role</th>
+          <th style="text-align:center">Status</th>
+          <th style="text-align:right">Last seen</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (admin of admins(); track admin.id) {
+          <tr [class.suspended-row]="!admin.active">
+            <td style="font-weight:500">{{ admin.displayName }}</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--pf-text-secondary)">
+              {{ admin.email }}
+            </td>
+            <td style="text-align:center">
+              <span class="admin-badge" [class]="roleSeverity(admin.role)">
+                {{ roleLabel(admin.role) }}
+              </span>
+            </td>
+            <td style="text-align:center">
+              @if (admin.active) {
+                <span class="admin-badge success">Active</span>
+              } @else {
+                <span class="admin-badge muted">Inactive</span>
+              }
+            </td>
+            <td style="text-align:right;color:var(--pf-text-muted);font-size:12px">
+              {{ admin.lastSeen | date:'MMM d, yyyy' }}
+            </td>
+            <td style="text-align:right;white-space:nowrap">
+              <p-button icon="pi pi-pencil" severity="secondary" size="small" [text]="true"
+                        (onClick)="openEdit(admin)"
+                        pTooltip="Edit" tooltipPosition="left" />
+              @if (admin.active && admin.id !== currentAdminId()) {
+                <p-button icon="pi pi-ban" severity="danger" size="small" [text]="true"
+                          (onClick)="deactivate(admin)"
+                          pTooltip="Deactivate" tooltipPosition="left" />
+              }
+              @if (!admin.active) {
+                <p-button icon="pi pi-check-circle" severity="success" size="small" [text]="true"
+                          (onClick)="reactivate(admin)"
+                          pTooltip="Reactivate" tooltipPosition="left" />
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
+
+<!-- ─── Create dialog ─────────────────────────────────────────────────────── -->
+<p-dialog header="New admin account" [(visible)]="showCreate"
+          [modal]="true" [style]="{width:'420px'}" [draggable]="false">
+
+  <div style="display:flex;flex-direction:column;gap:var(--pf-space-4);padding-top:var(--pf-space-2)">
+    <div class="admin-form-field">
+      <label class="admin-form-label">Display name</label>
+      <input pInputText [(ngModel)]="createDisplayName" placeholder="Alice Smith" class="w-full" />
+    </div>
+
+    <div class="admin-form-field">
+      <label class="admin-form-label">Email</label>
+      <input pInputText type="email" [(ngModel)]="createEmail" placeholder="alice@example.com" class="w-full" />
+    </div>
+
+    <div class="admin-form-field">
+      <label class="admin-form-label">Password</label>
+      <p-password [(ngModel)]="createPassword" placeholder="At least 8 characters"
+                  [toggleMask]="true" [feedback]="false"
+                  styleClass="w-full" inputStyleClass="w-full" />
+    </div>
+
+    <div class="admin-form-field">
+      <label class="admin-form-label">Role</label>
+      <p-select [(ngModel)]="createRole" [options]="roleOptions"
+                optionLabel="label" optionValue="value" styleClass="w-full" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [text]="true"
+              (onClick)="showCreate.set(false)" [disabled]="saving()" />
+    <p-button label="Create" icon="pi pi-check" (onClick)="submitCreate()"
+              [loading]="saving()"
+              [disabled]="!createEmail || !createDisplayName || !createPassword || saving()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ─── Edit dialog ───────────────────────────────────────────────────────── -->
+<p-dialog header="Edit admin" [(visible)]="showEdit"
+          [modal]="true" [style]="{width:'420px'}" [draggable]="false">
+
+  @if (editTarget()) {
+    <div style="display:flex;flex-direction:column;gap:var(--pf-space-4);padding-top:var(--pf-space-2)">
+      <div class="admin-form-field">
+        <label class="admin-form-label">Display name</label>
+        <input pInputText [(ngModel)]="editDisplayName" class="w-full" />
+      </div>
+
+      @if (editTarget()!.id !== currentAdminId()) {
+        <div class="admin-form-field">
+          <label class="admin-form-label">Role</label>
+          <p-select [(ngModel)]="editRole" [options]="roleOptions"
+                    optionLabel="label" optionValue="value" styleClass="w-full" />
+        </div>
+
+        <div class="admin-form-field">
+          <label class="admin-form-label">Active</label>
+          <p-select [(ngModel)]="editActive"
+                    [options]="[{label:'Active',value:true},{label:'Inactive',value:false}]"
+                    optionLabel="label" optionValue="value" styleClass="w-full" />
+        </div>
+      }
+
+      <div class="admin-form-field">
+        <label class="admin-form-label">New password <span style="color:var(--pf-text-muted)">(leave blank to keep)</span></label>
+        <p-password [(ngModel)]="editPassword" placeholder="Leave blank to keep current"
+                    [toggleMask]="true" [feedback]="false"
+                    styleClass="w-full" inputStyleClass="w-full" />
+      </div>
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [text]="true"
+              (onClick)="showEdit.set(false)" [disabled]="saving()" />
+    <p-button label="Save" icon="pi pi-check" (onClick)="submitEdit()"
+              [loading]="saving()" [disabled]="saving()" />
+  </ng-template>
+</p-dialog>

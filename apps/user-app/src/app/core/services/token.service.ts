@@ -1,22 +1,13 @@
 import { Injectable } from '@angular/core';
 
-const TOKEN_KEY = 'pf_token';
-
+/**
+ * Utility service for JWT operations.
+ * Token storage is now handled via HttpOnly cookies set by the server —
+ * this service no longer reads or writes localStorage.
+ */
 @Injectable({ providedIn: 'root' })
 export class TokenService {
-  setToken(token: string): void {
-    localStorage.setItem(TOKEN_KEY, token);
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
-  }
-
-  clearToken(): void {
-    localStorage.removeItem(TOKEN_KEY);
-  }
-
-  /** Decode JWT payload without verification (verification is done server-side). */
+  /** Decode JWT payload without verification (verification is server-side). */
   decodePayload(token: string): Record<string, unknown> | null {
     try {
       const parts = token.split('.');
@@ -26,11 +17,5 @@ export class TokenService {
     } catch {
       return null;
     }
-  }
-
-  isExpired(token: string): boolean {
-    const payload = this.decodePayload(token);
-    if (!payload || typeof payload['exp'] !== 'number') return true;
-    return Date.now() / 1000 > payload['exp'];
   }
 }

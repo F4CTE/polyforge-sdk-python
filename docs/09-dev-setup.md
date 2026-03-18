@@ -61,14 +61,23 @@ The defaults work out of the box for local dev — no changes needed. All values
 docker compose -f docker-compose.infra.yml up --build
 ```
 
-This starts everything: databases, Redis, MailHog, mock-polymarket, migrations, and all NestJS services (including auth-service and admin-auth-service).
+This starts everything: databases, Redis, MailHog, mock-polymarket, migrations, all NestJS services, Angular frontends, and the nginx gateway.
 
 **First run** takes 5–10 minutes to build all images. Subsequent runs start in ~30 seconds.
 
-**Services and exposed ports:**
+**Browser access:**
+
+| URL | What you see |
+|---|---|
+| http://localhost | User app (landing page at `/`, Angular SPA at all other paths) |
+| http://localhost:8080 | Admin console |
+| http://localhost:8025 | MailHog — all outbound emails |
+
+**Services and exposed ports (direct access):**
 
 | Service | Port | Notes |
 |---|---|---|
+| gateway (nginx) | 80, 8080 | Reverse proxy — main entry point |
 | auth-service | 3001 | `POST /auth/v1/register`, `/login`, etc. |
 | api-service | 3002 | REST API + WebSocket |
 | admin-auth-service | 3003 | Admin login |
@@ -91,18 +100,21 @@ This starts everything: databases, Redis, MailHog, mock-polymarket, migrations, 
 ## 5. Verify Everything Works
 
 ```bash
-# Health checks
+# Health checks (direct)
 curl http://localhost:3001/health | jq .
 curl http://localhost:3002/health | jq .
 curl http://localhost:3003/health | jq .
 curl http://localhost:3004/health | jq .
+
+# Health check through gateway
+curl http://localhost/api/v1/health | jq .
 ```
 
 All should return `{"status":"ok"}` or similar.
 
-**Test registration + email:**
+**Test registration + email (through gateway):**
 ```bash
-curl -s -X POST http://localhost:3001/auth/v1/register \
+curl -s -X POST http://localhost/auth/v1/register \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","username":"testuser","password":"Test1234!","tosAccepted":true}' | jq .
 ```
@@ -111,35 +123,47 @@ Check http://localhost:8025 — the verification email should appear in MailHog.
 
 ---
 
-## 6. Run the Angular Apps
+## 6. Frontend Apps
 
-Open two terminal tabs:
+The Angular apps are built and served by Docker — **no separate `ng serve` needed**.
 
-**User app** (http://localhost:4200):
+After `docker compose up`:
+
+| App | URL |
+|---|---|
+| User app | http://localhost |
+| Admin console | http://localhost:8080 |
+
+The nginx gateway (`services/gateway/nginx.dev.conf`) handles routing:
+- `/auth/v1/*` → auth-service (port 3001)
+- `/api/v1/*` → api-service (port 3002)
+- `/ws` → api-service WebSocket
+- All other paths → Angular SPA (`try_files`)
+
+**If you need live-reload during frontend development**, you can still run `ng serve` locally:
+
 ```bash
-cd apps/user-app
-pnpm start
+# User app with proxy (http://localhost:4200)
+cd apps/user-app && npm start
+
+# Admin app with proxy (http://localhost:4300)
+cd apps/admin-app && npm start
 ```
 
-**Admin app** (http://localhost:4300):
+Both apps include a `proxy.conf.json` that forwards API calls to the Docker services.
+
+**Default accounts:**
+
+| App | Email | Password | Notes |
+|---|---|---|---|
+| Admin console | superadmin@dev.local | superadmin123 | SUPER_ADMIN — run `pnpm seed:admin` first |
+| User app | alice@test.com | Test1234! | Seeded by migrations |
+| User app | bob@test.com | Test1234! | Seeded by migrations |
+
+To seed the admin database (first time only):
 ```bash
-cd apps/admin-app
-pnpm start
+ADMIN_DIRECT_DATABASE_URL=postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin pnpm seed:admin
 ```
-
-Both apps use `proxy.conf.json` to route API calls to the running Docker services:
-- `/auth/v1/*` → `localhost:3001` (user app) / `localhost:3003` (admin app)
-- `/api/v1/*` → `localhost:3002` (user app) / `localhost:3004` (admin app)
-
-No nginx needed for local dev.
-
-**Default test accounts** (created by migrations seed):
-
-| App | Email | Password |
-|---|---|---|
-| Admin panel | admin@polyforge.app | Admin1234! |
-| User app | alice@test.com | Test1234! |
-| User app | bob@test.com | Test1234! |
 
 ---
 
@@ -229,6 +253,13 @@ netstat -ano | findstr :3001   # Windows
 lsof -i :3001                  # Mac/Linux
 ```
 Stop the conflicting process, or change the port mapping in `docker-compose.infra.yml`.
+
+### 502 Bad Gateway after rebuilding a service
+
+nginx caches container IPs at startup. After a rebuild the container gets a new IP, but the gateway resolves it automatically every 10 seconds — just wait and retry. If it persists:
+```bash
+docker compose -f docker-compose.infra.yml restart gateway
+```
 
 ### Angular app shows "proxy error"
 

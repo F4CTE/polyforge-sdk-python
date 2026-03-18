@@ -5,15 +5,29 @@ import {
 } from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
+import fastifyCookie from '@fastify/cookie';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 
+const REQUIRED_ENV = ['ADMIN_JWT_SECRET', 'ADMIN_DATABASE_URL', 'REDIS_URL'];
+
+function validateEnv() {
+    const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
+    if (missing.length) {
+        process.stderr.write(`[admin-api-service] Missing required env vars: ${missing.join(', ')}\n`);
+        process.exit(1);
+    }
+}
+
 async function bootstrap() {
+    validateEnv();
     const app = await NestFactory.create<NestFastifyApplication>(
         AppModule,
         new FastifyAdapter(),
         { bufferLogs: true },
     );
+
+    await app.register(fastifyCookie as any);
 
     app.useLogger(app.get(Logger));
 
@@ -31,7 +45,7 @@ async function bootstrap() {
             const allowed = [
                 'https://admin.polyforge.app',
                 ...(process.env.NODE_ENV !== 'production'
-                    ? ['http://localhost:4300']
+                    ? ['http://localhost:4300', 'http://localhost:8080']
                     : []),
             ];
             if (!origin || allowed.includes(origin)) {
@@ -45,10 +59,22 @@ async function bootstrap() {
         credentials: true,
     });
 
+    // Security headers
+    app.getHttpAdapter().getInstance().addHook('onSend', (_req: any, reply: any, _payload: any, done: any) => {
+        reply.header('X-Content-Type-Options', 'nosniff');
+        reply.header('X-Frame-Options', 'DENY');
+        reply.header('X-XSS-Protection', '1; mode=block');
+        reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+        done();
+    });
+
     app.setGlobalPrefix('api/v1', { exclude: ['health'] });
 
     const port = process.env.PORT ?? 3004;
     await app.listen(port, '0.0.0.0');
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+    process.stderr.write(`[admin-api-service] Fatal startup error: ${String(err)}\n`);
+    process.exit(1);
+});

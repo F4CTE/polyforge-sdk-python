@@ -7,14 +7,14 @@
 </div>
 
 <!-- ─── Tabs ─────────────────────────────────────────────────────────────── -->
-<div class="section-tabs" style="margin-bottom:1.5rem">
-  <button class="section-tab" [class.active]="activeTab() === 'invites'" (click)="setTab('invites')">
+<div class="strategy-filter-tabs" style="margin-bottom:1.5rem">
+  <button class="filter-tab" [class.active]="activeTab() === 'invites'" (click)="setTab('invites')">
     <i class="pi pi-ticket"></i> Invite Codes
-    <span class="section-count">{{ invites().length }}</span>
+    <span class="dlq-count">{{ invites().length }}</span>
   </button>
-  <button class="section-tab" [class.active]="activeTab() === 'waitlist'" (click)="setTab('waitlist')">
+  <button class="filter-tab" [class.active]="activeTab() === 'waitlist'" (click)="setTab('waitlist')">
     <i class="pi pi-list"></i> Waitlist
-    <span class="section-count">{{ waitlist().length }}</span>
+    <span class="dlq-count">{{ waitlist().length }}</span>
   </button>
 </div>
 
@@ -24,24 +24,24 @@
 @if (activeTab() === 'invites') {
 
   <!-- ─── Generate panel ────────────────────────────────────────────────── -->
-  <div class="card mb-4">
-    <h3 class="section-title">Generate codes</h3>
+  <div class="admin-card" style="margin-bottom:1.5rem">
+    <h3 class="admin-section-title">Generate codes</h3>
 
     <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
-      <div class="form-field" style="flex:0 0 120px">
-        <label class="field-label">Count</label>
+      <div class="admin-form-field" style="flex:0 0 120px">
+        <label class="admin-form-label">Count</label>
         <p-inputNumber [(ngModel)]="genCount" [min]="1" [max]="100" [showButtons]="true"
                        inputStyleClass="w-full" styleClass="w-full" />
       </div>
 
-      <div class="form-field" style="flex:0 0 120px">
-        <label class="field-label">Uses per code</label>
+      <div class="admin-form-field" style="flex:0 0 120px">
+        <label class="admin-form-label">Uses per code</label>
         <p-inputNumber [(ngModel)]="genUses" [min]="1" [max]="50" [showButtons]="true"
                        inputStyleClass="w-full" styleClass="w-full" />
       </div>
 
-      <div class="form-field" style="flex:0 0 140px">
-        <label class="field-label">TTL (days, blank = ∞)</label>
+      <div class="admin-form-field" style="flex:0 0 140px">
+        <label class="admin-form-label">TTL (days, blank = ∞)</label>
         <p-inputNumber [(ngModel)]="genTtlDays" [min]="1" [max]="365" [showButtons]="false"
                        placeholder="No expiry" inputStyleClass="w-full" styleClass="w-full" />
       </div>
@@ -53,9 +53,9 @@
 
   <!-- ─── Last generated batch ──────────────────────────────────────────── -->
   @if (lastBatch().length) {
-    <div class="card mb-4">
+    <div class="admin-card" style="margin-bottom:1.5rem">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-        <h3 class="section-title" style="margin:0">Last generated ({{ lastBatch().length }} codes)</h3>
+        <h3 class="admin-section-title" style="margin:0">Last generated ({{ lastBatch().length }} codes)</h3>
         <p-button label="Copy all" icon="pi pi-copy" size="small" severity="secondary"
                   (onClick)="copyAll()" />
       </div>
@@ -75,9 +75,9 @@
   }
 
   <!-- ─── Active codes table ────────────────────────────────────────────── -->
-  <div class="card">
+  <div class="admin-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-      <h3 class="section-title" style="margin:0">Active codes ({{ invites().length }})</h3>
+      <h3 class="admin-section-title" style="margin:0">Active codes ({{ invites().length }})</h3>
       <p-button icon="pi pi-refresh" severity="secondary" size="small" [rounded]="true"
                 [loading]="loading()" (onClick)="load()" pTooltip="Refresh" tooltipPosition="left" />
     </div>
@@ -136,9 +136,9 @@
 ═════════════════════════════════════════════════════════════════════════ -->
 @if (activeTab() === 'waitlist') {
 
-  <div class="card">
+  <div class="admin-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-      <h3 class="section-title" style="margin:0">
+      <h3 class="admin-section-title" style="margin:0">
         Waitlist ({{ waitlist().length }} entries)
       </h3>
       <p-button icon="pi pi-refresh" severity="secondary" size="small" [rounded]="true"

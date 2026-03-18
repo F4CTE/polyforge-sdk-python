@@ -1,15 +1,20 @@
 export type AdminRole = 'SUPER_ADMIN' | 'ADMIN' | 'VIEWER';
 
+export interface AdminView {
+  id:          string;
+  email:       string;
+  displayName: string;
+  role:        AdminRole;
+  active:      boolean;
+  createdAt:   string;
+  lastSeen:    string;
+}
+
 export interface Admin {
   id:          string;
   email:       string;
   role:        AdminRole;
   displayName: string;
-}
-
-export interface AdminAuthResponse {
-  token: string;
-  admin: Admin;
 }
 
 export interface AdminLoginRequest {

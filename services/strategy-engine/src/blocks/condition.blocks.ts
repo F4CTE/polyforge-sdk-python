@@ -30,7 +30,7 @@ export const MaxPositionBlock: BlockEvaluator = {
         });
         if (!position) return { fired: true, reason: 'no existing position' };
 
-        const value = parseFloat(position.size) * parseFloat(position.currentPrice);
+        const value = parseFloat(position.size.toString()) * parseFloat(position.currentPrice.toString());
         const fired = value < max;
         return { fired, reason: `position $${value.toFixed(2)} < max $${max}` };
     },
@@ -96,7 +96,7 @@ export const NoExistingPositionBlock: BlockEvaluator = {
         const position = await prisma.position.findUnique({
             where: { userId_tokenId: { userId: ctx.userId, tokenId } },
         });
-        const hasPosition = !!position && parseFloat(position.size) > 0;
+        const hasPosition = !!position && parseFloat(position.size.toString()) > 0;
         return { fired: !hasPosition, reason: hasPosition ? `existing position on ${tokenId}` : 'no position' };
     },
 };

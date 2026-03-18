@@ -121,6 +121,10 @@ export class AuthService {
             );
         }
 
+        // Upgrade weak bcrypt rounds transparently — fire-and-forget
+        this.usersService.rehashIfNeeded(user.id, dto.password, user.passwordHash)
+            .catch(err => this.logger.error('Failed to rehash password', err));
+
         if (user.totpEnabled) {
             if (!dto.totpCode) {
                 throw new HttpException(

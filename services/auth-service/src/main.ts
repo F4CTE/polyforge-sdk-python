@@ -5,15 +5,40 @@ import {
 } from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
+import fastifyCookie from '@fastify/cookie';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 
+const REQUIRED_ENV = ['USER_JWT_SECRET', 'INTERNAL_JWT_SECRET', 'DATABASE_URL'];
+
+function validateEnv() {
+  const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
+  if (missing.length) {
+    process.stderr.write(`[auth-service] Missing required env vars: ${missing.join(', ')}\n`);
+    process.exit(1);
+  }
+
+  // Reject an all-zero TOTP encryption key in production — it's the insecure default
+  if (process.env.NODE_ENV === 'production') {
+    const totpKey = process.env.TOTP_ENCRYPTION_KEY ?? '';
+    if (!totpKey || /^0+$/.test(totpKey)) {
+      process.stderr.write('[auth-service] TOTP_ENCRYPTION_KEY must not be all zeros in production\n');
+      process.exit(1);
+    }
+  }
+}
+
 async function bootstrap() {
+  validateEnv();
+
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
     { bufferLogs: true },
   );
+
+  // Cookie plugin — must be registered before any route handlers
+  await app.register(fastifyCookie as any);
 
   // Logger
   app.useLogger(app.get(Logger));
@@ -36,7 +61,7 @@ async function bootstrap() {
         'https://www.polyforge.app',
         // dev origins — stripped in production by env check
         ...(process.env.NODE_ENV !== 'production'
-          ? ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:4300']
+          ? ['http://localhost', 'http://localhost:4200']  // gateway (prod-equivalent) + ng serve
           : []),
       ];
       if (!origin || allowed.includes(origin)) {
@@ -50,13 +75,24 @@ async function bootstrap() {
     credentials: true,
   });
 
+  // Security headers
+  app.getHttpAdapter().getInstance().addHook('onSend', (_req: any, reply: any, _payload: any, done: any) => {
+    reply.header('X-Content-Type-Options', 'nosniff');
+    reply.header('X-Frame-Options', 'DENY');
+    reply.header('X-XSS-Protection', '1; mode=block');
+    reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+    done();
+  });
+
   // Prefix: auth/v1 — Nginx routes /auth/v1/* to this service
   // Health check excluded so it stays at /health
   app.setGlobalPrefix('auth/v1', { exclude: ['health'] });
 
   const port = process.env.AUTH_SERVICE_PORT ?? 3001;
   await app.listen(port, '0.0.0.0');
-  console.log(`auth-service running on port ${port}`);
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  process.stderr.write(`[auth-service] Fatal startup error: ${String(err)}\n`);
+  process.exit(1);
+});

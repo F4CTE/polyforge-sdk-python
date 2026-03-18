@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { RedisService } from '@polyforge/shared-redis';
 import { FastifyRequest } from 'fastify';
 
 /**
@@ -14,19 +15,18 @@ import { FastifyRequest } from 'fastify';
  * Expected JWT payload:
  *   { iss: <service-name>, aud: "signer-service", jti: <uuid>, exp: <30s TTL> }
  *
- * jti replay protection is intentionally lightweight here (in-process Set).
- * For production, use Redis with TTL matching the JWT expiry.
+ * jti replay protection uses Redis SET NX with a 60s TTL (2× the JWT expiry)
+ * so a replayed token is rejected even across restarts or multiple instances.
  */
 @Injectable()
 export class InternalAuthGuard implements CanActivate {
-    private readonly seenJtis = new Set<string>();
-
     constructor(
         private readonly jwt: JwtService,
         private readonly config: ConfigService,
+        private readonly redis: RedisService,
     ) {}
 
-    canActivate(ctx: ExecutionContext): boolean {
+    async canActivate(ctx: ExecutionContext): Promise<boolean> {
         const req = ctx.switchToHttp().getRequest<FastifyRequest>();
         const auth = req.headers['authorization'];
 
@@ -46,16 +46,16 @@ export class InternalAuthGuard implements CanActivate {
             throw new UnauthorizedException('Invalid service token');
         }
 
-        // jti replay protection
-        if (!payload.jti || this.seenJtis.has(payload.jti)) {
-            throw new UnauthorizedException('Token already used or missing jti');
+        if (!payload.jti) {
+            throw new UnauthorizedException('Missing jti claim');
         }
-        this.seenJtis.add(payload.jti);
 
-        // Clean up expired jtis every 1000 entries (simple LRU-style cap)
-        if (this.seenJtis.size > 1000) {
-            const [first] = this.seenJtis;
-            this.seenJtis.delete(first);
+        // Atomic SET NX — only succeeds if the key does not exist (first use).
+        // TTL is 60s (2× the 30s JWT expiry) so replayed tokens are always rejected.
+        const key = `signer:jti:${payload.jti}`;
+        const set = await this.redis.getClient().set(key, '1', 'EX', 60, 'NX');
+        if (set === null) {
+            throw new UnauthorizedException('Token already used');
         }
 
         return true;

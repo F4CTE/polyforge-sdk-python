@@ -92,7 +92,7 @@ describe('UsersService', () => {
 
             const callArg = db.user.create.mock.calls[0][0];
             const hash = callArg.data.passwordHash as string;
-            expect(hash).toMatch(/^\$2b\$/); // bcrypt prefix
+            expect(hash).toMatch(/^\$2[ab]\$/); // bcryptjs uses $2a$, bcrypt uses $2b$
             expect(hash).not.toContain('Passw0rd!');
         });
 

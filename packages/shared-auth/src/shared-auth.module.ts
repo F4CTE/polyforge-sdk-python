@@ -9,7 +9,7 @@ import { InternalJwtGuard } from './internal-jwt.guard';
     imports: [
         PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.register({
-            secret: process.env.USER_JWT_SECRET ?? 'dev-secret',
+            secret: process.env.USER_JWT_SECRET!,
             signOptions: { expiresIn: '7d' },
         }),
     ],

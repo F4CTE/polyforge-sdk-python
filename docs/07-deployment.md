@@ -496,4 +496,69 @@ Security
 
 ---
 
+---
+
+## JWT Secret Rotation (L3 — SOP)
+
+All three JWT secrets (`USER_JWT_SECRET`, `ADMIN_JWT_SECRET`, `INTERNAL_JWT_SECRET`) live in AWS Secrets Manager and are fetched at container startup via `scripts/fetch-secrets.sh`.
+
+### When to rotate
+
+- Suspected credential leak (mandatory, immediately)
+- Periodic rotation (recommended: every 90 days)
+- Staff offboarding
+
+### Rotation procedure — zero-downtime
+
+Because user JWTs are **7-day** tokens, a hard rotation logs out all users immediately. Follow the grace-period procedure below:
+
+**Step 1 — Add the new secret in Secrets Manager**
+
+```bash
+# Generate a strong secret (32+ bytes)
+openssl rand -hex 32
+
+# Update in AWS Secrets Manager (do NOT delete the old value yet)
+aws secretsmanager update-secret \
+  --secret-id polyforge/USER_JWT_SECRET \
+  --secret-string "$(openssl rand -hex 32)"
+```
+
+**Step 2 — Deploy with dual-secret validation** *(optional grace period)*
+
+If gradual rollout is needed, temporarily configure the JWT strategy to accept tokens signed with either the old or new secret. Once all live tokens have expired (7 days max), remove the old secret acceptance.
+
+For `ADMIN_JWT_SECRET` and `INTERNAL_JWT_SECRET` (1h / 30s TTL), a hard cut-over is fine — sessions expire quickly.
+
+**Step 3 — Rolling restart**
+
+```bash
+# Trigger new deployment — containers re-fetch secrets on startup
+./scripts/deploy.sh
+```
+
+Services read `USER_JWT_SECRET` from environment at startup via `validateEnv()`. Any service that starts without the secret will exit immediately (fail-fast), preventing silent auth bypass.
+
+**Step 4 — Verify**
+
+```bash
+# Confirm services are running
+docker compose -f docker-compose.prod.yml ps
+
+# Confirm auth works
+curl -s -X POST https://polyforge.app/auth/v1/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"Test1234!"}' | jq .
+```
+
+**Step 5 — Remove old secret from Secrets Manager**
+
+After all tokens signed with the old secret have expired (max 7 days for user JWTs), update Secrets Manager to remove any temporary dual-secret setup.
+
+### `INTERNAL_JWT_SECRET` rotation
+
+Internal JWTs have 30s TTL. A hard rotation is safe — restart all services that use internal auth in one deployment pass.
+
+---
+
 *Previous: [Testing & Practices](./05-testing-and-practices.md) | Next: [Polymarket Integration](./08-polymarket-integration.md)*

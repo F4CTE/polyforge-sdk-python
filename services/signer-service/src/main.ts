@@ -6,7 +6,18 @@ import { AppModule } from './app.module';
 const PORT = parseInt(process.env.PORT ?? '3012', 10);
 const logger = new Logger('Bootstrap');
 
+const REQUIRED_ENV = ['INTERNAL_JWT_SECRET', 'ENCRYPTION_KEY', 'REDIS_URL'];
+
+function validateEnv() {
+    const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
+    if (missing.length) {
+        process.stderr.write(`[signer-service] Missing required env vars: ${missing.join(', ')}\n`);
+        process.exit(1);
+    }
+}
+
 async function bootstrap() {
+    validateEnv();
     const app = await NestFactory.create<NestFastifyApplication>(
         AppModule,
         new FastifyAdapter(),
@@ -22,7 +33,7 @@ async function bootstrap() {
     logger.log(`signer-service listening on port ${PORT} (localhost only)`);
 }
 
-bootstrap().catch(err => {
-    console.error('Failed to start signer-service', err);
+bootstrap().catch((err) => {
+    process.stderr.write(`[signer-service] Fatal startup error: ${String(err)}\n`);
     process.exit(1);
 });

@@ -10,6 +10,7 @@ import {
   AdminReport, ReportStatus,
   AuditLog, EventLog, LoginLog,
   PaginatedResponse,
+  AdminView, AdminRole,
 } from '../models/admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -181,6 +182,24 @@ export class AdminApiService {
 
   sendWaitlistInvite(email: string): Observable<{ code: string; sentTo: string }> {
     return this.http.post<{ code: string; sentTo: string }>(`${this.base}/waitlist/${encodeURIComponent(email)}/send-invite`, {});
+  }
+
+  // ─── Admin accounts (SUPER_ADMIN only) ──────────────────────────────────────
+
+  listAdmins(): Observable<AdminView[]> {
+    return this.http.get<AdminView[]>(`${this.base}/admins`);
+  }
+
+  createAdmin(data: { email: string; displayName: string; password: string; role: AdminRole }): Observable<AdminView> {
+    return this.http.post<AdminView>(`${this.base}/admins`, data);
+  }
+
+  updateAdmin(id: string, data: { displayName?: string; role?: AdminRole; active?: boolean; password?: string }): Observable<AdminView> {
+    return this.http.patch<AdminView>(`${this.base}/admins/${id}`, data);
+  }
+
+  deactivateAdmin(id: string): Observable<{ deactivated: boolean }> {
+    return this.http.delete<{ deactivated: boolean }>(`${this.base}/admins/${id}`);
   }
 
   // ─── Logs ───────────────────────────────────────────────────────────────────

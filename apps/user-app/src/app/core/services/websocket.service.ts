@@ -1,7 +1,6 @@
-import { Injectable, inject, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
-import { TokenService } from './token.service';
 
 export interface PriceUpdate {
   type: 'PRICE_UPDATE';
@@ -45,12 +44,12 @@ const BACKTEST_EVENT_TYPES = new Set([
 
 @Injectable({ providedIn: 'root' })
 export class WebSocketService implements OnDestroy {
-  private readonly tokenSvc = inject(TokenService);
-
   private ws: WebSocket | null = null;
   private reconnectDelay = 1000;
   private pingInterval: ReturnType<typeof setInterval> | null = null;
   private destroyed = false;
+  // Track whether the server acknowledged auth so we can send queued subscriptions
+  private authenticated = false;
 
   private readonly subscribedTokens     = new Set<string>();
   private readonly subscribedStrategies = new Set<string>();
@@ -76,26 +75,38 @@ export class WebSocketService implements OnDestroy {
     if (this.ws?.readyState === WebSocket.OPEN || this.ws?.readyState === WebSocket.CONNECTING) return;
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     this.ws = new WebSocket(`${proto}//${location.host}/ws`);
+    this.authenticated = false;
 
     this.ws.onopen = () => {
       this.reconnectDelay = 1000;
-      const token = this.tokenSvc.getToken();
-      if (token) this.send({ type: 'AUTH', token: `Bearer ${token}` });
+      // Cookie is sent automatically in the HTTP upgrade request —
+      // the server will reply AUTH_OK immediately if the cookie is valid.
+      // No explicit AUTH message needed for browser clients.
       this.startPing();
-      if (this.subscribedTokens.size > 0) {
-        this.send({ type: 'SUBSCRIBE_PRICES', tokenIds: [...this.subscribedTokens] });
-      }
-      for (const id of this.subscribedStrategies) {
-        this.send({ type: 'SUBSCRIBE_STRATEGY', strategyId: id });
-      }
     };
 
     this.ws.onmessage = ({ data }) => {
-      try { this.messages$.next(JSON.parse(data)); } catch { /* ignore */ }
+      try {
+        const msg: WsMessage = JSON.parse(data);
+        this.messages$.next(msg);
+
+        // When the server confirms auth (either from cookie or explicit AUTH message),
+        // flush any pending subscriptions.
+        if (msg['type'] === 'AUTH_OK' && !this.authenticated) {
+          this.authenticated = true;
+          if (this.subscribedTokens.size > 0) {
+            this.send({ type: 'SUBSCRIBE_PRICES', tokenIds: [...this.subscribedTokens] });
+          }
+          for (const id of this.subscribedStrategies) {
+            this.send({ type: 'SUBSCRIBE_STRATEGY', strategyId: id });
+          }
+        }
+      } catch { /* ignore malformed */ }
     };
 
     this.ws.onclose = () => {
       this.stopPing();
+      this.authenticated = false;
       if (!this.destroyed) {
         setTimeout(() => this.connect(), this.reconnectDelay);
         this.reconnectDelay = Math.min(this.reconnectDelay * 2, 30_000);
@@ -107,7 +118,7 @@ export class WebSocketService implements OnDestroy {
 
   subscribePrices(tokenIds: string[]): void {
     tokenIds.forEach(id => this.subscribedTokens.add(id));
-    if (this.ws?.readyState === WebSocket.OPEN) {
+    if (this.ws?.readyState === WebSocket.OPEN && this.authenticated) {
       this.send({ type: 'SUBSCRIBE_PRICES', tokenIds });
     }
   }
@@ -121,7 +132,7 @@ export class WebSocketService implements OnDestroy {
 
   subscribeStrategy(strategyId: string): void {
     this.subscribedStrategies.add(strategyId);
-    if (this.ws?.readyState === WebSocket.OPEN) {
+    if (this.ws?.readyState === WebSocket.OPEN && this.authenticated) {
       this.send({ type: 'SUBSCRIBE_STRATEGY', strategyId });
     }
   }

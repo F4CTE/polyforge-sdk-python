@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { SharedDbModule } from '@polyforge/shared-db';
 import { RedisModule } from '@polyforge/shared-redis';
 import { LoggerModule } from '@polyforge/logger';
@@ -10,6 +11,7 @@ import { HealthController } from './common/health.controller';
     LoggerModule,
     SharedDbModule,
     RedisModule,
+    ThrottlerModule.forRoot([{ ttl: 900000, limit: 10 }]),
     AuthModule,
   ],
   controllers: [HealthController],

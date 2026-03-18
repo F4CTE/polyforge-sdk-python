@@ -1435,6 +1435,95 @@ Attributed volume, current tier, weekly rewards.
 
 ---
 
+### Admin Management  *(SUPER_ADMIN only)*
+
+All endpoints in this section return `403 FORBIDDEN` for `ADMIN` and `VIEWER` roles.
+
+#### GET /api/v1/admins
+
+List all admin accounts.
+
+**Response `200`:**
+```json
+[
+  {
+    "id": "uuid",
+    "email": "alice@admin.local",
+    "displayName": "Alice",
+    "role": "SUPER_ADMIN",
+    "active": true,
+    "createdAt": "2026-01-01T00:00:00Z",
+    "lastSeen": "2026-03-18T10:00:00Z"
+  }
+]
+```
+
+---
+
+#### POST /api/v1/admins
+
+Create a new admin account.
+
+**Request:**
+```json
+{
+  "email": "bob@admin.local",
+  "displayName": "Bob",
+  "password": "SecurePass1",
+  "role": "ADMIN"
+}
+```
+
+**Validation:**
+- `email` — valid email, unique
+- `displayName` — 2–100 chars
+- `password` — min 8 chars
+- `role` — `SUPER_ADMIN` | `ADMIN` | `VIEWER`
+
+**Response `201`:** Same shape as list item above.
+
+**Errors:** `409 EMAIL_TAKEN`
+
+---
+
+#### PATCH /api/v1/admins/:id
+
+Update an existing admin account. All fields are optional.
+
+**Request:**
+```json
+{
+  "displayName": "Bobby",
+  "role": "VIEWER",
+  "active": false,
+  "password": "NewPassword1"
+}
+```
+
+**Constraints:**
+- A super admin cannot change their own role or set their own `active` to `false`
+
+**Response `200`:** Updated admin object.
+
+**Errors:** `403 SELF_MODIFY` · `404 NOT_FOUND`
+
+---
+
+#### DELETE /api/v1/admins/:id
+
+Deactivate an admin account (sets `active = false`; does not delete the record).
+
+**Constraints:** Cannot deactivate your own account.
+
+**Response `200`:**
+```json
+{ "deactivated": true }
+```
+
+**Errors:** `403 SELF_DEACTIVATE` · `404 NOT_FOUND`
+
+---
+
 ### Admin WebSocket  (`wss://admin.polyforge.app/ws`)
 
 All standard user WS messages plus:

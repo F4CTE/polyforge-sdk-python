@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { LoggerModule } from '@polyforge/logger';
+import { RedisModule } from '@polyforge/shared-redis';
 import { EncryptionModule } from './encryption/encryption.module';
 import { CredentialsModule } from './credentials/credentials.module';
 import { SigningModule } from './signing/signing.module';
@@ -13,6 +14,7 @@ import { HealthController } from './health/health.controller';
         ConfigModule.forRoot({ isGlobal: true }),
         JwtModule.register({}),
         LoggerModule,
+        RedisModule,
         EncryptionModule,
         CredentialsModule,
         SigningModule,

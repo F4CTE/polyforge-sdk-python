@@ -1,11 +1,9 @@
 import { HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { TokenService } from '../services/token.service';
 
+/**
+ * Attaches `withCredentials: true` to every request so the browser
+ * automatically sends the HttpOnly `pf_token` cookie to the API.
+ */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = inject(TokenService).getToken();
-  if (token) {
-    req = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
-  }
-  return next(req);
+  return next(req.clone({ withCredentials: true }));
 };

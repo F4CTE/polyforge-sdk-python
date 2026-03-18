@@ -480,6 +480,61 @@ These rules must be enforced by every service without exception.
 - **Raw SQL** — forbidden. Use Prisma query builder exclusively. Parameterised queries only.
 - **Monetary values** — always `string` (decimal) in TypeScript and `decimal(20,6)` in Postgres. Never `number` or `float`.
 
+### Least-privilege DB users (M7)
+
+The Prisma connection strings use database-level users with minimal grants. Create these users in PostgreSQL before first deployment:
+
+```sql
+-- ── User DB (polyforge) ───────────────────────────────────────────────
+
+-- Application user — used by all user-facing services via PgBouncer
+CREATE ROLE poly_app LOGIN PASSWORD '<generate-strong>';
+GRANT CONNECT ON DATABASE polyforge TO poly_app;
+GRANT USAGE  ON SCHEMA public TO poly_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO poly_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO poly_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO poly_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO poly_app;
+
+-- Explicitly deny destructive DDL
+REVOKE CREATE ON SCHEMA public FROM poly_app;
+
+-- Migration user — only used by the `migrate-user` container on startup
+CREATE ROLE poly_migrate LOGIN PASSWORD '<generate-strong>';
+GRANT ALL PRIVILEGES ON DATABASE polyforge TO poly_migrate;
+
+-- ── Admin DB (polyforge_admin) ────────────────────────────────────────
+
+CREATE ROLE poly_admin LOGIN PASSWORD '<generate-strong>';
+GRANT CONNECT ON DATABASE polyforge_admin TO poly_admin;
+GRANT USAGE  ON SCHEMA public TO poly_admin;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO poly_admin;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO poly_admin;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO poly_admin;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO poly_admin;
+REVOKE CREATE ON SCHEMA public FROM poly_admin;
+
+CREATE ROLE poly_admin_migrate LOGIN PASSWORD '<generate-strong>';
+GRANT ALL PRIVILEGES ON DATABASE polyforge_admin TO poly_admin_migrate;
+```
+
+Then set in `.env` / Secrets Manager:
+
+```
+DATABASE_URL=postgresql://poly_app:<password>@pgbouncer:5432/polyforge
+ADMIN_DATABASE_URL=postgresql://poly_admin:<password>@localhost:5434/polyforge_admin
+DIRECT_DATABASE_URL=postgresql://poly_migrate:<password>@postgres:5432/polyforge
+ADMIN_DIRECT_DATABASE_URL=postgresql://poly_admin_migrate:<password>@postgres-admin:5432/polyforge_admin
+```
+
+The `audit_logs` table should additionally have an `INSERT`-only trigger policy enforced at the DB level:
+
+```sql
+-- Prevent UPDATE and DELETE on audit_logs at the DB level
+CREATE RULE no_update_audit AS ON UPDATE TO audit_logs DO INSTEAD NOTHING;
+CREATE RULE no_delete_audit AS ON DELETE TO audit_logs DO INSTEAD NOTHING;
+```
+
 ---
 
 *Previous: [OpenAPI Codegen](./03-openapi-codegen.md) | Next: [Testing & Practices](./05-testing-and-practices.md)*

@@ -1,7 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { faker } from '@faker-js/faker';
+
+function makeReply() {
+    return { setCookie: vi.fn(), clearCookie: vi.fn() } as any;
+}
+
+function makeReq(cookie?: string) {
+    return { cookies: cookie ? { pf_admin_token: cookie } : {}, headers: {} } as any;
+}
 
 describe('AdminAuthController', () => {
     let controller: AuthController;
@@ -9,35 +16,52 @@ describe('AdminAuthController', () => {
 
     beforeEach(() => {
         authService = {
-            login: vi.fn(),
+            login:  vi.fn(),
             logout: vi.fn().mockResolvedValue(undefined),
+            getMe:  vi.fn(),
         } as unknown as AuthService;
         controller = new AuthController(authService);
     });
 
     describe('POST login', () => {
-        it('delegates to authService.login and returns the result', async () => {
-            const expected = { token: 'admin-jwt', admin: { id: '1', role: 'SUPER_ADMIN' } };
-            vi.mocked(authService.login).mockResolvedValue(expected as any);
+        it('delegates to authService.login, sets cookie, and returns admin profile', async () => {
+            const serviceResult = { token: 'admin-jwt', admin: { id: '1', role: 'SUPER_ADMIN' } };
+            vi.mocked(authService.login).mockResolvedValue(serviceResult as any);
             const dto = { email: 'admin@polyforge.app', password: 'AdminPass1!' };
+            const reply = makeReply();
 
-            const result = await controller.login(dto);
-            expect(result).toBe(expected);
+            const result = await controller.login(dto, reply);
+            expect(result).toBe(serviceResult.admin);
+            expect(reply.setCookie).toHaveBeenCalledWith('pf_admin_token', 'admin-jwt', expect.any(Object));
             expect(authService.login).toHaveBeenCalledWith(dto);
         });
     });
 
-    describe('POST logout', () => {
-        it('calls authService.logout with the Authorization header', async () => {
-            const header = `Bearer ${faker.string.alphanumeric(32)}`;
+    describe('GET me', () => {
+        it('delegates to authService.getMe with the cookie token', async () => {
+            const admin = { id: '1', email: 'admin@polyforge.app', role: 'SUPER_ADMIN', displayName: 'Super Admin' };
+            vi.mocked(authService.getMe).mockResolvedValue(admin as any);
+            const req = makeReq('admin-jwt');
 
-            await controller.logout(header);
-            expect(authService.logout).toHaveBeenCalledWith(header);
+            const result = await controller.me(req);
+            expect(result).toBe(admin);
+            expect(authService.getMe).toHaveBeenCalledWith('admin-jwt');
         });
 
-        it('calls authService.logout with undefined when no header provided', async () => {
-            await controller.logout(undefined as any);
-            expect(authService.logout).toHaveBeenCalledWith(undefined);
+        it('throws UnauthorizedException when no cookie present', async () => {
+            const req = makeReq();
+            await expect(controller.me(req)).rejects.toThrow('Not authenticated');
+        });
+    });
+
+    describe('POST logout', () => {
+        it('calls authService.logout and clears the cookie', async () => {
+            const req = makeReq('admin-jwt');
+            const reply = makeReply();
+
+            await controller.logout(req, reply);
+            expect(authService.logout).toHaveBeenCalledWith('Bearer admin-jwt');
+            expect(reply.clearCookie).toHaveBeenCalledWith('pf_admin_token', { path: '/' });
         });
     });
 });

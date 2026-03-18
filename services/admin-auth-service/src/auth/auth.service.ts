@@ -47,7 +47,7 @@ export class AuthService {
       sessionId,
     };
 
-    const token = this.jwtService.sign(payload);
+    const token = this.jwtService.sign(payload, { expiresIn: '1h' });
 
     return {
       token,
@@ -58,6 +58,40 @@ export class AuthService {
         displayName: admin.displayName,
       },
     };
+  }
+
+  async getMe(token: string) {
+    let payload: AdminJwtPayload;
+    try {
+      payload = this.jwtService.verify<AdminJwtPayload>(token, { secret: process.env.ADMIN_JWT_SECRET! });
+    } catch {
+      throw new HttpException(
+        { code: 'UNAUTHORIZED', message: 'Invalid or expired session' },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const sessionValid = await this.redis.get(`admin:session:${payload.sessionId}`);
+    if (!sessionValid) {
+      throw new HttpException(
+        { code: 'SESSION_EXPIRED', message: 'Session expired or revoked' },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const admin = await this.adminDb.admin.findUnique({
+      where: { id: payload.sub },
+      select: { id: true, email: true, role: true, displayName: true, active: true },
+    });
+
+    if (!admin || !admin.active) {
+      throw new HttpException(
+        { code: 'ACCOUNT_INACTIVE', message: 'Account is inactive' },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    return { id: admin.id, email: admin.email, role: admin.role, displayName: admin.displayName };
   }
 
   async logout(authHeader: string | undefined) {

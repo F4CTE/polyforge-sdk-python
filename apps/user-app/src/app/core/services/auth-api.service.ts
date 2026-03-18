@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@env';
-import { AuthResponse, LoginRequest, RegisterRequest, User } from '../models/user.model';
+import { LoginRequest, RegisterRequest, User } from '../models/user.model';
 
 const BASE = `${environment.authApiUrl}/auth/v1`;
 
@@ -10,12 +10,12 @@ const BASE = `${environment.authApiUrl}/auth/v1`;
 export class AuthApiService {
   private readonly http = inject(HttpClient);
 
-  register(body: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${BASE}/register`, body);
+  register(body: RegisterRequest): Observable<User> {
+    return this.http.post<User>(`${BASE}/register`, body);
   }
 
-  login(body: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${BASE}/login`, body);
+  login(body: LoginRequest): Observable<User> {
+    return this.http.post<User>(`${BASE}/login`, body);
   }
 
   logout(): Observable<void> {

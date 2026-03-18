@@ -6,6 +6,6 @@ import { AdminJwtGuard } from './admin-jwt.guard';
 @Module({
     imports: [JwtModule.register({})],
     providers: [AdminJwtGuard],
-    exports: [AdminJwtGuard],
+    exports: [AdminJwtGuard, JwtModule],
 })
 export class AdminGuardModule {}
