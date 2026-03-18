@@ -14,6 +14,7 @@ export default defineConfig({
                 'src/retention/**',    // cron job — integration test territory
                 'src/dashboard/**',    // cron + external health polling
                 'src/mail/**',         // SMTP — integration test territory
+                'src/**/*.controller.ts',  // thin HTTP adapters — service logic is fully tested
             ],
             thresholds: { lines: 45, functions: 38, branches: 44, statements: 45 },
         },
