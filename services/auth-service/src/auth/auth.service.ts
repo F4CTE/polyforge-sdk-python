@@ -15,212 +15,237 @@ import { JwtPayload } from '@polyforge/shared-types';
 const INVITE_KEY = (code: string) => `invite:${code.toUpperCase()}`;
 
 function deriveUserStatus(user: {
-    emailVerified: boolean;
-    polymarketConnected: boolean;
-    suspended: boolean;
+  emailVerified: boolean;
+  polymarketConnected: boolean;
+  suspended: boolean;
 }): string {
-    if (user.suspended) return 'SUSPENDED';
-    if (user.polymarketConnected) return 'CONNECTED';
-    if (user.emailVerified) return 'VERIFIED';
-    return 'UNVERIFIED';
+  if (user.suspended) return 'SUSPENDED';
+  if (user.polymarketConnected) return 'CONNECTED';
+  if (user.emailVerified) return 'VERIFIED';
+  return 'UNVERIFIED';
 }
 
 @Injectable()
 export class AuthService {
-    private readonly logger = new Logger(AuthService.name);
+  private readonly logger = new Logger(AuthService.name);
 
-    constructor(
-        private readonly usersService: UsersService,
-        private readonly jwtService: JwtService,
-        private readonly mailService: MailService,
-        private readonly totpService: TotpService,
-        private readonly config: ConfigService,
-        private readonly redis: RedisService,
-    ) { }
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
+    private readonly totpService: TotpService,
+    private readonly config: ConfigService,
+    private readonly redis: RedisService,
+  ) {}
 
-    // ─── Register ─────────────────────────────────────────────────────────────────
+  // ─── Register ─────────────────────────────────────────────────────────────────
 
-    async register(dto: RegisterDto) {
-        // Check Redis runtime flag first; fall back to env var
-        const redisFlagRaw = await this.redis.get('config:invite_only');
-        const inviteOnly = redisFlagRaw !== null
-            ? redisFlagRaw === 'true'
-            : this.config.get<string>('INVITE_ONLY') === 'true';
-        if (inviteOnly) {
-            if (!dto.inviteCode) {
-                throw new HttpException(
-                    { code: 'INVITE_REQUIRED', message: 'An invite code is required to register' },
-                    HttpStatus.FORBIDDEN,
-                );
-            }
-            const key = INVITE_KEY(dto.inviteCode);
-            const uses = await this.redis.get(key);
-            if (uses === null) {
-                throw new HttpException(
-                    { code: 'INVITE_INVALID', message: 'Invalid or expired invite code' },
-                    HttpStatus.FORBIDDEN,
-                );
-            }
-            const remaining = parseInt(uses, 10);
-            if (remaining <= 1) {
-                await this.redis.del(key);
-            } else {
-                await this.redis.getClient().decr(key);
-            }
-        }
-
-        const user = await this.usersService.create({
-            email: dto.email,
-            password: dto.password,
-            username: dto.username,
-        });
-
-        const token = this.generateToken(user);
-
-        // Send verification email — fire-and-forget, never fail registration
-        this.usersService.createEmailVerificationToken(user.id)
-            .then(verifyToken => this.mailService.sendVerificationEmail(user.email, verifyToken))
-            .catch(err => this.logger.error('Failed to send verification email', err));
-
-        return {
-            token,
-            user: {
-                id: user.id,
-                email: user.email,
-                username: user.username,
-                status: deriveUserStatus(user),
-                createdAt: user.createdAt,
-            },
-        };
+  async register(dto: RegisterDto) {
+    // Check Redis runtime flag first; fall back to env var
+    const redisFlagRaw = await this.redis.get('config:invite_only');
+    const inviteOnly =
+      redisFlagRaw !== null
+        ? redisFlagRaw === 'true'
+        : this.config.get<string>('INVITE_ONLY') === 'true';
+    if (inviteOnly) {
+      if (!dto.inviteCode) {
+        throw new HttpException(
+          {
+            code: 'INVITE_REQUIRED',
+            message: 'An invite code is required to register',
+          },
+          HttpStatus.FORBIDDEN,
+        );
+      }
+      const key = INVITE_KEY(dto.inviteCode);
+      const uses = await this.redis.get(key);
+      if (uses === null) {
+        throw new HttpException(
+          { code: 'INVITE_INVALID', message: 'Invalid or expired invite code' },
+          HttpStatus.FORBIDDEN,
+        );
+      }
+      const remaining = parseInt(uses, 10);
+      if (remaining <= 1) {
+        await this.redis.del(key);
+      } else {
+        await this.redis.getClient().decr(key);
+      }
     }
 
-    // ─── Login ────────────────────────────────────────────────────────────────────
+    const user = await this.usersService.create({
+      email: dto.email,
+      password: dto.password,
+      username: dto.username,
+    });
 
-    async login(dto: LoginDto) {
-        const user = await this.usersService.findByEmail(dto.email);
+    const token = this.generateToken(user);
 
-        if (!user || user.deleted) {
-            throw new HttpException(
-                { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+    // Send verification email — fire-and-forget, never fail registration
+    this.usersService
+      .createEmailVerificationToken(user.id)
+      .then((verifyToken) =>
+        this.mailService.sendVerificationEmail(user.email, verifyToken),
+      )
+      .catch((err) =>
+        this.logger.error('Failed to send verification email', err),
+      );
 
-        if (user.suspended) {
-            throw new HttpException(
-                { code: 'ACCOUNT_SUSPENDED', message: 'This account has been suspended' },
-                HttpStatus.FORBIDDEN,
-            );
-        }
+    return {
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        status: deriveUserStatus(user),
+        createdAt: user.createdAt,
+      },
+    };
+  }
 
-        const isValid = await this.usersService.validatePassword(user, dto.password);
-        if (!isValid) {
-            throw new HttpException(
-                { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+  // ─── Login ────────────────────────────────────────────────────────────────────
 
-        // Upgrade weak bcrypt rounds transparently — fire-and-forget
-        this.usersService.rehashIfNeeded(user.id, dto.password, user.passwordHash)
-            .catch(err => this.logger.error('Failed to rehash password', err));
+  async login(dto: LoginDto) {
+    const user = await this.usersService.findByEmail(dto.email);
 
-        if (user.totpEnabled) {
-            if (!dto.totpCode) {
-                throw new HttpException(
-                    { code: 'TOTP_REQUIRED', message: '2FA code is required' },
-                    HttpStatus.BAD_REQUEST,
-                );
-            }
-            const totpValid = await this.totpService.verify(user.id, dto.totpCode);
-            if (!totpValid) {
-                throw new HttpException(
-                    { code: 'TOTP_INVALID', message: 'Invalid 2FA code' },
-                    HttpStatus.BAD_REQUEST,
-                );
-            }
-        }
-
-        const token = this.generateToken(user);
-
-        return {
-            token,
-            user: {
-                id: user.id,
-                email: user.email,
-                username: user.username,
-                displayName: user.displayName,
-                status: deriveUserStatus(user),
-                polymarketConnected: user.polymarketConnected,
-                emailVerified: user.emailVerified,
-            },
-            requiresTotp: user.totpEnabled,
-        };
+    if (!user || user.deleted) {
+      throw new HttpException(
+        { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    // ─── Me ───────────────────────────────────────────────────────────────────────
-
-    async me(userId: string) {
-        const user = await this.usersService.findById(userId);
-
-        if (!user || user.deleted) {
-            throw new HttpException(
-                { code: 'UNAUTHORIZED', message: 'User not found' },
-                HttpStatus.UNAUTHORIZED,
-            );
-        }
-
-        return {
-            id: user.id,
-            email: user.email,
-            username: user.username,
-            displayName: user.displayName,
-            bio: user.bio,
-            avatarUrl: user.avatarUrl,
-            status: deriveUserStatus(user),
-            polymarketConnected: user.polymarketConnected,
-            emailVerified: user.emailVerified,
-            totpEnabled: user.totpEnabled,
-            createdAt: user.createdAt,
-            lastSeen: user.lastSeen,
-        };
+    if (user.suspended) {
+      throw new HttpException(
+        {
+          code: 'ACCOUNT_SUSPENDED',
+          message: 'This account has been suspended',
+        },
+        HttpStatus.FORBIDDEN,
+      );
     }
 
-    // ─── Verify email ─────────────────────────────────────────────────────────────
-
-    async verifyEmail(dto: VerifyEmailDto) {
-        await this.usersService.verifyEmail(dto.token);
-        return { message: 'Email verified successfully' };
+    const isValid = await this.usersService.validatePassword(
+      user,
+      dto.password,
+    );
+    if (!isValid) {
+      throw new HttpException(
+        { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    // ─── Forgot password ──────────────────────────────────────────────────────────
+    // Upgrade weak bcrypt rounds transparently — fire-and-forget
+    this.usersService
+      .rehashIfNeeded(user.id, dto.password, user.passwordHash)
+      .catch((err) => this.logger.error('Failed to rehash password', err));
 
-    async forgotPassword(dto: ForgotPasswordDto) {
-        // Always return 200 — prevents email enumeration
-        const user = await this.usersService.findByEmail(dto.email);
-        if (user && !user.deleted) {
-            this.usersService.createPasswordResetToken(user.id)
-                .then(token => this.mailService.sendPasswordResetEmail(user.email, token))
-                .catch(err => this.logger.error('Failed to send password reset email', err));
-        }
-        return { message: 'If that email exists, a reset link has been sent' };
+    if (user.totpEnabled) {
+      if (!dto.totpCode) {
+        throw new HttpException(
+          { code: 'TOTP_REQUIRED', message: '2FA code is required' },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      const totpValid = await this.totpService.verify(user.id, dto.totpCode);
+      if (!totpValid) {
+        throw new HttpException(
+          { code: 'TOTP_INVALID', message: 'Invalid 2FA code' },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
     }
 
-    // ─── Reset password ───────────────────────────────────────────────────────────
+    const token = this.generateToken(user);
 
-    async resetPassword(dto: ResetPasswordDto) {
-        await this.usersService.resetPassword(dto.token, dto.newPassword);
-        return { message: 'Password reset successfully' };
+    return {
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        displayName: user.displayName,
+        status: deriveUserStatus(user),
+        polymarketConnected: user.polymarketConnected,
+        emailVerified: user.emailVerified,
+      },
+      requiresTotp: user.totpEnabled,
+    };
+  }
+
+  // ─── Me ───────────────────────────────────────────────────────────────────────
+
+  async me(userId: string) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user || user.deleted) {
+      throw new HttpException(
+        { code: 'UNAUTHORIZED', message: 'User not found' },
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
-    // ─── Token ────────────────────────────────────────────────────────────────────
+    return {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      displayName: user.displayName,
+      bio: user.bio,
+      avatarUrl: user.avatarUrl,
+      status: deriveUserStatus(user),
+      polymarketConnected: user.polymarketConnected,
+      emailVerified: user.emailVerified,
+      totpEnabled: user.totpEnabled,
+      createdAt: user.createdAt,
+      lastSeen: user.lastSeen,
+    };
+  }
 
-    private generateToken(user: { id: string; email: string; username: string }): string {
-        const payload: JwtPayload = {
-            sub: user.id,
-            email: user.email,
-            username: user.username,
-        };
-        return this.jwtService.sign(payload);
+  // ─── Verify email ─────────────────────────────────────────────────────────────
+
+  async verifyEmail(dto: VerifyEmailDto) {
+    await this.usersService.verifyEmail(dto.token);
+    return { message: 'Email verified successfully' };
+  }
+
+  // ─── Forgot password ──────────────────────────────────────────────────────────
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    // Always return 200 — prevents email enumeration
+    const user = await this.usersService.findByEmail(dto.email);
+    if (user && !user.deleted) {
+      this.usersService
+        .createPasswordResetToken(user.id)
+        .then((token) =>
+          this.mailService.sendPasswordResetEmail(user.email, token),
+        )
+        .catch((err) =>
+          this.logger.error('Failed to send password reset email', err),
+        );
     }
+    return { message: 'If that email exists, a reset link has been sent' };
+  }
+
+  // ─── Reset password ───────────────────────────────────────────────────────────
+
+  async resetPassword(dto: ResetPasswordDto) {
+    await this.usersService.resetPassword(dto.token, dto.newPassword);
+    return { message: 'Password reset successfully' };
+  }
+
+  // ─── Token ────────────────────────────────────────────────────────────────────
+
+  private generateToken(user: {
+    id: string;
+    email: string;
+    username: string;
+  }): string {
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      username: user.username,
+    };
+    return this.jwtService.sign(payload);
+  }
 }

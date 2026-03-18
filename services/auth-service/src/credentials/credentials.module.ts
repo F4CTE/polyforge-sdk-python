@@ -6,8 +6,8 @@ import { CredentialsService } from './credentials.service';
 import { CredentialsController } from './credentials.controller';
 
 @Module({
-    imports: [SharedDbModule, SharedAuthModule, ConfigModule],
-    controllers: [CredentialsController],
-    providers: [CredentialsService],
+  imports: [SharedDbModule, SharedAuthModule, ConfigModule],
+  controllers: [CredentialsController],
+  providers: [CredentialsService],
 })
 export class CredentialsModule {}

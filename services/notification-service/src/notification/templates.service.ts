@@ -1,115 +1,115 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 
-const FRONTEND = process.env.FRONTEND_URL ?? 'https://polyforge.app';
+const FRONTEND = process.env.FRONTEND_URL ?? "https://polyforge.app";
 
 export interface NotificationContent {
-    title: string;
-    body: string;
-    severity: 'info' | 'success' | 'warning' | 'error';
+  title: string;
+  body: string;
+  severity: "info" | "success" | "warning" | "error";
 }
 
-const SEVERITY_COLOR: Record<NotificationContent['severity'], string> = {
-    info:    '#3b82f6',
-    success: '#22c55e',
-    warning: '#f59e0b',
-    error:   '#ef4444',
+const SEVERITY_COLOR: Record<NotificationContent["severity"], string> = {
+  info: "#3b82f6",
+  success: "#22c55e",
+  warning: "#f59e0b",
+  error: "#ef4444",
 };
 
-const SEVERITY_LABEL: Record<NotificationContent['severity'], string> = {
-    info:    'Info',
-    success: 'Success',
-    warning: 'Warning',
-    error:   'Alert',
+const SEVERITY_LABEL: Record<NotificationContent["severity"], string> = {
+  info: "Info",
+  success: "Success",
+  warning: "Warning",
+  error: "Alert",
 };
 
 @Injectable()
 export class TemplatesService {
-    build(eventType: string, data: Record<string, string>): NotificationContent {
-        switch (eventType) {
-            case 'ORDER_FILLED':
-                return {
-                    title: 'Order Filled',
-                    body: `Your order on token ${data.tokenId ?? 'unknown'} was filled at ${data.fillPrice ?? data.price ?? 'unknown'}.${data.pnl ? ` P&L: ${data.pnl} USDC.` : ''}`,
-                    severity: 'success',
-                };
+  build(eventType: string, data: Record<string, string>): NotificationContent {
+    switch (eventType) {
+      case "ORDER_FILLED":
+        return {
+          title: "Order Filled",
+          body: `Your order on token ${data.tokenId ?? "unknown"} was filled at ${data.fillPrice ?? data.price ?? "unknown"}.${data.pnl ? ` P&L: ${data.pnl} USDC.` : ""}`,
+          severity: "success",
+        };
 
-            case 'STRATEGY_ERROR':
-                return {
-                    title: 'Strategy Error',
-                    body: `Strategy ${data.strategyId ?? 'unknown'} encountered an error: ${data.reason ?? 'unknown error'}.`,
-                    severity: 'error',
-                };
+      case "STRATEGY_ERROR":
+        return {
+          title: "Strategy Error",
+          body: `Strategy ${data.strategyId ?? "unknown"} encountered an error: ${data.reason ?? "unknown error"}.`,
+          severity: "error",
+        };
 
-            case 'BACKTEST_COMPLETE':
-                return {
-                    title: 'Backtest Complete',
-                    body: `Your backtest run ${data.runId ?? 'unknown'} has finished.${data.totalPnl ? ` Total P&L: ${data.totalPnl} USDC.` : ''}`,
-                    severity: 'info',
-                };
+      case "BACKTEST_COMPLETE":
+        return {
+          title: "Backtest Complete",
+          body: `Your backtest run ${data.runId ?? "unknown"} has finished.${data.totalPnl ? ` Total P&L: ${data.totalPnl} USDC.` : ""}`,
+          severity: "info",
+        };
 
-            case 'PRICE_ALERT':
-                return {
-                    title: 'Price Alert Triggered',
-                    body: `Token ${data.tokenId ?? 'unknown'} reached your price alert threshold of ${data.threshold ?? data.price ?? 'unknown'}.`,
-                    severity: 'warning',
-                };
+      case "PRICE_ALERT":
+        return {
+          title: "Price Alert Triggered",
+          body: `Token ${data.tokenId ?? "unknown"} reached your price alert threshold of ${data.threshold ?? data.price ?? "unknown"}.`,
+          severity: "warning",
+        };
 
-            case 'DAILY_LOSS_LIMIT':
-                return {
-                    title: 'Daily Loss Limit Reached',
-                    body: `Strategy ${data.strategyId ?? 'unknown'} hit its daily loss limit and has been stopped.`,
-                    severity: 'error',
-                };
+      case "DAILY_LOSS_LIMIT":
+        return {
+          title: "Daily Loss Limit Reached",
+          body: `Strategy ${data.strategyId ?? "unknown"} hit its daily loss limit and has been stopped.`,
+          severity: "error",
+        };
 
-            case 'MARKET_RESOLVED':
-                return {
-                    title: 'Market Resolved',
-                    body: `Market ${data.marketId ?? 'unknown'} has resolved with outcome ${data.outcome ?? 'unknown'}.`,
-                    severity: 'info',
-                };
+      case "MARKET_RESOLVED":
+        return {
+          title: "Market Resolved",
+          body: `Market ${data.marketId ?? "unknown"} has resolved with outcome ${data.outcome ?? "unknown"}.`,
+          severity: "info",
+        };
 
-            case 'SOMEONE_FORKED':
-                return {
-                    title: 'Strategy Forked',
-                    body: `${data.forkerUsername ?? 'Someone'} forked your strategy "${data.strategyName ?? data.strategyId ?? 'unknown'}".`,
-                    severity: 'info',
-                };
+      case "SOMEONE_FORKED":
+        return {
+          title: "Strategy Forked",
+          body: `${data.forkerUsername ?? "Someone"} forked your strategy "${data.strategyName ?? data.strategyId ?? "unknown"}".`,
+          severity: "info",
+        };
 
-            case 'SOMEONE_FOLLOWED':
-                return {
-                    title: 'New Follower',
-                    body: `${data.followerUsername ?? 'Someone'} started following you.`,
-                    severity: 'info',
-                };
+      case "SOMEONE_FOLLOWED":
+        return {
+          title: "New Follower",
+          body: `${data.followerUsername ?? "Someone"} started following you.`,
+          severity: "info",
+        };
 
-            case 'SOMEONE_LIKED':
-                return {
-                    title: 'Strategy Liked',
-                    body: `${data.likerUsername ?? 'Someone'} liked your strategy "${data.strategyName ?? data.strategyId ?? 'unknown'}".`,
-                    severity: 'info',
-                };
+      case "SOMEONE_LIKED":
+        return {
+          title: "Strategy Liked",
+          body: `${data.likerUsername ?? "Someone"} liked your strategy "${data.strategyName ?? data.strategyId ?? "unknown"}".`,
+          severity: "info",
+        };
 
-            case 'SOMEONE_COMMENTED':
-                return {
-                    title: 'New Comment',
-                    body: `${data.commenterUsername ?? 'Someone'} commented on your strategy "${data.strategyName ?? data.strategyId ?? 'unknown'}".`,
-                    severity: 'info',
-                };
+      case "SOMEONE_COMMENTED":
+        return {
+          title: "New Comment",
+          body: `${data.commenterUsername ?? "Someone"} commented on your strategy "${data.strategyName ?? data.strategyId ?? "unknown"}".`,
+          severity: "info",
+        };
 
-            default:
-                return {
-                    title: 'Polyforge Notification',
-                    body: `New event: ${eventType}`,
-                    severity: 'info',
-                };
-        }
+      default:
+        return {
+          title: "Polyforge Notification",
+          body: `New event: ${eventType}`,
+          severity: "info",
+        };
     }
+  }
 
-    toHtml(content: NotificationContent): string {
-        const accent  = SEVERITY_COLOR[content.severity];
-        const label   = SEVERITY_LABEL[content.severity];
+  toHtml(content: NotificationContent): string {
+    const accent = SEVERITY_COLOR[content.severity];
+    const label = SEVERITY_LABEL[content.severity];
 
-        return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -236,5 +236,5 @@ export class TemplatesService {
   </table>
 </body>
 </html>`;
-    }
+  }
 }

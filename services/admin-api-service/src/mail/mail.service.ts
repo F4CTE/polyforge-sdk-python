@@ -1,13 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import { Injectable, Logger } from "@nestjs/common";
+import * as nodemailer from "nodemailer";
 
-const FRONTEND = process.env.FRONTEND_URL ?? 'https://polyforge.app';
+const FRONTEND = process.env.FRONTEND_URL ?? "https://polyforge.app";
 
-function emailLayout(opts: { preheader?: string; body: string; footerNote?: string }): string {
-    const preheader  = opts.preheader ?? '';
-    const footerNote = opts.footerNote ?? 'You received this email from Polyforge.';
+function emailLayout(opts: {
+  preheader?: string;
+  body: string;
+  footerNote?: string;
+}): string {
+  const preheader = opts.preheader ?? "";
+  const footerNote =
+    opts.footerNote ?? "You received this email from Polyforge.";
 
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -85,40 +90,40 @@ function emailLayout(opts: { preheader?: string; body: string; footerNote?: stri
 
 @Injectable()
 export class AdminMailService {
-    private readonly logger      = new Logger(AdminMailService.name);
-    private readonly transporter: nodemailer.Transporter;
-    private readonly from: string;
+  private readonly logger = new Logger(AdminMailService.name);
+  private readonly transporter: nodemailer.Transporter;
+  private readonly from: string;
 
-    constructor() {
-        this.from = `Polyforge <${process.env.AWS_SES_FROM_EMAIL ?? 'noreply@polyforge.app'}>`;
-        const driver = process.env.EMAIL_DRIVER ?? 'mailhog';
+  constructor() {
+    this.from = `Polyforge <${process.env.AWS_SES_FROM_EMAIL ?? "noreply@polyforge.app"}>`;
+    const driver = process.env.EMAIL_DRIVER ?? "mailhog";
 
-        if (driver === 'mailhog') {
-            this.transporter = nodemailer.createTransport({
-                host:      process.env.MAILHOG_HOST ?? 'localhost',
-                port:      parseInt(process.env.MAILHOG_PORT ?? '1025', 10),
-                secure:    false,
-                ignoreTLS: true,
-            } as any);
-        } else {
-            this.transporter = nodemailer.createTransport({
-                host:   `email-smtp.${process.env.AWS_SES_REGION ?? 'us-east-1'}.amazonaws.com`,
-                port:   587,
-                secure: false,
-                auth: {
-                    user: process.env.AWS_SES_SMTP_USER,
-                    pass: process.env.AWS_SES_SMTP_PASSWORD,
-                },
-            });
-        }
+    if (driver === "mailhog") {
+      this.transporter = nodemailer.createTransport({
+        host: process.env.MAILHOG_HOST ?? "localhost",
+        port: parseInt(process.env.MAILHOG_PORT ?? "1025", 10),
+        secure: false,
+        ignoreTLS: true,
+      } as any);
+    } else {
+      this.transporter = nodemailer.createTransport({
+        host: `email-smtp.${process.env.AWS_SES_REGION ?? "us-east-1"}.amazonaws.com`,
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.AWS_SES_SMTP_USER,
+          pass: process.env.AWS_SES_SMTP_PASSWORD,
+        },
+      });
     }
+  }
 
-    async sendInviteEmail(to: string, code: string): Promise<void> {
-        const registerUrl = `${FRONTEND}/register?invite=${encodeURIComponent(code)}`;
+  async sendInviteEmail(to: string, code: string): Promise<void> {
+    const registerUrl = `${FRONTEND}/register?invite=${encodeURIComponent(code)}`;
 
-        const html = emailLayout({
-            preheader: `Your Polyforge invite code is ${code} — click to claim your spot.`,
-            body: `
+    const html = emailLayout({
+      preheader: `Your Polyforge invite code is ${code} — click to claim your spot.`,
+      body: `
                 <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827">
                   Your invite is here
                 </h2>
@@ -155,16 +160,17 @@ export class AdminMailService {
                   This invite code is single-use. Do not share it publicly.
                 </p>
             `,
-            footerNote: 'You received this because you were on the Polyforge early-access waitlist.',
-        });
+      footerNote:
+        "You received this because you were on the Polyforge early-access waitlist.",
+    });
 
-        await this.transporter.sendMail({
-            from: this.from,
-            to,
-            subject: `Your Polyforge invite: ${code}`,
-            text: `You're invited to join Polyforge!\n\nYour invite code: ${code}\n\nCreate your account at: ${registerUrl}\n\nThis code is single-use.`,
-            html,
-        });
-        this.logger.log(`Invite email sent to ${to} with code ${code}`);
-    }
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject: `Your Polyforge invite: ${code}`,
+      text: `You're invited to join Polyforge!\n\nYour invite code: ${code}\n\nCreate your account at: ${registerUrl}\n\nThis code is single-use.`,
+      html,
+    });
+    this.logger.log(`Invite email sent to ${to} with code ${code}`);
+  }
 }

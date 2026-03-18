@@ -1,9 +1,13 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get } from "@nestjs/common";
 
-@Controller('health')
+@Controller("health")
 export class HealthController {
-    @Get()
-    check() {
-        return { status: 'ok', service: 'admin-api-service', uptime: process.uptime() };
-    }
+  @Get()
+  check() {
+    return {
+      status: "ok",
+      service: "admin-api-service",
+      uptime: process.uptime(),
+    };
+  }
 }

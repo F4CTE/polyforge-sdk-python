@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { SharedDbModule } from '@polyforge/shared-db';
-import { RedisModule } from '@polyforge/shared-redis';
-import { LoggerModule } from '@polyforge/logger';
-import { AuthModule } from './auth/auth.module';
-import { HealthController } from './common/health.controller';
+import { Module } from "@nestjs/common";
+import { ThrottlerModule } from "@nestjs/throttler";
+import { SharedDbModule } from "@polyforge/shared-db";
+import { RedisModule } from "@polyforge/shared-redis";
+import { LoggerModule } from "@polyforge/logger";
+import { AuthModule } from "./auth/auth.module";
+import { HealthController } from "./common/health.controller";
 
 @Module({
   imports: [
@@ -16,4 +16,4 @@ import { HealthController } from './common/health.controller';
   ],
   controllers: [HealthController],
 })
-export class AppModule { }
+export class AppModule {}

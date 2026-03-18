@@ -7,9 +7,9 @@ import { TotpService } from './totp.service';
 import { TotpController } from './totp.controller';
 
 @Module({
-    imports: [SharedDbModule, RedisModule, SharedAuthModule, ConfigModule],
-    controllers: [TotpController],
-    providers: [TotpService],
-    exports: [TotpService],
+  imports: [SharedDbModule, RedisModule, SharedAuthModule, ConfigModule],
+  controllers: [TotpController],
+  providers: [TotpService],
+  exports: [TotpService],
 })
 export class TotpModule {}

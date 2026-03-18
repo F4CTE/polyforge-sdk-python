@@ -1,5 +1,18 @@
-import { Controller, Post, Delete, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Delete,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
@@ -11,25 +24,40 @@ import { ImportCredentialsDto } from './dto/import-credentials.dto';
 @UseGuards(JwtAuthGuard)
 @Controller('credentials')
 export class CredentialsController {
-    constructor(private readonly credentialsService: CredentialsService) {}
+  constructor(private readonly credentialsService: CredentialsService) {}
 
-    @Post()
-    @HttpCode(HttpStatus.NO_CONTENT)
-    @Throttle({ default: { limit: 5, ttl: 3600000 } })  // 5 per hour
-    @ApiOperation({ summary: 'Import Polymarket credentials — forwarded to signer-service for AES-256-GCM storage' })
-    @ApiResponse({ status: 204, description: 'Credentials stored. User marked as CONNECTED.' })
-    @ApiResponse({ status: 403, description: 'Email not verified.' })
-    @ApiResponse({ status: 503, description: 'signer-service unavailable.' })
-    async import(@CurrentUser() user: JwtPayload, @Body() dto: ImportCredentialsDto) {
-        await this.credentialsService.import(user.sub, dto);
-    }
+  @Post()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 5, ttl: 3600000 } }) // 5 per hour
+  @ApiOperation({
+    summary:
+      'Import Polymarket credentials — forwarded to signer-service for AES-256-GCM storage',
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'Credentials stored. User marked as CONNECTED.',
+  })
+  @ApiResponse({ status: 403, description: 'Email not verified.' })
+  @ApiResponse({ status: 503, description: 'signer-service unavailable.' })
+  async import(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ImportCredentialsDto,
+  ) {
+    await this.credentialsService.import(user.sub, dto);
+  }
 
-    @Delete()
-    @HttpCode(HttpStatus.NO_CONTENT)
-    @ApiOperation({ summary: 'Delete Polymarket credentials and disconnect account' })
-    @ApiResponse({ status: 204, description: 'Credentials removed. User marked as VERIFIED (or UNVERIFIED).' })
-    @ApiResponse({ status: 404, description: 'No credentials found.' })
-    async delete(@CurrentUser() user: JwtPayload) {
-        await this.credentialsService.delete(user.sub);
-    }
+  @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete Polymarket credentials and disconnect account',
+  })
+  @ApiResponse({
+    status: 204,
+    description:
+      'Credentials removed. User marked as VERIFIED (or UNVERIFIED).',
+  })
+  @ApiResponse({ status: 404, description: 'No credentials found.' })
+  async delete(@CurrentUser() user: JwtPayload) {
+    await this.credentialsService.delete(user.sub);
+  }
 }

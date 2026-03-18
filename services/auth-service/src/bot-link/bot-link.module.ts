@@ -5,9 +5,9 @@ import { BotLinkService } from './bot-link.service';
 import { BotLinkController } from './bot-link.controller';
 
 @Module({
-    imports: [RedisModule, SharedAuthModule],
-    controllers: [BotLinkController],
-    providers: [BotLinkService],
-    exports: [BotLinkService],
+  imports: [RedisModule, SharedAuthModule],
+  controllers: [BotLinkController],
+  providers: [BotLinkService],
+  exports: [BotLinkService],
 })
 export class BotLinkModule {}

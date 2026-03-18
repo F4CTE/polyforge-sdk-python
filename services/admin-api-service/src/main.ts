@@ -1,82 +1,91 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory } from "@nestjs/core";
 import {
-    FastifyAdapter,
-    NestFastifyApplication,
-} from '@nestjs/platform-fastify';
-import { ValidationPipe, RequestMethod } from '@nestjs/common';
-import { Logger } from 'nestjs-pino';
-import fastifyCookie from '@fastify/cookie';
-import { AppModule } from './app.module';
-import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
+  FastifyAdapter,
+  NestFastifyApplication,
+} from "@nestjs/platform-fastify";
+import { ValidationPipe, RequestMethod } from "@nestjs/common";
+import { Logger } from "nestjs-pino";
+import fastifyCookie from "@fastify/cookie";
+import { AppModule } from "./app.module";
+import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 
-const REQUIRED_ENV = ['ADMIN_JWT_SECRET', 'ADMIN_DATABASE_URL', 'REDIS_URL'];
+const REQUIRED_ENV = ["ADMIN_JWT_SECRET", "ADMIN_DATABASE_URL", "REDIS_URL"];
 
 function validateEnv() {
-    const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
-    if (missing.length) {
-        process.stderr.write(`[admin-api-service] Missing required env vars: ${missing.join(', ')}\n`);
-        process.exit(1);
-    }
+  const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
+  if (missing.length) {
+    process.stderr.write(
+      `[admin-api-service] Missing required env vars: ${missing.join(", ")}\n`,
+    );
+    process.exit(1);
+  }
 }
 
 async function bootstrap() {
-    validateEnv();
-    const app = await NestFactory.create<NestFastifyApplication>(
-        AppModule,
-        new FastifyAdapter(),
-        { bufferLogs: true },
-    );
+  validateEnv();
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+    { bufferLogs: true },
+  );
 
-    await app.register(fastifyCookie as any);
+  await app.register(fastifyCookie as any);
 
-    app.useLogger(app.get(Logger));
+  app.useLogger(app.get(Logger));
 
-    app.useGlobalPipes(new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-    }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
-    app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
-    // CORS — admin subdomain only
-    app.enableCors({
-        origin: (origin, cb) => {
-            const allowed = [
-                'https://admin.polyforge.app',
-                ...(process.env.NODE_ENV !== 'production'
-                    ? ['http://localhost:4300', 'http://localhost:8080']
-                    : []),
-            ];
-            if (!origin || allowed.includes(origin)) {
-                cb(null, true);
-            } else {
-                cb(new Error(`CORS: origin ${origin} not allowed`), false);
-            }
-        },
-        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-        credentials: true,
+  // CORS — admin subdomain only
+  app.enableCors({
+    origin: (origin, cb) => {
+      const allowed = [
+        "https://admin.polyforge.app",
+        ...(process.env.NODE_ENV !== "production"
+          ? ["http://localhost:4300", "http://localhost:8080"]
+          : []),
+      ];
+      if (!origin || allowed.includes(origin)) {
+        cb(null, true);
+      } else {
+        cb(new Error(`CORS: origin ${origin} not allowed`), false);
+      }
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  });
+
+  // Security headers
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .addHook("onSend", (_req: any, reply: any, _payload: any, done: any) => {
+      reply.header("X-Content-Type-Options", "nosniff");
+      reply.header("X-Frame-Options", "DENY");
+      reply.header("X-XSS-Protection", "1; mode=block");
+      reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
+      done();
     });
 
-    // Security headers
-    app.getHttpAdapter().getInstance().addHook('onSend', (_req: any, reply: any, _payload: any, done: any) => {
-        reply.header('X-Content-Type-Options', 'nosniff');
-        reply.header('X-Frame-Options', 'DENY');
-        reply.header('X-XSS-Protection', '1; mode=block');
-        reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
-        done();
-    });
+  app.setGlobalPrefix("api/v1", {
+    exclude: [{ path: "health", method: RequestMethod.GET }],
+  });
 
-    app.setGlobalPrefix('api/v1', {
-        exclude: [{ path: 'health', method: RequestMethod.GET }],
-    });
-
-    const port = process.env.PORT ?? 3004;
-    await app.listen(port, '0.0.0.0');
+  const port = process.env.PORT ?? 3004;
+  await app.listen(port, "0.0.0.0");
 }
 
 bootstrap().catch((err) => {
-    process.stderr.write(`[admin-api-service] Fatal startup error: ${String(err)}\n`);
-    process.exit(1);
+  process.stderr.write(
+    `[admin-api-service] Fatal startup error: ${String(err)}\n`,
+  );
+  process.exit(1);
 });

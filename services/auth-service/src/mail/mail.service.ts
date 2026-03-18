@@ -4,41 +4,42 @@ import { emailLayout } from './email-layout';
 
 @Injectable()
 export class MailService {
-    private readonly logger = new Logger(MailService.name);
-    private readonly transporter: nodemailer.Transporter;
-    private readonly from: string;
+  private readonly logger = new Logger(MailService.name);
+  private readonly transporter: nodemailer.Transporter;
+  private readonly from: string;
 
-    constructor() {
-        this.from = `Polyforge <${process.env.AWS_SES_FROM_EMAIL ?? 'noreply@polyforge.app'}>`;
-        const driver = process.env.EMAIL_DRIVER ?? 'mailhog';
+  constructor() {
+    this.from = `Polyforge <${process.env.AWS_SES_FROM_EMAIL ?? 'noreply@polyforge.app'}>`;
+    const driver = process.env.EMAIL_DRIVER ?? 'mailhog';
 
-        if (driver === 'mailhog') {
-            this.transporter = nodemailer.createTransport({
-                host: process.env.MAILHOG_HOST ?? 'localhost',
-                port: parseInt(process.env.MAILHOG_PORT ?? '1025', 10),
-                secure: false,
-                ignoreTLS: true,
-            } as any);
-        } else {
-            this.transporter = nodemailer.createTransport({
-                host: `email-smtp.${process.env.AWS_SES_REGION ?? 'us-east-1'}.amazonaws.com`,
-                port: 587,
-                secure: false,
-                auth: {
-                    user: process.env.AWS_SES_SMTP_USER,
-                    pass: process.env.AWS_SES_SMTP_PASSWORD,
-                },
-            });
-        }
+    if (driver === 'mailhog') {
+      this.transporter = nodemailer.createTransport({
+        host: process.env.MAILHOG_HOST ?? 'localhost',
+        port: parseInt(process.env.MAILHOG_PORT ?? '1025', 10),
+        secure: false,
+        ignoreTLS: true,
+      } as any);
+    } else {
+      this.transporter = nodemailer.createTransport({
+        host: `email-smtp.${process.env.AWS_SES_REGION ?? 'us-east-1'}.amazonaws.com`,
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.AWS_SES_SMTP_USER,
+          pass: process.env.AWS_SES_SMTP_PASSWORD,
+        },
+      });
     }
+  }
 
-    async sendVerificationEmail(to: string, token: string): Promise<void> {
-        const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
-        const url  = `${base}/verify-email?token=${token}`;
+  async sendVerificationEmail(to: string, token: string): Promise<void> {
+    const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
+    const url = `${base}/verify-email?token=${token}`;
 
-        const html = emailLayout({
-            preheader: 'Verify your email address to activate your Polyforge account.',
-            body: `
+    const html = emailLayout({
+      preheader:
+        'Verify your email address to activate your Polyforge account.',
+      body: `
                 <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827">
                   Verify your email address
                 </h2>
@@ -63,25 +64,26 @@ export class MailService {
                   If you did not create a Polyforge account, you can safely ignore this email.
                 </p>
             `,
-            footerNote: 'You received this because someone signed up for Polyforge with this email address.',
-        });
+      footerNote:
+        'You received this because someone signed up for Polyforge with this email address.',
+    });
 
-        await this.transporter.sendMail({
-            from: this.from,
-            to,
-            subject: 'Verify your Polyforge account',
-            text: `Verify your Polyforge email address.\n\nClick the link below:\n\n${url}\n\nThis link expires in 24 hours.\n\nIf you did not create an account, ignore this email.`,
-            html,
-        });
-        this.logger.log(`Verification email sent to ${to}`);
-    }
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject: 'Verify your Polyforge account',
+      text: `Verify your Polyforge email address.\n\nClick the link below:\n\n${url}\n\nThis link expires in 24 hours.\n\nIf you did not create an account, ignore this email.`,
+      html,
+    });
+    this.logger.log(`Verification email sent to ${to}`);
+  }
 
-    async sendWaitlistConfirmationEmail(to: string): Promise<void> {
-        const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
+  async sendWaitlistConfirmationEmail(to: string): Promise<void> {
+    const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
 
-        const html = emailLayout({
-            preheader: "You're on the Polyforge waitlist — we'll be in touch soon.",
-            body: `
+    const html = emailLayout({
+      preheader: "You're on the Polyforge waitlist — we'll be in touch soon.",
+      body: `
                 <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827">
                   You're on the list!
                 </h2>
@@ -105,26 +107,27 @@ export class MailService {
                   If you didn't sign up for Polyforge early access, you can safely ignore this email.
                 </p>
             `,
-            footerNote: 'You received this because you joined the Polyforge early-access waitlist.',
-        });
+      footerNote:
+        'You received this because you joined the Polyforge early-access waitlist.',
+    });
 
-        await this.transporter.sendMail({
-            from: this.from,
-            to,
-            subject: "You're on the Polyforge waitlist",
-            text: `You're on the Polyforge early-access waitlist!\n\nWe'll email your personal invite code as soon as your spot opens up.\n\nVisit ${base} to learn more.\n\nIf you didn't sign up, you can ignore this email.`,
-            html,
-        });
-        this.logger.log(`Waitlist confirmation email sent to ${to}`);
-    }
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject: "You're on the Polyforge waitlist",
+      text: `You're on the Polyforge early-access waitlist!\n\nWe'll email your personal invite code as soon as your spot opens up.\n\nVisit ${base} to learn more.\n\nIf you didn't sign up, you can ignore this email.`,
+      html,
+    });
+    this.logger.log(`Waitlist confirmation email sent to ${to}`);
+  }
 
-    async sendPasswordResetEmail(to: string, token: string): Promise<void> {
-        const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
-        const url  = `${base}/reset-password?token=${token}`;
+  async sendPasswordResetEmail(to: string, token: string): Promise<void> {
+    const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
+    const url = `${base}/reset-password?token=${token}`;
 
-        const html = emailLayout({
-            preheader: 'Reset your Polyforge password — link expires in 1 hour.',
-            body: `
+    const html = emailLayout({
+      preheader: 'Reset your Polyforge password — link expires in 1 hour.',
+      body: `
                 <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827">
                   Reset your password
                 </h2>
@@ -150,16 +153,17 @@ export class MailService {
                   Your password will not be changed.
                 </p>
             `,
-            footerNote: 'You received this because a password reset was requested for your Polyforge account.',
-        });
+      footerNote:
+        'You received this because a password reset was requested for your Polyforge account.',
+    });
 
-        await this.transporter.sendMail({
-            from: this.from,
-            to,
-            subject: 'Reset your Polyforge password',
-            text: `Reset your Polyforge password.\n\nClick the link below:\n\n${url}\n\nThis link expires in 1 hour.\n\nIf you did not request this, ignore this email.`,
-            html,
-        });
-        this.logger.log(`Password reset email sent to ${to}`);
-    }
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject: 'Reset your Polyforge password',
+      text: `Reset your Polyforge password.\n\nClick the link below:\n\n${url}\n\nThis link expires in 1 hour.\n\nIf you did not request this, ignore this email.`,
+      html,
+    });
+    this.logger.log(`Password reset email sent to ${to}`);
+  }
 }

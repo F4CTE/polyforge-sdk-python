@@ -1,271 +1,485 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from "vitest";
 import {
-    MinLiquidityBlock,
-    MaxPositionBlock,
-    MaxBetsPerDayBlock,
-    DailyLossLimitBlock,
-    CooldownAfterTradeBlock,
-    PriceInRangeBlock,
-    NoReentryBlock,
-    NoExistingPositionBlock,
-    TimeWindowBlock,
-} from './condition.blocks';
-import { block, makeCtx, makePrisma, makeRedis } from './__helpers__';
+  MinLiquidityBlock,
+  MaxPositionBlock,
+  MaxBetsPerDayBlock,
+  DailyLossLimitBlock,
+  CooldownAfterTradeBlock,
+  PriceInRangeBlock,
+  NoReentryBlock,
+  NoExistingPositionBlock,
+  TimeWindowBlock,
+} from "./condition.blocks";
+import { block, makeCtx, makePrisma, makeRedis } from "./__helpers__";
 
-describe('MinLiquidityBlock', () => {
-    it('passes when bid liquidity meets minimum', async () => {
-        const book = {
-            bids: [
-                { price: '0.5', size: '200' },  // 100 USDC
-                { price: '0.4', size: '100' },  // 40 USDC
-            ],
-        };
-        const redis = makeRedis({ getJson: vi.fn().mockResolvedValue(book) });
-        const res = await MinLiquidityBlock.evaluate(block('min_liquidity', { tokenId: 'tok1', minUsdc: '100' }), makeCtx(), redis, makePrisma());
-        expect(res.fired).toBe(true); // 140 >= 100
-    });
+describe("MinLiquidityBlock", () => {
+  it("passes when bid liquidity meets minimum", async () => {
+    const book = {
+      bids: [
+        { price: "0.5", size: "200" }, // 100 USDC
+        { price: "0.4", size: "100" }, // 40 USDC
+      ],
+    };
+    const redis = makeRedis({ getJson: vi.fn().mockResolvedValue(book) });
+    const res = await MinLiquidityBlock.evaluate(
+      block("min_liquidity", { tokenId: "tok1", minUsdc: "100" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true); // 140 >= 100
+  });
 
-    it('fails when bid liquidity is below minimum', async () => {
-        const book = { bids: [{ price: '0.5', size: '10' }] }; // 5 USDC
-        const redis = makeRedis({ getJson: vi.fn().mockResolvedValue(book) });
-        const res = await MinLiquidityBlock.evaluate(block('min_liquidity', { tokenId: 'tok1', minUsdc: '100' }), makeCtx(), redis, makePrisma());
-        expect(res.fired).toBe(false);
-    });
+  it("fails when bid liquidity is below minimum", async () => {
+    const book = { bids: [{ price: "0.5", size: "10" }] }; // 5 USDC
+    const redis = makeRedis({ getJson: vi.fn().mockResolvedValue(book) });
+    const res = await MinLiquidityBlock.evaluate(
+      block("min_liquidity", { tokenId: "tok1", minUsdc: "100" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
 
-    it('fails when no book data', async () => {
-        const res = await MinLiquidityBlock.evaluate(block('min_liquidity', { tokenId: 'tok1', minUsdc: '100' }), makeCtx(), makeRedis(), makePrisma());
-        expect(res.fired).toBe(false);
-        expect(res.reason).toMatch(/no book data/);
-    });
+  it("fails when no book data", async () => {
+    const res = await MinLiquidityBlock.evaluate(
+      block("min_liquidity", { tokenId: "tok1", minUsdc: "100" }),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/no book data/);
+  });
 
-    it('defaults minUsdc to 100 when not provided', async () => {
-        const book = { bids: [{ price: '0.5', size: '250' }] }; // 125 USDC
-        const redis = makeRedis({ getJson: vi.fn().mockResolvedValue(book) });
-        const res = await MinLiquidityBlock.evaluate(block('min_liquidity', { tokenId: 'tok1' }), makeCtx(), redis, makePrisma());
-        expect(res.fired).toBe(true);
-    });
+  it("defaults minUsdc to 100 when not provided", async () => {
+    const book = { bids: [{ price: "0.5", size: "250" }] }; // 125 USDC
+    const redis = makeRedis({ getJson: vi.fn().mockResolvedValue(book) });
+    const res = await MinLiquidityBlock.evaluate(
+      block("min_liquidity", { tokenId: "tok1" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
 });
 
-describe('MaxPositionBlock', () => {
-    it('passes when no existing position', async () => {
-        const prisma = makePrisma(); // findUnique returns null
-        const res = await MaxPositionBlock.evaluate(block('max_position', { tokenId: 'tok1', maxUsdc: '500' }), makeCtx(), makeRedis(), prisma);
-        expect(res.fired).toBe(true);
-        expect(res.reason).toMatch(/no existing position/);
-    });
+describe("MaxPositionBlock", () => {
+  it("passes when no existing position", async () => {
+    const prisma = makePrisma(); // findUnique returns null
+    const res = await MaxPositionBlock.evaluate(
+      block("max_position", { tokenId: "tok1", maxUsdc: "500" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(res.fired).toBe(true);
+    expect(res.reason).toMatch(/no existing position/);
+  });
 
-    it('passes when position value is below max', async () => {
-        const prisma = makePrisma();
-        prisma.position.findUnique.mockResolvedValue({ size: '100', currentPrice: '0.3' }); // 30 USDC
-        const res = await MaxPositionBlock.evaluate(block('max_position', { tokenId: 'tok1', maxUsdc: '100' }), makeCtx(), makeRedis(), prisma);
-        expect(res.fired).toBe(true); // 30 < 100
-    });
+  it("passes when position value is below max", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "100",
+      currentPrice: "0.3",
+    }); // 30 USDC
+    const res = await MaxPositionBlock.evaluate(
+      block("max_position", { tokenId: "tok1", maxUsdc: "100" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(res.fired).toBe(true); // 30 < 100
+  });
 
-    it('fails when position value meets or exceeds max', async () => {
-        const prisma = makePrisma();
-        prisma.position.findUnique.mockResolvedValue({ size: '200', currentPrice: '0.6' }); // 120 USDC
-        const res = await MaxPositionBlock.evaluate(block('max_position', { tokenId: 'tok1', maxUsdc: '100' }), makeCtx(), makeRedis(), prisma);
-        expect(res.fired).toBe(false); // 120 >= 100
-    });
+  it("fails when position value meets or exceeds max", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({
+      size: "200",
+      currentPrice: "0.6",
+    }); // 120 USDC
+    const res = await MaxPositionBlock.evaluate(
+      block("max_position", { tokenId: "tok1", maxUsdc: "100" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(res.fired).toBe(false); // 120 >= 100
+  });
 
-    it('queries by userId + tokenId composite key', async () => {
-        const prisma = makePrisma();
-        const ctx = makeCtx();
-        await MaxPositionBlock.evaluate(block('max_position', { tokenId: 'tok-abc', maxUsdc: '500' }), ctx, makeRedis(), prisma);
-        expect(prisma.position.findUnique).toHaveBeenCalledWith(
-            expect.objectContaining({
-                where: { userId_tokenId: { userId: ctx.userId, tokenId: 'tok-abc' } },
-            }),
-        );
-    });
+  it("queries by userId + tokenId composite key", async () => {
+    const prisma = makePrisma();
+    const ctx = makeCtx();
+    await MaxPositionBlock.evaluate(
+      block("max_position", { tokenId: "tok-abc", maxUsdc: "500" }),
+      ctx,
+      makeRedis(),
+      prisma,
+    );
+    expect(prisma.position.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId_tokenId: { userId: ctx.userId, tokenId: "tok-abc" } },
+      }),
+    );
+  });
 });
 
-describe('MaxBetsPerDayBlock', () => {
-    it('passes when betsToday is below max', async () => {
-        const ctx = makeCtx({ betsToday: 4 });
-        const res = await MaxBetsPerDayBlock.evaluate(block('max_bets_per_day', { max: '5' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(true);
-    });
+describe("MaxBetsPerDayBlock", () => {
+  it("passes when betsToday is below max", async () => {
+    const ctx = makeCtx({ betsToday: 4 });
+    const res = await MaxBetsPerDayBlock.evaluate(
+      block("max_bets_per_day", { max: "5" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
 
-    it('fails when betsToday reaches max', async () => {
-        const ctx = makeCtx({ betsToday: 5 });
-        const res = await MaxBetsPerDayBlock.evaluate(block('max_bets_per_day', { max: '5' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(false);
-    });
+  it("fails when betsToday reaches max", async () => {
+    const ctx = makeCtx({ betsToday: 5 });
+    const res = await MaxBetsPerDayBlock.evaluate(
+      block("max_bets_per_day", { max: "5" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
 
-    it('defaults max to 10', async () => {
-        const ctx = makeCtx({ betsToday: 9 });
-        const res = await MaxBetsPerDayBlock.evaluate(block('max_bets_per_day', {}), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(true); // 9 < 10
-    });
+  it("defaults max to 10", async () => {
+    const ctx = makeCtx({ betsToday: 9 });
+    const res = await MaxBetsPerDayBlock.evaluate(
+      block("max_bets_per_day", {}),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true); // 9 < 10
+  });
 });
 
-describe('DailyLossLimitBlock', () => {
-    it('passes when daily loss is within limit', async () => {
-        const ctx = makeCtx({ dailyPnl: -8 });
-        const res = await DailyLossLimitBlock.evaluate(block('daily_loss_limit', { maxLossUsdc: '10' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(true); // -8 > -10
-    });
+describe("DailyLossLimitBlock", () => {
+  it("passes when daily loss is within limit", async () => {
+    const ctx = makeCtx({ dailyPnl: -8 });
+    const res = await DailyLossLimitBlock.evaluate(
+      block("daily_loss_limit", { maxLossUsdc: "10" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true); // -8 > -10
+  });
 
-    it('fails when daily loss exceeds limit', async () => {
-        const ctx = makeCtx({ dailyPnl: -12 });
-        const res = await DailyLossLimitBlock.evaluate(block('daily_loss_limit', { maxLossUsdc: '10' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(false);
-    });
+  it("fails when daily loss exceeds limit", async () => {
+    const ctx = makeCtx({ dailyPnl: -12 });
+    const res = await DailyLossLimitBlock.evaluate(
+      block("daily_loss_limit", { maxLossUsdc: "10" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
 
-    it('passes when pnl is positive', async () => {
-        const ctx = makeCtx({ dailyPnl: 5 });
-        const res = await DailyLossLimitBlock.evaluate(block('daily_loss_limit', { maxLossUsdc: '10' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(true);
-    });
+  it("passes when pnl is positive", async () => {
+    const ctx = makeCtx({ dailyPnl: 5 });
+    const res = await DailyLossLimitBlock.evaluate(
+      block("daily_loss_limit", { maxLossUsdc: "10" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
 });
 
-describe('CooldownAfterTradeBlock', () => {
-    it('passes when sufficient time has passed since last trade', async () => {
-        const now = Date.now();
-        const ctx = makeCtx({ lastTradeAt: now - 10_000 }, now);
-        const res = await CooldownAfterTradeBlock.evaluate(block('cooldown_after_trade', { cooldownMs: '5000' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(true);
-    });
+describe("CooldownAfterTradeBlock", () => {
+  it("passes when sufficient time has passed since last trade", async () => {
+    const now = Date.now();
+    const ctx = makeCtx({ lastTradeAt: now - 10_000 }, now);
+    const res = await CooldownAfterTradeBlock.evaluate(
+      block("cooldown_after_trade", { cooldownMs: "5000" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
 
-    it('fails when still in cooldown window', async () => {
-        const now = Date.now();
-        const ctx = makeCtx({ lastTradeAt: now - 2_000 }, now);
-        const res = await CooldownAfterTradeBlock.evaluate(block('cooldown_after_trade', { cooldownMs: '5000' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(false);
-    });
+  it("fails when still in cooldown window", async () => {
+    const now = Date.now();
+    const ctx = makeCtx({ lastTradeAt: now - 2_000 }, now);
+    const res = await CooldownAfterTradeBlock.evaluate(
+      block("cooldown_after_trade", { cooldownMs: "5000" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
 
-    it('passes when lastTradeAt is 0 (never traded)', async () => {
-        const ctx = makeCtx({ lastTradeAt: 0 });
-        const res = await CooldownAfterTradeBlock.evaluate(block('cooldown_after_trade', { cooldownMs: '60000' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(true);
-    });
+  it("passes when lastTradeAt is 0 (never traded)", async () => {
+    const ctx = makeCtx({ lastTradeAt: 0 });
+    const res = await CooldownAfterTradeBlock.evaluate(
+      block("cooldown_after_trade", { cooldownMs: "60000" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
 });
 
-describe('PriceInRangeBlock', () => {
-    it('passes when price is within range', async () => {
-        const redis = makeRedis({ getJson: vi.fn().mockResolvedValue({ price: 0.55 }) });
-        const res = await PriceInRangeBlock.evaluate(block('price_in_range', { tokenId: 'tok1', min: '0.40', max: '0.60' }), makeCtx(), redis, makePrisma());
-        expect(res.fired).toBe(true);
+describe("PriceInRangeBlock", () => {
+  it("passes when price is within range", async () => {
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.55 }),
     });
+    const res = await PriceInRangeBlock.evaluate(
+      block("price_in_range", { tokenId: "tok1", min: "0.40", max: "0.60" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
 
-    it('passes when price equals the bounds (inclusive)', async () => {
-        const redis = makeRedis({ getJson: vi.fn().mockResolvedValue({ price: 0.40 }) });
-        const res = await PriceInRangeBlock.evaluate(block('price_in_range', { tokenId: 'tok1', min: '0.40', max: '0.60' }), makeCtx(), redis, makePrisma());
-        expect(res.fired).toBe(true);
+  it("passes when price equals the bounds (inclusive)", async () => {
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.4 }),
     });
+    const res = await PriceInRangeBlock.evaluate(
+      block("price_in_range", { tokenId: "tok1", min: "0.40", max: "0.60" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
 
-    it('fails when price is below range', async () => {
-        const redis = makeRedis({ getJson: vi.fn().mockResolvedValue({ price: 0.30 }) });
-        const res = await PriceInRangeBlock.evaluate(block('price_in_range', { tokenId: 'tok1', min: '0.40', max: '0.60' }), makeCtx(), redis, makePrisma());
-        expect(res.fired).toBe(false);
+  it("fails when price is below range", async () => {
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.3 }),
     });
+    const res = await PriceInRangeBlock.evaluate(
+      block("price_in_range", { tokenId: "tok1", min: "0.40", max: "0.60" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
 
-    it('fails when price is above range', async () => {
-        const redis = makeRedis({ getJson: vi.fn().mockResolvedValue({ price: 0.75 }) });
-        const res = await PriceInRangeBlock.evaluate(block('price_in_range', { tokenId: 'tok1', min: '0.40', max: '0.60' }), makeCtx(), redis, makePrisma());
-        expect(res.fired).toBe(false);
+  it("fails when price is above range", async () => {
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.75 }),
     });
+    const res = await PriceInRangeBlock.evaluate(
+      block("price_in_range", { tokenId: "tok1", min: "0.40", max: "0.60" }),
+      makeCtx(),
+      redis,
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
 
-    it('fails when no price data', async () => {
-        const res = await PriceInRangeBlock.evaluate(block('price_in_range', { tokenId: 'tok1', min: '0.40', max: '0.60' }), makeCtx(), makeRedis(), makePrisma());
-        expect(res.fired).toBe(false);
-    });
+  it("fails when no price data", async () => {
+    const res = await PriceInRangeBlock.evaluate(
+      block("price_in_range", { tokenId: "tok1", min: "0.40", max: "0.60" }),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
 });
 
-describe('NoReentryBlock', () => {
-    it('passes when token has not been traded today', async () => {
-        const ctx = makeCtx({ tradedTokensToday: ['other-tok'] });
-        const res = await NoReentryBlock.evaluate(block('no_reentry', { tokenId: 'tok1' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(true);
-    });
+describe("NoReentryBlock", () => {
+  it("passes when token has not been traded today", async () => {
+    const ctx = makeCtx({ tradedTokensToday: ["other-tok"] });
+    const res = await NoReentryBlock.evaluate(
+      block("no_reentry", { tokenId: "tok1" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
 
-    it('fails when token has already been traded today', async () => {
-        const ctx = makeCtx({ tradedTokensToday: ['tok1', 'tok2'] });
-        const res = await NoReentryBlock.evaluate(block('no_reentry', { tokenId: 'tok1' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(false);
-        expect(res.reason).toMatch(/already traded/);
-    });
+  it("fails when token has already been traded today", async () => {
+    const ctx = makeCtx({ tradedTokensToday: ["tok1", "tok2"] });
+    const res = await NoReentryBlock.evaluate(
+      block("no_reentry", { tokenId: "tok1" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/already traded/);
+  });
 
-    it('passes when tokenId is not configured', async () => {
-        const res = await NoReentryBlock.evaluate(block('no_reentry', {}), makeCtx(), makeRedis(), makePrisma());
-        expect(res.fired).toBe(true); // no tokenId = pass
-    });
+  it("passes when tokenId is not configured", async () => {
+    const res = await NoReentryBlock.evaluate(
+      block("no_reentry", {}),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true); // no tokenId = pass
+  });
 
-    it('passes when tradedTokensToday is empty', async () => {
-        const ctx = makeCtx({ tradedTokensToday: [] });
-        const res = await NoReentryBlock.evaluate(block('no_reentry', { tokenId: 'tok1' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(true);
-    });
+  it("passes when tradedTokensToday is empty", async () => {
+    const ctx = makeCtx({ tradedTokensToday: [] });
+    const res = await NoReentryBlock.evaluate(
+      block("no_reentry", { tokenId: "tok1" }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
 });
 
-describe('NoExistingPositionBlock', () => {
-    it('passes when no position exists', async () => {
-        const prisma = makePrisma(); // findUnique returns null
-        const res = await NoExistingPositionBlock.evaluate(block('no_existing_position', { tokenId: 'tok1' }), makeCtx(), makeRedis(), prisma);
-        expect(res.fired).toBe(true);
-    });
+describe("NoExistingPositionBlock", () => {
+  it("passes when no position exists", async () => {
+    const prisma = makePrisma(); // findUnique returns null
+    const res = await NoExistingPositionBlock.evaluate(
+      block("no_existing_position", { tokenId: "tok1" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(res.fired).toBe(true);
+  });
 
-    it('fails when position with positive size exists', async () => {
-        const prisma = makePrisma();
-        prisma.position.findUnique.mockResolvedValue({ size: '50.0' });
-        const res = await NoExistingPositionBlock.evaluate(block('no_existing_position', { tokenId: 'tok1' }), makeCtx(), makeRedis(), prisma);
-        expect(res.fired).toBe(false);
-        expect(res.reason).toMatch(/existing position/);
-    });
+  it("fails when position with positive size exists", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "50.0" });
+    const res = await NoExistingPositionBlock.evaluate(
+      block("no_existing_position", { tokenId: "tok1" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(res.fired).toBe(false);
+    expect(res.reason).toMatch(/existing position/);
+  });
 
-    it('passes when position exists but size is 0', async () => {
-        const prisma = makePrisma();
-        prisma.position.findUnique.mockResolvedValue({ size: '0' });
-        const res = await NoExistingPositionBlock.evaluate(block('no_existing_position', { tokenId: 'tok1' }), makeCtx(), makeRedis(), prisma);
-        expect(res.fired).toBe(true); // size = 0 → no real position
-    });
+  it("passes when position exists but size is 0", async () => {
+    const prisma = makePrisma();
+    prisma.position.findUnique.mockResolvedValue({ size: "0" });
+    const res = await NoExistingPositionBlock.evaluate(
+      block("no_existing_position", { tokenId: "tok1" }),
+      makeCtx(),
+      makeRedis(),
+      prisma,
+    );
+    expect(res.fired).toBe(true); // size = 0 → no real position
+  });
 
-    it('passes when tokenId is not configured', async () => {
-        const res = await NoExistingPositionBlock.evaluate(block('no_existing_position', {}), makeCtx(), makeRedis(), makePrisma());
-        expect(res.fired).toBe(true);
-    });
+  it("passes when tokenId is not configured", async () => {
+    const res = await NoExistingPositionBlock.evaluate(
+      block("no_existing_position", {}),
+      makeCtx(),
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
 });
 
-describe('TimeWindowBlock', () => {
-    it('passes when current UTC time is within window', async () => {
-        // Force a known UTC time: 14:30
-        const dt = new Date();
-        dt.setUTCHours(14, 30, 0, 0);
-        const ctx = makeCtx({}, dt.getTime());
-        const res = await TimeWindowBlock.evaluate(block('time_window', { startHH: '9', startMM: '0', endHH: '17', endMM: '0' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(true);
-    });
+describe("TimeWindowBlock", () => {
+  it("passes when current UTC time is within window", async () => {
+    // Force a known UTC time: 14:30
+    const dt = new Date();
+    dt.setUTCHours(14, 30, 0, 0);
+    const ctx = makeCtx({}, dt.getTime());
+    const res = await TimeWindowBlock.evaluate(
+      block("time_window", {
+        startHH: "9",
+        startMM: "0",
+        endHH: "17",
+        endMM: "0",
+      }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
 
-    it('fails when current UTC time is before window', async () => {
-        const dt = new Date();
-        dt.setUTCHours(7, 0, 0, 0);
-        const ctx = makeCtx({}, dt.getTime());
-        const res = await TimeWindowBlock.evaluate(block('time_window', { startHH: '9', startMM: '0', endHH: '17', endMM: '0' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(false);
-    });
+  it("fails when current UTC time is before window", async () => {
+    const dt = new Date();
+    dt.setUTCHours(7, 0, 0, 0);
+    const ctx = makeCtx({}, dt.getTime());
+    const res = await TimeWindowBlock.evaluate(
+      block("time_window", {
+        startHH: "9",
+        startMM: "0",
+        endHH: "17",
+        endMM: "0",
+      }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
 
-    it('fails when current UTC time is after window', async () => {
-        const dt = new Date();
-        dt.setUTCHours(20, 0, 0, 0);
-        const ctx = makeCtx({}, dt.getTime());
-        const res = await TimeWindowBlock.evaluate(block('time_window', { startHH: '9', startMM: '0', endHH: '17', endMM: '0' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(false);
-    });
+  it("fails when current UTC time is after window", async () => {
+    const dt = new Date();
+    dt.setUTCHours(20, 0, 0, 0);
+    const ctx = makeCtx({}, dt.getTime());
+    const res = await TimeWindowBlock.evaluate(
+      block("time_window", {
+        startHH: "9",
+        startMM: "0",
+        endHH: "17",
+        endMM: "0",
+      }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(false);
+  });
 
-    it('passes at the exact start boundary (inclusive)', async () => {
-        const dt = new Date();
-        dt.setUTCHours(9, 0, 0, 0);
-        const ctx = makeCtx({}, dt.getTime());
-        const res = await TimeWindowBlock.evaluate(block('time_window', { startHH: '9', startMM: '0', endHH: '17', endMM: '0' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(true);
-    });
+  it("passes at the exact start boundary (inclusive)", async () => {
+    const dt = new Date();
+    dt.setUTCHours(9, 0, 0, 0);
+    const ctx = makeCtx({}, dt.getTime());
+    const res = await TimeWindowBlock.evaluate(
+      block("time_window", {
+        startHH: "9",
+        startMM: "0",
+        endHH: "17",
+        endMM: "0",
+      }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
 
-    it('passes at the exact end boundary (inclusive)', async () => {
-        const dt = new Date();
-        dt.setUTCHours(17, 0, 0, 0);
-        const ctx = makeCtx({}, dt.getTime());
-        const res = await TimeWindowBlock.evaluate(block('time_window', { startHH: '9', startMM: '0', endHH: '17', endMM: '0' }), ctx, makeRedis(), makePrisma());
-        expect(res.fired).toBe(true);
-    });
+  it("passes at the exact end boundary (inclusive)", async () => {
+    const dt = new Date();
+    dt.setUTCHours(17, 0, 0, 0);
+    const ctx = makeCtx({}, dt.getTime());
+    const res = await TimeWindowBlock.evaluate(
+      block("time_window", {
+        startHH: "9",
+        startMM: "0",
+        endHH: "17",
+        endMM: "0",
+      }),
+      ctx,
+      makeRedis(),
+      makePrisma(),
+    );
+    expect(res.fired).toBe(true);
+  });
 });

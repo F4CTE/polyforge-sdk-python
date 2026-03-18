@@ -1,6 +1,6 @@
-import { IsIn } from 'class-validator';
+import { IsIn } from "class-validator";
 
 export class StartStrategyDto {
-    @IsIn(['live', 'paper'])
-    declare mode: 'live' | 'paper';
+  @IsIn(["live", "paper"])
+  declare mode: "live" | "paper";
 }

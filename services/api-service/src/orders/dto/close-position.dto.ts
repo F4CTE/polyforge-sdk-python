@@ -1,10 +1,10 @@
-import { IsString, IsOptional, IsNumberString } from 'class-validator';
+import { IsString, IsOptional, IsNumberString } from "class-validator";
 
 export class ClosePositionDto {
-    @IsString()
-    declare tokenId: string;
+  @IsString()
+  declare tokenId: string;
 
-    @IsOptional()
-    @IsNumberString()
-    size?: string;
+  @IsOptional()
+  @IsNumberString()
+  size?: string;
 }

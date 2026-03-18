@@ -1,23 +1,23 @@
-import { IsOptional, IsString, MaxLength, IsUrl } from 'class-validator';
+import { IsOptional, IsString, MaxLength, IsUrl } from "class-validator";
 
 export class UpdateProfileDto {
-    @IsOptional()
-    @IsString()
-    @MaxLength(100)
-    displayName?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  displayName?: string;
 
-    @IsOptional()
-    @IsString()
-    @MaxLength(500)
-    bio?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  bio?: string;
 
-    @IsOptional()
-    @IsUrl({ require_protocol: true, protocols: ['https'] })
-    @MaxLength(2048)
-    avatarUrl?: string;
+  @IsOptional()
+  @IsUrl({ require_protocol: true, protocols: ["https"] })
+  @MaxLength(2048)
+  avatarUrl?: string;
 
-    @IsOptional()
-    @IsString()
-    @MaxLength(50)
-    twitterHandle?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  twitterHandle?: string;
 }

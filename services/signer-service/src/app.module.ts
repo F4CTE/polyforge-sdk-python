@@ -1,25 +1,25 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
-import { LoggerModule } from '@polyforge/logger';
-import { RedisModule } from '@polyforge/shared-redis';
-import { EncryptionModule } from './encryption/encryption.module';
-import { CredentialsModule } from './credentials/credentials.module';
-import { SigningModule } from './signing/signing.module';
-import { CanaryModule } from './canary/canary.module';
-import { HealthController } from './health/health.controller';
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { JwtModule } from "@nestjs/jwt";
+import { LoggerModule } from "@polyforge/logger";
+import { RedisModule } from "@polyforge/shared-redis";
+import { EncryptionModule } from "./encryption/encryption.module";
+import { CredentialsModule } from "./credentials/credentials.module";
+import { SigningModule } from "./signing/signing.module";
+import { CanaryModule } from "./canary/canary.module";
+import { HealthController } from "./health/health.controller";
 
 @Module({
-    imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        JwtModule.register({}),
-        LoggerModule,
-        RedisModule,
-        EncryptionModule,
-        CredentialsModule,
-        SigningModule,
-        CanaryModule,
-    ],
-    controllers: [HealthController],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    JwtModule.register({}),
+    LoggerModule,
+    RedisModule,
+    EncryptionModule,
+    CredentialsModule,
+    SigningModule,
+    CanaryModule,
+  ],
+  controllers: [HealthController],
 })
 export class AppModule {}

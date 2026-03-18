@@ -6,7 +6,14 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs'],
+    ignores: [
+      '**/eslint.config.mjs',
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/*.js',
+      '**/*.d.ts',
+      '**/coverage/**',
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -26,11 +33,14 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
+      // Downgrade all unsafe-any rules to warnings — mocks and Fastify internals
+      // legitimately use `any`; errors here would block CI on test files
       '@typescript-eslint/no-unsafe-argument': 'warn',
       '@typescript-eslint/no-unsafe-assignment': 'warn',
       '@typescript-eslint/no-unsafe-call': 'warn',
       '@typescript-eslint/no-unsafe-member-access': 'warn',
       '@typescript-eslint/no-unsafe-return': 'warn',
+      // Decorators and DI patterns use unbound methods
       '@typescript-eslint/unbound-method': ['error', { ignoreStatic: true }],
       '@typescript-eslint/no-base-to-string': 'warn',
       '@typescript-eslint/require-await': 'warn',
@@ -39,6 +49,7 @@ export default tseslint.config(
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },
+  // Relaxed rules for spec / test files
   {
     files: ['**/*.spec.ts', '**/test/**/*.ts'],
     rules: {

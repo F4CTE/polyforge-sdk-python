@@ -4,36 +4,48 @@ import { TotpService } from './totp.service';
 import { faker } from '@faker-js/faker';
 
 describe('TotpController', () => {
-    let controller: TotpController;
-    let totpService: TotpService;
+  let controller: TotpController;
+  let totpService: TotpService;
 
-    const user = { sub: faker.string.uuid(), email: 'alice@example.com', username: 'alice' };
+  const user = {
+    sub: faker.string.uuid(),
+    email: 'alice@example.com',
+    username: 'alice',
+  };
 
-    beforeEach(() => {
-        totpService = {
-            setup: vi.fn().mockResolvedValue({ secret: 'SECRET', uri: 'otpauth://...', qrCode: 'data:...' }),
-            confirm: vi.fn().mockResolvedValue({ backupCodes: ['CODE1', 'CODE2'] }),
-            disable: vi.fn().mockResolvedValue(undefined),
-        } as unknown as TotpService;
+  beforeEach(() => {
+    totpService = {
+      setup: vi.fn().mockResolvedValue({
+        secret: 'SECRET',
+        uri: 'otpauth://...',
+        qrCode: 'data:...',
+      }),
+      confirm: vi.fn().mockResolvedValue({ backupCodes: ['CODE1', 'CODE2'] }),
+      disable: vi.fn().mockResolvedValue(undefined),
+    } as unknown as TotpService;
 
-        controller = new TotpController(totpService);
+    controller = new TotpController(totpService);
+  });
+
+  it('setup delegates to totpService.setup with userId', async () => {
+    const result = await controller.setup(user as any);
+    expect(totpService.setup).toHaveBeenCalledWith(user.sub);
+    expect(result).toMatchObject({ secret: 'SECRET' });
+  });
+
+  it('confirm delegates to totpService.confirm', async () => {
+    const result = await controller.confirm(user as any, { code: '123456' });
+    expect(totpService.confirm).toHaveBeenCalledWith(user.sub, '123456');
+    expect(result).toMatchObject({ backupCodes: expect.any(Array) });
+  });
+
+  it('disable delegates to totpService.disable and returns message', async () => {
+    const result = await controller.disable(user as any, {
+      password: 'MyPass1!',
     });
-
-    it('setup delegates to totpService.setup with userId', async () => {
-        const result = await controller.setup(user as any);
-        expect(totpService.setup).toHaveBeenCalledWith(user.sub);
-        expect(result).toMatchObject({ secret: 'SECRET' });
+    expect(totpService.disable).toHaveBeenCalledWith(user.sub, 'MyPass1!');
+    expect(result).toMatchObject({
+      message: expect.stringContaining('disabled'),
     });
-
-    it('confirm delegates to totpService.confirm', async () => {
-        const result = await controller.confirm(user as any, { code: '123456' });
-        expect(totpService.confirm).toHaveBeenCalledWith(user.sub, '123456');
-        expect(result).toMatchObject({ backupCodes: expect.any(Array) });
-    });
-
-    it('disable delegates to totpService.disable and returns message', async () => {
-        const result = await controller.disable(user as any, { password: 'MyPass1!' });
-        expect(totpService.disable).toHaveBeenCalledWith(user.sub, 'MyPass1!');
-        expect(result).toMatchObject({ message: expect.stringContaining('disabled') });
-    });
+  });
 });

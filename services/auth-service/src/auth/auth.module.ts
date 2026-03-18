@@ -8,8 +8,8 @@ import { MailModule } from '../mail/mail.module';
 import { TotpModule } from '../totp/totp.module';
 
 @Module({
-    imports: [UsersModule, MailModule, SharedAuthModule, TotpModule, RedisModule],
-    providers: [AuthService],
-    controllers: [AuthController],
+  imports: [UsersModule, MailModule, SharedAuthModule, TotpModule, RedisModule],
+  providers: [AuthService],
+  controllers: [AuthController],
 })
-export class AuthModule { }
+export class AuthModule {}

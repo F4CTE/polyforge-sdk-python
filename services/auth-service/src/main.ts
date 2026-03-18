@@ -14,7 +14,9 @@ const REQUIRED_ENV = ['USER_JWT_SECRET', 'INTERNAL_JWT_SECRET', 'DATABASE_URL'];
 function validateEnv() {
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
   if (missing.length) {
-    process.stderr.write(`[auth-service] Missing required env vars: ${missing.join(', ')}\n`);
+    process.stderr.write(
+      `[auth-service] Missing required env vars: ${missing.join(', ')}\n`,
+    );
     process.exit(1);
   }
 
@@ -22,7 +24,9 @@ function validateEnv() {
   if (process.env.NODE_ENV === 'production') {
     const totpKey = process.env.TOTP_ENCRYPTION_KEY ?? '';
     if (!totpKey || /^0+$/.test(totpKey)) {
-      process.stderr.write('[auth-service] TOTP_ENCRYPTION_KEY must not be all zeros in production\n');
+      process.stderr.write(
+        '[auth-service] TOTP_ENCRYPTION_KEY must not be all zeros in production\n',
+      );
       process.exit(1);
     }
   }
@@ -44,11 +48,13 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
 
   // Global validation pipe
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   // Global exception filter
   app.useGlobalFilters(new GlobalExceptionFilter());
@@ -61,7 +67,7 @@ async function bootstrap() {
         'https://www.polyforge.app',
         // dev origins — stripped in production by env check
         ...(process.env.NODE_ENV !== 'production'
-          ? ['http://localhost', 'http://localhost:4200']  // gateway (prod-equivalent) + ng serve
+          ? ['http://localhost', 'http://localhost:4200'] // gateway (prod-equivalent) + ng serve
           : []),
       ];
       if (!origin || allowed.includes(origin)) {
@@ -76,13 +82,16 @@ async function bootstrap() {
   });
 
   // Security headers
-  app.getHttpAdapter().getInstance().addHook('onSend', (_req: any, reply: any, _payload: any, done: any) => {
-    reply.header('X-Content-Type-Options', 'nosniff');
-    reply.header('X-Frame-Options', 'DENY');
-    reply.header('X-XSS-Protection', '1; mode=block');
-    reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
-    done();
-  });
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .addHook('onSend', (_req: any, reply: any, _payload: any, done: any) => {
+      reply.header('X-Content-Type-Options', 'nosniff');
+      reply.header('X-Frame-Options', 'DENY');
+      reply.header('X-XSS-Protection', '1; mode=block');
+      reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+      done();
+    });
 
   // Prefix: auth/v1 — Nginx routes /auth/v1/* to this service
   // Health check excluded so it stays at /health

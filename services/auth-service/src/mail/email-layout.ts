@@ -2,14 +2,16 @@ const FRONTEND = process.env.FRONTEND_URL ?? 'https://polyforge.app';
 
 /** Wraps content in the Polyforge branded email shell. */
 export function emailLayout(opts: {
-    preheader?: string;
-    body: string;
-    footerNote?: string;
+  preheader?: string;
+  body: string;
+  footerNote?: string;
 }): string {
-    const preheader = opts.preheader ?? '';
-    const footerNote = opts.footerNote ?? `You received this email because an action was taken on your Polyforge account.`;
+  const preheader = opts.preheader ?? '';
+  const footerNote =
+    opts.footerNote ??
+    `You received this email because an action was taken on your Polyforge account.`;
 
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>

@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { RetentionService } from './retention.service';
+import { Module } from "@nestjs/common";
+import { RetentionService } from "./retention.service";
 
 @Module({
-    providers: [RetentionService],
+  providers: [RetentionService],
 })
 export class RetentionModule {}

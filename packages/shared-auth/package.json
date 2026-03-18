@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "lint": "echo \"lint not configured for packages\""
+    "lint": "eslint src/**/*.ts"
   },
   "dependencies": {
     "@nestjs/jwt": "^11.0.2",

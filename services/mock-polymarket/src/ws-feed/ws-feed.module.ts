@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { WsFeedService } from './ws-feed';
+import { Module } from "@nestjs/common";
+import { WsFeedService } from "./ws-feed";
 
 @Module({
-    providers: [WsFeedService],
-    exports: [WsFeedService],
+  providers: [WsFeedService],
+  exports: [WsFeedService],
 })
 export class WsFeedModule {}

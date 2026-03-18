@@ -1,41 +1,52 @@
-import { Controller, Get, Post, Param, Query, Body, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
-import { IsOptional, IsString } from 'class-validator';
-import { BacktestsService } from './backtests.service';
-import { CreateBacktestDto } from './dto/create-backtest.dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  ParseUUIDPipe,
+} from "@nestjs/common";
+import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import { IsOptional, IsString } from "class-validator";
+import { BacktestsService } from "./backtests.service";
+import { CreateBacktestDto } from "./dto/create-backtest.dto";
+import { PaginationDto } from "../common/dto/pagination.dto";
 
 class BacktestQueryDto extends PaginationDto {
-    @IsOptional()
-    @IsString()
-    strategyId?: string;
+  @IsOptional()
+  @IsString()
+  strategyId?: string;
 
-    @IsOptional()
-    @IsString()
-    status?: string;
+  @IsOptional()
+  @IsString()
+  status?: string;
 }
 
-@ApiTags('backtests')
-@ApiBearerAuth('jwt')
-@Controller('backtests')
+@ApiTags("backtests")
+@ApiBearerAuth("jwt")
+@Controller("backtests")
 @UseGuards(JwtAuthGuard)
 export class BacktestsController {
-    constructor(private readonly backtests: BacktestsService) {}
+  constructor(private readonly backtests: BacktestsService) {}
 
-    @Get()
-    list(@CurrentUser() user: any, @Query() query: BacktestQueryDto) {
-        return this.backtests.list(user.sub, query);
-    }
+  @Get()
+  list(@CurrentUser() user: any, @Query() query: BacktestQueryDto) {
+    return this.backtests.list(user.sub, query);
+  }
 
-    @Post()
-    @HttpCode(HttpStatus.CREATED)
-    create(@CurrentUser() user: any, @Body() dto: CreateBacktestDto) {
-        return this.backtests.create(user.sub, dto);
-    }
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  create(@CurrentUser() user: any, @Body() dto: CreateBacktestDto) {
+    return this.backtests.create(user.sub, dto);
+  }
 
-    @Get(':id')
-    findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
-        return this.backtests.findOne(id, user.sub);
-    }
+  @Get(":id")
+  findOne(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.backtests.findOne(id, user.sub);
+  }
 }

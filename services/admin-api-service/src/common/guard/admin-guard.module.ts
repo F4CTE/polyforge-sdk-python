@@ -1,11 +1,11 @@
-import { Global, Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { AdminJwtGuard } from './admin-jwt.guard';
+import { Global, Module } from "@nestjs/common";
+import { JwtModule } from "@nestjs/jwt";
+import { AdminJwtGuard } from "./admin-jwt.guard";
 
 @Global()
 @Module({
-    imports: [JwtModule.register({})],
-    providers: [AdminJwtGuard],
-    exports: [AdminJwtGuard, JwtModule],
+  imports: [JwtModule.register({})],
+  providers: [AdminJwtGuard],
+  exports: [AdminJwtGuard, JwtModule],
 })
 export class AdminGuardModule {}
