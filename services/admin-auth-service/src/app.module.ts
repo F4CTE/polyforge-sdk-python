@@ -11,7 +11,7 @@ import { HealthController } from './common/health.controller';
     LoggerModule,
     SharedDbModule,
     RedisModule,
-    ThrottlerModule.forRoot([{ ttl: 900000, limit: 10 }]),
+    ThrottlerModule.forRoot({ throttlers: [{ ttl: 900000, limit: 10 }] }),
     AuthModule,
   ],
   controllers: [HealthController],
