@@ -74,7 +74,7 @@ function makeRunner({
   prisma = makePrisma(),
   state = makeState(),
   onIntents = vi
-    .fn<[OrderIntent[]], Promise<void>>()
+    .fn<(intents: OrderIntent[]) => Promise<void>>()
     .mockResolvedValue(undefined),
   onStatusChange = vi.fn().mockResolvedValue(undefined),
 } = {}) {
@@ -276,7 +276,7 @@ describe("StrategyRunner — SAFETY evaluation", () => {
 describe("StrategyRunner — TRIGGER evaluation", () => {
   it("proceeds when every_tick trigger fires", async () => {
     const state = makeState();
-    const onIntents = vi.fn().mockResolvedValue(undefined);
+    const onIntents = vi.fn<(intents: OrderIntent[]) => Promise<void>>().mockResolvedValue(undefined);
 
     const runner = makeRunner({
       execMode: "EVENT",
@@ -293,7 +293,7 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
 
   it("skips tick when no trigger fires", async () => {
     const state = makeState();
-    const onIntents = vi.fn().mockResolvedValue(undefined);
+    const onIntents = vi.fn<(intents: OrderIntent[]) => Promise<void>>().mockResolvedValue(undefined);
 
     // win_streak with count=5 won't fire with consecutiveWin=0
     const runner = makeRunner({
@@ -312,7 +312,7 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
 
   it("fires when any one of multiple triggers matches (OR logic)", async () => {
     const state = makeState();
-    const onIntents = vi.fn().mockResolvedValue(undefined);
+    const onIntents = vi.fn<(intents: OrderIntent[]) => Promise<void>>().mockResolvedValue(undefined);
 
     const runner = makeRunner({
       execMode: "EVENT",
@@ -340,7 +340,7 @@ describe("StrategyRunner — TRIGGER evaluation", () => {
 describe("StrategyRunner — CONDITION evaluation", () => {
   it("skips tick when a condition fails (AND logic)", async () => {
     const state = makeState();
-    const onIntents = vi.fn().mockResolvedValue(undefined);
+    const onIntents = vi.fn<(intents: OrderIntent[]) => Promise<void>>().mockResolvedValue(undefined);
 
     // max_bets_per_day with max=3, betsToday=5 → condition fails
     const runner = makeRunner({
@@ -371,7 +371,7 @@ describe("StrategyRunner — ACTION execution + state update", () => {
     const redis = makeRedis({
       getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
     });
-    const onIntents = vi.fn().mockResolvedValue(undefined);
+    const onIntents = vi.fn<(intents: OrderIntent[]) => Promise<void>>().mockResolvedValue(undefined);
 
     const runner = makeRunner({
       execMode: "EVENT",
@@ -433,7 +433,7 @@ describe("StrategyRunner — ACTION execution + state update", () => {
 
   it("does NOT call onIntents when actions produce no intents (skip_bet)", async () => {
     const state = makeState();
-    const onIntents = vi.fn().mockResolvedValue(undefined);
+    const onIntents = vi.fn<(intents: OrderIntent[]) => Promise<void>>().mockResolvedValue(undefined);
 
     const runner = makeRunner({
       execMode: "EVENT",
@@ -448,7 +448,7 @@ describe("StrategyRunner — ACTION execution + state update", () => {
 
   it("skips unknown block types gracefully", async () => {
     const state = makeState();
-    const onIntents = vi.fn().mockResolvedValue(undefined);
+    const onIntents = vi.fn<(intents: OrderIntent[]) => Promise<void>>().mockResolvedValue(undefined);
 
     const runner = makeRunner({
       execMode: "EVENT",
