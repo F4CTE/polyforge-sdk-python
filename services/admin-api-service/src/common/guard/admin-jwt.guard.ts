@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { RedisService } from '@polyforge/shared-redis';
 import { AdminJwtPayload } from '@polyforge/shared-types';
 
-const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET ?? 'dev-admin-secret';
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET!;
 
 @Injectable()
 export class AdminJwtGuard implements CanActivate {
@@ -19,13 +19,16 @@ export class AdminJwtGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
-        const authHeader = request.headers['authorization'];
 
-        if (!authHeader?.startsWith('Bearer ')) {
+        // Accept token from HttpOnly cookie (browser) or Authorization header (API clients)
+        const cookieToken: string | undefined = request.cookies?.pf_admin_token;
+        const authHeader: string | undefined = request.headers['authorization'];
+        const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+        const token = cookieToken ?? bearerToken;
+
+        if (!token) {
             throw new UnauthorizedException('Missing token');
         }
-
-        const token = authHeader.slice(7);
         let payload: AdminJwtPayload;
 
         try {
@@ -44,7 +47,15 @@ export class AdminJwtGuard implements CanActivate {
         }
 
         request.admin = payload;
-        request.adminIp = request.ip ?? request.headers['x-forwarded-for'] ?? 'unknown';
+        // Use only the first IP in X-Forwarded-For to prevent spoofing by clients
+        // appending extra addresses to the header.
+        const xff = request.headers['x-forwarded-for'];
+        const forwardedIp = Array.isArray(xff)
+            ? xff[0].trim().split(',')[0].trim()
+            : typeof xff === 'string'
+              ? xff.trim().split(',')[0].trim()
+              : undefined;
+        request.adminIp = forwardedIp ?? request.ip ?? 'unknown';
         return true;
     }
 }

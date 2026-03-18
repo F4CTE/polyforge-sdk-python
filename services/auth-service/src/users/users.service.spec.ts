@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { UsersService } from './users.service';
 import { createMockDb, MockDb } from '../../test/helpers/mock-db';
 import {

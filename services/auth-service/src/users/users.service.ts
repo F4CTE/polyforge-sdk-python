@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '@polyforge/shared-db';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { randomBytes, createHash } from 'crypto';
 
 @Injectable()
@@ -54,6 +54,19 @@ export class UsersService {
 
     async validatePassword(user: { passwordHash: string }, password: string): Promise<boolean> {
         return bcrypt.compare(password, user.passwordHash);
+    }
+
+    /**
+     * If the stored hash was created with fewer than MIN_ROUNDS, rehash transparently.
+     * Call this after a successful password verification.
+     */
+    async rehashIfNeeded(userId: string, password: string, currentHash: string): Promise<void> {
+        const MIN_ROUNDS = 12;
+        const rounds = bcrypt.getRounds(currentHash);
+        if (rounds < MIN_ROUNDS) {
+            const newHash = await bcrypt.hash(password, MIN_ROUNDS);
+            await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: newHash } });
+        }
     }
 
     // ─── Email verification ───────────────────────────────────────────────────────

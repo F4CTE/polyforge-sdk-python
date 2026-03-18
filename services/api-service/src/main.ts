@@ -6,6 +6,7 @@ import { WsAdapter } from '@nestjs/platform-ws';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as fs from 'fs';
 import * as path from 'path';
+import fastifyCookie from '@fastify/cookie';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 
@@ -17,6 +18,8 @@ async function bootstrap() {
         new FastifyAdapter(),
         { bufferLogs: true },
     );
+
+    await app.register(fastifyCookie as any);
 
     app.useLogger(app.get(Logger));
 
@@ -36,7 +39,7 @@ async function bootstrap() {
                 'https://polyforge.app',
                 'https://www.polyforge.app',
                 ...(process.env.NODE_ENV !== 'production'
-                    ? ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:4300']
+                    ? ['http://localhost', 'http://localhost:4200']  // gateway + ng serve
                     : []),
             ];
             if (!origin || allowed.includes(origin)) {
@@ -86,10 +89,19 @@ async function bootstrap() {
     const outPath = path.join(__dirname, '..', 'swagger.json');
     fs.writeFileSync(outPath, JSON.stringify(document, null, 2), 'utf8');
 
+    // Security headers
+    app.getHttpAdapter().getInstance().addHook('onSend', (_req: any, reply: any, _payload: any, done: any) => {
+        reply.header('X-Content-Type-Options', 'nosniff');
+        reply.header('X-Frame-Options', 'DENY');
+        reply.header('X-XSS-Protection', '1; mode=block');
+        reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+        done();
+    });
+
     // Serve interactive docs in non-production environments
     if (process.env.NODE_ENV !== 'production') {
         SwaggerModule.setup('api/v1/docs', app, document, {
-            swaggerOptions: { persistAuthorization: true },
+            swaggerOptions: { persistAuthorization: false },
         });
     }
 
@@ -99,6 +111,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch(err => {
-    console.error('Failed to start api-service', err);
+    process.stderr.write(`[api-service] Fatal startup error: ${String(err)}\n`);
     process.exit(1);
 });

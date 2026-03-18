@@ -168,7 +168,7 @@ describe('TotpService', () => {
         });
 
         it('clears TOTP fields on success', async () => {
-            const bcrypt = await import('bcrypt');
+            const bcrypt = await import('bcryptjs');
             const hash = await bcrypt.hash('correct_password', 10);
             const user = userFactory({ totpEnabled: true, passwordHash: hash });
             db.user.findUniqueOrThrow.mockResolvedValue(user as any);

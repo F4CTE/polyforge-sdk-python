@@ -5,7 +5,7 @@ import { RedisService } from '@polyforge/shared-redis';
 import { generateSecret, generateURI, verifySync } from 'otplib';
 import * as QRCode from 'qrcode';
 import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'crypto';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 const PENDING_TOTP_TTL = 300; // 5 minutes
 const BACKUP_CODE_COUNT = 10;
