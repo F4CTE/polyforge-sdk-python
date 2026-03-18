@@ -151,7 +151,7 @@ describe("OrdersService", () => {
       );
 
       const whereArg = db.order.findMany.mock.calls[0][0]?.where;
-      expect(whereArg.createdAt).toMatchObject({
+      expect(whereArg!.createdAt).toMatchObject({
         gte: new Date("2025-01-01T00:00:00.000Z"),
       });
     });
@@ -166,7 +166,7 @@ describe("OrdersService", () => {
       );
 
       const whereArg = db.order.findMany.mock.calls[0][0]?.where;
-      expect(whereArg.createdAt).toMatchObject({
+      expect(whereArg!.createdAt).toMatchObject({
         lte: new Date("2025-12-31T23:59:59.000Z"),
       });
     });
@@ -184,8 +184,8 @@ describe("OrdersService", () => {
       );
 
       const whereArg = db.order.findMany.mock.calls[0][0]?.where;
-      expect(whereArg.createdAt.gte).toBeDefined();
-      expect(whereArg.createdAt.lte).toBeDefined();
+      expect((whereArg!.createdAt as any).gte).toBeDefined();
+      expect((whereArg!.createdAt as any).lte).toBeDefined();
     });
 
     it("does NOT add createdAt filter when neither from nor to is provided", async () => {

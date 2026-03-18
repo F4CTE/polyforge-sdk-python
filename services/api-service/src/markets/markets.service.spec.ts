@@ -93,8 +93,8 @@ describe("MarketsService", () => {
       await service.list(makeMarketQuery({ search: "eth" }) as any);
 
       const whereArg = db.market.findMany.mock.calls[0][0]?.where;
-      expect(whereArg.OR).toBeDefined();
-      expect(whereArg.OR[0]).toMatchObject({
+      expect(whereArg!.OR).toBeDefined();
+      expect(whereArg!.OR![0]).toMatchObject({
         title: { contains: "eth", mode: "insensitive" },
       });
     });
@@ -106,7 +106,7 @@ describe("MarketsService", () => {
       await service.list(makeMarketQuery({ category: "politics" }) as any);
 
       const whereArg = db.market.findMany.mock.calls[0][0]?.where;
-      expect(whereArg.category).toBe("politics");
+      expect(whereArg!.category).toBe("politics");
     });
 
     it("adds closed filter when closed is provided", async () => {
@@ -116,7 +116,7 @@ describe("MarketsService", () => {
       await service.list(makeMarketQuery({ closed: true }) as any);
 
       const whereArg = db.market.findMany.mock.calls[0][0]?.where;
-      expect(whereArg.closed).toBe(true);
+      expect(whereArg!.closed).toBe(true);
     });
 
     it("does NOT add closed filter when closed is undefined", async () => {

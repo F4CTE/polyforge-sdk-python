@@ -212,7 +212,7 @@ describe("SettingsService", () => {
       // Verify it is a valid bcrypt hash (not the plain text password)
       const isValidHash = await bcrypt.compare(
         "NewPassw0rd!",
-        dataArg.passwordHash,
+        dataArg.passwordHash as string,
       );
       expect(isValidHash).toBe(true);
     });

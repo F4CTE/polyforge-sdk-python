@@ -153,7 +153,7 @@ describe("BacktestsService", () => {
     });
 
     it("calculates totalPages and hasNext correctly", async () => {
-      db.backtestRun.findMany.mockResolvedValue([makeRun()]);
+      db.backtestRun.findMany.mockResolvedValue([makeRun() as any]);
       db.backtestRun.count.mockResolvedValue(25);
 
       const result = await service.list(
@@ -284,8 +284,8 @@ describe("BacktestsService", () => {
 
       const dataArg = db.backtestRun.create.mock.calls[0][0]?.data;
       expect(dataArg.dateRangeStart).toEqual(new Date(0));
-      expect(dataArg.dateRangeEnd.getTime()).toBeGreaterThanOrEqual(before);
-      expect(dataArg.dateRangeEnd.getTime()).toBeLessThanOrEqual(after);
+      expect((dataArg.dateRangeEnd as Date).getTime()).toBeGreaterThanOrEqual(before);
+      expect((dataArg.dateRangeEnd as Date).getTime()).toBeLessThanOrEqual(after);
     });
 
     it("includes a ts field in the Redis stream payload", async () => {
