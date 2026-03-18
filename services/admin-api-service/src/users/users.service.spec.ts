@@ -308,13 +308,13 @@ describe("UsersService", () => {
       const user = makeUser();
       const limits = {
         userId: "user-1",
-        maxStrategies: 5,
-        maxDailyOrders: 100,
+        maxRunningStrategies: 5,
+        maxOrdersPerDay: 100,
       };
       prisma.user.findUnique.mockResolvedValue(user as any);
       prisma.userLimit.upsert.mockResolvedValue(limits as any);
 
-      const dto = { maxStrategies: 5, maxDailyOrders: 100 };
+      const dto = { maxRunningStrategies: 5, maxOrdersPerDay: 100 };
       const result = await service.updateLimits("user-1", dto);
 
       expect(result).toEqual(limits);
@@ -325,7 +325,7 @@ describe("UsersService", () => {
       prisma.user.findUnique.mockResolvedValue(user as any);
       prisma.userLimit.upsert.mockResolvedValue({} as any);
 
-      const dto = { maxStrategies: 3 };
+      const dto = { maxRunningStrategies: 3 };
       await service.updateLimits("user-1", dto);
 
       const call = prisma.userLimit.upsert.mock.calls[0][0];
