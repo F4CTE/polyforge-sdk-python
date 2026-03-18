@@ -1,0 +1,133 @@
+<div class="pf-page">
+  <div class="page-header"><h1>Logs</h1></div>
+
+  <div class="strategy-filter-tabs" style="margin-bottom:16px">
+    <button class="filter-tab" [class.active]="activeTab() === 'audit'"  (click)="setTab('audit')">Audit Log</button>
+    <button class="filter-tab" [class.active]="activeTab() === 'events'" (click)="setTab('events')">Events</button>
+    <button class="filter-tab" [class.active]="activeTab() === 'logins'" (click)="setTab('logins')">Login History</button>
+  </div>
+
+  <!-- ─── Audit ──────────────────────────────────────────────────────── -->
+  @if (activeTab() === 'audit') {
+    <div class="admin-table-panel">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="pf-col-label">Action</th>
+              <th class="pf-col-label">Target</th>
+              <th class="pf-col-label">By</th>
+              <th class="pf-col-label" style="min-width:80px">IP</th>
+              <th class="pf-col-label" style="text-align:right">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading() && auditLogs().length === 0) {
+              @for (s of skeletons; track $index) { <tr class="table-row">@for (c of [1,2,3,4,5]; track c) { <td><p-skeleton height="12px" /></td> }</tr> }
+            } @else {
+              @for (log of auditLogs(); track log.id) {
+                <tr class="table-row">
+                  <td><span class="admin-badge muted">{{ log.action }}</span></td>
+                  <td><span style="font-size:12px;color:var(--pf-text-secondary)">{{ log.target ?? '—' }} <span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ log.targetId ? '(' + log.targetId.slice(0,8) + '…)' : '' }}</span></span></td>
+                  <td><span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ log.adminId ? 'admin' : (log.userId?.slice(0,8) ?? '—') }}…</span></td>
+                  <td><span class="pf-mono" style="font-size:11px">{{ log.ip ?? '—' }}</span></td>
+                  <td style="text-align:right"><span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ log.createdAt | date:'MMM d, HH:mm:ss' }}</span></td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    @if (auditPages() > 1) {
+      <div class="markets-pagination">
+        <p-button icon="pi pi-chevron-left"  severity="secondary" [text]="true" size="small" [disabled]="auditPage() === 1"           (onClick)="prevAudit()" />
+        <span class="pf-mono" style="font-size:13px;color:var(--pf-text-secondary)">{{ auditPage() }} / {{ auditPages() }}</span>
+        <p-button icon="pi pi-chevron-right" severity="secondary" [text]="true" size="small" [disabled]="auditPage() === auditPages()" (onClick)="nextAudit()" />
+      </div>
+    }
+  }
+
+  <!-- ─── Events ───────────────────────────────────────────────────────── -->
+  @if (activeTab() === 'events') {
+    <div class="admin-table-panel">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="pf-col-label">Type</th>
+              <th class="pf-col-label">User</th>
+              <th class="pf-col-label" style="min-width:300px">Payload</th>
+              <th class="pf-col-label" style="text-align:right">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading() && eventLogs().length === 0) {
+              @for (s of skeletons; track $index) { <tr class="table-row">@for (c of [1,2,3,4]; track c) { <td><p-skeleton height="12px" /></td> }</tr> }
+            } @else {
+              @for (log of eventLogs(); track log.id) {
+                <tr class="table-row">
+                  <td><span class="admin-badge muted">{{ log.type }}</span></td>
+                  <td><span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ log.userId?.slice(0,8) ?? '—' }}…</span></td>
+                  <td><span class="pf-mono log-payload">{{ log.payload | json }}</span></td>
+                  <td style="text-align:right"><span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ log.createdAt | date:'MMM d, HH:mm:ss' }}</span></td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    @if (eventPages() > 1) {
+      <div class="markets-pagination">
+        <p-button icon="pi pi-chevron-left"  severity="secondary" [text]="true" size="small" [disabled]="eventPage() === 1"           (onClick)="prevEvent()" />
+        <span class="pf-mono" style="font-size:13px;color:var(--pf-text-secondary)">{{ eventPage() }} / {{ eventPages() }}</span>
+        <p-button icon="pi pi-chevron-right" severity="secondary" [text]="true" size="small" [disabled]="eventPage() === eventPages()" (onClick)="nextEvent()" />
+      </div>
+    }
+  }
+
+  <!-- ─── Logins ───────────────────────────────────────────────────────── -->
+  @if (activeTab() === 'logins') {
+    <div class="admin-table-panel">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="pf-col-label">User</th>
+              <th class="pf-col-label" style="text-align:center">Result</th>
+              <th class="pf-col-label">IP</th>
+              <th class="pf-col-label">Reason</th>
+              <th class="pf-col-label" style="text-align:right">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading() && loginLogs().length === 0) {
+              @for (s of skeletons; track $index) { <tr class="table-row">@for (c of [1,2,3,4,5]; track c) { <td><p-skeleton height="12px" /></td> }</tr> }
+            } @else {
+              @for (log of loginLogs(); track log.id) {
+                <tr class="table-row">
+                  <td><span class="pf-mono" style="font-size:12px">{{ log.username }}</span></td>
+                  <td style="text-align:center">
+                    <i class="pi" [class.pi-check-circle]="log.success" [class.pi-times-circle]="!log.success"
+                       [style.color]="log.success ? 'var(--pf-success)' : 'var(--pf-danger)'"></i>
+                  </td>
+                  <td><span class="pf-mono" style="font-size:11px">{{ log.ip }}</span></td>
+                  <td><span style="font-size:12px;color:var(--pf-danger)">{{ log.failReason ?? '' }}</span></td>
+                  <td style="text-align:right"><span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ log.createdAt | date:'MMM d, HH:mm:ss' }}</span></td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    @if (loginPages() > 1) {
+      <div class="markets-pagination">
+        <p-button icon="pi pi-chevron-left"  severity="secondary" [text]="true" size="small" [disabled]="loginPage() === 1"           (onClick)="prevLogin()" />
+        <span class="pf-mono" style="font-size:13px;color:var(--pf-text-secondary)">{{ loginPage() }} / {{ loginPages() }}</span>
+        <p-button icon="pi pi-chevron-right" severity="secondary" [text]="true" size="small" [disabled]="loginPage() === loginPages()" (onClick)="nextLogin()" />
+      </div>
+    }
+  }
+</div>

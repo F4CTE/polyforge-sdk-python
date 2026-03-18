@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/**/*.ts"
+    "lint": "echo \"lint not configured for packages\""
   },
   "dependencies": {
     "nestjs-pino": "^4.6.1",

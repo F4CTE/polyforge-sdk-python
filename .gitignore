@@ -48,8 +48,8 @@ services/gateway/certs/
 # Generated API clients — committed intentionally
 # apps/*/src/app/api/  ← NE PAS ignorer
 
-# Logs
-logs/
+# Logs — only root-level log directories, not source folders named "logs"
+/logs/
 *.log
 
 # IDE

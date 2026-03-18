@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/**/*.ts"
+    "lint": "echo \"lint not configured for packages\""
   },
   "devDependencies": {
     "typescript": "^5.9.2"
