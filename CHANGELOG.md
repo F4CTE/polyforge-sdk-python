@@ -9,6 +9,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.8.0] — 2026-03-18
+
+### Security
+
+- **MEDIUM** — `DELETE /totp` (disable 2FA): added `@Throttle` — 10 attempts per hour per IP; prevents brute-forcing the password confirmation on TOTP disable
+
+---
+
 ## [1.7.0] — 2026-03-18
 
 ### Security
