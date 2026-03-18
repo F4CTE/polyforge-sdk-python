@@ -16,7 +16,7 @@ export default defineConfig({
                 'src/mail/**',         // SMTP — integration test territory
                 'src/**/*.controller.ts',  // thin HTTP adapters — service logic is fully tested
             ],
-            thresholds: { lines: 45, functions: 38, branches: 44, statements: 45 },
+            thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
         },
     },
 });
