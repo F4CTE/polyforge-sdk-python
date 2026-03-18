@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsIn, IsOptional, MinLength, Matches } from 'class-validator';
+import { IsString, IsInt, IsIn, IsOptional, MinLength, MaxLength, Matches } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ImportCredentialsDto {
@@ -16,6 +16,7 @@ export class ImportCredentialsDto {
     })
     @IsString()
     @MinLength(64)
+    @MaxLength(132)
     privateKey!: string;
 
     @ApiProperty({ example: 1, description: 'Signature type (0 = EOA, 1 = gnosis safe, 2 = magic link)' })
@@ -26,15 +27,18 @@ export class ImportCredentialsDto {
     @ApiPropertyOptional({ example: 'api-key-value', description: 'CLOB API key (required for sigType 0)' })
     @IsOptional()
     @IsString()
+    @MaxLength(500)
     apiKey?: string;
 
     @ApiPropertyOptional({ example: 'api-secret-value', description: 'CLOB API secret' })
     @IsOptional()
     @IsString()
+    @MaxLength(500)
     apiSecret?: string;
 
     @ApiPropertyOptional({ example: 'api-passphrase-value', description: 'CLOB API passphrase' })
     @IsOptional()
     @IsString()
+    @MaxLength(500)
     apiPassphrase?: string;
 }

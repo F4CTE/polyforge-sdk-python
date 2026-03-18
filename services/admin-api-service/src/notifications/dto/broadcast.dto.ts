@@ -1,4 +1,4 @@
-import { IsString, IsIn, IsOptional, IsArray, IsObject, MaxLength } from 'class-validator';
+import { IsString, IsIn, IsOptional, IsArray, IsObject, MaxLength, ArrayMaxSize, IsUUID } from 'class-validator';
 
 export class BroadcastDto {
     @IsString()
@@ -15,6 +15,8 @@ export class BroadcastDto {
 
     @IsOptional()
     @IsArray()
+    @ArrayMaxSize(10000)
+    @IsUUID('4', { each: true })
     userIds?: string[] | null;
 
     @IsOptional()

@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsBoolean, IsIn, IsInt, Min, Max, MaxLength } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsIn, IsInt, Min, Max, MaxLength, IsISO8601 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
@@ -29,11 +29,13 @@ export class PriceHistoryQueryDto {
     resolution?: string = '1h';
 
     @IsOptional()
-    @IsString()
+    @IsISO8601()
+    @MaxLength(30)
     from?: string;
 
     @IsOptional()
-    @IsString()
+    @IsISO8601()
+    @MaxLength(30)
     to?: string;
 
     @IsOptional()

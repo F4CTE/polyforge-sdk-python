@@ -1,4 +1,4 @@
-import { IsString, Length } from 'class-validator';
+import { IsString, Length, MinLength, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class TotpConfirmDto {
@@ -11,6 +11,8 @@ export class TotpConfirmDto {
 export class TotpDisableDto {
     @ApiProperty({ example: 'MySecurePassword1!', description: 'Current account password to confirm disable' })
     @IsString()
+    @MinLength(8)
+    @MaxLength(100)
     password!: string;
 }
 

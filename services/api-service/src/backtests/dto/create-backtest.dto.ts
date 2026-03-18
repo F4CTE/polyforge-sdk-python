@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsBoolean, IsISO8601 } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsISO8601, IsObject } from 'class-validator';
 
 export class CreateBacktestDto {
     @IsOptional()
@@ -18,5 +18,6 @@ export class CreateBacktestDto {
     quickMode?: boolean = false;
 
     @IsOptional()
-    strategyBlocks?: any;
+    @IsObject()
+    strategyBlocks?: Record<string, unknown>;
 }

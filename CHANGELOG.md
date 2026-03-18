@@ -9,6 +9,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.6.0] — 2026-03-18
+
+### Security
+
+- **HIGH** — `CreateStrategyDto`: `@ArrayMaxSize(50)` on triggers/conditions/actions, `@ArrayMaxSize(20)` on safety + tags; `@MaxLength(100)` on `BlockDto.type`; `@MaxLength(50, { each: true })` on tag strings — prevents memory exhaustion via unbounded block arrays
+- **HIGH** — `BroadcastDto` `userIds`: `@ArrayMaxSize(10000)` + `@IsUUID('4', { each: true })` — prevents query explosion from untrusted admin input
+- **HIGH** — `TotpDisableDto` `password`: added `@MinLength(8)` + `@MaxLength(100)` (was completely unvalidated)
+- **MEDIUM** — `CreateBacktestDto` `strategyBlocks`: changed `any` → `@IsObject() Record<string, unknown>` — removes untyped wildcard
+- **MEDIUM** — `UpdatePasswordDto` `newPassword`: added `@MaxLength(100)` (minLength existed, max was missing)
+- **MEDIUM** — `ResetPasswordDto` `newPassword`: added `@MaxLength(100)`
+- **MEDIUM** — `ImportCredentialsDto` (auth-service): `privateKey` capped at `@MaxLength(132)`; `apiKey/apiSecret/apiPassphrase` at `@MaxLength(500)`
+- **MEDIUM** — `ImportCredentialsDto` (signer-service): same bounds + `userId @MaxLength(255)`, `safeAddress @MaxLength(42)`
+- **MEDIUM** — `PriceHistoryQueryDto` `from`/`to`: changed `@IsString()` → `@IsISO8601() @MaxLength(30)` — validates date format, prevents ReDoS via crafted date strings
+- **MEDIUM** — WebSocket gateway: added 64 KB message size guard — oversized messages terminate the connection; `SUBSCRIBE_PRICES` tokenIds capped at 1000 entries
+
+---
+
 ## [1.5.0] — 2026-03-18
 
 ### Security

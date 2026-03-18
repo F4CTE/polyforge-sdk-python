@@ -82,6 +82,10 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         }
 
         client.on('message', (raw: Buffer) => {
+            if (raw.length > 65_536) {
+                client.terminate();
+                return;
+            }
             try {
                 const msg = JSON.parse(raw.toString());
                 this.handleMessage(client, msg);
@@ -152,6 +156,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
 
     private handleSubscribePrices(client: AuthedSocket, tokenIds: string[]) {
+        if (!Array.isArray(tokenIds) || tokenIds.length > 1000) return;
         for (const tokenId of tokenIds) {
             client.subscribedTokens.add(tokenId);
             if (!this.tokenSubscribers.has(tokenId)) {
