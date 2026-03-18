@@ -361,12 +361,12 @@ export class NotificationService {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
-  private async loadPrefs(userId: string): Promise<unknown> {
+  private async loadPrefs(userId: string): Promise<DispatchOptions | null> {
     const cacheKey = PREFS_CACHE_KEY(userId);
     const cached = await this.redis.get(cacheKey);
     if (cached) {
       try {
-        return JSON.parse(cached);
+        return JSON.parse(cached) as DispatchOptions;
       } catch {
         /* fall through */
       }
@@ -378,7 +378,7 @@ export class NotificationService {
     if (!prefs) return null;
 
     await this.redis.set(cacheKey, JSON.stringify(prefs), PREFS_TTL);
-    return prefs;
+    return prefs as unknown as DispatchOptions;
   }
 
   private async writeHistory(
