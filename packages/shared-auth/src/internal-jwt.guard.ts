@@ -19,7 +19,9 @@ export class InternalJwtGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Record<string, unknown>>();
+    const request = context
+      .switchToHttp()
+      .getRequest<Record<string, unknown>>();
     const token = this.extractToken(request);
 
     if (!token) {
