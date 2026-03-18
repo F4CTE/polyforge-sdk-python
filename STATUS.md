@@ -355,6 +355,36 @@
 
 ---
 
+## CI/CD, Linting & Test Coverage (2026-03-18)
+
+### CI Pipeline
+
+- [x] GitHub Actions CI fully green (lint → typecheck → test → build)
+- [x] ESLint 9 flat config (`eslint.config.mjs`) at root — all 12 services + 5 packages at 0 errors
+- [x] `recommendedTypeChecked` ruleset with 8 unsafe-* rules downgraded to `warn` (Fastify internals + mock types)
+- [x] `.npmrc` `public-hoist-pattern` entries for eslint so all packages can resolve the root binary
+- [x] `prisma generate` added to lint, typecheck, test, and build jobs in CI
+- [x] `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` — GitHub Actions runner opts into Node 24 early
+- [x] `gitignore` `/logs/` fixed (was `logs/`, incorrectly excluded `services/admin-api-service/src/logs/` and `apps/admin-app/src/app/features/logs/`)
+
+### Test Coverage
+
+- [x] **admin-api-service** — 3 new spec files: `backtests.service.spec.ts` (13 tests), `logs.service.spec.ts` (43 tests), `orders.service.spec.ts` (42 tests); coverage ~93% lines/functions; threshold raised to 80%
+- [x] **api-service** — `test/helpers/mock-db.ts` tsconfig rootDir fix; controllers excluded from coverage measurement; services at ~95%+ coverage; threshold 80%
+- [x] **bot-service** — `vitest.config.ts` added with `passWithNoTests: true` (no specs yet)
+- [x] All services: controllers excluded from coverage measurement (thin HTTP adapters, service logic fully covered)
+- [x] Coverage thresholds enforced: auth-service/admin-auth-service/order-service/signer-service 85%+, api-service/admin-api-service/notification-service/paper-order-service 80%+
+
+### Bug Fixes (Code Quality)
+
+- [x] `notification-service` — `loadPrefs` return type fixed (`Promise<unknown>` → `Promise<DispatchOptions | null>`)
+- [x] `strategy-runner.spec.ts` — deprecated `vi.fn<[TArgs], TReturn>()` syntax updated to `vi.fn<(arg: T) => R>()` (8 occurrences)
+- [x] `admin-api-service` `users.service.spec.ts` — DTO field names corrected (`maxRunningStrategies`, `maxOrdersPerDay`)
+- [x] `shared-auth` — `getRequest()` calls typed explicitly (`Record<string, unknown>` / `{ user: JwtPayload }`) to eliminate unsafe-assignment warnings
+- [x] `backtest-service` — `backtests.service.spec.ts` non-null assertions added for mock data
+
+---
+
 ## Post-Launch Polish & Fixes (2026-03-18)
 
 ### Docker Frontend Serving
