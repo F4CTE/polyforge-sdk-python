@@ -7,9 +7,12 @@ import * as QRCode from 'qrcode';
 import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 
-const PENDING_TOTP_TTL = 300; // 5 minutes
+const PENDING_TOTP_TTL = 300;   // 5 minutes
 const BACKUP_CODE_COUNT = 10;
 const ALGORITHM = 'aes-256-gcm';
+const TOTP_FAIL_MAX = 5;        // lock after 5 consecutive failures
+const TOTP_FAIL_WINDOW = 900;   // 15-minute lockout window (seconds)
+const failKey = (userId: string) => `totp:fail:${userId}`;
 
 @Injectable()
 export class TotpService {
@@ -135,33 +138,56 @@ export class TotpService {
     // ─── Verify (used during login) ───────────────────────────────────────────────
 
     async verify(userId: string, code: string): Promise<boolean> {
-        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        const client = this.redis.getClient();
 
+        // Reject immediately if account is locked out
+        const failCount = parseInt((await client.get(failKey(userId))) ?? '0', 10);
+        if (failCount >= TOTP_FAIL_MAX) {
+            throw new HttpException(
+                { code: 'TOTP_LOCKED', message: '2FA is temporarily locked due to too many failed attempts. Try again in 15 minutes.' },
+                HttpStatus.TOO_MANY_REQUESTS,
+            );
+        }
+
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
         if (!user || !user.totpEnabled || !user.totpSecret) return false;
 
         // Try TOTP code first
         const secret = this.decrypt(user.totpSecret);
+        let valid = false;
         try {
-            if (verifySync({ token: code, secret, strategy: 'totp' }).valid) return true;
+            if (verifySync({ token: code, secret, strategy: 'totp' }).valid) valid = true;
         } catch {
             // invalid code format — fall through to backup code check
         }
 
         // Try backup codes (constant-time comparison via hash)
-        const codeHash = createHash('sha256').update(code.toUpperCase()).digest('hex');
-        const matchIdx = user.totpBackupCodes.indexOf(codeHash);
+        if (!valid) {
+            const codeHash = createHash('sha256').update(code.toUpperCase()).digest('hex');
+            const matchIdx = user.totpBackupCodes.indexOf(codeHash);
+            if (matchIdx >= 0) {
+                const remaining = [...user.totpBackupCodes];
+                remaining.splice(matchIdx, 1);
+                await this.prisma.user.update({
+                    where: { id: userId },
+                    data: { totpBackupCodes: remaining },
+                });
+                valid = true;
+            }
+        }
 
-        if (matchIdx >= 0) {
-            // Burn the backup code
-            const remaining = [...user.totpBackupCodes];
-            remaining.splice(matchIdx, 1);
-            await this.prisma.user.update({
-                where: { id: userId },
-                data: { totpBackupCodes: remaining },
-            });
+        if (valid) {
+            // Clear failure counter on success
+            await client.del(failKey(userId));
             return true;
         }
 
+        // Increment failure counter; set TTL only on first failure so the
+        // window starts at the first bad attempt and doesn't keep sliding
+        const newCount = await client.incr(failKey(userId));
+        if (newCount === 1) {
+            await client.expire(failKey(userId), TOTP_FAIL_WINDOW);
+        }
         return false;
     }
 

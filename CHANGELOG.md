@@ -9,6 +9,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.9.0] — 2026-03-18
+
+### Security
+
+- **HIGH** — `TotpService.verify()`: account-level TOTP lockout via Redis — 5 consecutive wrong codes locks the account's 2FA for 15 minutes (`totp:fail:{userId}` counter with `INCR`/`EXPIRE`); counter clears on success; TTL set only on first failure so the window does not slide; throws `TOTP_LOCKED` (429) — prevents IP-distributed brute-force that bypasses per-IP throttling
+
+---
+
 ## [1.8.0] — 2026-03-18
 
 ### Security

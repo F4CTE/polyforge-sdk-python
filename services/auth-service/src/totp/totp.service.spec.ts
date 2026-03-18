@@ -7,11 +7,23 @@ import { verifySync } from 'otplib';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+function makeMockRedisClient() {
+    return {
+        get: vi.fn().mockResolvedValue(null),
+        del: vi.fn().mockResolvedValue(1),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+    };
+}
+
 function makeMockRedis() {
+    const ioClient = makeMockRedisClient();
     return {
         get: vi.fn(),
         set: vi.fn().mockResolvedValue(undefined),
         del: vi.fn().mockResolvedValue(undefined),
+        getClient: vi.fn().mockReturnValue(ioClient),
+        _ioClient: ioClient,
     };
 }
 
@@ -192,29 +204,87 @@ describe('TotpService', () => {
 
     describe('verify', () => {
         it('returns false when user does not exist', async () => {
+            redis._ioClient.get.mockResolvedValue(null);
             db.user.findUnique.mockResolvedValue(null);
             expect(await service.verify('nonexistent', '123456')).toBe(false);
         });
 
         it('returns false when TOTP is not enabled', async () => {
+            redis._ioClient.get.mockResolvedValue(null);
             const user = userFactory({ totpEnabled: false });
             db.user.findUnique.mockResolvedValue(user as any);
             expect(await service.verify(user.id, '123456')).toBe(false);
         });
 
         it('returns false when TOTP secret is null', async () => {
+            redis._ioClient.get.mockResolvedValue(null);
             const user = { ...userFactory({ totpEnabled: true }), totpSecret: null };
             db.user.findUnique.mockResolvedValue(user as any);
             expect(await service.verify(user.id, '123456')).toBe(false);
         });
 
-        it('burns a backup code on successful backup code usage', async () => {
+        it('throws TOTP_LOCKED (429) when fail counter is at or above threshold', async () => {
+            redis._ioClient.get.mockResolvedValue('5');
+
+            await expect(service.verify('user-id', '123456')).rejects.toMatchObject({
+                response: { code: 'TOTP_LOCKED' },
+                status: HttpStatus.TOO_MANY_REQUESTS,
+            });
+        });
+
+        it('increments fail counter on a bad code and sets TTL on first failure', async () => {
+            redis._ioClient.get.mockResolvedValue(null); // no prior failures
+            redis._ioClient.incr.mockResolvedValue(1);  // first failure
+
+            const encrypted = (service as any).encrypt('JBSWY3DPEHPK3PXP');
+            const user = { ...userFactory({ totpEnabled: true }), totpSecret: encrypted, totpBackupCodes: [] };
+            db.user.findUnique.mockResolvedValue(user as any);
+
+            const result = await service.verify(user.id, '000000');
+            expect(result).toBe(false);
+            expect(redis._ioClient.incr).toHaveBeenCalledWith(`totp:fail:${user.id}`);
+            expect(redis._ioClient.expire).toHaveBeenCalledWith(`totp:fail:${user.id}`, 900);
+        });
+
+        it('does not reset TTL on subsequent failures (incr > 1)', async () => {
+            redis._ioClient.get.mockResolvedValue('2'); // 2 prior failures
+            redis._ioClient.incr.mockResolvedValue(3);  // 3rd failure
+
+            const encrypted = (service as any).encrypt('JBSWY3DPEHPK3PXP');
+            const user = { ...userFactory({ totpEnabled: true }), totpSecret: encrypted, totpBackupCodes: [] };
+            db.user.findUnique.mockResolvedValue(user as any);
+
+            await service.verify(user.id, '000000');
+            expect(redis._ioClient.expire).not.toHaveBeenCalled();
+        });
+
+        it('clears fail counter on successful TOTP verify', async () => {
+            redis._ioClient.get.mockResolvedValue('2'); // had 2 prior failures
+
+            const encrypted = (service as any).encrypt('JBSWY3DPEHPK3PXP');
             const { createHash } = await import('crypto');
             const code = 'ABCD1234';
             const hash = createHash('sha256').update(code).digest('hex');
 
-            // Use the service's own encrypt method to generate a properly formatted secret
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const user = {
+                ...userFactory({ totpEnabled: true }),
+                totpSecret: encrypted,
+                totpBackupCodes: [hash],
+            };
+            db.user.findUnique.mockResolvedValue(user as any);
+            db.user.update.mockResolvedValue(user as any);
+
+            const result = await service.verify(user.id, code);
+            expect(result).toBe(true);
+            expect(redis._ioClient.del).toHaveBeenCalledWith(`totp:fail:${user.id}`);
+        });
+
+        it('burns a backup code on successful backup code usage', async () => {
+            redis._ioClient.get.mockResolvedValue(null);
+            const { createHash } = await import('crypto');
+            const code = 'ABCD1234';
+            const hash = createHash('sha256').update(code).digest('hex');
+
             const encrypted = (service as any).encrypt('JBSWY3DPEHPK3PXP');
 
             const user = {
@@ -225,11 +295,9 @@ describe('TotpService', () => {
             db.user.findUnique.mockResolvedValue(user as any);
             db.user.update.mockResolvedValue(user as any);
 
-            // The TOTP code won't match (wrong code), but backup code will match
             const result = await service.verify(user.id, code);
             expect(result).toBe(true);
 
-            // Backup code should be removed
             expect(db.user.update).toHaveBeenCalledWith({
                 where: { id: user.id },
                 data: { totpBackupCodes: ['other-hash'] },
