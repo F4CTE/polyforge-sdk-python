@@ -31,8 +31,7 @@
     "@polyforge/shared-db": "workspace:*",
     "@polyforge/shared-redis": "workspace:*",
     "@polyforge/shared-types": "workspace:*",
-    "@types/bcrypt": "^6.0.0",
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.0",
     "class-validator": "^0.14.0",
     "fastify": "^5.8.2",
@@ -45,6 +44,7 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.1.16",

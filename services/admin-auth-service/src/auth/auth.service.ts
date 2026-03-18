@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaAdminService } from '@polyforge/shared-db';
 import { RedisService } from '@polyforge/shared-redis';
 import { AdminJwtPayload, AdminRole } from '@polyforge/shared-types';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { AdminLoginDto } from './dto/login.dto';
 
