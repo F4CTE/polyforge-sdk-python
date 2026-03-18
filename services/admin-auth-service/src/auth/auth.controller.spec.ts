@@ -63,5 +63,14 @@ describe('AdminAuthController', () => {
             expect(authService.logout).toHaveBeenCalledWith('Bearer admin-jwt');
             expect(reply.clearCookie).toHaveBeenCalledWith('pf_admin_token', { path: '/' });
         });
+
+        it('falls back to Authorization header when no cookie is present', async () => {
+            const req = { cookies: {}, headers: { authorization: 'Bearer header-jwt' } } as any;
+            const reply = makeReply();
+
+            await controller.logout(req, reply);
+            expect(authService.logout).toHaveBeenCalledWith('Bearer header-jwt');
+            expect(reply.clearCookie).toHaveBeenCalledWith('pf_admin_token', { path: '/' });
+        });
     });
 });

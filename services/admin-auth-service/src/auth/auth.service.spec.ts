@@ -39,7 +39,7 @@ describe('AdminAuthService', () => {
 
     beforeEach(() => {
         adminDb = { admin: { findUnique: vi.fn() } };
-        redis = { set: vi.fn().mockResolvedValue('OK'), del: vi.fn().mockResolvedValue(1) };
+        redis = { set: vi.fn().mockResolvedValue('OK'), del: vi.fn().mockResolvedValue(1), get: vi.fn().mockResolvedValue(null) };
         jwtService = {
             sign: vi.fn().mockReturnValue('signed-admin-jwt'),
             verify: vi.fn(),
@@ -144,6 +144,70 @@ describe('AdminAuthService', () => {
             const session1 = redis.set.mock.calls[0][0] as string;
             const session2 = redis.set.mock.calls[1][0] as string;
             expect(session1).not.toBe(session2);
+        });
+    });
+
+    // ── getMe ─────────────────────────────────────────────────────────────────
+
+    describe('getMe', () => {
+        it('returns admin profile when token and session are valid', async () => {
+            const admin = await adminFactory();
+            const sessionId = faker.string.uuid();
+            jwtService.verify.mockReturnValue({ sub: admin.id, email: admin.email, role: admin.role, sessionId });
+            redis.get.mockResolvedValue(admin.id);
+            adminDb.admin.findUnique.mockResolvedValue(admin);
+
+            const result = await service.getMe('valid-token');
+
+            expect(result.id).toBe(admin.id);
+            expect(result.email).toBe(admin.email);
+            expect(result.role).toBe(admin.role);
+            expect(result.displayName).toBe(admin.displayName);
+        });
+
+        it('throws UNAUTHORIZED (401) when JWT is invalid', async () => {
+            jwtService.verify.mockImplementation(() => { throw new Error('invalid'); });
+
+            await expect(service.getMe('bad-token')).rejects.toMatchObject({
+                response: { code: 'UNAUTHORIZED' },
+                status: 401,
+            });
+        });
+
+        it('throws UNAUTHORIZED (401) when Redis session does not exist', async () => {
+            const sessionId = faker.string.uuid();
+            jwtService.verify.mockReturnValue({ sub: 'admin-id', sessionId });
+            redis.get.mockResolvedValue(null);
+
+            await expect(service.getMe('token')).rejects.toMatchObject({
+                response: { code: 'SESSION_EXPIRED' },
+                status: 401,
+            });
+        });
+
+        it('throws ACCOUNT_INACTIVE (403) when admin is inactive', async () => {
+            const admin = await adminFactory({ active: false });
+            const sessionId = faker.string.uuid();
+            jwtService.verify.mockReturnValue({ sub: admin.id, sessionId });
+            redis.get.mockResolvedValue(admin.id);
+            adminDb.admin.findUnique.mockResolvedValue(admin);
+
+            await expect(service.getMe('token')).rejects.toMatchObject({
+                response: { code: 'ACCOUNT_INACTIVE' },
+                status: 403,
+            });
+        });
+
+        it('throws ACCOUNT_INACTIVE (403) when admin is not found', async () => {
+            const sessionId = faker.string.uuid();
+            jwtService.verify.mockReturnValue({ sub: faker.string.uuid(), sessionId });
+            redis.get.mockResolvedValue('some-admin-id');
+            adminDb.admin.findUnique.mockResolvedValue(null);
+
+            await expect(service.getMe('token')).rejects.toMatchObject({
+                response: { code: 'ACCOUNT_INACTIVE' },
+                status: 403,
+            });
         });
     });
 

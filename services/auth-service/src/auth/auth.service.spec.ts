@@ -145,6 +145,74 @@ describe('AuthService', () => {
         });
     });
 
+    // ── register — invite-only mode ───────────────────────────────────────────
+
+    describe('register (invite-only mode)', () => {
+        beforeEach(() => {
+            // Enable invite-only via Redis flag
+            vi.mocked(redis.get).mockImplementation((key: string) =>
+                key === 'config:invite_only' ? Promise.resolve('true') : Promise.resolve(null),
+            );
+        });
+
+        it('throws INVITE_REQUIRED (403) when no invite code is provided', async () => {
+            await expect(service.register(makeRegisterDto() as any)).rejects.toMatchObject({
+                response: { code: 'INVITE_REQUIRED' },
+                status: 403,
+            });
+        });
+
+        it('throws INVITE_INVALID (403) when invite code is not in Redis', async () => {
+            // redis.get returns null for the invite key (already mocked above)
+            await expect(
+                service.register(makeRegisterDto({ inviteCode: 'POLY-AAAAAA' }) as any),
+            ).rejects.toMatchObject({
+                response: { code: 'INVITE_INVALID' },
+                status: 403,
+            });
+        });
+
+        it('deletes the invite key when only 1 use remains', async () => {
+            vi.mocked(redis.get).mockImplementation((key: string) => {
+                if (key === 'config:invite_only') return Promise.resolve('true');
+                if (key === 'invite:POLY-AAAAAA') return Promise.resolve('1');
+                return Promise.resolve(null);
+            });
+            const user = userFactory();
+            vi.mocked(usersService.create).mockResolvedValue(user as any);
+
+            await service.register(makeRegisterDto({ inviteCode: 'POLY-AAAAAA' }) as any);
+
+            expect(redis.del).toHaveBeenCalledWith('invite:POLY-AAAAAA');
+        });
+
+        it('decrements the invite key when more than 1 use remains', async () => {
+            const decrMock = vi.fn().mockResolvedValue(2);
+            vi.mocked(redis.getClient).mockReturnValue({ decr: decrMock } as any);
+            vi.mocked(redis.get).mockImplementation((key: string) => {
+                if (key === 'config:invite_only') return Promise.resolve('true');
+                if (key === 'invite:POLY-AAAAAA') return Promise.resolve('3');
+                return Promise.resolve(null);
+            });
+            const user = userFactory();
+            vi.mocked(usersService.create).mockResolvedValue(user as any);
+
+            await service.register(makeRegisterDto({ inviteCode: 'POLY-AAAAAA' }) as any);
+
+            expect(decrMock).toHaveBeenCalledWith('invite:POLY-AAAAAA');
+        });
+
+        it('respects env-var fallback when Redis flag is absent', async () => {
+            vi.mocked(redis.get).mockResolvedValue(null); // no Redis flag
+            vi.mocked(config.get).mockReturnValue('true'); // env var is true
+
+            await expect(service.register(makeRegisterDto() as any)).rejects.toMatchObject({
+                response: { code: 'INVITE_REQUIRED' },
+                status: 403,
+            });
+        });
+    });
+
     // ── login ─────────────────────────────────────────────────────────────────
 
     describe('login', () => {
@@ -241,6 +309,15 @@ describe('AuthService', () => {
 
             const result = await service.login(makeLoginDto() as any);
             expect(JSON.stringify(result)).not.toContain('passwordHash');
+        });
+
+        it('does not throw when rehashIfNeeded fails (fire-and-forget catch)', async () => {
+            const user = userFactory({ totpEnabled: false });
+            vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+            vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+            vi.mocked(usersService.rehashIfNeeded).mockRejectedValue(new Error('db error'));
+
+            await expect(service.login(makeLoginDto() as any)).resolves.toBeDefined();
         });
 
         it('includes status, polymarketConnected, emailVerified in response', async () => {
@@ -358,6 +435,14 @@ describe('AuthService', () => {
 
             await new Promise(r => setTimeout(r, 50)); // let fire-and-forget settle
             expect(usersService.createPasswordResetToken).not.toHaveBeenCalled();
+        });
+
+        it('does not throw when the reset email fails (fire-and-forget catch)', async () => {
+            const user = userFactory({ deleted: false });
+            vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+            vi.mocked(usersService.createPasswordResetToken).mockRejectedValue(new Error('db error'));
+
+            await expect(service.forgotPassword({ email: user.email })).resolves.toBeDefined();
         });
     });
 
