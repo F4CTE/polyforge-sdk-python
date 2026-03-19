@@ -313,7 +313,7 @@ services:
       AWS_SES_FROM_EMAIL: noreply@polyforge.app
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-dev-disabled}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-dev-disabled}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       PORT: "3010"
       NODE_ENV: ${NODE_ENV:-development}
     ports:
@@ -403,7 +403,7 @@ services:
       EMAIL_DRIVER: ${EMAIL_DRIVER:-mailhog}
       MAILHOG_HOST: mailhog
       MAILHOG_PORT: "1025"
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       INVITE_ONLY: ${INVITE_ONLY:-false}
       AUTH_SERVICE_PORT: "3001"
       NODE_ENV: ${NODE_ENV:-development}
