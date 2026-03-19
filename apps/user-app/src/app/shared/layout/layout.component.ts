@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { NgClass, SlicePipe } from '@angular/common';
+import { SlicePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
 import { MenuModule } from 'primeng/menu';
@@ -17,7 +17,7 @@ interface NavItem {
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgClass, SlicePipe, ButtonModule, AvatarModule, MenuModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, SlicePipe, ButtonModule, AvatarModule, MenuModule],
   providers: [MessageService],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',

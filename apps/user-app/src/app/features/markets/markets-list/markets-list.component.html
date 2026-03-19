@@ -95,9 +95,9 @@
               </td>
               <td style="text-align:right">
                 @if (isClosingSoon(market.endDate)) {
-                  <span class="closing-soon pf-mono" [pTooltip]="market.endDate | date:'medium'" tooltipPosition="top">{{ daysUntil(market.endDate) }}</span>
+                  <span class="closing-soon pf-mono" [pTooltip]="(market.endDate | date:'medium') ?? ''" tooltipPosition="top">{{ daysUntil(market.endDate) }}</span>
                 } @else {
-                  <span class="pf-mono" style="color:var(--pf-text-secondary)" [pTooltip]="market.endDate | date:'medium'" tooltipPosition="top">{{ daysUntil(market.endDate) }}</span>
+                  <span class="pf-mono" style="color:var(--pf-text-secondary)" [pTooltip]="(market.endDate | date:'medium') ?? ''" tooltipPosition="top">{{ daysUntil(market.endDate) }}</span>
                 }
               </td>
             </tr>
