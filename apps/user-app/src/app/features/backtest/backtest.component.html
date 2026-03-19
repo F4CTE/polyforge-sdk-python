@@ -26,11 +26,15 @@
       </div>
       <div class="backtest-field">
         <label class="settings-label">Start Date</label>
-        <input pInputText type="date" [(ngModel)]="dateStart" class="backtest-date-input" />
+        <p-datepicker [(ngModel)]="dateStartDate" dateFormat="yy-mm-dd" [showIcon]="true"
+                      placeholder="Start date" styleClass="backtest-date-input"
+                      (onSelect)="onDateStartSelect($event)" />
       </div>
       <div class="backtest-field">
         <label class="settings-label">End Date</label>
-        <input pInputText type="date" [(ngModel)]="dateEnd" class="backtest-date-input" />
+        <p-datepicker [(ngModel)]="dateEndDate" dateFormat="yy-mm-dd" [showIcon]="true"
+                      placeholder="End date" styleClass="backtest-date-input"
+                      (onSelect)="onDateEndSelect($event)" />
       </div>
       <div class="backtest-field backtest-field-action">
         <p-button

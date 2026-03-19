@@ -76,6 +76,19 @@
   --pf-icon-lg: 20px;
   --pf-icon-xl: 24px;
 
+  /* Inputs */
+  --pf-input-bg:           #0D1421;
+  --pf-input-border:       #1E3350;
+  --pf-input-border-hover: #264060;
+  --pf-input-border-focus: #06B6D4;
+  --pf-input-text:         #E8EDF5;
+  --pf-input-placeholder:  #445E7A;
+  --pf-input-focus-glow:   0 0 0 2px rgba(6, 182, 212, 0.15);
+
+  /* Error message */
+  --pf-error-bg:     rgba(239, 68, 68, 0.10);
+  --pf-error-border: rgba(239, 68, 68, 0.25);
+
   /* Animation */
   --pf-duration-fast:   100ms;
   --pf-duration-normal: 200ms;

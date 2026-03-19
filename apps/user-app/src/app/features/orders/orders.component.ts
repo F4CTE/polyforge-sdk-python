@@ -80,9 +80,9 @@ export class OrdersComponent implements OnInit {
   }
 
   fillRatio(order: Order): string {
-    const filled = parseFloat(order.filledSize);
     const total  = parseFloat(order.size);
     if (!total) return '—';
-    return `${order.filledSize} / ${order.size}`;
+    const filled = order.fillSize ?? '0';
+    return `${filled} / ${order.size}`;
   }
 }

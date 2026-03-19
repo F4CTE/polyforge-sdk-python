@@ -96,11 +96,15 @@ type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
                     </td>
                     <td>
                       @if (t.assignedToName) {
-                        <span style="font-size:12px;color:var(--pf-text-secondary)">
-                          <i class="pi pi-user" style="font-size:10px;margin-right:4px"></i>{{ t.assignedToName }}
-                        </span>
+                        <div style="display:flex;align-items:center;gap:8px">
+                          <span class="assigned-avatar" [style.background]="avatarBg(t.assignedToName)">{{ avatarInitial(t.assignedToName) }}</span>
+                          <span style="font-size:12px;font-weight:500;color:var(--pf-text-secondary)">{{ t.assignedToName }}</span>
+                        </div>
                       } @else {
-                        <span style="font-size:11px;color:var(--pf-text-muted);font-style:italic">Unassigned</span>
+                        <div style="display:flex;align-items:center;gap:8px">
+                          <span class="assigned-avatar unassigned">?</span>
+                          <span style="font-size:11px;color:var(--pf-text-muted);font-style:italic">Unassigned</span>
+                        </div>
                       }
                     </td>
                     <td style="text-align:right">
@@ -196,5 +200,24 @@ export class TicketsComponent implements OnInit {
   }
   priorityBg(p: TicketPriority): string {
     return { LOW: 'rgba(122,148,180,0.08)', MEDIUM: 'rgba(6,182,212,0.1)', HIGH: 'rgba(245,158,11,0.1)', URGENT: 'rgba(239,68,68,0.1)' }[p] ?? 'transparent';
+  }
+
+  avatarInitial(name: string): string {
+    return (name ?? '').charAt(0).toUpperCase() || '?';
+  }
+
+  private readonly avatarColors = [
+    'rgba(6,182,212,0.25)',
+    'rgba(16,185,129,0.25)',
+    'rgba(245,158,11,0.25)',
+    'rgba(139,92,246,0.25)',
+    'rgba(236,72,153,0.25)',
+    'rgba(59,130,246,0.25)',
+  ];
+
+  avatarBg(name: string): string {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return this.avatarColors[Math.abs(hash) % this.avatarColors.length];
   }
 }

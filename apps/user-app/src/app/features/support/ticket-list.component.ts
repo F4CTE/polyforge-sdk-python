@@ -77,11 +77,11 @@ import { TicketsApiService, TicketSummary, TicketStatus } from '../../core/servi
     .ticket-row {
       display: block;
       padding: 16px 20px;
-      border-bottom: 1px solid var(--pf-border);
+      border-bottom: 1px solid var(--pf-border-subtle);
       text-decoration: none;
       color: inherit;
       transition: background 0.15s;
-      &:hover { background: var(--pf-surface-hover); }
+      &:hover { background: var(--pf-bg-overlay); }
     }
     .ticket-row-top {
       display: flex;
@@ -98,9 +98,10 @@ import { TicketsApiService, TicketSummary, TicketStatus } from '../../core/servi
     .ticket-status-badge {
       font-size: 11px;
       font-weight: 600;
-      padding: 2px 8px;
+      padding: 2px 10px;
       border-radius: 999px;
       white-space: nowrap;
+      letter-spacing: 0.02em;
     }
     .ticket-row-bottom {
       display: flex;
@@ -110,16 +111,25 @@ import { TicketsApiService, TicketSummary, TicketStatus } from '../../core/servi
       color: var(--pf-text-muted);
     }
     .ticket-category {
-      font-family: var(--pf-font-mono);
+      font-family: 'JetBrains Mono', monospace;
       text-transform: uppercase;
       font-size: 10px;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
+      color: var(--pf-text-secondary);
+      background: var(--pf-bg-elevated);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .ticket-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
     }
     .ticket-preview {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       max-width: 400px;
+      color: var(--pf-text-secondary);
     }
   `],
 })

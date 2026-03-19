@@ -83,14 +83,18 @@ import { TicketsApiService, TicketDetail, TicketStatus } from '../../core/servic
     .ticket-status-badge {
       font-size: 11px;
       font-weight: 600;
-      padding: 2px 8px;
+      padding: 2px 10px;
       border-radius: 999px;
       white-space: nowrap;
+      letter-spacing: 0.02em;
     }
     .ticket-message {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--pf-border);
-      &.admin { background: rgba(6,182,212,0.03); }
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--pf-border-subtle);
+      &.admin {
+        background: rgba(6,182,212,0.04);
+        border-left: 3px solid var(--pf-cyan-500);
+      }
     }
     .msg-header {
       display: flex;
@@ -108,11 +112,11 @@ import { TicketsApiService, TicketDetail, TicketStatus } from '../../core/servic
     .msg-time {
       font-size: 11px;
       color: var(--pf-text-muted);
-      font-family: var(--pf-font-mono);
+      font-family: 'JetBrains Mono', monospace;
     }
     .msg-body {
       font-size: 14px;
-      line-height: 1.6;
+      line-height: 1.7;
       color: var(--pf-text-secondary);
       white-space: pre-wrap;
     }

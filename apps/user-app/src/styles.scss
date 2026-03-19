@@ -312,17 +312,65 @@ html, body {
     }
   }
 
+  // Dark-themed p-card override for auth pages
+  .p-card,
+  p-card {
+    --p-card-background: var(--pf-bg-elevated);
+    --p-card-border-color: var(--pf-border-default);
+    --p-card-shadow: var(--pf-shadow-md), 0 0 20px rgba(6, 182, 212, 0.08);
+
+    .p-card-body {
+      padding: var(--pf-space-8);
+    }
+  }
+
   h2 {
     margin: 0 0 var(--pf-space-2);
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--pf-text-primary);
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--pf-cyan-300), var(--pf-cyan-500));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .auth-subtitle {
     color: var(--pf-text-secondary);
     margin-bottom: var(--pf-space-6);
     font-size: 14px;
+  }
+
+  // Full-width inputs inside auth card
+  .p-inputtext,
+  input[pInputText] {
+    width: 100%;
+  }
+
+  .p-password,
+  p-password {
+    display: block;
+    width: 100%;
+
+    .p-inputtext {
+      width: 100%;
+    }
+  }
+
+  // Full-width sign-in button
+  .p-button {
+    width: 100%;
+    justify-content: center;
+    padding-block: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    margin-top: var(--pf-space-2);
+  }
+
+  // Error message dark styling
+  .p-message.p-message-error {
+    background: var(--pf-error-bg);
+    border-color: var(--pf-error-border);
+    color: #F87171;
   }
 
   .auth-footer {
@@ -359,6 +407,101 @@ html, body {
   font-size: 12px;
   color: var(--pf-danger);
   margin-top: var(--pf-space-1);
+}
+
+// ─── Global dark input overrides ────────────────────────────────────────────
+// Ensures all PrimeNG form inputs use dark backgrounds consistently
+
+.p-inputtext,
+input.p-inputtext,
+.p-select,
+.p-textarea,
+.p-inputnumber-input {
+  background: var(--pf-input-bg) !important;
+  border-color: var(--pf-input-border) !important;
+  color: var(--pf-input-text) !important;
+  transition: border-color var(--pf-duration-normal), box-shadow var(--pf-duration-normal);
+
+  &::placeholder {
+    color: var(--pf-input-placeholder);
+  }
+
+  &:hover {
+    border-color: var(--pf-input-border-hover) !important;
+  }
+
+  &:focus,
+  &.p-focus {
+    border-color: var(--pf-input-border-focus) !important;
+    box-shadow: var(--pf-input-focus-glow) !important;
+    outline: none;
+  }
+}
+
+// Password wrapper inherits dark style
+.p-password .p-inputtext {
+  background: var(--pf-input-bg) !important;
+  border-color: var(--pf-input-border) !important;
+  color: var(--pf-input-text) !important;
+
+  &:hover {
+    border-color: var(--pf-input-border-hover) !important;
+  }
+
+  &:focus {
+    border-color: var(--pf-input-border-focus) !important;
+    box-shadow: var(--pf-input-focus-glow) !important;
+  }
+}
+
+// Global error message override for dark theme
+.p-message.p-message-error,
+.p-message-error {
+  background: var(--pf-error-bg) !important;
+  border-color: var(--pf-error-border) !important;
+  color: #F87171 !important;
+}
+
+// DatePicker dark theme
+.p-datepicker .p-inputtext,
+.p-datepicker-input {
+  background: var(--pf-input-bg) !important;
+  border-color: var(--pf-input-border) !important;
+  color: var(--pf-input-text) !important;
+
+  &:focus {
+    border-color: var(--pf-input-border-focus) !important;
+    box-shadow: var(--pf-input-focus-glow) !important;
+  }
+}
+
+.p-datepicker-panel {
+  background: var(--pf-bg-elevated) !important;
+  border-color: var(--pf-border-default) !important;
+  color: var(--pf-text-primary) !important;
+}
+
+// Select dropdown dark theme
+.p-select-overlay,
+.p-select-panel {
+  background: var(--pf-bg-elevated) !important;
+  border-color: var(--pf-border-default) !important;
+  color: var(--pf-text-primary) !important;
+}
+
+.p-select-option {
+  color: var(--pf-text-secondary) !important;
+
+  &:hover,
+  &.p-focus {
+    background: var(--pf-bg-overlay) !important;
+    color: var(--pf-text-primary) !important;
+  }
+
+  &.p-selected {
+    background: var(--pf-cyan-glow) !important;
+    color: var(--pf-cyan-400) !important;
+  }
 }
 
 // ─── Misc utilities ──────────────────────────────────────────────────────────

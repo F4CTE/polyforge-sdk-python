@@ -55,12 +55,49 @@ export const AdminTheme = definePreset(Aura, {
       colorScheme: {
         dark: {
           root: {
-            background: '{surface.800}',
+            background: '{surface.900}',
             borderColor: '{surface.600}',
             hoverBorderColor: '{surface.500}',
             focusBorderColor: '{primary.500}',
-            color: '{surface.100}',
-            placeholderColor: '{surface.400}',
+            color: '{surface.50}',
+            placeholderColor: '{surface.300}',
+            borderRadius: '6px',
+            paddingX: '12px',
+            paddingY: '10px',
+            focusRing: {
+              width: '2px',
+              style: 'solid',
+              color: 'rgba(6,182,212,0.25)',
+              offset: '0',
+            },
+          },
+        },
+      },
+    },
+    password: {
+      colorScheme: {
+        dark: {
+          root: {
+            background: '{surface.900}',
+            borderColor: '{surface.600}',
+            color: '{surface.50}',
+            placeholderColor: '{surface.300}',
+            hoverBorderColor: '{surface.500}',
+            focusBorderColor: '{primary.500}',
+          },
+        },
+      },
+    },
+    textarea: {
+      colorScheme: {
+        dark: {
+          root: {
+            background: '{surface.900}',
+            borderColor: '{surface.600}',
+            color: '{surface.50}',
+            placeholderColor: '{surface.300}',
+            hoverBorderColor: '{surface.500}',
+            focusBorderColor: '{primary.500}',
           },
         },
       },

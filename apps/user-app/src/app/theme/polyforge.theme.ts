@@ -91,17 +91,79 @@ export const PolyforgeTheme = definePreset(Aura, {
       colorScheme: {
         dark: {
           root: {
-            background:       '#0D1421',
-            borderColor:      '#1E3350',
-            color:            '#E8EDF5',
-            placeholderColor: '#445E7A',
+            background:       '{surface.900}',
+            borderColor:      '{surface.500}',
+            color:            '{surface.50}',
+            placeholderColor: '{surface.300}',
             borderRadius:     '6px',
             paddingX:         '12px',
-            paddingY:         '8px',
+            paddingY:         '10px',
             fontSize:         '14px',
-            hoverBorderColor: '#264060',
+            hoverBorderColor: '{surface.400}',
             focusBorderColor: '#06B6D4',
-            focusShadow:      '0 0 0 2px rgba(6,182,212,0.15)',
+            focusRing: {
+              width:  '2px',
+              style:  'solid',
+              color:  'rgba(6,182,212,0.25)',
+              offset: '0',
+            },
+          },
+        },
+      },
+    },
+
+    password: {
+      colorScheme: {
+        dark: {
+          root: {
+            background:       '{surface.900}',
+            borderColor:      '{surface.500}',
+            color:            '{surface.50}',
+            placeholderColor: '{surface.300}',
+            hoverBorderColor: '{surface.400}',
+            focusBorderColor: '#06B6D4',
+          },
+        },
+      },
+    },
+
+    select: {
+      colorScheme: {
+        dark: {
+          root: {
+            background:       '{surface.900}',
+            borderColor:      '{surface.500}',
+            color:            '{surface.50}',
+            placeholderColor: '{surface.300}',
+            hoverBorderColor: '{surface.400}',
+            focusBorderColor: '#06B6D4',
+          },
+        },
+      },
+    },
+
+    textarea: {
+      colorScheme: {
+        dark: {
+          root: {
+            background:       '{surface.900}',
+            borderColor:      '{surface.500}',
+            color:            '{surface.50}',
+            placeholderColor: '{surface.300}',
+            hoverBorderColor: '{surface.400}',
+            focusBorderColor: '#06B6D4',
+          },
+        },
+      },
+    },
+
+    message: {
+      colorScheme: {
+        dark: {
+          error: {
+            background:  'rgba(239,68,68,0.10)',
+            borderColor: 'rgba(239,68,68,0.25)',
+            color:       '#F87171',
           },
         },
       },
@@ -291,6 +353,44 @@ export const PolyforgeTheme = definePreset(Aura, {
             activeColor:      '#06B6D4',
             fontSize:         '14px',
             padding:          '8px 16px',
+          },
+        },
+      },
+    },
+
+    datepicker: {
+      colorScheme: {
+        dark: {
+          root: {
+            background:       '{surface.900}',
+            borderColor:      '{surface.500}',
+            color:            '{surface.50}',
+            hoverBorderColor: '{surface.400}',
+            focusBorderColor: '#06B6D4',
+          },
+          panel: {
+            background:  '#111D2E',
+            borderColor: '#1E3350',
+            color:       '#E8EDF5',
+          },
+          header: {
+            background: '#111D2E',
+            color:      '#E8EDF5',
+          },
+          dayCell: {
+            selectedBackground: '#06B6D4',
+            selectedColor:      '#080C14',
+          },
+        },
+      },
+    },
+
+    toggleswitch: {
+      colorScheme: {
+        dark: {
+          root: {
+            checkedBackground:      '#06B6D4',
+            checkedHoverBackground: '#0891B2',
           },
         },
       },

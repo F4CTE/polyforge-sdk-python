@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy, inject, signal, DestroyRef } from '@angular/core';
 import { DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { forkJoin } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
@@ -8,10 +10,19 @@ import { MessageService } from 'primeng/api';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { HealthResponse, ServiceHealth } from '../../core/models/admin.model';
 
+interface DashboardStat {
+  label: string;
+  value: number | null;
+  icon: string;
+  color: string;
+  bg: string;
+  route: string;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, TitleCasePipe, ButtonModule, SkeletonModule, ToastModule],
+  imports: [DatePipe, DecimalPipe, TitleCasePipe, RouterLink, ButtonModule, SkeletonModule, ToastModule],
   providers: [MessageService],
   templateUrl: './dashboard.component.html',
 })
@@ -28,11 +39,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
   inviteOnlyLoading = signal(false);
   inviteOnlyToggling = signal(false);
 
+  statsLoading = signal(true);
+  stats = signal<DashboardStat[]>([
+    { label: 'Total Users',       value: null, icon: 'pi pi-users',       color: 'var(--pf-cyan-500)',  bg: 'rgba(6,182,212,0.1)',    route: '/users' },
+    { label: 'Active Strategies', value: null, icon: 'pi pi-bolt',        color: 'var(--pf-success)',   bg: 'rgba(16,185,129,0.1)',   route: '/strategies' },
+    { label: 'Total Orders',      value: null, icon: 'pi pi-shopping-bag', color: 'var(--pf-warning)',  bg: 'rgba(245,158,11,0.1)',   route: '/orders' },
+    { label: 'Open Tickets',      value: null, icon: 'pi pi-comments',    color: 'var(--pf-info, #3b82f6)', bg: 'rgba(59,130,246,0.1)', route: '/tickets' },
+  ]);
+
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
     this.load();
     this.loadConfig();
+    this.loadStats();
     this.refreshTimer = setInterval(() => this.load(), 15_000);
   }
 
@@ -50,6 +70,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.loading.set(false);
         },
         error: () => this.loading.set(false),
+      });
+  }
+
+  loadStats(): void {
+    this.statsLoading.set(true);
+    forkJoin({
+      users:      this.api.users({ page: 1, limit: 1 }),
+      strategies: this.api.strategies({ page: 1, limit: 1, status: 'RUNNING' }),
+      orders:     this.api.orders({ page: 1, limit: 1 }),
+      tickets:    this.api.tickets({ page: 1, limit: 1, status: 'OPEN' }),
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.stats.update(s => s.map((stat, i) => ({
+            ...stat,
+            value: [res.users.total, res.strategies.total, res.orders.total, res.tickets.total][i],
+          })));
+          this.statsLoading.set(false);
+        },
+        error: () => this.statsLoading.set(false),
       });
   }
 

@@ -1112,4 +1112,49 @@ html, body {
 
 ---
 
+---
+
+## 13. Form Inputs — Dark Theme Tokens
+
+Tous les champs de saisie (inputs, selects, textareas, datepickers) utilisent un fond sombre cohérent avec le thème global. Jamais de fond blanc.
+
+```
+─────────────────────────────────────────────────────────────
+INPUT TOKENS (tokens.css)
+─────────────────────────────────────────────────────────────
+--pf-input-bg             #0D1421   Fond des inputs
+--pf-input-border         #1E3350   Bordure par défaut
+--pf-input-border-hover   #264060   Bordure au survol
+--pf-input-border-focus   #06B6D4   Bordure au focus (cyan)
+--pf-input-text           #E8EDF5   Couleur du texte
+--pf-input-placeholder    #445E7A   Couleur du placeholder
+--pf-input-focus-glow     0 0 0 2px rgba(6,182,212,0.15)   Halo cyan au focus
+```
+
+### Règles d'application
+
+- **Global override** : tous les composants PrimeNG (`p-inputtext`, `p-select`, `p-textarea`, `p-datepicker`) reçoivent ces tokens via `styles.scss` avec `!important` pour garantir la cohérence.
+- **Auth pages** : la card utilise `--pf-bg-elevated` avec un subtle cyan glow shadow. Le titre "Welcome back" utilise un gradient cyan.
+- **Select dropdowns** : fond `--pf-bg-elevated`, options avec hover `--pf-bg-overlay`, sélection active avec `--pf-cyan-glow`.
+- **DatePicker** : remplace les inputs natifs `type="date"` pour un rendu cohérent cross-browser. Panel sombre.
+
+---
+
+## 14. Support Ticket System — UI Patterns
+
+### User-side (user-app)
+
+- **Ticket list** : utilise les mêmes patterns que les autres pages de liste (table-panel, pagination).
+- **Status badges** : `OPEN` (cyan), `AWAITING_USER` (warning/orange), `AWAITING_ADMIN` (cyan clair), `CLOSED` (muted gris).
+- **Category badge** : fond `--pf-bg-elevated`, monospace, uppercase, petit.
+- **Ticket detail** : messages admin identifiés par un `border-left: 3px solid cyan` et un fond légèrement teinté cyan.
+- **Reply form** : textarea dark + bouton "Send Reply".
+
+### Admin-side (admin-app)
+
+- **Dashboard stat cards** : 4 cartes (Users, Strategies, Orders, Tickets) avec icône colorée, label, et valeur numérique. Cliquables vers la page correspondante.
+- **Ticket assignment** : avatar circulaire avec initiale colorée (palette déterministe par hash du nom). "Unassigned" en gris italic quand non assigné.
+
+---
+
 *Ce document doit être relu à chaque ajout de composant majeur pour s'assurer de la cohérence visuelle.*

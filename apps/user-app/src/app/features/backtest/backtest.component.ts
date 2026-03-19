@@ -7,6 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
@@ -17,7 +18,7 @@ import { WebSocketService } from '../../core/services/websocket.service';
 @Component({
   selector: 'app-backtest',
   standalone: true,
-  imports: [FormsModule, DatePipe, ButtonModule, InputTextModule, SelectModule, SkeletonModule, ProgressBarModule, ToastModule],
+  imports: [FormsModule, DatePipe, ButtonModule, InputTextModule, SelectModule, SkeletonModule, ProgressBarModule, DatePickerModule, ToastModule],
   providers: [MessageService],
   templateUrl: './backtest.component.html',
 })
@@ -44,7 +45,17 @@ export class BacktestComponent implements OnInit, OnDestroy {
   selectedStratId = '';
   dateStart       = '';
   dateEnd         = '';
+  dateStartDate: Date | null = null;
+  dateEndDate: Date | null = null;
   submitting      = signal(false);
+
+  onDateStartSelect(event: Date): void {
+    this.dateStart = event.toISOString().slice(0, 10);
+  }
+
+  onDateEndSelect(event: Date): void {
+    this.dateEnd = event.toISOString().slice(0, 10);
+  }
 
   readonly strategyOptions = computed(() =>
     this.strategies().map(s => ({ label: s.name, value: s.id })),

@@ -61,12 +61,14 @@ export class DiscoverService {
       this.prisma.strategy.count({ where }),
     ]);
 
-    // Hide blocks for UNLISTED strategies
+    // Remap `user` → `author` for the frontend and hide blocks for UNLISTED
     const result = strategies.map((s) => {
-      if ((s as any).visibility === "UNLISTED") {
-        return { ...s, triggers: [], conditions: [], actions: [], safety: [] };
+      const { user, ...rest } = s as any;
+      const mapped = { ...rest, author: user };
+      if (mapped.visibility === "UNLISTED") {
+        return { ...mapped, triggers: [], conditions: [], actions: [], safety: [] };
       }
-      return s;
+      return mapped;
     });
 
     return paginate(result, total, page, limit);

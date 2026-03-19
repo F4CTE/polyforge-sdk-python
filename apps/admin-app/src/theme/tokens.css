@@ -64,4 +64,13 @@
   --pf-healthy:  #10B981;
   --pf-degraded: #F59E0B;
   --pf-down:     #EF4444;
+
+  /* Input tokens */
+  --pf-input-bg:           #0D1421;
+  --pf-input-border:       #1E3350;
+  --pf-input-border-hover: #264060;
+  --pf-input-border-focus: #06B6D4;
+  --pf-input-text:         #E8EDF5;
+  --pf-input-placeholder:  #445E7A;
+  --pf-input-focus-glow:   0 0 0 2px rgba(6, 182, 212, 0.15);
 }

@@ -15,6 +15,25 @@
     </div>
   </div>
 
+  <!-- ─── Stat cards ──────────────────────────────────────────────────── -->
+  <div class="dash-stats-grid">
+    @for (stat of stats(); track stat.label) {
+      <a class="dash-stat-card" [routerLink]="stat.route">
+        <div class="dash-stat-icon" [style.color]="stat.color" [style.background]="stat.bg">
+          <i [class]="stat.icon"></i>
+        </div>
+        <div class="dash-stat-body">
+          <span class="dash-stat-label">{{ stat.label }}</span>
+          @if (statsLoading() && stat.value === null) {
+            <p-skeleton height="28px" width="60px" />
+          } @else {
+            <span class="dash-stat-value pf-mono">{{ stat.value | number }}</span>
+          }
+        </div>
+      </a>
+    }
+  </div>
+
   @if (loading() && !health()) {
     <div class="health-grid">
       @for (s of [1,2,3,4,5,6]; track s) {

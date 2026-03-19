@@ -61,11 +61,10 @@ export interface Order {
   orderType:    string;
   status:       OrderStatus;
   clobOrderId:  string | null;
-  filledSize:   string;
-  avgFillPrice: string | null;
-  makerFee:     string;
-  takerFee:     string;
-  submittedAt:  string | null;
+  fillSize:     string | null;
+  fillPrice:    string | null;
+  fee:          string | null;
+  placedAt:     string | null;
   filledAt:     string | null;
   createdAt:    string;
 }
