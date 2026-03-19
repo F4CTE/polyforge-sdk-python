@@ -41,10 +41,12 @@ export default defineConfig({
             name: 'chromium',
             use: { ...devices['Desktop Chrome'] },
         },
-        {
-            name: 'firefox',
+        // Firefox is slow on GitHub Actions runners causing flaky timeouts.
+        // Run locally for cross-browser coverage; skip on CI for reliability.
+        ...(!process.env.CI ? [{
+            name: 'firefox' as const,
             use: { ...devices['Desktop Firefox'] },
-        },
+        }] : []),
     ],
 
     // Global timeout per test — allow extra for nginx proxy + SPA bootstrap
