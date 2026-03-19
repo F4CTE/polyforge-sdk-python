@@ -98,20 +98,40 @@ export function extractLink(body: string, pathPrefix: string): string {
 }
 
 /**
- * Convenience: wait for the verification email sent to `email` and return
- * the verification URL it contains.
+ * Rewrite an extracted email link so it points at the E2E test server
+ * (BASE_URL, typically http://localhost on CI) instead of FRONTEND_URL
+ * (which may be http://localhost:4200 or https://polyforge.app).
  */
-export async function getVerificationUrl(email: string): Promise<string> {
-    const msg = await waitForEmail(email);
-    return extractLink(msg.Content.Body, '/verify-email');
+function rebaseUrl(raw: string): string {
+    const base = process.env.BASE_URL ?? 'http://localhost';
+    try {
+        const parsed = new URL(raw);
+        const target = new URL(base);
+        parsed.protocol = target.protocol;
+        parsed.host     = target.host;
+        return parsed.toString();
+    } catch {
+        // Not a full URL — return as-is (relative path)
+        return raw;
+    }
 }
 
 /**
- * Convenience: wait for the password-reset email and return the reset URL.
+ * Convenience: wait for the verification email sent to `email` and return
+ * the verification URL it contains (rebased to BASE_URL).
+ */
+export async function getVerificationUrl(email: string): Promise<string> {
+    const msg = await waitForEmail(email);
+    return rebaseUrl(extractLink(msg.Content.Body, '/verify-email'));
+}
+
+/**
+ * Convenience: wait for the password-reset email and return the reset URL
+ * (rebased to BASE_URL).
  */
 export async function getPasswordResetUrl(email: string): Promise<string> {
     const msg = await waitForEmail(email);
-    return extractLink(msg.Content.Body, '/reset-password');
+    return rebaseUrl(extractLink(msg.Content.Body, '/reset-password'));
 }
 
 function escapeRegex(s: string): string {
