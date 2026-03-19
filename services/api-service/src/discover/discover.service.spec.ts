@@ -221,6 +221,23 @@ describe("DiscoverService", () => {
       expect(returned.safety).toEqual([]);
     });
 
+    it("returns strategies with author field instead of user", async () => {
+      const strategy = makeStrategy();
+      db.strategy.findMany.mockResolvedValue([strategy] as any);
+      db.strategy.count.mockResolvedValue(1);
+
+      const result = await service.discover("user-uuid-1", makeDiscoverQuery());
+
+      const returned = result.data[0];
+      expect(returned.author).toEqual({
+        id: "user-uuid-1",
+        username: "alice",
+        displayName: "Alice",
+        avatarUrl: null,
+      });
+      expect(returned).not.toHaveProperty("user");
+    });
+
     it("does NOT strip block fields from PUBLIC strategies", async () => {
       const publicStrategy = makeStrategy({ visibility: "PUBLIC" });
       db.strategy.findMany.mockResolvedValue([publicStrategy] as any);
