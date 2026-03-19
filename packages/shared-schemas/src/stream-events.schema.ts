@@ -88,6 +88,30 @@ export const PriceAlertTriggeredEventSchema = BaseEventSchema.extend({
   direction: z.enum(["above", "below"]),
 });
 
+// ─── Ticket events ──────────────────────────────────────────────────────────
+
+export const TicketCreatedEventSchema = BaseEventSchema.extend({
+  event_type: z.literal("TICKET_CREATED"),
+  userId: UuidSchema,
+  ticketId: UuidSchema,
+  subject: z.string(),
+});
+
+export const TicketReplyEventSchema = BaseEventSchema.extend({
+  event_type: z.literal("TICKET_REPLY"),
+  userId: UuidSchema,
+  ticketId: UuidSchema,
+  subject: z.string(),
+  adminName: z.string().optional(),
+});
+
+export const TicketClosedEventSchema = BaseEventSchema.extend({
+  event_type: z.literal("TICKET_CLOSED"),
+  userId: UuidSchema,
+  ticketId: UuidSchema,
+  subject: z.string(),
+});
+
 // ─── Union of all event types ─────────────────────────────────────────────────
 
 export const StreamEventSchema = z.discriminatedUnion("event_type", [
@@ -101,6 +125,9 @@ export const StreamEventSchema = z.discriminatedUnion("event_type", [
   StrategyPausedEventSchema,
   BacktestCompletedEventSchema,
   PriceAlertTriggeredEventSchema,
+  TicketCreatedEventSchema,
+  TicketReplyEventSchema,
+  TicketClosedEventSchema,
 ]);
 
 export type StreamEvent = z.infer<typeof StreamEventSchema>;

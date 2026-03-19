@@ -229,4 +229,32 @@ export class AdminApiService {
     if (q.limit) p = p.set('limit', q.limit!);
     return this.http.get<PaginatedResponse<LoginLog>>(`${this.base}/logs/logins`, { params: p });
   }
+
+  // ─── Tickets ──────────────────────────────────────────────────────────────
+
+  tickets(q: { page?: number; limit?: number; status?: string; priority?: string; assignedTo?: string } = {}): Observable<PaginatedResponse<any>> {
+    let p = new HttpParams();
+    if (q.page)       p = p.set('page',       q.page!);
+    if (q.limit)      p = p.set('limit',      q.limit!);
+    if (q.status)     p = p.set('status',     q.status);
+    if (q.priority)   p = p.set('priority',   q.priority);
+    if (q.assignedTo) p = p.set('assignedTo', q.assignedTo);
+    return this.http.get<PaginatedResponse<any>>(`${this.base}/tickets`, { params: p });
+  }
+
+  ticket(id: string): Observable<any> {
+    return this.http.get<any>(`${this.base}/tickets/${id}`);
+  }
+
+  replyTicket(id: string, body: string): Observable<any> {
+    return this.http.post<any>(`${this.base}/tickets/${id}/messages`, { body });
+  }
+
+  updateTicket(id: string, data: { status?: string; priority?: string; assignedTo?: string }): Observable<any> {
+    return this.http.patch<any>(`${this.base}/tickets/${id}`, data);
+  }
+
+  closeTicket(id: string): Observable<any> {
+    return this.http.post<any>(`${this.base}/tickets/${id}/close`, {});
+  }
 }

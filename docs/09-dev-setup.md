@@ -197,6 +197,9 @@ pnpm test
 # Run tests for a specific service
 cd services/auth-service && pnpm test
 
+# Run E2E tests (requires Docker stack running)
+BASE_URL=http://localhost pnpm --filter @polyforge/e2e test
+
 # Build everything
 pnpm build
 

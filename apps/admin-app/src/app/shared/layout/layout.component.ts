@@ -39,6 +39,7 @@ export class LayoutComponent {
         { label: 'Orders',     icon: 'pi pi-list',       route: '/orders' },
         { label: 'Backtests',  icon: 'pi pi-history',    route: '/backtests' },
         { label: 'Invites',    icon: 'pi pi-ticket',     route: '/invites' },
+        { label: 'Tickets',    icon: 'pi pi-comments',   route: '/tickets' },
       ],
     },
     {

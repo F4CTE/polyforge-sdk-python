@@ -21,6 +21,7 @@ import { WaitlistAdminModule } from "./waitlist/waitlist.module";
 import { ConfigFlagsModule } from "./config-flags/config-flags.module";
 import { AuditModule } from "./common/audit/audit.module";
 import { AdminsModule } from "./admins/admins.module";
+import { TicketsModule } from "./tickets/tickets.module";
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { AdminsModule } from "./admins/admins.module";
     WaitlistAdminModule,
     ConfigFlagsModule,
     AdminsModule,
+    TicketsModule,
   ],
   controllers: [HealthController],
 })

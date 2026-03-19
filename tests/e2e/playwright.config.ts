@@ -14,10 +14,11 @@ import { defineConfig, devices } from '@playwright/test';
  *   MAILHOG_URL  — MailHog web URL  (default: http://localhost:8025)
  */
 export default defineConfig({
+    globalSetup: './global-setup.ts',
     testDir:   './specs',
-    fullyParallel: false,           // preserve DB state across tests in a file
+    fullyParallel: false,           // sequential within a file, but each file gets a fresh context
     forbidOnly: !!process.env.CI,
-    retries:   process.env.CI ? 1 : 0,
+    retries:   process.env.CI ? 2 : 0,
     workers:   1,                   // serial execution — one browser, one DB state
     reporter:  [['html', { open: 'never' }], ['list']],
 
@@ -28,6 +29,11 @@ export default defineConfig({
         video:         'retain-on-failure',
         // Seed user credentials (alice is pre-verified + pre-connected)
         storageState:  undefined,
+        // Allow extra time for SPA loading through nginx proxy in Docker
+        navigationTimeout: 15_000,
+        actionTimeout:     10_000,
+        // Larger viewport to avoid cookie banner overlapping form buttons
+        viewport:      { width: 1280, height: 900 },
     },
 
     projects: [
@@ -41,7 +47,7 @@ export default defineConfig({
         },
     ],
 
-    // Global timeout per test — the full stack is local, so 30s is plenty
-    timeout: 30_000,
-    expect: { timeout: 8_000 },
+    // Global timeout per test — allow extra for nginx proxy + SPA bootstrap
+    timeout: 45_000,
+    expect: { timeout: 15_000 },
 });

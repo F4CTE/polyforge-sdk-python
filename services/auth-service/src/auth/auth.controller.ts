@@ -43,7 +43,12 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @Throttle({ default: { limit: 5, ttl: 3600000 } }) // 5 per hour
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === 'production' ? 5 : 500,
+      ttl: 3600000,
+    },
+  })
   @ApiOperation({ summary: 'Register a new user account' })
   @ApiResponse({
     status: 201,
@@ -63,7 +68,12 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 10, ttl: 900000 } }) // 10 per 15 min
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === 'production' ? 10 : 1000,
+      ttl: 900000,
+    },
+  })
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiResponse({
     status: 200,
@@ -107,7 +117,12 @@ export class AuthController {
 
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 10, ttl: 3600000 } }) // 10 per hour
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === 'production' ? 10 : 1000,
+      ttl: 3600000,
+    },
+  })
   @ApiOperation({ summary: 'Verify email address using token from email link' })
   @ApiResponse({ status: 200, description: 'Email verified successfully.' })
   @ApiResponse({
@@ -120,7 +135,12 @@ export class AuthController {
 
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 per hour
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === 'production' ? 3 : 300,
+      ttl: 3600000,
+    },
+  })
   @ApiOperation({
     summary:
       'Request a password reset email (always returns 200 to prevent email enumeration)',
@@ -135,7 +155,12 @@ export class AuthController {
 
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 10, ttl: 3600000 } }) // 10 per hour
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === 'production' ? 10 : 1000,
+      ttl: 3600000,
+    },
+  })
   @ApiOperation({ summary: 'Reset password using token from email link' })
   @ApiResponse({ status: 200, description: 'Password reset successfully.' })
   @ApiResponse({

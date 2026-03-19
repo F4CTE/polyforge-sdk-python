@@ -16,6 +16,7 @@ import { PortfolioModule } from "./portfolio/portfolio.module";
 import { PaperModule } from "./paper/paper.module";
 import { BacktestsModule } from "./backtests/backtests.module";
 import { AlertsModule } from "./alerts/alerts.module";
+import { TicketsModule } from "./tickets/tickets.module";
 import { ProfileModule } from "./profile/profile.module";
 import { SettingsModule } from "./settings/settings.module";
 import { EventsModule } from "./gateway/events.module";
@@ -24,7 +25,12 @@ import { EventsModule } from "./gateway/events.module";
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot({
-      throttlers: [{ ttl: 60000, limit: 120 }],
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: process.env.NODE_ENV === "production" ? 120 : 1200, // 120 req/min prod, 1200 dev/test
+        },
+      ],
     }),
     JwtModule.register({}),
     LoggerModule,
@@ -39,6 +45,7 @@ import { EventsModule } from "./gateway/events.module";
     PaperModule,
     BacktestsModule,
     AlertsModule,
+    TicketsModule,
     ProfileModule,
     SettingsModule,
     EventsModule,

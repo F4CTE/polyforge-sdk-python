@@ -223,6 +223,8 @@ Unique constraint: `(user_id, token_id)`
 - **backtest_runs** — job metadata + summary stats
 - **price_alerts** — user price threshold alerts (max 50 per user)
 - **data_gaps** — price history gap tracking
+- **tickets** — support tickets (userId, subject, category, status, priority, assignedTo, closedBy, closedAt, reminderSentAt). Indexes on userId, status, assignedTo, (status, updatedAt)
+- **ticket_messages** — conversation messages per ticket (senderId, senderName, isAdmin, body). Index on (ticketId, createdAt). Admin messages denormalize sender display name for cross-DB resolution
 
 ---
 
@@ -241,7 +243,7 @@ Unique constraint: `(user_id, token_id)`
 | email | varchar(255) unique | |
 | password_hash | varchar(255) | bcrypt cost 12 |
 | display_name | varchar(100) | |
-| role | enum | SUPER_ADMIN, ADMIN, VIEWER |
+| role | enum | SUPER_ADMIN, ADMIN, SUPPORT, VIEWER |
 | active | boolean | default true |
 | created_at | timestamptz | |
 | last_seen | timestamptz | |
@@ -444,8 +446,9 @@ SELECT add_retention_policy('cache_stats', INTERVAL '30 days');
 | `invite:{CODE}` | string | remaining uses (integer) | set at creation | admin-api-service | Uppercase code; deleted when uses reach 0 |
 | `waitlist:emails` | ZSET | score = epoch-ms joined | none | auth-service | `ZADD NX` deduplication; admin reads via `ZRANGE WITHSCORES` |
 | `config:invite_only` | string | `'true'` / `'false'` | none | admin-api-service | Runtime override for `INVITE_ONLY` env var; auth-service checks this first |
+| `config:ticket_reminder_hours` | string | integer (default 48) | none | admin-api-service | Hours to wait before sending a reminder email for tickets in AWAITING_USER status |
 
-> **Retention note:** `waitlist:emails` and `config:invite_only` are excluded from nightly retention jobs. Waitlist entries are managed manually by admins; the invite-only flag persists until explicitly toggled.
+> **Retention note:** `waitlist:emails`, `config:invite_only`, and `config:ticket_reminder_hours` are excluded from nightly retention jobs. These are managed manually by admins.
 
 ### Miscellaneous Keys
 

@@ -18,7 +18,12 @@ import { HealthController } from './common/health.controller';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot({
-      throttlers: [{ ttl: 60000, limit: 60 }], // default: 60 req/min
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: process.env.NODE_ENV === 'production' ? 60 : 10000, // 60 req/min prod, effectively unlimited in dev
+        },
+      ],
     }),
     LoggerModule,
     SharedDbModule,

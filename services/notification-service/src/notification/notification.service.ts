@@ -18,6 +18,8 @@ const EVENT_TO_PREF_FIELD: Record<string, keyof DispatchOptions | null> = {
   SOMEONE_FOLLOWED: "onSomeoneFollowed",
   SOMEONE_LIKED: "onSomeoneLiked",
   SOMEONE_COMMENTED: "onSomeoneCommented",
+  TICKET_REPLY: "onTicketReply",
+  TICKET_CLOSED: "onTicketReply",
 };
 
 interface DispatchOptions {
@@ -30,6 +32,7 @@ interface DispatchOptions {
   onSomeoneFollowed: boolean;
   onSomeoneLiked: boolean;
   onSomeoneCommented: boolean;
+  onTicketReply: boolean;
   emailEnabled: boolean;
   telegramEnabled: boolean;
   discordEnabled: boolean;

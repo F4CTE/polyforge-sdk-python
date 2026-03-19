@@ -81,7 +81,8 @@ test.describe('Strategy lifecycle', () => {
         await builderPage.fillName(strategyName);
         await builderPage.saveAndRedirect();
 
-        // Strategy should appear in the list
+        // Navigate to list and verify strategy appears
+        await listPage.goto();
         await expect(listPage.cardByName(strategyName)).toBeVisible();
         const status = await listPage.statusOf(strategyName);
         expect(status).toMatch(/IDLE/i);
@@ -101,7 +102,8 @@ test.describe('Strategy lifecycle', () => {
         await builderPage.fillName(strategyName);
         await builderPage.saveAndRedirect();
 
-        // Start paper
+        // Navigate to list and start paper
+        await listPage.goto();
         await listPage.startPaper(strategyName);
 
         // Status should update to RUNNING
@@ -125,6 +127,7 @@ test.describe('Strategy lifecycle', () => {
         await builderPage.fillName(strategyName);
         await builderPage.saveAndRedirect();
 
+        await listPage.goto();
         await expect(listPage.cardByName(strategyName)).toBeVisible();
 
         // ── Start paper ────────────────────────────────────────────────────
@@ -167,9 +170,14 @@ test.describe('Strategy lifecycle', () => {
         await builderPage.fillName(original);
         await builderPage.saveAndRedirect();
 
-        // Open edit from list
-        const card = listPage.cardByName(original);
-        await card.locator('button[ptooltip="Edit"]').click();
+        // Navigate to list and open edit
+        // Navigate to list, click card to get to detail, then navigate to edit
+        await listPage.goto();
+        await listPage.clickCard(original);
+        // Now on /strategies/:id — extract ID from URL and go to edit
+        await page.waitForURL(/\/strategies\/[a-z0-9-]+$/, { timeout: 15_000 });
+        const editUrl = page.url() + '/edit';
+        await page.goto(editUrl);
         await expect(page).toHaveURL(/\/edit$/);
 
         // Rename
@@ -177,7 +185,8 @@ test.describe('Strategy lifecycle', () => {
         await builderPage.fillName(renamed);
         await builderPage.saveAndRedirect();
 
-        // Should appear under new name
+        // Navigate to list — should appear under new name
+        await listPage.goto();
         await expect(listPage.cardByName(renamed)).toBeVisible();
     });
 
@@ -195,14 +204,13 @@ test.describe('Strategy lifecycle', () => {
 
         // Navigate to Triggers section and add a block
         await builderPage.selectSection('Triggers');
-        await builderPage.addBlock('Price Threshold');
+        await builderPage.addBlock('Price Crosses Up');
 
         // Confirm the block appears
-        await expect(builderPage.blockCards().filter({ hasText: 'Price Threshold' })).toBeVisible();
+        await expect(builderPage.blockCards().filter({ hasText: 'Price Crosses Up' })).toBeVisible();
 
-        // Save without redirecting to verify no errors
-        await builderPage.save();
-        await page.waitForURL(url => url.pathname === '/strategies', { timeout: 10_000 });
+        // Save and verify redirect
+        await builderPage.saveAndRedirect();
     });
 
     test('strategy detail page shows correct status', async ({ page }) => {
@@ -218,10 +226,13 @@ test.describe('Strategy lifecycle', () => {
         await builderPage.fillName(strategyName);
         await builderPage.saveAndRedirect();
 
-        // Click the card to open detail
-        await listPage.clickCard(strategyName);
+        // After save we may be on detail page already, or navigate from list
+        if (!page.url().match(/\/strategies\/[a-z0-9-]+$/)) {
+            await listPage.goto();
+            await listPage.clickCard(strategyName);
+        }
         await expect(page).toHaveURL(/\/strategies\/[a-z0-9-]+$/);
-        await expect(page.locator('h1', { hasText: strategyName })).toBeVisible();
+        await expect(page.locator('h1', { hasText: strategyName })).toBeVisible({ timeout: 15_000 });
         await expect(page.locator('.status-badge')).toContainText(/IDLE/i);
     });
 

@@ -9,3 +9,4 @@ export * from "./common.schema";
 export * from "./order.schema";
 export * from "./stream-events.schema";
 export * from "./websocket.schema";
+export * from "./ticket.schema";

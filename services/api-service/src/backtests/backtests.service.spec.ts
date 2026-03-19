@@ -284,8 +284,12 @@ describe("BacktestsService", () => {
 
       const dataArg = db.backtestRun.create.mock.calls[0][0]?.data;
       expect(dataArg.dateRangeStart).toEqual(new Date(0));
-      expect((dataArg.dateRangeEnd as Date).getTime()).toBeGreaterThanOrEqual(before);
-      expect((dataArg.dateRangeEnd as Date).getTime()).toBeLessThanOrEqual(after);
+      expect((dataArg.dateRangeEnd as Date).getTime()).toBeGreaterThanOrEqual(
+        before,
+      );
+      expect((dataArg.dateRangeEnd as Date).getTime()).toBeLessThanOrEqual(
+        after,
+      );
     });
 
     it("includes a ts field in the Redis stream payload", async () => {

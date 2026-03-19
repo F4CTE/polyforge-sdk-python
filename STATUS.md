@@ -11,6 +11,34 @@
 
 ---
 
+## Post-Launch — Support Ticket System (v2.1.0)
+
+- [x] Prisma schema: `tickets`, `ticket_messages` tables, `TicketStatus`/`TicketPriority`/`TicketCategory` enums
+- [x] `NotificationPreference.onTicketReply` toggle
+- [x] `AdminRole.SUPPORT` — dedicated support accounts
+- [x] api-service: `POST/GET /tickets`, `GET /tickets/:id`, `POST /tickets/:id/messages`
+- [x] admin-api-service: full ticket management (list, detail, reply, update, close)
+- [x] Auto-assignment on admin reply, admin name resolution from admin DB
+- [x] Ticket reminder cron — 48h single reminder email for AWAITING_USER tickets
+- [x] Branded reminder email template (`sendTicketReminderEmail`)
+- [x] notification-service: TICKET_REPLY, TICKET_CLOSED, TICKET_CREATED events
+- [x] user-app: `/support` pages (list, create, detail with conversation view)
+- [x] admin-app: `/tickets` pages (filterable list, detail with admin controls, "Assign to me")
+- [x] Tests: 48 tests (16 api-service + 25 admin-api + 7 reminder), 100% lines/95%+ branches
+
+## Post-Launch — E2E Test Fixes (v2.1.1)
+
+- [x] Fixed error interceptor: 401 on `/me` no longer redirects from public routes
+- [x] Dev rate limits relaxed (effectively unlimited in non-production)
+- [x] E2E helpers: cookie-based auth, quoted-printable email decoding
+- [x] E2E page objects: PrimeNG icon-based selectors, confirmPassword field, cookie banner dismissal
+- [x] E2E test assertions aligned with actual component behavior (verify-email, strategy builder redirect)
+- [x] Playwright config: global setup, increased timeouts, larger viewport
+- [x] Result: 60 passed, 4 skipped, 0 failed (was 38 failures)
+- [x] CI: E2E job added to GitHub Actions (Lint → Typecheck → Test → Build → **E2E**)
+
+---
+
 ## Phase 1 — Foundations
 
 ### Monorepo & Infrastructure

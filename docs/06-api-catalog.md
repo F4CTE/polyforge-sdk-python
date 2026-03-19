@@ -900,6 +900,76 @@ For `quickMode: true` (from strategy builder — last 7 days, synchronous):
 
 ---
 
+### Support Tickets (User)
+
+#### POST /api/v1/tickets
+
+Create a new support ticket.
+
+**Body:**
+```json
+{
+  "subject": "Can't log in",
+  "category": "TECHNICAL",
+  "body": "I get a 500 error when clicking login..."
+}
+```
+
+- `subject` — string, 1–255 chars (required)
+- `category` — `GENERAL` | `BILLING` | `TECHNICAL` | `ACCOUNT` | `BUG` | `FEATURE_REQUEST` (default: `GENERAL`)
+- `body` — string, 1–5000 chars (required, first message)
+
+**Response `201`:** Ticket object.
+
+#### GET /api/v1/tickets
+
+List current user's tickets (paginated).
+
+**Query:** `page` (default 1), `limit` (default 20)
+
+**Response `200`:** `PaginatedResponse<Ticket>` with latest message preview.
+
+#### GET /api/v1/tickets/:id
+
+Get ticket detail with full message history.
+
+**Response `200`:**
+```json
+{
+  "id": "uuid",
+  "subject": "Can't log in",
+  "category": "TECHNICAL",
+  "status": "AWAITING_USER",
+  "priority": "MEDIUM",
+  "createdAt": "ISO",
+  "updatedAt": "ISO",
+  "messages": [
+    {
+      "id": "uuid",
+      "senderId": "uuid",
+      "senderName": "alice",
+      "isAdmin": false,
+      "body": "I get a 500 error...",
+      "createdAt": "ISO"
+    }
+  ]
+}
+```
+
+**Errors:** `404 NOT_FOUND`, `403 FORBIDDEN` (not your ticket)
+
+#### POST /api/v1/tickets/:id/messages
+
+Add a reply to your ticket.
+
+**Body:** `{ "body": "Here's more info..." }` (1–5000 chars)
+
+**Response `201`:** TicketMessage object. Sets ticket status to `AWAITING_ADMIN`.
+
+**Errors:** `404 NOT_FOUND`, `403 FORBIDDEN`, `403 TICKET_CLOSED`
+
+---
+
 ### Profile & Social
 
 #### GET /api/v1/profile/:username
@@ -1021,6 +1091,8 @@ If the token is invalid, the server sends `AUTH_ERROR` and closes the connection
 | `POSITION_CLOSED` | `{ positionId, tokenId, realizedPnl }` | Position fully closed |
 | `POSITION_REDEEMED` | `{ positionId, redemptionValue, txHash }` | Resolution redemption |
 | `NOTIFICATION` | `{ type, title, body }` | In-app notification |
+| `TICKET_REPLY` | `{ ticketId, subject, adminName }` | Admin replied to your ticket |
+| `TICKET_CLOSED` | `{ ticketId, subject }` | Your ticket was closed |
 | `DISCONNECT` | `{ reason }` | Server is shutting down (graceful) |
 
 ---
@@ -1401,6 +1473,51 @@ Generate a single-use invite code and email it to a waitlist entry.
 
 ---
 
+### Support Tickets (Admin)
+
+#### GET /api/v1/tickets
+
+List all tickets (paginated, filterable).
+
+**Query:** `page`, `limit`, `status` (OPEN|AWAITING_USER|AWAITING_ADMIN|CLOSED), `priority` (LOW|MEDIUM|HIGH|URGENT), `assignedTo` (admin UUID)
+
+**Response `200`:** `PaginatedResponse<AdminTicket>` — includes `user.username`, `user.email`, `assignedToName` (resolved from admin DB), latest message preview.
+
+#### GET /api/v1/tickets/:id
+
+Get ticket detail with all messages and resolved admin names.
+
+**Response `200`:** Full ticket with `messages[]`, `assignedToName`, `closedByName`.
+
+#### POST /api/v1/tickets/:id/messages
+
+Admin reply to a ticket. Auto-assigns ticket to the replying admin if unassigned.
+
+**Body:** `{ "body": "We've fixed the issue..." }` (1–5000 chars)
+
+**Response `201`:** TicketMessage. Sets status to `AWAITING_USER`. Emits `TICKET_REPLY` stream event. Audit logged.
+
+#### PATCH /api/v1/tickets/:id
+
+Update ticket status, priority, or assignment.
+
+**Body:**
+```json
+{
+  "status": "AWAITING_ADMIN",
+  "priority": "HIGH",
+  "assignedTo": "admin-uuid"
+}
+```
+
+All fields optional. Setting `status: "CLOSED"` also sets `closedBy` and `closedAt`. Emits `TICKET_CLOSED` stream event when closing. Audit logged.
+
+#### POST /api/v1/tickets/:id/close
+
+Shorthand to close a ticket. Sets status to CLOSED, records `closedBy`/`closedAt`. Audit logged.
+
+---
+
 ### Audit & Logs
 
 #### GET /api/v1/logs/audit
@@ -1568,6 +1685,7 @@ All standard user WS messages plus:
 | `INVALID_POLYMARKET_CREDENTIALS` | 422 | Credentials failed validation against Polymarket API |
 | `CREDENTIALS_ALREADY_IMPORTED` | 422 | User already has credentials — delete first |
 | `STRATEGY_IS_RUNNING` | 422 | Cannot edit a running strategy |
+| `TICKET_CLOSED` | 403 | Cannot reply to a closed ticket |
 | `RATE_LIMITED` | 429 | Too many requests |
 | `INTERNAL_ERROR` | 500 | Unexpected server error |
 

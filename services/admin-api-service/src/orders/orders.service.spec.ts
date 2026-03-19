@@ -159,7 +159,7 @@ describe("OrdersService", () => {
       await service.findAll({ page: 1, limit: 10, from: "2024-01-01" });
 
       const call = prisma.order.findMany.mock.calls[0][0];
-      expect((call.where.createdAt as any).gte).toBeInstanceOf(Date);
+      expect(call.where.createdAt.gte).toBeInstanceOf(Date);
     });
 
     it("sets createdAt.lte when to is provided", async () => {
@@ -169,7 +169,7 @@ describe("OrdersService", () => {
       await service.findAll({ page: 1, limit: 10, to: "2024-12-31" });
 
       const call = prisma.order.findMany.mock.calls[0][0];
-      expect((call.where.createdAt as any).lte).toBeInstanceOf(Date);
+      expect(call.where.createdAt.lte).toBeInstanceOf(Date);
     });
 
     it("sets both gte and lte when from and to are both provided", async () => {
@@ -184,8 +184,8 @@ describe("OrdersService", () => {
       });
 
       const call = prisma.order.findMany.mock.calls[0][0];
-      expect((call.where.createdAt as any).gte).toBeInstanceOf(Date);
-      expect((call.where.createdAt as any).lte).toBeInstanceOf(Date);
+      expect(call.where.createdAt.gte).toBeInstanceOf(Date);
+      expect(call.where.createdAt.lte).toBeInstanceOf(Date);
     });
 
     it("does not add createdAt filter when neither from nor to is given", async () => {
@@ -394,10 +394,7 @@ describe("OrdersService", () => {
       const result = await service.replayDlqEntry("intent-target");
 
       expect(result.replayed).toBe(true);
-      expect(redisClient.xdel).toHaveBeenCalledWith(
-        "stream:orders:dlq",
-        "2-0",
-      );
+      expect(redisClient.xdel).toHaveBeenCalledWith("stream:orders:dlq", "2-0");
     });
 
     it("throws NotFoundException when entries is null", async () => {
@@ -429,9 +426,7 @@ describe("OrdersService", () => {
       const fields = fieldsFrom({ intentId: "some-other" });
       redisClient.xrange.mockResolvedValue([["1-0", fields]]);
 
-      await expect(
-        service.replayDlqEntry("missing"),
-      ).rejects.toMatchObject({
+      await expect(service.replayDlqEntry("missing")).rejects.toMatchObject({
         response: { code: "NOT_FOUND" },
       });
     });
@@ -459,10 +454,7 @@ describe("OrdersService", () => {
       const result = await service.discardDlqEntry("intent-discard");
 
       expect(result).toEqual({ discarded: true });
-      expect(redisClient.xdel).toHaveBeenCalledWith(
-        "stream:orders:dlq",
-        "7-0",
-      );
+      expect(redisClient.xdel).toHaveBeenCalledWith("stream:orders:dlq", "7-0");
       expect(redisClient.set).toHaveBeenCalledWith(
         "dlq:discarded:intent-discard",
         "1",
@@ -500,10 +492,7 @@ describe("OrdersService", () => {
 
       await service.discardDlqEntry("intent-b");
 
-      expect(redisClient.xdel).toHaveBeenCalledWith(
-        "stream:orders:dlq",
-        "4-0",
-      );
+      expect(redisClient.xdel).toHaveBeenCalledWith("stream:orders:dlq", "4-0");
       expect(redisClient.set).toHaveBeenCalledWith(
         "dlq:discarded:intent-b",
         "1",
@@ -534,9 +523,7 @@ describe("OrdersService", () => {
     it("throws NOT_FOUND when entries is null", async () => {
       redisClient.xrange.mockResolvedValue(null);
 
-      await expect(
-        service.discardDlqEntry("intent-x"),
-      ).rejects.toMatchObject({
+      await expect(service.discardDlqEntry("intent-x")).rejects.toMatchObject({
         response: { code: "NOT_FOUND" },
       });
     });

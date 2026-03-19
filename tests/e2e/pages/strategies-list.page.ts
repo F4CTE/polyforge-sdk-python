@@ -16,7 +16,7 @@ export class StrategiesListPage {
 
     async goto(): Promise<void> {
         await this.page.goto('/strategies');
-        await expect(this.page.locator('h1', { hasText: 'My Strategies' })).toBeVisible();
+        await expect(this.page.locator('h1', { hasText: 'My Strategies' })).toBeVisible({ timeout: 15_000 });
     }
 
     /** Find a strategy card by name */
@@ -51,19 +51,19 @@ export class StrategiesListPage {
     async pauseStrategy(name: string): Promise<void> {
         const card = this.cardByName(name);
         // Pause button has only an icon (pi-pause), no text label
-        await card.locator('button[ptooltip="Pause"]').click();
+        await card.locator('button:has(.pi-pause)').click();
     }
 
     /** Click the Resume button (icon-only) on a specific strategy card */
     async resumeStrategy(name: string): Promise<void> {
         const card = this.cardByName(name);
-        await card.locator('button[ptooltip="Resume"]').click();
+        await card.locator('button:has(.pi-play)').click();
     }
 
     /** Click the Stop button (icon-only) on a specific strategy card */
     async stopStrategy(name: string): Promise<void> {
         const card = this.cardByName(name);
-        await card.locator('button[ptooltip="Stop"]').click();
+        await card.locator('button:has(.pi-stop-circle)').click();
     }
 
     async clickNew(): Promise<void> {

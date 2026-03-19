@@ -26,7 +26,12 @@ export class LoginPage {
 
     async goto(): Promise<void> {
         await this.page.goto('/login');
-        await expect(this.page.locator('h2', { hasText: 'Welcome back' })).toBeVisible();
+        await expect(this.page.locator('h2', { hasText: 'Welcome back' })).toBeVisible({ timeout: 15_000 });
+        // Dismiss cookie banner if present
+        const cookieBtn = this.page.locator('button', { hasText: 'Got it' });
+        if (await cookieBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+            await cookieBtn.click();
+        }
     }
 
     async login(email: string, password: string): Promise<void> {
@@ -38,7 +43,7 @@ export class LoginPage {
     /** Login and wait for navigation away from /login */
     async loginAndRedirect(email: string, password: string): Promise<void> {
         await this.login(email, password);
-        await this.page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: 10_000 });
+        await this.page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: 15_000 });
     }
 
     async errorText(): Promise<string> {

@@ -112,6 +112,29 @@ enum BotChannel {
   DISCORD
 }
 
+enum TicketStatus {
+  OPEN
+  AWAITING_USER
+  AWAITING_ADMIN
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketCategory {
+  GENERAL
+  BILLING
+  TECHNICAL
+  ACCOUNT
+  BUG
+  FEATURE_REQUEST
+}
+
 // ─────────────────────────────────────────────
 // AUTH TABLES
 // ─────────────────────────────────────────────
@@ -164,6 +187,7 @@ model User {
   botConnections      BotConnection[]
   emailVerifications  EmailVerification[]
   passwordResetTokens PasswordResetToken[]
+  tickets             Ticket[]
 
   @@map("users")
 }
@@ -222,6 +246,7 @@ model NotificationPreference {
   onSomeoneFollowed  Boolean               @default(false)
   onSomeoneLiked     Boolean               @default(false)
   onSomeoneCommented Boolean               @default(false)
+  onTicketReply      Boolean               @default(true)
   minFillNotifyUsdc  Decimal               @default(0) @db.Decimal(10, 2)
   notificationFreq   NotificationFrequency @default(IMMEDIATE)
   updatedAt          DateTime              @updatedAt
@@ -714,6 +739,49 @@ model BacktestOrder {
   run BacktestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
 
   @@map("backtest_orders")
+}
+
+// ─────────────────────────────────────────────
+// SUPPORT TICKETS
+// ─────────────────────────────────────────────
+
+model Ticket {
+  id             String          @id @default(uuid())
+  userId         String
+  subject        String          @db.VarChar(255)
+  category       TicketCategory  @default(GENERAL)
+  status         TicketStatus    @default(OPEN)
+  priority       TicketPriority  @default(MEDIUM)
+  assignedTo     String?         // Admin UUID — from admin DB, no FK constraint (cross-DB)
+  closedBy       String?         // Admin UUID
+  closedAt       DateTime?
+  reminderSentAt DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  user     User            @relation(fields: [userId], references: [id])
+  messages TicketMessage[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([assignedTo])
+  @@index([status, updatedAt])
+  @@map("tickets")
+}
+
+model TicketMessage {
+  id         String   @id @default(uuid())
+  ticketId   String
+  senderId   String   // userId for users, adminId for admins
+  senderName String   @db.VarChar(100)
+  isAdmin    Boolean  @default(false)
+  body       String
+  createdAt  DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+
+  @@index([ticketId, createdAt])
+  @@map("ticket_messages")
 }
 
 // ─────────────────────────────────────────────

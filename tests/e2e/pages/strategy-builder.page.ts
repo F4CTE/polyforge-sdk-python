@@ -24,12 +24,12 @@ export class StrategyBuilderPage {
 
     async gotoNew(): Promise<void> {
         await this.page.goto('/strategies/new');
-        await expect(this.page.locator('h1', { hasText: 'New Strategy' })).toBeVisible();
+        await expect(this.page.locator('h1', { hasText: 'New Strategy' })).toBeVisible({ timeout: 15_000 });
     }
 
     async gotoEdit(strategyId: string): Promise<void> {
         await this.page.goto(`/strategies/${strategyId}/edit`);
-        await expect(this.page.locator('h1', { hasText: 'Edit Strategy' })).toBeVisible();
+        await expect(this.page.locator('h1', { hasText: 'Edit Strategy' })).toBeVisible({ timeout: 15_000 });
     }
 
     async fillName(name: string): Promise<void> {
@@ -62,9 +62,12 @@ export class StrategyBuilderPage {
         await this.saveButton.click();
     }
 
-    /** Save and wait for redirect to /strategies */
+    /** Save and wait for redirect away from builder (to list or detail) */
     async saveAndRedirect(): Promise<void> {
         await this.save();
-        await this.page.waitForURL(url => url.pathname === '/strategies', { timeout: 10_000 });
+        await this.page.waitForURL(
+            url => url.pathname.startsWith('/strategies') && !url.pathname.includes('/new') && !url.pathname.includes('/edit'),
+            { timeout: 20_000 },
+        );
     }
 }

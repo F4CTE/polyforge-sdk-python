@@ -68,16 +68,30 @@ export async function waitForEmail(
 }
 
 /**
+ * Decode quoted-printable encoding:
+ *   - soft line breaks (=\r\n or =\n) are removed (line continuation)
+ *   - =XX sequences are decoded to their byte value
+ */
+function decodeQuotedPrintable(raw: string): string {
+    return raw
+        .replace(/=\r?\n/g, '')       // remove soft line breaks
+        .replace(/=([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+}
+
+/**
  * Extracts the first URL from an email body.
  * Used to pull verification / password-reset links out of emails.
  */
 export function extractLink(body: string, pathPrefix: string): string {
+    // Decode quoted-printable so URLs aren't broken across lines
+    const decoded = decodeQuotedPrintable(body);
+
     // Emails may be HTML — look for href="..." containing the path
-    const hrefMatch = body.match(new RegExp(`href="([^"]*${escapeRegex(pathPrefix)}[^"]*)"`, 'i'));
+    const hrefMatch = decoded.match(new RegExp(`href="([^"]*${escapeRegex(pathPrefix)}[^"]*)"`, 'i'));
     if (hrefMatch) return hrefMatch[1];
 
     // Fallback: bare URL in text (plain-text emails)
-    const textMatch = body.match(new RegExp(`https?://\\S*${escapeRegex(pathPrefix)}\\S*`, 'i'));
+    const textMatch = decoded.match(new RegExp(`https?://\\S*${escapeRegex(pathPrefix)}\\S*`, 'i'));
     if (textMatch) return textMatch[0];
 
     throw new Error(`Could not find a link starting with '${pathPrefix}' in email body`);

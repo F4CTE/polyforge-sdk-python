@@ -20,3 +20,6 @@ export * from "./notifications";
 
 // WebSocket
 export * from "./websocket";
+
+// Tickets
+export * from "./tickets";

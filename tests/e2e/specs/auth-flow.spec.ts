@@ -67,10 +67,11 @@ test.describe('Auth flow', () => {
         const verifyUrl = await getVerificationUrl(email);
         await page.goto(verifyUrl);
 
-        // 3. App should redirect to login after verification
-        await page.waitForURL(url => url.pathname.startsWith('/login'), { timeout: 10_000 });
+        // 3. Verification page shows success
+        await expect(page.locator('h2', { hasText: 'Email verified' })).toBeVisible({ timeout: 15_000 });
 
-        // 4. Login with the new credentials
+        // 4. Navigate to login and sign in with the new credentials
+        await loginPage.goto();
         await loginPage.loginAndRedirect(email, password);
         await expect(page).not.toHaveURL(/\/login/);
     });
@@ -98,6 +99,11 @@ test.describe('Auth flow', () => {
         await registerPage.email.fill(uniqueEmail());
         await registerPage.username.fill(uniqueUsername());
         await registerPage.password.fill('Password123!');
+        await registerPage.email.click();
+        await page.waitForTimeout(300);
+        await registerPage.confirmPassword.fill('Password123!');
+        await registerPage.email.click();
+        await page.waitForTimeout(300);
         // Do NOT check TOS
         await registerPage.submit.click();
 
@@ -125,6 +131,7 @@ test.describe('Auth flow', () => {
 
     test('unauthenticated access to protected route redirects to login', async ({ page }) => {
         await page.goto('/strategies');
+        await page.waitForURL(/\/login/, { timeout: 15_000 });
         await expect(page).toHaveURL(/\/login/);
     });
 
@@ -154,6 +161,10 @@ test.describe('Auth flow', () => {
         const email = uniqueEmail('reset');
         const username = uniqueUsername('reset');
         await apiRegister(email, username, 'Password123!');
+
+        // Wait for the verification email to arrive, then clear all
+        await new Promise(r => setTimeout(r, 2000));
+        await clearAllMessages();
 
         // Navigate to forgot-password page
         const loginPage = new LoginPage(page);

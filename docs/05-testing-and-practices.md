@@ -80,7 +80,7 @@ If a test fails and you can't tell where to look, the test is too big. Break it 
 
 - **Unit tests** — pure logic: block evaluators, schema validation, encryption helpers, P&L calculations. No DB, no Redis, no network.
 - **Integration tests** — service boundaries: controller → service → DB → response. Uses real Postgres + Redis in test containers.
-- **E2E / Smoke tests** — happy path through the full stack: register → build strategy → start → place order → fill. Runs against the dev Docker environment.
+- **E2E / Smoke tests** — happy path through the full stack: register → build strategy → start → place order → fill. Runs against the dev Docker environment via `BASE_URL=http://localhost pnpm --filter @polyforge/e2e test`. Requires `docker compose -f docker-compose.infra.yml up -d` running. Global setup clears `config:invite_only` Redis flag. PrimeNG locators use icon classes (`.pi-pencil`, `.pi-pause`, etc.) since `pTooltip` directives don't render as DOM attributes in AOT builds.
 
 ---
 

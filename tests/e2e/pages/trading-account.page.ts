@@ -29,7 +29,9 @@ export class TradingAccountPage {
 
     async goto(): Promise<void> {
         await this.page.goto('/settings/trading-account');
-        await expect(this.page.locator('h1', { hasText: 'Trading Account' })).toBeVisible();
+        await expect(this.page.locator('h1', { hasText: 'Trading Account' })).toBeVisible({ timeout: 15_000 });
+        // Wait for status badge to appear (indicates auth state resolved)
+        await expect(this.statusBadge).toBeVisible({ timeout: 10_000 });
     }
 
     async isConnected(): Promise<boolean> {

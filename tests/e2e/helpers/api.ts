@@ -15,6 +15,7 @@ const API_URL  = process.env.API_URL  ?? 'http://localhost:3002';
 export interface LoginResponse {
     token: string;
     user:  { id: string; email: string; username: string; status: string };
+    cookie?: string;
 }
 
 export interface StrategyResponse {
@@ -37,7 +38,15 @@ export async function apiLogin(email: string, password: string): Promise<LoginRe
         throw new Error(`Login failed: ${res.status} ${JSON.stringify(err)}`);
     }
 
-    return res.json() as Promise<LoginResponse>;
+    // Cookie-based auth: token is in Set-Cookie header, user object in body
+    const cookie = res.headers.get('set-cookie') ?? '';
+    const tokenMatch = cookie.match(/pf_token=([^;]+)/);
+    const user = await res.json() as LoginResponse['user'];
+    return {
+        token: tokenMatch?.[1] ?? '',
+        user,
+        cookie,
+    };
 }
 
 export async function apiRegister(
@@ -63,7 +72,10 @@ export async function apiRegister(
 
 export async function apiGetStrategies(token: string): Promise<StrategyResponse[]> {
     const res = await fetch(`${API_URL}/api/v1/strategies`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+            Authorization: `Bearer ${token}`,
+            Cookie: `pf_token=${token}`,
+        },
     });
     if (!res.ok) throw new Error(`GET /strategies failed: ${res.status}`);
     const data = await res.json() as { data: StrategyResponse[] };
@@ -73,7 +85,10 @@ export async function apiGetStrategies(token: string): Promise<StrategyResponse[
 export async function apiDeleteStrategy(token: string, id: string): Promise<void> {
     const res = await fetch(`${API_URL}/api/v1/strategies/${id}`, {
         method:  'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+            Authorization: `Bearer ${token}`,
+            Cookie: `pf_token=${token}`,
+        },
     });
     // 404 is OK — may have been already deleted
     if (!res.ok && res.status !== 404) {
@@ -84,7 +99,10 @@ export async function apiDeleteStrategy(token: string, id: string): Promise<void
 export async function apiStopStrategy(token: string, id: string): Promise<void> {
     await fetch(`${API_URL}/api/v1/strategies/${id}/stop`, {
         method:  'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+            Authorization: `Bearer ${token}`,
+            Cookie: `pf_token=${token}`,
+        },
     });
 }
 

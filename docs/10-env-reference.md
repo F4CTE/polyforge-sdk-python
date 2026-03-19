@@ -9,7 +9,7 @@
 
 | Variable | Dev default | Description |
 |---|---|---|
-| `NODE_ENV` | `development` | `development` \| `production` \| `test` |
+| `NODE_ENV` | `development` | `development` \| `production` \| `test`. Controls rate-limit strictness: production uses tight per-route limits (5–10 req/hr); dev/test uses relaxed limits (500–10000) to support E2E testing. |
 | `LOG_LEVEL` | `debug` | `debug` \| `info` \| `warn` \| `error` |
 
 ---

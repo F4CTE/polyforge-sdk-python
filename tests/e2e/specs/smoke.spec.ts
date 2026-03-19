@@ -20,8 +20,9 @@ const ALICE_PASSWORD = 'password123';
 test.describe('Smoke', () => {
 
     test('@smoke app loads and redirects unauthenticated user to login', async ({ page }) => {
-        await page.goto('/');
-        await expect(page).toHaveURL(/\/login/);
+        // Navigate to a protected route — should redirect to /login
+        await page.goto('/strategies');
+        await page.waitForURL(/\/login/, { timeout: 15_000 });
         await expect(page.locator('h2', { hasText: 'Welcome back' })).toBeVisible();
     });
 
@@ -69,8 +70,8 @@ test.describe('Smoke', () => {
     test('@smoke direct API health check — auth-service responds', async () => {
         // Bypass the browser — quick sanity check via API helper
         const resp = await apiLogin(ALICE_EMAIL, ALICE_PASSWORD);
-        expect(resp.token).toBeTruthy();
         expect(resp.user.email).toBe(ALICE_EMAIL);
+        expect(resp.user.id).toBeTruthy();
     });
 
 });

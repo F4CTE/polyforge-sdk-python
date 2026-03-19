@@ -96,6 +96,27 @@ export class TemplatesService {
           severity: "info",
         };
 
+      case "TICKET_REPLY":
+        return {
+          title: "Support Reply",
+          body: `${data.adminName ?? "Our support team"} replied to your ticket "${data.subject ?? "unknown"}". Check your ticket for details.`,
+          severity: "info",
+        };
+
+      case "TICKET_CLOSED":
+        return {
+          title: "Ticket Closed",
+          body: `Your support ticket "${data.subject ?? "unknown"}" has been closed. If you need further help, you can open a new ticket.`,
+          severity: "info",
+        };
+
+      case "TICKET_CREATED":
+        return {
+          title: "Ticket Received",
+          body: `Your support ticket "${data.subject ?? "unknown"}" has been received. We'll get back to you as soon as possible.`,
+          severity: "info",
+        };
+
       default:
         return {
           title: "Polyforge Notification",

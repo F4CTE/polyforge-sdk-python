@@ -44,6 +44,12 @@ export class LayoutComponent {
         { label: 'Leaderboard', icon: 'pi pi-trophy',  route: '/leaderboard' },
       ],
     },
+    {
+      title: 'Help',
+      items: [
+        { label: 'Support', icon: 'pi pi-question-circle', route: '/support' },
+      ],
+    },
   ];
 
   readonly userMenu: MenuItem[] = [

@@ -86,6 +86,11 @@ export const routes: Routes = [
         loadChildren: () => import('./features/profile/profile.routes').then(m => m.profileRoutes),
       },
       {
+        path: 'support',
+        canActivate: [verifiedGuard],
+        loadChildren: () => import('./features/support/support.routes').then(m => m.supportRoutes),
+      },
+      {
         path: 'settings',
         canActivate: [authGuard],
         loadChildren: () => import('./features/settings/settings.routes').then(m => m.settingsRoutes),

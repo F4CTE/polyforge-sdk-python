@@ -22,6 +22,7 @@ function makePrefs(overrides: Partial<FullPrefs> = {}): FullPrefs {
     onSomeoneFollowed: true,
     onSomeoneLiked: true,
     onSomeoneCommented: true,
+    onTicketReply: true,
     emailEnabled: false,
     telegramEnabled: false,
     discordEnabled: false,
@@ -42,6 +43,7 @@ interface FullPrefs {
   onSomeoneFollowed: boolean;
   onSomeoneLiked: boolean;
   onSomeoneCommented: boolean;
+  onTicketReply: boolean;
   emailEnabled: boolean;
   telegramEnabled: boolean;
   discordEnabled: boolean;

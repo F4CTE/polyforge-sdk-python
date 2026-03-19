@@ -354,7 +354,7 @@ describe("LogsService", () => {
       });
 
       const call = prisma.eventLog.findMany.mock.calls[0][0];
-      expect((call.where.createdAt as any).gte).toBeInstanceOf(Date);
+      expect(call.where.createdAt.gte).toBeInstanceOf(Date);
     });
 
     it("sets createdAt.lte when to is provided", async () => {
@@ -368,7 +368,7 @@ describe("LogsService", () => {
       });
 
       const call = prisma.eventLog.findMany.mock.calls[0][0];
-      expect((call.where.createdAt as any).lte).toBeInstanceOf(Date);
+      expect(call.where.createdAt.lte).toBeInstanceOf(Date);
     });
 
     it("does not add createdAt filter when neither from nor to is given", async () => {
@@ -476,7 +476,7 @@ describe("LogsService", () => {
       });
 
       const call = prisma.userLoginHistory.findMany.mock.calls[0][0];
-      expect((call.where.createdAt as any).gte).toBeInstanceOf(Date);
+      expect(call.where.createdAt.gte).toBeInstanceOf(Date);
     });
 
     it("sets createdAt.lte when to is provided", async () => {
@@ -490,7 +490,7 @@ describe("LogsService", () => {
       });
 
       const call = prisma.userLoginHistory.findMany.mock.calls[0][0];
-      expect((call.where.createdAt as any).lte).toBeInstanceOf(Date);
+      expect(call.where.createdAt.lte).toBeInstanceOf(Date);
     });
 
     it("sets both gte and lte when from and to are both provided", async () => {
@@ -505,8 +505,8 @@ describe("LogsService", () => {
       });
 
       const call = prisma.userLoginHistory.findMany.mock.calls[0][0];
-      expect((call.where.createdAt as any).gte).toBeInstanceOf(Date);
-      expect((call.where.createdAt as any).lte).toBeInstanceOf(Date);
+      expect(call.where.createdAt.gte).toBeInstanceOf(Date);
+      expect(call.where.createdAt.lte).toBeInstanceOf(Date);
     });
 
     it("does not add createdAt filter when neither from nor to is given", async () => {
@@ -636,7 +636,7 @@ describe("LogsService", () => {
       });
 
       const call = prisma.notificationHistory.findMany.mock.calls[0][0];
-      expect((call.where.sentAt as any).gte).toBeInstanceOf(Date);
+      expect(call.where.sentAt.gte).toBeInstanceOf(Date);
     });
 
     it("sets sentAt.lte when to is provided", async () => {
@@ -650,7 +650,7 @@ describe("LogsService", () => {
       });
 
       const call = prisma.notificationHistory.findMany.mock.calls[0][0];
-      expect((call.where.sentAt as any).lte).toBeInstanceOf(Date);
+      expect(call.where.sentAt.lte).toBeInstanceOf(Date);
     });
 
     it("sets both gte and lte when from and to are both provided", async () => {
@@ -665,8 +665,8 @@ describe("LogsService", () => {
       });
 
       const call = prisma.notificationHistory.findMany.mock.calls[0][0];
-      expect((call.where.sentAt as any).gte).toBeInstanceOf(Date);
-      expect((call.where.sentAt as any).lte).toBeInstanceOf(Date);
+      expect(call.where.sentAt.gte).toBeInstanceOf(Date);
+      expect(call.where.sentAt.lte).toBeInstanceOf(Date);
     });
 
     it("does not add sentAt filter when neither from nor to is given", async () => {
@@ -730,9 +730,9 @@ describe("LogsService", () => {
     });
 
     it("calculates pages correctly for non-divisible total", async () => {
-      prisma.notificationHistory.findMany.mockResolvedValue(
-        [makeNotificationEntry()] as any,
-      );
+      prisma.notificationHistory.findMany.mockResolvedValue([
+        makeNotificationEntry(),
+      ] as any);
       prisma.notificationHistory.count.mockResolvedValue(13);
 
       const result = await service.getNotificationHistory({

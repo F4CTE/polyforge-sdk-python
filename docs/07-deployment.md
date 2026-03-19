@@ -366,6 +366,20 @@ curl https://polyforge.app/api/v1/health
 
 ## Part 12 — GitHub Actions CI/CD
 
+### CI Pipeline (`.github/workflows/ci.yml`)
+
+The CI pipeline runs on every push/PR to `main`:
+
+| Job | Depends on | What it does |
+|-----|-----------|--------------|
+| **Lint** | — | ESLint across all packages |
+| **Typecheck** | — | `tsc --noEmit` across all packages |
+| **Test** | — | Unit tests with coverage (Vitest) |
+| **Build** | Lint, Typecheck, Test | Full `pnpm build` + artifact verification |
+| **E2E** | Build | Docker Compose up → seed → Playwright (Chromium + Firefox) |
+
+The E2E job builds the full Docker stack, waits for all services to be healthy, seeds test data, runs 60+ Playwright tests across Chromium and Firefox, and uploads Playwright reports + Docker service logs on failure.
+
 ### Required repository secrets
 
 | Secret | Value |

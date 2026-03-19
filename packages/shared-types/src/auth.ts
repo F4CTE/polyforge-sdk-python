@@ -29,6 +29,7 @@ export interface InternalJwtPayload {
 export enum AdminRole {
   SUPER_ADMIN = "SUPER_ADMIN",
   ADMIN = "ADMIN",
+  SUPPORT = "SUPPORT",
   VIEWER = "VIEWER",
 }
 

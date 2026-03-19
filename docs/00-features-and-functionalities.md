@@ -631,6 +631,47 @@ These are not user-facing features, but they are required for the platform to fu
 
 ---
 
+## 17. Support Ticket System
+
+In-app support ticket system allowing users to submit and track support requests, and admins to manage, reply, and resolve them.
+
+### 17.1 User-Facing (user-app)
+
+- [x] **Create ticket** — subject (max 255), category (General, Billing, Technical, Account, Bug, Feature Request), description (max 5000)
+- [x] **Ticket list** — paginated list of user's tickets ordered by last updated, status badges, latest message preview
+- [x] **Ticket detail** — full conversation thread with chronological messages, admin messages visually distinguished (shield icon, tinted background)
+- [x] **Reply to ticket** — textarea reply form (hidden when ticket is closed)
+- [x] **Status visibility** — Open, Awaiting Reply (admin replied), In Progress (user replied), Closed
+- [x] **Sidebar navigation** — "Help > Support" section in sidebar
+
+### 17.2 Admin-Facing (admin-app)
+
+- [x] **Ticket list** — all tickets, filterable by status, priority, assigned admin. Shows user, status badge, priority badge, assigned admin name, last updated
+- [x] **Ticket detail** — user info, conversation thread, admin controls (status, priority dropdowns + update button)
+- [x] **Admin reply** — reply form with auto-assignment (if unassigned, replying admin is auto-assigned)
+- [x] **Assignment** — "Assign to me" button on unassigned tickets. Admin display names resolved from admin DB
+- [x] **Close ticket** — sets closedBy/closedAt, emits TICKET_CLOSED event, notifies user
+- [x] **Audit logging** — all admin actions (reply, update, close) logged to audit_logs
+
+### 17.3 Auto-Reminder
+
+- [x] **Stale ticket detection** — hourly cron checks for tickets in AWAITING_USER status older than 48h
+- [x] **Single reminder email** — branded HTML email with "View your ticket" CTA button, sent once per admin reply cycle
+- [x] **Configurable delay** — Redis key `config:ticket_reminder_hours` (default 48)
+- [x] **Error resilience** — continues processing remaining tickets if one email fails
+
+### 17.4 Notifications
+
+- [x] **TICKET_REPLY** — email/Telegram/Discord notification when admin replies (respects `onTicketReply` user preference)
+- [x] **TICKET_CLOSED** — notification when ticket is closed
+- [x] **TICKET_CREATED** — confirmation notification to user on ticket creation
+
+### 17.5 Admin Role: SUPPORT
+
+- [x] New `SUPPORT` role in `AdminRole` enum — dedicated support accounts that can access ticket management
+
+---
+
 ## Deferred (Future Versions)
 
 The following features are explicitly **out of scope for v1** and will be considered for future releases:

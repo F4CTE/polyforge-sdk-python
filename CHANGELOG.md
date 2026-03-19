@@ -7,6 +7,53 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **CI: E2E job** — New `e2e` job in GitHub Actions pipeline runs after `build`. Spins up Docker Compose, seeds databases, installs Playwright browsers (Chromium + Firefox), runs full E2E suite, uploads Playwright report and Docker logs on failure. Pipeline is now: Lint → Typecheck → Test → Build → E2E.
+
+---
+
+## [2.1.1] — 2026-03-19
+
+### Fixed — E2E Test Suite & Rate Limiting
+
+- **Error interceptor** (`apps/user-app/src/app/core/interceptors/error.interceptor.ts`): 401 responses from `GET /me` session probe no longer redirect away from public routes (`/register`, `/forgot-password`, etc.). Fixes register page showing login page in Docker builds.
+- **Rate limiting**: Dev/test throttle limits increased to effectively unlimited on both module-level (`ThrottlerModule`) and per-route `@Throttle` decorators in auth-service and api-service. Production limits unchanged.
+- **E2E cookie auth**: Fixed `apiLogin` helper to extract JWT from `Set-Cookie` header (cookie-based auth). API helpers now send `Cookie` header alongside `Authorization`.
+- **E2E quoted-printable**: Added `decodeQuotedPrintable()` to MailHog helper — email URLs broken across lines by quoted-printable encoding are now reassembled before link extraction.
+- **E2E register form**: Added `confirmPassword` field fill (missing from page object). Fixed PrimeNG checkbox locator (strict mode violation with `.or()`). Dismiss password strength popup before clicking TOS.
+- **E2E verify email flow**: Test now checks for "Email verified!" heading instead of expecting redirect to `/login` (component shows success page, not redirect).
+- **E2E forgot password**: Added delay after `apiRegister` before clearing MailHog to avoid race condition with verification email.
+- **E2E PrimeNG locators**: Replaced `button[ptooltip="..."]` selectors with icon-based (`.pi-pause`, `.pi-play`, `.pi-stop-circle`, `.pi-pencil`) — `pTooltip` directive doesn't render as DOM attribute in AOT builds.
+- **E2E strategy builder**: Fixed `saveAndRedirect` to accept detail page URL (builder redirects to `/strategies/:id`, not `/strategies` list). Added `listPage.goto()` before list assertions. Fixed block name `Price Threshold` → `Price Crosses Up`.
+- **E2E Playwright config**: Added `globalSetup.ts` (clears `invite_only` Redis flag), increased timeouts (45s test, 15s expect/navigation), added `viewport: 1280x900`, cookie banner dismissal in page objects.
+- **E2E smoke test**: Changed root `/` redirect test to use `/strategies` + `waitForURL` for SPA client-side redirect.
+- **Result**: 60 passed, 4 skipped (seed data edge cases), 0 failed (previously 38 failures).
+
+---
+
+## [2.1.0] — 2026-03-18
+
+### Added — Support Ticket System
+
+- **Database**: New `tickets` and `ticket_messages` tables with `TicketStatus`, `TicketPriority`, `TicketCategory` enums. Added `onTicketReply` toggle to `notification_preferences`. Added `SUPPORT` admin role to `AdminRole` enum.
+- **api-service**: New `/tickets` module — `POST /tickets` (create), `GET /tickets` (list my tickets), `GET /tickets/:id` (detail + messages), `POST /tickets/:id/messages` (user reply). Emits `TICKET_CREATED` stream event.
+- **admin-api-service**: New `/tickets` module — `GET /tickets` (list all, filterable by status/priority/assignedTo), `GET /tickets/:id` (detail with resolved admin names), `POST /tickets/:id/messages` (admin reply), `PATCH /tickets/:id` (update status/priority/assignment), `POST /tickets/:id/close`. Auto-assigns ticket to replying admin if unassigned. Full audit logging on all admin actions. Resolves admin UUIDs to display names from admin DB.
+- **admin-api-service**: Ticket reminder cron (`@Cron("15 * * * *")`) — checks for tickets in `AWAITING_USER` status older than 48h (configurable via Redis key `config:ticket_reminder_hours`), sends a single branded reminder email with CTA link, sets `reminderSentAt` to prevent repeat reminders.
+- **notification-service**: Added `TICKET_REPLY`, `TICKET_CLOSED`, `TICKET_CREATED` event templates. Mapped `TICKET_REPLY` and `TICKET_CLOSED` to `onTicketReply` notification preference.
+- **shared-types**: New `tickets.ts` with `TicketStatus`, `TicketPriority`, `TicketCategory` enums and `Ticket`, `TicketMessage`, `TicketDetail` interfaces. Added `SUPPORT` to `AdminRole`.
+- **shared-schemas**: New `ticket.schema.ts` with Zod schemas for create/query/update. Added `TicketCreatedEventSchema`, `TicketReplyEventSchema`, `TicketClosedEventSchema` to stream events union.
+- **user-app**: New "Support" section in sidebar (`/support`). Ticket list page with status badges, create ticket form (subject, category, description), ticket detail with conversation view and reply form. Closed tickets show info message instead of reply form.
+- **admin-app**: New "Tickets" item in Manage sidebar section (`/tickets`). Filterable ticket list with status/priority/assigned-to columns. Ticket detail with admin controls (status, priority, assignment), "Assign to me" button, conversation thread, and reply form. Shows resolved admin display names for assignment and closure.
+- **admin-api-service mail**: New `sendTicketReminderEmail()` method with branded HTML template matching existing Polyforge email design.
+
+### Tests
+
+- **api-service** `tickets.service.spec.ts` — 16 tests: create (transaction, event, default category), listMy (pagination, includes), getOne (ownership, not found, forbidden), addMessage (status transition, closed rejection, reminder clear).
+- **admin-api-service** `tickets.service.spec.ts` — 25 tests: findAll (filters, pagination, admin name resolution, includes), findOne (admin names, not found, null handling), addReply (auto-assign, keep existing, event, reminder clear), update (status/priority, close with closedBy/closedAt, event emission, no event on non-close), close (delegation).
+- **admin-api-service** `ticket-reminder.service.spec.ts` — 7 tests: no-op on empty, email sending, reminderSentAt update, configurable hours, default 48h, error resilience, batch processing.
+- All ticket coverage: 100% lines, 95%+ branches, 100% functions, 100% statements.
+
 ---
 
 ## [2.0.0] — 2026-03-18

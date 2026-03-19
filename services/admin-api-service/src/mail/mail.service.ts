@@ -173,4 +173,59 @@ export class AdminMailService {
     });
     this.logger.log(`Invite email sent to ${to} with code ${code}`);
   }
+
+  async sendTicketReminderEmail(
+    to: string,
+    username: string,
+    ticketId: string,
+    subject: string,
+  ): Promise<void> {
+    const ticketUrl = `${FRONTEND}/support/${ticketId}`;
+
+    const html = emailLayout({
+      preheader: `We're waiting for your reply on your support ticket.`,
+      body: `
+                <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827">
+                  We're waiting for your reply
+                </h2>
+                <p style="margin:0 0 16px;color:#4b5563">
+                  Hi ${username}, our support team replied to your ticket but we
+                  haven't heard back from you yet.
+                </p>
+
+                <div style="background:#f9fafb;border-radius:10px;padding:16px 20px;
+                            border-left:4px solid #06b6d4;margin:0 0 24px">
+                  <p style="margin:0 0 4px;font-size:12px;color:#9ca3af;
+                             text-transform:uppercase;letter-spacing:0.06em">Ticket subject</p>
+                  <p style="margin:0;font-size:16px;font-weight:600;color:#111827">${subject}</p>
+                </div>
+
+                <p style="text-align:center;margin:0 0 28px">
+                  <a href="${ticketUrl}"
+                     style="background:#06b6d4;border-radius:8px;color:#000;display:inline-block;
+                            font-size:15px;font-weight:600;padding:12px 28px;text-decoration:none">
+                    View your ticket
+                  </a>
+                </p>
+
+                <p style="margin:0;font-size:13px;color:#9ca3af">
+                  If you no longer need help, you can ignore this email and we'll
+                  close the ticket automatically.
+                </p>
+            `,
+      footerNote:
+        "You received this because you have an open support ticket on Polyforge.",
+    });
+
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject: `Reminder: Your support ticket "${subject}"`,
+      text: `Hi ${username},\n\nOur support team replied to your ticket "${subject}" but we haven't heard back from you.\n\nView your ticket: ${ticketUrl}\n\nIf you no longer need help, you can ignore this email.`,
+      html,
+    });
+    this.logger.log(
+      `Ticket reminder email sent to ${to} for ticket ${ticketId}`,
+    );
+  }
 }
