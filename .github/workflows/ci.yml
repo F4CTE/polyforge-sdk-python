@@ -160,6 +160,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # ── Free disk space for Docker builds ────────────────────────────────
+      # GitHub runners have ~14GB free; building 18 Docker images needs more.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune -af
+          df -h /
+
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
@@ -181,7 +189,7 @@ jobs:
       # ── Start the full Docker stack ──────────────────────────────────────
       - name: Build and start Docker Compose
         run: docker compose -f docker-compose.infra.yml up -d --build
-        timeout-minutes: 15
+        timeout-minutes: 20
 
       - name: Wait for services to be healthy
         run: |
