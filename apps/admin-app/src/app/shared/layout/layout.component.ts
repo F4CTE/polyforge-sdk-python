@@ -1,10 +1,12 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
 import { MenuModule } from 'primeng/menu';
-import { MenuItem } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
+import { MenuItem, MessageService } from 'primeng/api';
 import { AdminAuthStore } from '../../core/store/admin-auth.store';
+import { AdminPollingService } from '../../core/services/admin-polling.service';
 
 interface NavItem {
   label: string;
@@ -15,12 +17,19 @@ interface NavItem {
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ButtonModule, AvatarModule, MenuModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ButtonModule, AvatarModule, MenuModule, ToastModule],
+  providers: [MessageService],
   templateUrl: './layout.component.html',
 })
-export class LayoutComponent {
+export class LayoutComponent implements OnInit {
   readonly auth = inject(AdminAuthStore);
+  readonly polling = inject(AdminPollingService);
+  private readonly toast = inject(MessageService);
   collapsed     = signal(false);
+
+  ngOnInit(): void {
+    this.polling.start(this.toast);
+  }
 
   readonly nav: { title: string; superAdminOnly?: boolean; items: NavItem[] }[] = [
     {

@@ -71,6 +71,17 @@ export class WebSocketService implements OnDestroy {
     map(m => m as unknown as BacktestEvent),
   );
 
+  readonly notifications$ = this.messages$.pipe(
+    filter((msg: any) => msg.type === 'NOTIFICATION'),
+    map((msg: any) => ({
+      id: msg.id ?? crypto.randomUUID(),
+      title: msg.title ?? 'Notification',
+      body: msg.body ?? '',
+      severity: msg.severity ?? 'info',
+      timestamp: msg.ts ? Number(msg.ts) : Date.now(),
+    })),
+  );
+
   connect(): void {
     if (this.ws?.readyState === WebSocket.OPEN || this.ws?.readyState === WebSocket.CONNECTING) return;
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';

@@ -23,16 +23,16 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th class="pf-col-label" style="min-width:40px">#</th>
-            <th class="pf-col-label" style="min-width:60px">Side</th>
-            <th class="pf-col-label" style="min-width:60px">Outcome</th>
-            <th class="pf-col-label" style="min-width:100px;text-align:right">Size</th>
-            <th class="pf-col-label" style="min-width:80px;text-align:right">Price</th>
-            <th class="pf-col-label" style="min-width:140px;text-align:right">Filled / Total</th>
-            <th class="pf-col-label" style="min-width:90px;text-align:right">Avg Fill</th>
-            <th class="pf-col-label" style="min-width:80px">Type</th>
-            <th class="pf-col-label" style="min-width:100px">Status</th>
-            <th class="pf-col-label" style="min-width:130px;text-align:right">Date</th>
+            <th class="pf-col-label" style="min-width:40px" pTooltip="Row number" tooltipPosition="top">#</th>
+            <th class="pf-col-label" style="min-width:60px" pTooltip="Buy or Sell direction" tooltipPosition="top">Side</th>
+            <th class="pf-col-label" style="min-width:60px" pTooltip="YES or NO outcome token" tooltipPosition="top">Outcome</th>
+            <th class="pf-col-label" style="min-width:100px;text-align:right" pTooltip="Number of shares in the order" tooltipPosition="top">Size</th>
+            <th class="pf-col-label" style="min-width:80px;text-align:right" pTooltip="Limit price per share" tooltipPosition="top">Price</th>
+            <th class="pf-col-label" style="min-width:140px;text-align:right" pTooltip="Shares filled vs total order size" tooltipPosition="top">Filled / Total</th>
+            <th class="pf-col-label" style="min-width:90px;text-align:right" pTooltip="Volume-weighted average fill price" tooltipPosition="top">Avg Fill</th>
+            <th class="pf-col-label" style="min-width:80px" pTooltip="Order type (GTC, FOK, IOC)" tooltipPosition="top">Type</th>
+            <th class="pf-col-label" style="min-width:100px" pTooltip="Current order lifecycle status" tooltipPosition="top">Status</th>
+            <th class="pf-col-label" style="min-width:130px;text-align:right" pTooltip="Order creation timestamp" tooltipPosition="top">Date</th>
           </tr>
         </thead>
         <tbody>
@@ -56,7 +56,7 @@
             </tr>
           } @else {
             @for (order of orders(); track order.id; let i = $index) {
-              <tr class="table-row">
+              <tr class="table-row" (click)="selectOrder(order)" style="cursor:pointer">
                 <td>
                   <span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">
                     {{ (page() - 1) * 25 + i + 1 }}
@@ -88,7 +88,9 @@
                 <td>
                   <span class="order-status-badge"
                         [style.color]="statusColor(order.status)"
-                        [style.background]="statusBg(order.status)">
+                        [style.background]="statusBg(order.status)"
+                        [pTooltip]="order.status === 'CONFIRMED' ? 'Order submitted and confirmed on-chain' : order.status === 'PENDING' ? 'Order awaiting submission' : order.status === 'LIVE' ? 'Order is live on the orderbook' : order.status === 'CANCELLED' ? 'Order was cancelled' : order.status === 'FAILED' ? 'Order failed to execute' : order.status === 'MATCHED' ? 'Order has been matched' : 'Order submitted to exchange'"
+                        tooltipPosition="top">
                     {{ order.status }}
                   </span>
                 </td>
@@ -115,3 +117,56 @@
   }
 
 </div>
+
+@if (selectedOrder(); as order) {
+  <p-dialog [visible]="!!selectedOrder()" (visibleChange)="closeDetail()" [modal]="true"
+            [style]="{width:'480px'}" [closable]="true" [draggable]="false"
+            header="Order Details" position="right">
+    <div class="order-detail">
+      <div class="order-detail-row">
+        <span class="order-detail-label">Order ID</span>
+        <span class="order-detail-value pf-mono" style="font-size:11px">{{ order.id | slice:0:8 }}…</span>
+      </div>
+      <div class="order-detail-row">
+        <span class="order-detail-label">Side</span>
+        <span class="order-side-badge" [class]="order.side.toLowerCase()">{{ order.side }}</span>
+      </div>
+      <div class="order-detail-row">
+        <span class="order-detail-label">Outcome</span>
+        <span class="order-outcome-badge" [class]="order.outcome.toLowerCase()">{{ order.outcome }}</span>
+      </div>
+      <div class="order-detail-row">
+        <span class="order-detail-label">Size</span>
+        <span class="pf-mono">{{ order.size }}</span>
+      </div>
+      <div class="order-detail-row">
+        <span class="order-detail-label">Price</span>
+        <span class="pf-mono">{{ order.price }}</span>
+      </div>
+      <div class="order-detail-row">
+        <span class="order-detail-label">Fill Price</span>
+        <span class="pf-mono">{{ order.fillPrice ?? '—' }}</span>
+      </div>
+      <div class="order-detail-row">
+        <span class="order-detail-label">Filled</span>
+        <span class="pf-mono">{{ fillRatio(order) }}</span>
+      </div>
+      <div class="order-detail-row">
+        <span class="order-detail-label">Type</span>
+        <span>{{ order.orderType }}</span>
+      </div>
+      <div class="order-detail-row">
+        <span class="order-detail-label">Status</span>
+        <span class="order-status-badge"
+              [style.color]="statusColor(order.status)"
+              [style.background]="statusBg(order.status)">
+          {{ order.status }}
+        </span>
+      </div>
+      <div class="order-detail-row">
+        <span class="order-detail-label">Created</span>
+        <span class="pf-mono" style="font-size:12px">{{ order.placedAt | date:'MMM d, yyyy HH:mm:ss' }}</span>
+      </div>
+    </div>
+  </p-dialog>
+}

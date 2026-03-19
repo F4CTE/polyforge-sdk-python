@@ -8,6 +8,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MessageService } from 'primeng/api';
 
 import { StrategiesApiService, Strategy, CreateStrategyDto, ExecMode, StrategyVisibility } from '../../../core/services/strategies-api.service';
@@ -104,7 +105,7 @@ interface BlocksState {
 @Component({
   selector: 'app-strategy-builder',
   standalone: true,
-  imports: [RouterLink, FormsModule, ButtonModule, InputTextModule, TextareaModule, SelectModule, ToastModule, TooltipModule],
+  imports: [RouterLink, FormsModule, ButtonModule, InputTextModule, TextareaModule, SelectModule, ToastModule, TooltipModule, DragDropModule],
   providers: [MessageService],
   templateUrl: './strategy-builder.component.html',
 })
@@ -218,6 +219,15 @@ export class StrategyBuilderComponent implements OnInit {
       const to = idx + dir;
       if (to < 0 || to >= list.length) return b;
       [list[idx], list[to]] = [list[to], list[idx]];
+      return { ...b, [section]: list };
+    });
+  }
+
+  dropBlock(event: CdkDragDrop<BlockInstance[]>): void {
+    const section = this.activeSection();
+    this.blocks.update(b => {
+      const list = [...b[section]];
+      moveItemInArray(list, event.previousIndex, event.currentIndex);
       return { ...b, [section]: list };
     });
   }

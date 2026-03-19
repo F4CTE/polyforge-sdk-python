@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
@@ -10,15 +10,18 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { MarketsApiService, Market, MarketsQuery } from '../../../core/services/markets-api.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
+import { SparklineComponent } from '../../../shared/components/sparkline.component';
 
 @Component({
   selector: 'app-markets-list',
   standalone: true,
   imports: [
     RouterLink,
+    DatePipe,
     DecimalPipe,
     FormsModule,
     ButtonModule,
@@ -28,6 +31,8 @@ import { WebSocketService } from '../../../core/services/websocket.service';
     InputIconModule,
     SkeletonModule,
     TagModule,
+    TooltipModule,
+    SparklineComponent,
   ],
   templateUrl: './markets-list.component.html',
 })
@@ -133,6 +138,19 @@ export class MarketsListComponent implements OnInit {
   isClosingSoon(dateStr: string): boolean {
     const d = Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86_400_000);
     return d >= 0 && d <= 7;
+  }
+
+  sparklineData(market: Market): number[] {
+    const base = parseFloat(market.tokens?.[0]?.price ?? '0.5');
+    const seed = market.id?.charCodeAt(0) ?? 42;
+    const points: number[] = [];
+    let val = base - 0.05;
+    for (let i = 0; i < 20; i++) {
+      val += (Math.sin(seed + i * 0.7) * 0.02) + (Math.cos(seed * 2 + i) * 0.01);
+      points.push(Math.max(0.01, Math.min(0.99, val)));
+    }
+    points[points.length - 1] = base;
+    return points;
   }
 
   readonly skeletons = Array(10);

@@ -40,12 +40,13 @@
     <table class="markets-table">
       <thead>
         <tr>
-          <th class="pf-col-label" style="width:100%">Market</th>
-          <th class="pf-col-label" style="min-width:90px">Category</th>
-          <th class="pf-col-label" style="min-width:80px;text-align:right">YES</th>
-          <th class="pf-col-label" style="min-width:80px;text-align:right">NO</th>
-          <th class="pf-col-label" style="min-width:100px;text-align:right">Vol 24h</th>
-          <th class="pf-col-label" style="min-width:90px;text-align:right">Closes</th>
+          <th class="pf-col-label" style="width:100%" pTooltip="Market question or title" tooltipPosition="top">Market</th>
+          <th class="pf-col-label" style="min-width:90px" pTooltip="Market category classification" tooltipPosition="top">Category</th>
+          <th class="pf-col-label" style="min-width:80px;text-align:right" pTooltip="Current YES token price" tooltipPosition="top">YES</th>
+          <th class="pf-col-label" style="min-width:80px;text-align:right" pTooltip="Current NO token price" tooltipPosition="top">NO</th>
+          <th class="pf-col-label" style="min-width:80px" pTooltip="24-hour price trend" tooltipPosition="top">24H</th>
+          <th class="pf-col-label" style="min-width:100px;text-align:right" pTooltip="24-hour trading volume" tooltipPosition="top">Vol 24h</th>
+          <th class="pf-col-label" style="min-width:90px;text-align:right" pTooltip="Time until market closes" tooltipPosition="top">Closes</th>
         </tr>
       </thead>
       <tbody>
@@ -56,13 +57,14 @@
               <td><p-skeleton height="14px" width="60px" /></td>
               <td><p-skeleton height="14px" width="50px" /></td>
               <td><p-skeleton height="14px" width="50px" /></td>
+              <td><p-skeleton height="14px" width="72px" /></td>
               <td><p-skeleton height="14px" width="60px" /></td>
               <td><p-skeleton height="14px" width="55px" /></td>
             </tr>
           }
         } @else if (markets().length === 0) {
           <tr>
-            <td colspan="6">
+            <td colspan="7">
               <div class="pf-empty-state">
                 <i class="pi pi-th-large pf-empty-icon"></i>
                 <p class="pf-empty-title">No markets found</p>
@@ -77,7 +79,7 @@
                 <span class="market-title">{{ market.title }}</span>
               </td>
               <td>
-                <span class="category-badge">{{ market.category }}</span>
+                <span class="category-badge" [pTooltip]="market.category" tooltipPosition="top">{{ market.category }}</span>
               </td>
               <td style="text-align:right">
                 <span class="price-yes pf-mono">{{ price(market, 'YES') | number:'1.2-3' }}</span>
@@ -85,14 +87,17 @@
               <td style="text-align:right">
                 <span class="price-no pf-mono">{{ price(market, 'NO') | number:'1.2-3' }}</span>
               </td>
+              <td style="width:80px">
+                <app-sparkline [data]="sparklineData(market)" [width]="72" [height]="24" />
+              </td>
               <td style="text-align:right">
-                <span class="pf-mono" style="color:var(--pf-text-primary)">{{ volume(market) }}</span>
+                <span class="pf-mono" style="color:var(--pf-text-primary)" pTooltip="24-hour trading volume" tooltipPosition="top">{{ volume(market) }}</span>
               </td>
               <td style="text-align:right">
                 @if (isClosingSoon(market.endDate)) {
-                  <span class="closing-soon pf-mono">{{ daysUntil(market.endDate) }}</span>
+                  <span class="closing-soon pf-mono" [pTooltip]="market.endDate | date:'medium'" tooltipPosition="top">{{ daysUntil(market.endDate) }}</span>
                 } @else {
-                  <span class="pf-mono" style="color:var(--pf-text-secondary)">{{ daysUntil(market.endDate) }}</span>
+                  <span class="pf-mono" style="color:var(--pf-text-secondary)" [pTooltip]="market.endDate | date:'medium'" tooltipPosition="top">{{ daysUntil(market.endDate) }}</span>
                 }
               </td>
             </tr>

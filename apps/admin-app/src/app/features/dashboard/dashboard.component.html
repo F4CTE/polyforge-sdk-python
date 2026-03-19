@@ -18,7 +18,7 @@
   <!-- ─── Stat cards ──────────────────────────────────────────────────── -->
   <div class="dash-stats-grid">
     @for (stat of stats(); track stat.label) {
-      <a class="dash-stat-card" [routerLink]="stat.route">
+      <a class="dash-stat-card" [routerLink]="stat.route" [pTooltip]="stat.tooltip" tooltipPosition="bottom">
         <div class="dash-stat-icon" [style.color]="stat.color" [style.background]="stat.bg">
           <i [class]="stat.icon"></i>
         </div>

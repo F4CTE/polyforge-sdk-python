@@ -217,7 +217,7 @@ html, body {
     .status-dot {
       background: var(--pf-cyan-500);
       box-shadow: 0 0 6px rgba(6, 182, 212, 0.8);
-      animation: pf-pulse 2s ease-in-out infinite;
+      animation: pf-live-glow 2s ease-in-out infinite;
     }
   }
 
@@ -582,7 +582,9 @@ input.p-inputtext,
 .markets-row {
   transition: background var(--pf-duration-fast) ease;
 
-  &:hover td { background: var(--pf-bg-overlay); }
+  &:hover {
+    background: var(--pf-bg-overlay) !important;
+  }
 }
 
 .market-title-cell { max-width: 0; }
@@ -784,6 +786,26 @@ input.p-inputtext,
 .market-description-panel { padding: var(--pf-space-4); }
 .market-description-panel .panel-header { padding: 0 0 var(--pf-space-3); border-bottom: none; }
 
+// ─── Animation utilities ─────────────────────────────────────────────────────
+
+.pf-fade-in {
+  animation: pf-fade-in 0.3s ease-out both;
+}
+
+.pf-scale-in {
+  animation: pf-scale-in 0.2s ease-out both;
+}
+
+@keyframes pf-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pf-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
 // ─── Animations ──────────────────────────────────────────────────────────────
 
 @keyframes pf-enter {
@@ -793,6 +815,7 @@ input.p-inputtext,
 
 .pf-page {
   animation: pf-enter var(--pf-duration-slow) ease forwards;
+  animation: pf-fade-in 0.3s ease-out both;
 }
 
 @keyframes pf-pulse {
@@ -803,6 +826,11 @@ input.p-inputtext,
 @keyframes pf-tick {
   0%   { color: var(--pf-cyan-300); }
   100% { color: var(--pf-cyan-500); }
+}
+
+@keyframes pf-live-glow {
+  0%, 100% { box-shadow: 0 0 4px rgba(6, 182, 212, 0.6); }
+  50%      { box-shadow: 0 0 10px rgba(6, 182, 212, 1), 0 0 20px rgba(6, 182, 212, 0.3); }
 }
 
 .price-updated {
@@ -850,9 +878,13 @@ input.p-inputtext,
   display: flex;
   flex-direction: column;
   gap: var(--pf-space-3);
-  transition: border-color var(--pf-duration-fast) ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 
-  &:hover { border-color: var(--pf-border-default); }
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--pf-border-strong);
+    box-shadow: var(--pf-shadow-md), 0 0 12px rgba(6, 182, 212, 0.06);
+  }
 }
 
 .strategy-card-header {
@@ -1133,11 +1165,48 @@ input.p-inputtext,
   text-align: center;
 }
 
+.blocks-drop-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-3);
+}
+
 .block-card {
   background: var(--pf-bg-elevated);
   border: 1px solid var(--pf-border-default);
   border-radius: var(--pf-radius-md);
   padding: var(--pf-space-3) var(--pf-space-4);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+// CDK drag-and-drop styles
+.block-drag-handle:hover {
+  color: var(--pf-cyan-500) !important;
+}
+
+.cdk-drag-preview {
+  background: var(--pf-bg-elevated);
+  border: 1px solid var(--pf-cyan-500);
+  border-radius: var(--pf-radius-md);
+  padding: var(--pf-space-3) var(--pf-space-4);
+  box-shadow: var(--pf-shadow-lg), 0 0 16px rgba(6, 182, 212, 0.15);
+  opacity: 0.95;
+}
+
+.cdk-drag-placeholder {
+  background: var(--pf-cyan-glow);
+  border: 2px dashed var(--pf-cyan-500);
+  border-radius: var(--pf-radius-md);
+  min-height: 48px;
+  opacity: 0.4;
+}
+
+.cdk-drag-animating {
+  transition: transform 200ms ease;
+}
+
+.blocks-drop-list.cdk-drop-list-dragging .block-card:not(.cdk-drag-placeholder) {
+  transition: transform 200ms ease;
 }
 
 .block-card-header {
@@ -1330,7 +1399,10 @@ input.p-inputtext,
 
 .table-row {
   transition: background var(--pf-duration-fast) ease;
-  &:hover td { background: var(--pf-bg-overlay); }
+
+  &:hover {
+    background: var(--pf-bg-overlay) !important;
+  }
 }
 
 // ─── Badges ───────────────────────────────────────────────────────────────────
@@ -1401,11 +1473,12 @@ input.p-inputtext,
   text-decoration: none;
   color: inherit;
   cursor: pointer;
-  transition: border-color var(--pf-duration-fast) ease, box-shadow var(--pf-duration-fast) ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
-    border-color: rgba(6, 182, 212, 0.3);
-    box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.1);
+    transform: translateY(-2px);
+    border-color: var(--pf-border-strong);
+    box-shadow: var(--pf-shadow-md), 0 0 12px rgba(6, 182, 212, 0.06);
   }
 }
 

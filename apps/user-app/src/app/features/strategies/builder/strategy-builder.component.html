@@ -107,18 +107,16 @@
           </div>
         }
 
-        <!-- Added blocks -->
+        <!-- Added blocks (drag-and-drop reorderable) -->
+        <div cdkDropList (cdkDropListDropped)="dropBlock($event)" class="blocks-drop-list">
         @for (block of blocks()[activeSection()]; track block.id) {
-          <div class="block-card">
+          <div class="block-card" cdkDrag>
             <div class="block-card-header">
-              <span class="block-card-title">{{ getBlockDef(block.type)?.label ?? block.type }}</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <i class="pi pi-bars block-drag-handle" cdkDragHandle pTooltip="Drag to reorder" style="cursor:grab;color:var(--pf-text-muted);font-size:12px"></i>
+                <span class="block-card-title">{{ getBlockDef(block.type)?.label ?? block.type }}</span>
+              </div>
               <div style="display:flex;gap:4px">
-                <button class="block-ctrl-btn" pTooltip="Move up" (click)="moveBlock(activeSection(), block.id, -1)">
-                  <i class="pi pi-chevron-up"></i>
-                </button>
-                <button class="block-ctrl-btn" pTooltip="Move down" (click)="moveBlock(activeSection(), block.id, 1)">
-                  <i class="pi pi-chevron-down"></i>
-                </button>
                 <button class="block-ctrl-btn danger" pTooltip="Remove" (click)="removeBlock(activeSection(), block.id)">
                   <i class="pi pi-times"></i>
                 </button>
@@ -146,6 +144,7 @@
             }
           </div>
         }
+        </div><!-- /cdkDropList -->
 
         <!-- Add block button (when blocks exist) -->
         @if (blocks()[activeSection()].length > 0 && !paletteOpen()) {

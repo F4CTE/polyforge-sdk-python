@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, DestroyRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -122,7 +122,7 @@ import { TicketsApiService, TicketDetail, TicketStatus } from '../../core/servic
     }
   `],
 })
-export class TicketDetailComponent implements OnInit {
+export class TicketDetailComponent implements OnInit, OnDestroy {
   private readonly api = inject(TicketsApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly toast = inject(MessageService);
@@ -132,15 +132,41 @@ export class TicketDetailComponent implements OnInit {
   loading = signal(true);
   sending = signal(false);
   replyBody = '';
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.api.get(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next:  t  => { this.ticket.set(t); this.loading.set(false); },
+        next:  t  => { this.ticket.set(t); this.loading.set(false); this.startPolling(id); },
         error: () => this.loading.set(false),
       });
+  }
+
+  ngOnDestroy(): void {
+    if (this.pollTimer) clearInterval(this.pollTimer);
+  }
+
+  /** Poll for new messages every 15s while ticket is open */
+  private startPolling(id: string): void {
+    this.pollTimer = setInterval(() => {
+      const t = this.ticket();
+      if (!t || t.status === 'CLOSED') {
+        if (this.pollTimer) clearInterval(this.pollTimer);
+        return;
+      }
+      this.api.get(id)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: updated => {
+            // Only update if new messages arrived
+            if (updated.messages.length > (t.messages?.length ?? 0)) {
+              this.ticket.set(updated);
+            }
+          },
+        });
+    }, 15_000);
   }
 
   sendReply(): void {

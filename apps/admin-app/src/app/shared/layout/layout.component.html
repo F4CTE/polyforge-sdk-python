@@ -1,3 +1,4 @@
+<p-toast position="top-right" />
 <div class="admin-shell" [class.collapsed]="collapsed()">
 
   <!-- ─── Sidebar ──────────────────────────────────────────────────────── -->
@@ -21,7 +22,12 @@
             <a class="nav-item" [routerLink]="item.route" routerLinkActive="active"
                [title]="collapsed() ? item.label : ''">
               <i class="{{ item.icon }}"></i>
-              @if (!collapsed()) { <span>{{ item.label }}</span> }
+              @if (!collapsed()) {
+                <span>{{ item.label }}</span>
+                @if (item.label === 'Tickets' && polling.openTickets() > 0) {
+                  <span class="nav-badge">{{ polling.openTickets() }}</span>
+                }
+              }
             </a>
           }
         }

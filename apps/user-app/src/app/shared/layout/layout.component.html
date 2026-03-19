@@ -49,6 +49,41 @@
 
       <div style="flex:1"></div>
 
+      <!-- Notification bell -->
+      <div class="notif-bell-wrapper" style="position:relative">
+        <button class="notif-bell-btn" (click)="toggleNotif()">
+          <i class="pi pi-bell"></i>
+          @if (notifService.unreadCount() > 0) {
+            <span class="notif-badge">{{ notifService.unreadCount() > 9 ? '9+' : notifService.unreadCount() }}</span>
+          }
+        </button>
+        @if (notifOpen()) {
+          <div class="notif-dropdown" (click)="$event.stopPropagation()">
+            <div class="notif-dropdown-header">
+              <span>Notifications</span>
+              @if (notifService.unreadCount() > 0) {
+                <button class="notif-mark-all" (click)="notifService.markAllRead()">Mark all read</button>
+              }
+            </div>
+            @if (notifService.items().length === 0) {
+              <div class="notif-empty">No notifications yet</div>
+            } @else {
+              <div class="notif-list">
+                @for (n of notifService.items() | slice:0:20; track n.id) {
+                  <div class="notif-item" [class.unread]="!n.read" (click)="notifService.markRead(n.id)">
+                    <div class="notif-item-dot" [style.background]="n.severity === 'error' ? 'var(--pf-danger)' : n.severity === 'success' ? 'var(--pf-success)' : n.severity === 'warning' ? 'var(--pf-warning)' : 'var(--pf-cyan-500)'"></div>
+                    <div class="notif-item-body">
+                      <div class="notif-item-title">{{ n.title }}</div>
+                      <div class="notif-item-text">{{ n.body }}</div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+
       <!-- User menu -->
       <p-menu #userMenuRef [model]="userMenu" [popup]="true" />
       <div style="display:flex;align-items:center;gap:0.5rem;cursor:pointer"

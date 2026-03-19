@@ -19,6 +19,7 @@
     "generate:api": "openapi-ts --config openapi-ts.config.ts && openapi-ts --config openapi-ts.admin.config.ts"
   },
   "dependencies": {
+    "@angular/cdk": "^21.2.0",
     "@prisma/client": "7.5.0",
     "bcrypt": "^6.0.0"
   },

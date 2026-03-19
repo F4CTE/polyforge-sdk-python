@@ -6,6 +6,7 @@ import { forkJoin } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { HealthResponse, ServiceHealth } from '../../core/models/admin.model';
@@ -17,12 +18,13 @@ interface DashboardStat {
   color: string;
   bg: string;
   route: string;
+  tooltip: string;
 }
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, TitleCasePipe, RouterLink, ButtonModule, SkeletonModule, ToastModule],
+  imports: [DatePipe, DecimalPipe, TitleCasePipe, RouterLink, ButtonModule, SkeletonModule, ToastModule, TooltipModule],
   providers: [MessageService],
   templateUrl: './dashboard.component.html',
 })
@@ -41,10 +43,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   statsLoading = signal(true);
   stats = signal<DashboardStat[]>([
-    { label: 'Total Users',       value: null, icon: 'pi pi-users',       color: 'var(--pf-cyan-500)',  bg: 'rgba(6,182,212,0.1)',    route: '/users' },
-    { label: 'Active Strategies', value: null, icon: 'pi pi-bolt',        color: 'var(--pf-success)',   bg: 'rgba(16,185,129,0.1)',   route: '/strategies' },
-    { label: 'Total Orders',      value: null, icon: 'pi pi-shopping-bag', color: 'var(--pf-warning)',  bg: 'rgba(245,158,11,0.1)',   route: '/orders' },
-    { label: 'Open Tickets',      value: null, icon: 'pi pi-comments',    color: 'var(--pf-info, #3b82f6)', bg: 'rgba(59,130,246,0.1)', route: '/tickets' },
+    { label: 'Total Users',       value: null, icon: 'pi pi-users',       color: 'var(--pf-cyan-500)',  bg: 'rgba(6,182,212,0.1)',    route: '/users',      tooltip: 'Total registered users on the platform' },
+    { label: 'Active Strategies', value: null, icon: 'pi pi-bolt',        color: 'var(--pf-success)',   bg: 'rgba(16,185,129,0.1)',   route: '/strategies', tooltip: 'Strategies currently running across all users' },
+    { label: 'Total Orders',      value: null, icon: 'pi pi-shopping-bag', color: 'var(--pf-warning)',  bg: 'rgba(245,158,11,0.1)',   route: '/orders',     tooltip: 'Total orders placed across the platform' },
+    { label: 'Open Tickets',      value: null, icon: 'pi pi-comments',    color: 'var(--pf-info, #3b82f6)', bg: 'rgba(59,130,246,0.1)', route: '/tickets',  tooltip: 'Support tickets awaiting resolution' },
   ]);
 
   private refreshTimer: ReturnType<typeof setInterval> | null = null;

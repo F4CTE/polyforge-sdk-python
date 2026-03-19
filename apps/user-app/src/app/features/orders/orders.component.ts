@@ -1,29 +1,34 @@
 import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
-import { DatePipe, LowerCasePipe } from '@angular/common';
+import { DatePipe, LowerCasePipe, SlicePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
+import { DialogModule } from 'primeng/dialog';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { PortfolioApiService, Order, OrderStatus } from '../../core/services/portfolio-api.service';
+import { WebSocketService } from '../../core/services/websocket.service';
 
 type FilterStatus = 'ALL' | OrderStatus;
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [DatePipe, LowerCasePipe, ButtonModule, SkeletonModule],
+  imports: [DatePipe, LowerCasePipe, SlicePipe, ButtonModule, SkeletonModule, DialogModule, TooltipModule],
   templateUrl: './orders.component.html',
 })
 export class OrdersComponent implements OnInit {
   private readonly api        = inject(PortfolioApiService);
+  private readonly ws         = inject(WebSocketService);
   private readonly destroyRef = inject(DestroyRef);
 
-  orders     = signal<Order[]>([]);
-  loading    = signal(true);
-  total      = signal(0);
-  totalPages = signal(0);
-  page       = signal(1);
-  filter     = signal<FilterStatus>('ALL');
+  orders        = signal<Order[]>([]);
+  loading       = signal(true);
+  total         = signal(0);
+  totalPages    = signal(0);
+  page          = signal(1);
+  filter        = signal<FilterStatus>('ALL');
+  selectedOrder = signal<Order | null>(null);
 
   readonly filters: { label: string; value: FilterStatus }[] = [
     { label: 'All',       value: 'ALL' },
@@ -36,7 +41,23 @@ export class OrdersComponent implements OnInit {
 
   readonly skeletons = Array(8);
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+    this.listenWs();
+  }
+
+  /** Reload order list when a WebSocket order event arrives */
+  private listenWs(): void {
+    this.ws.connect();
+    // Listen to any notifications that match order events and refresh
+    this.ws.notifications$.pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(n => {
+      if (n.title?.includes('Order')) {
+        this.load();
+      }
+    });
+  }
 
   load(): void {
     this.loading.set(true);
@@ -84,5 +105,16 @@ export class OrdersComponent implements OnInit {
     if (!total) return '—';
     const filled = order.fillSize ?? '0';
     return `${filled} / ${order.size}`;
+  }
+
+  selectOrder(order: Order): void { this.selectedOrder.set(order); }
+  closeDetail(): void { this.selectedOrder.set(null); }
+
+  statusTimeline(order: Order): { label: string; time: string | null }[] {
+    return [
+      { label: 'Created',   time: order.createdAt },
+      { label: 'Placed',    time: order.placedAt },
+      { label: 'Filled',    time: order.filledAt },
+    ];
   }
 }
