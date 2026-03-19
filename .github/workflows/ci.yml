@@ -189,7 +189,7 @@ jobs:
       # ── Start the full Docker stack ──────────────────────────────────────
       - name: Build and start Docker Compose
         run: docker compose -f docker-compose.infra.yml up -d --build
-        timeout-minutes: 20
+        timeout-minutes: 30
 
       - name: Wait for services to be healthy
         run: |
