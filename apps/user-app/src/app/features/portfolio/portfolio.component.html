@@ -19,27 +19,31 @@
       @if (loadingPortfolio()) {
         @for (s of [1,2,3]; track s) { <div class="summary-card"><p-skeleton height="40px" /></div> }
       } @else if (portfolio(); as p) {
-        <div class="summary-card" pTooltip="Based on current market prices" tooltipPosition="bottom">
+        <div class="summary-card" pTooltip="Based on current market prices" tooltipPosition="bottom"
+             [style.border-left]="'3px solid ' + pnlColor(p.totalUnrealizedPnl)">
           <span class="summary-label">Unrealized P&L</span>
           <span class="summary-value pf-mono" [style.color]="pnlColor(p.totalUnrealizedPnl)">
             {{ formatPnl(p.totalUnrealizedPnl) }}
           </span>
         </div>
-        <div class="summary-card" pTooltip="Profit and loss from closed positions" tooltipPosition="bottom">
+        <div class="summary-card" pTooltip="Profit and loss from closed positions" tooltipPosition="bottom"
+             [style.border-left]="'3px solid ' + pnlColor(p.totalRealizedPnl)">
           <span class="summary-label">Realized P&L</span>
           <span class="summary-value pf-mono" [style.color]="pnlColor(p.totalRealizedPnl)">
             {{ formatPnl(p.totalRealizedPnl) }}
           </span>
         </div>
-        <div class="summary-card" pTooltip="Percentage of profitable closed positions" tooltipPosition="bottom">
+        <div class="summary-card" pTooltip="Percentage of profitable closed positions" tooltipPosition="bottom"
+             style="border-left:3px solid #06B6D4">
           <span class="summary-label">Win Rate</span>
-          <span class="summary-value pf-mono" style="color:var(--pf-text-primary)">
+          <span class="summary-value pf-mono" style="color:#06B6D4">
             {{ winRatePct(pnl()?.winRate ?? '0') }}
           </span>
         </div>
-        <div class="summary-card" pTooltip="Number of currently active positions" tooltipPosition="bottom">
+        <div class="summary-card" pTooltip="Number of currently active positions" tooltipPosition="bottom"
+             style="border-left:3px solid #ffffff">
           <span class="summary-label">Open Positions</span>
-          <span class="summary-value pf-mono" style="color:var(--pf-text-primary)">
+          <span class="summary-value pf-mono" style="color:#ffffff">
             {{ p.positions.length }}
           </span>
         </div>

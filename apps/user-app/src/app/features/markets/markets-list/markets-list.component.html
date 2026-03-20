@@ -4,7 +4,7 @@
   <div class="page-header">
     <h1>Markets</h1>
     @if (!loading()) {
-      <span style="font-size:12px;color:var(--pf-text-muted);font-family:'JetBrains Mono',monospace">
+      <span class="page-count">
         {{ total() | number }} markets
       </span>
     }
@@ -86,10 +86,10 @@
                       [pTooltip]="market.category" tooltipPosition="top">{{ market.category }}</span>
               </td>
               <td style="text-align:right">
-                <span class="price-yes pf-mono">{{ price(market, 'YES') | number:'1.2-3' }}</span>
+                <span class="price-yes pf-mono" [style.color]="+price(market, 'YES') > 0.5 ? '#22C55E' : '#EF4444'">{{ price(market, 'YES') | number:'1.2-3' }}</span>
               </td>
               <td style="text-align:right">
-                <span class="price-no pf-mono">{{ price(market, 'NO') | number:'1.2-3' }}</span>
+                <span class="price-no pf-mono" [style.color]="+price(market, 'NO') > 0.5 ? '#22C55E' : '#EF4444'">{{ price(market, 'NO') | number:'1.2-3' }}</span>
               </td>
               <td style="width:80px">
                 <app-sparkline [data]="sparklineData(market)" [width]="72" [height]="24" />

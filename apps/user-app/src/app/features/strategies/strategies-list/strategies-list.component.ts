@@ -5,6 +5,7 @@ import { DatePipe, LowerCasePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 
 import { StrategiesApiService, Strategy, StrategyStatus } from '../../../core/services/strategies-api.service';
@@ -14,7 +15,7 @@ type FilterStatus = 'ALL' | StrategyStatus;
 @Component({
   selector: 'app-strategies-list',
   standalone: true,
-  imports: [RouterLink, DatePipe, LowerCasePipe, ButtonModule, SkeletonModule, ToastModule],
+  imports: [RouterLink, DatePipe, LowerCasePipe, ButtonModule, SkeletonModule, ToastModule, TooltipModule],
   providers: [MessageService],
   templateUrl: './strategies-list.component.html',
 })

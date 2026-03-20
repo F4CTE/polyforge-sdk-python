@@ -84,4 +84,17 @@ export class UsersListComponent implements OnInit {
     if (status === 'VERIFIED')  return 'info';
     return 'secondary';
   }
+
+  statusBadge(status: string): { label: string; bg: string; color: string } {
+    switch (status) {
+      case 'CONNECTED':
+        return { label: 'ACTIVE',     bg: 'rgba(34,197,94,0.1)',   color: '#22C55E' };
+      case 'VERIFIED':
+        return { label: 'ACTIVE',     bg: 'rgba(34,197,94,0.1)',   color: '#22C55E' };
+      case 'UNVERIFIED':
+        return { label: 'UNVERIFIED', bg: 'rgba(245,158,11,0.1)',  color: '#F59E0B' };
+      default:
+        return { label: status || 'UNKNOWN', bg: 'rgba(245,158,11,0.1)', color: '#F59E0B' };
+    }
+  }
 }

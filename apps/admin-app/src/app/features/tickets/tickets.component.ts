@@ -22,7 +22,7 @@ type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
       <div class="page-header">
         <h1>Tickets</h1>
         @if (!loading()) {
-          <span class="pf-mono" style="font-size:12px;color:var(--pf-text-muted)">{{ total() }} tickets</span>
+          <span class="page-count pf-mono">{{ total() }} tickets</span>
         }
       </div>
 

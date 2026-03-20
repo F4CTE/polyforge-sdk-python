@@ -4,7 +4,7 @@
   <div class="page-header">
     <h1>Orders</h1>
     @if (activeTab() === 'orders' && !ordLoading()) {
-      <span class="pf-mono" style="font-size:12px;color:var(--pf-text-muted)">{{ ordTotal() }} total</span>
+      <span class="page-count pf-mono">{{ ordTotal() }} total</span>
     }
     @if (activeTab() === 'dlq') {
       <span class="admin-badge danger">{{ dlq().length }} in DLQ</span>

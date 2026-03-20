@@ -70,7 +70,7 @@
       <div class="builder-summary">
         @for (sec of sections; track sec.key) {
           <div class="summary-row" [class.active]="activeSection() === sec.key" (click)="setSection(sec.key)">
-            <i class="pi {{ sec.icon }}" style="font-size:14px;color:var(--pf-text-muted)"></i>
+            <i class="pi {{ sec.icon }}" style="font-size:14px" [style.color]="sec.color"></i>
             <span>{{ sec.label }}</span>
             @if (sectionCount(sec.key) > 0) {
               <span class="summary-count">{{ sectionCount(sec.key) }}</span>
@@ -87,8 +87,8 @@
       <div class="builder-section-tabs">
         @for (sec of sections; track sec.key) {
           <button class="section-tab" [class.active]="activeSection() === sec.key" (click)="setSection(sec.key)">
-            <i class="pi {{ sec.icon }}"></i>
-            {{ sec.label }}
+            <i class="pi {{ sec.icon }}" [style.color]="sec.color"></i>
+            <span [style.color]="activeSection() === sec.key ? sec.color : ''">{{ sec.label }}</span>
             @if (sectionCount(sec.key) > 0) {
               <span class="section-count">{{ sectionCount(sec.key) }}</span>
             }

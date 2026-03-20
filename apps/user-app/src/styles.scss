@@ -151,7 +151,7 @@ html, body {
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--pf-text-muted);
+    color: rgba(255, 255, 255, 0.45);
     padding: var(--pf-space-3) var(--pf-space-2) var(--pf-space-1);
   }
 }
@@ -188,6 +188,8 @@ html, body {
   &.active {
     background: rgba(6, 182, 212, 0.12);
     color: var(--pf-cyan-500);
+    border-left: 3px solid var(--pf-cyan-400, #22D3EE);
+    padding-left: calc(var(--pf-space-3) - 3px);
   }
 }
 
@@ -282,6 +284,18 @@ html, body {
     display: flex;
     gap: var(--pf-space-2);
   }
+}
+
+// ─── Page count badge ────────────────────────────────────────────────────────
+
+.page-count {
+  font-size: 13px;
+  color: var(--pf-text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 // ─── Auth pages ──────────────────────────────────────────────────────────────

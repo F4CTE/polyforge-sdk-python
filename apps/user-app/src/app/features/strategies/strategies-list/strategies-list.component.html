@@ -51,12 +51,12 @@
 
           <!-- Meta row -->
           <div class="strategy-meta">
-            <span class="meta-chip">{{ execLabel(strategy) }}</span>
+            <span class="meta-chip" style="background:rgba(6,182,212,0.15);color:#06B6D4">{{ execLabel(strategy) }}</span>
             <span class="meta-chip">{{ blocksCount(strategy) }} blocks</span>
             @if (strategy.tags.length > 0) {
               <span class="meta-chip">{{ strategy.tags[0] }}</span>
             }
-            <span class="meta-chip" style="margin-left:auto">
+            <span class="meta-chip" style="margin-left:auto;background:rgba(168,85,247,0.15);color:#A855F7">
               v{{ strategy.version }}
             </span>
           </div>
@@ -79,6 +79,8 @@
                   label="Live"
                   icon="pi pi-bolt"
                   size="small"
+                  pTooltip="Start Live"
+                  tooltipPosition="top"
                   [loading]="!!actionLoading()[strategy.id]"
                   (onClick)="start(strategy, 'live', $event)" />
                 <p-button
@@ -86,6 +88,8 @@
                   icon="pi pi-file"
                   size="small"
                   severity="secondary"
+                  pTooltip="Start Paper"
+                  tooltipPosition="top"
                   [loading]="!!actionLoading()[strategy.id]"
                   (onClick)="start(strategy, 'paper', $event)" />
               }

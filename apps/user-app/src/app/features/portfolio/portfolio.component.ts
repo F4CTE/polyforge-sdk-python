@@ -194,9 +194,9 @@ export class PortfolioComponent implements OnInit {
 
   pnlColor(val: string): string {
     const n = parseFloat(val);
-    if (n > 0) return 'var(--pf-pnl-positive)';
-    if (n < 0) return 'var(--pf-pnl-negative)';
-    return 'var(--pf-pnl-neutral)';
+    if (n > 0) return '#22C55E';
+    if (n < 0) return '#EF4444';
+    return '#9CA3AF';
   }
 
   formatPnl(val: string): string {

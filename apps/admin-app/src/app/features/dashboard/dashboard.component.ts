@@ -46,10 +46,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   statsLoading = signal(true);
   stats = signal<DashboardStat[]>([
-    { label: 'Total Users',       value: null, icon: 'pi pi-users',       color: 'var(--pf-cyan-500)',  bg: 'rgba(6,182,212,0.1)',    route: '/users',      tooltip: 'Total registered users on the platform' },
-    { label: 'Active Strategies', value: null, icon: 'pi pi-bolt',        color: 'var(--pf-success)',   bg: 'rgba(16,185,129,0.1)',   route: '/strategies', tooltip: 'Strategies currently running across all users' },
-    { label: 'Total Orders',      value: null, icon: 'pi pi-shopping-bag', color: 'var(--pf-warning)',  bg: 'rgba(245,158,11,0.1)',   route: '/orders',     tooltip: 'Total orders placed across the platform' },
-    { label: 'Open Tickets',      value: null, icon: 'pi pi-comments',    color: 'var(--pf-info, #3b82f6)', bg: 'rgba(59,130,246,0.1)', route: '/tickets',  tooltip: 'Support tickets awaiting resolution' },
+    { label: 'Total Users',       value: null, icon: 'pi pi-users',       color: '#3B82F6',  bg: '#3B82F61a',    route: '/users',      tooltip: 'Total registered users on the platform' },
+    { label: 'Active Strategies', value: null, icon: 'pi pi-bolt',        color: '#06B6D4',  bg: '#06B6D41a',    route: '/strategies', tooltip: 'Strategies currently running across all users' },
+    { label: 'Total Orders',      value: null, icon: 'pi pi-shopping-bag', color: '#F59E0B', bg: '#F59E0B1a',    route: '/orders',     tooltip: 'Total orders placed across the platform' },
+    { label: 'Open Tickets',      value: null, icon: 'pi pi-comments',    color: '#EF4444',  bg: '#EF44441a',    route: '/tickets',    tooltip: 'Support tickets awaiting resolution' },
   ]);
 
   private refreshTimer: ReturnType<typeof setInterval> | null = null;

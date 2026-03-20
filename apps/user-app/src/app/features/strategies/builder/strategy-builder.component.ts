@@ -138,11 +138,11 @@ export class StrategyBuilderComponent implements OnInit {
   // Palette: all block defs for the active section
   readonly paletteDefs = computed(() => BLOCK_DEFS[this.activeSection()]);
 
-  readonly sections: { key: BlockSection; label: string; icon: string }[] = [
-    { key: 'safety',     label: 'Safety',     icon: 'pi-shield' },
-    { key: 'triggers',   label: 'Triggers',   icon: 'pi-bolt' },
-    { key: 'conditions', label: 'Conditions', icon: 'pi-filter' },
-    { key: 'actions',    label: 'Actions',    icon: 'pi-play-circle' },
+  readonly sections: { key: BlockSection; label: string; icon: string; color: string }[] = [
+    { key: 'safety',     label: 'Safety',     icon: 'pi-shield',      color: '#EF4444' },
+    { key: 'triggers',   label: 'Triggers',   icon: 'pi-bolt',        color: '#F59E0B' },
+    { key: 'conditions', label: 'Conditions', icon: 'pi-filter',      color: '#3B82F6' },
+    { key: 'actions',    label: 'Actions',    icon: 'pi-play-circle', color: '#22C55E' },
   ];
 
   readonly execModeOptions = [

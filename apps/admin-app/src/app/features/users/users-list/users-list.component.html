@@ -3,7 +3,7 @@
   <div class="page-header">
     <h1>Users</h1>
     @if (!loading()) {
-      <span class="pf-mono" style="font-size:12px;color:var(--pf-text-muted)">{{ total() }} total</span>
+      <span class="page-count pf-mono">{{ total() }} total</span>
     }
   </div>
 
@@ -60,24 +60,26 @@
                 </td>
                 <td>
                   @if (u.suspended) {
-                    <span class="admin-badge danger">SUSPENDED</span>
+                    <span class="admin-badge" style="background:rgba(239,68,68,0.1);color:#EF4444">SUSPENDED</span>
                   } @else {
-                    <span class="admin-badge" [class.success]="u.status === 'CONNECTED'" [class.info]="u.status === 'VERIFIED'" [class.muted]="u.status === 'UNVERIFIED'">
-                      {{ u.status }}
+                    <span class="admin-badge"
+                      [style.background]="statusBadge(u.status).bg"
+                      [style.color]="statusBadge(u.status).color">
+                      {{ statusBadge(u.status).label }}
                     </span>
                   }
                 </td>
                 <td style="text-align:center">
                   <i class="pi" [class.pi-check-circle]="u.emailVerified" [class.pi-times-circle]="!u.emailVerified"
-                     [style.color]="u.emailVerified ? 'var(--pf-success)' : 'var(--pf-text-muted)'"></i>
+                     [style.color]="u.emailVerified ? '#22C55E' : '#4B5563'"></i>
                 </td>
                 <td style="text-align:center">
                   <i class="pi" [class.pi-shield]="u.totpEnabled" [class.pi-minus-circle]="!u.totpEnabled"
-                     [style.color]="u.totpEnabled ? 'var(--pf-success)' : 'var(--pf-text-muted)'"></i>
+                     [style.color]="u.totpEnabled ? '#22C55E' : '#4B5563'"></i>
                 </td>
                 <td style="text-align:center">
                   <i class="pi" [class.pi-link]="u.polymarketConnected" [class.pi-times]="!u.polymarketConnected"
-                     [style.color]="u.polymarketConnected ? 'var(--pf-cyan-400)' : 'var(--pf-text-muted)'"></i>
+                     [style.color]="u.polymarketConnected ? '#22C55E' : '#4B5563'"></i>
                 </td>
                 <td style="text-align:right"><span class="pf-mono">{{ u.strategyCount }}</span></td>
                 <td style="text-align:right"><span class="pf-mono">{{ u.orderCount }}</span></td>

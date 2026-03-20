@@ -1005,6 +1005,23 @@ p-inputnumber.w-full .p-inputnumber { width: 100%; }
   line-height: 1;
 }
 
+// ─── Page count badge ────────────────────────────────────────────────────────
+
+.page-count {
+  font-size: 13px;
+  color: var(--pf-text-muted, #6b7280);
+  background: rgba(255,255,255,0.05);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+// ─── Zebra striping for admin tables ─────────────────────────────────────────
+
+.data-table tbody tr:nth-child(even) {
+  background: rgba(255,255,255,0.02);
+}
+
 // ─── Animation keyframes ────────────────────────────────────────────────────
 
 @keyframes pf-fade-in {
