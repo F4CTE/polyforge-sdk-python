@@ -35,6 +35,25 @@ html, body {
   color: var(--pf-cyan-300);
 }
 
+// ─── Sidebar collapse button ──────────────────────────────────────────────────
+.sidebar-collapse-btn {
+  background: none;
+  border: 1px solid var(--pf-border-subtle);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  color: var(--pf-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  &:hover { background: var(--pf-bg-overlay); color: var(--pf-text-primary); }
+}
+
 // ─── Typography utilities ─────────────────────────────────────────────────────
 
 .pf-mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
@@ -1229,5 +1248,103 @@ textarea:focus-visible,
 @media (max-width: 480px) {
   .dash-stats-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+// ─── Theme toggle button ──────────────────────────────────────────────────────
+
+.topbar-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--pf-text-secondary);
+  font-size: 18px;
+  padding: 8px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.topbar-icon-btn:hover {
+  color: var(--pf-text-primary);
+  background: var(--pf-bg-overlay);
+}
+
+// ─── Light theme overrides ────────────────────────────────────────────────────
+
+[data-theme="light"] {
+  body { background: var(--pf-bg-base); color: var(--pf-text-primary); }
+
+  .admin-sidebar { background: var(--pf-bg-elevated); border-right-color: var(--pf-border-default); }
+  .nav-item { color: var(--pf-text-secondary); }
+  .nav-item:hover { background: var(--pf-bg-overlay); }
+  .nav-item.active { background: rgba(6, 182, 212, 0.08); color: #0891B2; }
+
+  .admin-topbar { background: var(--pf-bg-elevated); border-bottom-color: var(--pf-border-default); }
+
+  .sidebar-brand { border-bottom-color: var(--pf-border-default); }
+  .sidebar-brand .brand-text { color: var(--pf-text-primary); }
+  .sidebar-footer { border-top-color: var(--pf-border-default); }
+
+  .admin-card, .settings-panel {
+    background: var(--pf-bg-elevated);
+    border-color: var(--pf-border-default);
+  }
+
+  .admin-table-panel {
+    background: var(--pf-bg-elevated);
+    border-color: var(--pf-border-default);
+  }
+
+  .data-table th { background: rgba(0, 0, 0, 0.03); }
+  .data-table td { border-bottom-color: var(--pf-border-subtle); }
+  .data-table tbody tr:nth-child(even) { background: rgba(0, 0, 0, 0.02); }
+
+  .dash-stat-card, .health-card, .cache-stat-card, .infra-card {
+    background: var(--pf-bg-elevated);
+    border-color: var(--pf-border-default);
+  }
+
+  .p-inputtext, .p-select, .p-textarea, .p-password input, .p-inputnumber-input {
+    background: var(--pf-input-bg) !important;
+    border-color: var(--pf-input-border) !important;
+    color: var(--pf-input-text) !important;
+  }
+
+  .p-dialog, .p-confirmdialog {
+    background: var(--pf-bg-elevated) !important;
+    color: var(--pf-text-primary) !important;
+    border-color: var(--pf-border-default) !important;
+  }
+
+  .p-dropdown-panel, .p-select-overlay, .p-listbox {
+    background: var(--pf-bg-elevated) !important;
+    border-color: var(--pf-border-default) !important;
+    color: var(--pf-text-primary) !important;
+  }
+
+  .p-skeleton {
+    background: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .admin-login-page { background: var(--pf-bg-base); }
+  .admin-login-card { background: var(--pf-bg-elevated); border-color: var(--pf-border-default); }
+
+  .topbar-icon-btn { color: var(--pf-text-secondary); }
+  .topbar-icon-btn:hover { background: var(--pf-bg-overlay); }
+
+  .page-header h1 { color: var(--pf-text-primary); }
+  .page-count { background: rgba(0, 0, 0, 0.04); color: var(--pf-text-muted); }
+
+  .strategy-filter-tabs { background: var(--pf-bg-elevated); border-color: var(--pf-border-default); }
+  .filter-tab:hover, .filter-tab.active { background: var(--pf-bg-surface); }
+
+  .admin-user-name { color: var(--pf-text-primary); }
+
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"] {
+    color-scheme: light;
   }
 }

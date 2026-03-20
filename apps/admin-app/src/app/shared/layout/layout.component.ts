@@ -8,6 +8,7 @@ import { ToastModule } from 'primeng/toast';
 import { MenuItem, MessageService } from 'primeng/api';
 import { AdminAuthStore } from '../../core/store/admin-auth.store';
 import { AdminPollingService } from '../../core/services/admin-polling.service';
+import { ThemeService } from '../../core/services/theme.service';
 
 interface NavItem {
   label: string;
@@ -25,6 +26,7 @@ interface NavItem {
 export class LayoutComponent implements OnInit {
   readonly auth = inject(AdminAuthStore);
   readonly polling = inject(AdminPollingService);
+  readonly theme = inject(ThemeService);
   private readonly toast = inject(MessageService);
   private readonly router = inject(Router);
   collapsed     = signal(false);

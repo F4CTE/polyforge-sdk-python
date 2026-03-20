@@ -4,18 +4,16 @@
   <!-- ─── Sidebar ──────────────────────────────────────────────────────── -->
   <aside class="admin-sidebar">
     <div class="sidebar-brand">
+      <svg class="brand-logo" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" stroke="#06b6d4" stroke-width="1.2" fill="none" opacity="0.4"/>
+        <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="#06b6d4"/>
+      </svg>
       @if (!collapsed()) {
-        <svg class="brand-logo" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" stroke="#06b6d4" stroke-width="1.2" fill="none" opacity="0.4"/>
-          <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="#06b6d4"/>
-        </svg>
         <span class="brand-text">Polyforge <span class="brand-admin">Admin</span></span>
-      } @else {
-        <svg class="brand-logo" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" stroke="#06b6d4" stroke-width="1.2" fill="none" opacity="0.4"/>
-          <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="#06b6d4"/>
-        </svg>
       }
+      <button class="sidebar-collapse-btn" (click)="collapsed.update(v => !v)" type="button" aria-label="Toggle sidebar">
+        <i [class]="collapsed() ? 'pi pi-angle-right' : 'pi pi-angle-left'" style="font-size:14px"></i>
+      </button>
     </div>
 
     <nav class="sidebar-nav">
@@ -60,10 +58,11 @@
   <!-- ─── Main ─────────────────────────────────────────────────────────── -->
   <div class="admin-main">
     <header class="admin-topbar">
-      <p-button [icon]="collapsed() ? 'pi pi-bars' : 'pi pi-bars'" severity="secondary" [text]="true"
-        size="small" aria-label="Toggle sidebar" (onClick)="collapsed.update(v => !v)" />
       <span class="topbar-title">{{ currentPage() }}</span>
       <div class="topbar-right" style="display:flex;align-items:center;gap:8px">
+        <button class="topbar-icon-btn" (click)="theme.toggle()" [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
+          <i class="pi" [class.pi-sun]="theme.isDark()" [class.pi-moon]="!theme.isDark()"></i>
+        </button>
         <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--pf-cyan-500);color:#080C14;font-size:11px;font-weight:700;letter-spacing:0.02em">{{ initials }}</span>
         <span style="font-size:13px;font-weight:500;color:var(--pf-text-secondary)">{{ auth.admin()?.displayName }}</span>
       </div>

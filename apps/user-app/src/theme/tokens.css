@@ -123,3 +123,27 @@
   --pf-font-xl: 22px;
   --pf-font-2xl: 28px;
 }
+
+/* ── Light theme overrides ──────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --pf-bg-base: #F8FAFC;
+  --pf-bg-elevated: #FFFFFF;
+  --pf-bg-overlay: rgba(0, 0, 0, 0.04);
+  --pf-bg-surface: #F1F5F9;
+
+  --pf-text-primary: #0F172A;
+  --pf-text-secondary: #334155;
+  --pf-text-muted: #64748B;
+
+  --pf-border-default: #E2E8F0;
+  --pf-border-subtle: #F1F5F9;
+  --pf-border-strong: #CBD5E1;
+
+  --pf-input-bg: #FFFFFF;
+  --pf-input-border: #CBD5E1;
+  --pf-input-border-hover: #94A3B8;
+  --pf-input-border-focus: #06B6D4;
+  --pf-input-text: #0F172A;
+  --pf-input-placeholder: #94A3B8;
+  --pf-input-focus-glow: rgba(6, 182, 212, 0.15);
+}

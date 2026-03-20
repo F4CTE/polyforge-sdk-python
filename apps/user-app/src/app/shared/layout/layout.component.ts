@@ -7,6 +7,7 @@ import { MenuModule } from 'primeng/menu';
 import { MenuItem, MessageService } from 'primeng/api';
 import { AuthStore } from '../../core/store/auth.store';
 import { NotificationUiService } from '../../core/services/notification-ui.service';
+import { ThemeService } from '../../core/services/theme.service';
 
 interface NavItem {
   label: string;
@@ -28,6 +29,7 @@ interface NavItem {
 export class LayoutComponent {
   readonly auth = inject(AuthStore);
   readonly notifService = inject(NotificationUiService);
+  readonly theme = inject(ThemeService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly zone = inject(NgZone);
 

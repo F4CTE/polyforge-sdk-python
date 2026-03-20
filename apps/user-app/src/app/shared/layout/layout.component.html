@@ -7,6 +7,9 @@
         <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="#06b6d4"/>
       </svg>
       <span class="logo-label" [hidden]="sidebarCollapsed">Polyforge</span>
+      <button class="sidebar-collapse-btn" (click)="toggleSidebar()" type="button" aria-label="Toggle sidebar">
+        <i [class]="sidebarCollapsed ? 'pi pi-angle-right' : 'pi pi-angle-left'" style="font-size:14px"></i>
+      </button>
     </div>
 
     @for (section of navSections; track section.title) {
@@ -36,13 +39,12 @@
   <div class="app-main">
     <!-- Top bar -->
     <header class="app-topbar">
-      <button class="sidebar-toggle-btn" (click)="toggleSidebar()" type="button"
-              aria-label="Toggle sidebar"
-              style="background:none;border:none;cursor:pointer;padding:6px;border-radius:50%;color:var(--pf-text-secondary)">
-        <i [class]="sidebarCollapsed ? 'pi pi-bars' : 'pi pi-times'" style="font-size:18px"></i>
-      </button>
-
       <div style="flex:1"></div>
+
+      <!-- Theme toggle -->
+      <button class="topbar-icon-btn" (click)="theme.toggle()" [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
+        <i class="pi" [class.pi-sun]="theme.isDark()" [class.pi-moon]="!theme.isDark()"></i>
+      </button>
 
       <!-- Notification bell -->
       <div class="notif-bell-wrapper" style="position:relative">
