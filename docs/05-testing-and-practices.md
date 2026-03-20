@@ -592,6 +592,37 @@ describe('TicketReminderService', () => {
 
 **E2E ticket tests** follow the same Playwright patterns as other features. The ticket E2E tests verify the full flow: create ticket as user, reply as admin, verify status transitions and notification delivery.
 
+### OnPush change detection
+
+Key Angular components use `ChangeDetectionStrategy.OnPush` to reduce unnecessary re-renders. When testing OnPush components:
+
+```typescript
+// Trigger change detection explicitly after async operations
+fixture.detectChanges();
+
+// For signal-based state, update the signal and then detect changes
+component.someSignal.set(newValue);
+fixture.detectChanges();
+
+// For observable-driven components, ensure the mock emits before detectChanges
+mockService.getData.mockReturnValue(of(testData));
+fixture.detectChanges();
+```
+
+OnPush components only re-render when their `@Input()` references change, a signal updates, or an observable emits through the `async` pipe. Tests must account for this by explicitly triggering change detection after state changes.
+
+### Recent test file additions
+
+The following test files were added as part of the design polish and interactivity work:
+
+- `rankMedal` — leaderboard medal icon logic (gold/silver/bronze for top 3)
+- `categoryColor` — market category badge color mapping (6 categories)
+- `pnlColor` — P&L color-coding logic (green positive, red negative)
+- `breadcrumb routing` — topbar title extraction from route config
+- `statusBadge` — user status badge styling (color by status)
+
+These 28 test cases cover pure utility functions and follow the standard pattern: test the happy path, boundary values, and edge cases (unknown/null inputs).
+
 ---
 
 ## 9. Error Handling

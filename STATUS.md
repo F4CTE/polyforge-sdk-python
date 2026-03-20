@@ -7,9 +7,32 @@
 
 ## Next Up
 
-🎉 All phases complete. Polyforge is production-ready.
+All phases complete. Polyforge is production-ready.
 
 ---
+
+## Post-Launch — Accessibility, Performance & Dev Tooling (v2.5.0)
+
+### Accessibility & Responsiveness
+
+- [x] `focus-visible` outlines and `aria-label` attributes on interactive elements
+- [x] Responsive table columns with horizontal scroll on mobile
+- [x] Stacked layouts on small viewports
+- [x] Confirmation dialogs before destructive actions
+
+### UI Enhancements
+
+- [x] OnPush change detection on key Angular components
+- [x] Character counter on length-limited text inputs
+- [x] Polling indicator on ticket detail view
+- [x] Design tokens: section colors (`--pf-section-*`), status colors (`--pf-status-*`), typography scale (`--pf-text-*`)
+- [x] Standardized empty states across all list pages
+
+### Infrastructure
+
+- [x] Local dev HTTPS: `docker-compose.ssl.yml`, self-signed cert generation script, ports 443/8443
+- [x] CI: E2E pipeline job (Lint -> Typecheck -> Test -> Build -> E2E)
+- [x] E2E rate-limit bypass via `X-E2E-Bypass` header
 
 ## Post-Launch — Support Ticket System (v2.1.0)
 

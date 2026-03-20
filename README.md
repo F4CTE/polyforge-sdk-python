@@ -4,6 +4,20 @@
 
 Strategy automation platform for [Polymarket](https://polymarket.com) — users build automated trading strategies using a drag-and-drop block interface, backtest them against historical data, paper trade in simulation, and deploy live strategies that trade on their behalf. Includes an in-app support ticket system for user-to-admin communication with auto-reminders and real-time notifications.
 
+### Key Features
+
+- **SVG canvas strategy builder** — 2D drag-and-drop canvas with pan/zoom, bezier connection lines, color-coded blocks, and auto-layout
+- **Market cards** — Polymarket-style card grid with gradient headers, sparklines, and card/table toggle
+- **Market detail page** — Stats bar and "Run Strategy" dialog with strategy selector
+- **Support ticket system** — User-to-admin tickets with assignment, priority, reminders, and email notifications
+- **Real-time updates** — WebSocket-driven order fills, strategy events, notification bell, and ticket polling
+- **Interactive UI** — Tooltips, drag-and-drop reordering, sparkline charts, hover effects, page animations
+- **Design system** — Dark theme with design tokens (section colors, status colors, typography scale), loading screen with animated logo
+- **Accessibility** — `focus-visible` outlines, `aria-label` attributes, responsive mobile layouts
+- **OnPush change detection** — Key components use `ChangeDetectionStrategy.OnPush` for rendering performance
+- **Local HTTPS** — Self-signed cert generation and `docker-compose.ssl.yml` for secure local development
+- **CI/CD pipeline** — Lint, typecheck, test, build, and E2E stages with Playwright
+
 ---
 
 ## Stack

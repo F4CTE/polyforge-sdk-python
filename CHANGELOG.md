@@ -5,11 +5,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased]
+## [2.5.0] — 2026-03-20
 
-### Added
+### Added — Accessibility & Responsiveness
 
+- **Accessibility** — Added `focus-visible` outlines and `aria-label` attributes across interactive elements for keyboard and screen-reader users.
+- **Responsive design** — Mobile-friendly table columns with horizontal scroll and stacked layouts on small viewports.
+- **Confirmation dialogs** — Added confirmation prompts before destructive actions (delete strategy, close position, etc.).
+
+### Added — UI Enhancements
+
+- **OnPush change detection** — Migrated key Angular components to `ChangeDetectionStrategy.OnPush` for improved rendering performance.
+- **Character counter** — Real-time character count on text inputs with length limits (ticket body, strategy description, bio).
+- **Polling indicator** — Visual indicator when ticket detail view is polling for new messages.
+- **Design tokens** — New CSS custom properties for section colors (`--pf-section-*`), status colors (`--pf-status-*`), and typography scale (`--pf-text-*`).
+- **Standardized empty states** — Consistent empty-state pattern with icon, heading, and guidance text across all list pages.
+
+### Added — Infrastructure
+
+- **Local dev HTTPS** — `docker-compose.ssl.yml` overlay with self-signed certificates, `scripts/generate-dev-certs.sh`, HTTPS on ports 443/8443 with HTTP-to-HTTPS redirect. Documented in `docs/09-dev-setup.md`.
 - **CI: E2E job** — New `e2e` job in GitHub Actions pipeline runs after `build`. Spins up Docker Compose, seeds databases, installs Playwright browsers (Chromium + Firefox), runs full E2E suite, uploads Playwright report and Docker logs on failure. Pipeline is now: Lint → Typecheck → Test → Build → E2E.
+
+### Fixed
+
+- **E2E rate limiting** — Rate-limit bypass for E2E tests via `X-E2E-Bypass` header in test environments, preventing flaky failures from throttling.
 
 ---
 
