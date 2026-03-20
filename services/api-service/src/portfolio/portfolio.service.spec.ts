@@ -33,6 +33,8 @@ describe("PortfolioService", () => {
       get: vi.fn().mockResolvedValue(null),
     } as unknown as RedisService;
     service = new PortfolioService(db as any, redis);
+    // Default: no markets found (positions will have empty marketTitle)
+    db.market.findMany.mockResolvedValue([]);
   });
 
   afterEach(() => {
