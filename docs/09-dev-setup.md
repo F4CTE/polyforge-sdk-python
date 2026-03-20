@@ -336,4 +336,42 @@ docker compose -f docker-compose.infra.yml up --build
 
 ---
 
+## Local HTTPS (Optional)
+
+For testing HTTPS locally (WebSocket `wss://`, secure cookies, CORS matching production):
+
+### 1. Generate self-signed certificates
+
+```bash
+bash scripts/generate-dev-certs.sh
+```
+
+This creates `services/gateway/certs/dev.crt` and `dev.key` (gitignored).
+
+### 2. Start with HTTPS
+
+```bash
+docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml up -d
+```
+
+### 3. Access
+
+| URL                          | App       |
+|------------------------------|-----------|
+| `https://localhost`          | User app  |
+| `https://localhost:8443`     | Admin app |
+| `wss://localhost/ws`         | WebSocket |
+
+Your browser will show a certificate warning (self-signed) — accept it to proceed.
+
+> **Note:** HTTP on ports 80/8080 automatically redirects to HTTPS.
+
+### 4. Switch back to HTTP
+
+```bash
+docker compose -f docker-compose.infra.yml up -d
+```
+
+---
+
 *Next: [Architecture](./01-architecture.md) · [API Catalog](./06-api-catalog.md) · [Database & Redis](./04-database-and-redis.md)*

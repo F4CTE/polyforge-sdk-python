@@ -1,0 +1,25 @@
+# ─── Local Dev HTTPS Override ─────────────────────────────────────────────────
+#
+# Usage:
+#   1. bash scripts/generate-dev-certs.sh
+#   2. docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml up -d
+#
+# This overrides the gateway service to use the SSL nginx config and
+# expose HTTPS on ports 443 (user app) and 8443 (admin app).
+# HTTP on ports 80/8080 redirects to HTTPS automatically.
+#
+# Access:
+#   https://localhost          user app
+#   https://localhost:8443     admin app
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  gateway:
+    volumes:
+      - ./services/gateway/nginx.dev-ssl.conf:/etc/nginx/nginx.conf:ro
+      - ./services/gateway/certs:/etc/nginx/certs:ro
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+      - "8443:8443"

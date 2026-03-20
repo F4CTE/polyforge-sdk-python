@@ -73,3 +73,4 @@ packages/*/src/*.js.map
 packages/*/src/*.d.tstests/e2e/playwright-report/
 tests/e2e/test-results/
 packages/**/src/*.d.ts
+services/gateway/certs/
