@@ -22,198 +22,209 @@
     <div style="padding:48px;text-align:center;color:var(--pf-text-muted)">Loading strategy…</div>
   } @else {
 
-  <!-- ─── Builder body ─────────────────────────────────────────────────── -->
-  <div class="builder-body">
+  <!-- ─── Canvas wrapper (full remaining space) ───────────────────────── -->
+  <div class="canvas-wrapper"
+       (mousemove)="onCanvasMouseMove($event)"
+       (mouseup)="endDrag()"
+       (mouseleave)="endDrag()"
+       (dragover)="onCanvasDragOver($event)"
+       (drop)="onCanvasDrop($event)">
 
-    <!-- ── Left: meta form ─────────────────────────────────────────────── -->
-    <div class="builder-meta">
-      <div class="form-field">
-        <label class="field-label">Strategy Name *</label>
-        <input pInputText type="text" style="width:100%" placeholder="My Strategy"
-               [value]="form().name" (input)="updateForm('name', $any($event.target).value)" />
-      </div>
+    <!-- SVG Canvas -->
+    <svg class="strategy-canvas"
+         #canvasSvg
+         [attr.viewBox]="viewBoxStr()"
+         (mousedown)="startPan($event)"
+         (wheel)="onWheel($event)">
 
-      <div class="form-field">
-        <label class="field-label">Description</label>
-        <textarea pTextarea rows="3" style="width:100%" placeholder="What does this strategy do?"
-                  [value]="form().description"
-                  (input)="updateForm('description', $any($event.target).value)"></textarea>
-      </div>
+      <!-- Grid pattern -->
+      <defs>
+        <pattern id="canvas-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/>
+        </pattern>
+        <pattern id="canvas-grid-lg" width="100" height="100" patternUnits="userSpaceOnUse">
+          <rect width="100" height="100" fill="url(#canvas-grid)"/>
+          <path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="4000" height="4000" x="-500" y="-500" fill="url(#canvas-grid-lg)"/>
 
-      <div class="form-field">
-        <label class="field-label">Exec Mode</label>
-        <p-select [options]="execModeOptions" [ngModel]="form().execMode" optionLabel="label" optionValue="value"
-                  style="width:100%" (ngModelChange)="updateForm('execMode', $event)" />
-      </div>
+      <!-- Section column headers -->
+      <text x="160" y="40" class="canvas-section-label" fill="#EF4444">&#x2298; Safety</text>
+      <text x="500" y="40" class="canvas-section-label" fill="#F59E0B">&#x26A1; Triggers</text>
+      <text x="840" y="40" class="canvas-section-label" fill="#3B82F6">&#x25BD; Conditions</text>
+      <text x="1180" y="40" class="canvas-section-label" fill="#22C55E">&#x25B6; Actions</text>
 
-      @if (form().execMode !== 'EVENT') {
-        <div class="form-field">
-          <label class="field-label">Tick Interval (ms)</label>
-          <input pInputText type="number" style="width:100%" placeholder="1000" min="200"
-                 [value]="form().tickMs" (input)="updateForm('tickMs', +$any($event.target).value)" />
-        </div>
+      <!-- Connection lines between columns -->
+      @for (path of connectionPaths(); track $index) {
+        <path [attr.d]="path" class="canvas-connection" fill="none" stroke="rgba(6,182,212,0.15)" stroke-width="2" stroke-dasharray="6,4"/>
       }
 
-      <div class="form-field">
-        <label class="field-label">Visibility</label>
-        <p-select [options]="visibilityOptions" [ngModel]="form().visibility" optionLabel="label" optionValue="value"
-                  style="width:100%" (ngModelChange)="updateForm('visibility', $event)" />
-      </div>
-
-      <div class="form-field">
-        <label class="field-label">Tags <span style="color:var(--pf-text-muted);font-weight:400">(comma separated)</span></label>
-        <input pInputText type="text" style="width:100%" placeholder="momentum, politics"
-               [value]="form().tagsInput" (input)="updateForm('tagsInput', $any($event.target).value)" />
-      </div>
-
-      <!-- Block summary -->
-      <div class="builder-summary">
-        @for (sec of sections; track sec.key) {
-          <div class="summary-row" [class.active]="activeSection() === sec.key" (click)="setSection(sec.key)">
-            <i class="pi {{ sec.icon }}" style="font-size:14px" [style.color]="sec.color"></i>
-            <span>{{ sec.label }}</span>
-            @if (sectionCount(sec.key) > 0) {
-              <span class="summary-count">{{ sectionCount(sec.key) }}</span>
-            }
+      <!-- Block nodes -->
+      @for (block of canvasBlocks(); track block.id) {
+        <foreignObject [attr.x]="block.x" [attr.y]="block.y" width="280" height="200">
+          <div xmlns="http://www.w3.org/1999/xhtml"
+               class="canvas-block section-{{block.section}}"
+               (mousedown)="startBlockDrag($event, block)">
+            <div class="canvas-block-header">
+              <i class="pi pi-arrows-alt canvas-drag-handle"></i>
+              <span class="canvas-block-title">{{ getBlockDef(block.type)?.label ?? block.type }}</span>
+              <button class="canvas-block-delete" (mousedown)="$event.stopPropagation()" (click)="removeCanvasBlock(block.id)" aria-label="Delete block">
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
+            <p class="canvas-block-desc">{{ getBlockDef(block.type)?.description }}</p>
+            <div class="canvas-block-fields">
+              @for (field of getBlockDef(block.type)?.fields ?? []; track field.key) {
+                <div class="canvas-field">
+                  <label>{{ field.label }}</label>
+                  <input [type]="field.type"
+                         [placeholder]="field.placeholder"
+                         [value]="block.config[field.key] ?? ''"
+                         (input)="updateBlockConfig(block.id, field.key, $any($event.target).value)"
+                         (mousedown)="$event.stopPropagation()"/>
+                </div>
+              }
+            </div>
           </div>
-        }
+        </foreignObject>
+      }
+    </svg>
+
+    <!-- Empty state -->
+    @if (canvasBlocks().length === 0) {
+      <div class="canvas-empty-state">
+        <i class="pi pi-sitemap" style="font-size:48px;opacity:0.3"></i>
+        <p>Drag a block from the panel to get started</p>
+        <p style="font-size:12px;color:var(--pf-text-muted)">Or click a block in the panel to add it</p>
       </div>
-    </div>
+    }
 
-    <!-- ── Right: canvas builder ─────────────────────────────────────────── -->
-    <div class="builder-blocks">
+    <!-- Drop indicator overlay -->
+    @if (isDraggingOver()) {
+      <div class="canvas-drop-indicator">
+        <i class="pi pi-plus-circle" style="font-size:24px"></i>
+        <span>Drop to add block</span>
+      </div>
+    }
 
-      <div class="strategy-canvas-container"
-           (mousemove)="onCanvasMouseMove($event)"
-           (mouseup)="endDrag()"
-           (mouseleave)="endDrag()">
-
-        <!-- Zoom controls -->
-        <div class="canvas-controls">
-          <button (click)="zoomIn()" title="Zoom in" aria-label="Zoom in">
-            <i class="pi pi-plus"></i>
-          </button>
-          <span class="canvas-zoom-level">{{ (scale() * 100) | number:'1.0-0' }}%</span>
-          <button (click)="zoomOut()" title="Zoom out" aria-label="Zoom out">
-            <i class="pi pi-minus"></i>
-          </button>
-          <button (click)="fitToView()" title="Fit to view" aria-label="Fit to view">
-            <i class="pi pi-expand"></i>
+    <!-- ─── Floating right panel ────────────────────────────────────────── -->
+    @if (panelOpen()) {
+      <div class="builder-floating-panel">
+        <div class="panel-header">
+          <span>Strategy Settings</span>
+          <button class="panel-close-btn" (click)="panelOpen.set(false)" aria-label="Close panel">
+            <i class="pi pi-times"></i>
           </button>
         </div>
 
-        <!-- SVG Canvas -->
-        <svg class="strategy-canvas"
-             [attr.viewBox]="viewBoxStr()"
-             (mousedown)="startPan($event)"
-             (wheel)="onWheel($event)">
+        <div class="panel-body">
+          <!-- Metadata form -->
+          <div class="panel-section">
+            <div class="form-field">
+              <label class="field-label">Strategy Name *</label>
+              <input pInputText type="text" style="width:100%" placeholder="My Strategy"
+                     [value]="form().name" (input)="updateForm('name', $any($event.target).value)" />
+            </div>
 
-          <!-- Grid pattern -->
-          <defs>
-            <pattern id="canvas-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/>
-            </pattern>
-            <pattern id="canvas-grid-lg" width="100" height="100" patternUnits="userSpaceOnUse">
-              <rect width="100" height="100" fill="url(#canvas-grid)"/>
-              <path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-            </pattern>
-          </defs>
-          <rect width="4000" height="4000" x="-500" y="-500" fill="url(#canvas-grid-lg)"/>
+            <div class="form-field">
+              <label class="field-label">Description</label>
+              <textarea pTextarea rows="2" style="width:100%" placeholder="What does this strategy do?"
+                        [value]="form().description"
+                        (input)="updateForm('description', $any($event.target).value)"></textarea>
+            </div>
 
-          <!-- Section column headers -->
-          <text x="160" y="40" class="canvas-section-label" fill="#EF4444">&#x2298; Safety</text>
-          <text x="500" y="40" class="canvas-section-label" fill="#F59E0B">&#x26A1; Triggers</text>
-          <text x="840" y="40" class="canvas-section-label" fill="#3B82F6">&#x25BD; Conditions</text>
-          <text x="1180" y="40" class="canvas-section-label" fill="#22C55E">&#x25B6; Actions</text>
+            <div class="form-field">
+              <label class="field-label">Exec Mode</label>
+              <p-select [options]="execModeOptions" [ngModel]="form().execMode" optionLabel="label" optionValue="value"
+                        style="width:100%" (ngModelChange)="updateForm('execMode', $event)" />
+            </div>
 
-          <!-- Connection lines between columns -->
-          @for (path of connectionPaths(); track $index) {
-            <path [attr.d]="path" class="canvas-connection" fill="none" stroke="rgba(6,182,212,0.15)" stroke-width="2" stroke-dasharray="6,4"/>
-          }
-
-          <!-- Block nodes -->
-          @for (block of canvasBlocks(); track block.id) {
-            <foreignObject [attr.x]="block.x" [attr.y]="block.y" width="280" height="200">
-              <div xmlns="http://www.w3.org/1999/xhtml"
-                   class="canvas-block section-{{block.section}}"
-                   (mousedown)="startBlockDrag($event, block)">
-                <div class="canvas-block-header">
-                  <i class="pi pi-arrows-alt canvas-drag-handle"></i>
-                  <span class="canvas-block-title">{{ getBlockDef(block.type)?.label ?? block.type }}</span>
-                  <button class="canvas-block-delete" (mousedown)="$event.stopPropagation()" (click)="removeCanvasBlock(block.id)" aria-label="Delete block">
-                    <i class="pi pi-times"></i>
-                  </button>
-                </div>
-                <p class="canvas-block-desc">{{ getBlockDef(block.type)?.description }}</p>
-                <div class="canvas-block-fields">
-                  @for (field of getBlockDef(block.type)?.fields ?? []; track field.key) {
-                    <div class="canvas-field">
-                      <label>{{ field.label }}</label>
-                      <input [type]="field.type"
-                             [placeholder]="field.placeholder"
-                             [value]="block.config[field.key] ?? ''"
-                             (input)="updateBlockConfig(block.id, field.key, $any($event.target).value)"
-                             (mousedown)="$event.stopPropagation()"/>
-                    </div>
-                  }
-                </div>
+            @if (form().execMode !== 'EVENT') {
+              <div class="form-field">
+                <label class="field-label">Tick Interval (ms)</label>
+                <input pInputText type="number" style="width:100%" placeholder="1000" min="200"
+                       [value]="form().tickMs" (input)="updateForm('tickMs', +$any($event.target).value)" />
               </div>
-            </foreignObject>
-          }
-        </svg>
+            }
 
-        <!-- Add block FAB -->
-        <button class="canvas-add-fab" (click)="paletteOpen.set(true)" title="Add block" aria-label="Add block">
-          <i class="pi pi-plus"></i>
-        </button>
+            <div class="form-field">
+              <label class="field-label">Visibility</label>
+              <p-select [options]="visibilityOptions" [ngModel]="form().visibility" optionLabel="label" optionValue="value"
+                        style="width:100%" (ngModelChange)="updateForm('visibility', $event)" />
+            </div>
 
-        <!-- Empty state -->
-        @if (canvasBlocks().length === 0) {
-          <div class="canvas-empty-state">
-            <i class="pi pi-sitemap" style="font-size:48px;opacity:0.3"></i>
-            <p>Click <strong>+</strong> to add your first block</p>
-            <p style="font-size:12px;color:var(--pf-text-muted)">Drag blocks to arrange them on the canvas</p>
-          </div>
-        }
-
-        <!-- Block palette overlay -->
-        @if (paletteOpen()) {
-          <div class="canvas-palette-overlay">
-            <div class="block-palette">
-              <div class="palette-header">
-                <span style="font-size:13px;font-weight:600;color:var(--pf-text-secondary)">
-                  Choose a {{ activeSection() }} block
-                </span>
-                <div style="display:flex;gap:4px;align-items:center">
-                  @for (sec of sections; track sec.key) {
-                    <button class="palette-section-btn" [class.active]="activeSection() === sec.key" (click)="setSection(sec.key)"
-                            [style.--sec-color]="sec.color">
-                      <i class="pi {{ sec.icon }}" style="font-size:12px"></i>
-                      {{ sec.label }}
-                    </button>
-                  }
-                  <button class="block-ctrl-btn" (click)="paletteOpen.set(false)" style="margin-left:8px" aria-label="Close palette">
-                    <i class="pi pi-times"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="palette-grid">
-                @for (def of paletteDefs(); track def.type) {
-                  <div class="palette-item" (click)="addBlock(def)">
-                    <span class="palette-item-label">{{ def.label }}</span>
-                    <span class="palette-item-desc">{{ def.description }}</span>
-                  </div>
-                }
-              </div>
+            <div class="form-field">
+              <label class="field-label">Tags <span style="color:var(--pf-text-muted);font-weight:400">(comma separated)</span></label>
+              <input pInputText type="text" style="width:100%" placeholder="momentum, politics"
+                     [value]="form().tagsInput" (input)="updateForm('tagsInput', $any($event.target).value)" />
             </div>
           </div>
-        }
 
+          <!-- Block palette -->
+          <div class="panel-section panel-blocks-section">
+            <h3 class="panel-section-title">Blocks</h3>
+
+            <!-- Section tabs -->
+            <div class="panel-block-tabs">
+              @for (sec of sections; track sec.key) {
+                <button class="panel-tab-btn"
+                        [class.active]="activeSection() === sec.key"
+                        (click)="setSection(sec.key)"
+                        [style.--sec-color]="sec.color">
+                  <i class="pi {{ sec.icon }}" style="font-size:11px"></i>
+                  {{ sec.label }}
+                  @if (sectionCount(sec.key) > 0) {
+                    <span class="panel-tab-count">{{ sectionCount(sec.key) }}</span>
+                  }
+                </button>
+              }
+            </div>
+
+            <!-- Draggable block items -->
+            <div class="panel-block-list">
+              @for (def of paletteDefs(); track def.type) {
+                <div class="panel-block-item"
+                     draggable="true"
+                     (dragstart)="onBlockDragStart($event, def)"
+                     (dragend)="onBlockDragEnd()"
+                     (click)="addBlock(def)">
+                  <div class="panel-block-item-label">
+                    <i class="pi pi-grip-vertical" style="font-size:10px;color:var(--pf-text-muted);cursor:grab"></i>
+                    {{ def.label }}
+                  </div>
+                  <div class="panel-block-item-desc">{{ def.description }}</div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
       </div>
+    }
 
-    </div><!-- /builder-blocks -->
+    <!-- Panel toggle when closed -->
+    @if (!panelOpen()) {
+      <button class="panel-toggle-btn" (click)="panelOpen.set(true)" title="Open settings panel" aria-label="Open settings panel">
+        <i class="pi pi-sliders-h"></i>
+      </button>
+    }
 
-  </div><!-- /builder-body -->
+    <!-- ─── Zoom controls — bottom center ───────────────────────────────── -->
+    <div class="canvas-zoom-bar">
+      <button (click)="zoomOut()" title="Zoom out" aria-label="Zoom out">
+        <i class="pi pi-minus"></i>
+      </button>
+      <span class="canvas-zoom-level">{{ (scale() * 100) | number:'1.0-0' }}%</span>
+      <button (click)="zoomIn()" title="Zoom in" aria-label="Zoom in">
+        <i class="pi pi-plus"></i>
+      </button>
+      <div class="zoom-divider"></div>
+      <button (click)="fitToView()" title="Fit to view" aria-label="Fit to view">
+        <i class="pi pi-expand"></i>
+      </button>
+    </div>
+
+  </div><!-- /canvas-wrapper -->
 
   } <!-- /loading -->
 

@@ -1300,27 +1300,35 @@ input[type="time"] {
 
 // ─── Strategy builder ─────────────────────────────────────────────────────────
 
+// Builder takes over the entire viewport — covers sidebar and topbar
 .builder-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  max-width: none;
+  background: var(--pf-bg-base);
   overflow: hidden;
 }
 
 // When builder-page is present, the .app-content should not scroll
 .app-content:has(.builder-page) {
   overflow: hidden;
-  padding: var(--pf-space-4);
+  padding: 0;
 }
 
 .builder-topbar {
   display: flex;
   align-items: center;
   gap: var(--pf-space-4);
-  margin-bottom: var(--pf-space-4);
+  padding: var(--pf-space-3) var(--pf-space-4);
   flex-wrap: wrap;
   flex-shrink: 0;
+  background: var(--pf-bg-surface);
+  border-bottom: 1px solid var(--pf-border-subtle);
 }
 
 .builder-title {
@@ -1330,72 +1338,210 @@ input[type="time"] {
   margin: 0;
 }
 
-.builder-body {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: var(--pf-space-4);
-  align-items: stretch;
+// ─── Canvas wrapper — takes full remaining space ──────────────────────────
+.canvas-wrapper {
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;
-
-  @media (max-width: 900px) { grid-template-columns: 1fr; }
+  background: #080c14;
 }
 
-.builder-meta {
-  background: var(--pf-bg-surface);
-  border: 1px solid var(--pf-border-subtle);
+// ─── Floating right panel ─────────────────────────────────────────────────
+.builder-floating-panel {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 300px;
+  max-height: calc(100% - 32px);
+  z-index: 20;
+  background: rgba(12, 18, 30, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--pf-radius-lg);
-  padding: var(--pf-space-4);
   display: flex;
   flex-direction: column;
-  gap: var(--pf-space-3);
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+
+  span {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--pf-text-primary);
+  }
+}
+
+.panel-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  color: var(--pf-text-muted);
+  cursor: pointer;
+  border-radius: var(--pf-radius-sm);
+  &:hover { background: rgba(255,255,255,0.06); color: var(--pf-text-primary); }
+}
+
+.panel-body {
+  flex: 1;
   overflow-y: auto;
   min-height: 0;
 }
 
-.builder-summary {
-  border-top: 1px solid var(--pf-border-subtle);
-  padding-top: var(--pf-space-3);
+.panel-section {
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--pf-space-3);
 }
 
-.summary-row {
+.panel-blocks-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.panel-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pf-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.panel-block-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.panel-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--pf-radius-sm);
+  color: var(--pf-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover { border-color: rgba(255,255,255,0.15); color: var(--pf-text-primary); }
+  &.active { border-color: var(--sec-color, var(--pf-cyan-500)); color: var(--sec-color, var(--pf-cyan-500)); background: rgba(255,255,255,0.03); }
+}
+
+.panel-tab-count {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(6,182,212,0.15);
+  color: var(--pf-cyan-500);
+  padding: 0 5px;
+  border-radius: var(--pf-radius-sm);
+}
+
+.panel-block-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.panel-block-item {
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--pf-radius-md);
+  cursor: grab;
+  transition: all 0.15s ease;
+  user-select: none;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(6, 182, 212, 0.2);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.panel-block-item-label {
   display: flex;
   align-items: center;
-  gap: var(--pf-space-2);
-  padding: 8px var(--pf-space-3);
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pf-text-primary);
+}
+
+.panel-block-item-desc {
+  font-size: 10px;
+  color: var(--pf-text-muted);
+  line-height: 1.4;
+  margin-top: 2px;
+  padding-left: 16px;
+}
+
+// ─── Panel toggle button ──────────────────────────────────────────────────
+.panel-toggle-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 20;
+  width: 36px;
+  height: 36px;
   border-radius: var(--pf-radius-md);
-  font-size: 13px;
+  background: rgba(12, 18, 30, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--pf-text-secondary);
   cursor: pointer;
-  transition: background var(--pf-duration-fast) ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 
-  &:hover  { background: var(--pf-bg-overlay); }
-  &.active { background: rgba(6,182,212,0.08); color: var(--pf-cyan-500); }
+  &:hover {
+    background: rgba(12, 18, 30, 0.95);
+    border-color: rgba(6, 182, 212, 0.3);
+    color: var(--pf-cyan-500);
+  }
 }
 
-.summary-count {
-  margin-left: auto;
-  font-size: 11px;
-  font-weight: 600;
-  background: var(--pf-bg-elevated);
-  border: 1px solid var(--pf-border-subtle);
-  padding: 0 6px;
-  border-radius: var(--pf-radius-sm);
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.builder-blocks {
-  background: var(--pf-bg-surface);
-  border: 1px solid var(--pf-border-subtle);
-  border-radius: var(--pf-radius-lg);
-  overflow: hidden;
+// ─── Drop indicator ───────────────────────────────────────────────────────
+.canvas-drop-indicator {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(6, 182, 212, 0.05);
+  border: 2px dashed rgba(6, 182, 212, 0.3);
+  color: var(--pf-cyan-500);
+  font-size: 14px;
+  font-weight: 500;
+  pointer-events: none;
+  z-index: 15;
 }
 
 .builder-section-tabs {
@@ -1612,16 +1758,6 @@ input[type="time"] {
 
 // ─── Canvas Strategy Builder ─────────────────────────────────────────────────
 
-.strategy-canvas-container {
-  position: relative;
-  flex: 1;
-  overflow: hidden;
-  background: #080c14;
-  border-radius: var(--pf-radius-lg);
-  border: 1px solid var(--pf-border-subtle);
-  min-height: 0;
-}
-
 .strategy-canvas {
   width: 100%;
   height: 100%;
@@ -1640,18 +1776,22 @@ input[type="time"] {
   pointer-events: none;
 }
 
-.canvas-controls {
+.canvas-zoom-bar {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 10;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: var(--pf-bg-surface);
-  border: 1px solid var(--pf-border-subtle);
-  border-radius: var(--pf-radius-md);
-  padding: 4px;
+  gap: 2px;
+  background: rgba(12, 18, 30, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 4px 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 
   button {
     display: flex;
@@ -1663,9 +1803,18 @@ input[type="time"] {
     border: none;
     color: var(--pf-text-secondary);
     cursor: pointer;
-    border-radius: var(--pf-radius-sm);
-    &:hover { background: var(--pf-bg-overlay); color: var(--pf-text-primary); }
+    border-radius: 50%;
+    font-size: 12px;
+    transition: all 0.15s ease;
+    &:hover { background: rgba(255,255,255,0.08); color: var(--pf-text-primary); }
   }
+}
+
+.zoom-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 2px;
 }
 
 .canvas-zoom-level {
@@ -1770,30 +1919,7 @@ input[type="time"] {
   }
 }
 
-.canvas-add-fab {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  z-index: 10;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--pf-cyan-500);
-  color: #000;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  box-shadow: 0 4px 16px rgba(6,182,212,0.3);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-
-  &:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 24px rgba(6,182,212,0.4);
-  }
-}
+// .canvas-add-fab removed — blocks now added via floating panel drag & drop
 
 .canvas-empty-state {
   position: absolute;
@@ -1810,35 +1936,7 @@ input[type="time"] {
   }
 }
 
-.canvas-palette-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 20;
-  width: min(90%, 700px);
-  max-height: 80%;
-  overflow-y: auto;
-}
-
-.palette-section-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  background: transparent;
-  border: 1px solid var(--pf-border-default);
-  border-radius: var(--pf-radius-sm);
-  color: var(--pf-text-muted);
-  font-size: 11px;
-  font-weight: 500;
-  font-family: 'Outfit', sans-serif;
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover { border-color: var(--pf-border-strong); color: var(--pf-text-primary); }
-  &.active { border-color: var(--sec-color, var(--pf-cyan-500)); color: var(--sec-color, var(--pf-cyan-500)); background: rgba(255,255,255,0.03); }
-}
+// .canvas-palette-overlay and .palette-section-btn removed — replaced by floating panel
 
 // ─── Portfolio ────────────────────────────────────────────────────────────────
 

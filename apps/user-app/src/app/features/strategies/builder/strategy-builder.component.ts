@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -132,8 +132,14 @@ export class StrategyBuilderComponent implements OnInit {
   loading     = signal(false);
   saving      = signal(false);
 
-  activeSection = signal<BlockSection>('safety');
-  paletteOpen   = signal(false);
+  activeSection   = signal<BlockSection>('safety');
+  panelOpen       = signal(true);
+  isDraggingOver  = signal(false);
+
+  private draggingDef: BlockDef | null = null;
+  private draggingSection: BlockSection | null = null;
+
+  @ViewChild('canvasSvg', { static: false }) canvasSvgRef!: ElementRef<SVGSVGElement>;
 
   form = signal<FormState>({
     name:        '',
@@ -336,10 +342,10 @@ export class StrategyBuilderComponent implements OnInit {
     );
   }
 
-  addBlockToCanvas(def: BlockDef, section: BlockSection): void {
+  addBlockToCanvas(def: BlockDef, section: BlockSection, atX?: number, atY?: number): void {
     const existingInSection = this.canvasBlocks().filter(b => b.section === section);
-    const x = SECTION_COLUMNS[section];
-    const y = 80 + existingInSection.length * 220;
+    const x = atX ?? SECTION_COLUMNS[section];
+    const y = atY ?? (80 + existingInSection.length * 220);
 
     const block: CanvasBlock = {
       id: crypto.randomUUID(),
@@ -350,7 +356,6 @@ export class StrategyBuilderComponent implements OnInit {
       y,
     };
     this.canvasBlocks.update(blocks => [...blocks, block]);
-    this.paletteOpen.set(false);
   }
 
   removeCanvasBlock(id: string): void {
@@ -391,12 +396,52 @@ export class StrategyBuilderComponent implements OnInit {
     this.activeSection.set(s);
   }
 
-  togglePalette(): void {
-    this.paletteOpen.update(v => !v);
-  }
-
   addBlock(def: BlockDef): void {
     this.addBlockToCanvas(def, this.activeSection());
+  }
+
+  // ─── Drag & drop from panel to canvas ─────────────────────────────────
+
+  onBlockDragStart(event: DragEvent, def: BlockDef): void {
+    this.draggingDef = def;
+    this.draggingSection = this.activeSection();
+    event.dataTransfer?.setData('text/plain', def.type);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'copy';
+    }
+  }
+
+  onBlockDragEnd(): void {
+    this.draggingDef = null;
+    this.draggingSection = null;
+    this.isDraggingOver.set(false);
+  }
+
+  onCanvasDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'copy';
+    }
+    this.isDraggingOver.set(true);
+  }
+
+  onCanvasDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.isDraggingOver.set(false);
+
+    if (!this.draggingDef || !this.draggingSection) return;
+
+    // Convert screen coords to SVG coords
+    const svg = this.canvasSvgRef?.nativeElement;
+    if (svg) {
+      const pt = this.svgPoint(svg, event as unknown as MouseEvent);
+      this.addBlockToCanvas(this.draggingDef, this.draggingSection, pt.x - 140, pt.y - 100);
+    } else {
+      this.addBlockToCanvas(this.draggingDef, this.draggingSection);
+    }
+
+    this.draggingDef = null;
+    this.draggingSection = null;
   }
 
   // ─── Form helpers ───────────────────────────────────────────────────────
