@@ -26,6 +26,49 @@
 - [x] admin-app: `/tickets` pages (filterable list, detail with admin controls, "Assign to me")
 - [x] Tests: 48 tests (16 api-service + 25 admin-api + 7 reminder), 100% lines/95%+ branches
 
+## Post-Launch — Design Polish, UX & Dev Workflow (v2.3.0)
+
+### Design Polish
+
+- [x] Color-coded category badges on Markets (Sports=blue, Crypto=orange, Politics=purple, Economics=emerald, Finance=cyan, Technology=pink)
+- [x] YES/NO price color-coding (green >0.5, red <=0.5)
+- [x] Strategy card tags: cyan exec mode, purple version, gray block count
+- [x] Strategy builder: color-coded block tabs (Safety=red, Triggers=amber, Conditions=blue, Actions=green)
+- [x] Portfolio P&L cards with colored left borders (red/green based on value)
+- [x] Sidebar: brighter section labels, cyan left border on active item, collapsible to 64px icon-only
+- [x] Consistent `.page-count` pill badges across all pages
+- [x] Admin: colored user status badges, distinct stat card icon colors, avatar badge in topbar, dynamic breadcrumb
+- [x] Admin: bolt icon in sidebar replacing placeholder
+- [x] Auth pages: subtle cyan radial gradient background
+- [x] Cookie banner: compact single-line layout
+- [x] Landing page: feature card icon contrast, hover glow, CTA gradient text, footer column spread, proof strip cyan numbers, step number gradients
+
+### UX Improvements
+
+- [x] Leaderboard: gold/silver/bronze medal icons for top 3
+- [x] Portfolio: dash for zero current price
+- [x] Backtest: improved empty state with guidance text
+- [x] Support: warmer empty state with response time note
+- [x] Markets: "/" keyboard shortcut hint in search
+- [x] Admin users: clickable rows navigate to detail
+- [x] Admin topbar: dynamic breadcrumb showing current page
+- [x] Sidebar collapse: working toggle with smooth transition
+
+### Bug Fixes
+
+- [x] Sidebar collapse: fixed class binding issue, switched to plain boolean + `[hidden]` + `[style.width.px]`
+- [x] Native date inputs: dark theme overrides for all input types
+- [x] Sidebar toggle button: visible on desktop for collapse functionality
+
+### Infrastructure
+
+- [x] `docker-compose.override.yml` for dev volume mounts (no more image rebuilds for code changes)
+- [x] Dev setup docs updated with volume-mount workflow (section 8 of `docs/09-dev-setup.md`)
+
+### Tests
+
+- [x] Unit tests: `rankMedal`, `categoryColor`, `pnlColor`, breadcrumb routing, `statusBadge` (28 test cases)
+
 ## Post-Launch — Frontend Interactivity & Design Polish (v2.2.0)
 
 ### Interactivity Enhancements

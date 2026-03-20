@@ -13,6 +13,50 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.3.0] — 2026-03-20
+
+### Added — Frontend Design Polish
+
+- **Category badges** — Markets page now displays color-coded category badges: Sports (blue), Crypto (orange), Politics (purple), Economics (emerald), Finance (cyan), Technology (pink).
+- **YES/NO price coloring** — YES and NO token prices are color-coded: green when >0.5, red when <=0.5.
+- **Strategy card tags** — Strategy list cards display colored metadata tags: cyan for execution mode, purple for version, gray for block count.
+- **Strategy builder color-coded tabs** — Block category tabs in the strategy builder are color-coded: Safety (red), Triggers (amber), Conditions (blue), Actions (green).
+- **Portfolio P&L card borders** — Portfolio position cards have a colored left border: green for positive P&L, red for negative.
+- **Sidebar polish** — Brighter section labels, cyan left border on active nav item, collapsible to 64px icon-only mode with smooth transition.
+- **Page count pill badges** — Consistent `.page-count` pill badges showing item totals on all admin and user list pages.
+- **Admin colored badges** — User status badges are color-coded; stat card icons have distinct colors per card; avatar badge shown in topbar; dynamic breadcrumb displays current page name.
+- **Admin sidebar bolt icon** — Replaced placeholder icon with `pi pi-bolt` in admin sidebar brand.
+- **Auth page background** — Subtle cyan radial gradient background on login/register pages.
+- **Cookie banner compact layout** — Cookie consent banner uses a compact single-line layout.
+- **Landing page polish** — Feature card icon contrast improvements, hover glow effect, CTA gradient text, wider footer column spread, proof strip cyan numbers, step number gradients.
+
+### Added — Frontend UX Improvements
+
+- **Leaderboard medals** — Top 3 leaderboard positions display gold/silver/bronze medal icons instead of plain rank numbers.
+- **Portfolio zero price** — Dash displayed instead of `0.00` for positions with zero current price.
+- **Backtest empty state** — Improved empty state with guidance text explaining how to run a first backtest.
+- **Support empty state** — Warmer empty state with response time note for the support ticket page.
+- **Markets search hint** — "/" keyboard shortcut hint displayed inside the market search input.
+- **Admin clickable user rows** — User table rows in admin are clickable, navigating to the user detail page.
+- **Admin dynamic breadcrumb** — Topbar breadcrumb dynamically reflects the current admin page.
+- **Sidebar collapse toggle** — Working toggle button with smooth width transition on desktop.
+
+### Fixed
+
+- **Sidebar collapse class binding** — Fixed class binding issue; switched from signal factory to plain boolean + `[hidden]` + `[style.width.px]` for reliable change detection.
+- **Native date input dark theme** — Added dark theme CSS overrides for native `<input type="date">`, `<input type="time">`, and related input types to prevent white backgrounds in dark mode.
+- **Sidebar toggle button visibility** — Toggle button now visible on desktop for collapse functionality.
+
+### Changed — Infrastructure
+
+- **Volume-mount dev mode** — Added `docker-compose.override.yml` for dev volume mounts. Local `dist/` directories are mounted into running containers so code changes take effect without rebuilding Docker images. Node `--watch` mode auto-restarts NestJS services on file changes.
+
+### Tests
+
+- **Design polish unit tests** — 28 new test cases covering `rankMedal` (leaderboard medal logic), `categoryColor` (market category badge colors), `pnlColor` (P&L color-coding), breadcrumb routing (topbar title extraction), and `statusBadge` (user status badge styling).
+
+---
+
 ## [2.2.0] — 2026-03-20
 
 ### Added — Frontend Interactivity Enhancements
