@@ -18,6 +18,16 @@ export class PortfolioService {
     let totalUnrealizedPnl = 0;
     let totalRealizedPnl = 0;
 
+    // Fetch market titles for all positions in one query
+    const marketIds = [...new Set(positions.map((p) => p.marketId))];
+    const markets = marketIds.length
+      ? await this.prisma.market.findMany({
+          where: { id: { in: marketIds } },
+          select: { id: true, title: true },
+        })
+      : [];
+    const marketTitleMap = new Map(markets.map((m) => [m.id, m.title]));
+
     const enriched = await Promise.all(
       positions.map(async (pos) => {
         const priceRaw = await this.redis.get(`cache:price:${pos.tokenId}`);
@@ -34,7 +44,7 @@ export class PortfolioService {
           id: pos.id,
           marketId: pos.marketId,
           tokenId: pos.tokenId,
-          marketTitle: "",
+          marketTitle: marketTitleMap.get(pos.marketId) ?? "",
           side: pos.outcome,
           size: String(pos.size),
           avgEntryPrice: String(pos.avgPrice),
@@ -70,10 +80,10 @@ export class PortfolioService {
       ? await this.prisma.$queryRaw`
                 SELECT
                     time_bucket('1 day'::interval, time) AS time,
-                    last(realized_pnl, time) AS pnl
+                    last("realizedPnl", time) AS pnl
                 FROM pnl_snapshots
-                WHERE user_id = ${userId}
-                  AND strategy_id = ${strategyId}
+                WHERE "userId" = ${userId}
+                  AND "strategyId" = ${strategyId}
                   AND time >= ${since}
                 GROUP BY 1
                 ORDER BY 1 ASC
@@ -81,9 +91,9 @@ export class PortfolioService {
       : await this.prisma.$queryRaw`
                 SELECT
                     time_bucket('1 day'::interval, time) AS time,
-                    last(realized_pnl, time) AS pnl
+                    last("realizedPnl", time) AS pnl
                 FROM pnl_snapshots
-                WHERE user_id = ${userId}
+                WHERE "userId" = ${userId}
                   AND time >= ${since}
                 GROUP BY 1
                 ORDER BY 1 ASC
