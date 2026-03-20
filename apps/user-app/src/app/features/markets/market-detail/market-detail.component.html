@@ -95,9 +95,12 @@
           } @else if (chartData()) {
             <p-chart type="line" [data]="chartData()" [options]="chartOptions()" height="300px" />
           } @else {
-            <div class="pf-empty-state" style="padding:40px">
-              <i class="pi pi-chart-line pf-empty-icon"></i>
-              <p class="pf-empty-desc">No price data available</p>
+            <div class="chart-placeholder">
+              <svg viewBox="0 0 400 100" style="width:100%;opacity:0.1">
+                <polyline points="0,80 50,60 100,70 150,30 200,45 250,20 300,40 350,25 400,10"
+                          stroke="#06b6d4" stroke-width="2" fill="none"/>
+              </svg>
+              <span>Price chart coming soon</span>
             </div>
           }
         </div>

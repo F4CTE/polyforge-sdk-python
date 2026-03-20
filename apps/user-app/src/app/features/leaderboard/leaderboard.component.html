@@ -23,7 +23,7 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th class="pf-col-label" style="min-width:50px">Rank</th>
+            <th class="pf-col-label" style="min-width:50px;text-align:right">Rank</th>
             <th class="pf-col-label" style="min-width:180px">Trader</th>
             <th class="pf-col-label" style="min-width:120px;text-align:right">P&L</th>
             <th class="pf-col-label" style="min-width:100px;text-align:right">Win Rate</th>
@@ -53,7 +53,7 @@
             @for (entry of entries(); track entry.userId) {
               <tr class="table-row leaderboard-row">
                 <!-- Rank -->
-                <td>
+                <td style="text-align:right">
                   <div class="leaderboard-rank" [style.color]="rankColor(entry.rank)">
                     @if (rankMedal(entry.rank)) {
                       <span style="font-size:18px">{{ rankMedal(entry.rank) }}</span>

@@ -371,6 +371,7 @@ html, body {
     margin: 0 0 var(--pf-space-2);
     font-size: 20px;
     font-weight: 700;
+    text-align: center;
     background: linear-gradient(135deg, var(--pf-cyan-300), var(--pf-cyan-500));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -381,6 +382,7 @@ html, body {
     color: var(--pf-text-secondary);
     margin-bottom: var(--pf-space-6);
     font-size: 14px;
+    text-align: center;
   }
 
   // Full-width inputs inside auth card
@@ -939,6 +941,30 @@ input[type="time"] {
 .chart-wrap {
   padding: var(--pf-space-4);
   height: 300px;
+}
+
+.chart-placeholder {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+
+  svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  span {
+    position: relative;
+    font-size: 13px;
+    color: var(--pf-text-muted);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
 }
 
 .res-btn {
@@ -2226,8 +2252,9 @@ input[type="time"] {
 .leaderboard-rank {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   width: 32px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 .leaderboard-user {
@@ -3102,6 +3129,22 @@ textarea:focus-visible,
   background: var(--pf-bg-elevated, #111D2E) !important;
   border: 1px solid var(--pf-border-default, #1E293B) !important;
   color: var(--pf-text-primary, #F0F0F5) !important;
+
+  .p-dialog-header {
+    background: var(--pf-bg-elevated, #111D2E) !important;
+    color: var(--pf-text-primary, #F0F0F5) !important;
+    border-bottom: 1px solid var(--pf-border-subtle, rgba(255,255,255,0.06));
+  }
+
+  .p-dialog-content {
+    background: var(--pf-bg-elevated, #111D2E) !important;
+    color: var(--pf-text-primary, #F0F0F5) !important;
+  }
+
+  .p-dialog-footer {
+    background: var(--pf-bg-elevated, #111D2E) !important;
+    border-top: 1px solid var(--pf-border-subtle, rgba(255,255,255,0.06));
+  }
 }
 
 .p-confirmdialog {
