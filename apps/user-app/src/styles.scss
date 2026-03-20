@@ -117,12 +117,7 @@ html, body {
   max-width: 1440px;
 }
 
-// Hide sidebar toggle on desktop — only needed for mobile
-.sidebar-toggle-btn {
-  @media (min-width: 769px) {
-    display: none !important;
-  }
-}
+// Sidebar toggle — always visible for collapse functionality
 
 // ─── Sidebar nav ─────────────────────────────────────────────────────────────
 
