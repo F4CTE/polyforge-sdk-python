@@ -50,6 +50,36 @@ Trace a concrete example to understand how everything connects: **a user starts 
    └─► Updates the portfolio/orders UI in real-time
 ```
 
+### Example 2: A user creates a support ticket
+
+```
+1. User fills out support form in user-app (Angular)
+   └─► POST /api/v1/tickets  (api-service)
+
+2. api-service validates JWT, creates ticket + first message in a transaction
+   └─► INSERT into tickets + ticket_messages (Prisma $transaction)
+   └─► Publish TICKET_CREATED to stream:events
+
+3. notification-service consumes TICKET_CREATED
+   └─► Sends confirmation email to user (if onTicketReply enabled)
+   └─► Pushes in-app NOTIFICATION to stream:events
+
+4. Admin opens ticket in admin-app, replies
+   └─► POST /api/v1/tickets/:id/messages  (admin-api-service)
+   └─► Auto-assigns ticket to replying admin if unassigned
+   └─► Sets ticket status to AWAITING_USER
+   └─► Publishes TICKET_REPLY to stream:events
+   └─► Audit logged
+
+5. api-service relays TICKET_REPLY via WebSocket to user
+   └─► user-app shows notification bell update
+
+6. If user doesn't reply within 48h:
+   └─► admin-api-service reminder cron detects stale ticket
+   └─► Sends branded reminder email with "View your ticket" CTA
+   └─► Sets reminderSentAt to prevent repeat reminders
+```
+
 ---
 
 ## 2. Shared Packages — The Foundation

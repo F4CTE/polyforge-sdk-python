@@ -156,7 +156,9 @@ stream:orders         strategy-engine → order-service
 stream:paper_orders   strategy-engine → paper-order-service
 stream:backtests      api-service     → backtest-service
 stream:events         order-service, paper-order-service,
-                      backtest-service, strategy-engine
+                      backtest-service, strategy-engine,
+                      api-service (ticket events),
+                      admin-api-service (ticket events)
                       → api-service (WebSocket to users)
                       → admin-api-service (WebSocket to admins)
                       → notification-service
@@ -220,6 +222,7 @@ Served at `polyforge.app`
 | `/profile/:username` | Public profile view | Public |
 | `/settings` | Notifications, bot linking, 2FA | Verified |
 | `/settings/trading-account` | Polymarket credential import | Verified |
+| `/support` | Support tickets list + detail | Verified |
 | `/terms` | Terms of Service | Public |
 | `/privacy` | Privacy Policy | Public |
 
@@ -244,6 +247,7 @@ Served at `admin.polyforge.app` — IP allowlisted at the Nginx level.
 | `/logs/audit` | Admin action history |
 | `/logs/events` | System event log |
 | `/logs/logins` | User login activity |
+| `/tickets` | Ticket management (list, detail, reply, assign) |
 | `/logs/notifications` | Notification delivery history |
 
 ### Angular HTTP clients
@@ -607,6 +611,8 @@ Polymarket WS ──► market-data-service ──► Redis Streams
 { type: 'PAPER_ORDER_FILLED',  orderId, simulatedPrice }
 { type: 'BACKTEST_PROGRESS',   runId, progress }
 { type: 'NOTIFICATION',        title, body, severity }
+{ type: 'TICKET_REPLY',       ticketId, subject, adminName }
+{ type: 'TICKET_CLOSED',      ticketId, subject }
 { type: 'AUTH_ERROR',          message }
 ```
 
@@ -885,6 +891,15 @@ CHANGE_ADMIN_ROLE, VIEW_USER_DETAIL, EXPORT_DATA
 | backtest_orders | With parent run | Cascade delete |
 
 Retention jobs run nightly at 3am UTC via `@Cron` decorator in `admin-api-service`.
+
+### Ticket Reminder Cron
+
+`admin-api-service` runs a ticket reminder cron (`@Cron("15 * * * *")`) that:
+1. Queries tickets in `AWAITING_USER` status with `updatedAt` older than the configured reminder threshold
+2. Sends a single branded reminder email per ticket with a "View your ticket" CTA
+3. Sets `reminderSentAt` on the ticket to prevent repeat reminders
+4. Threshold is configurable via Redis key `config:ticket_reminder_hours` (default: 48h)
+5. Continues processing remaining tickets if one email fails (error resilience)
 
 ---
 

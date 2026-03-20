@@ -26,6 +26,40 @@
 - [x] admin-app: `/tickets` pages (filterable list, detail with admin controls, "Assign to me")
 - [x] Tests: 48 tests (16 api-service + 25 admin-api + 7 reminder), 100% lines/95%+ branches
 
+## Post-Launch — Frontend Interactivity & Design Polish (v2.2.0)
+
+### Interactivity Enhancements
+
+- [x] Page fade-in and scale-in animations on route transitions
+- [x] Card hover effects (translateY lift + cyan glow shadow)
+- [x] Table row hover effects across all data tables
+- [x] Live status dot pulsing glow animation for RUNNING strategies
+- [x] Tooltips on column headers, status badges, portfolio cards, admin stat cards
+- [x] Order detail dialog — click any order row for full details
+- [x] Notification bell in user-app topbar with unread count badge + dropdown
+- [x] Sparkline mini-charts on market rows (24h price trend via Chart.js)
+- [x] Drag & drop block reordering in strategy builder (via @angular/cdk DragDrop)
+- [x] Cross-app live updates: orders refresh on WS events, ticket detail polls every 15s
+- [x] Admin sidebar badge for open ticket count + toast on new tickets
+
+### Design Polish
+
+- [x] Dark-themed auth card with cyan gradient heading
+- [x] Global dark input overrides for all PrimeNG components
+- [x] Input-specific design tokens (`--pf-input-bg`, `--pf-input-border`, etc.)
+- [x] Fixed Discover page (user to author remapping)
+- [x] Fixed Orders page (fillSize/fillPrice field names corrected)
+- [x] PrimeNG DatePicker for backtest date inputs (replaces native date inputs)
+- [x] Admin dashboard stat cards (Users, Strategies, Orders, Tickets) with icons
+- [x] Avatar initial badges for ticket assignment (deterministic color by name hash)
+
+### CI/CD Enhancements
+
+- [x] E2E tests integrated into CI pipeline (runs after build step)
+- [x] Free disk space step for Docker builds on GitHub Actions
+- [x] Chromium-only on CI (Firefox skipped for stability)
+- [x] Rate-limit bypass for E2E tests via `X-E2E-Bypass` header
+
 ## Post-Launch — E2E Test Fixes (v2.1.1)
 
 - [x] Fixed error interceptor: 401 on `/me` no longer redirects from public routes

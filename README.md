@@ -2,7 +2,7 @@
 
 > **Build status:** [`STATUS.md`](./STATUS.md)
 
-Strategy automation platform for [Polymarket](https://polymarket.com) — users build automated trading strategies using a drag-and-drop block interface, backtest them against historical data, paper trade in simulation, and deploy live strategies that trade on their behalf.
+Strategy automation platform for [Polymarket](https://polymarket.com) — users build automated trading strategies using a drag-and-drop block interface, backtest them against historical data, paper trade in simulation, and deploy live strategies that trade on their behalf. Includes an in-app support ticket system for user-to-admin communication with auto-reminders and real-time notifications.
 
 ---
 
@@ -190,8 +190,10 @@ See [`docs/06-api-catalog.md`](./docs/06-api-catalog.md) for the full endpoint r
 | [`docs/03-openapi-codegen.md`](./docs/03-openapi-codegen.md) | OpenAPI generation pipeline |
 | [`docs/04-database-and-redis.md`](./docs/04-database-and-redis.md) | Prisma schema, Redis keys, migrations |
 | [`docs/05-testing-and-practices.md`](./docs/05-testing-and-practices.md) | Testing conventions |
+| [`docs/00-features-and-functionalities.md`](./docs/00-features-and-functionalities.md) | Product specification and feature backlog |
 | [`docs/06-api-catalog.md`](./docs/06-api-catalog.md) | Complete REST + WebSocket endpoint reference |
 | [`docs/07-deployment.md`](./docs/07-deployment.md) | Production deployment guide |
+| [`docs/13-design-charter.md`](./docs/13-design-charter.md) | Design system, UI patterns, interactivity |
 | [`docs/09-dev-setup.md`](./docs/09-dev-setup.md) | Local development setup |
 | [`docs/10-env-reference.md`](./docs/10-env-reference.md) | Environment variable reference |
 | [`docs/11-roadmap.md`](./docs/11-roadmap.md) | Feature roadmap |

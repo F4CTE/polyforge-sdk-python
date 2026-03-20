@@ -80,7 +80,7 @@ If a test fails and you can't tell where to look, the test is too big. Break it 
 
 - **Unit tests** — pure logic: block evaluators, schema validation, encryption helpers, P&L calculations. No DB, no Redis, no network.
 - **Integration tests** — service boundaries: controller → service → DB → response. Uses real Postgres + Redis in test containers.
-- **E2E / Smoke tests** — happy path through the full stack: register → build strategy → start → place order → fill. Runs against the dev Docker environment via `BASE_URL=http://localhost pnpm --filter @polyforge/e2e test`. Requires `docker compose -f docker-compose.infra.yml up -d` running. Global setup clears `config:invite_only` Redis flag. PrimeNG locators use icon classes (`.pi-pencil`, `.pi-pause`, etc.) since `pTooltip` directives don't render as DOM attributes in AOT builds.
+- **E2E / Smoke tests** — happy path through the full stack: register → build strategy → start → place order → fill. Runs against the dev Docker environment via `BASE_URL=http://localhost pnpm --filter @polyforge/e2e test`. Requires `docker compose -f docker-compose.infra.yml up -d` running. Global setup clears `config:invite_only` Redis flag. PrimeNG locators use icon classes (`.pi-pencil`, `.pi-pause`, etc.) since `pTooltip` directives don't render as DOM attributes in AOT builds. CI runs E2E after build (Chromium-only for stability; Firefox skipped). Rate-limit bypass via `X-E2E-Bypass` header in test environments. CI includes a free-disk-space step before Docker builds.
 
 ---
 
@@ -540,6 +540,57 @@ export default defineConfig({
 > **Note:** strategy-engine and backtest-service thresholds are intentionally low while dedicated evaluator tests are pending. These are tracked as improvement items. Target is 80% once evaluator tests are written.
 
 CI pipeline fails if coverage drops below thresholds.
+
+### Ticket system test patterns
+
+The support ticket system follows the same testing approach as other modules, with some specific patterns:
+
+```typescript
+// api-service: tickets.service.spec.ts — 16 tests
+describe('TicketsService', () => {
+  // Transaction testing — ticket + first message created atomically
+  it('creates ticket and first message in a transaction');
+  it('emits TICKET_CREATED event to stream:events');
+  it('defaults category to GENERAL when not specified');
+
+  // Ownership — users can only see their own tickets
+  it('lists only tickets belonging to the requesting user');
+  it('returns 403 when accessing another user ticket');
+
+  // Status transitions
+  it('sets status to AWAITING_ADMIN when user replies');
+  it('rejects reply on CLOSED ticket with 403');
+  it('clears reminderSentAt when user replies');
+});
+
+// admin-api-service: tickets.service.spec.ts — 25 tests
+describe('AdminTicketsService', () => {
+  // Cross-DB name resolution
+  it('resolves admin UUIDs to display names from admin DB');
+  it('handles null assignedTo gracefully');
+
+  // Auto-assignment
+  it('auto-assigns ticket to replying admin if unassigned');
+  it('keeps existing assignment when admin replies');
+
+  // Closing
+  it('sets closedBy and closedAt when status changes to CLOSED');
+  it('emits TICKET_CLOSED event only on close');
+});
+
+// admin-api-service: ticket-reminder.service.spec.ts — 7 tests
+describe('TicketReminderService', () => {
+  it('no-op when no stale tickets exist');
+  it('sends reminder email for stale AWAITING_USER tickets');
+  it('updates reminderSentAt after sending');
+  it('reads configurable hours from Redis');
+  it('defaults to 48h when Redis key is unset');
+  it('continues processing if one email fails');
+  it('processes multiple stale tickets in batch');
+});
+```
+
+**E2E ticket tests** follow the same Playwright patterns as other features. The ticket E2E tests verify the full flow: create ticket as user, reply as admin, verify status transitions and notification delivery.
 
 ---
 

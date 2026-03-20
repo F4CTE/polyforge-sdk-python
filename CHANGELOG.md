@@ -13,6 +13,45 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.2.0] — 2026-03-20
+
+### Added — Frontend Interactivity Enhancements
+
+- **Page animations** — Route transitions now use fade-in + scale-in animations (`pf-page-fade` keyframes) for smooth page entry.
+- **Card hover effects** — Interactive cards lift on hover (`translateY(-2px)`) with a subtle cyan glow shadow (`--pf-shadow-cyan`).
+- **Table row hover** — All `p-datatable` rows highlight on hover using `--pf-bg-overlay`.
+- **Live status dot** — RUNNING strategy status dots use a pulsing glow animation (`pf-pulse`, 2s infinite cycle) to indicate live activity.
+- **Tooltips** — Added `pTooltip` to all column headers, status badges, portfolio cards, and admin dashboard stat cards for contextual help.
+- **Order detail dialog** — Clicking any order row opens a `p-dialog` with full order details (market, side, outcome, size, price, fill details, fees, timestamps, CLOB order ID).
+- **Notification bell** — User-app topbar includes a notification bell icon (`pi pi-bell`) with `p-badge` unread count and dropdown panel for recent notifications.
+- **Sparkline mini-charts** — Market list rows display 24h price trend sparklines rendered as inline Chart.js `<canvas>` elements (no axes, line color `--pf-cyan-500`).
+- **Drag & drop block reordering** — Strategy builder blocks can be reordered within each category column via `@angular/cdk` `DragDrop` module with drag handles and semi-transparent cyan-bordered preview.
+- **Cross-app live updates** — Orders list auto-refreshes on `ORDER_FILLED`/`ORDER_CANCELLED`/`ORDER_FAILED` WebSocket events; ticket detail view polls for new messages every 15 seconds.
+- **Admin sidebar ticket badge** — "Tickets" nav item shows open ticket count badge; toast notification fires on new ticket creation.
+
+### Added — Frontend Design Polish
+
+- **Auth card styling** — Dark-themed auth card with `--pf-bg-elevated` background and cyan gradient heading text.
+- **Dark input overrides** — Global `styles.scss` overrides ensure all PrimeNG input components (`p-inputtext`, `p-select`, `p-textarea`, `p-datepicker`) use dark theme tokens with `!important`.
+- **Input design tokens** — New CSS custom properties: `--pf-input-bg`, `--pf-input-border`, `--pf-input-border-hover`, `--pf-input-border-focus`, `--pf-input-text`, `--pf-input-placeholder`, `--pf-input-focus-glow`.
+- **Admin dashboard stat cards** — Four clickable stat cards (Users, Strategies, Orders, Tickets) with colored icons, labels, and values linking to their respective management pages.
+- **Avatar initial badges** — Ticket assignment displays avatar circles with deterministic-colored initials (hash-based palette). Unassigned state shown as grey italic text.
+- **PrimeNG DatePicker** — Backtest date inputs now use `p-datepicker` for consistent cross-browser dark-themed date selection (replaces native `<input type="date">`).
+
+### Fixed
+
+- **Discover page** — Fixed user-to-author remapping for public strategy cards.
+- **Orders page** — Corrected field names from `filledSize`/`avgFillPrice` to `fillSize`/`fillPrice` matching the API response schema.
+
+### Changed — CI/CD
+
+- **E2E in CI** — E2E tests now run as a dedicated CI pipeline step after build completion.
+- **Free disk space** — Added disk cleanup step for GitHub Actions Docker builds to prevent out-of-space failures.
+- **Chromium-only CI** — E2E runs only on Chromium in CI (Firefox skipped for flaky test stability).
+- **Rate-limit bypass** — E2E tests can bypass rate limiting via `X-E2E-Bypass` header in test environments.
+
+---
+
 ## [2.1.1] — 2026-03-19
 
 ### Fixed — E2E Test Suite & Rate Limiting

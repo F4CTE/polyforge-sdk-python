@@ -1140,7 +1140,77 @@ INPUT TOKENS (tokens.css)
 
 ---
 
-## 14. Support Ticket System — UI Patterns
+## 14. Interactivity & Micro-Interactions
+
+### Page & Component Animations
+
+```css
+/* Page fade-in — all route components */
+@keyframes pf-page-fade {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.pf-page { animation: pf-page-fade 300ms ease forwards; }
+
+/* Card hover — lift + cyan glow */
+.pf-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 16px rgba(6,182,212,0.15);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+/* Table row hover */
+.p-datatable .p-datatable-tbody > tr:hover {
+  background: var(--pf-bg-overlay);
+  transition: background var(--pf-duration-fast) ease;
+}
+```
+
+### Live Status Dot — Pulsing Glow
+
+The RUNNING status dot uses a pulsing glow animation to indicate live activity:
+
+```css
+.status-dot-running {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #06B6D4;
+  box-shadow: 0 0 6px rgba(6,182,212,0.8);
+  animation: pf-pulse 2s ease-in-out infinite;
+}
+```
+
+### Tooltips
+
+All column headers, status badges, portfolio cards, and admin dashboard stat cards use PrimeNG `pTooltip` for contextual help. Icons without text labels must always have a tooltip for accessibility.
+
+### Order Detail Dialog
+
+Clicking any order row in the Orders table opens a `p-dialog` with full order details: market, side, outcome, size, price, fill details, fees, timestamps, and CLOB order ID. Provides an at-a-glance view without navigating away.
+
+### Notification Bell
+
+The user-app topbar includes a notification bell (`pi pi-bell`) with:
+- Unread count badge (PrimeNG `p-badge`)
+- Dropdown panel listing recent notifications
+- Marks notifications as read on open
+
+### Sparkline Mini-Charts
+
+Market list rows include sparkline mini-charts showing the 24h price trend. Rendered as inline `<canvas>` elements using Chart.js with zero-config (no axes, no labels, no tooltips) — line color follows `--pf-cyan-500`.
+
+### Drag & Drop Block Reordering
+
+The strategy builder uses `@angular/cdk` `DragDrop` module for block reordering within each category column. Blocks can be reordered vertically via drag handles. The drag preview uses a semi-transparent clone with cyan border.
+
+### Cross-App Live Updates
+
+- **Orders**: Order list auto-refreshes when `ORDER_FILLED`, `ORDER_CANCELLED`, or `ORDER_FAILED` WebSocket events arrive
+- **Ticket detail**: Polls for new messages every 15 seconds while the detail view is open
+- **Admin sidebar**: Badge on "Tickets" nav item shows the count of open tickets; toast notification on new ticket creation
+
+---
+
+## 15. Support Ticket System — UI Patterns
 
 ### User-side (user-app)
 
