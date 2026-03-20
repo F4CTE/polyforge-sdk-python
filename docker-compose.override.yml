@@ -1,0 +1,165 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# DEVELOPMENT OVERRIDE — volume mounts for live code reloading
+#
+# Usage:
+#   docker compose -f docker-compose.infra.yml -f docker-compose.override.yml up -d
+#
+# Or symlink / rename so Docker picks it up automatically:
+#   docker compose -f docker-compose.infra.yml up -d
+#   (Docker Compose auto-merges docker-compose.override.yml when present)
+#
+# Workflow:
+#   1. Build locally:  pnpm build  (or build individual packages/services)
+#   2. The running containers pick up new dist/ files immediately —
+#      no `docker compose build` needed.
+#
+# For NestJS services the container restarts automatically via
+#   node --watch dist/main.js
+# which watches the dist/ tree for changes.
+#
+# For frontend apps, nginx serves whichever files are on disk.
+# After a local build the browser just needs a refresh.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ─── FRONTEND APPS ─────────────────────────────────────────────────────────
+
+  user-app:
+    volumes:
+      - ./apps/user-app/dist/user-app/browser:/usr/share/nginx/html:ro
+      - ./apps/user-app/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+  admin-app:
+    volumes:
+      - ./apps/admin-app/dist/admin-app/browser:/usr/share/nginx/html:ro
+      - ./apps/admin-app/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+  landing:
+    volumes:
+      - ./apps/landing:/usr/share/nginx/html:ro
+      - ./apps/landing/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+  # ─── NESTJS SERVICES ──────────────────────────────────────────────────────
+  # Mount local dist/ output over the image's baked-in dist/.
+  # Override CMD with node --watch so the process restarts on file changes.
+  # Shared package dist/ and prisma client are also mounted.
+
+  auth-service:
+    volumes:
+      - ./services/auth-service/dist:/app/services/auth-service/dist:ro
+      - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
+      - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
+      - ./packages/shared-auth/dist:/app/packages/shared-auth/dist:ro
+      - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/logger/dist:/app/packages/logger/dist:ro
+    command: ["node", "--watch", "dist/main.js"]
+
+  api-service:
+    volumes:
+      - ./services/api-service/dist:/app/services/api-service/dist:ro
+      - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
+      - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
+      - ./packages/shared-auth/dist:/app/packages/shared-auth/dist:ro
+      - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/logger/dist:/app/packages/logger/dist:ro
+    command: ["node", "--watch", "dist/main.js"]
+
+  admin-auth-service:
+    volumes:
+      - ./services/admin-auth-service/dist:/app/services/admin-auth-service/dist:ro
+      - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
+      - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
+      - ./packages/shared-auth/dist:/app/packages/shared-auth/dist:ro
+      - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/logger/dist:/app/packages/logger/dist:ro
+    command: ["node", "--watch", "dist/main.js"]
+
+  admin-api-service:
+    volumes:
+      - ./services/admin-api-service/dist:/app/services/admin-api-service/dist:ro
+      - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
+      - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
+      - ./packages/shared-auth/dist:/app/packages/shared-auth/dist:ro
+      - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/logger/dist:/app/packages/logger/dist:ro
+    command: ["node", "--watch", "dist/main.js"]
+
+  market-data-service:
+    volumes:
+      - ./services/market-data-service/dist:/app/services/market-data-service/dist:ro
+      - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
+      - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
+      - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/logger/dist:/app/packages/logger/dist:ro
+    command: ["node", "--watch", "dist/main.js"]
+
+  strategy-engine:
+    volumes:
+      - ./services/strategy-engine/dist:/app/services/strategy-engine/dist:ro
+      - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
+      - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
+      - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/logger/dist:/app/packages/logger/dist:ro
+    command: ["node", "--watch", "dist/main.js"]
+
+  order-service:
+    volumes:
+      - ./services/order-service/dist:/app/services/order-service/dist:ro
+      - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
+      - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
+      - ./packages/shared-auth/dist:/app/packages/shared-auth/dist:ro
+      - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/logger/dist:/app/packages/logger/dist:ro
+    command: ["node", "--watch", "dist/main.js"]
+
+  paper-order-service:
+    volumes:
+      - ./services/paper-order-service/dist:/app/services/paper-order-service/dist:ro
+      - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
+      - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
+      - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/logger/dist:/app/packages/logger/dist:ro
+    command: ["node", "--watch", "dist/main.js"]
+
+  backtest-service:
+    volumes:
+      - ./services/backtest-service/dist:/app/services/backtest-service/dist:ro
+      - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
+      - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
+      - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/logger/dist:/app/packages/logger/dist:ro
+    command: ["node", "--watch", "dist/main.js"]
+
+  notification-service:
+    volumes:
+      - ./services/notification-service/dist:/app/services/notification-service/dist:ro
+      - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
+      - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
+      - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/logger/dist:/app/packages/logger/dist:ro
+    command: ["node", "--watch", "dist/main.js"]
+
+  bot-service:
+    volumes:
+      - ./services/bot-service/dist:/app/services/bot-service/dist:ro
+      - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
+      - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
+      - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/logger/dist:/app/packages/logger/dist:ro
+    command: ["node", "--watch", "dist/main.js"]
+
+  signer-service:
+    volumes:
+      - ./services/signer-service/dist:/app/services/signer-service/dist:ro
+      - ./packages/shared-db/dist:/app/packages/shared-db/dist:ro
+      - ./packages/shared-redis/dist:/app/packages/shared-redis/dist:ro
+      - ./packages/shared-auth/dist:/app/packages/shared-auth/dist:ro
+      - ./packages/shared-types/dist:/app/packages/shared-types/dist:ro
+      - ./packages/logger/dist:/app/packages/logger/dist:ro
+    command: ["node", "--watch", "dist/main.js"]
+
+  mock-polymarket:
+    volumes:
+      - ./services/mock-polymarket/dist:/app/services/mock-polymarket/dist:ro
+    command: ["node", "--watch", "dist/main.js"]

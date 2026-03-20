@@ -13,8 +13,9 @@
 5. [Verify Everything Works](#5-verify-everything-works)
 6. [Run the Angular Apps](#6-run-the-angular-apps)
 7. [Daily Development Commands](#7-daily-development-commands)
-8. [Mock Scenarios](#8-mock-scenarios)
-9. [Common Issues & Fixes](#9-common-issues--fixes)
+8. [Volume-Mount Dev Mode (no rebuild)](#8-volume-mount-dev-mode-no-rebuild)
+9. [Mock Scenarios](#9-mock-scenarios)
+10. [Common Issues & Fixes](#10-common-issues--fixes)
 
 ---
 
@@ -209,7 +210,58 @@ pnpm --filter "./packages/**" build
 
 ---
 
-## 8. Mock Scenarios
+## 8. Volume-Mount Dev Mode (no rebuild)
+
+The `docker-compose.override.yml` file mounts local `dist/` directories into running containers so you can iterate on code without running `docker compose build`. Docker Compose merges the override file automatically when it sits alongside the main compose file.
+
+**How it works:**
+
+- **NestJS services**: the override mounts each service's `dist/` folder and all shared package `dist/` folders into the container, then overrides the command to `node --watch dist/main.js`. When you rebuild locally, Node detects the changed files and restarts automatically.
+- **Frontend apps** (user-app, admin-app): the override mounts the local build output (`dist/<app>/browser`) into the nginx html root. After a local `pnpm build --filter @polyforge/user-app`, refresh the browser to see changes.
+- **Landing page**: the override mounts the `apps/landing/` directory directly into nginx.
+
+**Quick start:**
+
+```bash
+# 1. Build everything locally first (one-time)
+pnpm install
+pnpm build
+
+# 2. Start the stack — override is merged automatically
+docker compose -f docker-compose.infra.yml up -d
+
+# 3. Edit code, then rebuild whichever part you changed:
+pnpm --filter @polyforge/auth-service build          # single NestJS service
+pnpm --filter "./packages/**" build                  # all shared packages
+pnpm --filter @polyforge/user-app build              # Angular user app
+
+# The running container picks up the new dist/ files — no docker build needed.
+```
+
+**Rebuild a single service + its dependencies:**
+
+```bash
+# NestJS service (auto-restarts via node --watch)
+pnpm --filter @polyforge/api-service... build
+
+# Frontend app (refresh browser after build)
+pnpm --filter @polyforge/admin-app build
+```
+
+**Disabling the override:**
+
+If you want a clean Docker-only build (no host mounts), rename or remove the override file:
+
+```bash
+mv docker-compose.override.yml docker-compose.override.yml.bak
+docker compose -f docker-compose.infra.yml up --build
+```
+
+> **Note:** The override file does not mount `node_modules` or Prisma client files. If you add new npm dependencies or change Prisma schemas, you still need to rebuild the Docker image for that service with `docker compose -f docker-compose.infra.yml up --build <service>`.
+
+---
+
+## 9. Mock Scenarios
 
 The `mock-polymarket` service supports different behaviour modes. Set `SCENARIO` in `.env` and restart:
 
@@ -227,7 +279,7 @@ docker compose -f docker-compose.infra.yml restart mock-polymarket
 
 ---
 
-## 9. Common Issues & Fixes
+## 10. Common Issues & Fixes
 
 ### "Cannot connect" / service exits immediately
 
