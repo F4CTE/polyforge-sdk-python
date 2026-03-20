@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs';
+import { Observable, tap, catchError, of, timeout } from 'rxjs';
 import { User, LoginRequest, RegisterRequest } from '../models/user.model';
 import { AuthApiService } from '../services/auth-api.service';
 
@@ -22,14 +22,15 @@ export class AuthStore {
 
   // ─── Init (called on app bootstrap) ──────────────────────────────────────
 
-  init(): void {
+  init(): Observable<unknown> {
     // Cookie auth: we can't read the HttpOnly cookie from JS, so we probe the
     // server. A 401 simply means the user is not logged in — that's fine.
     this.loading.set(true);
-    this.authApi.getMe().subscribe({
-      next:  user  => { this.user.set(user); this.loading.set(false); },
-      error: ()    => { this.loading.set(false); },
-    });
+    return this.authApi.getMe().pipe(
+      timeout(3000),
+      tap(user => { this.user.set(user); this.loading.set(false); }),
+      catchError(() => { this.loading.set(false); return of(null); }),
+    );
   }
 
   // ─── Actions ──────────────────────────────────────────────────────────────

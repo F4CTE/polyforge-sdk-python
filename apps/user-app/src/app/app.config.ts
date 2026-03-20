@@ -27,8 +27,6 @@ export const appConfig: ApplicationConfig = {
       ripple: true,
     }),
     MessageService,
-    provideAppInitializer(() => {
-      inject(AuthStore).init();
-    }),
+    provideAppInitializer(() => inject(AuthStore).init()),
   ],
 };

@@ -66,7 +66,13 @@ export class DiscoverService {
       const { user, ...rest } = s as any;
       const mapped = { ...rest, author: user };
       if (mapped.visibility === "UNLISTED") {
-        return { ...mapped, triggers: [], conditions: [], actions: [], safety: [] };
+        return {
+          ...mapped,
+          triggers: [],
+          conditions: [],
+          actions: [],
+          safety: [],
+        };
       }
       return mapped;
     });

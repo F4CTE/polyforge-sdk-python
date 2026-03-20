@@ -70,4 +70,5 @@ Thumbs.db
 # Compiled TS artifacts in packages/*/src (should be in dist/)
 packages/*/src/*.js
 packages/*/src/*.js.map
-packages/*/src/*.d.ts
+packages/*/src/*.d.tstests/e2e/playwright-report/
+tests/e2e/test-results/
