@@ -270,6 +270,26 @@ export class StrategyBuilderComponent implements OnInit {
     this.panStart = { x: event.clientX, y: event.clientY };
   }
 
+  zoomIn(): void {
+    const vb = this.viewBox();
+    const newW = vb.w * 0.9;
+    const newH = vb.h * 0.9;
+    const dx = (newW - vb.w) / 2;
+    const dy = (newH - vb.h) / 2;
+    this.viewBox.set({ x: vb.x - dx, y: vb.y - dy, w: newW, h: newH });
+    this.scale.set(1400 / newW);
+  }
+
+  zoomOut(): void {
+    const vb = this.viewBox();
+    const newW = vb.w * 1.1;
+    const newH = vb.h * 1.1;
+    const dx = (newW - vb.w) / 2;
+    const dy = (newH - vb.h) / 2;
+    this.viewBox.set({ x: vb.x - dx, y: vb.y - dy, w: newW, h: newH });
+    this.scale.set(1400 / newW);
+  }
+
   onWheel(event: WheelEvent): void {
     event.preventDefault?.();
     const vb = this.viewBox();

@@ -90,11 +90,11 @@
 
         <!-- Zoom controls -->
         <div class="canvas-controls">
-          <button (click)="onWheel({deltaY: -100} as any)" title="Zoom in">
+          <button (click)="zoomIn()" title="Zoom in">
             <i class="pi pi-plus"></i>
           </button>
           <span class="canvas-zoom-level">{{ (scale() * 100) | number:'1.0-0' }}%</span>
-          <button (click)="onWheel({deltaY: 100} as any)" title="Zoom out">
+          <button (click)="zoomOut()" title="Zoom out">
             <i class="pi pi-minus"></i>
           </button>
           <button (click)="fitToView()" title="Fit to view">
