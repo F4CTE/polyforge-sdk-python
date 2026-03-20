@@ -80,102 +80,136 @@
       </div>
     </div>
 
-    <!-- ── Right: block builder ─────────────────────────────────────────── -->
+    <!-- ── Right: canvas builder ─────────────────────────────────────────── -->
     <div class="builder-blocks">
 
-      <!-- Section tabs -->
-      <div class="builder-section-tabs">
-        @for (sec of sections; track sec.key) {
-          <button class="section-tab" [class.active]="activeSection() === sec.key" (click)="setSection(sec.key)">
-            <i class="pi {{ sec.icon }}" [style.color]="sec.color"></i>
-            <span [style.color]="activeSection() === sec.key ? sec.color : ''">{{ sec.label }}</span>
-            @if (sectionCount(sec.key) > 0) {
-              <span class="section-count">{{ sectionCount(sec.key) }}</span>
-            }
+      <div class="strategy-canvas-container"
+           (mousemove)="onCanvasMouseMove($event)"
+           (mouseup)="endDrag()"
+           (mouseleave)="endDrag()">
+
+        <!-- Zoom controls -->
+        <div class="canvas-controls">
+          <button (click)="onWheel({deltaY: -100} as any)" title="Zoom in">
+            <i class="pi pi-plus"></i>
           </button>
-        }
-      </div>
+          <span class="canvas-zoom-level">{{ (scale() * 100) | number:'1.0-0' }}%</span>
+          <button (click)="onWheel({deltaY: 100} as any)" title="Zoom out">
+            <i class="pi pi-minus"></i>
+          </button>
+          <button (click)="fitToView()" title="Fit to view">
+            <i class="pi pi-expand"></i>
+          </button>
+        </div>
 
-      <!-- Active section blocks -->
-      <div class="blocks-area">
+        <!-- SVG Canvas -->
+        <svg class="strategy-canvas"
+             [attr.viewBox]="viewBoxStr()"
+             (mousedown)="startPan($event)"
+             (wheel)="onWheel($event)">
 
-        @if (blocks()[activeSection()].length === 0 && !paletteOpen()) {
-          <div class="blocks-empty">
-            <i class="pi pi-plus-circle" style="font-size:28px;color:var(--pf-text-muted)"></i>
-            <p style="color:var(--pf-text-secondary);font-size:14px;margin:0">No {{ activeSection() }} blocks yet.</p>
-            <p-button label="Add Block" icon="pi pi-plus" severity="secondary" size="small" (onClick)="togglePalette()" />
+          <!-- Grid pattern -->
+          <defs>
+            <pattern id="canvas-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/>
+            </pattern>
+            <pattern id="canvas-grid-lg" width="100" height="100" patternUnits="userSpaceOnUse">
+              <rect width="100" height="100" fill="url(#canvas-grid)"/>
+              <path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="4000" height="4000" x="-500" y="-500" fill="url(#canvas-grid-lg)"/>
+
+          <!-- Section column headers -->
+          <text x="160" y="40" class="canvas-section-label" fill="#EF4444">&#x2298; Safety</text>
+          <text x="500" y="40" class="canvas-section-label" fill="#F59E0B">&#x26A1; Triggers</text>
+          <text x="840" y="40" class="canvas-section-label" fill="#3B82F6">&#x25BD; Conditions</text>
+          <text x="1180" y="40" class="canvas-section-label" fill="#22C55E">&#x25B6; Actions</text>
+
+          <!-- Connection lines between columns -->
+          @for (path of connectionPaths(); track $index) {
+            <path [attr.d]="path" class="canvas-connection" fill="none" stroke="rgba(6,182,212,0.15)" stroke-width="2" stroke-dasharray="6,4"/>
+          }
+
+          <!-- Block nodes -->
+          @for (block of canvasBlocks(); track block.id) {
+            <foreignObject [attr.x]="block.x" [attr.y]="block.y" width="280" height="200">
+              <div xmlns="http://www.w3.org/1999/xhtml"
+                   class="canvas-block section-{{block.section}}"
+                   (mousedown)="startBlockDrag($event, block)">
+                <div class="canvas-block-header">
+                  <i class="pi pi-arrows-alt canvas-drag-handle"></i>
+                  <span class="canvas-block-title">{{ getBlockDef(block.type)?.label ?? block.type }}</span>
+                  <button class="canvas-block-delete" (mousedown)="$event.stopPropagation()" (click)="removeCanvasBlock(block.id)">
+                    <i class="pi pi-times"></i>
+                  </button>
+                </div>
+                <p class="canvas-block-desc">{{ getBlockDef(block.type)?.description }}</p>
+                <div class="canvas-block-fields">
+                  @for (field of getBlockDef(block.type)?.fields ?? []; track field.key) {
+                    <div class="canvas-field">
+                      <label>{{ field.label }}</label>
+                      <input [type]="field.type"
+                             [placeholder]="field.placeholder"
+                             [value]="block.config[field.key] ?? ''"
+                             (input)="updateBlockConfig(block.id, field.key, $any($event.target).value)"
+                             (mousedown)="$event.stopPropagation()"/>
+                    </div>
+                  }
+                </div>
+              </div>
+            </foreignObject>
+          }
+        </svg>
+
+        <!-- Add block FAB -->
+        <button class="canvas-add-fab" (click)="paletteOpen.set(true)" title="Add block">
+          <i class="pi pi-plus"></i>
+        </button>
+
+        <!-- Empty state -->
+        @if (canvasBlocks().length === 0) {
+          <div class="canvas-empty-state">
+            <i class="pi pi-sitemap" style="font-size:48px;opacity:0.3"></i>
+            <p>Click <strong>+</strong> to add your first block</p>
+            <p style="font-size:12px;color:var(--pf-text-muted)">Drag blocks to arrange them on the canvas</p>
           </div>
         }
 
-        <!-- Added blocks (drag-and-drop reorderable) -->
-        <div cdkDropList (cdkDropListDropped)="dropBlock($event)" class="blocks-drop-list">
-        @for (block of blocks()[activeSection()]; track block.id) {
-          <div class="block-card" cdkDrag>
-            <div class="block-card-header">
-              <div style="display:flex;align-items:center;gap:8px">
-                <i class="pi pi-bars block-drag-handle" cdkDragHandle pTooltip="Drag to reorder" style="cursor:grab;color:var(--pf-text-muted);font-size:12px"></i>
-                <span class="block-card-title">{{ getBlockDef(block.type)?.label ?? block.type }}</span>
+        <!-- Block palette overlay -->
+        @if (paletteOpen()) {
+          <div class="canvas-palette-overlay">
+            <div class="block-palette">
+              <div class="palette-header">
+                <span style="font-size:13px;font-weight:600;color:var(--pf-text-secondary)">
+                  Choose a {{ activeSection() }} block
+                </span>
+                <div style="display:flex;gap:4px;align-items:center">
+                  @for (sec of sections; track sec.key) {
+                    <button class="palette-section-btn" [class.active]="activeSection() === sec.key" (click)="setSection(sec.key)"
+                            [style.--sec-color]="sec.color">
+                      <i class="pi {{ sec.icon }}" style="font-size:12px"></i>
+                      {{ sec.label }}
+                    </button>
+                  }
+                  <button class="block-ctrl-btn" (click)="paletteOpen.set(false)" style="margin-left:8px">
+                    <i class="pi pi-times"></i>
+                  </button>
+                </div>
               </div>
-              <div style="display:flex;gap:4px">
-                <button class="block-ctrl-btn danger" pTooltip="Remove" (click)="removeBlock(activeSection(), block.id)">
-                  <i class="pi pi-times"></i>
-                </button>
-              </div>
-            </div>
-
-            @if (getBlockDef(block.type)?.description; as desc) {
-              <p class="block-card-desc">{{ desc }}</p>
-            }
-
-            <!-- Config fields -->
-            @if ((getBlockDef(block.type)?.fields?.length ?? 0) > 0) {
-              <div class="block-fields">
-                @for (field of getBlockDef(block.type)?.fields ?? []; track field.key) {
-                  <div class="block-field-row">
-                    <label class="field-label" style="font-size:12px;min-width:140px">{{ field.label }}</label>
-                    <input pInputText [type]="field.type === 'number' ? 'number' : 'text'"
-                           [placeholder]="field.placeholder"
-                           [value]="$any(block.config)?.[field.key] ?? ''"
-                           (input)="updateBlockConfig(activeSection(), block.id, field.key, $event)"
-                           style="flex:1" />
+              <div class="palette-grid">
+                @for (def of paletteDefs(); track def.type) {
+                  <div class="palette-item" (click)="addBlock(def)">
+                    <span class="palette-item-label">{{ def.label }}</span>
+                    <span class="palette-item-desc">{{ def.description }}</span>
                   </div>
                 }
               </div>
-            }
-          </div>
-        }
-        </div><!-- /cdkDropList -->
-
-        <!-- Add block button (when blocks exist) -->
-        @if (blocks()[activeSection()].length > 0 && !paletteOpen()) {
-          <button class="add-block-btn" (click)="togglePalette()">
-            <i class="pi pi-plus"></i> Add {{ activeSection() }} block
-          </button>
-        }
-
-        <!-- Block palette -->
-        @if (paletteOpen()) {
-          <div class="block-palette">
-            <div class="palette-header">
-              <span style="font-size:13px;font-weight:600;color:var(--pf-text-secondary)">
-                Choose a {{ activeSection() }} block
-              </span>
-              <button class="block-ctrl-btn" (click)="togglePalette()">
-                <i class="pi pi-times"></i>
-              </button>
-            </div>
-            <div class="palette-grid">
-              @for (def of paletteDefs(); track def.type) {
-                <div class="palette-item" (click)="addBlock(def)">
-                  <span class="palette-item-label">{{ def.label }}</span>
-                  <span class="palette-item-desc">{{ def.description }}</span>
-                </div>
-              }
             </div>
           </div>
         }
 
-      </div><!-- /blocks-area -->
+      </div>
 
     </div><!-- /builder-blocks -->
 
