@@ -863,23 +863,25 @@ transition: opacity var(--pf-duration-slow) ease,
 
 Le nom **Polyforge** évoque la forge (création, précision, chaleur) et les marchés prédictifs (poly = multiple, probabilités). Le logo doit être **lisible à petite taille** (favicon, sidebar réduite).
 
-### Direction recommandée
+### Logo actuel (v2.4.0)
 
-Un logomark géométrique construit sur l'idée d'un **hexagone** (structure cristalline, précision) ou d'une **flèche vers le haut** encadrée — à confirmer avec un designer.
+Le logomark est un **polygone (hexagone outline) + bolt** rendu en SVG. Il est utilisé dans toutes les applications (user-app, admin-app, landing) ainsi que sur l'ecran de chargement anime.
 
 ```
-Logomark   : forme géométrique simple, mono-couleur
+Logomark   : hexagone outline + bolt SVG
 Logotype   : "Polyforge" en Outfit 600
-Couleur    : #06B6D4 sur fond sombre
+Couleur    : #06B6D4 (cyan) sur fond sombre
 Favicon    : logomark seul sur fond #080C14
+Loading    : logomark anime (pulse/rotation) sur l'ecran de chargement
 ```
 
 ### Règles d'utilisation
 
 - Le logo n'est **jamais** affiché sur fond blanc (Polyforge est dark-only)
-- Espace minimum autour du logo : 1× la hauteur du logomark
+- Espace minimum autour du logo : 1x la hauteur du logomark
 - Ne jamais étirer, tourner, ou recolorer le logo
 - Version sidebar réduite : logomark seul (pas le texte)
+- L'ecran de chargement affiche le logomark avec une animation subtile pendant le chargement initial de l'application
 
 ---
 
@@ -1198,9 +1200,30 @@ The user-app topbar includes a notification bell (`pi pi-bell`) with:
 
 Market list rows include sparkline mini-charts showing the 24h price trend. Rendered as inline `<canvas>` elements using Chart.js with zero-config (no axes, no labels, no tooltips) — line color follows `--pf-cyan-500`.
 
-### Drag & Drop Block Reordering
+### Canvas Strategy Builder (v2.4.0)
 
-The strategy builder uses `@angular/cdk` `DragDrop` module for block reordering within each category column. Blocks can be reordered vertically via drag handles. The drag preview uses a semi-transparent clone with cyan border.
+The strategy builder uses an SVG-based 2D canvas for visual block composition, replacing the previous tab-based list approach.
+
+**Canvas features:**
+
+- **Free-form positioning** — blocks can be dragged anywhere on the canvas
+- **Pan & zoom** — scroll to pan, pinch/wheel to zoom the canvas viewport
+- **Auto-layout** — blocks auto-arrange in section columns (Safety | Triggers | Conditions | Actions) on initial load or via layout button
+- **Bezier connection lines** — SVG bezier curves connect blocks to show evaluation flow
+- **Color-coded blocks** — each block category has a distinct color: Safety (red), Triggers (amber), Conditions (blue), Actions (green)
+- **FAB add button** — floating action button opens a block picker to add new blocks to the canvas
+- **Block config** — clicking a block opens its configuration panel
+
+**Visual rules:**
+
+- Block rectangles use `--pf-bg-surface` with a colored left border indicating category
+- Selected block has a `--pf-cyan-500` border highlight
+- Connection lines use `stroke: var(--pf-border-default)` with category-colored endpoints
+- The canvas background uses `--pf-bg-base` with a subtle dot grid pattern
+
+### Drag & Drop Block Positioning
+
+Blocks on the strategy builder canvas can be freely dragged to any position. The drag interaction uses native pointer events on the SVG canvas (not `@angular/cdk` `DragDrop`). Block positions are persisted as part of the strategy layout metadata.
 
 ### Cross-App Live Updates
 

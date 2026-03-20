@@ -252,6 +252,10 @@ export const BLOCK_REGISTRY: BlockRegistry = {
 
 **Step 5 — Add the block UI in `user-app`:**
 
+The strategy builder uses an SVG-based 2D canvas (not a tab-based list). Blocks are rendered as color-coded rectangles that can be freely dragged, with bezier connection lines between them. The canvas supports pan/zoom and auto-layout in section columns. A floating action button (FAB) opens the block picker.
+
+To register a new block, add its definition to the appropriate category file:
+
 ```typescript
 // apps/user-app/src/app/strategy-builder/blocks/trigger-blocks.ts
 export const TRIGGER_BLOCKS: BlockDefinition[] = [
@@ -270,6 +274,8 @@ export const TRIGGER_BLOCKS: BlockDefinition[] = [
   },
 ];
 ```
+
+The canvas will automatically render the new block with the correct category color (Safety=red, Triggers=amber, Conditions=blue, Actions=green) and make it available in the FAB block picker.
 
 **Step 6 — Write tests:**
 

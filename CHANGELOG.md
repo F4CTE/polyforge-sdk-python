@@ -13,6 +13,36 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.4.0] — 2026-03-20
+
+### Added — Major Features
+
+- **Market cards** — Polymarket-style card grid with colored gradient headers, sparklines, and trade buttons. Card/table view toggle with localStorage persistence.
+- **Market detail page** — Stats bar (volume, liquidity, end date) and "Run Strategy" dialog with strategy selector dropdown.
+- **Canvas strategy builder** — SVG-based 2D canvas replacing tab-based block lists. Free-form drag positioning, pan/zoom, auto-layout in section columns, bezier connection lines, color-coded blocks, and FAB add button.
+- **Support FAQ** — 6 expandable FAQ items on the support page.
+- **New logo** — Polygon (hexagon outline) + bolt SVG across all apps (user-app, admin-app, landing).
+
+### Added — Design Improvements
+
+- **Dark skeleton overrides** — Eliminated white loading flash with dark-themed skeleton placeholders.
+- **Smooth page transitions** — Fade-in transitions on route changes for seamless navigation.
+- **Loading screen** — Animated Polyforge logo displayed during initial app load.
+- **Settings layout** — Full-width layout for the settings page.
+- **Strategy card enhancements** — Strategy cards now show P&L value and sparkline mini-chart.
+- **Discover card indicators** — Discover cards display 24h P&L indicator.
+
+### Fixed
+
+- **Strategy detail 404** — Contextual error messages for 403 (forbidden), 404 (not found), and other error states instead of generic 404.
+- **PrimeNG loading overlays** — Dark-themed loading overlays replacing default light-themed PrimeNG overlays.
+
+### Changed — Data
+
+- **Seed data expansion** — 4 additional positions, 6 additional orders, 60 P&L snapshots, and 2 completed backtests added to seed script.
+
+---
+
 ## [2.3.0] — 2026-03-20
 
 ### Added — Frontend Design Polish

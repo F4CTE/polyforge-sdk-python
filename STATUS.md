@@ -26,6 +26,37 @@
 - [x] admin-app: `/tickets` pages (filterable list, detail with admin controls, "Assign to me")
 - [x] Tests: 48 tests (16 api-service + 25 admin-api + 7 reminder), 100% lines/95%+ branches
 
+## Post-Launch — Market Cards, Canvas Builder & Polish (v2.4.0)
+
+### Major Features
+
+- [x] Market cards: Polymarket-style card grid with colored gradient headers, sparklines, trade buttons
+- [x] Card/table view toggle with localStorage persistence
+- [x] Market detail page: stats bar (volume, liquidity, end date), "Run Strategy" dialog with strategy selector dropdown
+- [x] Canvas strategy builder: SVG-based 2D canvas replacing tab-based block lists
+- [x] Canvas: free-form drag positioning, pan/zoom, auto-layout in section columns
+- [x] Canvas: bezier connection lines between blocks, color-coded blocks, FAB add button
+- [x] Support FAQ: 6 expandable FAQ items on the support page
+- [x] New logo: polygon (hexagon outline) + bolt SVG across all apps
+
+### Design Improvements
+
+- [x] Dark skeleton overrides (no more white loading flash)
+- [x] Smooth fade-in page transitions on route changes
+- [x] Loading screen with animated Polyforge logo
+- [x] Settings: full-width layout
+- [x] Strategy cards show P&L + sparkline
+- [x] Discover cards show 24h P&L indicator
+
+### Bug Fixes
+
+- [x] Strategy detail 404: contextual error messages (403/404/other)
+- [x] PrimeNG loading overlays dark-themed
+
+### Data
+
+- [x] Seed: 4 more positions, 6 more orders, 60 P&L snapshots, 2 completed backtests
+
 ## Post-Launch — Design Polish, UX & Dev Workflow (v2.3.0)
 
 ### Design Polish
