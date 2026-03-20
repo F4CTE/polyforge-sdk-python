@@ -117,12 +117,7 @@ html, body {
   max-width: 1440px;
 }
 
-// Sidebar toggle — hidden on desktop, visible on mobile
-@media (min-width: 769px) {
-  .sidebar-toggle-btn {
-    display: none !important;
-  }
-}
+// Sidebar toggle — always visible (both mobile and desktop)
 
 // ─── Sidebar nav ─────────────────────────────────────────────────────────────
 
@@ -1287,14 +1282,27 @@ input[type="time"] {
 
 // ─── Strategy builder ─────────────────────────────────────────────────────────
 
-.builder-page { display: flex; flex-direction: column; }
+.builder-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: none;
+  overflow: hidden;
+}
+
+// When builder-page is present, the .app-content should not scroll
+.app-content:has(.builder-page) {
+  overflow: hidden;
+  padding: var(--pf-space-4);
+}
 
 .builder-topbar {
   display: flex;
   align-items: center;
   gap: var(--pf-space-4);
-  margin-bottom: var(--pf-space-5);
+  margin-bottom: var(--pf-space-4);
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .builder-title {
@@ -1308,7 +1316,10 @@ input[type="time"] {
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: var(--pf-space-4);
-  align-items: start;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 
   @media (max-width: 900px) { grid-template-columns: 1fr; }
 }
@@ -1321,6 +1332,8 @@ input[type="time"] {
   display: flex;
   flex-direction: column;
   gap: var(--pf-space-3);
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .builder-summary {
@@ -1364,7 +1377,7 @@ input[type="time"] {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 600px;
+  min-height: 0;
 }
 
 .builder-section-tabs {
@@ -1588,7 +1601,7 @@ input[type="time"] {
   background: #080c14;
   border-radius: var(--pf-radius-lg);
   border: 1px solid var(--pf-border-subtle);
-  min-height: 600px;
+  min-height: 0;
 }
 
 .strategy-canvas {
@@ -2965,6 +2978,36 @@ textarea:focus-visible,
 }
 .empty-state-action {
   margin-top: 8px;
+}
+
+// ─── Dark theme PrimeNG overlays ──────────────────────────────────────────
+
+.p-dialog {
+  background: var(--pf-bg-elevated, #111D2E) !important;
+  border: 1px solid var(--pf-border-default, #1E293B) !important;
+  color: var(--pf-text-primary, #F0F0F5) !important;
+}
+
+.p-confirmdialog {
+  background: var(--pf-bg-elevated, #111D2E) !important;
+  color: var(--pf-text-primary, #F0F0F5) !important;
+}
+
+.p-dropdown-panel, .p-select-overlay, .p-listbox {
+  background: var(--pf-bg-elevated, #111D2E) !important;
+  border: 1px solid var(--pf-border-default, #1E293B) !important;
+  color: var(--pf-text-primary, #F0F0F5) !important;
+}
+
+.p-tooltip .p-tooltip-text {
+  background: var(--pf-bg-overlay, #1E293B) !important;
+  color: var(--pf-text-primary, #F0F0F5) !important;
+}
+
+.p-popover {
+  background: var(--pf-bg-elevated, #111D2E) !important;
+  border: 1px solid var(--pf-border-default, #1E293B) !important;
+  color: var(--pf-text-primary, #F0F0F5) !important;
 }
 
 // ─── Consistent form fields ────────────────────────────────────────────────

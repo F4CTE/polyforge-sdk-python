@@ -389,7 +389,6 @@ export class StrategyBuilderComponent implements OnInit {
 
   setSection(s: BlockSection): void {
     this.activeSection.set(s);
-    this.paletteOpen.set(false);
   }
 
   togglePalette(): void {

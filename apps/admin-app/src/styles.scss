@@ -67,8 +67,11 @@ html, body {
   overflow-y: auto;
   overflow-x: hidden;
   transition: width var(--pf-duration-normal) ease;
+}
 
-  &.collapsed { width: 64px; }
+.admin-shell.collapsed .admin-sidebar {
+  width: 64px;
+  min-width: 64px;
 }
 
 .admin-main {
@@ -1020,6 +1023,36 @@ p-inputnumber.w-full .p-inputnumber { width: 100%; }
 
 .data-table tbody tr:nth-child(even) {
   background: rgba(255,255,255,0.02);
+}
+
+// ─── Dark theme PrimeNG overlays ──────────────────────────────────────────
+
+.p-dialog {
+  background: var(--pf-bg-elevated, #111D2E) !important;
+  border: 1px solid var(--pf-border-default, #1E293B) !important;
+  color: var(--pf-text-primary, #F0F0F5) !important;
+}
+
+.p-confirmdialog {
+  background: var(--pf-bg-elevated, #111D2E) !important;
+  color: var(--pf-text-primary, #F0F0F5) !important;
+}
+
+.p-dropdown-panel, .p-select-overlay, .p-listbox {
+  background: var(--pf-bg-elevated, #111D2E) !important;
+  border: 1px solid var(--pf-border-default, #1E293B) !important;
+  color: var(--pf-text-primary, #F0F0F5) !important;
+}
+
+.p-tooltip .p-tooltip-text {
+  background: var(--pf-bg-overlay, #1E293B) !important;
+  color: var(--pf-text-primary, #F0F0F5) !important;
+}
+
+.p-popover {
+  background: var(--pf-bg-elevated, #111D2E) !important;
+  border: 1px solid var(--pf-border-default, #1E293B) !important;
+  color: var(--pf-text-primary, #F0F0F5) !important;
 }
 
 // ─── Animation keyframes ────────────────────────────────────────────────────

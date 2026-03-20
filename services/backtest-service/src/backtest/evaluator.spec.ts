@@ -315,7 +315,7 @@ describe("checkTriggers", () => {
   describe("spread_below", () => {
     it("returns true when spread is below maxSpread", () => {
       const prices = makePrices({
-        "tok-a": { bid: 0.48, ask: 0.50 },
+        "tok-a": { bid: 0.48, ask: 0.5 },
       });
       const blocks: Block[] = [
         { type: "spread_below", config: { tokenId: "tok-a", maxSpread: 0.05 } },
@@ -325,7 +325,7 @@ describe("checkTriggers", () => {
 
     it("returns false when spread is at or above maxSpread", () => {
       const prices = makePrices({
-        "tok-a": { bid: 0.40, ask: 0.50 },
+        "tok-a": { bid: 0.4, ask: 0.5 },
       });
       const blocks: Block[] = [
         { type: "spread_below", config: { tokenId: "tok-a", maxSpread: 0.05 } },
@@ -546,9 +546,9 @@ describe("checkConditions", () => {
       const blocks: Block[] = [
         { type: "cooldown_after_trade", config: { cooldownMs: 5000 } },
       ];
-      expect(
-        checkConditions(blocks, state, new Map(), new Map(), now),
-      ).toBe(false);
+      expect(checkConditions(blocks, state, new Map(), new Map(), now)).toBe(
+        false,
+      );
     });
 
     it("returns true when cooldown has elapsed", () => {
@@ -558,9 +558,9 @@ describe("checkConditions", () => {
       const blocks: Block[] = [
         { type: "cooldown_after_trade", config: { cooldownMs: 5000 } },
       ];
-      expect(
-        checkConditions(blocks, state, new Map(), new Map(), now),
-      ).toBe(true);
+      expect(checkConditions(blocks, state, new Map(), new Map(), now)).toBe(
+        true,
+      );
     });
 
     it("returns true when no trade has occurred yet (lastTradeAt=0)", () => {
@@ -707,7 +707,10 @@ describe("executeActions", () => {
         "tok-a": { size: 10, avgPrice: 0.5 },
       });
       const blocks: Block[] = [
-        { type: "set_stop_loss", config: { tokenId: "tok-a", stopLossPct: 0.2 } },
+        {
+          type: "set_stop_loss",
+          config: { tokenId: "tok-a", stopLossPct: 0.2 },
+        },
       ];
       executeActions(blocks, new Map(), positions, state);
       // stopLoss = 0.5 * (1 - 0.2) = 0.4
@@ -717,7 +720,10 @@ describe("executeActions", () => {
     it("does not set stop loss when no position exists", () => {
       const state = createSimState();
       const blocks: Block[] = [
-        { type: "set_stop_loss", config: { tokenId: "tok-a", stopLossPct: 0.2 } },
+        {
+          type: "set_stop_loss",
+          config: { tokenId: "tok-a", stopLossPct: 0.2 },
+        },
       ];
       executeActions(blocks, new Map(), new Map(), state);
       expect(state.stopLosses.has("tok-a")).toBe(false);
@@ -729,7 +735,10 @@ describe("executeActions", () => {
         "tok-a": { size: 10, avgPrice: 0.5 },
       });
       const blocks: Block[] = [
-        { type: "set_stop_loss", config: { tokenId: "tok-a", stopLossPct: 0.2 } },
+        {
+          type: "set_stop_loss",
+          config: { tokenId: "tok-a", stopLossPct: 0.2 },
+        },
       ];
       const fills = executeActions(blocks, new Map(), positions, state);
       expect(fills).toHaveLength(0);
