@@ -2,6 +2,7 @@ import { type Page, type Locator, expect } from '@playwright/test';
 
 /**
  * Page Object for the Strategy Builder (/strategies/new and /strategies/:id/edit).
+ * Supports the SVG canvas-based builder with FAB block picker.
  */
 export class StrategyBuilderPage {
     readonly page:         Page;
@@ -9,7 +10,7 @@ export class StrategyBuilderPage {
     readonly descInput:    Locator;
     readonly saveButton:   Locator;
     readonly cancelButton: Locator;
-    readonly addBlockBtn:  Locator;
+    readonly addBlockFab:  Locator;
     readonly paletteGrid:  Locator;
 
     constructor(page: Page) {
@@ -18,7 +19,7 @@ export class StrategyBuilderPage {
         this.descInput    = page.locator('textarea[placeholder="What does this strategy do?"]');
         this.saveButton   = page.locator('p-button').filter({ hasText: /Create Strategy|Save Changes/ }).locator('button');
         this.cancelButton = page.locator('p-button').filter({ hasText: 'Cancel' }).locator('button');
-        this.addBlockBtn  = page.locator('button', { hasText: 'Add Block' });
+        this.addBlockFab  = page.locator('.canvas-add-fab');
         this.paletteGrid  = page.locator('.block-palette');
     }
 
@@ -40,22 +41,29 @@ export class StrategyBuilderPage {
         await this.descInput.fill(desc);
     }
 
-    /** Click a section tab by label (e.g. 'Safety', 'Triggers', 'Conditions', 'Actions') */
+    /** Click a section tab in the palette by label (e.g. 'Safety', 'Triggers', 'Conditions', 'Actions') */
     async selectSection(label: string): Promise<void> {
-        await this.page.locator('button.section-tab', { hasText: label }).click();
+        // Open palette first if not already open
+        if (!(await this.paletteGrid.isVisible())) {
+            await this.addBlockFab.click();
+            await expect(this.paletteGrid).toBeVisible({ timeout: 5_000 });
+        }
+        await this.page.locator('.palette-section-btn', { hasText: label }).click();
     }
 
     /** Open the block palette and click the block with the given label */
     async addBlock(blockLabel: string): Promise<void> {
-        await this.addBlockBtn.click();
-        await expect(this.paletteGrid).toBeVisible();
+        // Open palette if not already open
+        if (!(await this.paletteGrid.isVisible())) {
+            await this.addBlockFab.click();
+            await expect(this.paletteGrid).toBeVisible({ timeout: 5_000 });
+        }
         await this.paletteGrid.locator('.palette-item', { hasText: blockLabel }).click();
-        await expect(this.paletteGrid).not.toBeVisible();
     }
 
-    /** Returns all block card titles in the active section */
+    /** Returns all block cards on the canvas */
     blockCards(): Locator {
-        return this.page.locator('.block-card-title');
+        return this.page.locator('.canvas-block');
     }
 
     async save(): Promise<void> {
