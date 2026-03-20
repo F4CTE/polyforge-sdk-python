@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectorRef, NgZone } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { SlicePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
@@ -28,6 +28,8 @@ interface NavItem {
 export class LayoutComponent {
   readonly auth = inject(AuthStore);
   readonly notifService = inject(NotificationUiService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly zone = inject(NgZone);
 
   collapsed = signal(false);
   notifOpen = signal(false);
@@ -65,8 +67,10 @@ export class LayoutComponent {
     { label: 'Sign out', icon: 'pi pi-sign-out', command: () => this.auth.logout() },
   ];
 
+  sidebarCollapsed = false;
+
   toggleSidebar(): void {
-    this.collapsed.update(v => !v);
+    this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 
   toggleNotif(): void {
