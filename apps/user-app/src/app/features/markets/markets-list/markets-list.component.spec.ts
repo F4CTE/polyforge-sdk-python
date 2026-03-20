@@ -4,6 +4,16 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 // The categoryColor method lives on MarketsListComponent. We extract the logic
 // here so we can test it without Angular TestBed (user-app has no vitest wired up).
 
+function getDefaultViewMode(): 'cards' | 'table' {
+  return (typeof localStorage !== 'undefined' && localStorage.getItem('pf-markets-view') as 'cards' | 'table') || 'cards';
+}
+
+function setViewMode(mode: 'cards' | 'table'): void {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('pf-markets-view', mode);
+  }
+}
+
 function categoryColor(cat: string): { bg: string; text: string } {
   const map: Record<string, { bg: string; text: string }> = {
     Sports:     { bg: "rgba(59,130,246,0.15)",  text: "#3B82F6" },
@@ -71,6 +81,36 @@ describe("MarketsListComponent", () => {
 
       expect(result.bg).toBe("rgba(107,114,128,0.15)");
       expect(result.text).toBe("#6B7280");
+    });
+  });
+
+  describe("viewMode", () => {
+    afterEach(() => {
+      localStorage.removeItem('pf-markets-view');
+    });
+
+    it("default viewMode is 'cards' when no localStorage value exists", () => {
+      localStorage.removeItem('pf-markets-view');
+
+      expect(getDefaultViewMode()).toBe('cards');
+    });
+
+    it("setViewMode('cards') stores preference in localStorage", () => {
+      setViewMode('cards');
+
+      expect(localStorage.getItem('pf-markets-view')).toBe('cards');
+    });
+
+    it("setViewMode('table') stores preference in localStorage", () => {
+      setViewMode('table');
+
+      expect(localStorage.getItem('pf-markets-view')).toBe('table');
+    });
+
+    it("getDefaultViewMode reads stored 'table' preference", () => {
+      localStorage.setItem('pf-markets-view', 'table');
+
+      expect(getDefaultViewMode()).toBe('table');
     });
   });
 });
