@@ -29,9 +29,10 @@ import { TicketsApiService, TicketSummary, TicketStatus } from '../../core/servi
           }
         } @else if (tickets().length === 0) {
           <div class="pf-empty-state" style="padding:64px">
-            <i class="pi pi-question-circle pf-empty-icon"></i>
+            <i class="pi pi-question-circle" style="font-size:48px;color:#06B6D4"></i>
             <p class="pf-empty-title">No tickets yet</p>
             <p class="pf-empty-desc">Need help? Create a support ticket and our team will get back to you.</p>
+            <p class="pf-empty-desc" style="margin-top:4px;font-size:12px;color:var(--pf-text-muted)">Our team typically responds within 24 hours.</p>
             <p-button label="Create Ticket" icon="pi pi-plus" routerLink="/support/new" styleClass="mt-3" />
           </div>
         } @else {

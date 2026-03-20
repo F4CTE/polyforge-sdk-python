@@ -56,7 +56,7 @@
     <header class="admin-topbar">
       <p-button [icon]="collapsed() ? 'pi pi-bars' : 'pi pi-bars'" severity="secondary" [text]="true"
         size="small" (onClick)="collapsed.update(v => !v)" />
-      <span class="topbar-title">Polyforge Admin Console</span>
+      <span class="topbar-title">{{ currentPage() }}</span>
       <div class="topbar-right" style="display:flex;align-items:center;gap:8px">
         <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--pf-cyan-500);color:#080C14;font-size:11px;font-weight:700;letter-spacing:0.02em">{{ initials }}</span>
         <span style="font-size:13px;font-weight:500;color:var(--pf-text-secondary)">{{ auth.admin()?.displayName }}</span>

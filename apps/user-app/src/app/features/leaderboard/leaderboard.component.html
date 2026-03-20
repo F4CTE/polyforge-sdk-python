@@ -55,8 +55,8 @@
                 <!-- Rank -->
                 <td>
                   <div class="leaderboard-rank" [style.color]="rankColor(entry.rank)">
-                    @if (rankIcon(entry.rank)) {
-                      <i class="pi {{ rankIcon(entry.rank) }}" style="font-size:14px"></i>
+                    @if (rankMedal(entry.rank)) {
+                      <span style="font-size:18px">{{ rankMedal(entry.rank) }}</span>
                     } @else {
                       <span class="pf-mono" style="font-size:12px">{{ entry.rank }}</span>
                     }

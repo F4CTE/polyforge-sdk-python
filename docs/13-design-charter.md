@@ -1227,4 +1227,90 @@ The strategy builder uses `@angular/cdk` `DragDrop` module for block reordering 
 
 ---
 
-*Ce document doit être relu à chaque ajout de composant majeur pour s'assurer de la cohérence visuelle.*
+## 16. Clickable Elements
+
+All table rows that represent a data entity should be clickable to navigate to that entity's detail view.
+
+**Implementation rules:**
+
+- Add `[routerLink]` on the `<tr>` element — not just on a cell or link inside it
+- The `.admin-table-row` class provides `cursor: pointer` and the `.table-row:hover` rule provides background highlight (`var(--pf-bg-overlay)`)
+- Strategy cards in Discover/Leaderboard are also clickable, navigating to strategy detail
+- Action buttons (Stop, Delete, Replay, etc.) inside clickable rows must use `$event.stopPropagation()` on their `(click)` handler to prevent row navigation
+- Links inside clickable rows (e.g., user name links) remain functional; the row-level routerLink serves as a fallback click target
+
+---
+
+## 17. Empty States
+
+Every list, table, or data container must display an empty state when there is no data. Never show a blank component.
+
+**Structure:**
+
+```html
+<div class="pf-empty-state">
+  <i class="pi pi-[relevant-icon] pf-empty-icon"></i>       <!-- 48px muted icon -->
+  <p class="pf-empty-title">No [items] yet</p>              <!-- bold heading -->
+  <p class="pf-empty-desc">[What to do next]</p>             <!-- descriptive subtitle -->
+  <p-button label="[CTA]" icon="pi pi-plus" />               <!-- optional action -->
+</div>
+```
+
+- The icon should be contextually relevant: `pi-users` for users, `pi-code` for strategies, `pi-list` for orders, `pi-comments` for tickets, `pi-history` for backtests
+- The `.pf-empty-icon` class sets `font-size: 48px` and `color: var(--pf-text-muted)`
+- The CTA button is optional — include it when there is a clear next action the user can take
+
+---
+
+## 18. Sidebar Collapse
+
+The admin sidebar collapses to a 64px icon-only mode via the hamburger toggle button in the topbar.
+
+**Implementation:**
+
+- The `collapsed` state is a plain `signal<boolean>(false)` on the `LayoutComponent` — not a signal factory or computed. Plain boolean ensures reliable change detection with Angular's template binding.
+- When collapsed, nav labels and section titles are hidden via `@if (!collapsed())` blocks.
+- The sidebar brand shows only the bolt icon when collapsed.
+- Nav items show a `[title]` tooltip (native HTML) when collapsed for accessibility.
+- Width transitions from 240px to 64px using CSS transition on the `.admin-sidebar` element.
+
+---
+
+## 19. Leaderboard
+
+The Leaderboard page ranks users by performance.
+
+**Visual rules:**
+
+- Top 3 ranks display medal icons instead of plain numbers: gold (`#FFD700`), silver (`#C0C0C0`), bronze (`#CD7F32`)
+- All rank numbers use `font-family: 'JetBrains Mono', monospace` (the `.pf-mono` class)
+- The leaderboard table follows all standard table conventions (hover, clickable rows, column labels)
+
+---
+
+## 20. Count Badges
+
+All admin page headers display the total item count next to the page title using a `.page-count` pill badge.
+
+**Format:** `<span class="page-count pf-mono">{{ total }} total</span>`
+
+- The `.page-count` class renders a small rounded pill with muted background and monospace text
+- Examples: "27 total" next to Users, "3 tickets" next to Tickets
+- The badge is hidden while the data is still loading (wrapped in `@if (!loading())`)
+- The admin sidebar shows the open ticket count as a `.nav-badge` next to the Tickets nav item, updated via `AdminPollingService` every 30 seconds
+
+---
+
+## 21. Topbar Breadcrumb
+
+The admin topbar displays the current page name dynamically instead of static text.
+
+**Implementation:**
+
+- The `LayoutComponent` listens to `Router.events` for `NavigationEnd` and extracts the first URL segment
+- The segment is title-cased and displayed in the `.topbar-title` element (e.g., "Dashboard", "Users", "Tickets")
+- This provides immediate visual context for which section the admin is viewing
+
+---
+
+*Ce document doit être relu a chaque ajout de composant majeur pour s'assurer de la coherence visuelle.*

@@ -51,7 +51,8 @@
             </td></tr>
           } @else {
             @for (u of users(); track u.id) {
-              <tr class="table-row admin-table-row" [class.suspended-row]="u.suspended">
+              <tr class="table-row admin-table-row" [class.suspended-row]="u.suspended"
+                  [routerLink]="['/users', u.id]" style="cursor:pointer">
                 <td>
                   <a [routerLink]="['/users', u.id]" class="admin-user-link">
                     <div class="admin-user-name">{{ u.displayName ?? u.username }}</div>

@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, NavigationEnd, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
 import { MenuModule } from 'primeng/menu';
@@ -25,10 +26,22 @@ export class LayoutComponent implements OnInit {
   readonly auth = inject(AdminAuthStore);
   readonly polling = inject(AdminPollingService);
   private readonly toast = inject(MessageService);
+  private readonly router = inject(Router);
   collapsed     = signal(false);
+  currentPage   = signal('Dashboard');
 
   ngOnInit(): void {
     this.polling.start(this.toast);
+    this.updateCurrentPage(this.router.url);
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map(e => e.urlAfterRedirects ?? e.url),
+    ).subscribe(url => this.updateCurrentPage(url));
+  }
+
+  private updateCurrentPage(url: string): void {
+    const segment = url.split('/').filter(Boolean)[0] ?? 'dashboard';
+    this.currentPage.set(segment.charAt(0).toUpperCase() + segment.slice(1));
   }
 
   readonly nav: { title: string; superAdminOnly?: boolean; items: NavItem[] }[] = [

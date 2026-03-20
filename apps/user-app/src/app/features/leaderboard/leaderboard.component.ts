@@ -67,6 +67,13 @@ export class LeaderboardComponent implements OnInit {
     return v > 0 ? `+${pnl}` : pnl;
   }
 
+  rankMedal(rank: number): string {
+    if (rank === 1) return '\u{1F947}';
+    if (rank === 2) return '\u{1F948}';
+    if (rank === 3) return '\u{1F949}';
+    return '';
+  }
+
   rankIcon(rank: number): string {
     if (rank === 1) return 'pi-trophy';
     if (rank === 2) return 'pi-star-fill';
