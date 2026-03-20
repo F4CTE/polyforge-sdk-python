@@ -46,6 +46,12 @@ import { TicketsApiService, TicketDetail, TicketStatus } from '../../core/servic
 
         <!-- Messages -->
         <div class="portfolio-table-panel" style="padding:0">
+          @if (t.status !== 'CLOSED') {
+            <div class="poll-indicator">
+              <span class="poll-dot"></span>
+              Auto-updating every 15s
+            </div>
+          }
           @for (msg of t.messages; track msg.id) {
             <div class="ticket-message" [class.admin]="msg.isAdmin">
               <div class="msg-header">
@@ -66,9 +72,10 @@ import { TicketsApiService, TicketDetail, TicketStatus } from '../../core/servic
         @if (t.status !== 'CLOSED') {
           <div class="portfolio-table-panel" style="padding:20px;margin-top:16px">
             <textarea pTextarea [(ngModel)]="replyBody" rows="3" placeholder="Type your reply..."
-                      style="width:100%;resize:vertical;margin-bottom:12px" maxlength="5000"></textarea>
+                      style="width:100%;resize:vertical;margin-bottom:4px" maxlength="5000"></textarea>
+            <span class="char-counter" [class.near-limit]="replyBody.length > 4500">{{ replyBody.length }} / 5000</span>
             <p-button label="Send Reply" icon="pi pi-send" [loading]="sending()"
-                      (onClick)="sendReply()" [disabled]="!replyBody.trim()" size="small" />
+                      (onClick)="sendReply()" [disabled]="!replyBody.trim()" size="small" style="margin-top:8px" />
           </div>
         } @else {
           <div class="portfolio-table-panel" style="padding:20px;margin-top:16px;text-align:center;color:var(--pf-text-muted)">
@@ -119,6 +126,35 @@ import { TicketsApiService, TicketDetail, TicketStatus } from '../../core/servic
       line-height: 1.7;
       color: var(--pf-text-secondary);
       white-space: pre-wrap;
+    }
+    .char-counter {
+      display: block;
+      text-align: right;
+      font-size: 12px;
+      color: var(--pf-text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      &.near-limit { color: var(--pf-danger, #EF4444); }
+    }
+    .poll-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 24px;
+      font-size: 12px;
+      color: var(--pf-cyan-500);
+      border-bottom: 1px solid var(--pf-border-subtle);
+    }
+    .poll-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--pf-cyan-500);
+      box-shadow: 0 0 6px rgba(6,182,212,0.8);
+      animation: pf-pulse 2s ease-in-out infinite;
+    }
+    @keyframes pf-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
     }
   `],
 })

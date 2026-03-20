@@ -1,4 +1,5 @@
 <p-toast position="top-right" />
+<p-confirmDialog />
 
 <div class="pf-page">
 
@@ -71,8 +72,10 @@
           <p-chart type="line" [data]="chartData()" [options]="chartOptions()" height="260px" />
         </div>
       } @else {
-        <div class="pf-empty-state" style="max-height:150px;padding:32px">
-          <p class="pf-empty-desc">No P&L data yet.</p>
+        <div class="empty-state" style="max-height:150px;padding:32px">
+          <i class="pi pi-chart-line empty-state-icon"></i>
+          <p class="empty-state-title">No P&L data yet</p>
+          <p class="empty-state-desc">P&L data will appear once your strategies generate trades.</p>
         </div>
       }
     </div>
@@ -88,10 +91,10 @@
           @for (s of [1,2,3]; track s) { <p-skeleton height="40px" styleClass="mb-2" /> }
         </div>
       } @else if ((portfolio()?.positions ?? []).length === 0) {
-        <div class="pf-empty-state" style="padding:40px">
-          <i class="pi pi-wallet pf-empty-icon"></i>
-          <p class="pf-empty-title">No open positions</p>
-          <p class="pf-empty-desc">Start a strategy to build positions.</p>
+        <div class="empty-state">
+          <i class="pi pi-wallet empty-state-icon"></i>
+          <p class="empty-state-title">No open positions</p>
+          <p class="empty-state-desc">Start a strategy to build positions.</p>
         </div>
       } @else {
         <div class="table-scroll">
@@ -199,10 +202,10 @@
 
       <!-- Paper positions -->
       @if (p.positions.length === 0) {
-        <div class="pf-empty-state" style="padding:48px">
-          <i class="pi pi-file pf-empty-icon"></i>
-          <p class="pf-empty-title">No paper positions</p>
-          <p class="pf-empty-desc">Start a strategy in Paper mode to simulate trades.</p>
+        <div class="empty-state">
+          <i class="pi pi-file empty-state-icon"></i>
+          <p class="empty-state-title">No paper positions</p>
+          <p class="empty-state-desc">Start a strategy in Paper mode to simulate trades.</p>
         </div>
       } @else {
         <div class="portfolio-table-panel">

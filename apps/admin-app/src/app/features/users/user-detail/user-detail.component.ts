@@ -7,8 +7,9 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DialogModule } from 'primeng/dialog';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MessageService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { AdminApiService } from '../../../core/services/admin-api.service';
 import { AdminUserDetail } from '../../../core/models/admin.model';
@@ -17,8 +18,8 @@ import { AdminAuthStore } from '../../../core/store/admin-auth.store';
 @Component({
   selector: 'app-user-detail',
   standalone: true,
-  imports: [RouterLink, FormsModule, DatePipe, ButtonModule, InputTextModule, InputNumberModule, DialogModule, SkeletonModule, ToastModule],
-  providers: [MessageService],
+  imports: [RouterLink, FormsModule, DatePipe, ButtonModule, InputTextModule, InputNumberModule, DialogModule, ConfirmDialogModule, SkeletonModule, ToastModule],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './user-detail.component.html',
 })
 export class UserDetailComponent implements OnInit {
@@ -26,6 +27,7 @@ export class UserDetailComponent implements OnInit {
   private readonly route      = inject(ActivatedRoute);
   private readonly toast      = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmSvc = inject(ConfirmationService);
   readonly auth               = inject(AdminAuthStore);
 
   user    = signal<AdminUserDetail | null>(null);
@@ -52,6 +54,16 @@ export class UserDetailComponent implements OnInit {
         next: u => { this.user.set(u); this.limitsForm = { ...u.limits }; this.loading.set(false); },
         error: () => this.loading.set(false),
       });
+  }
+
+  confirmSuspend(): void {
+    this.confirmSvc.confirm({
+      message: 'Are you sure you want to suspend this user? They will lose access immediately.',
+      header: 'Suspend User?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => this.showSuspendDialog.set(true),
+    });
   }
 
   suspend(): void {

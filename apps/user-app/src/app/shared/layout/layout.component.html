@@ -37,6 +37,7 @@
     <!-- Top bar -->
     <header class="app-topbar">
       <button class="sidebar-toggle-btn" (click)="toggleSidebar()" type="button"
+              aria-label="Toggle sidebar"
               style="background:none;border:none;cursor:pointer;padding:6px;border-radius:50%;color:var(--pf-text-secondary)">
         <i [class]="sidebarCollapsed ? 'pi pi-bars' : 'pi pi-times'" style="font-size:18px"></i>
       </button>
@@ -45,7 +46,7 @@
 
       <!-- Notification bell -->
       <div class="notif-bell-wrapper" style="position:relative">
-        <button class="notif-bell-btn" (click)="toggleNotif()">
+        <button class="notif-bell-btn" (click)="toggleNotif()" aria-label="Notifications">
           <i class="pi pi-bell"></i>
           @if (notifService.unreadCount() > 0) {
             <span class="notif-badge">{{ notifService.unreadCount() > 9 ? '9+' : notifService.unreadCount() }}</span>
@@ -75,6 +76,7 @@
                 }
               }
             </div>
+            <a routerLink="/settings" class="notif-see-all" (click)="toggleNotif()">See all notifications</a>
           </div>
         }
       </div>
@@ -82,11 +84,12 @@
       <!-- User avatar -->
       <p-avatar [label]="initials" shape="circle"
                 styleClass="user-avatar"
+                aria-label="User menu"
                 (click)="menu.toggle($event)" />
       <span class="user-name" (click)="menu.toggle($event)">
         {{ auth.user()?.displayName ?? auth.user()?.username }}
       </span>
-      <i class="pi pi-chevron-down user-chevron" (click)="menu.toggle($event)"></i>
+      <i class="pi pi-chevron-down user-chevron" (click)="menu.toggle($event)" role="button" aria-label="Open user menu"></i>
       <p-menu #menu [model]="userMenu" [popup]="true" appendTo="body" />
     </header>
 

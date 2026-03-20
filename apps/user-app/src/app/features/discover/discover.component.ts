@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -15,6 +15,7 @@ type SortOption = 'popular' | 'newest' | 'top_pnl' | 'most_forked';
   standalone: true,
   imports: [RouterLink, DatePipe, ButtonModule, SkeletonModule, AvatarModule],
   templateUrl: './discover.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DiscoverComponent implements OnInit {
   private readonly api        = inject(SocialApiService);

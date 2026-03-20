@@ -1105,3 +1105,96 @@ input.p-inputtext,
   from { opacity: 0; transform: scale(0.95); }
   to   { opacity: 1; transform: scale(1); }
 }
+
+// ─── Keyboard navigation focus outlines ──────────────────────────────────────
+
+:focus-visible {
+  outline: 2px solid var(--pf-cyan-400, #22D3EE);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--pf-cyan-400, #22D3EE);
+  outline-offset: 2px;
+}
+
+/* Remove default outline for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+// ─── Typography size utilities ───────────────────────────────────────────────
+
+.text-xs { font-size: var(--pf-font-xs); }
+.text-sm { font-size: var(--pf-font-sm); }
+.text-base { font-size: var(--pf-font-base); }
+.text-md { font-size: var(--pf-font-md); }
+.text-lg { font-size: var(--pf-font-lg); }
+.text-xl { font-size: var(--pf-font-xl); }
+.text-2xl { font-size: var(--pf-font-2xl); }
+
+// ─── Standardized empty states ──────────────────────────────────────────────
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 12px;
+}
+.empty-state-icon {
+  font-size: 48px;
+  opacity: 0.3;
+  color: var(--pf-text-muted);
+}
+.empty-state-title {
+  font-size: var(--pf-font-lg, 18px);
+  font-weight: 600;
+  color: var(--pf-text-primary);
+}
+.empty-state-desc {
+  font-size: var(--pf-font-sm, 13px);
+  color: var(--pf-text-muted);
+  max-width: 360px;
+}
+.empty-state-action {
+  margin-top: 8px;
+}
+
+// ─── Responsive tables ──────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  /* Admin users: hide 2FA, Connected columns */
+  .users-table th:nth-child(6),
+  .users-table td:nth-child(6),
+  .users-table th:nth-child(7),
+  .users-table td:nth-child(7) {
+    display: none;
+  }
+
+  /* Admin tickets: hide Category, Priority columns */
+  .tickets-table th:nth-child(4),
+  .tickets-table td:nth-child(4),
+  .tickets-table th:nth-child(5),
+  .tickets-table td:nth-child(5) {
+    display: none;
+  }
+
+  /* Stack dashboard stat cards */
+  .dash-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dash-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

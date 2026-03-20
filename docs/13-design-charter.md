@@ -19,6 +19,10 @@
 10. [Logo & identité](#10-logo--identité)
 11. [Application aux deux frontends](#11-application-aux-deux-frontends)
 12. [Fichiers de configuration](#12-fichiers-de-configuration)
+22. [Accessibility](#22-accessibility)
+23. [Typography Scale](#23-typography-scale)
+24. [Status / Semantic Colors](#24-status--semantic-colors)
+25. [Responsive Design](#25-responsive-design)
 
 ---
 
@@ -1268,20 +1272,32 @@ All table rows that represent a data entity should be clickable to navigate to t
 
 Every list, table, or data container must display an empty state when there is no data. Never show a blank component.
 
-**Structure:**
+**Structure (standardized):**
 
 ```html
-<div class="pf-empty-state">
-  <i class="pi pi-[relevant-icon] pf-empty-icon"></i>       <!-- 48px muted icon -->
-  <p class="pf-empty-title">No [items] yet</p>              <!-- bold heading -->
-  <p class="pf-empty-desc">[What to do next]</p>             <!-- descriptive subtitle -->
-  <p-button label="[CTA]" icon="pi pi-plus" />               <!-- optional action -->
+<div class="empty-state">
+  <i class="pi pi-[relevant-icon] empty-state-icon"></i>
+  <p class="empty-state-title">No [items] yet</p>
+  <p class="empty-state-desc">[What to do next]</p>
+  <div class="empty-state-action">                            <!-- optional -->
+    <p-button label="[CTA]" icon="pi pi-plus" />
+  </div>
 </div>
 ```
 
+**Class specifications:**
+
+- `.empty-state` — flex column, centered, `padding: 48px 24px`, `gap: 12px`
+- `.empty-state-icon` — `font-size: 48px`, `opacity: 0.3`, `color: var(--pf-text-muted)`
+- `.empty-state-title` — `font-size: 18px` (`var(--pf-font-lg)`), `font-weight: 600`, `color: var(--pf-text-primary)`
+- `.empty-state-desc` — `font-size: 13px` (`var(--pf-font-sm)`), `color: var(--pf-text-muted)`, `max-width: 360px`
+- `.empty-state-action` — `margin-top: 8px`, wraps the optional CTA button
+
+**Rules:**
+
 - The icon should be contextually relevant: `pi-users` for users, `pi-code` for strategies, `pi-list` for orders, `pi-comments` for tickets, `pi-history` for backtests
-- The `.pf-empty-icon` class sets `font-size: 48px` and `color: var(--pf-text-muted)`
 - The CTA button is optional — include it when there is a clear next action the user can take
+- Legacy `.pf-empty-state` / `.pf-empty-icon` / `.pf-empty-title` / `.pf-empty-desc` classes are deprecated; migrate to the standardized `.empty-state` classes
 
 ---
 
@@ -1333,6 +1349,76 @@ The admin topbar displays the current page name dynamically instead of static te
 - The `LayoutComponent` listens to `Router.events` for `NavigationEnd` and extracts the first URL segment
 - The segment is title-cased and displayed in the `.topbar-title` element (e.g., "Dashboard", "Users", "Tickets")
 - This provides immediate visual context for which section the admin is viewing
+
+---
+
+---
+
+## 22. Accessibility
+
+All interactive elements must meet baseline accessibility requirements.
+
+**Rules:**
+
+- All interactive elements must have `focus-visible` outlines: `2px solid cyan`, `2px offset`
+- Icon-only buttons require an `aria-label` attribute describing the action
+- Color-only indicators must have text alternatives (e.g., status badges show text alongside color)
+- Destructive actions (delete, reset, close position) require confirmation dialogs before execution
+
+---
+
+## 23. Typography Scale
+
+The typography scale is defined as CSS custom properties in `tokens.css`. All font sizes must reference these tokens.
+
+| Token             | Size  | Usage                        |
+| ----------------- | ----- | ---------------------------- |
+| `--pf-font-xs`    | 11px  | Badges, captions, metadata   |
+| `--pf-font-sm`    | 13px  | Secondary text, labels       |
+| `--pf-font-base`  | 14px  | Body text                    |
+| `--pf-font-md`    | 15px  | Emphasis text                |
+| `--pf-font-lg`    | 18px  | Section titles               |
+| `--pf-font-xl`    | 22px  | Page titles                  |
+| `--pf-font-2xl`   | 28px  | Hero text                    |
+
+Utility classes `.text-xs` through `.text-2xl` are available in both apps' global stylesheets.
+
+---
+
+## 24. Status / Semantic Colors
+
+Status tokens are defined in `tokens.css` for consistent status indication across both apps.
+
+| Token                        | Value                        | Usage                          |
+| ---------------------------- | ---------------------------- | ------------------------------ |
+| `--pf-status-active-color`   | `#22C55E`                    | Active / running / connected   |
+| `--pf-status-active-bg`      | `rgba(34, 197, 94, 0.12)`   | Active badge background        |
+| `--pf-status-warning-color`  | `#F59E0B`                    | Degraded / pending / caution   |
+| `--pf-status-warning-bg`     | `rgba(245, 158, 11, 0.12)`  | Warning badge background       |
+| `--pf-status-error-color`    | `#EF4444`                    | Error / failed / danger        |
+| `--pf-status-error-bg`       | `rgba(239, 68, 68, 0.12)`   | Error badge background         |
+| `--pf-status-info-color`     | `#3B82F6`                    | Informational                  |
+| `--pf-status-info-bg`        | `rgba(59, 130, 246, 0.12)`  | Info badge background          |
+
+Additionally, the semantic tokens `--pf-success`, `--pf-danger`, `--pf-warning`, and `--pf-info` (with their `-bg` variants) are used for P&L colors, toast messages, and general feedback.
+
+---
+
+## 25. Responsive Design
+
+The UI adapts to smaller viewports with targeted responsive rules.
+
+**Breakpoints:**
+
+- `768px` — tablet threshold
+- `480px` — mobile threshold
+
+**Rules:**
+
+- Tables hide non-essential columns below 768px (e.g., admin users table hides 2FA and Connected columns; tickets table hides Category and Priority)
+- Dashboard stat grids collapse from 4-column to 2-column at 768px, then to 1-column at 480px
+- Summary cards (portfolio, paper trading) stack vertically on mobile
+- Page titles shrink to 18px (`var(--pf-font-lg)`) on mobile viewports
 
 ---
 

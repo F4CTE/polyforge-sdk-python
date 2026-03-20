@@ -90,14 +90,14 @@
 
         <!-- Zoom controls -->
         <div class="canvas-controls">
-          <button (click)="zoomIn()" title="Zoom in">
+          <button (click)="zoomIn()" title="Zoom in" aria-label="Zoom in">
             <i class="pi pi-plus"></i>
           </button>
           <span class="canvas-zoom-level">{{ (scale() * 100) | number:'1.0-0' }}%</span>
-          <button (click)="zoomOut()" title="Zoom out">
+          <button (click)="zoomOut()" title="Zoom out" aria-label="Zoom out">
             <i class="pi pi-minus"></i>
           </button>
-          <button (click)="fitToView()" title="Fit to view">
+          <button (click)="fitToView()" title="Fit to view" aria-label="Fit to view">
             <i class="pi pi-expand"></i>
           </button>
         </div>
@@ -140,7 +140,7 @@
                 <div class="canvas-block-header">
                   <i class="pi pi-arrows-alt canvas-drag-handle"></i>
                   <span class="canvas-block-title">{{ getBlockDef(block.type)?.label ?? block.type }}</span>
-                  <button class="canvas-block-delete" (mousedown)="$event.stopPropagation()" (click)="removeCanvasBlock(block.id)">
+                  <button class="canvas-block-delete" (mousedown)="$event.stopPropagation()" (click)="removeCanvasBlock(block.id)" aria-label="Delete block">
                     <i class="pi pi-times"></i>
                   </button>
                 </div>
@@ -163,7 +163,7 @@
         </svg>
 
         <!-- Add block FAB -->
-        <button class="canvas-add-fab" (click)="paletteOpen.set(true)" title="Add block">
+        <button class="canvas-add-fab" (click)="paletteOpen.set(true)" title="Add block" aria-label="Add block">
           <i class="pi pi-plus"></i>
         </button>
 
@@ -192,7 +192,7 @@
                       {{ sec.label }}
                     </button>
                   }
-                  <button class="block-ctrl-btn" (click)="paletteOpen.set(false)" style="margin-left:8px">
+                  <button class="block-ctrl-btn" (click)="paletteOpen.set(false)" style="margin-left:8px" aria-label="Close palette">
                     <i class="pi pi-times"></i>
                   </button>
                 </div>

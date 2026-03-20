@@ -6,7 +6,8 @@ import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MessageService, ConfirmationService } from 'primeng/api';
 
 import {
   PortfolioApiService,
@@ -23,14 +24,15 @@ type Period = '7d' | '30d' | '90d' | 'allTime';
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [DecimalPipe, LowerCasePipe, ChartModule, ButtonModule, SkeletonModule, ToastModule, TooltipModule],
-  providers: [MessageService],
+  imports: [DecimalPipe, LowerCasePipe, ChartModule, ButtonModule, SkeletonModule, ToastModule, TooltipModule, ConfirmDialogModule],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './portfolio.component.html',
 })
 export class PortfolioComponent implements OnInit {
   private readonly api        = inject(PortfolioApiService);
   private readonly ws         = inject(WebSocketService);
   private readonly toast      = inject(MessageService);
+  private readonly confirm    = inject(ConfirmationService);
   private readonly destroyRef = inject(DestroyRef);
 
   tab    = signal<Tab>('live');
@@ -114,14 +116,22 @@ export class PortfolioComponent implements OnInit {
   }
 
   resetPaper(): void {
-    this.resettingPaper.set(true);
-    this.api.paperReset().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.resettingPaper.set(false);
-        this.paper.set({ pnl: '0', positions: [], orderCount: 0 });
-        this.toast.add({ severity: 'success', summary: 'Paper account reset', life: 3000 });
+    this.confirm.confirm({
+      message: 'This will delete all paper positions and orders. This cannot be undone.',
+      header: 'Reset Paper Account?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.resettingPaper.set(true);
+        this.api.paperReset().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+          next: () => {
+            this.resettingPaper.set(false);
+            this.paper.set({ pnl: '0', positions: [], orderCount: 0 });
+            this.toast.add({ severity: 'success', summary: 'Paper account reset', life: 3000 });
+          },
+          error: () => this.resettingPaper.set(false),
+        });
       },
-      error: () => this.resettingPaper.set(false),
     });
   }
 

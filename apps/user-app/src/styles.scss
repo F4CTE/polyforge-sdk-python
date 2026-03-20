@@ -2841,6 +2841,18 @@ input[type="time"] {
 .notif-item-body { flex: 1; min-width: 0; }
 .notif-item-title { font-size: 13px; font-weight: 600; color: var(--pf-text-primary); margin-bottom: 2px; }
 .notif-item-text { font-size: 12px; color: var(--pf-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-see-all {
+  display: block;
+  text-align: center;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--pf-cyan-400);
+  text-decoration: none;
+  border-top: 1px solid var(--pf-border-subtle);
+  transition: background 0.15s;
+  &:hover { background: var(--pf-bg-overlay); }
+}
 
 // ─── PrimeNG chip/tag dark theme overrides ────────────────────────────────────
 
@@ -2891,4 +2903,117 @@ router-outlet + * {
 
 .p-datatable .p-datatable-loading-icon {
   color: var(--pf-cyan-500) !important;
+}
+
+// ─── Keyboard navigation focus outlines ──────────────────────────────────────
+
+:focus-visible {
+  outline: 2px solid var(--pf-cyan-400, #22D3EE);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--pf-cyan-400, #22D3EE);
+  outline-offset: 2px;
+}
+
+/* Remove default outline for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+// ─── Typography size utilities ───────────────────────────────────────────────
+
+.text-xs { font-size: var(--pf-font-xs); }
+.text-sm { font-size: var(--pf-font-sm); }
+.text-base { font-size: var(--pf-font-base); }
+.text-md { font-size: var(--pf-font-md); }
+.text-lg { font-size: var(--pf-font-lg); }
+.text-xl { font-size: var(--pf-font-xl); }
+.text-2xl { font-size: var(--pf-font-2xl); }
+
+// ─── Standardized empty states ──────────────────────────────────────────────
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 12px;
+}
+.empty-state-icon {
+  font-size: 48px;
+  opacity: 0.3;
+  color: var(--pf-text-muted);
+}
+.empty-state-title {
+  font-size: var(--pf-font-lg, 18px);
+  font-weight: 600;
+  color: var(--pf-text-primary);
+}
+.empty-state-desc {
+  font-size: var(--pf-font-sm, 13px);
+  color: var(--pf-text-muted);
+  max-width: 360px;
+}
+.empty-state-action {
+  margin-top: 8px;
+}
+
+// ─── Consistent form fields ────────────────────────────────────────────────
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.form-label {
+  font-size: var(--pf-font-sm, 13px);
+  font-weight: 500;
+  color: var(--pf-text-secondary);
+}
+.form-input {
+  width: 100%;
+}
+.form-hint {
+  font-size: var(--pf-font-xs, 11px);
+  color: var(--pf-text-muted);
+}
+
+// ─── Responsive tables ──────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  /* Orders table: hide Type, Avg Fill, Date columns */
+  .orders-table th:nth-child(7),
+  .orders-table td:nth-child(7),
+  .orders-table th:nth-child(8),
+  .orders-table td:nth-child(8),
+  .orders-table th:nth-child(10),
+  .orders-table td:nth-child(10) {
+    display: none;
+  }
+
+  /* Portfolio positions: hide Entry, Current columns */
+  .positions-table th:nth-child(4),
+  .positions-table td:nth-child(4),
+  .positions-table th:nth-child(5),
+  .positions-table td:nth-child(5) {
+    display: none;
+  }
+
+  /* Make page titles smaller */
+  .pf-page h1 { font-size: 18px; }
+
+  /* Stack summary cards vertically */
+  .summary-row, .portfolio-summary {
+    flex-direction: column;
+  }
 }

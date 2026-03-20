@@ -93,4 +93,33 @@
   --pf-duration-fast:   100ms;
   --pf-duration-normal: 200ms;
   --pf-duration-slow:   300ms;
+
+  /* Block section colors */
+  --pf-safety-color: #EF4444;
+  --pf-safety-bg: rgba(239, 68, 68, 0.12);
+  --pf-triggers-color: #F59E0B;
+  --pf-triggers-bg: rgba(245, 158, 11, 0.12);
+  --pf-conditions-color: #3B82F6;
+  --pf-conditions-bg: rgba(59, 130, 246, 0.12);
+  --pf-actions-color: #22C55E;
+  --pf-actions-bg: rgba(34, 197, 94, 0.12);
+
+  /* Status colors */
+  --pf-status-active-color: #22C55E;
+  --pf-status-active-bg: rgba(34, 197, 94, 0.12);
+  --pf-status-warning-color: #F59E0B;
+  --pf-status-warning-bg: rgba(245, 158, 11, 0.12);
+  --pf-status-error-color: #EF4444;
+  --pf-status-error-bg: rgba(239, 68, 68, 0.12);
+  --pf-status-info-color: #3B82F6;
+  --pf-status-info-bg: rgba(59, 130, 246, 0.12);
+
+  /* Font sizes */
+  --pf-font-xs: 11px;
+  --pf-font-sm: 13px;
+  --pf-font-base: 14px;
+  --pf-font-md: 15px;
+  --pf-font-lg: 18px;
+  --pf-font-xl: 22px;
+  --pf-font-2xl: 28px;
 }

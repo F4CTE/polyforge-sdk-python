@@ -119,6 +119,7 @@
                   severity="secondary"
                   size="small"
                   pTooltip="Pause"
+                  aria-label="Pause"
                   tooltipPosition="top"
                   [loading]="!!actionLoading()[strategy.id]"
                   (onClick)="pause(strategy, $event)" />
@@ -128,6 +129,7 @@
                   size="small"
                   [text]="true"
                   pTooltip="Stop"
+                  aria-label="Stop"
                   tooltipPosition="top"
                   [loading]="!!actionLoading()[strategy.id]"
                   (onClick)="stop(strategy, $event)" />
@@ -139,6 +141,7 @@
                   icon="pi pi-play"
                   size="small"
                   pTooltip="Resume"
+                  aria-label="Resume"
                   tooltipPosition="top"
                   [loading]="!!actionLoading()[strategy.id]"
                   (onClick)="resume(strategy, $event)" />
@@ -148,6 +151,7 @@
                   size="small"
                   [text]="true"
                   pTooltip="Stop"
+                  aria-label="Stop"
                   tooltipPosition="top"
                   [loading]="!!actionLoading()[strategy.id]"
                   (onClick)="stop(strategy, $event)" />
@@ -160,6 +164,7 @@
                 size="small"
                 [text]="true"
                 pTooltip="Edit"
+                aria-label="Edit"
                 tooltipPosition="top"
                 [routerLink]="['/strategies', strategy.id, 'edit']"
                 (onClick)="$event.stopPropagation()" />

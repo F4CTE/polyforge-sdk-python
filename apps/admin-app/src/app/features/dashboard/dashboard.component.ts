@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -27,6 +27,7 @@ interface DashboardStat {
   imports: [DatePipe, DecimalPipe, TitleCasePipe, RouterLink, ButtonModule, SkeletonModule, ToastModule, TooltipModule],
   providers: [MessageService],
   templateUrl: './dashboard.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private readonly api        = inject(AdminApiService);

@@ -26,10 +26,10 @@
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
       <!-- View toggle -->
       <div class="view-toggle">
-        <button class="view-toggle-btn" [class.active]="viewMode() === 'cards'" (click)="setViewMode('cards')" pTooltip="Card view" tooltipPosition="top">
+        <button class="view-toggle-btn" [class.active]="viewMode() === 'cards'" (click)="setViewMode('cards')" pTooltip="Card view" aria-label="Card view" tooltipPosition="top">
           <i class="pi pi-th-large"></i>
         </button>
-        <button class="view-toggle-btn" [class.active]="viewMode() === 'table'" (click)="setViewMode('table')" pTooltip="Table view" tooltipPosition="top">
+        <button class="view-toggle-btn" [class.active]="viewMode() === 'table'" (click)="setViewMode('table')" pTooltip="Table view" aria-label="Table view" tooltipPosition="top">
           <i class="pi pi-list"></i>
         </button>
       </div>

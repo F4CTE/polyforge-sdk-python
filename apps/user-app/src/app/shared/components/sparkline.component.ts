@@ -1,9 +1,10 @@
-import { Component, Input, ElementRef, AfterViewInit, OnChanges, ViewChild } from '@angular/core';
+import { Component, Input, ElementRef, AfterViewInit, OnChanges, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-sparkline',
   standalone: true,
   template: '<canvas #canvas [width]="width" [height]="height" style="display:block"></canvas>',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SparklineComponent implements AfterViewInit, OnChanges {
   @ViewChild('canvas') canvasRef!: ElementRef<HTMLCanvasElement>;

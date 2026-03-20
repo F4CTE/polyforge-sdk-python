@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
@@ -14,6 +14,7 @@ type Period = '7d' | '30d' | 'allTime';
   standalone: true,
   imports: [RouterLink, ButtonModule, SkeletonModule, AvatarModule],
   templateUrl: './leaderboard.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LeaderboardComponent implements OnInit {
   private readonly api        = inject(SocialApiService);

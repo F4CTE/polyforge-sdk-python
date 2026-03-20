@@ -51,7 +51,7 @@
           </div>
           <p-menu #menu [model]="userMenu" [popup]="true" />
           <p-button icon="pi pi-ellipsis-v" severity="secondary" [text]="true" size="small"
-            (onClick)="menu.toggle($event)" />
+            aria-label="User options" (onClick)="menu.toggle($event)" />
         }
       </div>
     </div>
@@ -61,7 +61,7 @@
   <div class="admin-main">
     <header class="admin-topbar">
       <p-button [icon]="collapsed() ? 'pi pi-bars' : 'pi pi-bars'" severity="secondary" [text]="true"
-        size="small" (onClick)="collapsed.update(v => !v)" />
+        size="small" aria-label="Toggle sidebar" (onClick)="collapsed.update(v => !v)" />
       <span class="topbar-title">{{ currentPage() }}</span>
       <div class="topbar-right" style="display:flex;align-items:center;gap:8px">
         <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--pf-cyan-500);color:#080C14;font-size:11px;font-weight:700;letter-spacing:0.02em">{{ initials }}</span>
