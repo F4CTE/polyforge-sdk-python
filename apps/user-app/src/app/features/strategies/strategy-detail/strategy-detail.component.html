@@ -157,10 +157,17 @@
 
     </div>
 
-  } @else {
+  } @else if (notFound()) {
     <div class="pf-empty-state">
       <i class="pi pi-exclamation-circle pf-empty-icon"></i>
       <p class="pf-empty-title">Strategy not found</p>
+      <p class="pf-empty-desc">This strategy may have been deleted or the link is invalid.</p>
+      <p-button label="Back to Strategies" severity="secondary" routerLink="/strategies" />
+    </div>
+  } @else if (loadError()) {
+    <div class="pf-empty-state">
+      <i class="pi pi-exclamation-triangle pf-empty-icon"></i>
+      <p class="pf-empty-title">{{ loadError() }}</p>
       <p-button label="Back to Strategies" severity="secondary" routerLink="/strategies" />
     </div>
   }

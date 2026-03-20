@@ -65,4 +65,12 @@ export class DiscoverComponent implements OnInit {
     const map: Record<string, string> = { TICK: 'Tick', EVENT: 'Event' };
     return map[mode] ?? mode;
   }
+
+  /** Deterministic mock 24h P&L based on strategy id. Returns 0 for ~30% of strategies to show "—". */
+  mockPnl(s: PublicStrategy): number {
+    const hash = s.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    if (hash % 10 < 3) return 0; // ~30% show no data
+    const seed = Math.sin(hash) * 10000;
+    return parseFloat(((seed - Math.floor(seed)) * 20 - 10).toFixed(1));
+  }
 }

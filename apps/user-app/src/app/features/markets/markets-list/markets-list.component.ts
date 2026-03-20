@@ -49,6 +49,9 @@ export class MarketsListComponent implements OnInit {
   search     = signal('');
   sort       = signal<MarketsQuery['sort']>('volume');
   livePrices = signal<Record<string, string>>({});
+  viewMode   = signal<'cards' | 'table'>(
+    (typeof localStorage !== 'undefined' && localStorage.getItem('pf-markets-view') as 'cards' | 'table') || 'cards'
+  );
 
   private searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -163,6 +166,13 @@ export class MarketsListComponent implements OnInit {
       Technology: { bg: 'rgba(236,72,153,0.15)',   text: '#EC4899' },
     };
     return map[cat] ?? { bg: 'rgba(107,114,128,0.15)', text: '#6B7280' };
+  }
+
+  setViewMode(mode: 'cards' | 'table'): void {
+    this.viewMode.set(mode);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('pf-markets-view', mode);
+    }
   }
 
   readonly skeletons = Array(10);

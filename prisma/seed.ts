@@ -684,7 +684,138 @@ async function main() {
     });
   }
 
-  console.log('  ✓ 3 orders for alice (2 confirmed, 1 live)');
+  // Additional orders with varied statuses
+  const additionalOrders = [
+    {
+      id: 'seed-order-4',
+      intentId: 'intent-seed-order-4',
+      clobOrderId: 'clob-order-abc004',
+      clobStatus: 'CANCELLED',
+      userId: alice.id,
+      strategyId: stratCrossDown.id,
+      marketId: MARKETS.cryptoEtf.id,
+      tokenId: MARKETS.cryptoEtf.tokenYes,
+      side: 'BUY' as const,
+      outcome: 'YES' as const,
+      size: '200.000000',
+      price: '0.420000',
+      orderType: 'GTC' as const,
+      status: 'CANCELLED' as const,
+      placedAt: daysAgo(5),
+      createdAt: daysAgo(5),
+    },
+    {
+      id: 'seed-order-5',
+      intentId: 'intent-seed-order-5',
+      clobOrderId: 'clob-order-abc005',
+      clobStatus: 'MATCHED',
+      userId: alice.id,
+      strategyId: stratMomentum.id,
+      marketId: MARKETS.cryptoEtf.id,
+      tokenId: MARKETS.cryptoEtf.tokenYes,
+      side: 'BUY' as const,
+      outcome: 'YES' as const,
+      size: '200.000000',
+      price: '0.415000',
+      orderType: 'GTC' as const,
+      status: 'CONFIRMED' as const,
+      fillSize: '200.000000',
+      fillPrice: '0.418000',
+      fee: '0.100000',
+      placedAt: daysAgo(4),
+      filledAt: daysAgo(4),
+      createdAt: daysAgo(4),
+    },
+    {
+      id: 'seed-order-6',
+      intentId: 'intent-seed-order-6',
+      userId: alice.id,
+      strategyId: stratMomentum.id,
+      marketId: MARKETS.superbowl.id,
+      tokenId: MARKETS.superbowl.tokenYes,
+      side: 'BUY' as const,
+      outcome: 'YES' as const,
+      size: '50.000000',
+      price: '0.510000',
+      orderType: 'FOK' as const,
+      status: 'CONFIRMED' as const,
+      fillSize: '50.000000',
+      fillPrice: '0.510000',
+      fee: '0.025000',
+      placedAt: daysAgo(3),
+      filledAt: daysAgo(3),
+      createdAt: daysAgo(3),
+    },
+    {
+      id: 'seed-order-7',
+      intentId: 'intent-seed-order-7',
+      userId: alice.id,
+      strategyId: stratCrossDown.id,
+      marketId: MARKETS.usElections.id,
+      tokenId: MARKETS.usElections.tokenNo,
+      side: 'BUY' as const,
+      outcome: 'NO' as const,
+      size: '60.000000',
+      price: '0.380000',
+      orderType: 'GTC' as const,
+      status: 'CONFIRMED' as const,
+      fillSize: '60.000000',
+      fillPrice: '0.380000',
+      fee: '0.030000',
+      placedAt: daysAgo(7),
+      filledAt: daysAgo(7),
+      createdAt: daysAgo(7),
+    },
+    {
+      id: 'seed-order-8',
+      intentId: 'intent-seed-order-8',
+      userId: alice.id,
+      strategyId: stratMomentum.id,
+      marketId: MARKETS.cryptoEtf.id,
+      tokenId: MARKETS.cryptoEtf.tokenNo,
+      side: 'BUY' as const,
+      outcome: 'NO' as const,
+      size: '80.000000',
+      price: '0.575000',
+      orderType: 'GTC' as const,
+      status: 'FAILED' as const,
+      errorMessage: 'Insufficient balance for order',
+      placedAt: daysAgo(2),
+      createdAt: daysAgo(2),
+    },
+    {
+      id: 'seed-order-9',
+      intentId: 'intent-seed-order-9',
+      clobOrderId: 'clob-order-abc009',
+      clobStatus: 'MATCHED',
+      userId: alice.id,
+      strategyId: stratCrossDown.id,
+      marketId: MARKETS.cryptoEtf.id,
+      tokenId: MARKETS.cryptoEtf.tokenNo,
+      side: 'BUY' as const,
+      outcome: 'NO' as const,
+      size: '80.000000',
+      price: '0.580000',
+      orderType: 'GTC' as const,
+      status: 'CONFIRMED' as const,
+      fillSize: '80.000000',
+      fillPrice: '0.580000',
+      fee: '0.040000',
+      placedAt: daysAgo(2),
+      filledAt: daysAgo(2),
+      createdAt: daysAgo(2),
+    },
+  ];
+
+  for (const order of additionalOrders) {
+    await prisma.order.upsert({
+      where: { id: order.id },
+      update: {},
+      create: order as any,
+    });
+  }
+
+  console.log('  ✓ 9 orders for alice (5 confirmed, 1 live, 1 cancelled, 1 failed, 1 matched)');
 
   // ───────────────────────────────────────────────
   // POSITIONS — ALICE
@@ -709,7 +840,122 @@ async function main() {
     },
   });
 
-  console.log('  ✓ 1 open position for alice (US Elections YES)');
+  // Alice — Crypto ETF YES position (in profit)
+  await prisma.position.upsert({
+    where: { userId_tokenId: { userId: alice.id, tokenId: MARKETS.cryptoEtf.tokenYes } },
+    update: {},
+    create: {
+      userId: alice.id,
+      marketId: MARKETS.cryptoEtf.id,
+      tokenId: MARKETS.cryptoEtf.tokenYes,
+      outcome: 'YES',
+      size: '200.000000',
+      avgPrice: '0.420000',
+      currentPrice: '0.485000',
+      unrealizedPnl: '13.000000',
+      realizedPnl: '5.200000',
+      resolutionStatus: 'UNRESOLVED',
+    },
+  });
+
+  // Alice — Crypto ETF NO position (small loss)
+  await prisma.position.upsert({
+    where: { userId_tokenId: { userId: alice.id, tokenId: MARKETS.cryptoEtf.tokenNo } },
+    update: {},
+    create: {
+      userId: alice.id,
+      marketId: MARKETS.cryptoEtf.id,
+      tokenId: MARKETS.cryptoEtf.tokenNo,
+      outcome: 'NO',
+      size: '80.000000',
+      avgPrice: '0.580000',
+      currentPrice: '0.515000',
+      unrealizedPnl: '-5.200000',
+      realizedPnl: '0.000000',
+      resolutionStatus: 'UNRESOLVED',
+    },
+  });
+
+  // Alice — Superbowl YES position (small position)
+  await prisma.position.upsert({
+    where: { userId_tokenId: { userId: alice.id, tokenId: MARKETS.superbowl.tokenYes } },
+    update: {},
+    create: {
+      userId: alice.id,
+      marketId: MARKETS.superbowl.id,
+      tokenId: MARKETS.superbowl.tokenYes,
+      outcome: 'YES',
+      size: '50.000000',
+      avgPrice: '0.510000',
+      currentPrice: '0.550000',
+      unrealizedPnl: '2.000000',
+      realizedPnl: '0.000000',
+      resolutionStatus: 'UNRESOLVED',
+    },
+  });
+
+  // Alice — US Elections NO position (underwater)
+  await prisma.position.upsert({
+    where: { userId_tokenId: { userId: alice.id, tokenId: MARKETS.usElections.tokenNo } },
+    update: {},
+    create: {
+      userId: alice.id,
+      marketId: MARKETS.usElections.id,
+      tokenId: MARKETS.usElections.tokenNo,
+      outcome: 'NO',
+      size: '60.000000',
+      avgPrice: '0.380000',
+      currentPrice: '0.290000',
+      unrealizedPnl: '-5.400000',
+      realizedPnl: '0.000000',
+      resolutionStatus: 'UNRESOLVED',
+    },
+  });
+
+  console.log('  ✓ 5 open positions for alice (US Elections YES/NO, Crypto ETF YES/NO, Superbowl YES)');
+
+  // ───────────────────────────────────────────────
+  // PAPER POSITIONS — ALICE (paper trading)
+  // ───────────────────────────────────────────────
+
+  await prisma.paperPosition.upsert({
+    where: { userId_tokenId: { userId: alice.id, tokenId: MARKETS.superbowl.tokenNo } },
+    update: {},
+    create: {
+      userId: alice.id,
+      marketId: MARKETS.superbowl.id,
+      tokenId: MARKETS.superbowl.tokenNo,
+      outcome: 'NO',
+      size: '100.000000',
+      avgPrice: '0.480000',
+      currentPrice: '0.450000',
+      unrealizedPnl: '-3.000000',
+      realizedPnl: '0.000000',
+    },
+  });
+
+  await prisma.paperOrder.upsert({
+    where: { id: 'seed-paper-order-alice-1' },
+    update: {},
+    create: {
+      id: 'seed-paper-order-alice-1',
+      userId: alice.id,
+      strategyId: stratCrossDown.id,
+      marketId: MARKETS.superbowl.id,
+      tokenId: MARKETS.superbowl.tokenNo,
+      side: 'BUY',
+      outcome: 'NO',
+      size: '100.000000',
+      price: '0.480000',
+      orderType: 'GTC',
+      status: 'CONFIRMED',
+      fillSize: '100.000000',
+      fillPrice: '0.480000',
+      createdAt: hoursAgo(36),
+    },
+  });
+
+  console.log('  ✓ 1 paper position + 1 paper order for alice');
 
   // ───────────────────────────────────────────────
   // PAPER ORDERS & POSITIONS — BOB
@@ -786,6 +1032,160 @@ async function main() {
   });
 
   console.log('  ✓ 1 completed backtest for bob (84.1% fill rate, +$124.50)');
+
+  // Additional backtest — alice, completed
+  await prisma.backtestRun.upsert({
+    where: { id: 'seed-backtest-2' },
+    update: {},
+    create: {
+      id: 'seed-backtest-2',
+      userId: alice.id,
+      strategyId: stratMomentum.id,
+      dateRangeStart: daysAgo(60),
+      dateRangeEnd: daysAgo(1),
+      status: 'COMPLETED',
+      progress: 100,
+      totalOrders: 312,
+      filledOrders: 278,
+      totalPnl: '287.350000',
+      winRate: '0.7120',
+      maxDrawdown: '-58.900000',
+      sharpeRatio: '2.1300',
+      hasDataGaps: false,
+      createdAt: daysAgo(1),
+      completedAt: daysAgo(1),
+    },
+  });
+
+  // Additional backtest — alice, different strategy
+  await prisma.backtestRun.upsert({
+    where: { id: 'seed-backtest-3' },
+    update: {},
+    create: {
+      id: 'seed-backtest-3',
+      userId: alice.id,
+      strategyId: stratCrossDown.id,
+      dateRangeStart: daysAgo(45),
+      dateRangeEnd: daysAgo(1),
+      status: 'COMPLETED',
+      progress: 100,
+      totalOrders: 156,
+      filledOrders: 134,
+      totalPnl: '-42.100000',
+      winRate: '0.4480',
+      maxDrawdown: '-95.600000',
+      sharpeRatio: '0.6200',
+      hasDataGaps: true,
+      createdAt: daysAgo(3),
+      completedAt: daysAgo(3),
+    },
+  });
+
+  // Backtest orders for alice momentum backtest (sample equity curve)
+  const backtestOrdersData = [
+    { id: 'seed-bt-order-1', runId: 'seed-backtest-2', tokenId: MARKETS.usElections.tokenYes, side: 'BUY' as const, outcome: 'YES' as const, size: '50.000000', price: '0.580000', fillPrice: '0.582000', pnl: '12.500000', equityCurve: '12.500000', simulatedAt: daysAgo(55) },
+    { id: 'seed-bt-order-2', runId: 'seed-backtest-2', tokenId: MARKETS.usElections.tokenYes, side: 'SELL' as const, outcome: 'YES' as const, size: '50.000000', price: '0.620000', fillPrice: '0.618000', pnl: '18.000000', equityCurve: '30.500000', simulatedAt: daysAgo(50) },
+    { id: 'seed-bt-order-3', runId: 'seed-backtest-2', tokenId: MARKETS.cryptoEtf.tokenYes, side: 'BUY' as const, outcome: 'YES' as const, size: '100.000000', price: '0.400000', fillPrice: '0.402000', pnl: '-8.200000', equityCurve: '22.300000', simulatedAt: daysAgo(45) },
+    { id: 'seed-bt-order-4', runId: 'seed-backtest-2', tokenId: MARKETS.usElections.tokenYes, side: 'BUY' as const, outcome: 'YES' as const, size: '75.000000', price: '0.650000', fillPrice: '0.652000', pnl: '35.100000', equityCurve: '57.400000', simulatedAt: daysAgo(40) },
+    { id: 'seed-bt-order-5', runId: 'seed-backtest-2', tokenId: MARKETS.cryptoEtf.tokenYes, side: 'SELL' as const, outcome: 'YES' as const, size: '100.000000', price: '0.450000', fillPrice: '0.448000', pnl: '44.600000', equityCurve: '102.000000', simulatedAt: daysAgo(30) },
+  ];
+
+  for (const btOrder of backtestOrdersData) {
+    await prisma.backtestOrder.upsert({
+      where: { id: btOrder.id },
+      update: {},
+      create: btOrder,
+    });
+  }
+
+  console.log('  ✓ 2 additional backtests (alice momentum +$287.35, alice cross-down -$42.10)');
+  console.log('  ✓ 5 backtest orders for alice momentum backtest');
+
+  // ───────────────────────────────────────────────
+  // PNL SNAPSHOTS — ALICE (30 days)
+  // ───────────────────────────────────────────────
+
+  console.log('\n📈 Creating P&L snapshots...');
+
+  // Generate 30 days of daily P&L snapshots for alice with realistic volatility
+  // Start at 0, random walk with slight upward drift
+  {
+    let cumulativePnl = 0;
+    let realizedPnl = 0;
+    const pnlSnapshots: { time: Date; userId: string; strategyId: string | null; pnl: string; realizedPnl: string; positionCount: number }[] = [];
+
+    // Seed a simple pseudo-random sequence for reproducibility
+    const dailyChanges = [
+      12.5, -3.2, 8.7, -1.5, 15.3, -7.8, 4.2, 22.1, -11.4, 6.8,
+      -2.1, 9.5, 3.3, -8.9, 18.2, -4.6, 7.1, -15.3, 11.8, 5.4,
+      -6.7, 20.5, -9.1, 3.8, 14.2, -2.8, 8.9, -5.1, 16.7, 10.3,
+    ];
+
+    for (let i = 30; i >= 1; i--) {
+      const change = dailyChanges[30 - i];
+      cumulativePnl += change;
+      if (change > 0) realizedPnl += change * 0.3; // 30% of gains are realized
+
+      const snapshotTime = new Date(daysAgo(i));
+      snapshotTime.setHours(23, 59, 0, 0); // end of day
+
+      pnlSnapshots.push({
+        time: snapshotTime,
+        userId: alice.id,
+        strategyId: null, // portfolio-level snapshot
+        pnl: cumulativePnl.toFixed(6),
+        realizedPnl: realizedPnl.toFixed(6),
+        positionCount: Math.floor(Math.random() * 3) + 3, // 3-5 positions
+      });
+    }
+
+    // Also generate strategy-level snapshots for alice's momentum strategy
+    // Use 23:58 to avoid composite PK collision with portfolio-level (23:59)
+    let stratPnl = 0;
+    let stratRealizedPnl = 0;
+    const stratChanges = [
+      8.2, -2.1, 5.5, -0.8, 11.2, -5.3, 3.1, 16.4, -8.2, 4.5,
+      -1.3, 6.8, 2.2, -6.1, 13.5, -3.2, 5.0, -10.8, 8.4, 3.7,
+      -4.5, 14.8, -6.3, 2.6, 10.1, -1.9, 6.2, -3.5, 12.1, 7.4,
+    ];
+
+    for (let i = 30; i >= 1; i--) {
+      const change = stratChanges[30 - i];
+      stratPnl += change;
+      if (change > 0) stratRealizedPnl += change * 0.25;
+
+      const snapshotTime = new Date(daysAgo(i));
+      snapshotTime.setHours(23, 58, 0, 0); // 23:58 to avoid PK collision with portfolio-level 23:59
+
+      pnlSnapshots.push({
+        time: snapshotTime,
+        userId: alice.id,
+        strategyId: stratMomentum.id,
+        pnl: stratPnl.toFixed(6),
+        realizedPnl: stratRealizedPnl.toFixed(6),
+        positionCount: Math.floor(Math.random() * 2) + 1,
+      });
+    }
+
+    // Use createMany for efficiency (PnlSnapshot has composite PK on [time, userId])
+    // Since composite PK includes time and userId, and strategy-level snapshots share
+    // the same time+userId, we need to insert them individually with raw SQL
+    for (const snap of pnlSnapshots) {
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO pnl_snapshots (time, "userId", "strategyId", pnl, "realizedPnl", "positionCount")
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT DO NOTHING`,
+        snap.time,
+        snap.userId,
+        snap.strategyId,
+        snap.pnl,
+        snap.realizedPnl,
+        snap.positionCount,
+      );
+    }
+
+    console.log(`  ✓ ${pnlSnapshots.length} P&L snapshots for alice (30 days portfolio + 30 days momentum strategy)`);
+  }
 
   // ───────────────────────────────────────────────
   // PRICE ALERTS — ALICE

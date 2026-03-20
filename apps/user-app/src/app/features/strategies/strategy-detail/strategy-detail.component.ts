@@ -34,6 +34,8 @@ export class StrategyDetailComponent implements OnInit, OnDestroy {
 
   strategy      = signal<Strategy | null>(null);
   loading       = signal(true);
+  notFound      = signal(false);
+  loadError     = signal<string | null>(null);
   actionLoading = signal(false);
   liveLog       = signal<LiveLogEntry[]>([]);
 
@@ -45,7 +47,16 @@ export class StrategyDetailComponent implements OnInit, OnDestroy {
 
     this.api.get(this.strategyId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next:  s  => { this.strategy.set(s); this.loading.set(false); },
-      error: () => this.loading.set(false),
+      error: err => {
+        this.loading.set(false);
+        if (err?.status === 404) {
+          this.notFound.set(true);
+        } else if (err?.status === 403) {
+          this.loadError.set('You do not have permission to view this strategy.');
+        } else {
+          this.loadError.set('Failed to load strategy. Please try again.');
+        }
+      },
     });
 
     this.ws.subscribeStrategy(this.strategyId);

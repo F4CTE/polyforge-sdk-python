@@ -9,13 +9,14 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 
 import { StrategiesApiService, Strategy, StrategyStatus } from '../../../core/services/strategies-api.service';
+import { SparklineComponent } from '../../../shared/components/sparkline.component';
 
 type FilterStatus = 'ALL' | StrategyStatus;
 
 @Component({
   selector: 'app-strategies-list',
   standalone: true,
-  imports: [RouterLink, DatePipe, LowerCasePipe, ButtonModule, SkeletonModule, ToastModule, TooltipModule],
+  imports: [RouterLink, DatePipe, LowerCasePipe, ButtonModule, SkeletonModule, ToastModule, TooltipModule, SparklineComponent],
   providers: [MessageService],
   templateUrl: './strategies-list.component.html',
 })
@@ -120,5 +121,26 @@ export class StrategiesListComponent implements OnInit {
 
   blocksCount(s: Strategy): number {
     return s.safety.length + s.triggers.length + s.conditions.length + s.actions.length;
+  }
+
+  /** Return totalPnl if the API provides it, otherwise null (placeholder). */
+  getPnl(s: Strategy): number | null {
+    return (s as any).totalPnl ?? null;
+  }
+
+  /** Format a P&L number as a display string like "+$142.50" or "-$23.00". */
+  formatPnl(value: number): string {
+    const sign = value >= 0 ? '+' : '-';
+    return `${sign}$${Math.abs(value).toFixed(2)}`;
+  }
+
+  /** CSS class for positive / negative P&L colouring. */
+  pnlClass(value: number): string {
+    return value >= 0 ? 'pnl-positive' : 'pnl-negative';
+  }
+
+  /** Placeholder sparkline data — replaced when the API provides real trend data. */
+  getSparklineData(_s: Strategy): number[] {
+    return ((_s as any).pnlHistory as number[]) ?? [];
   }
 }

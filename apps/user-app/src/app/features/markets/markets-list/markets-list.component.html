@@ -24,6 +24,16 @@
     </p-iconfield>
 
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <!-- View toggle -->
+      <div class="view-toggle">
+        <button class="view-toggle-btn" [class.active]="viewMode() === 'cards'" (click)="setViewMode('cards')" pTooltip="Card view" tooltipPosition="top">
+          <i class="pi pi-th-large"></i>
+        </button>
+        <button class="view-toggle-btn" [class.active]="viewMode() === 'table'" (click)="setViewMode('table')" pTooltip="Table view" tooltipPosition="top">
+          <i class="pi pi-list"></i>
+        </button>
+      </div>
+
       <span style="font-size:12px;color:var(--pf-text-muted)">Sort by</span>
       <p-select
         [options]="sortOptions"
@@ -35,81 +45,162 @@
     </div>
   </div>
 
-  <!-- ─── Table ────────────────────────────────────────────────────────── -->
-  <div class="markets-table-wrap">
-    <table class="markets-table">
-      <thead>
-        <tr>
-          <th class="pf-col-label" style="width:100%" pTooltip="Market question or title" tooltipPosition="top">Market</th>
-          <th class="pf-col-label" style="min-width:90px" pTooltip="Market category classification" tooltipPosition="top">Category</th>
-          <th class="pf-col-label" style="min-width:80px;text-align:right" pTooltip="Current YES token price" tooltipPosition="top">YES</th>
-          <th class="pf-col-label" style="min-width:80px;text-align:right" pTooltip="Current NO token price" tooltipPosition="top">NO</th>
-          <th class="pf-col-label" style="min-width:80px" pTooltip="24-hour price trend" tooltipPosition="top">24H</th>
-          <th class="pf-col-label" style="min-width:100px;text-align:right" pTooltip="24-hour trading volume" tooltipPosition="top">Vol 24h</th>
-          <th class="pf-col-label" style="min-width:90px;text-align:right" pTooltip="Time until market closes" tooltipPosition="top">Closes</th>
-        </tr>
-      </thead>
-      <tbody>
-        @if (loading()) {
-          @for (s of skeletons; track $index) {
-            <tr class="markets-row">
-              <td><p-skeleton height="14px" width="70%" /></td>
-              <td><p-skeleton height="14px" width="60px" /></td>
-              <td><p-skeleton height="14px" width="50px" /></td>
-              <td><p-skeleton height="14px" width="50px" /></td>
-              <td><p-skeleton height="14px" width="72px" /></td>
-              <td><p-skeleton height="14px" width="60px" /></td>
-              <td><p-skeleton height="14px" width="55px" /></td>
-            </tr>
-          }
-        } @else if (markets().length === 0) {
-          <tr>
-            <td colspan="7">
-              <div class="pf-empty-state">
-                <i class="pi pi-th-large pf-empty-icon"></i>
-                <p class="pf-empty-title">No markets found</p>
-                <p class="pf-empty-desc">Try adjusting your search or sort filter.</p>
+  <!-- ─── Card View ──────────────────────────────────────────────────── -->
+  @if (viewMode() === 'cards') {
+    <div class="markets-card-grid">
+      @if (loading()) {
+        @for (s of skeletons; track $index) {
+          <div class="market-card">
+            <div class="market-card-gradient" style="background:linear-gradient(135deg, rgba(107,114,128,0.3), rgba(107,114,128,0.1))">
+              <p-skeleton height="14px" width="60px" />
+            </div>
+            <div class="market-card-body">
+              <p-skeleton height="16px" width="85%" styleClass="mb-2" />
+              <p-skeleton height="14px" width="60%" styleClass="mb-3" />
+              <div style="display:flex;gap:12px;margin-bottom:12px">
+                <p-skeleton height="32px" width="80px" />
+                <p-skeleton height="32px" width="80px" />
               </div>
-            </td>
+              <p-skeleton height="24px" width="72px" />
+            </div>
+          </div>
+        }
+      } @else if (markets().length === 0) {
+        <div class="pf-empty-state" style="grid-column:1/-1;padding:64px">
+          <i class="pi pi-th-large pf-empty-icon"></i>
+          <p class="pf-empty-title">No markets found</p>
+          <p class="pf-empty-desc">Try adjusting your search or sort filter.</p>
+        </div>
+      } @else {
+        @for (market of markets(); track market.id) {
+          <a class="market-card" [routerLink]="['/markets', market.id]">
+            <!-- Gradient header -->
+            <div class="market-card-gradient"
+                 [style.background]="'linear-gradient(135deg, ' + categoryColor(market.category).text + '33, ' + categoryColor(market.category).text + '0D)'">
+              <span class="category-badge"
+                    [style.background]="categoryColor(market.category).bg"
+                    [style.color]="categoryColor(market.category).text"
+                    [style.border-color]="'transparent'">{{ market.category }}</span>
+              @if (isClosingSoon(market.endDate)) {
+                <span class="closing-soon-badge" style="margin-left:auto;font-size:10px;padding:1px 6px">Closing soon</span>
+              }
+            </div>
+
+            <!-- Card body -->
+            <div class="market-card-body">
+              <div class="market-card-title">{{ market.title }}</div>
+
+              <!-- YES/NO prices -->
+              <div class="market-card-prices">
+                <div class="market-card-price yes">
+                  <span class="market-card-price-label">YES</span>
+                  <span class="market-card-price-value pf-mono" [style.color]="'#22C55E'">{{ price(market, 'YES') | number:'1.2-3' }}</span>
+                </div>
+                <div class="market-card-price no">
+                  <span class="market-card-price-label">NO</span>
+                  <span class="market-card-price-value pf-mono" [style.color]="'#EF4444'">{{ price(market, 'NO') | number:'1.2-3' }}</span>
+                </div>
+              </div>
+
+              <!-- Sparkline -->
+              <div class="market-card-chart">
+                <app-sparkline [data]="sparklineData(market)" [width]="120" [height]="32" />
+              </div>
+
+              <!-- Footer info -->
+              <div class="market-card-footer">
+                <span class="market-card-meta pf-mono">
+                  <i class="pi pi-chart-bar" style="font-size:11px"></i> {{ volume(market) }}
+                </span>
+                <span class="market-card-meta pf-mono">
+                  <i class="pi pi-clock" style="font-size:11px"></i> {{ daysUntil(market.endDate) }}
+                </span>
+                <span class="market-card-trade-btn">Trade</span>
+              </div>
+            </div>
+          </a>
+        }
+      }
+    </div>
+  }
+
+  <!-- ─── Table View ─────────────────────────────────────────────────── -->
+  @if (viewMode() === 'table') {
+    <div class="markets-table-wrap">
+      <table class="markets-table">
+        <thead>
+          <tr>
+            <th class="pf-col-label" style="width:100%" pTooltip="Market question or title" tooltipPosition="top">Market</th>
+            <th class="pf-col-label" style="min-width:90px" pTooltip="Market category classification" tooltipPosition="top">Category</th>
+            <th class="pf-col-label" style="min-width:80px;text-align:right" pTooltip="Current YES token price" tooltipPosition="top">YES</th>
+            <th class="pf-col-label" style="min-width:80px;text-align:right" pTooltip="Current NO token price" tooltipPosition="top">NO</th>
+            <th class="pf-col-label" style="min-width:80px" pTooltip="24-hour price trend" tooltipPosition="top">24H</th>
+            <th class="pf-col-label" style="min-width:100px;text-align:right" pTooltip="24-hour trading volume" tooltipPosition="top">Vol 24h</th>
+            <th class="pf-col-label" style="min-width:90px;text-align:right" pTooltip="Time until market closes" tooltipPosition="top">Closes</th>
           </tr>
-        } @else {
-          @for (market of markets(); track market.id) {
-            <tr class="markets-row" [routerLink]="['/markets', market.id]" style="cursor:pointer">
-              <td class="market-title-cell">
-                <span class="market-title">{{ market.title }}</span>
-              </td>
-              <td>
-                <span class="category-badge"
-                      [style.background]="categoryColor(market.category).bg"
-                      [style.color]="categoryColor(market.category).text"
-                      [style.border-color]="'transparent'"
-                      [pTooltip]="market.category" tooltipPosition="top">{{ market.category }}</span>
-              </td>
-              <td style="text-align:right">
-                <span class="price-yes pf-mono" [style.color]="+price(market, 'YES') > 0.5 ? '#22C55E' : '#EF4444'">{{ price(market, 'YES') | number:'1.2-3' }}</span>
-              </td>
-              <td style="text-align:right">
-                <span class="price-no pf-mono" [style.color]="+price(market, 'NO') > 0.5 ? '#22C55E' : '#EF4444'">{{ price(market, 'NO') | number:'1.2-3' }}</span>
-              </td>
-              <td style="width:80px">
-                <app-sparkline [data]="sparklineData(market)" [width]="72" [height]="24" />
-              </td>
-              <td style="text-align:right">
-                <span class="pf-mono" style="color:var(--pf-text-primary)" pTooltip="24-hour trading volume" tooltipPosition="top">{{ volume(market) }}</span>
-              </td>
-              <td style="text-align:right">
-                @if (isClosingSoon(market.endDate)) {
-                  <span class="closing-soon pf-mono" [pTooltip]="(market.endDate | date:'medium') ?? ''" tooltipPosition="top">{{ daysUntil(market.endDate) }}</span>
-                } @else {
-                  <span class="pf-mono" style="color:var(--pf-text-secondary)" [pTooltip]="(market.endDate | date:'medium') ?? ''" tooltipPosition="top">{{ daysUntil(market.endDate) }}</span>
-                }
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (s of skeletons; track $index) {
+              <tr class="markets-row">
+                <td><p-skeleton height="14px" width="70%" /></td>
+                <td><p-skeleton height="14px" width="60px" /></td>
+                <td><p-skeleton height="14px" width="50px" /></td>
+                <td><p-skeleton height="14px" width="50px" /></td>
+                <td><p-skeleton height="14px" width="72px" /></td>
+                <td><p-skeleton height="14px" width="60px" /></td>
+                <td><p-skeleton height="14px" width="55px" /></td>
+              </tr>
+            }
+          } @else if (markets().length === 0) {
+            <tr>
+              <td colspan="7">
+                <div class="pf-empty-state">
+                  <i class="pi pi-th-large pf-empty-icon"></i>
+                  <p class="pf-empty-title">No markets found</p>
+                  <p class="pf-empty-desc">Try adjusting your search or sort filter.</p>
+                </div>
               </td>
             </tr>
+          } @else {
+            @for (market of markets(); track market.id) {
+              <tr class="markets-row" [routerLink]="['/markets', market.id]" style="cursor:pointer">
+                <td class="market-title-cell">
+                  <span class="market-title">{{ market.title }}</span>
+                </td>
+                <td>
+                  <span class="category-badge"
+                        [style.background]="categoryColor(market.category).bg"
+                        [style.color]="categoryColor(market.category).text"
+                        [style.border-color]="'transparent'"
+                        [pTooltip]="market.category" tooltipPosition="top">{{ market.category }}</span>
+                </td>
+                <td style="text-align:right">
+                  <span class="price-yes pf-mono" [style.color]="+price(market, 'YES') > 0.5 ? '#22C55E' : '#EF4444'">{{ price(market, 'YES') | number:'1.2-3' }}</span>
+                </td>
+                <td style="text-align:right">
+                  <span class="price-no pf-mono" [style.color]="+price(market, 'NO') > 0.5 ? '#22C55E' : '#EF4444'">{{ price(market, 'NO') | number:'1.2-3' }}</span>
+                </td>
+                <td style="width:80px">
+                  <app-sparkline [data]="sparklineData(market)" [width]="72" [height]="24" />
+                </td>
+                <td style="text-align:right">
+                  <span class="pf-mono" style="color:var(--pf-text-primary)" pTooltip="24-hour trading volume" tooltipPosition="top">{{ volume(market) }}</span>
+                </td>
+                <td style="text-align:right">
+                  @if (isClosingSoon(market.endDate)) {
+                    <span class="closing-soon pf-mono" [pTooltip]="(market.endDate | date:'medium') ?? ''" tooltipPosition="top">{{ daysUntil(market.endDate) }}</span>
+                  } @else {
+                    <span class="pf-mono" style="color:var(--pf-text-secondary)" [pTooltip]="(market.endDate | date:'medium') ?? ''" tooltipPosition="top">{{ daysUntil(market.endDate) }}</span>
+                  }
+                </td>
+              </tr>
+            }
           }
-        }
-      </tbody>
-    </table>
-  </div>
+        </tbody>
+      </table>
+    </div>
+  }
 
   <!-- ─── Pagination ──────────────────────────────────────────────────── -->
   @if (totalPages() > 1) {

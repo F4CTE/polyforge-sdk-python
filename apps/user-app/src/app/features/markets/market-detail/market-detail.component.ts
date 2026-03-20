@@ -1,11 +1,13 @@
 import { Component, OnInit, OnDestroy, inject, signal, DestroyRef } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ChartModule } from 'primeng/chart';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
+import { DialogModule } from 'primeng/dialog';
 
 import {
   MarketsApiService,
@@ -13,6 +15,7 @@ import {
   OrderBook,
   PriceHistory,
 } from '../../../core/services/markets-api.service';
+import { StrategiesApiService, Strategy } from '../../../core/services/strategies-api.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
 
 type Resolution = '1m' | '1h' | '1d';
@@ -20,14 +23,15 @@ type Resolution = '1m' | '1h' | '1d';
 @Component({
   selector: 'app-market-detail',
   standalone: true,
-  imports: [RouterLink, ChartModule, ButtonModule, SkeletonModule, SelectModule, TagModule],
+  imports: [RouterLink, FormsModule, ChartModule, ButtonModule, SkeletonModule, SelectModule, TagModule, DialogModule],
   templateUrl: './market-detail.component.html',
 })
 export class MarketDetailComponent implements OnInit, OnDestroy {
-  private readonly route      = inject(ActivatedRoute);
-  private readonly api        = inject(MarketsApiService);
-  private readonly ws         = inject(WebSocketService);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly route         = inject(ActivatedRoute);
+  private readonly api           = inject(MarketsApiService);
+  private readonly strategiesApi = inject(StrategiesApiService);
+  private readonly ws            = inject(WebSocketService);
+  private readonly destroyRef    = inject(DestroyRef);
 
   market       = signal<Market | null>(null);
   orderBook    = signal<OrderBook | null>(null);
@@ -42,6 +46,11 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
   liveNoPrice   = signal<string | null>(null);
   resolution    = signal<Resolution>('1h');
 
+  // Run Strategy dialog
+  showRunStrategy    = signal(false);
+  strategyOptions    = signal<{ label: string; value: string }[]>([]);
+  selectedStrategyId: string | null = null;
+
   readonly resolutionOptions: { label: string; value: Resolution }[] = [
     { label: '1m', value: '1m' },
     { label: '1h', value: '1h' },
@@ -51,6 +60,17 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.ws.connect();
+
+    // Load strategies for the Run Strategy dialog
+    this.strategiesApi.list({ limit: 100 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.strategyOptions.set(
+            res.data.map(s => ({ label: s.name, value: s.id }))
+          );
+        },
+      });
 
     this.api.get(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (market) => {
@@ -104,6 +124,36 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
     this.resolution.set(value);
     const yes = this.market()?.tokens.find(t => t.outcome === 'YES');
     if (yes) this.loadChart(yes.tokenId);
+  }
+
+  onStartStrategy(): void {
+    if (!this.selectedStrategyId) return;
+    this.strategiesApi.start(this.selectedStrategyId, 'paper')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.showRunStrategy.set(false);
+          this.selectedStrategyId = null;
+        },
+      });
+  }
+
+  marketVolume(): string {
+    const m = this.market();
+    if (!m) return '—';
+    const v = parseFloat(m.volume24h);
+    if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+    if (v >= 1_000)     return `$${(v / 1_000).toFixed(1)}K`;
+    return `$${v.toFixed(0)}`;
+  }
+
+  marketLiquidity(): string {
+    const m = this.market();
+    if (!m) return '—';
+    const v = m.tokens.reduce((sum, t) => sum + parseFloat(t.liquidity || '0'), 0);
+    if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+    if (v >= 1_000)     return `$${(v / 1_000).toFixed(1)}K`;
+    return `$${v.toFixed(0)}`;
   }
 
   private chartRange(): number {

@@ -66,6 +66,24 @@
             <p class="strategy-desc">{{ strategy.description }}</p>
           }
 
+          <!-- P&L + sparkline -->
+          <div class="strategy-pnl-row">
+            @if (getPnl(strategy) !== null) {
+              <span class="strategy-pnl pf-mono" [class]="pnlClass(getPnl(strategy)!)">
+                {{ formatPnl(getPnl(strategy)!) }}
+              </span>
+            } @else {
+              <span class="strategy-pnl pf-mono pnl-placeholder">P&amp;L: &mdash;</span>
+            }
+            @if (getSparklineData(strategy).length >= 2) {
+              <app-sparkline
+                [data]="getSparklineData(strategy)"
+                [width]="72"
+                [height]="22"
+                color="#06B6D4" />
+            }
+          </div>
+
           <!-- Footer: last updated + actions -->
           <div class="strategy-card-footer" (click)="$event.stopPropagation()">
             <span class="strategy-date pf-mono">

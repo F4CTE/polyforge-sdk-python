@@ -38,16 +38,35 @@
         </p>
       </div>
 
-      <!-- Live price pills -->
-      <div class="market-price-pills">
-        <div class="price-pill yes">
-          <span class="price-pill-label">YES</span>
-          <span class="price-pill-value pf-mono">{{ liveYesPrice() ?? '—' }}</span>
+      <!-- Live price pills + Run Strategy button -->
+      <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div class="market-price-pills">
+          <div class="price-pill yes">
+            <span class="price-pill-label">YES</span>
+            <span class="price-pill-value pf-mono">{{ liveYesPrice() ?? '—' }}</span>
+          </div>
+          <div class="price-pill no">
+            <span class="price-pill-label">NO</span>
+            <span class="price-pill-value pf-mono">{{ liveNoPrice() ?? '—' }}</span>
+          </div>
         </div>
-        <div class="price-pill no">
-          <span class="price-pill-label">NO</span>
-          <span class="price-pill-value pf-mono">{{ liveNoPrice() ?? '—' }}</span>
-        </div>
+        <p-button label="Run Strategy" icon="pi pi-play" severity="success" (onClick)="showRunStrategy.set(true)" />
+      </div>
+    </div>
+
+    <!-- ─── Market stats bar ─────────────────────────────────────────── -->
+    <div class="market-stats-bar">
+      <div class="market-stat-item">
+        <span class="market-stat-label">24h Volume</span>
+        <span class="market-stat-value pf-mono">{{ marketVolume() }}</span>
+      </div>
+      <div class="market-stat-item">
+        <span class="market-stat-label">Liquidity</span>
+        <span class="market-stat-value pf-mono">{{ marketLiquidity() }}</span>
+      </div>
+      <div class="market-stat-item">
+        <span class="market-stat-label">End Date</span>
+        <span class="market-stat-value pf-mono">{{ formatDate(m.endDate) }}</span>
       </div>
     </div>
 
@@ -140,15 +159,79 @@
 
     </div><!-- /market-detail-grid -->
 
+    <!-- ─── Strategies running on this market ────────────────────────── -->
+    <div class="market-description-panel" style="margin-top:var(--pf-space-4)">
+      <div class="panel-header"><span class="panel-title">Strategies on This Market</span></div>
+      <div class="pf-empty-state" style="padding:32px">
+        <i class="pi pi-bolt" style="font-size:24px;color:var(--pf-text-muted)"></i>
+        <p class="pf-empty-desc">No strategies running on this market yet.</p>
+        <p-button label="Run Strategy" icon="pi pi-play" severity="secondary" size="small" (onClick)="showRunStrategy.set(true)" />
+      </div>
+    </div>
+
     <!-- ─── Description ────────────────────────────────────────────────── -->
     @if (m.description) {
-      <div class="market-description-panel">
+      <div class="market-description-panel" style="margin-top:var(--pf-space-4)">
         <div class="panel-header"><span class="panel-title">About</span></div>
         <p style="font-size:14px;color:var(--pf-text-secondary);line-height:1.6;margin:0">
           {{ m.description }}
         </p>
       </div>
     }
+
+    <!-- ─── Run Strategy Dialog ──────────────────────────────────────── -->
+    <p-dialog
+      header="Run Strategy on This Market"
+      [visible]="showRunStrategy()"
+      (visibleChange)="showRunStrategy.set($event)"
+      [modal]="true"
+      [style]="{ width: '480px' }"
+      [draggable]="false"
+      [resizable]="false">
+
+      <div style="display:flex;flex-direction:column;gap:var(--pf-space-4);padding-top:var(--pf-space-2)">
+
+        <!-- Strategy selector -->
+        <div>
+          <label class="field-label">Select Strategy</label>
+          <p-select
+            [options]="strategyOptions()"
+            [(ngModel)]="selectedStrategyId"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Choose a strategy..."
+            [style]="{ width: '100%' }"
+            [filter]="true"
+            filterPlaceholder="Search strategies..." />
+        </div>
+
+        <!-- Or create new -->
+        <div style="text-align:center">
+          <span style="font-size:13px;color:var(--pf-text-muted)">or</span>
+        </div>
+
+        <p-button
+          label="Create New Strategy"
+          icon="pi pi-plus"
+          severity="secondary"
+          [outlined]="true"
+          [style]="{ width: '100%' }"
+          routerLink="/strategies/new"
+          (onClick)="showRunStrategy.set(false)" />
+
+        <!-- Start button -->
+        <div style="display:flex;gap:var(--pf-space-2);justify-content:flex-end;padding-top:var(--pf-space-2);border-top:1px solid var(--pf-border-subtle)">
+          <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="showRunStrategy.set(false)" />
+          <p-button
+            label="Start Strategy"
+            icon="pi pi-play"
+            severity="success"
+            [disabled]="!selectedStrategyId"
+            (onClick)="onStartStrategy()" />
+        </div>
+      </div>
+
+    </p-dialog>
 
   } @else {
     <div class="pf-empty-state">

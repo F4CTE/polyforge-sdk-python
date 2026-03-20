@@ -9,6 +9,18 @@
   <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
-  <app-root></app-root>
+  <app-root>
+    <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0a0f1a">
+      <div style="text-align:center">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="animation:pulse-logo 1.5s ease-in-out infinite">
+          <path d="M13 2L4.09 12.96H11L10 22L20.91 11.04H14L13 2Z" fill="#06b6d4"/>
+        </svg>
+        <p style="color:#6b7280;font-family:system-ui;font-size:14px;margin-top:16px">Loading Polyforge...</p>
+      </div>
+    </div>
+    <style>
+      @keyframes pulse-logo { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.95); } }
+    </style>
+  </app-root>
 </body>
 </html>
