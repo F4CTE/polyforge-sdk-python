@@ -74,8 +74,10 @@ import { TicketsApiService, TicketDetail, TicketStatus } from '../../core/servic
             <textarea pTextarea [(ngModel)]="replyBody" rows="3" placeholder="Type your reply..."
                       style="width:100%;resize:vertical;margin-bottom:4px" maxlength="5000"></textarea>
             <span class="char-counter" [class.near-limit]="replyBody.length > 4500">{{ replyBody.length }} / 5000</span>
-            <p-button label="Send Reply" icon="pi pi-send" [loading]="sending()"
-                      (onClick)="sendReply()" [disabled]="!replyBody.trim()" size="small" style="margin-top:8px" />
+            <div style="margin-top:8px">
+              <p-button label="Send Reply" icon="pi pi-send" [loading]="sending()"
+                        (onClick)="sendReply()" [disabled]="!replyBody.trim()" size="small" />
+            </div>
           </div>
         } @else {
           <div class="portfolio-table-panel" style="padding:20px;margin-top:16px;text-align:center;color:var(--pf-text-muted)">
