@@ -9,7 +9,7 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { AdminApiService } from '../../core/services/admin-api.service';
-import { HealthResponse, ServiceHealth } from '../../core/models/admin.model';
+import { HealthResponse, ServiceHealth, AuditLog } from '../../core/models/admin.model';
 
 interface DashboardStat {
   label: string;
@@ -41,6 +41,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   inviteOnlyLoading = signal(false);
   inviteOnlyToggling = signal(false);
 
+  recentActivity  = signal<AuditLog[]>([]);
+  activityLoading = signal(true);
+
   statsLoading = signal(true);
   stats = signal<DashboardStat[]>([
     { label: 'Total Users',       value: null, icon: 'pi pi-users',       color: 'var(--pf-cyan-500)',  bg: 'rgba(6,182,212,0.1)',    route: '/users',      tooltip: 'Total registered users on the platform' },
@@ -55,6 +58,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.load();
     this.loadConfig();
     this.loadStats();
+    this.loadRecentActivity();
     this.refreshTimer = setInterval(() => this.load(), 15_000);
   }
 
@@ -148,6 +152,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   overallIcon(s: ServiceHealth): string {
     return s === 'healthy' ? 'pi-check-circle' : s === 'degraded' ? 'pi-exclamation-circle' : 'pi-times-circle';
+  }
+
+  loadRecentActivity(): void {
+    this.activityLoading.set(true);
+    this.api.auditLogs({ page: 1, limit: 5 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.recentActivity.set(res.data);
+          this.activityLoading.set(false);
+        },
+        error: () => this.activityLoading.set(false),
+      });
   }
 
   formatServiceName(name: string): string {

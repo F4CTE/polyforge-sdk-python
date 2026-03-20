@@ -153,5 +153,17 @@ export class MarketsListComponent implements OnInit {
     return points;
   }
 
+  categoryColor(cat: string): { bg: string; text: string } {
+    const map: Record<string, { bg: string; text: string }> = {
+      Sports:     { bg: 'rgba(59,130,246,0.15)',  text: '#3B82F6' },
+      Crypto:     { bg: 'rgba(245,158,11,0.15)',  text: '#F59E0B' },
+      Politics:   { bg: 'rgba(168,85,247,0.15)',  text: '#A855F7' },
+      Economics:  { bg: 'rgba(16,185,129,0.15)',   text: '#10B981' },
+      Finance:    { bg: 'rgba(6,182,212,0.15)',    text: '#06B6D4' },
+      Technology: { bg: 'rgba(236,72,153,0.15)',   text: '#EC4899' },
+    };
+    return map[cat] ?? { bg: 'rgba(107,114,128,0.15)', text: '#6B7280' };
+  }
+
   readonly skeletons = Array(10);
 }

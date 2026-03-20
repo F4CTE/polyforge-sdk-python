@@ -79,7 +79,11 @@
                 <span class="market-title">{{ market.title }}</span>
               </td>
               <td>
-                <span class="category-badge" [pTooltip]="market.category" tooltipPosition="top">{{ market.category }}</span>
+                <span class="category-badge"
+                      [style.background]="categoryColor(market.category).bg"
+                      [style.color]="categoryColor(market.category).text"
+                      [style.border-color]="'transparent'"
+                      [pTooltip]="market.category" tooltipPosition="top">{{ market.category }}</span>
               </td>
               <td style="text-align:right">
                 <span class="price-yes pf-mono">{{ price(market, 'YES') | number:'1.2-3' }}</span>

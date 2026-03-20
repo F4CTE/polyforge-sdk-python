@@ -58,15 +58,19 @@
           }
         </div>
       </div>
-      <div class="chart-wrap" style="height:260px">
-        @if (loadingChart()) {
+      @if (loadingChart()) {
+        <div class="chart-wrap" style="height:260px">
           <p-skeleton height="100%" />
-        } @else if (chartData()) {
+        </div>
+      } @else if (chartData()) {
+        <div class="chart-wrap" style="height:260px">
           <p-chart type="line" [data]="chartData()" [options]="chartOptions()" height="260px" />
-        } @else {
-          <div class="pf-empty-state"><p class="pf-empty-desc">No P&L data yet.</p></div>
-        }
-      </div>
+        </div>
+      } @else {
+        <div class="pf-empty-state" style="max-height:150px;padding:32px">
+          <p class="pf-empty-desc">No P&L data yet.</p>
+        </div>
+      }
     </div>
 
     <!-- ─── Positions table ──────────────────────────────────────────────── -->

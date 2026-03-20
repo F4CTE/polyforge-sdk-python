@@ -148,4 +148,47 @@
     }
   </div>
 
+  <!-- ─── Recent Activity ──────────────────────────────────────────── -->
+  <div class="admin-section-title" style="margin-top:var(--pf-space-5)">
+    <i class="pi pi-history" style="margin-right:6px"></i>Recent Activity
+  </div>
+  <div class="admin-table-panel">
+    @if (activityLoading() && recentActivity().length === 0) {
+      <div style="padding:var(--pf-space-4)">
+        @for (s of [1,2,3,4,5]; track s) {
+          <p-skeleton height="32px" styleClass="mb-2" />
+        }
+      </div>
+    } @else if (recentActivity().length === 0) {
+      <div style="padding:var(--pf-space-6);text-align:center;color:var(--pf-text-muted);font-size:13px">
+        No recent activity
+      </div>
+    } @else {
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="pf-col-label">Admin</th>
+              <th class="pf-col-label">Action</th>
+              <th class="pf-col-label">Target</th>
+              <th class="pf-col-label">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of recentActivity(); track log.id) {
+              <tr class="table-row">
+                <td style="font-size:13px;color:var(--pf-text-primary)">{{ log.adminId ?? '—' }}</td>
+                <td>
+                  <span class="admin-badge" style="text-transform:none">{{ log.action }}</span>
+                </td>
+                <td style="font-size:12px;color:var(--pf-text-muted)">{{ log.target ?? '—' }}</td>
+                <td class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ log.createdAt | date:'MMM d, HH:mm' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
 </div>

@@ -232,18 +232,20 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--pf-bg-base);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(6,182,212,0.08) 0%, transparent 60%),
+    var(--pf-bg-base);
   padding: var(--pf-space-6);
 }
 
 .admin-login-card {
   width: 100%;
   max-width: 380px;
-  background: var(--pf-bg-surface);
-  border: 1px solid var(--pf-border-subtle);
+  background: var(--pf-bg-elevated, var(--pf-bg-surface));
+  border: 1px solid var(--pf-border-default, var(--pf-border-subtle));
   border-radius: var(--pf-radius-lg);
   padding: var(--pf-space-6);
-  box-shadow: var(--pf-shadow-lg);
+  box-shadow: var(--pf-shadow-lg), 0 0 20px rgba(6, 182, 212, 0.08);
 }
 
 .admin-login-brand {
@@ -261,8 +263,11 @@ html, body {
   .admin-login-title {
     font-size: 18px;
     font-weight: 700;
-    color: var(--pf-text-primary);
     letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--pf-cyan-300), var(--pf-cyan-500));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .admin-login-subtitle {

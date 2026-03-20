@@ -28,31 +28,33 @@ const STORAGE_KEY = 'pf_cookie_consent';
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 1.25rem;
-      padding: 0.875rem 1.5rem;
+      gap: 0.75rem;
+      padding: 0.5rem 1rem;
       background: var(--pf-surface-card, #1a1a2e);
       border-top: 1px solid var(--pf-border, rgba(255,255,255,0.08));
-      flex-wrap: wrap;
+      font-size: 13px;
     }
     .cookie-text {
       font-size: 13px;
       color: var(--pf-text-secondary, #94a3b8);
+      line-height: 1.3;
     }
     .cookie-link {
       color: var(--p-primary-400, #22d3ee);
       text-decoration: underline;
     }
     .cookie-btn {
-      padding: 0.375rem 1rem;
-      font-size: 13px;
+      padding: 0.25rem 0.75rem;
+      font-size: 12px;
       font-weight: 600;
-      border-radius: 6px;
+      border-radius: 4px;
       border: 1px solid var(--pf-border, rgba(255,255,255,0.12));
       background: var(--pf-surface-elevated, #242438);
       color: var(--pf-text, #f1f5f9);
       cursor: pointer;
       white-space: nowrap;
       transition: background 0.15s;
+      flex-shrink: 0;
     }
     .cookie-btn:hover {
       background: var(--p-primary-400, #22d3ee);
