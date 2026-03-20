@@ -21,6 +21,9 @@ interface NavItem {
   providers: [MessageService],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
+  host: {
+    '[class.sidebar-collapsed]': 'collapsed()',
+  },
 })
 export class LayoutComponent {
   readonly auth = inject(AuthStore);

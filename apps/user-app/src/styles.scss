@@ -82,7 +82,14 @@ html, body {
 
   &.collapsed {
     width: 64px;
+    min-width: 64px;
   }
+}
+
+// Host-level collapsed state (signal-driven via host binding)
+.sidebar-collapsed .app-sidebar {
+  width: 64px !important;
+  min-width: 64px !important;
 }
 
 .app-main {
@@ -485,9 +492,12 @@ input.p-inputtext,
   color: #F87171 !important;
 }
 
-// DatePicker dark theme
+// DatePicker dark theme — cover all PrimeNG date picker variants
 .p-datepicker .p-inputtext,
-.p-datepicker-input {
+.p-datepicker-input,
+p-datepicker .p-inputtext,
+p-datepicker input,
+.p-datepicker input[type="text"] {
   background: var(--pf-input-bg) !important;
   border-color: var(--pf-input-border) !important;
   color: var(--pf-input-text) !important;
@@ -498,10 +508,29 @@ input.p-inputtext,
   }
 }
 
-.p-datepicker-panel {
+.p-datepicker-panel,
+.p-datepicker-overlay {
   background: var(--pf-bg-elevated) !important;
   border-color: var(--pf-border-default) !important;
   color: var(--pf-text-primary) !important;
+}
+
+// Native date/time inputs fallback
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+  background: var(--pf-input-bg, #0d1926) !important;
+  border: 1px solid var(--pf-input-border, #2a3a4e) !important;
+  color: var(--pf-input-text, #f0f0f5) !important;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color-scheme: dark;
+
+  &:focus {
+    border-color: var(--pf-input-border-focus, #22d3ee) !important;
+    box-shadow: var(--pf-input-focus-glow) !important;
+    outline: none;
+  }
 }
 
 // Select dropdown dark theme
