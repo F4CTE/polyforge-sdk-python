@@ -29,6 +29,7 @@
 29. [Password Confirmation Pattern](#29-password-confirmation-pattern)
 30. [Strategy Builder — Connection Ports & Wires](#30-strategy-builder--connection-ports--wires)
 31. [Strategy Builder — Variable Blocks](#31-strategy-builder--variable-blocks)
+32. [v3.0 — React + shadcn/ui Migration](#32-v30--react--shadcnui-migration)
 
 ---
 
@@ -1628,6 +1629,98 @@ Variable blocks use section color `#A855F7` (purple / `--pf-purple-500`), distin
 - Variables section header uses the purple accent with `pi-calculator` icon.
 - Each variable block displays the variable name in `JetBrains Mono 500` and the expression in `--pf-text-secondary`.
 - Variable blocks are rendered at the top of the canvas, above the safety column.
+
+---
+
+---
+
+## 32. v3.0 — React + shadcn/ui Migration
+
+> Starting with v3.0, Polyforge frontends are migrating from Angular + PrimeNG to React + shadcn/ui + Tailwind CSS. This section documents the new design stack. The Angular sections above remain valid for the legacy apps during the transition period.
+
+### Component Library — shadcn/ui
+
+The v3.0 frontend uses **shadcn/ui** as its component library. shadcn/ui is not a traditional npm dependency — components are copied into the project source (`packages/ui/`) and owned by the team. They are built on **Radix UI** primitives, which provide unstyled, accessible, composable building blocks.
+
+**Key characteristics:**
+
+- **Copy-paste ownership** — components live in `packages/ui/src/components/` and can be freely modified to match Polyforge's design needs. No version lock-in.
+- **Radix primitives** — Dialog, Popover, Select, Tabs, Tooltip, and other interactive patterns use `@radix-ui/react-*` for accessibility and keyboard handling.
+- **Composable API** — components expose compound patterns (e.g., `<Card>`, `<CardHeader>`, `<CardContent>`) rather than monolithic prop-heavy APIs.
+
+### Styling — Tailwind CSS v4
+
+All styling uses **Tailwind CSS v4** with the `@theme` directive for design token configuration.
+
+```css
+/* packages/ui/src/theme.css */
+@theme {
+  --color-pf-bg-base:      #080C14;
+  --color-pf-bg-surface:   #0D1421;
+  --color-pf-bg-elevated:  #111D2E;
+  --color-pf-cyan-500:     #06B6D4;
+  --color-pf-gold-500:     #EAB308;
+  /* ... full Polyforge palette mapped to Tailwind tokens */
+}
+```
+
+- **Utility-first** — layout, spacing, typography, and color are applied via Tailwind utility classes directly in JSX.
+- **No separate CSS files** — component styles live inline via `className`. Global styles are limited to the theme configuration and base resets.
+- **Design tokens** — all Polyforge palette colors, spacing, and typography from sections 2-4 above are mapped to Tailwind custom theme tokens via `@theme`.
+
+### Design Aesthetic
+
+The v3.0 UI combines **shadcn's clean, minimal style** with the existing **Polyforge dark theme identity**:
+
+- shadcn's default neutral palette is replaced with the Polyforge deep blue-night backgrounds and cyan accent system.
+- Component borders, hover states, and focus rings use Polyforge's `--pf-border-*` and `--pf-cyan-*` tokens.
+- Typography retains the Polyforge convention: Inter for UI text, JetBrains Mono for financial data.
+- The overall feel remains "Precision Instrument" — dense, professional, data-focused.
+
+### Icon Library — Lucide React
+
+**Lucide React** replaces PrimeIcons (`pi pi-*`) as the icon library.
+
+- Tree-shakeable SVG icons imported individually: `import { TrendingUp, Settings, Bell } from 'lucide-react'`
+- Consistent 24x24 base size with `strokeWidth={1.5}` for the Polyforge visual weight.
+- Same icon concepts apply (action icons for buttons, status icons for badges), just different import paths.
+
+### Charts — Recharts
+
+**Recharts** replaces Chart.js for all data visualization.
+
+- Declarative React component API: `<LineChart>`, `<BarChart>`, `<AreaChart>`, etc.
+- Responsive container support via `<ResponsiveContainer>`.
+- Polyforge chart theming: cyan for primary series, gold for secondary, dark backgrounds matching `--pf-bg-surface`.
+- Tooltip and legend styling uses Polyforge text colors and border tokens.
+
+### Strategy Builder — React Flow
+
+The strategy builder canvas migrates from the custom SVG implementation to **React Flow** (`@xyflow/react`).
+
+- **Node-based graph** — blocks are custom React Flow nodes with category-colored headers (Safety=red, Triggers=amber, Conditions=blue, Actions=green, Variables=purple).
+- **Edge connections** — Bezier connection lines rendered by React Flow's built-in edge system, replacing the custom SVG path rendering.
+- **Pan/zoom** — React Flow's built-in viewport controls replace the custom pan/zoom implementation.
+- **Minimap** — optional minimap component for large strategies.
+- **Same interaction model** — drag-to-wire from output to input ports, click-to-select, Delete to remove connections.
+
+### State Management — Zustand
+
+**Zustand** replaces Angular signals and service-based state management.
+
+- Lightweight stores with simple hook-based API: `const user = useAuthStore(s => s.user)`
+- No boilerplate — stores are plain functions, not classes or modules.
+- Devtools support via `zustand/middleware` for state inspection.
+- Stores: `authStore`, `themeStore`, `notificationStore`, `websocketStore`, `builderStore`.
+
+### Dark Mode — Tailwind dark: variant
+
+Dark/light mode theming uses **Tailwind's `dark:` variant** with the `class` strategy.
+
+- The `<html>` element receives a `dark` class based on user preference (stored in localStorage).
+- Components use `dark:` prefixed utilities: `bg-white dark:bg-pf-bg-surface`, `text-gray-900 dark:text-pf-text-primary`.
+- The theme toggle (sun/moon icon, now from Lucide React) toggles the `dark` class and persists the choice.
+- Default mode is dark, consistent with the Polyforge "Precision Instrument" identity.
 
 ---
 

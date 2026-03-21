@@ -5,6 +5,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [3.0.0] — 2026-03-21
+
+### Changed — Frontend Rewrite
+
+- **Complete frontend rewrite** — Migrated from Angular 21 + PrimeNG to React 19 + shadcn/ui + Tailwind CSS v4.
+- **Vite** — User app and admin app SPAs now use Vite for dev server and production builds.
+- **Next.js 15** — Landing page rebuilt with Next.js 15 App Router for SSR and SEO.
+- **React Flow** — Strategy builder canvas migrated from custom SVG to `@xyflow/react` for node-based graph editing.
+- **Recharts** — Data visualization migrated from Chart.js to Recharts (declarative React charting).
+- **Zustand** — State management migrated from Angular signals/services to Zustand stores.
+- **@hey-api/client-fetch** — API client generation migrated from `@hey-api/client-angular` to `@hey-api/client-fetch` (Promise-based, no Angular dependency).
+- **@tanstack/react-table** — Data tables migrated from PrimeNG Table to TanStack React Table.
+- **Lucide React** — Icon library migrated from PrimeIcons to Lucide React (tree-shakeable SVG icons).
+- **Sonner** — Toast notifications migrated from PrimeNG Toast to Sonner.
+- **shadcn/ui** — Component library migrated from PrimeNG to shadcn/ui (Radix primitives, Tailwind styling, copy-paste ownership) with Polyforge theme.
+
+---
+
 ## [2.7.0] — 2026-03-21
 
 ### Fixed — Strategy Builder

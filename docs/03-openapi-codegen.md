@@ -16,6 +16,7 @@
 7. [Workflow: When You Add or Change an Endpoint](#7-workflow-when-you-add-or-change-an-endpoint)
 8. [CI Enforcement](#8-ci-enforcement)
 9. [Troubleshooting](#9-troubleshooting)
+10. [React Migration — @hey-api/client-fetch (v3.0)](#10-react-migration--hey-apiclient-fetch-v30)
 
 ---
 
@@ -506,6 +507,118 @@ A DTO field was renamed or removed. The TypeScript error message points to the e
 ### "CI diff failing on unrelated changes"
 
 The version of `@hey-api/openapi-ts` drifted between local and CI environments. Ensure the version is **pinned exactly** in `package.json` (no `^` prefix) and that `pnpm-lock.yaml` is committed.
+
+---
+
+---
+
+## 10. React Migration — `@hey-api/client-fetch` (v3.0)
+
+> Starting with v3.0, the React apps use `@hey-api/client-fetch` instead of `@hey-api/client-angular`. During the migration, both Angular and React configs coexist.
+
+### Plugin Change
+
+| Stack | Plugin | Runtime |
+|---|---|---|
+| Angular (legacy) | `@hey-api/client-angular` | Angular `HttpClient` (Observable-based) |
+| React (v3.0) | `@hey-api/client-fetch` | Native `fetch` (Promise-based) |
+
+### React Config Files
+
+**`openapi-ts.react.config.ts`** — for `user-app-react`:
+
+```typescript
+import { defineConfig } from '@hey-api/openapi-ts';
+
+export default defineConfig({
+  input:  'services/api-service/dist/swagger.json',
+  output: {
+    path:   'packages/api-client/src/generated/user',
+    format: 'prettier',
+  },
+  plugins: [
+    '@hey-api/typescript',
+    {
+      name: '@hey-api/sdk',
+    },
+    {
+      name: '@hey-api/client-fetch',
+    },
+  ],
+});
+```
+
+**`openapi-ts.react-admin.config.ts`** — for `admin-app-react`:
+
+```typescript
+import { defineConfig } from '@hey-api/openapi-ts';
+
+export default defineConfig({
+  input:  'services/admin-api-service/dist/swagger-admin.json',
+  output: {
+    path:   'packages/api-client/src/generated/admin',
+    format: 'prettier',
+  },
+  plugins: [
+    '@hey-api/typescript',
+    {
+      name: '@hey-api/sdk',
+    },
+    {
+      name: '@hey-api/client-fetch',
+    },
+  ],
+});
+```
+
+### Output Location
+
+Generated files go into the shared `packages/api-client/` package:
+
+```
+packages/api-client/src/generated/
+├── user/
+│   ├── types.gen.ts
+│   ├── sdk.gen.ts
+│   └── client.gen.ts
+└── admin/
+    ├── types.gen.ts
+    ├── sdk.gen.ts
+    └── client.gen.ts
+```
+
+### Usage in React
+
+SDK functions return **Promises** (not Observables):
+
+```typescript
+import { getMarkets } from '@polyforge/api-client/user';
+
+// Async/await — no .subscribe()
+const response = await getMarkets();
+const markets = response.data;
+
+// Or with React Query / useEffect
+useEffect(() => {
+  getMarkets().then(res => setMarkets(res.data));
+}, []);
+```
+
+### Dual Output During Migration
+
+During the transition, both Angular and React generation scripts coexist:
+
+```json
+{
+  "scripts": {
+    "generate:api":       "openapi-ts --config openapi-ts.config.ts && openapi-ts --config openapi-ts.admin.config.ts",
+    "generate:api:react": "openapi-ts --config openapi-ts.react.config.ts && openapi-ts --config openapi-ts.react-admin.config.ts",
+    "generate:api:all":   "pnpm generate:api && pnpm generate:api:react"
+  }
+}
+```
+
+Run `pnpm generate:api:all` to regenerate both Angular and React clients after an API change.
 
 ---
 

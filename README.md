@@ -34,7 +34,9 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 | Redis client | ioredis |
 | Logging | pino + nestjs-pino |
 | Testing | Vitest + Supertest |
-| Frontend | Angular 21 + PrimeNG 21 |
+| Frontend (v3.0) | React 19, Vite, shadcn/ui, Tailwind CSS v4, React Flow, Recharts |
+| Landing (v3.0) | Next.js 15 (App Router, SSR/SEO) |
+| Frontend (legacy) | Angular 21 + PrimeNG 21 |
 | Build system | Turborepo 2 + pnpm workspaces |
 | Containers | Docker + Docker Compose |
 | Runtime | Node.js 24 |
@@ -46,9 +48,12 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 ```
 polyforge/
 ├── apps/
-│   ├── user-app/                  # ✅ Angular 21 user SPA — served at http://localhost
-│   ├── admin-app/                 # ✅ Angular 21 admin console — served at http://localhost:8080
-│   └── landing/                   # ✅ Static landing page with waitlist form
+│   ├── user-app-react/            # 🆕 React 19 + Vite user SPA (v3.0)
+│   ├── admin-app-react/           # 🆕 React 19 + Vite admin SPA (v3.0)
+│   ├── landing-next/              # 🆕 Next.js 15 landing page (v3.0)
+│   ├── user-app/                  # Angular 21 user SPA (legacy)
+│   ├── admin-app/                 # Angular 21 admin console (legacy)
+│   └── landing/                   # Static landing page (legacy)
 │
 ├── services/
 │   ├── gateway/                   # ✅ nginx dev gateway (ports 80 + 8080)
@@ -67,12 +72,14 @@ polyforge/
 │   └── mock-polymarket/           # ✅ Dev-only fake Polymarket APIs
 │
 └── packages/
-    ├── shared-types/              # ✅ All TypeScript interfaces and enums
-    ├── shared-schemas/            # ✅ Zod schemas (streams, WebSocket, orders)
-    ├── shared-auth/               # ✅ JWT guards + internal service client
-    ├── shared-db/                 # ✅ Prisma client NestJS module
-    ├── shared-redis/              # ✅ ioredis factory + stream helpers
-    └── logger/                    # ✅ pino + nestjs-pino
+    ├── ui/                        # 🆕 Shared shadcn/ui components + Tailwind theme (v3.0)
+    ├── api-client/                # 🆕 Shared @hey-api/client-fetch generated client (v3.0)
+    ├── shared-types/              # All TypeScript interfaces and enums
+    ├── shared-schemas/            # Zod schemas (streams, WebSocket, orders)
+    ├── shared-auth/               # JWT guards + internal service client
+    ├── shared-db/                 # Prisma client NestJS module
+    ├── shared-redis/              # ioredis factory + stream helpers
+    └── logger/                    # pino + nestjs-pino
 ```
 
 ---

@@ -382,4 +382,52 @@ docker compose -f docker-compose.infra.yml up -d
 
 ---
 
+---
+
+## React Development (v3.0)
+
+> Starting with v3.0, the React apps run alongside the Angular apps during the migration period. Each has its own dev server on a distinct port.
+
+### Start React Dev Servers
+
+```bash
+# User app (React) — Vite dev server on port 5173
+pnpm --filter @polyforge/user-app-react dev
+
+# Admin app (React) — Vite dev server on port 5174
+pnpm --filter @polyforge/admin-app-react dev
+
+# Landing page (Next.js) — Next.js dev server on port 3000
+pnpm --filter @polyforge/landing-next dev
+```
+
+### Parallel Development (Angular + React)
+
+During the migration, both Angular and React frontends can run simultaneously:
+
+| App | Stack | Port | Command |
+|---|---|---|---|
+| User app (Angular) | Angular CLI | 4200 | `cd apps/user-app && npm start` |
+| User app (React) | Vite | 5173 | `pnpm --filter @polyforge/user-app-react dev` |
+| Admin app (Angular) | Angular CLI | 4300 | `cd apps/admin-app && npm start` |
+| Admin app (React) | Vite | 5174 | `pnpm --filter @polyforge/admin-app-react dev` |
+| Landing page | Next.js | 3000 | `pnpm --filter @polyforge/landing-next dev` |
+
+Both Angular and React dev servers proxy API calls to the Docker backend services. The React apps use Vite's `server.proxy` configuration (in `vite.config.ts`) to forward `/api/v1/*`, `/auth/v1/*`, and `/ws` to the same backend ports.
+
+### React Build
+
+```bash
+# Build user app (React)
+pnpm --filter @polyforge/user-app-react build
+
+# Build admin app (React)
+pnpm --filter @polyforge/admin-app-react build
+
+# Build landing page (Next.js)
+pnpm --filter @polyforge/landing-next build
+```
+
+---
+
 *Next: [Architecture](./01-architecture.md) · [API Catalog](./06-api-catalog.md) · [Database & Redis](./04-database-and-redis.md)*

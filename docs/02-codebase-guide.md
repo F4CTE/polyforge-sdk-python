@@ -14,6 +14,8 @@
 6. [Debugging](#6-debugging)
 7. [Database Schema Changes (Prisma)](#7-database-schema-changes-prisma)
 8. [Code Style & Conventions](#8-code-style--conventions)
+9. [HTTPS and Docker Compose Overlays](#9-https-and-docker-compose-overlays)
+10. [React App Structure (v3.0)](#10-react-app-structure-v30)
 
 ---
 
@@ -720,6 +722,102 @@ docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml up -d
 When adding new infrastructure features, prefer creating a new overlay file rather than modifying the base compose file. This keeps the base stack simple and allows features to be toggled independently.
 
 See [`docs/09-dev-setup.md`](./09-dev-setup.md) for full HTTPS setup instructions including certificate generation.
+
+---
+
+---
+
+## 10. React App Structure (v3.0)
+
+> Starting with v3.0, the frontend is migrating from Angular to React. This section documents the new React application architecture. The Angular sections above remain valid during the transition.
+
+### New Apps and Packages
+
+```
+apps/
+├── user-app-react/           # Vite + React 19 + React Router v7 — user SPA
+├── admin-app-react/          # Vite + React 19 + React Router v7 — admin SPA
+├── landing-next/             # Next.js 15 App Router — landing page (SSR/SEO)
+├── user-app/                 # (legacy) Angular 21 user SPA
+└── admin-app/                # (legacy) Angular 21 admin SPA
+
+packages/
+├── ui/                       # Shared shadcn/ui components + Tailwind theme
+├── api-client/               # Shared @hey-api/client-fetch generated client
+├── shared-types/             # (unchanged) TypeScript interfaces and enums
+├── shared-schemas/           # (unchanged) Zod schemas
+└── ...
+```
+
+### `packages/ui/` — Shared Component Library
+
+Contains shadcn/ui components and the shared Tailwind theme. Both `user-app-react` and `admin-app-react` import from this package.
+
+```
+packages/ui/
+├── src/
+│   ├── components/           # shadcn/ui components (Button, Card, Dialog, etc.)
+│   ├── theme.css             # Tailwind @theme directive with Polyforge tokens
+│   └── index.ts              # Public exports
+├── tailwind.config.ts
+└── package.json
+```
+
+### `packages/api-client/` — Generated API Client
+
+Shared `@hey-api/client-fetch` generated client used by both React apps. Returns Promises (not Observables).
+
+```
+packages/api-client/
+├── src/
+│   ├── generated/
+│   │   ├── user/             # Generated from api-service swagger.json
+│   │   └── admin/            # Generated from admin-api-service swagger-admin.json
+│   └── index.ts
+└── package.json
+```
+
+Usage: `import { getMarkets } from '@polyforge/api-client/user'`
+
+### Zustand Stores
+
+State management uses Zustand with one store per domain concern:
+
+| Store | File | Purpose |
+|---|---|---|
+| `useAuthStore` | `stores/auth.store.ts` | User session, JWT token, login/logout |
+| `useThemeStore` | `stores/theme.store.ts` | Dark/light mode toggle, persistence |
+| `useNotificationStore` | `stores/notification.store.ts` | Toast queue, notification bell count |
+| `useWebSocketStore` | `stores/websocket.store.ts` | WS connection, message dispatch |
+| `useBuilderStore` | `stores/builder.store.ts` | Strategy builder canvas state, blocks, connections |
+
+### Hooks
+
+Custom hooks encapsulate common patterns:
+
+| Hook | Purpose |
+|---|---|
+| `useAuth()` | Access auth state + login/logout actions |
+| `usePriceUpdates(tokenId)` | Subscribe to real-time price feed via WebSocket |
+| `useStrategyEvents(strategyId)` | Subscribe to strategy execution events via WebSocket |
+
+### Guard Components
+
+Route protection uses wrapper components instead of Angular route guards:
+
+```tsx
+// Requires authenticated user
+<AuthGuard>
+  <DashboardPage />
+</AuthGuard>
+
+// Requires authenticated + email-verified user
+<VerifiedGuard>
+  <TradingPage />
+</VerifiedGuard>
+```
+
+Guards redirect to `/login` or `/verify-email` as appropriate.
 
 ---
 

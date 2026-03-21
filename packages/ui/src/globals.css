@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@theme {
+  /* Backgrounds */
+  --color-pf-base: #080C14;
+  --color-pf-surface: #0D1421;
+  --color-pf-elevated: #111D2E;
+  --color-pf-overlay: #162030;
+
+  /* Borders */
+  --color-pf-border-subtle: #1A2840;
+  --color-pf-border: #1E3350;
+  --color-pf-border-strong: #264060;
+
+  /* Text */
+  --color-pf-text: #E8EDF5;
+  --color-pf-text-secondary: #7A94B4;
+  --color-pf-text-muted: #445E7A;
+
+  /* Cyan accent */
+  --color-pf-cyan-300: #67E8F9;
+  --color-pf-cyan-400: #22D3EE;
+  --color-pf-cyan-500: #06B6D4;
+  --color-pf-cyan-600: #0891B2;
+
+  /* Gold accent */
+  --color-pf-gold-300: #FCD34D;
+  --color-pf-gold-400: #FBBF24;
+  --color-pf-gold-500: #F59E0B;
+  --color-pf-gold-600: #D97706;
+
+  /* Purple accent */
+  --color-pf-purple-300: #C4B5FD;
+  --color-pf-purple-400: #A78BFA;
+  --color-pf-purple-500: #8B5CF6;
+  --color-pf-purple-600: #7C3AED;
+
+  /* Semantic */
+  --color-pf-success: #10B981;
+  --color-pf-danger: #EF4444;
+  --color-pf-warning: #F59E0B;
+  --color-pf-info: #3B82F6;
+
+  /* Shadows */
+  --shadow-pf-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-pf-sm: 0 2px 4px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-pf-md: 0 4px 12px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15);
+  --shadow-pf-lg: 0 8px 24px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
+
+  /* Radius */
+  --radius-pf-sm: 6px;
+  --radius-pf: 8px;
+  --radius-pf-md: 10px;
+  --radius-pf-lg: 12px;
+
+  /* Font families */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Spacing scale */
+  --spacing-pf-1: 4px;
+  --spacing-pf-2: 8px;
+  --spacing-pf-3: 12px;
+  --spacing-pf-4: 16px;
+  --spacing-pf-5: 24px;
+  --spacing-pf-6: 32px;
+  --spacing-pf-7: 40px;
+  --spacing-pf-8: 48px;
+}
+
+/* Base styles */
+body {
+  font-family: var(--font-sans);
+  background: var(--color-pf-base);
+  color: var(--color-pf-text);
+}
+
+/* Light theme overrides */
+.light {
+  --color-pf-base: #F8FAFC;
+  --color-pf-surface: #F1F5F9;
+  --color-pf-elevated: #FFFFFF;
+  --color-pf-overlay: rgba(0, 0, 0, 0.04);
+  --color-pf-border-subtle: #F1F5F9;
+  --color-pf-border: #E2E8F0;
+  --color-pf-border-strong: #CBD5E1;
+  --color-pf-text: #0F172A;
+  --color-pf-text-secondary: #334155;
+  --color-pf-text-muted: #64748B;
+  --shadow-pf-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-pf-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-pf-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-pf-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
