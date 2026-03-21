@@ -3830,11 +3830,7 @@ textarea:focus-visible,
 
 // ─── Market Card Enhancements ─────────────────────────────────────────────────
 
-.market-card-chart {
-  width: 100%;
-  margin: -4px 0;
-  opacity: 0.7;
-}
+// .market-card-chart removed — charts belong on detail page only
 
 .market-card-footer {
   display: flex;

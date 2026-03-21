@@ -146,11 +146,6 @@
                 </div>
               </div>
 
-              <!-- Sparkline Chart -->
-              <div class="market-card-chart">
-                <app-sparkline [data]="sparklineData(market)" [width]="280" [height]="64" color="var(--pf-cyan-500)" />
-              </div>
-
               <!-- Outcomes -->
               <div class="market-outcomes">
                 @if (market.tokens.length <= 2) {
@@ -221,11 +216,6 @@
                     }
                   </div>
                 </div>
-              </div>
-
-              <!-- Sparkline Chart -->
-              <div class="market-card-chart">
-                <app-sparkline [data]="sparklineData(market)" [width]="280" [height]="64" color="var(--pf-cyan-500)" />
               </div>
 
               <!-- Outcomes -->
