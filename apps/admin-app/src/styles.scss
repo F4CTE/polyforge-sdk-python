@@ -1072,25 +1072,45 @@ p-inputnumber.w-full .p-inputnumber { width: 100%; }
 
 // ─── Dark theme PrimeNG overlays ──────────────────────────────────────────
 
-.p-dialog {
+.p-dialog,
+.p-dialog-content,
+.p-dialog-header,
+.p-dialog-footer {
   background: var(--pf-bg-elevated, #111D2E) !important;
-  border: 1px solid var(--pf-border-default, #1E293B) !important;
   color: var(--pf-text-primary, #F0F0F5) !important;
-
-  .p-dialog-header {
-    background: var(--pf-bg-elevated, #111D2E) !important;
-    color: var(--pf-text-primary, #F0F0F5) !important;
-    border-bottom: 1px solid var(--pf-border-default, #1E293B) !important;
-  }
-
-  .p-dialog-content {
-    background: var(--pf-bg-elevated, #111D2E) !important;
-    color: var(--pf-text-primary, #F0F0F5) !important;
-  }
-
-  .p-dialog-footer {
-    background: var(--pf-bg-elevated, #111D2E) !important;
-    border-top: 1px solid var(--pf-border-default, #1E293B) !important;
+}
+.p-dialog {
+  border: 1px solid var(--pf-border-default, #1E293B) !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;
+}
+.p-dialog-header {
+  border-bottom: 1px solid var(--pf-border-default, #1E293B) !important;
+}
+.p-dialog-footer {
+  border-top: 1px solid var(--pf-border-default, #1E293B) !important;
+}
+// Dialog close button
+.p-dialog-header-close {
+  color: var(--pf-text-muted, #6B7280) !important;
+  &:hover { color: var(--pf-text-primary, #F0F0F5) !important; }
+}
+// Dialog mask/overlay
+.p-dialog-mask {
+  background: rgba(0, 0, 0, 0.6) !important;
+}
+// PrimeNG password inside dialogs
+.p-dialog .p-password-input,
+.p-dialog .p-inputtext,
+.p-dialog .p-select {
+  background: var(--pf-input-bg, #0D1520) !important;
+  border-color: var(--pf-input-border, #2D3748) !important;
+  color: var(--pf-input-text, #F0F0F5) !important;
+}
+// Select dropdown items in dialogs
+.p-select-option {
+  color: var(--pf-text-primary, #F0F0F5) !important;
+  &:hover, &.p-highlight {
+    background: rgba(6, 182, 212, 0.1) !important;
   }
 }
 
