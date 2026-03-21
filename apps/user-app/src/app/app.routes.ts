@@ -95,6 +95,11 @@ export const routes: Routes = [
         canActivate: [authGuard],
         loadChildren: () => import('./features/settings/settings.routes').then(m => m.settingsRoutes),
       },
+      {
+        path: 'api-docs',
+        canActivate: [verifiedGuard],
+        loadComponent: () => import('./features/api-docs/api-docs.component').then(m => m.ApiDocsComponent),
+      },
     ],
   },
 

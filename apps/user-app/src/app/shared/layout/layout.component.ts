@@ -55,6 +55,12 @@ export class LayoutComponent {
       ],
     },
     {
+      title: 'Developers',
+      items: [
+        { label: 'API Docs', icon: 'pi pi-code', route: '/api-docs' },
+      ],
+    },
+    {
       title: 'Help',
       items: [
         { label: 'Support', icon: 'pi pi-question-circle', route: '/support' },
