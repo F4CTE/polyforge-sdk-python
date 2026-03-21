@@ -5,6 +5,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.6.0] — 2026-03-21
+
+### Added — API Key Management
+
+- **User API key management** — Generate, list, and revoke API keys with scoped permissions (READ / WRITE / TRADE).
+- **API key authentication** — External tools authenticate with `Bearer pf_...` token instead of JWT. Keys are SHA256-hashed at rest; plaintext shown only at creation.
+- **Scope-based access control** — `@RequireScopes()` decorator enforces per-endpoint scope requirements via `ApiKeyScopeGuard`.
+- **Per-API-key rate limiting** — Separate from IP-based throttling, each key has its own rate-limit bucket.
+- **Admin API key controls** — Admins can view and revoke any user's API keys (audit logged).
+- **API Keys settings tab** — New "API Keys" tab in user Settings page for key lifecycle management.
+
+### Added — UI Enhancements
+
+- **Dark/light theme toggle** — Theme switcher on both user-app and admin-app.
+- **Sidebar collapse button** — Moved collapse button to the top of the sidebar.
+- **Strategy builder full-screen canvas** — Full-screen canvas mode with drag-and-drop from the block palette panel.
+
+### Fixed
+
+- **Landing page feature card hover** — Fixed inconsistent hover effect on feature cards.
+- **Strategy builder palette closing** — Fixed palette closing unexpectedly on tab switch.
+
+---
+
 ## [2.5.0] — 2026-03-20
 
 ### Added — Accessibility & Responsiveness

@@ -11,6 +11,7 @@ import { UsersModule } from './users/users.module';
 import { TotpModule } from './totp/totp.module';
 import { CredentialsModule } from './credentials/credentials.module';
 import { BotLinkModule } from './bot-link/bot-link.module';
+import { ApiKeysModule } from './api-keys/api-keys.module';
 import { WaitlistModule } from './waitlist/waitlist.module';
 import { HealthController } from './common/health.controller';
 
@@ -34,6 +35,7 @@ import { HealthController } from './common/health.controller';
     TotpModule,
     CredentialsModule,
     BotLinkModule,
+    ApiKeysModule,
     WaitlistModule,
   ],
   controllers: [HealthController],

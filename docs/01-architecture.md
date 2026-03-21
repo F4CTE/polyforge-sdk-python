@@ -285,6 +285,7 @@ Use the following PrimeNG components for the specified UI patterns:
 | Bot JWT | BOT_JWT_SECRET | 30 days | Bots → api-service (scoped) |
 | Internal JWT | INTERNAL_JWT_SECRET | 30 seconds | Service → service |
 | 2FA temp | USER_JWT_SECRET | 5 minutes | Login 2FA challenge |
+| API Key | — (SHA256 hashed at rest) | Configurable expiry (optional) | External tools → api-service (scoped: READ/WRITE/TRADE) |
 
 ### User Auth Flow
 

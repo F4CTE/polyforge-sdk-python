@@ -11,6 +11,7 @@ import {
   AuditLog, EventLog, LoginLog,
   PaginatedResponse,
   AdminView, AdminRole,
+  AdminApiKey,
 } from '../models/admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -50,6 +51,16 @@ export class AdminApiService {
 
   updateLimits(id: string, limits: Partial<AdminUserDetail['limits']>): Observable<AdminUserDetail['limits']> {
     return this.http.patch<AdminUserDetail['limits']>(`${this.base}/users/${id}/limits`, limits);
+  }
+
+  // ─── User API Keys ─────────────────────────────────────────────────────────
+
+  userApiKeys(userId: string): Observable<AdminApiKey[]> {
+    return this.http.get<AdminApiKey[]>(`${this.base}/users/${userId}/api-keys`);
+  }
+
+  revokeUserApiKey(userId: string, keyId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/users/${userId}/api-keys/${keyId}`);
   }
 
   // ─── Strategies ─────────────────────────────────────────────────────────────

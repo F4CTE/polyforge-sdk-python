@@ -178,6 +178,59 @@ export class UsersService {
     return limits;
   }
 
+  async listApiKeys(userId: string) {
+    await this.findUserOrFail(userId);
+
+    return this.prisma.apiKey.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        prefix: true,
+        scopes: true,
+        expiresAt: true,
+        lastUsedAt: true,
+        lastUsedIp: true,
+        revoked: true,
+        revokedAt: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  async revokeApiKey(userId: string, keyId: string) {
+    await this.findUserOrFail(userId);
+
+    const apiKey = await this.prisma.apiKey.findUnique({
+      where: { id: keyId },
+    });
+
+    if (!apiKey || apiKey.userId !== userId) {
+      throw new NotFoundException({
+        code: "NOT_FOUND",
+        message: "API key not found",
+      });
+    }
+
+    if (apiKey.revoked) {
+      throw new HttpException(
+        { code: "ALREADY_REVOKED", message: "API key is already revoked" },
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    await this.prisma.apiKey.update({
+      where: { id: keyId },
+      data: {
+        revoked: true,
+        revokedAt: new Date(),
+      },
+    });
+
+    return { revoked: true };
+  }
+
   private async findUserOrFail(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user || user.deleted) {

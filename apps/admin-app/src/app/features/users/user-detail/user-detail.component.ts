@@ -12,7 +12,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { AdminApiService } from '../../../core/services/admin-api.service';
-import { AdminUserDetail } from '../../../core/models/admin.model';
+import { AdminUserDetail, AdminApiKey } from '../../../core/models/admin.model';
 import { AdminAuthStore } from '../../../core/store/admin-auth.store';
 
 @Component({
@@ -46,14 +46,50 @@ export class UserDetailComponent implements OnInit {
   };
   limitsSaving = signal(false);
 
+  // ─── API Keys ────────────────────────────────────────────────────────────────
+  userApiKeys       = signal<AdminApiKey[]>([]);
+  apiKeysLoading    = signal(false);
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.api.user(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: u => { this.user.set(u); this.limitsForm = { ...u.limits }; this.loading.set(false); },
+        next: u => { this.user.set(u); this.limitsForm = { ...u.limits }; this.loading.set(false); this.loadApiKeys(u.id); },
         error: () => this.loading.set(false),
       });
+  }
+
+  loadApiKeys(userId: string): void {
+    this.apiKeysLoading.set(true);
+    this.api.userApiKeys(userId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: keys => { this.userApiKeys.set(keys); this.apiKeysLoading.set(false); },
+        error: () => this.apiKeysLoading.set(false),
+      });
+  }
+
+  revokeUserApiKey(keyId: string): void {
+    const u = this.user();
+    if (!u) return;
+    this.confirmSvc.confirm({
+      message: 'Are you sure you want to revoke this API key?',
+      header: 'Revoke API Key?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.api.revokeUserApiKey(u.id, keyId)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: () => {
+              this.userApiKeys.update(keys => keys.map(k => k.id === keyId ? { ...k, revoked: true } : k));
+              this.toast.add({ severity: 'warn', summary: 'Revoked', detail: 'API key has been revoked.' });
+            },
+            error: () => this.toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to revoke API key.' }),
+          });
+      },
+    });
   }
 
   confirmSuspend(): void {

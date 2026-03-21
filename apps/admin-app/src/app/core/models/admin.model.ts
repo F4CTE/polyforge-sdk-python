@@ -222,6 +222,20 @@ export interface LoginLog {
   createdAt: string;
 }
 
+// ─── API Keys ────────────────────────────────────────────────────────────────
+
+export interface AdminApiKey {
+  id:         string;
+  name:       string;
+  prefix:     string;
+  scopes:     string[];
+  expiresAt:  string | null;
+  lastUsedAt: string | null;
+  lastUsedIp: string | null;
+  revoked:    boolean;
+  createdAt:  string;
+}
+
 // ─── Pagination ───────────────────────────────────────────────────────────────
 
 export interface PaginatedResponse<T> {

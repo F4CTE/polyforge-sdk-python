@@ -4,6 +4,7 @@ import { PassportModule } from "@nestjs/passport";
 import { JwtStrategy } from "./jwt.strategy";
 import { JwtAuthGuard } from "./jwt-auth.guard";
 import { InternalJwtGuard } from "./internal-jwt.guard";
+import { ApiKeyScopeGuard } from "./api-key-scopes.guard";
 
 @Module({
   imports: [
@@ -13,7 +14,13 @@ import { InternalJwtGuard } from "./internal-jwt.guard";
       signOptions: { expiresIn: "7d" },
     }),
   ],
-  providers: [JwtStrategy, JwtAuthGuard, InternalJwtGuard],
-  exports: [JwtModule, JwtStrategy, JwtAuthGuard, InternalJwtGuard],
+  providers: [JwtStrategy, JwtAuthGuard, InternalJwtGuard, ApiKeyScopeGuard],
+  exports: [
+    JwtModule,
+    JwtStrategy,
+    JwtAuthGuard,
+    InternalJwtGuard,
+    ApiKeyScopeGuard,
+  ],
 })
 export class SharedAuthModule {}

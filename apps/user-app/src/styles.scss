@@ -2516,6 +2516,58 @@ input[type="time"] {
   text-align: center;
 }
 
+// ─── API Keys ────────────────────────────────────────────────────────────────
+
+.api-key-display {
+  background: var(--pf-bg-overlay);
+  border: 1px dashed var(--pf-cyan-400);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  word-break: break-all;
+  color: var(--pf-cyan-300);
+  position: relative;
+}
+
+.api-key-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--pf-cyan-500);
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.api-key-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #F59E0B;
+  font-size: 13px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scope-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.scope-badge.read { background: rgba(59,130,246,0.15); color: #3B82F6; }
+.scope-badge.write { background: rgba(245,158,11,0.15); color: #F59E0B; }
+.scope-badge.trade { background: rgba(34,197,94,0.15); color: #22C55E; }
+
 // ─── Notifications list ───────────────────────────────────────────────────────
 
 .notif-list {
@@ -3287,6 +3339,8 @@ textarea:focus-visible,
   .p-card.auth-card { background: var(--pf-bg-elevated); border-color: var(--pf-border-default); }
 
   .canvas-bg { fill: #F1F5F9; }
+
+  .api-key-display { border-color: var(--pf-border-default); color: var(--pf-text-primary); }
 
   .topbar-icon-btn { color: var(--pf-text-secondary); }
   .topbar-icon-btn:hover { background: var(--pf-bg-overlay); }

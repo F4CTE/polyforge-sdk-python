@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -11,6 +12,8 @@ import {
   ParseBoolPipe,
   Optional,
   ParseUUIDPipe,
+  HttpCode,
+  HttpStatus,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { SuspendUserDto } from "./dto/suspend.dto";
@@ -111,6 +114,43 @@ export class UsersController {
       targetType: "user",
       targetId: id,
       payload: dto as any,
+      ip,
+    });
+    return result;
+  }
+
+  @Get(":id/api-keys")
+  async listApiKeys(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentAdmin() admin: AdminJwtPayload,
+    @AdminIp() ip: string,
+  ) {
+    const result = await this.users.listApiKeys(id);
+    await this.audit.log({
+      adminId: admin.sub,
+      action: "VIEW_USER_API_KEYS",
+      targetType: "user",
+      targetId: id,
+      ip,
+    });
+    return result;
+  }
+
+  @Delete(":id/api-keys/:keyId")
+  @HttpCode(HttpStatus.OK)
+  async revokeApiKey(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Param("keyId", ParseUUIDPipe) keyId: string,
+    @CurrentAdmin() admin: AdminJwtPayload,
+    @AdminIp() ip: string,
+  ) {
+    const result = await this.users.revokeApiKey(id, keyId);
+    await this.audit.log({
+      adminId: admin.sub,
+      action: "REVOKE_USER_API_KEY",
+      targetType: "api_key",
+      targetId: keyId,
+      payload: { userId: id },
       ip,
     });
     return result;

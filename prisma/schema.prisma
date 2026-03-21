@@ -107,6 +107,12 @@ enum ReportStatus {
   REVIEWED_KEPT
 }
 
+enum ApiKeyScope {
+  READ
+  WRITE
+  TRADE
+}
+
 enum BotChannel {
   TELEGRAM
   DISCORD
@@ -185,6 +191,7 @@ model User {
   loginHistory        UserLoginHistory[]
   limits              UserLimit?
   botConnections      BotConnection[]
+  apiKeys             ApiKey[]
   emailVerifications  EmailVerification[]
   passwordResetTokens PasswordResetToken[]
   tickets             Ticket[]
@@ -269,6 +276,27 @@ model BotConnection {
 
   @@unique([channel, chatId])
   @@map("bot_connections")
+}
+
+model ApiKey {
+  id          String        @id @default(uuid())
+  userId      String
+  name        String        @db.VarChar(100)
+  prefix      String        @db.VarChar(12)
+  tokenHash   String        @unique
+  scopes      ApiKeyScope[]
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  lastUsedIp  String?       @db.VarChar(45)
+  revoked     Boolean       @default(false)
+  revokedAt   DateTime?
+  createdAt   DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("api_keys")
 }
 
 model Follow {

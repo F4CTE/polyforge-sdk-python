@@ -12,6 +12,7 @@
   "dependencies": {
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
+    "@polyforge/shared-db": "workspace:*",
     "@polyforge/shared-redis": "workspace:*",
     "@polyforge/shared-types": "workspace:*",
     "passport": "^0.7.0",

@@ -11,6 +11,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Market detail page** — Stats bar and "Run Strategy" dialog with strategy selector
 - **Support ticket system** — User-to-admin tickets with assignment, priority, reminders, and email notifications
 - **Real-time updates** — WebSocket-driven order fills, strategy events, notification bell, and ticket polling
+- **API key management** — Generate scoped API keys (READ / WRITE / TRADE) for external tool integration, AI agents, and programmatic access
 - **Interactive UI** — Tooltips, drag-and-drop reordering, sparkline charts, hover effects, page animations
 - **Design system** — Dark theme with design tokens (section colors, status colors, typography scale), loading screen with animated logo
 - **Accessibility** — `focus-visible` outlines, `aria-label` attributes, responsive mobile layouts

@@ -68,11 +68,7 @@ describe("DiscordService", () => {
         "/connect XYZ789",
       );
       expect(result).toBe("Account linked!");
-      expect(linking.connect).toHaveBeenCalledWith(
-        "DISCORD",
-        "ch-1",
-        "XYZ789",
-      );
+      expect(linking.connect).toHaveBeenCalledWith("DISCORD", "ch-1", "XYZ789");
     });
 
     it("/disconnect delegates to linking.disconnect with DISCORD channel", async () => {

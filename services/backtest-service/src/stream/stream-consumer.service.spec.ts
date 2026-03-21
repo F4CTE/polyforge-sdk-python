@@ -113,12 +113,7 @@ describe("StreamConsumerService", () => {
       redis._client.xreadgroup.mockImplementation(async () => {
         callCount++;
         if (callCount === 1) {
-          return [
-            [
-              "stream:backtests",
-              [["msg-1", ["runId", "run-abc"]]],
-            ],
-          ];
+          return [["stream:backtests", [["msg-1", ["runId", "run-abc"]]]]];
         }
         // Stop the loop after first iteration
         (svc as any).running = false;
@@ -141,12 +136,7 @@ describe("StreamConsumerService", () => {
       redis._client.xreadgroup.mockImplementation(async () => {
         callCount++;
         if (callCount === 1) {
-          return [
-            [
-              "stream:backtests",
-              [["msg-no-run", ["type", "unknown"]]],
-            ],
-          ];
+          return [["stream:backtests", [["msg-no-run", ["type", "unknown"]]]]];
         }
         (svc as any).running = false;
         return null;
@@ -186,12 +176,7 @@ describe("StreamConsumerService", () => {
       redis._client.xreadgroup.mockImplementation(async () => {
         callCount++;
         if (callCount === 1) {
-          return [
-            [
-              "stream:backtests",
-              [["msg-err", ["runId", "run-err"]]],
-            ],
-          ];
+          return [["stream:backtests", [["msg-err", ["runId", "run-err"]]]]];
         }
         (svc as any).running = false;
         return null;

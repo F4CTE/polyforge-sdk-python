@@ -11,6 +11,31 @@ All phases complete. Polyforge is production-ready.
 
 ---
 
+## Post-Launch — API Key Management (v2.6.0)
+
+### API Key Feature
+
+- [x] User API key management: generate, list, revoke with scoped permissions (READ / WRITE / TRADE)
+- [x] API key authentication: `Bearer pf_...` token, SHA256 hashed at rest, plaintext shown only at creation
+- [x] Scope-based access control: `@RequireScopes()` decorator + `ApiKeyScopeGuard`
+- [x] Per-API-key rate limiting (separate from IP-based throttling)
+- [x] Admin: view and revoke user API keys (audit logged)
+- [x] Max 10 active keys per user, optional expiration
+
+### UI Enhancements
+
+- [x] API Keys tab in user Settings page
+- [x] Dark/light theme toggle on both user-app and admin-app
+- [x] Sidebar collapse button moved to sidebar top
+- [x] Strategy builder full-screen canvas with drag-and-drop from panel
+
+### Bug Fixes
+
+- [x] Landing page feature card hover inconsistency
+- [x] Strategy builder palette closing on tab switch
+
+---
+
 ## Post-Launch — Accessibility, Performance & Dev Tooling (v2.5.0)
 
 ### Accessibility & Responsiveness

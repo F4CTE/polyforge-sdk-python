@@ -11,6 +11,7 @@
     <button class="filter-tab" [class.active]="activeTab() === 'profile'"       (click)="setTab('profile')">Profile</button>
     <button class="filter-tab" [class.active]="activeTab() === 'security'"      (click)="setTab('security')">Security</button>
     <button class="filter-tab" [class.active]="activeTab() === 'notifications'" (click)="setTab('notifications')">Notifications</button>
+    <button class="filter-tab" [class.active]="activeTab() === 'apikeys'"       (click)="setTab('apikeys')"><i class="pi pi-key" style="margin-right:6px"></i>API Keys</button>
   </div>
 
   <!-- ─── Profile Tab ───────────────────────────────────────────────────── -->
@@ -172,6 +173,115 @@
       <div class="settings-actions">
         <p-button label="Save Preferences" icon="pi pi-check" (onClick)="saveNotifications()" [loading]="notifSaving()" />
       </div>
+    </div>
+  }
+
+  <!-- ─── API Keys Tab ────────────────────────────────────────────────────── -->
+  @if (activeTab() === 'apikeys') {
+    <div class="settings-panel">
+
+      <!-- Generate section -->
+      <div class="settings-section-title">Generate API Key</div>
+
+      <div class="settings-field">
+        <label class="settings-label">Key Name</label>
+        <input pInputText [(ngModel)]="newKeyName" placeholder="My Integration" class="settings-input" />
+      </div>
+
+      <div class="settings-field">
+        <label class="settings-label">Scopes</label>
+        <div style="display:flex;gap:16px;margin-top:4px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--pf-text-secondary)">
+            <input type="checkbox" [(ngModel)]="newKeyScopes.read" /> READ
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--pf-text-secondary)">
+            <input type="checkbox" [(ngModel)]="newKeyScopes.write" /> WRITE
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--pf-text-secondary)">
+            <input type="checkbox" [(ngModel)]="newKeyScopes.trade" /> TRADE
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-field">
+        <label class="settings-label">Expiration (optional)</label>
+        <input type="date" [(ngModel)]="newKeyExpiration" class="settings-input" style="max-width:220px" />
+      </div>
+
+      <div class="settings-actions">
+        <p-button label="Generate API Key" icon="pi pi-key" (onClick)="createApiKey()"
+          [loading]="apiKeysCreating()" [disabled]="!newKeyName.trim()" />
+      </div>
+
+      <!-- One-time key display -->
+      @if (createdKey()) {
+        <div style="margin-top:24px">
+          <div class="api-key-warning">
+            <i class="pi pi-exclamation-triangle"></i>
+            Copy this key now — it won't be shown again!
+          </div>
+          <div class="api-key-display">
+            {{ createdKey()!.key }}
+            <button class="api-key-copy-btn" (click)="copyKey(createdKey()!.key)">Copy</button>
+          </div>
+          <div style="margin-top:12px">
+            <p-button label="Got it" icon="pi pi-check" severity="secondary" size="small" (onClick)="createdKey.set(null)" />
+          </div>
+        </div>
+      }
+
+      <!-- Keys table -->
+      <div class="settings-divider"></div>
+      <div class="settings-section-title">Your API Keys</div>
+
+      @if (apiKeysLoading()) {
+        <p class="settings-desc">Loading...</p>
+      } @else if (apiKeys().length === 0) {
+        <p class="settings-desc">No API keys yet. Generate one to get started.</p>
+      } @else {
+        <div style="overflow-x:auto;margin-top:12px">
+          <table class="pf-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Key Prefix</th>
+                <th>Scopes</th>
+                <th>Created</th>
+                <th>Last Used</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (key of apiKeys(); track key.id) {
+                <tr>
+                  <td>{{ key.name }}</td>
+                  <td><span class="pf-mono">{{ key.prefix }}...</span></td>
+                  <td>
+                    @for (scope of key.scopes; track scope) {
+                      <span class="scope-badge" [class.read]="scope === 'READ'" [class.write]="scope === 'WRITE'" [class.trade]="scope === 'TRADE'">{{ scope }}</span>
+                    }
+                  </td>
+                  <td class="pf-mono">{{ key.createdAt | date:'MMM d, yyyy' }}</td>
+                  <td class="pf-mono">{{ key.lastUsedAt ? (key.lastUsedAt | date:'MMM d, yyyy') : '—' }}</td>
+                  <td>
+                    @if (key.revoked) {
+                      <span class="status-badge" style="background:rgba(239,68,68,0.15);color:#EF4444">Revoked</span>
+                    } @else {
+                      <span class="status-badge" style="background:rgba(34,197,94,0.15);color:#22C55E">Active</span>
+                    }
+                  </td>
+                  <td>
+                    <p-button label="Revoke" icon="pi pi-ban" severity="danger" size="small" [text]="true"
+                      [disabled]="key.revoked" (onClick)="revokeApiKey(key.id)" />
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
     </div>
   }
 

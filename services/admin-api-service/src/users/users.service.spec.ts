@@ -39,6 +39,11 @@ function makePrisma() {
     userLimit: {
       upsert: vi.fn(),
     },
+    apiKey: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
   };
 }
 
@@ -361,6 +366,155 @@ describe("UsersService", () => {
       );
 
       await expect(service.updateLimits("user-1", {})).rejects.toMatchObject({
+        response: { code: "NOT_FOUND" },
+      });
+    });
+  });
+
+  // ── listApiKeys ─────────────────────────────────────────────────────────────
+
+  describe("listApiKeys", () => {
+    it("returns keys for specified user", async () => {
+      const user = makeUser();
+      prisma.user.findUnique.mockResolvedValue(user as any);
+
+      const keys = [
+        {
+          id: "key-1",
+          name: "Bot Key",
+          prefix: "pf_abcd",
+          scopes: ["READ"],
+          expiresAt: null,
+          lastUsedAt: null,
+          lastUsedIp: null,
+          revoked: false,
+          revokedAt: null,
+          createdAt: new Date(),
+        },
+      ];
+      prisma.apiKey.findMany.mockResolvedValue(keys as any);
+
+      const result = await service.listApiKeys("user-1");
+
+      expect(result).toEqual(keys);
+      expect(prisma.apiKey.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userId: "user-1" },
+          orderBy: { createdAt: "desc" },
+        }),
+      );
+    });
+
+    it("does not expose tokenHash in the select", async () => {
+      const user = makeUser();
+      prisma.user.findUnique.mockResolvedValue(user as any);
+      prisma.apiKey.findMany.mockResolvedValue([] as any);
+
+      await service.listApiKeys("user-1");
+
+      const call = prisma.apiKey.findMany.mock.calls[0][0];
+      expect(call.select.tokenHash).toBeUndefined();
+    });
+
+    it("throws NOT_FOUND when user does not exist", async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.listApiKeys("ghost")).rejects.toMatchObject({
+        response: { code: "NOT_FOUND" },
+      });
+    });
+
+    it("throws NOT_FOUND for soft-deleted user", async () => {
+      prisma.user.findUnique.mockResolvedValue(
+        makeUser({ deleted: true }) as any,
+      );
+
+      await expect(service.listApiKeys("user-1")).rejects.toMatchObject({
+        response: { code: "NOT_FOUND" },
+      });
+    });
+  });
+
+  // ── revokeApiKey ────────────────────────────────────────────────────────────
+
+  describe("revokeApiKey", () => {
+    it("sets revoked=true and returns { revoked: true }", async () => {
+      const user = makeUser();
+      prisma.user.findUnique.mockResolvedValue(user as any);
+      prisma.apiKey.findUnique.mockResolvedValue({
+        id: "key-1",
+        userId: "user-1",
+        revoked: false,
+      } as any);
+      prisma.apiKey.update.mockResolvedValue({ revoked: true } as any);
+
+      const result = await service.revokeApiKey("user-1", "key-1");
+
+      expect(result).toEqual({ revoked: true });
+      expect(prisma.apiKey.update).toHaveBeenCalledWith({
+        where: { id: "key-1" },
+        data: {
+          revoked: true,
+          revokedAt: expect.any(Date),
+        },
+      });
+    });
+
+    it("throws NOT_FOUND for unknown key id", async () => {
+      const user = makeUser();
+      prisma.user.findUnique.mockResolvedValue(user as any);
+      prisma.apiKey.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.revokeApiKey("user-1", "nonexistent"),
+      ).rejects.toMatchObject({
+        response: { code: "NOT_FOUND" },
+      });
+    });
+
+    it("throws NOT_FOUND when key belongs to a different user", async () => {
+      const user = makeUser();
+      prisma.user.findUnique.mockResolvedValue(user as any);
+      prisma.apiKey.findUnique.mockResolvedValue({
+        id: "key-1",
+        userId: "other-user",
+        revoked: false,
+      } as any);
+
+      await expect(
+        service.revokeApiKey("user-1", "key-1"),
+      ).rejects.toMatchObject({
+        response: { code: "NOT_FOUND" },
+      });
+
+      expect(prisma.apiKey.update).not.toHaveBeenCalled();
+    });
+
+    it("throws ALREADY_REVOKED (409) when key is already revoked", async () => {
+      const user = makeUser();
+      prisma.user.findUnique.mockResolvedValue(user as any);
+      prisma.apiKey.findUnique.mockResolvedValue({
+        id: "key-1",
+        userId: "user-1",
+        revoked: true,
+      } as any);
+
+      await expect(
+        service.revokeApiKey("user-1", "key-1"),
+      ).rejects.toMatchObject({
+        response: { code: "ALREADY_REVOKED" },
+        status: HttpStatus.CONFLICT,
+      });
+
+      expect(prisma.apiKey.update).not.toHaveBeenCalled();
+    });
+
+    it("throws NOT_FOUND when user does not exist", async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.revokeApiKey("ghost", "key-1"),
+      ).rejects.toMatchObject({
         response: { code: "NOT_FOUND" },
       });
     });

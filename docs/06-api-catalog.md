@@ -16,6 +16,19 @@
 | Admin JWT | `Authorization: Bearer <token>` | 1 hour | admin-auth-service |
 | Bot JWT | `Authorization: Bearer <token>` | 30 days | auth-service |
 | Internal JWT | `Authorization: Bearer <token>` | 30 seconds | each service (for service-to-service calls) |
+| API Key | `Authorization: Bearer pf_xxxx...` | Configurable (optional expiry) | auth-service |
+
+### API Key Authentication
+
+External tools, AI agents, and scripts can authenticate using API keys instead of JWTs.
+
+- Include `Authorization: Bearer pf_xxxx...` header (keys always start with `pf_` prefix)
+- Keys are scoped: **READ** (view data), **WRITE** (modify strategies/settings), **TRADE** (place orders)
+- Keys are SHA256-hashed at rest; the plaintext key is shown only once at creation
+- Max 10 active keys per user
+- Optional expiration (`expiresInDays` at creation time)
+- `JwtAuthGuard` detects the `pf_` prefix, SHA256 hashes the token, looks up the hash in the database, and sets `request.user` + `request.apiKeyMeta`
+- `ApiKeyScopeGuard` checks required scopes via the `@RequireScopes()` decorator
 
 ### Error response (all endpoints)
 
@@ -311,6 +324,80 @@ Generate a short-lived link code for connecting a Telegram or Discord bot.
   "expiresIn": 300
 }
 ```
+
+---
+
+### POST /auth/v1/api-keys
+
+Create a new API key for the authenticated user.
+
+**Auth:** User JWT
+**Rate limit:** 10 req/hour per user
+
+**Request:**
+```json
+{
+  "name": "My Trading Bot",
+  "scopes": ["READ", "WRITE", "TRADE"],
+  "expiresInDays": 90
+}
+```
+
+- `name` — descriptive label for the key
+- `scopes` — array of `READ`, `WRITE`, `TRADE` (at least one required)
+- `expiresInDays` — optional; key never expires if omitted
+
+**Response `201`:**
+```json
+{
+  "id": "uuid",
+  "name": "My Trading Bot",
+  "key": "pf_abc123...full-plaintext-key",
+  "prefix": "pf_abc123",
+  "scopes": ["READ", "WRITE", "TRADE"],
+  "expiresAt": "2026-06-19T00:00:00Z"
+}
+```
+
+> **Warning:** The `key` field is returned **only once** at creation. It cannot be retrieved again.
+
+**Errors:** `400 VALIDATION_ERROR` · `409 MAX_KEYS_REACHED` (limit: 10 active keys per user)
+
+---
+
+### GET /auth/v1/api-keys
+
+List all API keys for the authenticated user. Does not include `tokenHash`.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+[
+  {
+    "id": "uuid",
+    "name": "My Trading Bot",
+    "prefix": "pf_abc123",
+    "scopes": ["READ", "WRITE", "TRADE"],
+    "createdAt": "2026-03-21T10:00:00Z",
+    "expiresAt": "2026-06-19T00:00:00Z",
+    "lastUsedAt": "2026-03-21T12:30:00Z",
+    "status": "ACTIVE"
+  }
+]
+```
+
+---
+
+### DELETE /auth/v1/api-keys/:id
+
+Revoke an API key. The key becomes immediately unusable.
+
+**Auth:** User JWT
+
+**Response `204`:** No body.
+
+**Errors:** `404 API_KEY_NOT_FOUND`
 
 ---
 
@@ -1208,6 +1295,30 @@ Full user detail including credential status (no key values), login history, str
 **Request:** Any subset of limit fields.
 
 **Response `200`:** Updated UserLimit object.
+
+---
+
+### User API Keys (Admin)
+
+#### GET /api/v1/users/:id/api-keys
+
+List all API keys for a specific user.
+
+**Auth:** Admin JWT
+
+**Response `200`:** Array of API key objects (same shape as user-facing list, without `tokenHash`).
+
+---
+
+#### DELETE /api/v1/users/:id/api-keys/:keyId
+
+Revoke a specific API key for a user. Audit logged.
+
+**Auth:** Admin JWT
+
+**Response `204`:** No body.
+
+**Errors:** `404 API_KEY_NOT_FOUND`
 
 ---
 

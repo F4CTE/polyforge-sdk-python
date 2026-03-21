@@ -23,6 +23,7 @@
 23. [Typography Scale](#23-typography-scale)
 24. [Status / Semantic Colors](#24-status--semantic-colors)
 25. [Responsive Design](#25-responsive-design)
+26. [API Keys UI](#26-api-keys-ui)
 
 ---
 
@@ -1419,6 +1420,34 @@ The UI adapts to smaller viewports with targeted responsive rules.
 - Dashboard stat grids collapse from 4-column to 2-column at 768px, then to 1-column at 480px
 - Summary cards (portfolio, paper trading) stack vertically on mobile
 - Page titles shrink to 18px (`var(--pf-font-lg)`) on mobile viewports
+
+---
+
+## 26. API Keys UI
+
+### Key Display Pattern
+
+- The full API key is displayed **only once** at creation, in a monospace read-only field
+- A **"Copy" button** (icon: `pi pi-copy`) copies the key to the clipboard with a brief success toast
+- A **warning banner** below the key reads: "This key will not be shown again. Store it securely."
+- After dismissal, only the `prefix` (e.g., `pf_abc123`) is shown in the key list
+
+### Scope Badges
+
+| Scope | Color | Token |
+|---|---|---|
+| READ | Blue (`--pf-info` / `#3B82F6`) | `--pf-info-bg` background |
+| WRITE | Amber (`--pf-warning` / `#F59E0B`) | `--pf-warning-bg` background |
+| TRADE | Green (`--pf-success` / `#10B981`) | `--pf-success-bg` background |
+
+Badges use `letter-spacing: 0.08em`, `text-transform: uppercase`, `font-size: 11px` — consistent with existing category badges.
+
+### Status Badges
+
+| Status | Color | Token |
+|---|---|---|
+| ACTIVE | Green (`--pf-success` / `#10B981`) | `--pf-success-bg` background |
+| REVOKED | Red (`--pf-danger` / `#EF4444`) | `--pf-danger-bg` background |
 
 ---
 

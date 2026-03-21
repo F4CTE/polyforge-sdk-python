@@ -1,7 +1,8 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
-import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
+import { ThrottlerModule } from "@nestjs/throttler";
+import { ApiKeyThrottlerGuard } from "./common/api-key-throttler.guard";
 import { JwtModule } from "@nestjs/jwt";
 import { SharedDbModule } from "@polyforge/shared-db";
 import { RedisModule } from "@polyforge/shared-redis";
@@ -51,6 +52,6 @@ import { EventsModule } from "./gateway/events.module";
     EventsModule,
   ],
   controllers: [HealthController],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [{ provide: APP_GUARD, useClass: ApiKeyThrottlerGuard }],
 })
 export class AppModule {}

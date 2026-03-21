@@ -38,3 +38,34 @@ export enum UserStatus {
   VERIFIED = "VERIFIED",
   CONNECTED = "CONNECTED",
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API Key types
+// ─────────────────────────────────────────────────────────────────────────────
+
+export enum ApiKeyScopeEnum {
+  READ = "READ",
+  WRITE = "WRITE",
+  TRADE = "TRADE",
+}
+
+export interface ApiKeyMeta {
+  keyId: string;
+  scopes: string[];
+}
+
+export interface ApiKeyResponse {
+  id: string;
+  name: string;
+  prefix: string;
+  scopes: string[];
+  expiresAt: string | null;
+  lastUsedAt: string | null;
+  lastUsedIp: string | null;
+  revoked: boolean;
+  createdAt: string;
+}
+
+export interface CreateApiKeyResponse extends ApiKeyResponse {
+  key: string; // plaintext — returned once
+}

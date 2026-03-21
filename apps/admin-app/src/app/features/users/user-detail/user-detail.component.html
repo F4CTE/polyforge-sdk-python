@@ -138,6 +138,58 @@
         </div>
       </div>
 
+      <!-- API Keys card -->
+      <div class="admin-card" style="grid-column:1/-1">
+        <div class="admin-card-title">API Keys ({{ userApiKeys().length }})</div>
+        @if (apiKeysLoading()) {
+          <p style="color:var(--pf-text-muted);padding:12px 0">Loading...</p>
+        } @else if (userApiKeys().length === 0) {
+          <p style="color:var(--pf-text-muted);padding:12px 0">No API keys.</p>
+        } @else {
+          <div style="overflow-x:auto">
+            <table class="admin-table" style="width:100%;margin-top:8px">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Prefix</th>
+                  <th>Scopes</th>
+                  <th>Created</th>
+                  <th>Last Used</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (key of userApiKeys(); track key.id) {
+                  <tr>
+                    <td>{{ key.name }}</td>
+                    <td><span class="pf-mono">{{ key.prefix }}...</span></td>
+                    <td>
+                      @for (scope of key.scopes; track scope) {
+                        <span class="admin-badge" [class.info]="scope === 'READ'" [class.warning]="scope === 'WRITE'" [class.success]="scope === 'TRADE'" style="font-size:10px;margin-right:4px">{{ scope }}</span>
+                      }
+                    </td>
+                    <td class="pf-mono">{{ key.createdAt | date:'MMM d, yyyy' }}</td>
+                    <td class="pf-mono">{{ key.lastUsedAt ? (key.lastUsedAt | date:'MMM d, yyyy') : '—' }}</td>
+                    <td>
+                      @if (key.revoked) {
+                        <span class="admin-badge danger">Revoked</span>
+                      } @else {
+                        <span class="admin-badge success">Active</span>
+                      }
+                    </td>
+                    <td>
+                      <p-button label="Revoke" icon="pi pi-ban" severity="danger" size="small" [text]="true"
+                        [disabled]="key.revoked" (onClick)="revokeUserApiKey(key.id)" />
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
     </div>
   }
 

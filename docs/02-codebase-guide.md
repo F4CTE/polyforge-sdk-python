@@ -144,6 +144,14 @@ const price = await redisService.getJson<PriceData>(`cache:price:${tokenId}`);
 
 JWT guards and internal service client. Use `@UseGuards(JwtAuthGuard)` and `InternalServiceClient` from here — never reimplement JWT validation.
 
+#### API Key Authentication Flow
+
+1. User generates a key in **Settings → API Keys** tab
+2. External tool sends `Authorization: Bearer pf_...` header
+3. `JwtAuthGuard` detects the `pf_` prefix, SHA256 hashes the token, and looks up the hash in the database
+4. Sets `request.user` (the key's owner) + `request.apiKeyMeta` (key id, scopes, expiry)
+5. `ApiKeyScopeGuard` checks required scopes via the `@RequireScopes()` decorator on the controller method
+
 ### `shared-db`
 
 Prisma client as a NestJS module. Use `@InjectDb()` from this package — never instantiate Prisma directly.
