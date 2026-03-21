@@ -56,6 +56,11 @@ export class AdminsComponent implements OnInit {
   editRole: AdminRole = 'ADMIN';
   editActive    = true;
   editPassword  = '';
+  editConfirmPassword = '';
+
+  get passwordsMatch(): boolean {
+    return this.editPassword === this.editConfirmPassword;
+  }
 
   readonly roleOptions = [
     { label: 'Super Admin', value: 'SUPER_ADMIN' as AdminRole },
@@ -114,12 +119,14 @@ export class AdminsComponent implements OnInit {
     this.editRole        = admin.role;
     this.editActive      = admin.active;
     this.editPassword    = '';
+    this.editConfirmPassword = '';
     this.showEdit.set(true);
   }
 
   submitEdit() {
     const target = this.editTarget();
     if (!target) return;
+    if (this.editPassword && !this.passwordsMatch) return;
     this.saving.set(true);
 
     const data: { displayName?: string; role?: AdminRole; active?: boolean; password?: string } = {

@@ -148,6 +148,18 @@
                     [toggleMask]="true" [feedback]="false"
                     styleClass="w-full" inputStyleClass="w-full" />
       </div>
+
+      @if (editPassword) {
+        <div class="admin-form-field">
+          <label class="admin-form-label">Confirm password</label>
+          <p-password [(ngModel)]="editConfirmPassword" placeholder="Re-enter new password"
+                      [toggleMask]="true" [feedback]="false"
+                      styleClass="w-full" inputStyleClass="w-full" />
+          @if (editConfirmPassword && !passwordsMatch) {
+            <small style="color:var(--pf-status-error-color, #EF4444);margin-top:4px;display:block">Passwords do not match</small>
+          }
+        </div>
+      }
     </div>
   }
 
@@ -155,6 +167,7 @@
     <p-button label="Cancel" severity="secondary" [text]="true"
               (onClick)="showEdit.set(false)" [disabled]="saving()" />
     <p-button label="Save" icon="pi pi-check" (onClick)="submitEdit()"
-              [loading]="saving()" [disabled]="saving()" />
+              [loading]="saving()"
+              [disabled]="saving() || (editPassword && (!editConfirmPassword || !passwordsMatch))" />
   </ng-template>
 </p-dialog>
