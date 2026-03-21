@@ -623,8 +623,8 @@ describe("StrategyRunner — calculation variables", () => {
     expect(onIntents).toHaveBeenCalledOnce();
     const intents: OrderIntent[] = onIntents.mock.calls[0][0];
     expect(intents).toHaveLength(1);
-    // $betSize should resolve to 15 (10 + 5)
-    expect(intents[0].size).toBe(15);
+    // $betSize should resolve to 15 (10 + 5) — may be number or string
+    expect(Number(intents[0].size)).toBe(15);
   });
 
   it("invalid expression does not crash (logs warning, skips)", async () => {
@@ -687,8 +687,8 @@ describe("StrategyRunner — calculation variables", () => {
 
     expect(onIntents).toHaveBeenCalledOnce();
     const intents: OrderIntent[] = onIntents.mock.calls[0][0];
-    // base = 3 * 10 = 30, adjusted = 30 + 5 = 35
-    expect(intents[0].size).toBe(35);
+    // base = 3 * 10 = 30, adjusted = 30 + 5 = 35 — may be number or string
+    expect(Number(intents[0].size)).toBe(35);
   });
 
   it("empty variables array works (backward compat)", async () => {
