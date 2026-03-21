@@ -169,6 +169,22 @@ export class MarketsListComponent implements OnInit {
     return Math.round(parseFloat(token.price || '0') * 100);
   }
 
+  yesPercent(market: Market): number {
+    const token = market.tokens.find(t => t.outcome === 'YES');
+    if (!token) return 50;
+    const live = this.livePrices()[token.tokenId];
+    const raw = live ?? token.price;
+    return Math.round(parseFloat(raw || '0') * 100);
+  }
+
+  noPercent(market: Market): number {
+    const token = market.tokens.find(t => t.outcome === 'NO');
+    if (!token) return 50;
+    const live = this.livePrices()[token.tokenId];
+    const raw = live ?? token.price;
+    return Math.round(parseFloat(raw || '0') * 100);
+  }
+
   volume(market: Market): string {
     const v = parseFloat(market.volume24h);
     if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
@@ -214,6 +230,12 @@ export class MarketsListComponent implements OnInit {
       Technology: { bg: 'rgba(236,72,153,0.15)',   text: '#EC4899' },
     };
     return map[cat] ?? { bg: 'rgba(107,114,128,0.15)', text: '#6B7280' };
+  }
+
+  strategyCount(market: Market): number {
+    // Mock until API supports activeStrategies
+    const hash = market.id?.charCodeAt(0) || 0;
+    return hash % 15;
   }
 
   categoryGradient(cat: string): string {
