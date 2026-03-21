@@ -1,8 +1,330 @@
+import { useState } from 'react';
+import { Link } from 'react-router';
+import { ChevronDown, ChevronUp, Key } from 'lucide-react';
+
+/* ─── Types ──────────────────────────────────────────────────────────── */
+
+interface Endpoint {
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  path: string;
+  scope: string;
+  description: string;
+  queryParams?: string;
+  curl: string;
+}
+
+interface EndpointCategory {
+  title: string;
+  endpoints: Endpoint[];
+}
+
+/* ─── Data ───────────────────────────────────────────────────────────── */
+
+const METHOD_STYLES: Record<string, { bg: string; text: string }> = {
+  GET:    { bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
+  POST:   { bg: 'bg-blue-500/10', text: 'text-blue-400' },
+  PATCH:  { bg: 'bg-amber-500/10', text: 'text-amber-400' },
+  DELETE: { bg: 'bg-red-500/10', text: 'text-red-400' },
+};
+
+const SCOPE_STYLES: Record<string, { bg: string; text: string }> = {
+  READ:  { bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
+  WRITE: { bg: 'bg-blue-500/10', text: 'text-blue-400' },
+  TRADE: { bg: 'bg-amber-500/10', text: 'text-amber-400' },
+};
+
+const ERROR_SHAPE = `{
+  "statusCode": 401,
+  "code": "UNAUTHORIZED",
+  "message": "Invalid or expired API key",
+  "field": null,
+  "requestId": "req_abc123"
+}`;
+
+const ERROR_CODES = [
+  { code: 400, meaning: 'Bad Request -- invalid parameters or malformed body' },
+  { code: 401, meaning: 'Unauthorized -- missing or invalid API key' },
+  { code: 403, meaning: 'Forbidden -- API key lacks the required scope' },
+  { code: 404, meaning: 'Not Found -- resource does not exist' },
+  { code: 409, meaning: 'Conflict -- action conflicts with current state' },
+  { code: 422, meaning: 'Unprocessable Entity -- validation failed' },
+  { code: 429, meaning: 'Too Many Requests -- rate limit exceeded' },
+  { code: 500, meaning: 'Internal Server Error -- unexpected error on our end' },
+];
+
+const CATEGORIES: EndpointCategory[] = [
+  {
+    title: 'Markets',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/markets', scope: 'READ', description: 'List all available markets with optional filtering.', queryParams: 'search, sort, category',
+        curl: 'curl -X GET "https://api.polyforge.app/api/v1/markets?search=election&sort=volume" \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'GET', path: '/api/v1/markets/:id', scope: 'READ', description: 'Get full details for a single market.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/markets/mkt_abc123 \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'GET', path: '/api/v1/markets/:tokenId/price-history', scope: 'READ', description: 'Get OHLCV price history for a market token.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/markets/tok_abc123/price-history \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'GET', path: '/api/v1/markets/:tokenId/book', scope: 'READ', description: 'Get the current order book for a market token.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/markets/tok_abc123/book \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+    ],
+  },
+  {
+    title: 'Strategies',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/strategies', scope: 'READ', description: 'List all your strategies.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/strategies \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'POST', path: '/api/v1/strategies', scope: 'WRITE', description: 'Create a new strategy.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/strategies \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"name": "My Strategy", "blocks": [...]}\''},
+      { method: 'GET', path: '/api/v1/strategies/:id', scope: 'READ', description: 'Get full details for a strategy.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/strategies/strat_123 \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'PATCH', path: '/api/v1/strategies/:id', scope: 'WRITE', description: 'Update a strategy.',
+        curl: 'curl -X PATCH https://api.polyforge.app/api/v1/strategies/strat_123 \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"name": "Updated Name"}\'' },
+      { method: 'DELETE', path: '/api/v1/strategies/:id', scope: 'WRITE', description: 'Delete a strategy. Must be stopped first.',
+        curl: 'curl -X DELETE https://api.polyforge.app/api/v1/strategies/strat_123 \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'POST', path: '/api/v1/strategies/:id/start', scope: 'TRADE', description: 'Start live execution of a strategy.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/strategies/strat_123/start \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'POST', path: '/api/v1/strategies/:id/stop', scope: 'TRADE', description: 'Stop a running strategy.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/strategies/strat_123/stop \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'POST', path: '/api/v1/strategies/:id/pause', scope: 'TRADE', description: 'Pause a running strategy temporarily.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/strategies/strat_123/pause \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'POST', path: '/api/v1/strategies/:id/resume', scope: 'TRADE', description: 'Resume a paused strategy.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/strategies/strat_123/resume \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+    ],
+  },
+  {
+    title: 'Orders',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/orders', scope: 'READ', description: 'List your orders with optional filtering.', queryParams: 'status, page, limit',
+        curl: 'curl -X GET "https://api.polyforge.app/api/v1/orders?status=filled&limit=50" \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'POST', path: '/api/v1/orders/close-position', scope: 'TRADE', description: 'Close an open position by selling at market.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/orders/close-position \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"positionId": "pos_abc123"}\'' },
+    ],
+  },
+  {
+    title: 'Portfolio',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/portfolio', scope: 'READ', description: 'Get your current positions and aggregated P&L.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/portfolio \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'GET', path: '/api/v1/portfolio/pnl', scope: 'READ', description: 'Get P&L time series data for charting.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/portfolio/pnl \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+    ],
+  },
+  {
+    title: 'Alerts',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/alerts', scope: 'READ', description: 'List all your price alerts.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/alerts \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'POST', path: '/api/v1/alerts', scope: 'WRITE', description: 'Create a new price alert.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/alerts \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"marketId": "mkt_abc123", "condition": "above", "price": 0.75}\'' },
+      { method: 'DELETE', path: '/api/v1/alerts/:id', scope: 'WRITE', description: 'Delete a price alert.',
+        curl: 'curl -X DELETE https://api.polyforge.app/api/v1/alerts/alert_123 \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+    ],
+  },
+  {
+    title: 'Backtests',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/backtests', scope: 'READ', description: 'List your backtest runs.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/backtests \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'POST', path: '/api/v1/backtests', scope: 'WRITE', description: 'Start a new backtest run.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/backtests \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"strategyId": "strat_123", "from": "2025-01-01", "to": "2025-06-01"}\'' },
+      { method: 'GET', path: '/api/v1/backtests/:id', scope: 'READ', description: 'Get results for a backtest run.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/backtests/bt_abc123 \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+    ],
+  },
+  {
+    title: 'Profile',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/profile/:username', scope: 'READ', description: 'Get a user profile including public strategies and stats.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/profile/alphatrader \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+    ],
+  },
+  {
+    title: 'Paper Trading',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/paper/summary', scope: 'READ', description: 'Get your paper trading account summary.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/paper/summary \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'POST', path: '/api/v1/paper/reset', scope: 'WRITE', description: 'Reset your paper trading account to default balance.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/paper/reset \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+    ],
+  },
+];
+
+/* ─── Component ──────────────────────────────────────────────────────── */
+
 export function Component() {
+  const [openEndpoints, setOpenEndpoints] = useState<Set<string>>(new Set());
+
+  function toggleEndpoint(key: string) {
+    setOpenEndpoints(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold">API Documentation</h1>
-      <p className="text-pf-text-muted mt-2">Coming soon...</p>
+    <div className="p-6 max-w-4xl mx-auto space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-pf-text mb-1">API Documentation</h1>
+        <p className="text-sm text-pf-text-secondary leading-relaxed">
+          Use your API key to integrate with external tools, AI agents, and custom applications.
+        </p>
+      </div>
+
+      {/* Authentication */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-pf-text">Authentication</h2>
+        <p className="text-sm text-pf-text-secondary leading-relaxed">
+          Authenticate every request by including your API key in the{' '}
+          <code className="bg-pf-overlay px-1.5 py-0.5 rounded text-xs font-mono">Authorization</code> header:
+        </p>
+        <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-xs font-mono text-pf-text overflow-x-auto">
+          Authorization: Bearer pf_your_key_here
+        </pre>
+        <p className="text-sm text-pf-text-secondary">
+          Generate and manage your API keys in{' '}
+          <Link to="/settings" className="text-pf-cyan-400 hover:underline">Settings &rarr; API Keys</Link>.
+        </p>
+
+        <h3 className="text-base font-semibold text-pf-text mt-4">Scopes</h3>
+        <div className="space-y-2">
+          {[
+            { scope: 'READ', desc: 'View data: markets, portfolio, strategies, orders, alerts, backtests, profiles' },
+            { scope: 'WRITE', desc: 'Modify strategies, settings, alerts, and start backtests' },
+            { scope: 'TRADE', desc: 'Place orders, start/stop/pause/resume strategies, close positions' },
+          ].map(s => {
+            const ss = SCOPE_STYLES[s.scope];
+            return (
+              <div key={s.scope} className="flex items-center gap-3">
+                <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${ss.bg} ${ss.text}`}>{s.scope}</span>
+                <span className="text-xs text-pf-text-secondary">{s.desc}</span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Endpoints */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-pf-text">Endpoints</h2>
+        {CATEGORIES.map((category, catIdx) => (
+          <div key={category.title} className="space-y-2">
+            <h3 className="text-sm font-semibold text-pf-text">{category.title}</h3>
+            {category.endpoints.map((ep, epIdx) => {
+              const key = `${catIdx}-${epIdx}`;
+              const isOpen = openEndpoints.has(key);
+              const ms = METHOD_STYLES[ep.method];
+              const ss = SCOPE_STYLES[ep.scope];
+              return (
+                <div key={key}>
+                  <button
+                    onClick={() => toggleEndpoint(key)}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 bg-pf-elevated border border-pf-border rounded-pf hover:border-pf-border-strong transition-colors text-left"
+                  >
+                    <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${ms.bg} ${ms.text}`}>{ep.method}</span>
+                    <code className="flex-1 text-xs font-mono text-pf-text">{ep.path}</code>
+                    <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${ss.bg} ${ss.text}`}>{ep.scope}</span>
+                    {isOpen ? <ChevronUp className="size-3 text-pf-text-muted" /> : <ChevronDown className="size-3 text-pf-text-muted" />}
+                  </button>
+                  {isOpen && (
+                    <div className="px-3 pb-3 border border-t-0 border-pf-border rounded-b-pf-lg -mt-px bg-pf-elevated">
+                      <p className="text-xs text-pf-text-secondary mt-3 mb-2">{ep.description}</p>
+                      {ep.queryParams && (
+                        <p className="text-[11px] text-pf-text-muted mb-2">
+                          Query params: <code className="font-mono">{ep.queryParams}</code>
+                        </p>
+                      )}
+                      <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap">
+                        {ep.curl}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </section>
+
+      {/* Rate Limits */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-pf-text">Rate Limits</h2>
+        <p className="text-sm text-pf-text-secondary leading-relaxed">
+          Each API key is limited to <strong className="text-pf-text">120 requests per minute</strong>.
+          If you exceed the limit, the API responds with status{' '}
+          <code className="bg-pf-overlay px-1.5 py-0.5 rounded text-xs font-mono">429 Too Many Requests</code>.
+        </p>
+        <p className="text-sm text-pf-text-secondary leading-relaxed">
+          The response includes a{' '}
+          <code className="bg-pf-overlay px-1.5 py-0.5 rounded text-xs font-mono">Retry-After</code>{' '}
+          header indicating how many seconds to wait before retrying.
+        </p>
+      </section>
+
+      {/* Error Codes */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-pf-text">Error Codes</h2>
+        <p className="text-sm text-pf-text-secondary leading-relaxed mb-3">All errors follow a standard shape:</p>
+        <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-xs font-mono text-pf-text overflow-x-auto">
+          {ERROR_SHAPE}
+        </pre>
+        <div className="overflow-x-auto mt-4">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-pf-border">
+                <th className="text-left py-2 px-3 text-xs text-pf-text-muted font-semibold">Code</th>
+                <th className="text-left py-2 px-3 text-xs text-pf-text-muted font-semibold">Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ERROR_CODES.map(err => (
+                <tr key={err.code} className="border-b border-pf-border-subtle">
+                  <td className="py-2 px-3 font-mono text-pf-text">{err.code}</td>
+                  <td className="py-2 px-3 text-pf-text-secondary">{err.meaning}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Code Examples */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-pf-text">Code Examples</h2>
+
+        <div>
+          <h3 className="text-sm font-semibold text-pf-text mb-2">1. List your strategies</h3>
+          <p className="text-[11px] text-pf-text-muted mb-1">curl</p>
+          <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap mb-3">
+{`curl -X GET https://api.polyforge.app/api/v1/strategies \\
+  -H "Authorization: Bearer pf_live_abc123..."`}
+          </pre>
+          <p className="text-[11px] text-pf-text-muted mb-1">JavaScript (fetch)</p>
+          <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap">
+{`const res = await fetch('https://api.polyforge.app/api/v1/strategies', {
+  headers: { 'Authorization': 'Bearer pf_live_abc123...' }
+});
+const strategies = await res.json();`}
+          </pre>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-pf-text mb-2">2. Start a strategy</h3>
+          <p className="text-[11px] text-pf-text-muted mb-1">curl</p>
+          <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap">
+{`curl -X POST https://api.polyforge.app/api/v1/strategies/strat_123/start \\
+  -H "Authorization: Bearer pf_live_abc123..."`}
+          </pre>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-pf-text mb-2">3. Get portfolio P&L</h3>
+          <p className="text-[11px] text-pf-text-muted mb-1">curl</p>
+          <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap">
+{`curl -X GET https://api.polyforge.app/api/v1/portfolio/pnl \\
+  -H "Authorization: Bearer pf_live_abc123..."`}
+          </pre>
+        </div>
+      </section>
     </div>
   );
 }

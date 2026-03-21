@@ -1,0 +1,329 @@
+// ─── Block definitions for the strategy builder ─────────────────────────────
+
+export type BlockSection = 'safety' | 'triggers' | 'conditions' | 'actions';
+
+export interface BlockField {
+  key: string;
+  label: string;
+  type: 'text' | 'number';
+  placeholder: string;
+}
+
+export interface BlockDef {
+  type: string;
+  label: string;
+  description: string;
+  fields: BlockField[];
+}
+
+export const SECTION_META: Record<
+  BlockSection,
+  { label: string; color: string; icon: string }
+> = {
+  safety:     { label: 'Safety',     color: '#EF4444', icon: 'shield' },
+  triggers:   { label: 'Triggers',   color: '#F59E0B', icon: 'zap' },
+  conditions: { label: 'Conditions', color: '#3B82F6', icon: 'filter' },
+  actions:    { label: 'Actions',    color: '#22C55E', icon: 'play' },
+};
+
+export const SECTION_COLUMNS: Record<BlockSection, number> = {
+  safety:     100,
+  triggers:   450,
+  conditions: 800,
+  actions:    1150,
+};
+
+export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
+  // ── Safety blocks (6) ──────────────────────────────────────────────────────
+  safety: [
+    {
+      type: 'stop_if_daily_loss',
+      label: 'Stop on Daily Loss',
+      description: 'Halts if cumulative daily loss exceeds threshold.',
+      fields: [{ key: 'maxLossUsdc', label: 'Max Loss (USDC)', type: 'number', placeholder: '200' }],
+    },
+    {
+      type: 'stop_if_consecutive_losses',
+      label: 'Stop on Streak Losses',
+      description: 'Halts after N consecutive losing trades.',
+      fields: [{ key: 'count', label: 'Max consecutive losses', type: 'number', placeholder: '3' }],
+    },
+    {
+      type: 'stop_if_position_size',
+      label: 'Max Position Size',
+      description: 'Prevents positions larger than limit.',
+      fields: [{ key: 'maxPositionUsdc', label: 'Max Position (USDC)', type: 'number', placeholder: '500' }],
+    },
+    {
+      type: 'stop_if_drawdown',
+      label: 'Max Drawdown',
+      description: 'Halts if drawdown exceeds percentage.',
+      fields: [{ key: 'maxDrawdownPct', label: 'Max Drawdown (%)', type: 'number', placeholder: '10' }],
+    },
+    {
+      type: 'max_daily_bets',
+      label: 'Max Daily Bets',
+      description: 'Limits the number of bets placed per day.',
+      fields: [{ key: 'count', label: 'Max bets per day', type: 'number', placeholder: '10' }],
+    },
+    {
+      type: 'time_window',
+      label: 'Time Window',
+      description: 'Only trades within the specified hours (UTC).',
+      fields: [
+        { key: 'startHour', label: 'Start Hour (0-23)', type: 'number', placeholder: '9' },
+        { key: 'endHour', label: 'End Hour (0-23)', type: 'number', placeholder: '17' },
+      ],
+    },
+  ],
+
+  // ── Trigger blocks (13) ────────────────────────────────────────────────────
+  triggers: [
+    {
+      type: 'price_crosses_up',
+      label: 'Price Crosses Up',
+      description: 'Fires when price crosses above threshold.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'threshold', label: 'Price Threshold', type: 'number', placeholder: '0.60' },
+      ],
+    },
+    {
+      type: 'price_crosses_down',
+      label: 'Price Crosses Down',
+      description: 'Fires when price crosses below threshold.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'threshold', label: 'Price Threshold', type: 'number', placeholder: '0.40' },
+      ],
+    },
+    {
+      type: 'price_change_pct',
+      label: 'Price Change %',
+      description: 'Fires on price change over time window.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'pct', label: 'Change %', type: 'number', placeholder: '5' },
+        { key: 'windowMs', label: 'Window (ms)', type: 'number', placeholder: '60000' },
+      ],
+    },
+    {
+      type: 'volume_spike',
+      label: 'Volume Spike',
+      description: 'Fires when volume multiplier exceeds threshold.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'multiplier', label: 'Multiplier', type: 'number', placeholder: '3' },
+      ],
+    },
+    {
+      type: 'market_resolving',
+      label: 'Market Resolving',
+      description: 'Fires when market enters resolution window.',
+      fields: [],
+    },
+    {
+      type: 'market_resolved',
+      label: 'Market Resolved',
+      description: 'Fires when market resolves.',
+      fields: [],
+    },
+    {
+      type: 'price_above',
+      label: 'Price Above',
+      description: 'True each tick when price is above threshold.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'threshold', label: 'Threshold', type: 'number', placeholder: '0.60' },
+      ],
+    },
+    {
+      type: 'price_below',
+      label: 'Price Below',
+      description: 'True each tick when price is below threshold.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'threshold', label: 'Threshold', type: 'number', placeholder: '0.40' },
+      ],
+    },
+    {
+      type: 'spread_below',
+      label: 'Spread Below',
+      description: 'True when spread is tight enough.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'maxSpread', label: 'Max Spread', type: 'number', placeholder: '0.05' },
+      ],
+    },
+    {
+      type: 'liquidity_above',
+      label: 'Liquidity Above',
+      description: 'True when liquidity meets minimum.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'minLiquidity', label: 'Min Liquidity (USDC)', type: 'number', placeholder: '1000' },
+      ],
+    },
+    {
+      type: 'position_open',
+      label: 'Position Open',
+      description: 'True when an open position exists.',
+      fields: [{ key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' }],
+    },
+    {
+      type: 'no_position',
+      label: 'No Position',
+      description: 'True when no position is open.',
+      fields: [{ key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' }],
+    },
+    {
+      type: 'time_between',
+      label: 'Time Between',
+      description: 'True during specified hours (UTC).',
+      fields: [
+        { key: 'startHour', label: 'Start Hour', type: 'number', placeholder: '9' },
+        { key: 'endHour', label: 'End Hour', type: 'number', placeholder: '17' },
+      ],
+    },
+  ],
+
+  // ── Condition blocks (9) ───────────────────────────────────────────────────
+  conditions: [
+    {
+      type: 'min_liquidity',
+      label: 'Min Liquidity',
+      description: 'Requires minimum market liquidity.',
+      fields: [{ key: 'minUsdc', label: 'Min USDC', type: 'number', placeholder: '100' }],
+    },
+    {
+      type: 'max_spread',
+      label: 'Max Spread',
+      description: 'Requires spread below maximum.',
+      fields: [{ key: 'maxSpread', label: 'Max Spread', type: 'number', placeholder: '0.04' }],
+    },
+    {
+      type: 'min_price',
+      label: 'Min Price',
+      description: 'Token price must be above minimum.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'minPrice', label: 'Min Price', type: 'number', placeholder: '0.10' },
+      ],
+    },
+    {
+      type: 'max_price',
+      label: 'Max Price',
+      description: 'Token price must be below maximum.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'maxPrice', label: 'Max Price', type: 'number', placeholder: '0.90' },
+      ],
+    },
+    {
+      type: 'no_recent_bet',
+      label: 'No Recent Bet',
+      description: 'No bet placed in the last N ms.',
+      fields: [{ key: 'windowMs', label: 'Window (ms)', type: 'number', placeholder: '300000' }],
+    },
+    {
+      type: 'daily_loss_below',
+      label: 'Daily Loss Below',
+      description: 'Daily loss must not exceed threshold.',
+      fields: [{ key: 'maxLossUsdc', label: 'Max Loss (USDC)', type: 'number', placeholder: '100' }],
+    },
+    {
+      type: 'position_size_below',
+      label: 'Position Size Below',
+      description: 'Open position must be below limit.',
+      fields: [{ key: 'maxUsdc', label: 'Max USDC', type: 'number', placeholder: '500' }],
+    },
+    {
+      type: 'market_open',
+      label: 'Market Open',
+      description: 'Market must be accepting orders.',
+      fields: [],
+    },
+    {
+      type: 'time_in_window',
+      label: 'Time in Window',
+      description: 'Current time must be within hours (UTC).',
+      fields: [
+        { key: 'startHour', label: 'Start Hour', type: 'number', placeholder: '9' },
+        { key: 'endHour', label: 'End Hour', type: 'number', placeholder: '17' },
+      ],
+    },
+  ],
+
+  // ── Action blocks (8) ──────────────────────────────────────────────────────
+  actions: [
+    {
+      type: 'buy_yes',
+      label: 'Buy YES',
+      description: 'Buy YES tokens for the specified amount.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
+      ],
+    },
+    {
+      type: 'buy_no',
+      label: 'Buy NO',
+      description: 'Buy NO tokens for the specified amount.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
+      ],
+    },
+    {
+      type: 'sell_yes',
+      label: 'Sell YES',
+      description: 'Sell YES tokens for the specified amount.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
+      ],
+    },
+    {
+      type: 'sell_no',
+      label: 'Sell NO',
+      description: 'Sell NO tokens for the specified amount.',
+      fields: [
+        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
+      ],
+    },
+    {
+      type: 'close_position',
+      label: 'Close Position',
+      description: 'Fully close the position (FOK SELL).',
+      fields: [{ key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' }],
+    },
+    {
+      type: 'set_stop_loss',
+      label: 'Set Stop Loss',
+      description: 'Close position if loss exceeds percentage.',
+      fields: [{ key: 'pct', label: 'Stop Loss (%)', type: 'number', placeholder: '10' }],
+    },
+    {
+      type: 'set_take_profit',
+      label: 'Set Take Profit',
+      description: 'Close position if profit reaches percentage.',
+      fields: [{ key: 'pct', label: 'Take Profit (%)', type: 'number', placeholder: '20' }],
+    },
+    {
+      type: 'notify',
+      label: 'Notify',
+      description: 'Send a notification when this action fires.',
+      fields: [{ key: 'message', label: 'Message', type: 'text', placeholder: 'Alert triggered' }],
+    },
+  ],
+};
+
+/** Find a block definition by type across all sections */
+export function findBlockDef(type: string): (BlockDef & { section: BlockSection }) | undefined {
+  for (const section of Object.keys(BLOCK_DEFS) as BlockSection[]) {
+    const found = BLOCK_DEFS[section].find((d) => d.type === type);
+    if (found) return { ...found, section };
+  }
+  return undefined;
+}
