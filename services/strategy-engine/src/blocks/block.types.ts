@@ -33,6 +33,7 @@ export interface EvalContext {
   userId: string;
   state: StrategyState;
   now: number; // epoch ms
+  variables?: Record<string, number>;
 }
 
 export interface BlockResult {

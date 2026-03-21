@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, DestroyRef, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -44,6 +44,12 @@ export interface CanvasBlock {
   config: Record<string, string | number>;
   x: number;
   y: number;
+}
+
+export interface Connection {
+  id: string;
+  fromBlockId: string;
+  toBlockId: string;
 }
 
 export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
@@ -153,6 +159,9 @@ export class StrategyBuilderComponent implements OnInit {
   // ─── Canvas state ───────────────────────────────────────────────────────
 
   canvasBlocks = signal<CanvasBlock[]>([]);
+  connections = signal<Connection[]>([]);
+  drawingWire = signal<{ fromBlockId: string; fromX: number; fromY: number; mouseX: number; mouseY: number } | null>(null);
+  selectedConnectionId = signal<string | null>(null);
 
   viewBox = signal({ x: 0, y: 0, w: 1400, h: 900 });
   scale = signal(1);
@@ -168,33 +177,41 @@ export class StrategyBuilderComponent implements OnInit {
     return `${vb.x} ${vb.y} ${vb.w} ${vb.h}`;
   });
 
-  readonly connectionPaths = computed(() => {
+  readonly renderConnections = computed(() => {
     const blocks = this.canvasBlocks();
+    const conns = this.connections();
+    const blockMap = new Map(blocks.map(b => [b.id, b]));
+
+    if (conns.length > 0) {
+      // Explicit connections
+      return conns.map(conn => {
+        const from = blockMap.get(conn.fromBlockId);
+        const to = blockMap.get(conn.toBlockId);
+        if (!from || !to) return { id: conn.id, path: '' };
+        const x1 = from.x + 280, y1 = from.y + 100;
+        const x2 = to.x, y2 = to.y + 100;
+        const cx = (x1 + x2) / 2;
+        return { id: conn.id, path: `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}` };
+      }).filter(c => c.path);
+    }
+
+    // Auto-wire fallback (existing logic)
     if (blocks.length === 0) return [];
-
-    const sectionOrder: BlockSection[] = ['safety', 'triggers', 'conditions', 'actions'];
-    const paths: string[] = [];
-
+    const sectionOrder = ['safety', 'triggers', 'conditions', 'actions'] as const;
+    const results: { id: string; path: string }[] = [];
     for (let i = 0; i < sectionOrder.length - 1; i++) {
-      const fromSection = sectionOrder[i];
-      const toSection = sectionOrder[i + 1];
-      const fromBlocks = blocks.filter(b => b.section === fromSection);
-      const toBlocks = blocks.filter(b => b.section === toSection);
-
-      if (fromBlocks.length === 0 || toBlocks.length === 0) continue;
-
+      const fromBlocks = blocks.filter(b => b.section === sectionOrder[i]);
+      const toBlocks = blocks.filter(b => b.section === sectionOrder[i + 1]);
       for (const fb of fromBlocks) {
         for (const tb of toBlocks) {
-          const x1 = fb.x + 280; // right edge of from block
-          const y1 = fb.y + 100; // vertical center
-          const x2 = tb.x;       // left edge of to block
-          const y2 = tb.y + 100; // vertical center
+          const x1 = fb.x + 280, y1 = fb.y + 100;
+          const x2 = tb.x, y2 = tb.y + 100;
           const cx = (x1 + x2) / 2;
-          paths.push(`M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`);
+          results.push({ id: `auto-${fb.id}-${tb.id}`, path: `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}` });
         }
       }
     }
-    return paths;
+    return results;
   });
 
   // Palette: all block defs for the active section
@@ -245,10 +262,17 @@ export class StrategyBuilderComponent implements OnInit {
   }
 
   onCanvasMouseMove(event: MouseEvent): void {
-    if (this.draggingBlock) {
-      const svg = (event.target as Element).closest('.strategy-canvas-container')?.querySelector('svg');
+    if (this.drawingWire()) {
+      const svg = this.canvasSvgRef?.nativeElement;
       if (!svg) return;
-      const pt = this.svgPoint(svg as SVGSVGElement, event);
+      const pt = this.svgPoint(svg, event);
+      this.drawingWire.update(w => w ? { ...w, mouseX: pt.x, mouseY: pt.y } : null);
+    }
+
+    if (this.draggingBlock) {
+      const svg = this.canvasSvgRef?.nativeElement;
+      if (!svg) return;
+      const pt = this.svgPoint(svg, event);
       const block = this.draggingBlock;
       const newX = pt.x - this.dragOffset.x;
       const newY = pt.y - this.dragOffset.y;
@@ -263,9 +287,35 @@ export class StrategyBuilderComponent implements OnInit {
     }
   }
 
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    if ((event.key === 'Delete' || event.key === 'Backspace') && this.selectedConnectionId()) {
+      // Don't delete connections when typing in an input
+      const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+      this.connections.update(conns => conns.filter(c => c.id !== this.selectedConnectionId()));
+      this.selectedConnectionId.set(null);
+    }
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  onDocumentMouseMove(event: MouseEvent): void {
+    if (this.draggingBlock) {
+      this.onCanvasMouseMove(event);
+    }
+  }
+
+  @HostListener('document:mouseup')
+  onDocumentMouseUp(): void {
+    if (this.draggingBlock || this.isPanning) {
+      this.endDrag();
+    }
+  }
+
   endDrag(): void {
     this.draggingBlock = null;
     this.isPanning = false;
+    if (this.drawingWire()) this.cancelWire();
   }
 
   startPan(event: MouseEvent): void {
@@ -358,8 +408,62 @@ export class StrategyBuilderComponent implements OnInit {
     this.canvasBlocks.update(blocks => [...blocks, block]);
   }
 
+  // ─── Wire drawing methods ───────────────────────────────────────────
+
+  startWire(event: MouseEvent, block: CanvasBlock): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.drawingWire.set({
+      fromBlockId: block.id,
+      fromX: block.x + 280,
+      fromY: block.y + 100,
+      mouseX: block.x + 280,
+      mouseY: block.y + 100,
+    });
+  }
+
+  finishWire(event: MouseEvent, targetBlock: CanvasBlock): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const wire = this.drawingWire();
+    if (!wire) return;
+
+    // No self-connections
+    if (wire.fromBlockId === targetBlock.id) { this.drawingWire.set(null); return; }
+    // No duplicate connections
+    const exists = this.connections().some(c =>
+      c.fromBlockId === wire.fromBlockId && c.toBlockId === targetBlock.id
+    );
+    if (exists) { this.drawingWire.set(null); return; }
+
+    // Create connection
+    this.connections.update(conns => [...conns, {
+      id: crypto.randomUUID(),
+      fromBlockId: wire.fromBlockId,
+      toBlockId: targetBlock.id,
+    }]);
+    this.drawingWire.set(null);
+  }
+
+  cancelWire(): void {
+    this.drawingWire.set(null);
+  }
+
+  selectConnection(event: MouseEvent, id: string): void {
+    event.stopPropagation();
+    this.selectedConnectionId.set(this.selectedConnectionId() === id ? null : id);
+  }
+
+  tempWirePath(): string {
+    const w = this.drawingWire();
+    if (!w) return '';
+    const cx = (w.fromX + w.mouseX) / 2;
+    return `M ${w.fromX} ${w.fromY} C ${cx} ${w.fromY}, ${cx} ${w.mouseY}, ${w.mouseX} ${w.mouseY}`;
+  }
+
   removeCanvasBlock(id: string): void {
     this.canvasBlocks.update(blocks => blocks.filter(b => b.id !== id));
+    this.connections.update(conns => conns.filter(c => c.fromBlockId !== id && c.toBlockId !== id));
   }
 
   updateBlockConfig(blockId: string, key: string, value: any): void {
@@ -465,16 +569,21 @@ export class StrategyBuilderComponent implements OnInit {
     const blocks: CanvasBlock[] = [];
     const sectionOrder: BlockSection[] = ['safety', 'triggers', 'conditions', 'actions'];
 
+    const canvasLayout = s.canvas as any;
+    const storedPositions = canvasLayout?.positions || {};
+
     for (const section of sectionOrder) {
-      const items = s[section] as { type: string; config: Record<string, any> }[];
+      const items = s[section] as { id?: string; type: string; config: Record<string, any> }[];
       items.forEach((b, i) => {
+        const blockId = b.id || crypto.randomUUID();
+        const storedPos = storedPositions[blockId];
         blocks.push({
-          id: crypto.randomUUID(),
+          id: blockId,
           type: b.type,
           section,
           config: { ...b.config },
-          x: SECTION_COLUMNS[section],
-          y: 80 + i * 220,
+          x: storedPos?.x ?? SECTION_COLUMNS[section],
+          y: storedPos?.y ?? (80 + i * 220),
         });
       });
     }
@@ -492,10 +601,17 @@ export class StrategyBuilderComponent implements OnInit {
     }
 
     const blocks = this.canvasBlocks();
-    const safety     = blocks.filter(b => b.section === 'safety').map(b => ({ type: b.type, config: b.config }));
-    const triggers   = blocks.filter(b => b.section === 'triggers').map(b => ({ type: b.type, config: b.config }));
-    const conditions = blocks.filter(b => b.section === 'conditions').map(b => ({ type: b.type, config: b.config }));
-    const actions    = blocks.filter(b => b.section === 'actions').map(b => ({ type: b.type, config: b.config }));
+    const safety     = blocks.filter(b => b.section === 'safety').map(b => ({ id: b.id, type: b.type, config: b.config }));
+    const triggers   = blocks.filter(b => b.section === 'triggers').map(b => ({ id: b.id, type: b.type, config: b.config }));
+    const conditions = blocks.filter(b => b.section === 'conditions').map(b => ({ id: b.id, type: b.type, config: b.config }));
+    const actions    = blocks.filter(b => b.section === 'actions').map(b => ({ id: b.id, type: b.type, config: b.config }));
+
+    // Build canvas layout from current block positions
+    const positions: Record<string, { x: number; y: number }> = {};
+    for (const b of blocks) {
+      positions[b.id] = { x: b.x, y: b.y };
+    }
+    const canvas = { positions };
 
     const dto: CreateStrategyDto = {
       name:        f.name.trim(),
@@ -508,6 +624,7 @@ export class StrategyBuilderComponent implements OnInit {
       conditions,
       actions,
       tags:        f.tagsInput.split(',').map(t => t.trim()).filter(Boolean),
+      canvas,
     };
 
     this.saving.set(true);

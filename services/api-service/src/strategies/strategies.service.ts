@@ -80,6 +80,7 @@ export class StrategiesService {
         actions: (dto.actions as any) ?? [],
         safety: (dto.safety as any) ?? [],
         tags: dto.tags ?? [],
+        canvas: (dto.canvas as any) ?? undefined,
         status: StrategyStatus.IDLE,
         version: 1,
         template: false,
@@ -139,6 +140,7 @@ export class StrategiesService {
     if (d.actions !== undefined) data.actions = d.actions;
     if (d.safety !== undefined) data.safety = d.safety;
     if (d.tags !== undefined) data.tags = d.tags;
+    if (d.canvas !== undefined) data.canvas = d.canvas;
 
     return this.prisma.strategy.update({ where: { id }, data });
   }

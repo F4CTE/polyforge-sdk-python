@@ -1,8 +1,10 @@
 import { Logger } from "@nestjs/common";
 import { v4 as uuidv4 } from "uuid";
+import { Parser } from "expr-eval";
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
+import { StrategyVariable } from "@polyforge/shared-types";
 import { EvalContext, OrderIntent } from "../blocks/block.types";
 import {
   SAFETY_REGISTRY,
@@ -10,6 +12,7 @@ import {
   CONDITION_REGISTRY,
   ACTION_REGISTRY,
 } from "../blocks/registry";
+import { resolveParams } from "../blocks/resolve-params";
 import { StateService } from "../state/state.service";
 
 const MIN_TICK_MS = 200;
@@ -45,6 +48,7 @@ export class StrategyRunner {
     private readonly conditions: Block[],
     private readonly actions: Block[],
     private readonly safety: Block[],
+    private readonly variables: StrategyVariable[],
     private readonly redis: RedisService,
     private readonly prisma: PrismaService,
     private readonly state: StateService,
@@ -114,6 +118,40 @@ export class StrategyRunner {
       now: Date.now(),
     };
 
+    // 0. Evaluate user-defined calculation variables
+    const variables: Record<string, number> = {};
+    if (this.variables.length > 0) {
+      const parser = new Parser();
+      const scope: Record<string, number> = {
+        dailyPnl: stateData.dailyPnl,
+        betsToday: stateData.betsToday,
+        consecutiveLoss: stateData.consecutiveLoss,
+        consecutiveWin: stateData.consecutiveWin,
+        totalOrders: stateData.totalOrders,
+      };
+
+      // Try to resolve currentPrice from the first trigger/action tokenId
+      const primaryTokenId = this.getPrimaryTokenId();
+      if (primaryTokenId) {
+        const priceData = await this.state.getPrice(primaryTokenId);
+        scope.currentPrice = priceData?.price ?? 0;
+      }
+
+      for (const v of this.variables) {
+        try {
+          variables[v.name] = parser.evaluate(v.expression, {
+            ...scope,
+            ...variables,
+          });
+        } catch {
+          this.logger.warn(
+            `Variable "${v.name}" evaluation failed: ${v.expression}`,
+          );
+        }
+      }
+    }
+    ctx.variables = variables;
+
     // 1. Check stale data — pause if any subscribed token's price is stale
     const staleToken = await this.detectStaleData();
     if (staleToken) {
@@ -143,8 +181,12 @@ export class StrategyRunner {
       const evaluator = SAFETY_REGISTRY[block.type];
       if (!evaluator) continue;
 
+      const resolvedBlock = {
+        ...block,
+        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+      };
       const result = await evaluator.evaluate(
-        block as any,
+        resolvedBlock as any,
         ctx,
         this.redis,
         this.prisma,
@@ -169,8 +211,12 @@ export class StrategyRunner {
       const evaluator = TRIGGER_REGISTRY[block.type];
       if (!evaluator) continue;
 
+      const resolvedBlock = {
+        ...block,
+        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+      };
       const result = await evaluator.evaluate(
-        block as any,
+        resolvedBlock as any,
         ctx,
         this.redis,
         this.prisma,
@@ -187,8 +233,12 @@ export class StrategyRunner {
       const evaluator = CONDITION_REGISTRY[block.type];
       if (!evaluator) continue;
 
+      const resolvedBlock = {
+        ...block,
+        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+      };
       const result = await evaluator.evaluate(
-        block as any,
+        resolvedBlock as any,
         ctx,
         this.redis,
         this.prisma,
@@ -202,8 +252,12 @@ export class StrategyRunner {
       const evaluator = ACTION_REGISTRY[block.type];
       if (!evaluator) continue;
 
+      const resolvedBlock = {
+        ...block,
+        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+      };
       const result = await evaluator.execute(
-        block as any,
+        resolvedBlock as any,
         ctx,
         this.redis,
         this.prisma,
@@ -221,6 +275,17 @@ export class StrategyRunner {
 
       await this.onIntents(allIntents);
     }
+  }
+
+  /** Returns the first tokenId found in triggers or actions (for variable scope). */
+  private getPrimaryTokenId(): string | null {
+    for (const block of [...this.triggers, ...this.actions]) {
+      const params = block.params;
+      if (params?.tokenId && typeof params.tokenId === "string") {
+        return params.tokenId;
+      }
+    }
+    return null;
   }
 
   private async detectStaleData(): Promise<string | null> {

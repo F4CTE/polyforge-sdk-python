@@ -41,6 +41,12 @@ export class StrategyRegistryService {
     const stream = isPaper ? PAPER_ORDER_STREAM : ORDER_STREAM;
     const newStatus = isPaper ? StrategyStatus.PAPER : StrategyStatus.RUNNING;
 
+    // Extract variables from canvas (if defined by the strategy builder)
+    const canvas = strategy.canvas as Record<string, unknown> | null;
+    const variables = Array.isArray((canvas as any)?.variables)
+      ? (canvas as any).variables
+      : [];
+
     const runner = new StrategyRunner(
       strategyId,
       strategy.userId,
@@ -50,6 +56,7 @@ export class StrategyRegistryService {
       (strategy.conditions as any[]) ?? [],
       (strategy.actions as any[]) ?? [],
       (strategy.safety as any[]) ?? [],
+      variables,
       this.redis,
       this.prisma,
       this.state,

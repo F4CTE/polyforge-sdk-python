@@ -390,6 +390,7 @@ model Strategy {
   likeCount        Int                @default(0)
   template         Boolean            @default(false)
   tags             String[]
+  canvas           Json?
   version          Int                @default(1)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt

@@ -29,6 +29,7 @@ export interface Strategy {
   forkCount:    number;
   likeCount:    number;
   tags:         string[];
+  canvas?:      any;
   createdAt:    string;
   updatedAt:    string;
 }
@@ -53,6 +54,7 @@ export interface CreateStrategyDto {
   actions:     BlockConfig[];
   safety:      BlockConfig[];
   tags:        string[];
+  canvas?:     any;
 }
 
 @Injectable({ providedIn: 'root' })

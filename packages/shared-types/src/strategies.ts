@@ -80,9 +80,18 @@ export interface Strategy {
   likeCount: number;
   template: boolean;
   tags: string[];
+  canvas?: Record<string, unknown>;
   version: number;
   createdAt: string;
   updatedAt: string;
+}
+
+// ─── Calculation variables ───────────────────────────────────────────────────
+
+export interface StrategyVariable {
+  id: string;
+  name: string;
+  expression: string;
 }
 
 // ─── Strategy state (Redis) ──────────────────────────────────────────────────

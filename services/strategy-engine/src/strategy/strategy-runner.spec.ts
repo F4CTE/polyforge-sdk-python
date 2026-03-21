@@ -87,6 +87,7 @@ function makeRunner({
     conditions,
     actions,
     safety,
+    [], // variables
     redis,
     prisma,
     state,
