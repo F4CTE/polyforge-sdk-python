@@ -1,9 +1,105 @@
+import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router';
+import { Mail, ArrowLeft, Check } from 'lucide-react';
+
 export function Component() {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [touched, setTouched] = useState(false);
+
+  const emailError = touched && !email ? 'Email is required'
+    : touched && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? 'Enter a valid email address'
+    : '';
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setTouched(true);
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+
+    setLoading(true);
+    try {
+      await fetch('/auth/v1/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email }),
+      });
+    } catch {
+      // always show success per spec
+    } finally {
+      setLoading(false);
+      setSent(true);
+    }
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-pf-base">
-      <div className="w-full max-w-md p-8">
-        <h1 className="text-2xl font-semibold text-pf-text">Forgot Password</h1>
-        <p className="text-pf-text-muted mt-2">Coming soon...</p>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-pf-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative w-full max-w-md px-4">
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" stroke="#06b6d4" strokeWidth="1.2" fill="none" opacity="0.4"/>
+            <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="#06b6d4"/>
+          </svg>
+          <span className="text-xl font-semibold text-pf-text">Polyforge</span>
+        </div>
+
+        {/* Card */}
+        <div className="bg-pf-elevated border border-pf-border rounded-xl p-8">
+          {!sent ? (
+            <>
+              <h2 className="text-xl font-semibold text-pf-text mb-1">Reset password</h2>
+              <p className="text-sm text-pf-text-muted mb-6">We&apos;ll send you a reset link.</p>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-pf-text mb-1.5">Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onBlur={() => setTouched(true)}
+                      placeholder="you@example.com"
+                      className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-lg text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
+                    />
+                  </div>
+                  {emailError && <p className="mt-1 text-xs text-red-400">{emailError}</p>}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-2.5 bg-pf-cyan-500 text-pf-base font-semibold rounded-lg hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {loading ? 'Sending...' : 'Send reset link'}
+                </button>
+              </form>
+            </>
+          ) : (
+            <div className="text-center">
+              <div className="size-16 rounded-full bg-pf-cyan-500/10 flex items-center justify-center mx-auto mb-4">
+                <Check className="size-8 text-pf-cyan-500" />
+              </div>
+              <h2 className="text-xl font-semibold text-pf-text mb-2">Check your inbox</h2>
+              <p className="text-sm text-pf-text-muted">
+                If an account with that email exists, we&apos;ve sent a reset link.
+              </p>
+            </div>
+          )}
+
+          <div className="border-t border-pf-border mt-6 pt-4 text-center text-sm">
+            <Link to="/login" className="inline-flex items-center gap-1.5 text-pf-cyan-500 hover:text-pf-cyan-400 transition-colors">
+              <ArrowLeft className="size-4" />
+              Back to login
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
