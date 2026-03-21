@@ -184,7 +184,8 @@
       @if (gridMarkets().length > 0) {
         <div class="market-grid">
           @for (market of gridMarkets(); track market.id) {
-            <a class="market-card" [routerLink]="['/markets', market.id]">
+            <a class="market-card" [routerLink]="['/markets', market.id]"
+               [style.--card-accent]="categoryColor(market.category).text">
               <div class="market-card-top-row">
                 <!-- Thumbnail or placeholder -->
                 @if (market.image) {
