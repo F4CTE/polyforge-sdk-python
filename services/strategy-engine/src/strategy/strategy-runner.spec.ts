@@ -70,6 +70,7 @@ function makeRunner({
   conditions = [] as any[],
   actions = [] as any[],
   safety = [] as any[],
+  variables = [] as any[],
   redis = makeRedis(),
   prisma = makePrisma(),
   state = makeState(),
@@ -87,7 +88,7 @@ function makeRunner({
     conditions,
     actions,
     safety,
-    [], // variables
+    variables,
     redis,
     prisma,
     state,
@@ -541,5 +542,164 @@ describe("StrategyRunner — error handling", () => {
     // Should not throw — errors are caught and logged
     await expect(runner.onPriceEvent("tok1", 0.5)).resolves.not.toThrow();
     expect(runner.status).toBe("RUNNING");
+  });
+});
+
+describe("StrategyRunner — calculation variables", () => {
+  it("variables are evaluated before safety blocks", async () => {
+    const state = makeState();
+    const callOrder: string[] = [];
+
+    // Track when state.get is called (happens at start of evaluate())
+    state.get.mockImplementation(async () => {
+      callOrder.push("state.get");
+      return { ...DEFAULT_STATE, dailyPnl: -5 };
+    });
+
+    // getPrice is called during variable evaluation
+    state.getPrice = vi.fn().mockImplementation(async () => {
+      callOrder.push("getPrice");
+      return { price: 0.6 };
+    });
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      variables: [{ id: "v1", name: "threshold", expression: "dailyPnl * -1" }],
+      safety: [
+        {
+          id: "safety-1",
+          type: "stop_if_daily_loss",
+          params: { maxLossUsdc: "$threshold" },
+        },
+      ],
+      triggers: [{ id: "t1", type: "every_tick", params: { tokenId: "tok1" } }],
+    });
+
+    await runner.onPriceEvent("tok1", 0.6);
+
+    // state.get is called first, then getPrice during variable eval,
+    // all before safety blocks run
+    expect(callOrder[0]).toBe("state.get");
+  });
+
+  it("$varName in block params gets resolved to variable value", async () => {
+    const state = makeState();
+    state.get.mockResolvedValue({ ...DEFAULT_STATE, dailyPnl: 0 });
+    state.getPrice = vi.fn().mockResolvedValue({ price: 0.6 });
+
+    const onIntents = vi
+      .fn<(intents: OrderIntent[]) => Promise<void>>()
+      .mockResolvedValue(undefined);
+
+    const prisma = makePrisma();
+    prisma.token.findUnique.mockResolvedValue({
+      id: "tok-yes",
+      marketId: "mkt-1",
+      outcome: "YES",
+    });
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.7 }),
+    });
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onIntents,
+      variables: [{ id: "v1", name: "betSize", expression: "10 + 5" }],
+      actions: [
+        {
+          id: "a1",
+          type: "buy_yes",
+          params: { tokenId: "tok-yes", size: "$betSize" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok-yes", 0.7);
+
+    expect(onIntents).toHaveBeenCalledOnce();
+    const intents: OrderIntent[] = onIntents.mock.calls[0][0];
+    expect(intents).toHaveLength(1);
+    // $betSize should resolve to 15 (10 + 5)
+    expect(intents[0].size).toBe(15);
+  });
+
+  it("invalid expression does not crash (logs warning, skips)", async () => {
+    const state = makeState();
+    state.get.mockResolvedValue({ ...DEFAULT_STATE });
+    state.getPrice = vi.fn().mockResolvedValue(null);
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      variables: [
+        { id: "v1", name: "badVar", expression: "??? invalid syntax !!!" },
+      ],
+    });
+
+    // Should not throw
+    await expect(runner.onPriceEvent("tok1", 0.5)).resolves.not.toThrow();
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("variables can reference other previously-defined variables", async () => {
+    const state = makeState();
+    state.get.mockResolvedValue({ ...DEFAULT_STATE, betsToday: 3 });
+    state.getPrice = vi.fn().mockResolvedValue({ price: 0.5 });
+
+    const onIntents = vi
+      .fn<(intents: OrderIntent[]) => Promise<void>>()
+      .mockResolvedValue(undefined);
+
+    const prisma = makePrisma();
+    prisma.token.findUnique.mockResolvedValue({
+      id: "tok-yes",
+      marketId: "mkt-1",
+      outcome: "YES",
+    });
+    const redis = makeRedis({
+      getJson: vi.fn().mockResolvedValue({ price: 0.5 }),
+    });
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      redis,
+      prisma,
+      onIntents,
+      variables: [
+        { id: "v1", name: "base", expression: "betsToday * 10" },
+        { id: "v2", name: "adjusted", expression: "base + 5" },
+      ],
+      actions: [
+        {
+          id: "a1",
+          type: "buy_yes",
+          params: { tokenId: "tok-yes", size: "$adjusted" },
+        },
+      ],
+    });
+
+    await runner.onPriceEvent("tok-yes", 0.5);
+
+    expect(onIntents).toHaveBeenCalledOnce();
+    const intents: OrderIntent[] = onIntents.mock.calls[0][0];
+    // base = 3 * 10 = 30, adjusted = 30 + 5 = 35
+    expect(intents[0].size).toBe(35);
+  });
+
+  it("empty variables array works (backward compat)", async () => {
+    const state = makeState();
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      variables: [],
+    });
+
+    await expect(runner.onPriceEvent("tok1", 0.5)).resolves.not.toThrow();
+    expect(state.get).toHaveBeenCalled();
   });
 });

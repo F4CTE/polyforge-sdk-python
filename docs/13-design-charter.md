@@ -27,6 +27,8 @@
 27. [Dark/Light Theme Toggle](#27-darklight-theme-toggle)
 28. [Admin Dialog Styling](#28-admin-dialog-styling)
 29. [Password Confirmation Pattern](#29-password-confirmation-pattern)
+30. [Strategy Builder — Connection Ports & Wires](#30-strategy-builder--connection-ports--wires)
+31. [Strategy Builder — Variable Blocks](#31-strategy-builder--variable-blocks)
 
 ---
 
@@ -1522,6 +1524,57 @@ get passwordsMatch(): boolean {
 ```
 
 This pattern should be reused wherever password changes are offered in admin dialogs.
+
+---
+
+## 30. Strategy Builder — Connection Ports & Wires
+
+### Connection Ports
+
+Each canvas block displays two circular ports for wiring:
+
+- **Output port** (right edge): 6px diameter circle, centered vertically on the block's right side (`x + 280`, `y + 100`).
+- **Input port** (left edge): 6px diameter circle, centered vertically on the block's left side (`x`, `y + 100`).
+- **Color**: `--pf-cyan-500` (`#06B6D4`) fill with `--pf-cyan-glow` outline on hover.
+- **Visibility**: Ports appear on hover over the block (opacity transition `150ms ease`). Always visible when a wire is being drawn.
+
+### Wire Styles
+
+Connections between blocks are rendered as SVG `<path>` elements using cubic Bezier curves.
+
+- **Default wire**: `stroke: var(--pf-text-muted)` (`#445E7A`), `stroke-width: 2`, `stroke-dasharray: 6 4`, `fill: none`.
+- **Selected wire**: `stroke: var(--pf-cyan-500)` (`#06B6D4`), `stroke-width: 2.5`, `filter: drop-shadow(0 0 6px var(--pf-cyan-glow))`.
+- **Temporary wire** (during drag): `stroke: var(--pf-cyan-400)` (`#22D3EE`), `stroke-width: 2`, `stroke-dasharray: 4 4`, `opacity: 0.7`.
+- **Bezier control points**: horizontal midpoint between source and target (`cx = (x1 + x2) / 2`), producing smooth S-curves.
+
+### Interaction
+
+- Drag from output port to input port to create a connection.
+- Click a wire to select it (toggles `selectedConnectionId`).
+- Press `Delete` or `Backspace` to remove the selected wire.
+- No self-connections or duplicate connections are allowed.
+
+---
+
+## 31. Strategy Builder — Variable Blocks
+
+### Section Color
+
+Variable blocks use section color `#A855F7` (purple / `--pf-purple-500`), distinct from the four execution sections:
+
+| Section    | Color     |
+|------------|-----------|
+| Safety     | `#EF4444` |
+| Triggers   | `#F59E0B` |
+| Conditions | `#3B82F6` |
+| Actions    | `#22C55E` |
+| Variables  | `#A855F7` |
+
+### Block Appearance
+
+- Variables section header uses the purple accent with `pi-calculator` icon.
+- Each variable block displays the variable name in `JetBrains Mono 500` and the expression in `--pf-text-secondary`.
+- Variable blocks are rendered at the top of the canvas, above the safety column.
 
 ---
 

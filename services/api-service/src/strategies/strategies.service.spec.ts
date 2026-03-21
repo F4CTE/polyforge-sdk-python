@@ -1526,4 +1526,70 @@ describe("StrategiesService", () => {
       expect(result.totalPages).toBe(2);
     });
   });
+
+  // ── canvas persistence ─────────────────────────────────────────────────
+
+  describe("canvas persistence", () => {
+    it("create strategy with canvas positions saves correctly", async () => {
+      const canvas = {
+        blocks: [
+          { id: "b1", x: 80, y: 80 },
+          { id: "b2", x: 420, y: 80 },
+        ],
+        connections: [{ id: "c1", fromBlockId: "b1", toBlockId: "b2" }],
+      };
+      const dto: CreateStrategyDto = {
+        name: "Canvas Strat",
+        canvas,
+      } as any;
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockResolvedValue(
+        makeStrategy({ name: "Canvas Strat", canvas }) as any,
+      );
+
+      const result = await service.create("user-1", dto);
+
+      const dataArg = (db.strategy.create as any).mock.calls[0][0].data;
+      expect(dataArg.canvas).toEqual(canvas);
+      expect(result.canvas).toEqual(canvas);
+    });
+
+    it("update strategy canvas positions updates correctly", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.IDLE,
+      });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      const newCanvas = {
+        blocks: [{ id: "b1", x: 200, y: 300 }],
+        connections: [],
+      };
+      db.strategy.update.mockResolvedValue(
+        makeStrategy({ ...strategy, canvas: newCanvas }) as any,
+      );
+
+      const result = await service.update(strategy.id, "user-1", {
+        canvas: newCanvas,
+      } as any);
+
+      const dataArg = (db.strategy.update as any).mock.calls[0][0].data;
+      expect(dataArg.canvas).toEqual(newCanvas);
+      expect(result.canvas).toEqual(newCanvas);
+    });
+
+    it("strategy without canvas loads with null/undefined canvas (backward compat)", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        visibility: "PUBLIC",
+      });
+      // Simulate old strategy without canvas field
+      delete (strategy as any).canvas;
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      const result = await service.findOne(strategy.id, "user-1");
+
+      expect(result.canvas).toBeUndefined();
+    });
+  });
 });

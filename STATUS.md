@@ -11,6 +11,43 @@ All phases complete. Polyforge is production-ready.
 
 ---
 
+## Post-Launch — Strategy Builder & Market Redesign (v2.7.0)
+
+### Strategy Builder — Block Dragging Fix
+
+- [x] SVG selector fix for drag target detection
+- [x] `pointer-events` handling for reliable block interaction
+- [x] Document-level `mousemove`/`mouseup` listeners for smooth dragging
+
+### Strategy Builder — Canvas Persistence
+
+- [x] `canvasJson` column on strategy table for block positions and connections
+- [x] Stable block IDs (UUIDs) generated at creation time
+- [x] Canvas layout survives save/reload cycles
+
+### Strategy Builder — Block Wiring
+
+- [x] Connection ports: output (right, 6px cyan circle) and input (left) on each block
+- [x] Drag-to-wire interaction: drag from output port to input port creates Bezier connection
+- [x] Click-to-select wires with glow highlight; Delete key removes selected connection
+- [x] Auto-wire fallback when no explicit connections exist (backward compat)
+
+### Strategy Builder — Calculation Variables
+
+- [x] `variables` block section with `expr-eval` parser
+- [x] `$varName` references in block params resolved via `resolveParams`
+- [x] Variables evaluated before safety blocks in the evaluation pipeline
+- [x] Sandboxed evaluation (scoped parser, no global access)
+- [x] Variables can reference previously-defined variables
+
+### Market Page — Polymarket Redesign
+
+- [x] Flat card layout with event images
+- [x] Multi-outcome market support
+- [x] Per-market strategy count display
+
+---
+
 ## Post-Launch — API Key Management (v2.6.0)
 
 ### API Key Feature

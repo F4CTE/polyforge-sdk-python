@@ -285,6 +285,32 @@ export const TRIGGER_BLOCKS: BlockDefinition[] = [
 
 The canvas will automatically render the new block with the correct category color (Safety=red, Triggers=amber, Conditions=blue, Actions=green) and make it available in the FAB block picker.
 
+### Block Wiring Interaction
+
+Blocks have output ports (right edge) and input ports (left edge). Users drag from an output port to an input port to create an explicit connection. Connections are stored in the component's `connections` signal as `{ id, fromBlockId, toBlockId }` objects and rendered as dashed Bezier curves in the SVG canvas.
+
+When no explicit connections exist, the canvas falls back to auto-wiring: all blocks in adjacent section columns (safety -> triggers -> conditions -> actions) are connected automatically for backward compatibility.
+
+Selected connections display a cyan glow effect. Pressing Delete removes the selected connection.
+
+### Variable Evaluation Order
+
+Calculation variables are evaluated **before** safety blocks in the strategy runner's `evaluate()` pipeline:
+
+1. Load strategy state from Redis
+2. Evaluate calculation variables (expr-eval parser with state scope)
+3. Check stale data
+4. SAFETY blocks (with `$varName` params resolved)
+5. TRIGGERS
+6. CONDITIONS
+7. ACTIONS
+
+Variables can reference previously-defined variables. Invalid expressions are caught and logged as warnings without crashing the evaluation.
+
+### Canvas Position Persistence
+
+Block positions and connections are persisted via a `canvasJson` column (Prisma `Json?` type) on the strategy table. The `canvasJson` payload contains block coordinates and connection metadata. Block IDs are stable UUIDs generated at creation time, so positions survive save/reload cycles.
+
 **Step 6 — Write tests:**
 
 ```typescript

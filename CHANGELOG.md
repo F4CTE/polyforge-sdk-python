@@ -5,6 +5,34 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.7.0] — 2026-03-21
+
+### Fixed — Strategy Builder
+
+- **Block dragging** — Fixed SVG selector, added `pointer-events` handling, and moved drag listeners to `document` level for reliable block repositioning across the canvas.
+
+### Added — Canvas Persistence
+
+- **Canvas position persistence** — New `canvasJson` column stores block positions and connections. Block IDs are stable UUIDs generated at creation, ensuring layout survives save/reload cycles.
+
+### Added — Block Wiring
+
+- **Connection ports** — Output (right) and input (left) ports on each block for manual wiring. Drag from an output port to an input port to create a Bezier connection line.
+- **Click-to-select wires** — Click a connection wire to select it (highlighted with glow); press Delete to remove.
+- **Auto-wire fallback** — When no explicit connections exist, adjacent section columns are auto-wired for backward compatibility.
+
+### Added — Calculation Variables
+
+- **Calculation variables** — New `variables` block section powered by `expr-eval`. Define named variables with arithmetic expressions referencing strategy state (`dailyPnl`, `betsToday`, `consecutiveLoss`, etc.).
+- **$varName references** — Block params starting with `$` are resolved to the corresponding variable value at evaluation time via `resolveParams`.
+- **Sandboxed evaluation** — Variables are evaluated in a scoped `expr-eval` parser with no access to global scope, preventing arbitrary code execution.
+
+### Changed — Market Page
+
+- **Polymarket redesign** — Market page now uses flat cards with event images, supports multi-outcome markets, and displays per-market strategy count.
+
+---
+
 ## [2.6.0] — 2026-03-21
 
 ### Added — API Key Management

@@ -22,6 +22,12 @@ interface CanvasBlock {
   y: number;
 }
 
+interface Connection {
+  id: string;
+  fromBlockId: string;
+  toBlockId: string;
+}
+
 const SECTION_COLUMNS: Record<BlockSection, number> = {
   safety: 80,
   triggers: 420,
@@ -353,6 +359,204 @@ describe("StrategyBuilderComponent", () => {
 
       expect(result[0].config.maxLossUsdc).toBe(500);
       expect(blocks[0].config.maxLossUsdc).toBe(200);
+    });
+  });
+
+  // ─── Connection logic ────────────────────────────────────────────────────
+
+  describe("renderConnections (auto-wire fallback)", () => {
+    function renderConnections(blocks: CanvasBlock[], conns: Connection[]) {
+      const blockMap = new Map(blocks.map(b => [b.id, b]));
+
+      if (conns.length > 0) {
+        return conns.map(conn => {
+          const from = blockMap.get(conn.fromBlockId);
+          const to = blockMap.get(conn.toBlockId);
+          if (!from || !to) return { id: conn.id, path: '' };
+          const x1 = from.x + 280, y1 = from.y + 100;
+          const x2 = to.x, y2 = to.y + 100;
+          const cx = (x1 + x2) / 2;
+          return { id: conn.id, path: `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}` };
+        }).filter(c => c.path);
+      }
+
+      if (blocks.length === 0) return [];
+      const sectionOrder = ['safety', 'triggers', 'conditions', 'actions'] as const;
+      const results: { id: string; path: string }[] = [];
+      for (let i = 0; i < sectionOrder.length - 1; i++) {
+        const fromBlocks = blocks.filter(b => b.section === sectionOrder[i]);
+        const toBlocks = blocks.filter(b => b.section === sectionOrder[i + 1]);
+        for (const fb of fromBlocks) {
+          for (const tb of toBlocks) {
+            const x1 = fb.x + 280, y1 = fb.y + 100;
+            const x2 = tb.x, y2 = tb.y + 100;
+            const cx = (x1 + x2) / 2;
+            results.push({ id: `auto-${fb.id}-${tb.id}`, path: `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}` });
+          }
+        }
+      }
+      return results;
+    }
+
+    it("returns auto-wired paths when no explicit connections", () => {
+      const blocks: CanvasBlock[] = [
+        { id: 's1', type: 'stop_if_daily_loss', section: 'safety', config: {}, x: 80, y: 80 },
+        { id: 't1', type: 'price_crosses_up', section: 'triggers', config: {}, x: 420, y: 80 },
+      ];
+      const result = renderConnections(blocks, []);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('auto-s1-t1');
+      expect(result[0].path).toContain('M 360 180');
+    });
+
+    it("returns only explicit connections when they exist", () => {
+      const blocks: CanvasBlock[] = [
+        { id: 's1', type: 'stop_if_daily_loss', section: 'safety', config: {}, x: 80, y: 80 },
+        { id: 't1', type: 'price_crosses_up', section: 'triggers', config: {}, x: 420, y: 80 },
+        { id: 'a1', type: 'buy_yes', section: 'actions', config: {}, x: 1100, y: 80 },
+      ];
+      const conns: Connection[] = [
+        { id: 'c1', fromBlockId: 's1', toBlockId: 'a1' },
+      ];
+      const result = renderConnections(blocks, conns);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('c1');
+    });
+
+    it("filters out connections with missing blocks", () => {
+      const blocks: CanvasBlock[] = [
+        { id: 's1', type: 'stop_if_daily_loss', section: 'safety', config: {}, x: 80, y: 80 },
+      ];
+      const conns: Connection[] = [
+        { id: 'c1', fromBlockId: 's1', toBlockId: 'nonexistent' },
+      ];
+      const result = renderConnections(blocks, conns);
+
+      expect(result).toHaveLength(0);
+    });
+
+    it("returns empty array when no blocks", () => {
+      const result = renderConnections([], []);
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("tempWirePath", () => {
+    function tempWirePath(drawingWire: { fromX: number; fromY: number; mouseX: number; mouseY: number } | null): string {
+      if (!drawingWire) return '';
+      const w = drawingWire;
+      const cx = (w.fromX + w.mouseX) / 2;
+      return `M ${w.fromX} ${w.fromY} C ${cx} ${w.fromY}, ${cx} ${w.mouseY}, ${w.mouseX} ${w.mouseY}`;
+    }
+
+    it("returns valid SVG path when drawingWire is set", () => {
+      const wire = { fromX: 360, fromY: 180, mouseX: 420, mouseY: 180 };
+      const result = tempWirePath(wire);
+
+      expect(result).toBe('M 360 180 C 390 180, 390 180, 420 180');
+    });
+
+    it("returns empty string when no drawingWire", () => {
+      expect(tempWirePath(null)).toBe('');
+    });
+  });
+
+  describe("connection validation", () => {
+    function finishWire(
+      fromBlockId: string,
+      targetBlockId: string,
+      existingConnections: Connection[],
+    ): Connection | null {
+      if (fromBlockId === targetBlockId) return null;
+      const exists = existingConnections.some(
+        c => c.fromBlockId === fromBlockId && c.toBlockId === targetBlockId,
+      );
+      if (exists) return null;
+      return { id: 'new-conn', fromBlockId, toBlockId: targetBlockId };
+    }
+
+    it("prevents self-connections", () => {
+      const result = finishWire('block-1', 'block-1', []);
+
+      expect(result).toBeNull();
+    });
+
+    it("prevents duplicate connections", () => {
+      const existing: Connection[] = [
+        { id: 'c1', fromBlockId: 'block-1', toBlockId: 'block-2' },
+      ];
+      const result = finishWire('block-1', 'block-2', existing);
+
+      expect(result).toBeNull();
+    });
+
+    it("allows valid new connections", () => {
+      const result = finishWire('block-1', 'block-2', []);
+
+      expect(result).not.toBeNull();
+      expect(result!.fromBlockId).toBe('block-1');
+      expect(result!.toBlockId).toBe('block-2');
+    });
+  });
+
+  describe("removeCanvasBlock cleans up connections", () => {
+    function removeCanvasBlockWithConnections(
+      blocks: CanvasBlock[],
+      connections: Connection[],
+      id: string,
+    ): { blocks: CanvasBlock[]; connections: Connection[] } {
+      return {
+        blocks: blocks.filter(b => b.id !== id),
+        connections: connections.filter(c => c.fromBlockId !== id && c.toBlockId !== id),
+      };
+    }
+
+    it("removes connections referencing removed block as source", () => {
+      const blocks: CanvasBlock[] = [
+        { id: 'a', type: 'stop_if_daily_loss', section: 'safety', config: {}, x: 80, y: 80 },
+        { id: 'b', type: 'buy_yes', section: 'actions', config: {}, x: 1100, y: 80 },
+      ];
+      const conns: Connection[] = [
+        { id: 'c1', fromBlockId: 'a', toBlockId: 'b' },
+      ];
+      const result = removeCanvasBlockWithConnections(blocks, conns, 'a');
+
+      expect(result.blocks).toHaveLength(1);
+      expect(result.connections).toHaveLength(0);
+    });
+
+    it("removes connections referencing removed block as target", () => {
+      const blocks: CanvasBlock[] = [
+        { id: 'a', type: 'stop_if_daily_loss', section: 'safety', config: {}, x: 80, y: 80 },
+        { id: 'b', type: 'buy_yes', section: 'actions', config: {}, x: 1100, y: 80 },
+      ];
+      const conns: Connection[] = [
+        { id: 'c1', fromBlockId: 'a', toBlockId: 'b' },
+      ];
+      const result = removeCanvasBlockWithConnections(blocks, conns, 'b');
+
+      expect(result.blocks).toHaveLength(1);
+      expect(result.connections).toHaveLength(0);
+    });
+
+    it("preserves unrelated connections", () => {
+      const blocks: CanvasBlock[] = [
+        { id: 'a', type: 'stop_if_daily_loss', section: 'safety', config: {}, x: 80, y: 80 },
+        { id: 'b', type: 'price_crosses_up', section: 'triggers', config: {}, x: 420, y: 80 },
+        { id: 'c', type: 'buy_yes', section: 'actions', config: {}, x: 1100, y: 80 },
+      ];
+      const conns: Connection[] = [
+        { id: 'c1', fromBlockId: 'a', toBlockId: 'b' },
+        { id: 'c2', fromBlockId: 'b', toBlockId: 'c' },
+      ];
+      const result = removeCanvasBlockWithConnections(blocks, conns, 'a');
+
+      expect(result.blocks).toHaveLength(2);
+      expect(result.connections).toHaveLength(1);
+      expect(result.connections[0].id).toBe('c2');
     });
   });
 
