@@ -15,10 +15,7 @@ export class InternalClientService {
     private readonly config: ConfigService,
     private readonly jwt: JwtService,
   ) {
-    this.secret = this.config.get<string>(
-      "INTERNAL_JWT_SECRET",
-      "dev-internal-jwt-secret",
-    );
+    this.secret = this.config.getOrThrow<string>("INTERNAL_JWT_SECRET");
   }
 
   private issueToken(audience: string): string {
@@ -38,6 +35,7 @@ export class InternalClientService {
     const res = await fetch(url, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(10_000),
     });
     return res;
   }
@@ -52,6 +50,7 @@ export class InternalClientService {
     const res = await fetch(url, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(10_000),
     });
     return res;
   }
@@ -65,6 +64,7 @@ export class InternalClientService {
     const url = `${baseUrl}${path}`;
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(10_000),
     });
     return res;
   }

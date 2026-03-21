@@ -134,8 +134,7 @@ export class OrdersService {
 
       if (attempt < MAX_ATTEMPTS) {
         const delay = RETRY_BASE_MS * Math.pow(2, attempt - 1);
-        await this.sleep(delay);
-        return this.processIntent(intent, attempt + 1);
+        return this.scheduleRetry(intent, attempt + 1, delay);
       }
 
       // All retries exhausted
@@ -214,7 +213,19 @@ export class OrdersService {
     return result;
   }
 
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  /** Visible for testing — resolves when the delayed retry completes. */
+  scheduleRetry(
+    intent: OrderIntent,
+    nextAttempt: number,
+    delayMs: number,
+  ): Promise<void> {
+    this.logger.log(
+      `Scheduling retry ${nextAttempt}/${MAX_ATTEMPTS} for intent ${intent.intentId} in ${delayMs}ms`,
+    );
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        this.processIntent(intent, nextAttempt).then(resolve, resolve);
+      }, delayMs);
+    });
   }
 }

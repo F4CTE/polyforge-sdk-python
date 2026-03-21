@@ -3,6 +3,7 @@ import {
   Logger,
   NotFoundException,
   ConflictException,
+  OnApplicationBootstrap,
 } from "@nestjs/common";
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
@@ -15,7 +16,7 @@ const ORDER_STREAM = "stream:orders";
 const PAPER_ORDER_STREAM = "stream:paper_orders";
 
 @Injectable()
-export class StrategyRegistryService {
+export class StrategyRegistryService implements OnApplicationBootstrap {
   private readonly logger = new Logger(StrategyRegistryService.name);
   private readonly runners = new Map<string, StrategyRunner>();
 
@@ -24,6 +25,78 @@ export class StrategyRegistryService {
     private readonly redis: RedisService,
     private readonly state: StateService,
   ) {}
+
+  // ─── Startup reconciliation ─────────────────────────────────────────────────
+  // After a restart, re-start runners for all strategies that should be active.
+
+  async onApplicationBootstrap(): Promise<void> {
+    try {
+      const strategies = await this.prisma.strategy.findMany({
+        where: {
+          status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] },
+        },
+      });
+
+      if (strategies.length === 0) {
+        this.logger.log("Startup reconciliation: no strategies to resume");
+        return;
+      }
+
+      this.logger.log(
+        `Startup reconciliation: resuming ${strategies.length} strategies`,
+      );
+
+      let succeeded = 0;
+      for (const strategy of strategies) {
+        try {
+          const isPaper = strategy.status === StrategyStatus.PAPER;
+          const stream = isPaper ? PAPER_ORDER_STREAM : ORDER_STREAM;
+
+          const canvas = strategy.canvas as Record<string, unknown> | null;
+          const variables = Array.isArray((canvas as any)?.variables)
+            ? (canvas as any).variables
+            : [];
+
+          const runner = new StrategyRunner(
+            strategy.id,
+            strategy.userId,
+            strategy.execMode,
+            strategy.tickMs ?? 1000,
+            (strategy.triggers as any[]) ?? [],
+            (strategy.conditions as any[]) ?? [],
+            (strategy.actions as any[]) ?? [],
+            (strategy.safety as any[]) ?? [],
+            variables,
+            this.redis,
+            this.prisma,
+            this.state,
+            (intents) => this.publishIntents(intents, stream),
+            (status, reason) =>
+              this.onRunnerStatusChange(
+                strategy.id,
+                strategy.userId,
+                status,
+                reason,
+              ),
+          );
+
+          this.runners.set(strategy.id, runner);
+          runner.start();
+          succeeded++;
+        } catch (err) {
+          this.logger.error(
+            `Failed to reconcile strategy ${strategy.id}: ${String(err)}`,
+          );
+        }
+      }
+
+      this.logger.log(
+        `Startup reconciliation complete: ${succeeded}/${strategies.length} strategies resumed`,
+      );
+    } catch (err) {
+      this.logger.error(`Startup reconciliation failed: ${String(err)}`);
+    }
+  }
 
   async start(strategyId: string): Promise<void> {
     if (this.runners.has(strategyId)) {

@@ -9,6 +9,7 @@ import { Logger } from "@nestjs/common";
 import { Server, WebSocket } from "ws";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
+import { PrismaService } from "@polyforge/shared-db";
 
 interface AuthedSocket extends WebSocket {
   userId?: string;
@@ -37,13 +38,14 @@ export class EventsGateway
   private readonly jwtSecret: string;
 
   // Maps for fast lookup
-  private readonly clients = new Map<string, AuthedSocket>(); // userId → socket (last wins)
+  private readonly clients = new Map<string, Set<AuthedSocket>>(); // userId → Set of sockets
   private readonly tokenSubscribers = new Map<string, Set<string>>(); // tokenId → Set<userId>
   private readonly strategySubscribers = new Map<string, Set<string>>(); // strategyId → Set<userId>
 
   constructor(
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
   ) {
     this.jwtSecret = this.config.getOrThrow<string>("JWT_SECRET");
   }
@@ -77,7 +79,7 @@ export class EventsGateway
           });
           client.userId = decoded.sub;
           client.isAuthenticated = true;
-          this.clients.set(decoded.sub, client);
+          this.addClientToSet(decoded.sub, client);
           this.send(client, { type: "AUTH_OK", userId: decoded.sub });
         } catch {
           // Cookie present but invalid — will require explicit AUTH message
@@ -101,7 +103,13 @@ export class EventsGateway
 
   handleDisconnect(client: AuthedSocket) {
     if (client.userId) {
-      this.clients.delete(client.userId);
+      const sockets = this.clients.get(client.userId);
+      if (sockets) {
+        sockets.delete(client);
+        if (sockets.size === 0) {
+          this.clients.delete(client.userId);
+        }
+      }
       for (const tokenId of client.subscribedTokens) {
         this.tokenSubscribers.get(tokenId)?.delete(client.userId);
       }
@@ -154,7 +162,7 @@ export class EventsGateway
       const decoded = this.jwt.verify(token, { secret: this.jwtSecret });
       client.userId = decoded.sub;
       client.isAuthenticated = true;
-      this.clients.set(decoded.sub, client);
+      this.addClientToSet(decoded.sub, client);
       this.send(client, { type: "AUTH_OK", userId: decoded.sub });
     } catch {
       this.send(client, { type: "AUTH_ERROR", message: "Invalid token" });
@@ -180,8 +188,50 @@ export class EventsGateway
     }
   }
 
-  private handleSubscribeStrategy(client: AuthedSocket, strategyId: string) {
+  private async handleSubscribeStrategy(
+    client: AuthedSocket,
+    strategyId: string,
+  ) {
     if (!strategyId) return;
+
+    // Authorization: check strategy ownership or visibility
+    try {
+      const strategy = await this.prisma.strategy.findUnique({
+        where: { id: strategyId },
+        select: { userId: true, visibility: true },
+      });
+
+      if (!strategy) {
+        this.send(client, {
+          type: "SUBSCRIBE_ERROR",
+          strategyId,
+          message: "Strategy not found",
+        });
+        return;
+      }
+
+      const isOwner = strategy.userId === client.userId;
+      const isAccessible =
+        strategy.visibility === "PUBLIC" || strategy.visibility === "UNLISTED";
+
+      if (!isOwner && !isAccessible) {
+        this.send(client, {
+          type: "SUBSCRIBE_ERROR",
+          strategyId,
+          message: "You do not have access to this strategy",
+        });
+        return;
+      }
+    } catch (err) {
+      this.logger.error(`Failed to check strategy access: ${strategyId}`, err);
+      this.send(client, {
+        type: "SUBSCRIBE_ERROR",
+        strategyId,
+        message: "Failed to verify strategy access",
+      });
+      return;
+    }
+
     client.subscribedStrategies.add(strategyId);
     if (!this.strategySubscribers.has(strategyId)) {
       this.strategySubscribers.set(strategyId, new Set());
@@ -195,6 +245,25 @@ export class EventsGateway
     this.strategySubscribers.get(strategyId)?.delete(client.userId!);
   }
 
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+  private addClientToSet(userId: string, client: AuthedSocket) {
+    let sockets = this.clients.get(userId);
+    if (!sockets) {
+      sockets = new Set();
+      this.clients.set(userId, sockets);
+    }
+    sockets.add(client);
+  }
+
+  private broadcastToUser(userId: string, msg: Record<string, any>) {
+    const sockets = this.clients.get(userId);
+    if (!sockets) return;
+    for (const socket of sockets) {
+      this.send(socket, msg);
+    }
+  }
+
   // ─── Push methods (called by EventsService) ───────────────────────────────
 
   /** Push a price update to all subscribers of this tokenId */
@@ -204,8 +273,7 @@ export class EventsGateway
 
     const msg = { type: "PRICE_UPDATE", tokenId, price, timestamp };
     for (const userId of userIds) {
-      const client = this.clients.get(userId);
-      if (client) this.send(client, msg);
+      this.broadcastToUser(userId, msg);
     }
   }
 
@@ -224,31 +292,25 @@ export class EventsGateway
 
     if (strategyUsers) {
       for (const uid of strategyUsers) {
-        const client = this.clients.get(uid);
-        if (client) {
-          this.send(client, msg);
-          sent.add(uid);
-        }
+        this.broadcastToUser(uid, msg);
+        sent.add(uid);
       }
     }
 
     // Always push to strategy owner if not already sent
     if (!sent.has(userId)) {
-      const client = this.clients.get(userId);
-      if (client) this.send(client, msg);
+      this.broadcastToUser(userId, msg);
     }
   }
 
   /** Push an order event to the order owner */
   pushOrderEvent(userId: string, type: string, payload: Record<string, any>) {
-    const client = this.clients.get(userId);
-    if (client) this.send(client, { type, ...payload });
+    this.broadcastToUser(userId, { type, ...payload });
   }
 
   /** Push a notification to a user */
   pushNotification(userId: string, payload: Record<string, any>) {
-    const client = this.clients.get(userId);
-    if (client) this.send(client, { type: "NOTIFICATION", ...payload });
+    this.broadcastToUser(userId, { type: "NOTIFICATION", ...payload });
   }
 
   private send(client: AuthedSocket, msg: Record<string, any>) {

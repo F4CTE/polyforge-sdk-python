@@ -10,8 +10,10 @@ import { JwtService } from "@nestjs/jwt";
 import { randomUUID } from "crypto";
 import { Prisma } from "@prisma/client";
 
-const INTERNAL_JWT_SECRET =
-  process.env.INTERNAL_JWT_SECRET ?? "dev-internal-jwt-secret";
+const INTERNAL_JWT_SECRET = process.env.INTERNAL_JWT_SECRET;
+if (!INTERNAL_JWT_SECRET) {
+  throw new Error("INTERNAL_JWT_SECRET env var is required");
+}
 const STRATEGY_ENGINE_URL =
   process.env.STRATEGY_ENGINE_URL ?? "http://strategy-engine:3006";
 

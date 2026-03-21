@@ -6,7 +6,14 @@ import {
   Logger,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { StrategyStatus } from ".prisma/client";
+import {
+  Prisma,
+  ReportReason,
+  Strategy,
+  StrategyStatus,
+  StrategyVisibility,
+  ExecMode,
+} from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { paginate, PaginatedResponse } from "../common/dto/pagination.dto";
 import { InternalClientService } from "../common/services/internal-client.service";
@@ -39,11 +46,14 @@ export class StrategiesService {
   async list(
     userId: string,
     query: StrategyQueryDto,
-  ): Promise<PaginatedResponse<any>> {
+  ): Promise<PaginatedResponse<Strategy>> {
     const { page, limit, status, sort } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = { userId, status: { not: StrategyStatus.ARCHIVED } };
+    const where: Prisma.StrategyWhereInput = {
+      userId,
+      status: { not: StrategyStatus.ARCHIVED },
+    };
     if (status) where.status = status as StrategyStatus;
 
     const orderBy = { [sort ?? "createdAt"]: "desc" as const };
@@ -56,7 +66,7 @@ export class StrategiesService {
     return paginate(strategies, total, page, limit);
   }
 
-  async create(userId: string, dto: CreateStrategyDto): Promise<any> {
+  async create(userId: string, dto: CreateStrategyDto): Promise<Strategy> {
     const count = await this.prisma.strategy.count({
       where: { userId, status: { not: StrategyStatus.ARCHIVED } },
     });
@@ -72,15 +82,16 @@ export class StrategiesService {
         userId,
         name: dto.name,
         description: dto.description,
-        visibility: (dto.visibility as any) ?? "PRIVATE",
-        execMode: (dto.execMode as any) ?? "TICK",
+        visibility:
+          (dto.visibility as StrategyVisibility) ?? StrategyVisibility.PRIVATE,
+        execMode: (dto.execMode as ExecMode) ?? ExecMode.TICK,
         tickMs: dto.tickMs ?? 1000,
-        triggers: (dto.triggers as any) ?? [],
-        conditions: (dto.conditions as any) ?? [],
-        actions: (dto.actions as any) ?? [],
-        safety: (dto.safety as any) ?? [],
+        triggers: (dto.triggers ?? []) as unknown as Prisma.InputJsonValue,
+        conditions: (dto.conditions ?? []) as unknown as Prisma.InputJsonValue,
+        actions: (dto.actions ?? []) as unknown as Prisma.InputJsonValue,
+        safety: (dto.safety ?? []) as unknown as Prisma.InputJsonValue,
         tags: dto.tags ?? [],
-        canvas: (dto.canvas as any) ?? undefined,
+        canvas: dto.canvas as unknown as Prisma.InputJsonValue | undefined,
         status: StrategyStatus.IDLE,
         version: 1,
         template: false,
@@ -88,7 +99,7 @@ export class StrategiesService {
     });
   }
 
-  async findOne(id: string, userId: string): Promise<any> {
+  async findOne(id: string, userId: string): Promise<Strategy> {
     const strategy = await this.prisma.strategy.findUnique({ where: { id } });
     if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
       throw new NotFoundException({
@@ -97,7 +108,7 @@ export class StrategiesService {
       });
     }
     if (
-      strategy.visibility === ("PRIVATE" as any) &&
+      strategy.visibility === StrategyVisibility.PRIVATE &&
       strategy.userId !== userId
     ) {
       throw new ForbiddenException({
@@ -112,14 +123,14 @@ export class StrategiesService {
     id: string,
     userId: string,
     dto: UpdateStrategyDto,
-  ): Promise<any> {
+  ): Promise<Strategy> {
     const strategy = await this.getOwned(id, userId);
     if (strategy.status === StrategyStatus.RUNNING) {
       const blocksChanged =
-        (dto as any).triggers !== undefined ||
-        (dto as any).conditions !== undefined ||
-        (dto as any).actions !== undefined ||
-        (dto as any).safety !== undefined;
+        dto.triggers !== undefined ||
+        dto.conditions !== undefined ||
+        dto.actions !== undefined ||
+        dto.safety !== undefined;
       if (blocksChanged) {
         throw new UnprocessableEntityException({
           code: "STRATEGY_IS_RUNNING",
@@ -128,19 +139,27 @@ export class StrategiesService {
       }
     }
 
-    const data: any = { updatedAt: new Date(), version: { increment: 1 } };
-    const d = dto as any;
-    if (d.name !== undefined) data.name = d.name;
-    if (d.description !== undefined) data.description = d.description;
-    if (d.visibility !== undefined) data.visibility = d.visibility;
-    if (d.execMode !== undefined) data.execMode = d.execMode;
-    if (d.tickMs !== undefined) data.tickMs = d.tickMs;
-    if (d.triggers !== undefined) data.triggers = d.triggers;
-    if (d.conditions !== undefined) data.conditions = d.conditions;
-    if (d.actions !== undefined) data.actions = d.actions;
-    if (d.safety !== undefined) data.safety = d.safety;
-    if (d.tags !== undefined) data.tags = d.tags;
-    if (d.canvas !== undefined) data.canvas = d.canvas;
+    const data: Prisma.StrategyUpdateInput = {
+      updatedAt: new Date(),
+      version: { increment: 1 },
+    };
+    if (dto.name !== undefined) data.name = dto.name;
+    if (dto.description !== undefined) data.description = dto.description;
+    if (dto.visibility !== undefined)
+      data.visibility = dto.visibility as StrategyVisibility;
+    if (dto.execMode !== undefined) data.execMode = dto.execMode as ExecMode;
+    if (dto.tickMs !== undefined) data.tickMs = dto.tickMs;
+    if (dto.triggers !== undefined)
+      data.triggers = dto.triggers as unknown as Prisma.InputJsonValue;
+    if (dto.conditions !== undefined)
+      data.conditions = dto.conditions as unknown as Prisma.InputJsonValue;
+    if (dto.actions !== undefined)
+      data.actions = dto.actions as unknown as Prisma.InputJsonValue;
+    if (dto.safety !== undefined)
+      data.safety = dto.safety as unknown as Prisma.InputJsonValue;
+    if (dto.tags !== undefined) data.tags = dto.tags;
+    if (dto.canvas !== undefined)
+      data.canvas = dto.canvas as unknown as Prisma.InputJsonValue;
 
     return this.prisma.strategy.update({ where: { id }, data });
   }
@@ -159,7 +178,11 @@ export class StrategiesService {
     });
   }
 
-  async start(id: string, userId: string, dto: StartStrategyDto): Promise<any> {
+  async start(
+    id: string,
+    userId: string,
+    dto: StartStrategyDto,
+  ): Promise<{ status: string; startedAt: string }> {
     const strategy = await this.getOwned(id, userId);
 
     if (strategy.status === StrategyStatus.RUNNING) {
@@ -196,7 +219,10 @@ export class StrategiesService {
       `/internal/strategies/${id}/start`,
     );
     if (!res.ok && res.status !== 204) {
-      const body: any = await res.json().catch(() => ({}));
+      const body = (await res.json().catch(() => ({}))) as {
+        code?: string;
+        message?: string;
+      };
       throw new UnprocessableEntityException({
         code: body.code ?? "ENGINE_ERROR",
         message: body.message ?? "Failed to start strategy",
@@ -206,7 +232,10 @@ export class StrategiesService {
     return { status: "RUNNING", startedAt: new Date().toISOString() };
   }
 
-  async stop(id: string, userId: string): Promise<any> {
+  async stop(
+    id: string,
+    userId: string,
+  ): Promise<{ status: string; stoppedAt: string }> {
     await this.getOwned(id, userId);
     const res = await this.client.delete(
       this.engineUrl,
@@ -223,7 +252,7 @@ export class StrategiesService {
     return { status: "IDLE", stoppedAt: new Date().toISOString() };
   }
 
-  async pause(id: string, userId: string): Promise<any> {
+  async pause(id: string, userId: string): Promise<{ status: string }> {
     await this.getOwned(id, userId);
     await this.client.post(
       this.engineUrl,
@@ -233,7 +262,7 @@ export class StrategiesService {
     return { status: "PAUSED" };
   }
 
-  async resume(id: string, userId: string): Promise<any> {
+  async resume(id: string, userId: string): Promise<{ status: string }> {
     await this.getOwned(id, userId);
     await this.client.post(
       this.engineUrl,
@@ -243,7 +272,7 @@ export class StrategiesService {
     return { status: "RUNNING" };
   }
 
-  async fork(id: string, userId: string): Promise<any> {
+  async fork(id: string, userId: string): Promise<Strategy> {
     const strategy = await this.prisma.strategy.findUnique({ where: { id } });
     if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
       throw new NotFoundException({
@@ -252,7 +281,7 @@ export class StrategiesService {
       });
     }
     if (
-      strategy.visibility === ("PRIVATE" as any) &&
+      strategy.visibility === StrategyVisibility.PRIVATE &&
       strategy.userId !== userId
     ) {
       throw new ForbiddenException({
@@ -276,13 +305,13 @@ export class StrategiesService {
         userId,
         name: `Fork of ${strategy.name}`,
         description: strategy.description,
-        visibility: "PRIVATE" as any,
+        visibility: StrategyVisibility.PRIVATE,
         execMode: strategy.execMode,
         tickMs: strategy.tickMs,
-        triggers: strategy.triggers as any,
-        conditions: strategy.conditions as any,
-        actions: strategy.actions as any,
-        safety: strategy.safety as any,
+        triggers: strategy.triggers as unknown as Prisma.InputJsonValue,
+        conditions: strategy.conditions as unknown as Prisma.InputJsonValue,
+        actions: strategy.actions as unknown as Prisma.InputJsonValue,
+        safety: strategy.safety as unknown as Prisma.InputJsonValue,
         tags: strategy.tags ?? [],
         status: StrategyStatus.IDLE,
         version: 1,
@@ -292,9 +321,12 @@ export class StrategiesService {
     });
   }
 
-  async like(id: string, userId: string): Promise<any> {
+  async like(
+    id: string,
+    userId: string,
+  ): Promise<{ liked: boolean; likeCount: number }> {
     const strategy = await this.prisma.strategy.findUnique({ where: { id } });
-    if (!strategy || strategy.visibility === ("PRIVATE" as any)) {
+    if (!strategy || strategy.visibility === StrategyVisibility.PRIVATE) {
       throw new NotFoundException({
         code: "NOT_FOUND",
         message: "Strategy not found",
@@ -337,7 +369,7 @@ export class StrategiesService {
   async listComments(
     id: string,
     query: PaginationDto,
-  ): Promise<PaginatedResponse<any>> {
+  ): Promise<PaginatedResponse<unknown>> {
     const { page, limit } = query;
     const skip = (page - 1) * limit;
 
@@ -363,7 +395,7 @@ export class StrategiesService {
     id: string,
     userId: string,
     dto: CreateCommentDto,
-  ): Promise<any> {
+  ): Promise<unknown> {
     await this.findOne(id, userId);
     return this.prisma.strategyComment.create({
       data: { strategyId: id, userId, content: dto.content },
@@ -403,7 +435,7 @@ export class StrategiesService {
     id: string,
     userId: string,
     dto: ReportStrategyDto,
-  ): Promise<any> {
+  ): Promise<{ reportId: string }> {
     await this.findOne(id, userId);
     // Report model: reporterId, targetType, targetId, strategyId, reason, description
     const report = await this.prisma.report.create({
@@ -412,14 +444,16 @@ export class StrategiesService {
         targetType: "STRATEGY",
         targetId: id,
         strategyId: id,
-        reason: dto.reason as any,
+        reason: dto.reason as ReportReason,
         description: dto.description,
       },
     });
     return { reportId: report.id };
   }
 
-  async listTemplates(query: PaginationDto): Promise<PaginatedResponse<any>> {
+  async listTemplates(
+    query: PaginationDto,
+  ): Promise<PaginatedResponse<Strategy>> {
     const { page, limit } = query;
     const skip = (page - 1) * limit;
 
@@ -438,7 +472,7 @@ export class StrategiesService {
     return paginate(templates, total, page, limit);
   }
 
-  private async getOwned(id: string, userId: string): Promise<any> {
+  private async getOwned(id: string, userId: string): Promise<Strategy> {
     const strategy = await this.prisma.strategy.findUnique({ where: { id } });
     if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
       throw new NotFoundException({

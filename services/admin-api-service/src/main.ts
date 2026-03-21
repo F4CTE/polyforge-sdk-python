@@ -9,7 +9,12 @@ import fastifyCookie from "@fastify/cookie";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 
-const REQUIRED_ENV = ["ADMIN_JWT_SECRET", "ADMIN_DATABASE_URL", "REDIS_URL"];
+const REQUIRED_ENV = [
+  "ADMIN_JWT_SECRET",
+  "ADMIN_DATABASE_URL",
+  "REDIS_URL",
+  "INTERNAL_JWT_SECRET",
+];
 
 function validateEnv() {
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);

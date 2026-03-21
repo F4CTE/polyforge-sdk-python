@@ -1265,7 +1265,7 @@ describe("StrategiesService", () => {
         content: "Great strategy!",
       } as CreateCommentDto);
 
-      expect(result.content).toBe("Great strategy!");
+      expect((result as any).content).toBe("Great strategy!");
     });
 
     it("creates comment with correct data", async () => {

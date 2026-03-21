@@ -26,6 +26,10 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
 const USER_COOKIE = 'pf_token';
+const REFRESH_COOKIE = 'pf_refresh';
+
+const ACCESS_COOKIE_MAX_AGE = 15 * 60; // 15 minutes
+const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
 
 function cookieOpts(maxAge: number) {
   return {
@@ -62,7 +66,16 @@ export class AuthController {
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
     const result = await this.authService.register(dto);
-    reply.setCookie(USER_COOKIE, result.token, cookieOpts(7 * 24 * 60 * 60));
+    reply.setCookie(
+      USER_COOKIE,
+      result.token,
+      cookieOpts(ACCESS_COOKIE_MAX_AGE),
+    );
+    reply.setCookie(
+      REFRESH_COOKIE,
+      result.refreshToken,
+      cookieOpts(REFRESH_COOKIE_MAX_AGE),
+    );
     return result.user;
   }
 
@@ -90,7 +103,16 @@ export class AuthController {
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
     const result = await this.authService.login(dto);
-    reply.setCookie(USER_COOKIE, result.token, cookieOpts(7 * 24 * 60 * 60));
+    reply.setCookie(
+      USER_COOKIE,
+      result.token,
+      cookieOpts(ACCESS_COOKIE_MAX_AGE),
+    );
+    reply.setCookie(
+      REFRESH_COOKIE,
+      result.refreshToken,
+      cookieOpts(REFRESH_COOKIE_MAX_AGE),
+    );
     return result.user;
   }
 
@@ -109,10 +131,46 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Logout — clears the session cookie' })
+  @ApiOperation({
+    summary: 'Logout — clears session cookies and revokes refresh token',
+  })
   @ApiResponse({ status: 204, description: 'Logged out.' })
-  async logout(@Res({ passthrough: true }) reply: FastifyReply) {
+  async logout(
+    @Body() body: { refreshToken?: string },
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    if (body?.refreshToken) {
+      await this.authService.revokeRefreshToken(body.refreshToken);
+    }
     reply.clearCookie(USER_COOKIE, { path: '/' });
+    reply.clearCookie(REFRESH_COOKIE, { path: '/' });
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === 'production' ? 30 : 3000,
+      ttl: 900000,
+    },
+  })
+  @ApiOperation({ summary: 'Refresh access token using a refresh token' })
+  @ApiResponse({
+    status: 200,
+    description: 'New access token issued. Sets HttpOnly JWT cookie.',
+  })
+  @ApiResponse({ status: 401, description: 'INVALID_REFRESH_TOKEN' })
+  async refresh(
+    @Body() body: { refreshToken: string },
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    const result = await this.authService.refresh(body.refreshToken);
+    reply.setCookie(
+      USER_COOKIE,
+      result.token,
+      cookieOpts(ACCESS_COOKIE_MAX_AGE),
+    );
+    return { token: result.token };
   }
 
   @Post('verify-email')

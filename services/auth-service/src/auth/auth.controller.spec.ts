@@ -100,7 +100,7 @@ describe('AuthController', () => {
   describe('POST logout', () => {
     it('clears the cookie', async () => {
       const reply = makeReply();
-      await controller.logout(reply);
+      await controller.logout({}, reply);
       expect(reply.clearCookie).toHaveBeenCalledWith('pf_token', { path: '/' });
     });
   });

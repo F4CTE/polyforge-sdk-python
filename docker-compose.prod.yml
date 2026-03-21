@@ -23,7 +23,7 @@ name: polyforge-prod
 
 # ECR_REGISTRY is set by the deploy script, e.g.:
 #   123456789012.dkr.ecr.us-east-1.amazonaws.com
-# IMAGE_TAG defaults to "latest" — CI should set a commit SHA tag.
+# IMAGE_TAG must be set by CI (e.g. git commit SHA)
 
 x-image: &ecr_image "${ECR_REGISTRY:-missing-ecr-registry}/polyforge"
 
@@ -68,7 +68,7 @@ services:
   # Only service with published ports.
 
   gateway:
-    image: "${ECR_REGISTRY}/polyforge-gateway:${IMAGE_TAG:-latest}"
+    image: "${ECR_REGISTRY}/polyforge-gateway:${IMAGE_TAG}"
     <<: *common
     ports:
       - "80:80"
@@ -145,7 +145,7 @@ services:
   # ─── Auth Service ──────────────────────────────────────────────────────────
 
   auth-service:
-    image: "${ECR_REGISTRY}/polyforge-auth-service:${IMAGE_TAG:-latest}"
+    image: "${ECR_REGISTRY}/polyforge-auth-service:${IMAGE_TAG}"
     <<: *common
     networks: [public, internal, signer-only]
     depends_on:
@@ -165,7 +165,7 @@ services:
   # ─── API Service ───────────────────────────────────────────────────────────
 
   api-service:
-    image: "${ECR_REGISTRY}/polyforge-api-service:${IMAGE_TAG:-latest}"
+    image: "${ECR_REGISTRY}/polyforge-api-service:${IMAGE_TAG}"
     <<: *common
     networks: [public, internal]
     depends_on:
@@ -185,7 +185,7 @@ services:
   # ─── Admin Auth Service ────────────────────────────────────────────────────
 
   admin-auth-service:
-    image: "${ECR_REGISTRY}/polyforge-admin-auth-service:${IMAGE_TAG:-latest}"
+    image: "${ECR_REGISTRY}/polyforge-admin-auth-service:${IMAGE_TAG}"
     <<: *common
     networks: [admin-only, internal]
     depends_on:
@@ -205,7 +205,7 @@ services:
   # ─── Admin API Service ─────────────────────────────────────────────────────
 
   admin-api-service:
-    image: "${ECR_REGISTRY}/polyforge-admin-api-service:${IMAGE_TAG:-latest}"
+    image: "${ECR_REGISTRY}/polyforge-admin-api-service:${IMAGE_TAG}"
     <<: *common
     networks: [admin-only, internal]
     depends_on:
@@ -226,7 +226,7 @@ services:
   # ─── Market Data Service ───────────────────────────────────────────────────
 
   market-data-service:
-    image: "${ECR_REGISTRY}/polyforge-market-data-service:${IMAGE_TAG:-latest}"
+    image: "${ECR_REGISTRY}/polyforge-market-data-service:${IMAGE_TAG}"
     <<: *common
     networks: [internal]
     depends_on:
@@ -247,7 +247,7 @@ services:
   # Most CPU-intensive service — gets the most resources.
 
   strategy-engine:
-    image: "${ECR_REGISTRY}/polyforge-strategy-engine:${IMAGE_TAG:-latest}"
+    image: "${ECR_REGISTRY}/polyforge-strategy-engine:${IMAGE_TAG}"
     <<: *common
     networks: [internal]
     depends_on:
@@ -267,7 +267,7 @@ services:
   # ─── Order Service ─────────────────────────────────────────────────────────
 
   order-service:
-    image: "${ECR_REGISTRY}/polyforge-order-service:${IMAGE_TAG:-latest}"
+    image: "${ECR_REGISTRY}/polyforge-order-service:${IMAGE_TAG}"
     <<: *common
     networks: [internal, signer-only]
     depends_on:
@@ -288,7 +288,7 @@ services:
   # ─── Paper Order Service ───────────────────────────────────────────────────
 
   paper-order-service:
-    image: "${ECR_REGISTRY}/polyforge-paper-order-service:${IMAGE_TAG:-latest}"
+    image: "${ECR_REGISTRY}/polyforge-paper-order-service:${IMAGE_TAG}"
     <<: *common
     networks: [internal]
     depends_on:
@@ -308,7 +308,7 @@ services:
   # ─── Backtest Service ──────────────────────────────────────────────────────
 
   backtest-service:
-    image: "${ECR_REGISTRY}/polyforge-backtest-service:${IMAGE_TAG:-latest}"
+    image: "${ECR_REGISTRY}/polyforge-backtest-service:${IMAGE_TAG}"
     <<: *common
     networks: [internal]
     depends_on:
@@ -328,7 +328,7 @@ services:
   # ─── Notification Service ──────────────────────────────────────────────────
 
   notification-service:
-    image: "${ECR_REGISTRY}/polyforge-notification-service:${IMAGE_TAG:-latest}"
+    image: "${ECR_REGISTRY}/polyforge-notification-service:${IMAGE_TAG}"
     <<: *common
     networks: [internal]
     depends_on:
@@ -348,7 +348,7 @@ services:
   # ─── Bot Service ───────────────────────────────────────────────────────────
 
   bot-service:
-    image: "${ECR_REGISTRY}/polyforge-bot-service:${IMAGE_TAG:-latest}"
+    image: "${ECR_REGISTRY}/polyforge-bot-service:${IMAGE_TAG}"
     <<: *common
     networks: [internal]
     depends_on:
@@ -370,7 +370,7 @@ services:
   # NO published ports. Only reachable by auth-service and order-service.
 
   signer-service:
-    image: "${ECR_REGISTRY}/polyforge-signer-service:${IMAGE_TAG:-latest}"
+    image: "${ECR_REGISTRY}/polyforge-signer-service:${IMAGE_TAG}"
     <<: *common
     networks: [signer-only]
     read_only: true
