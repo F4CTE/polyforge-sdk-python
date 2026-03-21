@@ -1,0 +1,180 @@
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router';
+import { Sun, Moon, Bell, ChevronDown, User, Settings, LogOut } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth-store';
+import { useThemeStore } from '@/stores/theme-store';
+import { useNotificationStore } from '@/stores/notification-store';
+
+export function Topbar() {
+  const { user, logout } = useAuthStore();
+  const { isDark, toggle: toggleTheme } = useThemeStore();
+  const { items: notifications, unreadCount, markAllRead, markRead } =
+    useNotificationStore();
+  const navigate = useNavigate();
+
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const initials = user
+    ? (user.displayName ?? user.username).slice(0, 2).toUpperCase()
+    : '?';
+
+  const displayName = user?.displayName ?? user?.username ?? '';
+  const unread = unreadCount();
+
+  return (
+    <header className="flex items-center h-14 px-4 border-b border-pf-border bg-pf-surface">
+      <div className="flex-1" />
+
+      {/* Theme toggle */}
+      <button
+        onClick={toggleTheme}
+        className="p-2 rounded-md text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors"
+        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      >
+        {isDark ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
+
+      {/* Notification bell */}
+      <div className="relative" ref={notifRef}>
+        <button
+          onClick={() => setNotifOpen((v) => !v)}
+          className="relative p-2 rounded-md text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors"
+          aria-label="Notifications"
+        >
+          <Bell size={18} />
+          {unread > 0 && (
+            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+              {unread > 9 ? '9+' : unread}
+            </span>
+          )}
+        </button>
+
+        {notifOpen && (
+          <div className="absolute right-0 top-12 w-80 bg-pf-elevated border border-pf-border rounded-lg shadow-xl z-50">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border">
+              <strong className="text-sm text-pf-text">Notifications</strong>
+              <button
+                onClick={markAllRead}
+                className="text-xs text-pf-cyan hover:underline"
+              >
+                Mark all read
+              </button>
+            </div>
+            <div className="max-h-80 overflow-y-auto">
+              {notifications.length === 0 ? (
+                <p className="text-center text-pf-text-muted text-sm py-6">
+                  No notifications
+                </p>
+              ) : (
+                notifications.slice(0, 8).map((n) => (
+                  <div
+                    key={n.id}
+                    onClick={() => markRead(n.id)}
+                    className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-pf-surface transition-colors ${
+                      !n.read ? 'bg-pf-cyan/5' : ''
+                    }`}
+                  >
+                    <span
+                      className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${
+                        n.severity === 'error'
+                          ? 'bg-red-500'
+                          : n.severity === 'warning'
+                            ? 'bg-yellow-500'
+                            : n.severity === 'success'
+                              ? 'bg-green-500'
+                              : 'bg-pf-cyan'
+                      }`}
+                    />
+                    <div className="min-w-0">
+                      <strong className="text-sm text-pf-text block truncate">
+                        {n.title}
+                      </strong>
+                      <p className="text-xs text-pf-text-muted truncate">
+                        {n.body}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <button
+              onClick={() => {
+                setNotifOpen(false);
+                navigate('/settings');
+              }}
+              className="block w-full text-center text-xs text-pf-cyan py-3 border-t border-pf-border hover:bg-pf-surface transition-colors"
+            >
+              See all notifications
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* User menu */}
+      <div className="relative ml-2" ref={menuRef}>
+        <button
+          onClick={() => setMenuOpen((v) => !v)}
+          className="flex items-center gap-2 p-1 rounded-md hover:bg-pf-elevated transition-colors"
+        >
+          <div className="w-8 h-8 rounded-full bg-pf-cyan/20 text-pf-cyan flex items-center justify-center text-xs font-semibold">
+            {initials}
+          </div>
+          <span className="text-sm text-pf-text hidden sm:inline">
+            {displayName}
+          </span>
+          <ChevronDown size={14} className="text-pf-text-muted" />
+        </button>
+
+        {menuOpen && (
+          <div className="absolute right-0 top-12 w-48 bg-pf-elevated border border-pf-border rounded-lg shadow-xl z-50 py-1">
+            <button
+              onClick={() => {
+                setMenuOpen(false);
+                navigate('/profile/me');
+              }}
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-pf-text hover:bg-pf-surface transition-colors"
+            >
+              <User size={16} />
+              Profile
+            </button>
+            <button
+              onClick={() => {
+                setMenuOpen(false);
+                navigate('/settings');
+              }}
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-pf-text hover:bg-pf-surface transition-colors"
+            >
+              <Settings size={16} />
+              Settings
+            </button>
+            <div className="border-t border-pf-border my-1" />
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-pf-surface transition-colors"
+            >
+              <LogOut size={16} />
+              Sign out
+            </button>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+}
