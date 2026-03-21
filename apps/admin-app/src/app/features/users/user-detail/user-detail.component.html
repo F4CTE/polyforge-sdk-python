@@ -45,7 +45,7 @@
   <div class="page-header">
     <div style="display:flex;align-items:center;gap:8px">
       <a routerLink="/users">
-        <p-button icon="pi pi-arrow-left" severity="secondary" [text]="true" size="small" />
+        <p-button icon="pi pi-arrow-left" severity="secondary" [text]="true" size="small" aria-label="Back to users list" />
       </a>
       @if (user()) {
         <h1>{{ user()!.displayName ?? user()!.username }}</h1>
@@ -103,7 +103,7 @@
           </div>
           <div class="admin-detail-row">
             <span class="admin-detail-label">2FA Enabled</span>
-            <i class="pi" [class.pi-shield]="user()!.totpEnabled" [class.pi-shield]="!user()!.totpEnabled"
+            <i class="pi" [class.pi-shield]="user()!.totpEnabled" [class.pi-minus-circle]="!user()!.totpEnabled"
                [style.color]="user()!.totpEnabled ? 'var(--pf-success)' : 'var(--pf-text-muted)'"></i>
           </div>
           <div class="admin-detail-row">
@@ -147,16 +147,16 @@
           <p style="color:var(--pf-text-muted);padding:12px 0">No API keys.</p>
         } @else {
           <div style="overflow-x:auto">
-            <table class="admin-table" style="width:100%;margin-top:8px">
+            <table class="data-table" style="width:100%;margin-top:8px">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Prefix</th>
-                  <th>Scopes</th>
-                  <th>Created</th>
-                  <th>Last Used</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th class="pf-col-label">Name</th>
+                  <th class="pf-col-label">Prefix</th>
+                  <th class="pf-col-label">Scopes</th>
+                  <th class="pf-col-label">Created</th>
+                  <th class="pf-col-label">Last Used</th>
+                  <th class="pf-col-label">Status</th>
+                  <th class="pf-col-label">Actions</th>
                 </tr>
               </thead>
               <tbody>

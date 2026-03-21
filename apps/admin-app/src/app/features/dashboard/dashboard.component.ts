@@ -47,10 +47,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   statsLoading = signal(true);
   stats = signal<DashboardStat[]>([
-    { label: 'Total Users',       value: null, icon: 'pi pi-users',       color: '#3B82F6',  bg: '#3B82F61a',    route: '/users',      tooltip: 'Total registered users on the platform' },
-    { label: 'Active Strategies', value: null, icon: 'pi pi-bolt',        color: '#06B6D4',  bg: '#06B6D41a',    route: '/strategies', tooltip: 'Strategies currently running across all users' },
-    { label: 'Total Orders',      value: null, icon: 'pi pi-shopping-bag', color: '#F59E0B', bg: '#F59E0B1a',    route: '/orders',     tooltip: 'Total orders placed across the platform' },
-    { label: 'Open Tickets',      value: null, icon: 'pi pi-comments',    color: '#EF4444',  bg: '#EF44441a',    route: '/tickets',    tooltip: 'Support tickets awaiting resolution' },
+    { label: 'Total Users',       value: null, icon: 'pi pi-users',       color: 'var(--pf-info)',    bg: 'var(--pf-info-bg)',    route: '/users',      tooltip: 'Total registered users on the platform' },
+    { label: 'Active Strategies', value: null, icon: 'pi pi-bolt',        color: 'var(--pf-cyan-500)', bg: 'rgba(6,182,212,0.1)',  route: '/strategies', tooltip: 'Strategies currently running across all users' },
+    { label: 'Total Orders',      value: null, icon: 'pi pi-shopping-bag', color: 'var(--pf-warning)', bg: 'var(--pf-warning-bg)', route: '/orders',     tooltip: 'Total orders placed across the platform' },
+    { label: 'Open Tickets',      value: null, icon: 'pi pi-comments',    color: 'var(--pf-danger)',  bg: 'var(--pf-danger-bg)',  route: '/tickets',    tooltip: 'Support tickets awaiting resolution' },
   ]);
 
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
@@ -148,7 +148,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   statusBg(s: ServiceHealth): string {
-    return s === 'healthy' ? 'rgba(16,185,129,0.1)' : s === 'degraded' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)';
+    return s === 'healthy' ? 'var(--pf-success-bg)' : s === 'degraded' ? 'var(--pf-warning-bg)' : 'var(--pf-danger-bg)';
   }
 
   overallIcon(s: ServiceHealth): string {

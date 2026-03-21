@@ -171,7 +171,7 @@ html, body {
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--pf-text-muted);
     padding: var(--pf-space-3) var(--pf-space-2) var(--pf-space-1);
   }
 }

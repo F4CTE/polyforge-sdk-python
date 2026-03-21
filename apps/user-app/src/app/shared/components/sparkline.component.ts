@@ -11,11 +11,21 @@ export class SparklineComponent implements AfterViewInit, OnChanges {
   @Input() data: number[] = [];
   @Input() width = 80;
   @Input() height = 24;
-  @Input() color = '#06B6D4';
-  @Input() fillColor = 'rgba(6, 182, 212, 0.1)';
+  @Input() color = '';
+  @Input() fillColor = '';
 
   ngAfterViewInit(): void { this.draw(); }
   ngOnChanges(): void { if (this.canvasRef) this.draw(); }
+
+  private resolveColor(value: string, fallback: string): string {
+    if (!value) return fallback;
+    if (value.startsWith('var(')) {
+      const varName = value.replace(/^var\(/, '').replace(/\)$/, '').trim();
+      const resolved = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+      return resolved || fallback;
+    }
+    return value;
+  }
 
   private draw(): void {
     const canvas = this.canvasRef?.nativeElement;
@@ -33,10 +43,21 @@ export class SparklineComponent implements AfterViewInit, OnChanges {
 
     ctx.clearRect(0, 0, w, h);
 
+    const style = getComputedStyle(document.documentElement);
+    const defaultColor = style.getPropertyValue('--pf-cyan-500').trim() || '#06B6D4';
+    const dangerColor = style.getPropertyValue('--pf-danger').trim() || '#EF4444';
+
     // Determine color based on trend
     const trending = d[d.length - 1] >= d[0];
-    const lineColor = trending ? this.color : '#EF4444';
-    const fill = trending ? this.fillColor : 'rgba(239, 68, 68, 0.1)';
+    const resolvedColor = this.resolveColor(this.color, defaultColor);
+    const lineColor = trending ? resolvedColor : dangerColor;
+    const toFill = (hex: string) => {
+      // Convert hex to rgba with 0.1 alpha for fill
+      const match = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+      if (match) return `rgba(${parseInt(match[1], 16)},${parseInt(match[2], 16)},${parseInt(match[3], 16)},0.1)`;
+      return hex + '1A';
+    };
+    const fill = this.fillColor || toFill(lineColor);
 
     // Draw filled area
     ctx.beginPath();

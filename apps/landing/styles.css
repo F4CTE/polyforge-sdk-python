@@ -462,6 +462,7 @@ a { color: inherit; text-decoration: none; }
 .feature-card:nth-child(4) { animation-delay: 0.4s; }
 .feature-card:nth-child(5) { animation-delay: 0.5s; }
 .feature-card:nth-child(6) { animation-delay: 0.6s; }
+.feature-card:nth-child(7) { animation-delay: 0.7s; }
 
 .feature-card:hover {
   border-color: rgba(6,182,212,0.3);
@@ -476,6 +477,7 @@ a { color: inherit; text-decoration: none; }
 .feature-card--4 { background: linear-gradient(160deg, rgba(6,182,212,0.03) 0%, var(--bg-surface) 40%); }
 .feature-card--5 { background: linear-gradient(160deg, rgba(251,191,36,0.03) 0%, var(--bg-surface) 40%); }
 .feature-card--6 { background: linear-gradient(160deg, rgba(99,102,241,0.04) 0%, var(--bg-surface) 40%); }
+.feature-card--7 { background: linear-gradient(160deg, rgba(168,85,247,0.04) 0%, var(--bg-surface) 40%); }
 
 /* Feature visual preview */
 .feature-visual {
@@ -910,6 +912,21 @@ a { color: inherit; text-decoration: none; }
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Pause reveal animations until element is scrolled into view */
+.feature-card,
+.testimonial-card,
+.step,
+.proof-item {
+  animation-play-state: paused;
+}
+
+.feature-card.is-visible,
+.testimonial-card.is-visible,
+.step.is-visible,
+.proof-item.is-visible {
+  animation-play-state: running;
 }
 
 /* ─── Responsive ─────────────────────────────────────────────────────────── */

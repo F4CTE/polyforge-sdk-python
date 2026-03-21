@@ -5,7 +5,7 @@
   <div class="page-header">
     <h1>Backtest</h1>
     @if (!loading()) {
-      <span class="pf-mono" style="font-size:12px;color:var(--pf-text-muted)">{{ total() }} runs</span>
+      <span class="page-count">{{ total() }} runs</span>
     }
   </div>
 
@@ -137,10 +137,10 @@
           } @else if (runs().length === 0) {
             <tr>
               <td colspan="7">
-                <div class="empty-state">
-                  <i class="pi pi-history empty-state-icon"></i>
-                  <p class="empty-state-title">No backtest runs yet</p>
-                  <p class="empty-state-desc">Select a strategy and date range above, then click Run Backtest.</p>
+                <div class="pf-empty-state">
+                  <i class="pi pi-history pf-empty-icon"></i>
+                  <p class="pf-empty-title">No backtest runs yet</p>
+                  <p class="pf-empty-desc">Select a strategy and date range above, then click Run Backtest.</p>
                 </div>
               </td>
             </tr>

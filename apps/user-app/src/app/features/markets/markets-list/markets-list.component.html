@@ -94,11 +94,11 @@
               <div class="market-card-prices">
                 <div class="market-card-price yes">
                   <span class="market-card-price-label">YES</span>
-                  <span class="market-card-price-value pf-mono" [style.color]="'#22C55E'">{{ price(market, 'YES') | number:'1.2-3' }}</span>
+                  <span class="market-card-price-value pf-mono" style="color:var(--pf-success)">{{ price(market, 'YES') | number:'1.2-3' }}</span>
                 </div>
                 <div class="market-card-price no">
                   <span class="market-card-price-label">NO</span>
-                  <span class="market-card-price-value pf-mono" [style.color]="'#EF4444'">{{ price(market, 'NO') | number:'1.2-3' }}</span>
+                  <span class="market-card-price-value pf-mono" style="color:var(--pf-danger)">{{ price(market, 'NO') | number:'1.2-3' }}</span>
                 </div>
               </div>
 
@@ -176,10 +176,10 @@
                         [pTooltip]="market.category" tooltipPosition="top">{{ market.category }}</span>
                 </td>
                 <td style="text-align:right">
-                  <span class="price-yes pf-mono" [style.color]="+price(market, 'YES') > 0.5 ? '#22C55E' : '#EF4444'">{{ price(market, 'YES') | number:'1.2-3' }}</span>
+                  <span class="price-yes pf-mono" [style.color]="+price(market, 'YES') > 0.5 ? 'var(--pf-success)' : 'var(--pf-danger)'">{{ price(market, 'YES') | number:'1.2-3' }}</span>
                 </td>
                 <td style="text-align:right">
-                  <span class="price-no pf-mono" [style.color]="+price(market, 'NO') > 0.5 ? '#22C55E' : '#EF4444'">{{ price(market, 'NO') | number:'1.2-3' }}</span>
+                  <span class="price-no pf-mono" [style.color]="+price(market, 'NO') > 0.5 ? 'var(--pf-success)' : 'var(--pf-danger)'">{{ price(market, 'NO') | number:'1.2-3' }}</span>
                 </td>
                 <td style="width:80px">
                   <app-sparkline [data]="sparklineData(market)" [width]="72" [height]="24" />

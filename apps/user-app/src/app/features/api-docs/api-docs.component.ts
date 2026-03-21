@@ -50,15 +50,15 @@ interface EndpointCategory {
         <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 10px">Scopes</h3>
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px">
           <div style="display: flex; align-items: center; gap: 10px">
-            <span class="scope-badge" style="background: rgba(34,197,94,0.15); color: #22C55E">READ</span>
+            <span class="scope-badge" style="background: var(--pf-success-bg); color: var(--pf-success)">READ</span>
             <span style="color: var(--pf-text-secondary); font-size: 13px">View data: markets, portfolio, strategies, orders, alerts, backtests, profiles</span>
           </div>
           <div style="display: flex; align-items: center; gap: 10px">
-            <span class="scope-badge" style="background: rgba(59,130,246,0.15); color: #3B82F6">WRITE</span>
+            <span class="scope-badge" style="background: var(--pf-info-bg); color: var(--pf-info)">WRITE</span>
             <span style="color: var(--pf-text-secondary); font-size: 13px">Modify strategies, settings, alerts, and start backtests</span>
           </div>
           <div style="display: flex; align-items: center; gap: 10px">
-            <span class="scope-badge" style="background: rgba(245,158,11,0.15); color: #F59E0B">TRADE</span>
+            <span class="scope-badge" style="background: var(--pf-warning-bg); color: var(--pf-warning)">TRADE</span>
             <span style="color: var(--pf-text-secondary); font-size: 13px">Place orders, start/stop/pause/resume strategies, close positions</span>
           </div>
         </div>
@@ -381,19 +381,19 @@ export class ApiDocsComponent {
 
   scopeBg(scope: string): string {
     switch (scope) {
-      case 'READ': return 'rgba(34,197,94,0.15)';
-      case 'WRITE': return 'rgba(59,130,246,0.15)';
-      case 'TRADE': return 'rgba(245,158,11,0.15)';
-      default: return 'rgba(255,255,255,0.1)';
+      case 'READ': return 'var(--pf-success-bg)';
+      case 'WRITE': return 'var(--pf-info-bg)';
+      case 'TRADE': return 'var(--pf-warning-bg)';
+      default: return 'var(--pf-bg-overlay)';
     }
   }
 
   scopeColor(scope: string): string {
     switch (scope) {
-      case 'READ': return '#22C55E';
-      case 'WRITE': return '#3B82F6';
-      case 'TRADE': return '#F59E0B';
-      default: return '#fff';
+      case 'READ': return 'var(--pf-success)';
+      case 'WRITE': return 'var(--pf-info)';
+      case 'TRADE': return 'var(--pf-warning)';
+      default: return 'var(--pf-text-primary)';
     }
   }
 }

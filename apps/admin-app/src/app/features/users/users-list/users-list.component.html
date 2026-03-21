@@ -61,7 +61,7 @@
                 </td>
                 <td>
                   @if (u.suspended) {
-                    <span class="admin-badge" style="background:rgba(239,68,68,0.1);color:#EF4444">SUSPENDED</span>
+                    <span class="admin-badge danger">SUSPENDED</span>
                   } @else {
                     <span class="admin-badge"
                       [style.background]="statusBadge(u.status).bg"
@@ -72,15 +72,15 @@
                 </td>
                 <td style="text-align:center">
                   <i class="pi" [class.pi-check-circle]="u.emailVerified" [class.pi-times-circle]="!u.emailVerified"
-                     [style.color]="u.emailVerified ? '#22C55E' : '#4B5563'"></i>
+                     [style.color]="u.emailVerified ? 'var(--pf-success)' : 'var(--pf-text-muted)'"></i>
                 </td>
                 <td style="text-align:center">
                   <i class="pi" [class.pi-shield]="u.totpEnabled" [class.pi-minus-circle]="!u.totpEnabled"
-                     [style.color]="u.totpEnabled ? '#22C55E' : '#4B5563'"></i>
+                     [style.color]="u.totpEnabled ? 'var(--pf-success)' : 'var(--pf-text-muted)'"></i>
                 </td>
                 <td style="text-align:center">
                   <i class="pi" [class.pi-link]="u.polymarketConnected" [class.pi-times]="!u.polymarketConnected"
-                     [style.color]="u.polymarketConnected ? '#22C55E' : '#4B5563'"></i>
+                     [style.color]="u.polymarketConnected ? 'var(--pf-success)' : 'var(--pf-text-muted)'"></i>
                 </td>
                 <td style="text-align:right"><span class="pf-mono">{{ u.strategyCount }}</span></td>
                 <td style="text-align:right"><span class="pf-mono">{{ u.orderCount }}</span></td>

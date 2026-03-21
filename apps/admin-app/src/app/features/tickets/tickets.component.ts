@@ -27,15 +27,15 @@ type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
       </div>
 
       <!-- Filters -->
-      <div style="display:flex;gap:12px;margin-bottom:16px">
+      <div class="admin-filters">
         <p-select [options]="statusOptions" [(ngModel)]="statusFilter" optionLabel="label" optionValue="value"
-                  placeholder="Status" (onChange)="load()" style="min-width:160px" />
+                  placeholder="Status" (onChange)="load()" styleClass="admin-filter-select" />
         <p-select [options]="priorityOptions" [(ngModel)]="priorityFilter" optionLabel="label" optionValue="value"
-                  placeholder="Priority" (onChange)="load()" style="min-width:140px" />
+                  placeholder="Priority" (onChange)="load()" styleClass="admin-filter-select" />
       </div>
 
       <!-- Table -->
-      <div class="portfolio-table-panel">
+      <div class="admin-table-panel">
         <div class="table-scroll">
           <table class="data-table">
             <thead>

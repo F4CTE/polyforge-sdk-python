@@ -850,7 +850,7 @@ html, body {
   align-items: center;
   justify-content: center;
   background: var(--pf-danger);
-  color: #fff;
+  color: var(--pf-bg-base);
   font-size: 10px;
   font-weight: 700;
   min-width: 16px;
@@ -1045,7 +1045,7 @@ p-inputnumber.w-full .p-inputnumber { width: 100%; }
   align-items: center;
   justify-content: center;
   background: var(--pf-cyan-500);
-  color: #080C14;
+  color: var(--pf-bg-base);
   font-size: 10px;
   font-weight: 700;
   border-radius: 99px;
@@ -1134,6 +1134,17 @@ p-inputnumber.w-full .p-inputnumber { width: 100%; }
   background: var(--pf-bg-elevated, #111D2E) !important;
   border: 1px solid var(--pf-border-default, #1E293B) !important;
   color: var(--pf-text-primary, #F0F0F5) !important;
+}
+
+// Menu overlay (sidebar user menu)
+.p-menu {
+  background: var(--pf-bg-elevated, #111D2E) !important;
+  border: 1px solid var(--pf-border-default, #1E293B) !important;
+  color: var(--pf-text-primary, #F0F0F5) !important;
+}
+.p-menu .p-menuitem-link {
+  color: var(--pf-text-secondary) !important;
+  &:hover { background: rgba(6, 182, 212, 0.08) !important; color: var(--pf-text-primary) !important; }
 }
 
 // ─── Animation keyframes ────────────────────────────────────────────────────
@@ -1388,6 +1399,12 @@ textarea:focus-visible,
     color: var(--pf-text-primary) !important;
   }
 
+  .p-menu {
+    background: var(--pf-bg-elevated) !important;
+    border-color: var(--pf-border-default) !important;
+    color: var(--pf-text-primary) !important;
+  }
+
   .p-skeleton {
     background: rgba(0, 0, 0, 0.06) !important;
   }
@@ -1405,6 +1422,10 @@ textarea:focus-visible,
   .filter-tab:hover, .filter-tab.active { background: var(--pf-bg-surface); }
 
   .admin-user-name { color: var(--pf-text-primary); }
+
+  .invite-code-chip { background: var(--pf-bg-surface); border-color: var(--pf-border-default); }
+
+  .dlq-count, .nav-badge { color: #FFFFFF; }
 
   input[type="date"],
   input[type="datetime-local"],

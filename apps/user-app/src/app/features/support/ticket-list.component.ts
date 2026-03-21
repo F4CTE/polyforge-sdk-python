@@ -34,14 +34,12 @@ interface FaqItem {
             </div>
           }
         } @else if (tickets().length === 0) {
-          <div class="empty-state">
-            <i class="pi pi-question-circle empty-state-icon"></i>
-            <p class="empty-state-title">No tickets yet</p>
-            <p class="empty-state-desc">Need help? Create a support ticket and our team will get back to you.</p>
-            <p class="empty-state-desc" style="font-size:12px">Our team typically responds within 24 hours.</p>
-            <div class="empty-state-action">
-              <p-button label="Create Ticket" icon="pi pi-plus" routerLink="/support/new" />
-            </div>
+          <div class="pf-empty-state">
+            <i class="pi pi-question-circle pf-empty-icon"></i>
+            <p class="pf-empty-title">No tickets yet</p>
+            <p class="pf-empty-desc">Need help? Create a support ticket and our team will get back to you.</p>
+            <p class="pf-empty-desc" style="font-size:12px">Our team typically responds within 24 hours.</p>
+            <p-button label="Create Ticket" icon="pi pi-plus" routerLink="/support/new" />
           </div>
         } @else {
           @for (ticket of tickets(); track ticket.id) {

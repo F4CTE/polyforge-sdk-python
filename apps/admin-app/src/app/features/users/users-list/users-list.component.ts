@@ -88,13 +88,13 @@ export class UsersListComponent implements OnInit {
   statusBadge(status: string): { label: string; bg: string; color: string } {
     switch (status) {
       case 'CONNECTED':
-        return { label: 'ACTIVE',     bg: 'rgba(34,197,94,0.1)',   color: '#22C55E' };
+        return { label: 'ACTIVE',     bg: 'var(--pf-success-bg)',  color: 'var(--pf-success)' };
       case 'VERIFIED':
-        return { label: 'ACTIVE',     bg: 'rgba(34,197,94,0.1)',   color: '#22C55E' };
+        return { label: 'ACTIVE',     bg: 'var(--pf-success-bg)',  color: 'var(--pf-success)' };
       case 'UNVERIFIED':
-        return { label: 'UNVERIFIED', bg: 'rgba(245,158,11,0.1)',  color: '#F59E0B' };
+        return { label: 'UNVERIFIED', bg: 'var(--pf-warning-bg)',  color: 'var(--pf-warning)' };
       default:
-        return { label: status || 'UNKNOWN', bg: 'rgba(245,158,11,0.1)', color: '#F59E0B' };
+        return { label: status || 'UNKNOWN', bg: 'var(--pf-warning-bg)', color: 'var(--pf-warning)' };
     }
   }
 }

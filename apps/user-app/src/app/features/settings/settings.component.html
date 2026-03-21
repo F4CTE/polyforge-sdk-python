@@ -266,9 +266,9 @@
                   <td class="pf-mono">{{ key.lastUsedAt ? (key.lastUsedAt | date:'MMM d, yyyy') : '—' }}</td>
                   <td>
                     @if (key.revoked) {
-                      <span class="status-badge" style="background:rgba(239,68,68,0.15);color:#EF4444">Revoked</span>
+                      <span class="status-badge" style="background:var(--pf-danger-bg);color:var(--pf-danger)">Revoked</span>
                     } @else {
-                      <span class="status-badge" style="background:rgba(34,197,94,0.15);color:#22C55E">Active</span>
+                      <span class="status-badge" style="background:var(--pf-success-bg);color:var(--pf-success)">Active</span>
                     }
                   </td>
                   <td>

@@ -162,6 +162,14 @@ export class PortfolioComponent implements OnInit {
       }],
     });
 
+    const style = getComputedStyle(document.documentElement);
+    const gridColor = style.getPropertyValue('--pf-border-subtle').trim() || '#1A2840';
+    const tickColor = style.getPropertyValue('--pf-text-muted').trim() || '#445E7A';
+    const tooltipBg = style.getPropertyValue('--pf-bg-elevated').trim() || '#111D2E';
+    const tooltipTitle = style.getPropertyValue('--pf-text-primary').trim() || '#E8EDF5';
+    const tooltipBody = style.getPropertyValue('--pf-text-secondary').trim() || '#7A94B4';
+    const tooltipBorder = style.getPropertyValue('--pf-border-default').trim() || '#1E3350';
+
     this.chartOptions.set({
       responsive:          true,
       maintainAspectRatio: false,
@@ -170,10 +178,10 @@ export class PortfolioComponent implements OnInit {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#111D2E',
-          titleColor:      '#E8EDF5',
-          bodyColor:       '#7A94B4',
-          borderColor:     '#1E3350',
+          backgroundColor: tooltipBg,
+          titleColor:      tooltipTitle,
+          bodyColor:       tooltipBody,
+          borderColor:     tooltipBorder,
           borderWidth:     1,
           padding:         12,
           cornerRadius:    6,
@@ -187,13 +195,13 @@ export class PortfolioComponent implements OnInit {
       },
       scales: {
         x: {
-          grid:  { color: '#1A2840' },
-          ticks: { color: '#445E7A', font: { family: "'JetBrains Mono', monospace", size: 10 }, maxTicksLimit: 8 },
+          grid:  { color: gridColor },
+          ticks: { color: tickColor, font: { family: "'JetBrains Mono', monospace", size: 10 }, maxTicksLimit: 8 },
         },
         y: {
-          grid:  { color: '#1A2840' },
+          grid:  { color: gridColor },
           ticks: {
-            color: '#445E7A',
+            color: tickColor,
             font:  { family: "'JetBrains Mono', monospace", size: 10 },
             callback: (v: number) => `$${v.toFixed(0)}`,
           },
@@ -204,9 +212,9 @@ export class PortfolioComponent implements OnInit {
 
   pnlColor(val: string): string {
     const n = parseFloat(val);
-    if (n > 0) return '#22C55E';
-    if (n < 0) return '#EF4444';
-    return '#9CA3AF';
+    if (n > 0) return 'var(--pf-pnl-positive)';
+    if (n < 0) return 'var(--pf-pnl-negative)';
+    return 'var(--pf-pnl-neutral)';
   }
 
   formatPnl(val: string): string {
