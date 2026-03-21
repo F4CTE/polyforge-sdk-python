@@ -15,6 +15,7 @@ export interface Market {
   title: string;
   description: string;
   category: string;
+  image: string | null;
   seriesSlug: string;
   tokens: MarketToken[];
   volume24h: string;

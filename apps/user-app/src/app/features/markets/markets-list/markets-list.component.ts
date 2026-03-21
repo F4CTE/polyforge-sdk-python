@@ -165,6 +165,10 @@ export class MarketsListComponent implements OnInit {
     return Math.round(val * 100) + '\u00A2';
   }
 
+  tokenPercent(token: any): number {
+    return Math.round(parseFloat(token.price || '0') * 100);
+  }
+
   volume(market: Market): string {
     const v = parseFloat(market.volume24h);
     if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;

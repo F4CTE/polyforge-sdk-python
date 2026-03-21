@@ -399,6 +399,98 @@ async function main() {
   console.log('  ✓ notification preferences set for all users');
 
   // ───────────────────────────────────────────────
+  // MARKETS & TOKENS
+  // ───────────────────────────────────────────────
+
+  console.log('\n📈 Creating markets & tokens...');
+
+  const marketSeeds = [
+    {
+      id: MARKETS.usElections.id,
+      slug: 'us-elections-2026',
+      title: 'Will the Democrats win the 2026 US midterm elections?',
+      description: 'Resolves YES if the Democratic Party wins a majority in the House of Representatives in the 2026 midterm elections.',
+      category: 'Politics',
+      image: 'https://picsum.photos/seed/us-elections/400/200',
+      endDate: new Date('2026-11-04'),
+      closed: false,
+      negRisk: false,
+      volume24h: 125000,
+      tokens: [
+        { id: MARKETS.usElections.tokenYes, outcome: 'YES', price: 0.58, liquidity: 42000 },
+        { id: MARKETS.usElections.tokenNo, outcome: 'NO', price: 0.42, liquidity: 38000 },
+      ],
+    },
+    {
+      id: MARKETS.cryptoEtf.id,
+      slug: 'crypto-etf-approval',
+      title: 'Will the SEC approve a spot Ethereum ETF by end of 2026?',
+      description: 'Resolves YES if the SEC approves at least one spot Ethereum ETF before January 1, 2027.',
+      category: 'Crypto',
+      image: 'https://picsum.photos/seed/crypto-etf/400/200',
+      endDate: new Date('2026-12-31'),
+      closed: false,
+      negRisk: false,
+      volume24h: 89000,
+      tokens: [
+        { id: MARKETS.cryptoEtf.tokenYes, outcome: 'YES', price: 0.40, liquidity: 31000 },
+        { id: MARKETS.cryptoEtf.tokenNo, outcome: 'NO', price: 0.60, liquidity: 29000 },
+      ],
+    },
+    {
+      id: MARKETS.superbowl.id,
+      slug: 'superbowl-2027',
+      title: 'Will the Kansas City Chiefs win Super Bowl LXI?',
+      description: 'Resolves YES if the Kansas City Chiefs win Super Bowl LXI in February 2027.',
+      category: 'Sports',
+      image: 'https://picsum.photos/seed/superbowl/400/200',
+      endDate: new Date('2027-02-14'),
+      closed: false,
+      negRisk: false,
+      volume24h: 210000,
+      tokens: [
+        { id: MARKETS.superbowl.tokenYes, outcome: 'YES', price: 0.25, liquidity: 55000 },
+        { id: MARKETS.superbowl.tokenNo, outcome: 'NO', price: 0.75, liquidity: 51000 },
+      ],
+    },
+  ];
+
+  for (const m of marketSeeds) {
+    await prisma.market.upsert({
+      where: { id: m.id },
+      update: { image: m.image },
+      create: {
+        id: m.id,
+        slug: m.slug,
+        title: m.title,
+        description: m.description,
+        category: m.category,
+        image: m.image,
+        endDate: m.endDate,
+        closed: m.closed,
+        negRisk: m.negRisk,
+        volume24h: m.volume24h,
+      },
+    });
+
+    for (const t of m.tokens) {
+      await prisma.token.upsert({
+        where: { id: t.id },
+        update: { price: t.price, liquidity: t.liquidity },
+        create: {
+          id: t.id,
+          marketId: m.id,
+          outcome: t.outcome,
+          price: t.price,
+          liquidity: t.liquidity,
+        },
+      });
+    }
+  }
+
+  console.log('  ✓ 3 markets with tokens seeded');
+
+  // ───────────────────────────────────────────────
   // SOCIAL FOLLOWS
   // ───────────────────────────────────────────────
 

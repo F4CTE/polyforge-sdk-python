@@ -89,7 +89,6 @@
           </div>
           <p-skeleton height="18px" width="90%" styleClass="mb-2" />
           <p-skeleton height="16px" width="65%" styleClass="mb-3" />
-          <p-skeleton height="48px" width="100%" styleClass="mb-3" borderRadius="8px" />
           <div style="display:flex;gap:8px;margin-bottom:12px">
             <p-skeleton height="42px" width="48%" borderRadius="10px" />
             <p-skeleton height="42px" width="48%" borderRadius="10px" />
@@ -118,9 +117,10 @@
           @for (market of featuredMarkets(); track market.id) {
             <a class="featured-card" [routerLink]="['/markets', market.id]"
                [style.--card-accent]="categoryColor(market.category).text">
-              <div class="featured-card-sparkline">
-                <app-sparkline [data]="sparklineData(market)" [width]="240" [height]="80" />
-              </div>
+              @if (market.image) {
+                <div class="featured-card-bg"
+                     [style.background-image]="'url(' + market.image + ')'"></div>
+              }
               <div class="featured-card-body">
                 <div class="featured-card-top">
                   <span class="market-category-chip"
@@ -133,16 +133,39 @@
                   </span>
                 </div>
                 <div class="featured-card-title">{{ market.title }}</div>
-                <div class="market-card-prices">
-                  <button class="market-price-btn market-yes-btn">
-                    <span>Yes</span>
-                    <span>{{ priceCents(market, 'YES') }}</span>
-                  </button>
-                  <button class="market-price-btn market-no-btn">
-                    <span>No</span>
-                    <span>{{ priceCents(market, 'NO') }}</span>
-                  </button>
-                </div>
+
+                <!-- Binary market (2 tokens) -->
+                @if (market.tokens.length <= 2) {
+                  <div class="market-card-prices">
+                    <button class="market-price-btn market-yes-btn">
+                      <span>Yes</span>
+                      <span>{{ priceCents(market, 'YES') }}</span>
+                    </button>
+                    <button class="market-price-btn market-no-btn">
+                      <span>No</span>
+                      <span>{{ priceCents(market, 'NO') }}</span>
+                    </button>
+                  </div>
+                }
+
+                <!-- Multi-outcome market (3+ tokens) -->
+                @if (market.tokens.length > 2) {
+                  <div class="market-outcomes">
+                    @for (token of market.tokens.slice(0, 4); track token.tokenId) {
+                      <div class="market-outcome-row">
+                        <span class="outcome-name">{{ token.outcome }}</span>
+                        <div class="outcome-bar-wrap">
+                          <div class="outcome-bar" [style.width.%]="tokenPercent(token)"></div>
+                        </div>
+                        <span class="outcome-price">{{ tokenPercent(token) }}%</span>
+                      </div>
+                    }
+                    @if (market.tokens.length > 4) {
+                      <span class="outcome-more">+{{ market.tokens.length - 4 }} more</span>
+                    }
+                  </div>
+                }
+
                 <div class="featured-card-footer">
                   <span class="market-meta">
                     <i class="pi pi-chart-bar" style="font-size:11px"></i> {{ volume(market) }} Vol
@@ -162,37 +185,70 @@
         <div class="market-grid">
           @for (market of gridMarkets(); track market.id) {
             <a class="market-card" [routerLink]="['/markets', market.id]">
-              <!-- Header row: category + closing -->
-              <div class="market-card-header">
-                <span class="market-category-chip"
-                      [style.--chip-color]="categoryColor(market.category).text">
-                  <i class="pi {{ categoryIcons[market.category] }}" style="font-size:10px"></i>
-                  {{ market.category }}
-                </span>
-                <span class="market-card-closes">
-                  <i class="pi pi-clock" style="font-size:10px"></i> {{ daysUntil(market.endDate) }}
-                </span>
+              <div class="market-card-top-row">
+                <!-- Thumbnail or placeholder -->
+                @if (market.image) {
+                  <img class="market-card-thumb"
+                       [src]="market.image"
+                       [alt]="market.title"
+                       loading="lazy" />
+                } @else {
+                  <span class="market-card-thumb-placeholder"
+                        [style.background]="categoryColor(market.category).bg"
+                        [style.color]="categoryColor(market.category).text">
+                    <i class="pi {{ categoryIcons[market.category] }}"></i>
+                  </span>
+                }
+
+                <div class="market-card-top-content">
+                  <!-- Header row: category + closing -->
+                  <div class="market-card-header">
+                    <span class="market-category-chip"
+                          [style.--chip-color]="categoryColor(market.category).text">
+                      <i class="pi {{ categoryIcons[market.category] }}" style="font-size:10px"></i>
+                      {{ market.category }}
+                    </span>
+                    <span class="market-card-closes">
+                      <i class="pi pi-clock" style="font-size:10px"></i> {{ daysUntil(market.endDate) }}
+                    </span>
+                  </div>
+
+                  <!-- Title -->
+                  <div class="market-card-title">{{ market.title }}</div>
+                </div>
               </div>
 
-              <!-- Title -->
-              <div class="market-card-title">{{ market.title }}</div>
+              <!-- Binary market (2 tokens) -->
+              @if (market.tokens.length <= 2) {
+                <div class="market-card-prices">
+                  <button class="market-price-btn market-yes-btn">
+                    <span>Yes</span>
+                    <span>{{ priceCents(market, 'YES') }}</span>
+                  </button>
+                  <button class="market-price-btn market-no-btn">
+                    <span>No</span>
+                    <span>{{ priceCents(market, 'NO') }}</span>
+                  </button>
+                </div>
+              }
 
-              <!-- Sparkline -->
-              <div class="market-card-sparkline">
-                <app-sparkline [data]="sparklineData(market)" [width]="280" [height]="48" />
-              </div>
-
-              <!-- YES/NO buttons -->
-              <div class="market-card-prices">
-                <button class="market-price-btn market-yes-btn">
-                  <span>Yes</span>
-                  <span>{{ priceCents(market, 'YES') }}</span>
-                </button>
-                <button class="market-price-btn market-no-btn">
-                  <span>No</span>
-                  <span>{{ priceCents(market, 'NO') }}</span>
-                </button>
-              </div>
+              <!-- Multi-outcome market (3+ tokens) -->
+              @if (market.tokens.length > 2) {
+                <div class="market-outcomes">
+                  @for (token of market.tokens.slice(0, 4); track token.tokenId) {
+                    <div class="market-outcome-row">
+                      <span class="outcome-name">{{ token.outcome }}</span>
+                      <div class="outcome-bar-wrap">
+                        <div class="outcome-bar" [style.width.%]="tokenPercent(token)"></div>
+                      </div>
+                      <span class="outcome-price">{{ tokenPercent(token) }}%</span>
+                    </div>
+                  }
+                  @if (market.tokens.length > 4) {
+                    <span class="outcome-more">+{{ market.tokens.length - 4 }} more</span>
+                  }
+                </div>
+              }
 
               <!-- Footer: volume + liquidity -->
               <div class="market-card-footer">

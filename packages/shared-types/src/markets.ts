@@ -14,6 +14,7 @@ export interface Market {
   endDate: string | null;
   volume: string; // USDC — always string, never float
   liquidity: string; // USDC
+  image: string | null;
   tokens: Token[];
   seriesId: string | null;
   tags: string[];
@@ -24,7 +25,7 @@ export interface Market {
 export interface Token {
   id: string;
   marketId: string;
-  outcome: "YES" | "NO";
+  outcome: string; // "YES" | "NO" or any custom outcome like "Trump", "Biden", etc.
   price: string; // 0.00 – 1.00 — always string
   winner: boolean;
 }

@@ -688,6 +688,7 @@ model Market {
   title         String
   description   String?
   category      String?   @db.VarChar(100)
+  image         String?
   seriesSlug    String?   @db.VarChar(255)
   endDate       DateTime?
   closed        Boolean   @default(false)

@@ -16,6 +16,7 @@ interface GammaMarket {
   title: string;
   description?: string;
   category?: string;
+  image?: string;
   seriesSlug?: string;
   endDate?: string;
   closed: boolean;
@@ -87,6 +88,7 @@ export class GammaApiService implements OnModuleInit {
         title: market.title,
         description: market.description,
         category: market.category,
+        image: market.image ?? null,
         seriesSlug: market.seriesSlug,
         endDate: market.endDate ? new Date(market.endDate) : undefined,
         closed: market.closed,
@@ -95,6 +97,7 @@ export class GammaApiService implements OnModuleInit {
       },
       update: {
         closed: market.closed,
+        image: market.image ?? undefined,
         volume24h: parseFloat(market.volume24h ?? "0"),
         lastUpdatedAt: new Date(),
       },
