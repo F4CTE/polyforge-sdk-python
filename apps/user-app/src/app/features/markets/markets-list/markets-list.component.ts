@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -48,6 +48,7 @@ export class MarketsListComponent implements OnInit {
   page       = signal(1);
   search     = signal('');
   sort       = signal<MarketsQuery['sort']>('volume');
+  category   = signal<string>('all');
   livePrices = signal<Record<string, string>>({});
   viewMode   = signal<'cards' | 'table'>(
     (typeof localStorage !== 'undefined' && localStorage.getItem('pf-markets-view') as 'cards' | 'table') || 'cards'
@@ -57,10 +58,42 @@ export class MarketsListComponent implements OnInit {
 
   readonly sortOptions = [
     { label: 'Volume',       value: 'volume' },
-    { label: 'Liquidity',    value: 'liquidity' },
-    { label: 'Closing Soon', value: 'closing_soon' },
     { label: 'Newest',       value: 'newest' },
+    { label: 'Closing Soon', value: 'closing_soon' },
+    { label: 'Liquidity',    value: 'liquidity' },
   ];
+
+  readonly categories = ['all', 'Sports', 'Crypto', 'Politics', 'Economics', 'Finance', 'Technology'];
+
+  readonly categoryIcons: Record<string, string> = {
+    all:        'pi-objects-column',
+    Sports:     'pi-trophy',
+    Crypto:     'pi-bitcoin',
+    Politics:   'pi-building-columns',
+    Economics:  'pi-chart-line',
+    Finance:    'pi-wallet',
+    Technology: 'pi-microchip',
+  };
+
+  /** Top 3 markets by volume for the featured/hero section */
+  featuredMarkets = computed(() => {
+    const all = this.filteredMarkets();
+    return all.slice(0, 3);
+  });
+
+  /** Markets after featured, for the main grid */
+  gridMarkets = computed(() => {
+    const all = this.filteredMarkets();
+    return all.slice(3);
+  });
+
+  /** All markets filtered by category */
+  filteredMarkets = computed(() => {
+    const cat = this.category();
+    const all = this.markets();
+    if (cat === 'all') return all;
+    return all.filter(m => m.category === cat);
+  });
 
   ngOnInit(): void {
     this.ws.connect();
@@ -88,6 +121,10 @@ export class MarketsListComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  setCategory(cat: string): void {
+    this.category.set(cat);
   }
 
   onSearchInput(event: Event): void {
@@ -119,6 +156,13 @@ export class MarketsListComponent implements OnInit {
     if (!token) return '—';
     const live = this.livePrices()[token.tokenId];
     return live ?? token.price;
+  }
+
+  priceCents(market: Market, outcome: 'YES' | 'NO'): string {
+    const raw = this.price(market, outcome);
+    if (raw === '—') return '—';
+    const val = parseFloat(raw);
+    return Math.round(val * 100) + '\u00A2';
   }
 
   volume(market: Market): string {
@@ -166,6 +210,11 @@ export class MarketsListComponent implements OnInit {
       Technology: { bg: 'rgba(236,72,153,0.15)',   text: '#EC4899' },
     };
     return map[cat] ?? { bg: 'rgba(107,114,128,0.15)', text: '#6B7280' };
+  }
+
+  categoryGradient(cat: string): string {
+    const c = this.categoryColor(cat);
+    return `linear-gradient(135deg, ${c.text}22 0%, ${c.text}08 50%, transparent 100%)`;
   }
 
   setViewMode(mode: 'cards' | 'table'): void {
