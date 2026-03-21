@@ -65,7 +65,7 @@
       <div class="settings-panel" style="margin-bottom:var(--pf-space-5)">
         <p class="settings-desc">Flush keys matching a Redis pattern (e.g. <span class="pf-mono">cache:price:*</span>, <span class="pf-mono">cache:book:*</span>). Use with caution.</p>
         <div style="display:flex;gap:12px;align-items:center">
-          <input pInputText [(ngModel)]="flushPattern" placeholder="cache:market:*" style="width:280px" />
+          <input pInputText [(ngModel)]="flushPattern" placeholder="cache:market:*" class="pf-dark-input" style="width:280px" />
           <p-button label="Flush" icon="pi pi-trash" severity="danger" [loading]="flushing()" [disabled]="!flushPattern.trim()" (onClick)="flush()" />
           @if (flushResult() !== null) {
             <span class="pf-mono" style="color:var(--pf-success)">{{ flushResult() }} keys deleted</span>

@@ -672,11 +672,30 @@ html, body {
 }
 
 .dash-stat-value {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--pf-text-primary);
   letter-spacing: -0.02em;
   line-height: 1.2;
+}
+
+.dash-stat-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 2px;
+
+  i { font-size: 10px; }
+
+  &.trend-up {
+    color: var(--pf-success);
+  }
+
+  &.trend-down {
+    color: var(--pf-danger);
+  }
 }
 
 // ─── Dashboard: health cards ──────────────────────────────────────────────────
@@ -995,6 +1014,33 @@ html, body {
   }
 }
 
+// ─── Dark-themed input (for use outside dialogs) ─────────────────────────────
+
+.pf-dark-input.p-inputtext,
+input.pf-dark-input {
+  background: var(--pf-input-bg) !important;
+  border: 1px solid var(--pf-input-border) !important;
+  color: var(--pf-input-text) !important;
+  border-radius: var(--pf-radius-md);
+  padding: 8px 12px;
+  font-size: 13px;
+  transition: border-color var(--pf-duration-fast) ease, box-shadow var(--pf-duration-fast) ease;
+
+  &::placeholder {
+    color: var(--pf-input-placeholder) !important;
+  }
+
+  &:hover {
+    border-color: var(--pf-input-border-hover) !important;
+  }
+
+  &:focus {
+    border-color: var(--pf-input-border-focus) !important;
+    box-shadow: var(--pf-input-focus-glow) !important;
+    outline: none;
+  }
+}
+
 // ─── PrimeNG component overrides ──────────────────────────────────────────────
 
 // Select (dropdown) filter style
@@ -1147,12 +1193,188 @@ p-inputnumber.w-full .p-inputnumber { width: 100%; }
   &:hover { background: rgba(6, 182, 212, 0.08) !important; color: var(--pf-text-primary) !important; }
 }
 
-// ─── Animation keyframes ────────────────────────────────────────────────────
+// ─── Dashboard: section headers ──────────────────────────────────────────────
 
-@keyframes pf-fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+.dash-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--pf-space-3);
+  margin-top: var(--pf-space-5);
+  padding-bottom: var(--pf-space-2);
+  border-bottom: 1px solid var(--pf-border-subtle);
+
+  &:first-of-type { margin-top: 0; }
 }
+
+.dash-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--pf-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  i { font-size: 13px; }
+}
+
+// ─── Dashboard: pulse animation on status dots ──────────────────────────────
+
+@keyframes pf-pulse {
+  0%   { box-shadow: 0 0 0 0 currentColor; }
+  70%  { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.pulse-dot {
+  animation: pf-pulse 2s ease-in-out infinite;
+}
+
+.overall-status-dot-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overall-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+// ─── Dashboard: latency indicator ────────────────────────────────────────────
+
+.latency-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+}
+
+.latency-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+// ─── Dashboard: Launch Control card ──────────────────────────────────────────
+
+.launch-control-card {
+  background: var(--pf-bg-surface);
+  border: 1px solid var(--pf-border-subtle);
+  border-radius: var(--pf-radius-lg);
+  padding: var(--pf-space-5);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--pf-cyan-500), var(--pf-cyan-300));
+    border-radius: var(--pf-radius-lg) var(--pf-radius-lg) 0 0;
+  }
+}
+
+.launch-control-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--pf-space-4);
+}
+
+.launch-control-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pf-text-primary);
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.launch-control-desc {
+  margin: 0;
+  font-size: 12px;
+  color: var(--pf-text-secondary);
+}
+
+.launch-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--pf-space-3) 0;
+  border-top: 1px solid var(--pf-border-subtle);
+}
+
+.launch-control-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.launch-control-flag-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--pf-text-primary);
+}
+
+.launch-control-flag-desc {
+  font-size: 12px;
+  color: var(--pf-text-secondary);
+}
+
+.launch-control-status {
+  font-weight: 600;
+}
+
+// ─── Dashboard: activity action badges ───────────────────────────────────────
+
+.action-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: var(--pf-radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+
+  &.action-create {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--pf-success);
+  }
+
+  &.action-update {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--pf-info);
+  }
+
+  &.action-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--pf-danger);
+  }
+
+  &.action-review {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--pf-warning);
+  }
+
+  &.action-default {
+    background: rgba(122, 148, 180, 0.08);
+    color: var(--pf-text-muted);
+  }
+}
+
+// ─── Animation keyframes ────────────────────────────────────────────────────
 
 // ─── Global dark input overrides ────────────────────────────────────────────
 // Ensures all PrimeNG form inputs use dark backgrounds consistently

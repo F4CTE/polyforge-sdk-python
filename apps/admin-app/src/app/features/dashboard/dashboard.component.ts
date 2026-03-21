@@ -19,6 +19,8 @@ interface DashboardStat {
   bg: string;
   route: string;
   tooltip: string;
+  trend: number;      // percentage change (mock)
+  trendUp: boolean;   // true = arrow up, false = arrow down
 }
 
 @Component({
@@ -47,10 +49,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   statsLoading = signal(true);
   stats = signal<DashboardStat[]>([
-    { label: 'Total Users',       value: null, icon: 'pi pi-users',       color: 'var(--pf-info)',    bg: 'var(--pf-info-bg)',    route: '/users',      tooltip: 'Total registered users on the platform' },
-    { label: 'Active Strategies', value: null, icon: 'pi pi-bolt',        color: 'var(--pf-cyan-500)', bg: 'rgba(6,182,212,0.1)',  route: '/strategies', tooltip: 'Strategies currently running across all users' },
-    { label: 'Total Orders',      value: null, icon: 'pi pi-shopping-bag', color: 'var(--pf-warning)', bg: 'var(--pf-warning-bg)', route: '/orders',     tooltip: 'Total orders placed across the platform' },
-    { label: 'Open Tickets',      value: null, icon: 'pi pi-comments',    color: 'var(--pf-danger)',  bg: 'var(--pf-danger-bg)',  route: '/tickets',    tooltip: 'Support tickets awaiting resolution' },
+    { label: 'Total Users',       value: null, icon: 'pi pi-users',       color: 'var(--pf-info)',    bg: 'var(--pf-info-bg)',    route: '/users',      tooltip: 'Total registered users on the platform',          trend: 12.4, trendUp: true },
+    { label: 'Active Strategies', value: null, icon: 'pi pi-bolt',        color: 'var(--pf-cyan-500)', bg: 'rgba(6,182,212,0.1)',  route: '/strategies', tooltip: 'Strategies currently running across all users',    trend: 8.2,  trendUp: true },
+    { label: 'Total Orders',      value: null, icon: 'pi pi-shopping-bag', color: 'var(--pf-warning)', bg: 'var(--pf-warning-bg)', route: '/orders',     tooltip: 'Total orders placed across the platform',          trend: 23.1, trendUp: true },
+    { label: 'Open Tickets',      value: null, icon: 'pi pi-comments',    color: 'var(--pf-danger)',  bg: 'var(--pf-danger-bg)',  route: '/tickets',    tooltip: 'Support tickets awaiting resolution',              trend: 5.3,  trendUp: false },
   ]);
 
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
@@ -170,5 +172,48 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   formatServiceName(name: string): string {
     return name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  // ── Relative time helper ──────────────────────────────────────────────────
+  relativeTime(dateStr: string): string {
+    const now = Date.now();
+    const then = new Date(dateStr).getTime();
+    const diffMs = now - then;
+    const diffSec = Math.floor(diffMs / 1000);
+    if (diffSec < 60)   return 'just now';
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60)   return diffMin === 1 ? '1 minute ago' : `${diffMin} minutes ago`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24)    return diffHr === 1 ? '1 hour ago' : `${diffHr} hours ago`;
+    const diffDay = Math.floor(diffHr / 24);
+    return diffDay === 1 ? '1 day ago' : `${diffDay} days ago`;
+  }
+
+  // ── Action badge styling ──────────────────────────────────────────────────
+  actionBadgeClass(action: string): string {
+    const a = action.toUpperCase();
+    if (a.includes('CREATE') || a.includes('REGISTER')) return 'action-create';
+    if (a.includes('UPDATE') || a.includes('EDIT') || a.includes('SET')) return 'action-update';
+    if (a.includes('DELETE') || a.includes('REMOVE') || a.includes('SUSPEND')) return 'action-delete';
+    if (a.includes('REVIEW') || a.includes('APPROVE') || a.includes('REJECT')) return 'action-review';
+    return 'action-default';
+  }
+
+  actionIcon(action: string): string {
+    const a = action.toUpperCase();
+    if (a.includes('CREATE') || a.includes('REGISTER')) return 'pi pi-plus-circle';
+    if (a.includes('UPDATE') || a.includes('EDIT') || a.includes('SET')) return 'pi pi-pencil';
+    if (a.includes('DELETE') || a.includes('REMOVE') || a.includes('SUSPEND')) return 'pi pi-trash';
+    if (a.includes('REVIEW') || a.includes('APPROVE')) return 'pi pi-check-circle';
+    if (a.includes('REJECT')) return 'pi pi-times-circle';
+    if (a.includes('LOGIN') || a.includes('AUTH')) return 'pi pi-sign-in';
+    return 'pi pi-circle';
+  }
+
+  // ── Latency color helper ──────────────────────────────────────────────────
+  latencyColor(ms: number): string {
+    if (ms < 100) return 'var(--pf-success)';
+    if (ms < 500) return 'var(--pf-warning)';
+    return 'var(--pf-danger)';
   }
 }

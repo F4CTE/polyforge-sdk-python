@@ -16,19 +16,27 @@
   </div>
 
   <!-- ─── Stat cards ──────────────────────────────────────────────────── -->
+  <div class="dash-section-header">
+    <span class="dash-section-label"><i class="pi pi-chart-bar"></i> Overview</span>
+  </div>
   <div class="dash-stats-grid">
     @for (stat of stats(); track stat.label) {
-      <a class="dash-stat-card" [routerLink]="stat.route" [pTooltip]="stat.tooltip" tooltipPosition="bottom">
+      <a class="dash-stat-card" [routerLink]="stat.route" [pTooltip]="stat.tooltip" tooltipPosition="bottom"
+         [style.background]="'linear-gradient(135deg, ' + stat.bg + ', var(--pf-bg-surface))'">
         <div class="dash-stat-icon" [style.color]="stat.color" [style.background]="stat.bg">
           <i [class]="stat.icon"></i>
         </div>
         <div class="dash-stat-body">
           <span class="dash-stat-label">{{ stat.label }}</span>
           @if (statsLoading() && stat.value === null) {
-            <p-skeleton height="28px" width="60px" />
+            <p-skeleton height="32px" width="60px" />
           } @else {
             <span class="dash-stat-value pf-mono">{{ stat.value | number }}</span>
           }
+          <span class="dash-stat-trend" [class.trend-up]="stat.trendUp" [class.trend-down]="!stat.trendUp">
+            <i class="pi" [class.pi-arrow-up-right]="stat.trendUp" [class.pi-arrow-down-right]="!stat.trendUp"></i>
+            {{ stat.trend }}%
+          </span>
         </div>
       </a>
     }
@@ -43,7 +51,13 @@
   } @else if (health()) {
 
     <!-- ─── Overall status banner ─────────────────────────────────────── -->
+    <div class="dash-section-header">
+      <span class="dash-section-label"><i class="pi pi-heart"></i> System Health</span>
+    </div>
     <div class="overall-status" [style.border-color]="statusColor(health()!.status)" [style.background]="statusBg(health()!.status)">
+      <div class="overall-status-dot-wrap">
+        <div class="overall-status-dot pulse-dot" [style.background]="statusColor(health()!.status)"></div>
+      </div>
       <i class="pi {{ overallIcon(health()!.status) }}" [style.color]="statusColor(health()!.status)" style="font-size:20px"></i>
       <div>
         <div class="overall-status-label" [style.color]="statusColor(health()!.status)">
@@ -61,20 +75,26 @@
       @for (svc of serviceEntries(); track svc.name) {
         <div class="health-card" [style.border-color]="statusColor(svc.status)">
           <div class="health-card-header">
-            <div class="health-status-dot" [style.background]="statusColor(svc.status)"></div>
+            <div class="health-status-dot pulse-dot" [style.background]="statusColor(svc.status)"></div>
             <span class="health-service-name">{{ formatServiceName(svc.name) }}</span>
           </div>
           <div class="health-card-footer">
             <span class="health-status-badge" [style.color]="statusColor(svc.status)" [style.background]="statusBg(svc.status)">
               {{ svc.status }}
             </span>
-            <span class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ svc.latencyMs }}ms</span>
+            <span class="latency-indicator pf-mono" [style.color]="latencyColor(svc.latencyMs)">
+              <span class="latency-dot" [style.background]="latencyColor(svc.latencyMs)"></span>
+              {{ svc.latencyMs }}ms
+            </span>
           </div>
         </div>
       }
     </div>
 
     <!-- ─── Infrastructure ────────────────────────────────────────────── -->
+    <div class="dash-section-header">
+      <span class="dash-section-label"><i class="pi pi-server"></i> Infrastructure</span>
+    </div>
     <div class="infra-grid">
       <div class="infra-card">
         <div class="infra-card-title"><i class="pi pi-database"></i> Database</div>
@@ -111,28 +131,31 @@
   }
 
   <!-- ─── Launch Control ──────────────────────────────────────────────── -->
-  <div class="card" style="margin-top:1.5rem">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+  <div class="dash-section-header" style="margin-top:var(--pf-space-5)">
+    <span class="dash-section-label"><i class="pi pi-sliders-h"></i> Launch Control</span>
+  </div>
+  <div class="launch-control-card">
+    <div class="launch-control-header">
       <div>
-        <h3 class="section-title" style="margin:0 0 4px">
-          <i class="pi pi-sliders-h" style="margin-right:6px"></i>Launch Control
+        <h3 class="launch-control-title">
+          <i class="pi pi-bolt" style="color:var(--pf-cyan-400)"></i> Runtime Flags
         </h3>
-        <p style="margin:0;font-size:12px;color:var(--pf-text-secondary)">Runtime flags — changes take effect immediately without restart.</p>
+        <p class="launch-control-desc">Changes take effect immediately without restart.</p>
       </div>
     </div>
 
     @if (inviteOnlyLoading() && inviteOnly() === null) {
       <p-skeleton height="48px" />
     } @else {
-      <div class="infra-row" style="padding:12px 0;border-top:1px solid var(--pf-border)">
-        <div style="display:flex;flex-direction:column;gap:2px">
-          <span style="font-size:14px;font-weight:500;color:var(--pf-text)">Invite-only registration</span>
-          <span style="font-size:12px;color:var(--pf-text-secondary)">
+      <div class="launch-control-row">
+        <div class="launch-control-info">
+          <span class="launch-control-flag-name">Invite-only registration</span>
+          <span class="launch-control-flag-desc">
             When ON, new accounts require a valid invite code.
             @if (inviteOnly()) {
-              <span style="color:var(--pf-warning);font-weight:600"> Currently: ON</span>
+              <span class="launch-control-status" style="color:var(--pf-warning)"> Currently: ON</span>
             } @else {
-              <span style="color:var(--pf-healthy);font-weight:600"> Currently: OFF (open registration)</span>
+              <span class="launch-control-status" style="color:var(--pf-healthy)"> Currently: OFF (open registration)</span>
             }
           </span>
         </div>
@@ -149,8 +172,8 @@
   </div>
 
   <!-- ─── Recent Activity ──────────────────────────────────────────── -->
-  <div class="admin-section-title" style="margin-top:var(--pf-space-5)">
-    <i class="pi pi-history" style="margin-right:6px"></i>Recent Activity
+  <div class="dash-section-header" style="margin-top:var(--pf-space-5)">
+    <span class="dash-section-label"><i class="pi pi-history"></i> Recent Activity</span>
   </div>
   <div class="admin-table-panel">
     @if (activityLoading() && recentActivity().length === 0) {
@@ -179,10 +202,15 @@
               <tr class="table-row">
                 <td style="font-size:13px;color:var(--pf-text-primary)">{{ log.adminId ?? '—' }}</td>
                 <td>
-                  <span class="admin-badge" style="text-transform:none">{{ log.action }}</span>
+                  <span class="action-badge" [class]="actionBadgeClass(log.action)">
+                    <i [class]="actionIcon(log.action)" style="font-size:11px"></i>
+                    {{ log.action }}
+                  </span>
                 </td>
                 <td style="font-size:12px;color:var(--pf-text-muted)">{{ log.target ?? '—' }}</td>
-                <td class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)">{{ log.createdAt | date:'MMM d, HH:mm' }}</td>
+                <td class="pf-mono" style="font-size:11px;color:var(--pf-text-muted)" [pTooltip]="(log.createdAt | date:'MMM d, yyyy HH:mm:ss')!" tooltipPosition="left">
+                  {{ relativeTime(log.createdAt) }}
+                </td>
               </tr>
             }
           </tbody>
