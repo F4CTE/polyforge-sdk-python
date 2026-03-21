@@ -2,7 +2,7 @@ import { type Page, type Locator, expect } from '@playwright/test';
 
 /**
  * Page Object for the Strategy Builder (/strategies/new and /strategies/:id/edit).
- * Supports the SVG canvas-based builder with FAB block picker.
+ * Supports the full-screen SVG canvas with floating side panel.
  */
 export class StrategyBuilderPage {
     readonly page:         Page;
@@ -10,8 +10,6 @@ export class StrategyBuilderPage {
     readonly descInput:    Locator;
     readonly saveButton:   Locator;
     readonly cancelButton: Locator;
-    readonly addBlockFab:  Locator;
-    readonly paletteGrid:  Locator;
 
     constructor(page: Page) {
         this.page         = page;
@@ -19,8 +17,6 @@ export class StrategyBuilderPage {
         this.descInput    = page.locator('textarea[placeholder="What does this strategy do?"]');
         this.saveButton   = page.locator('p-button').filter({ hasText: /Create Strategy|Save Changes/ }).locator('button');
         this.cancelButton = page.locator('p-button').filter({ hasText: 'Cancel' }).locator('button');
-        this.addBlockFab  = page.locator('.canvas-add-fab');
-        this.paletteGrid  = page.locator('.block-palette');
     }
 
     async gotoNew(): Promise<void> {
@@ -41,27 +37,29 @@ export class StrategyBuilderPage {
         await this.descInput.fill(desc);
     }
 
-    /** Click a section tab in the palette by label (e.g. 'Safety', 'Triggers', 'Conditions', 'Actions') */
+    /** Click a section tab in the floating panel by label (e.g. 'Safety', 'Triggers', 'Conditions', 'Actions') */
     async selectSection(label: string): Promise<void> {
-        // Open palette first if not already open
-        if (!(await this.paletteGrid.isVisible())) {
-            await this.addBlockFab.click();
-            await expect(this.paletteGrid).toBeVisible({ timeout: 5_000 });
+        // Ensure the panel is open
+        const panel = this.page.locator('.builder-floating-panel');
+        if (!(await panel.isVisible())) {
+            await this.page.locator('.panel-toggle-btn').click();
+            await expect(panel).toBeVisible({ timeout: 5_000 });
         }
-        await this.page.locator('.palette-section-btn', { hasText: label }).click();
+        await this.page.locator('.panel-tab-btn', { hasText: label }).click();
     }
 
-    /** Open the block palette and click the block with the given label */
+    /** Click a block item in the floating panel to add it to the canvas */
     async addBlock(blockLabel: string): Promise<void> {
-        // Open palette if not already open
-        if (!(await this.paletteGrid.isVisible())) {
-            await this.addBlockFab.click();
-            await expect(this.paletteGrid).toBeVisible({ timeout: 5_000 });
+        // Ensure the panel is open
+        const panel = this.page.locator('.builder-floating-panel');
+        if (!(await panel.isVisible())) {
+            await this.page.locator('.panel-toggle-btn').click();
+            await expect(panel).toBeVisible({ timeout: 5_000 });
         }
-        await this.paletteGrid.locator('.palette-item', { hasText: blockLabel }).click();
+        await this.page.locator('.panel-block-item', { hasText: blockLabel }).click();
     }
 
-    /** Returns all block cards on the canvas */
+    /** Returns all block elements on the canvas */
     blockCards(): Locator {
         return this.page.locator('.canvas-block');
     }
