@@ -1,0 +1,235 @@
+import { useState, useEffect, type FormEvent } from 'react';
+import { useParams, useNavigate } from 'react-router';
+import { toast } from 'sonner';
+import { ArrowLeft, Send } from 'lucide-react';
+import { adminApi } from '@/lib/api';
+import { statusColor, formatDateTime, timeAgo } from '@/lib/utils';
+
+const priorityColor: Record<string, string> = {
+  LOW: 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]',
+  MEDIUM: 'text-amber-400 bg-amber-400/10',
+  HIGH: 'text-orange-400 bg-orange-400/10',
+  URGENT: 'text-red-400 bg-red-400/10',
+};
+
+export function Component() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [ticket, setTicket] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [reply, setReply] = useState('');
+  const [sending, setSending] = useState(false);
+  const [statusValue, setStatusValue] = useState('');
+  const [assignedTo, setAssignedTo] = useState('');
+  const [admins, setAdmins] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!id) return;
+    async function load() {
+      try {
+        const [ticketRes, adminsRes] = await Promise.all([
+          adminApi.ticket(id!),
+          adminApi.listAdmins().catch(() => []),
+        ]);
+        setTicket(ticketRes);
+        setStatusValue(ticketRes.status);
+        setAssignedTo(ticketRes.assignedTo ?? '');
+        setAdmins(adminsRes);
+      } catch {
+        toast.error('Failed to load ticket');
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [id]);
+
+  async function handleReply(e: FormEvent) {
+    e.preventDefault();
+    if (!id || !reply.trim()) return;
+    setSending(true);
+    try {
+      const res = await adminApi.replyTicket(id, reply);
+      setTicket((t: any) => ({
+        ...t,
+        messages: [...(t.messages ?? []), res],
+      }));
+      setReply('');
+      toast.success('Reply sent');
+    } catch {
+      toast.error('Failed to send reply');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleStatusChange(newStatus: string) {
+    if (!id) return;
+    try {
+      await adminApi.updateTicket(id, { status: newStatus });
+      setStatusValue(newStatus);
+      setTicket((t: any) => ({ ...t, status: newStatus }));
+      toast.success(`Status updated to ${newStatus}`);
+    } catch {
+      toast.error('Failed to update status');
+    }
+  }
+
+  async function handleAssign(adminId: string) {
+    if (!id) return;
+    try {
+      await adminApi.updateTicket(id, { assignedTo: adminId });
+      setAssignedTo(adminId);
+      toast.success('Ticket assigned');
+    } catch {
+      toast.error('Failed to assign ticket');
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-sm text-[var(--color-pf-text-secondary)]">Loading ticket...</div>
+      </div>
+    );
+  }
+
+  if (!ticket) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-[var(--color-pf-text-secondary)]">Ticket not found</p>
+        <button
+          onClick={() => navigate('/tickets')}
+          className="mt-4 text-sm text-[var(--color-pf-cyan-500)] hover:underline"
+        >
+          Back to tickets
+        </button>
+      </div>
+    );
+  }
+
+  const messages = ticket.messages ?? [];
+
+  return (
+    <div className="space-y-6">
+      {/* Back */}
+      <button
+        onClick={() => navigate('/tickets')}
+        className="flex items-center gap-1.5 text-sm text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)] transition-colors"
+      >
+        <ArrowLeft size={16} />
+        Back to tickets
+      </button>
+
+      {/* Header */}
+      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">
+              {ticket.subject}
+            </h2>
+            <p className="text-sm text-[var(--color-pf-text-tertiary)] mt-0.5">
+              {ticket.username ?? ticket.userId} - {formatDateTime(ticket.createdAt)}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(ticket.status)}`}>
+              {ticket.status}
+            </span>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityColor[ticket.priority] ?? ''}`}>
+              {ticket.priority}
+            </span>
+            {ticket.category && (
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] border border-[var(--color-pf-border)]">
+                {ticket.category}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex flex-wrap gap-4 pt-4 border-t border-[var(--color-pf-border)]">
+          <div>
+            <label className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Status</label>
+            <select
+              value={statusValue}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              className="px-3 py-1.5 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+            >
+              <option value="OPEN">Open</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="RESOLVED">Resolved</option>
+              <option value="CLOSED">Closed</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Assign To</label>
+            <select
+              value={assignedTo}
+              onChange={(e) => handleAssign(e.target.value)}
+              className="px-3 py-1.5 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+            >
+              <option value="">Unassigned</option>
+              {admins.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.displayName}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Messages Thread */}
+      <div className="space-y-3">
+        {messages.map((msg: any, i: number) => {
+          const isAdmin = msg.senderType === 'admin' || msg.adminId;
+          return (
+            <div
+              key={msg.id ?? i}
+              className={`p-4 rounded-lg border ${
+                isAdmin
+                  ? 'bg-[var(--color-pf-cyan-500)]/5 border-[var(--color-pf-cyan-500)]/20 ml-8'
+                  : 'bg-[var(--color-pf-elevated)] border-[var(--color-pf-border)] mr-8'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-[var(--color-pf-text-secondary)]">
+                  {isAdmin ? (msg.senderName ?? 'Admin') : (ticket.username ?? 'User')}
+                </span>
+                <span className="text-[11px] text-[var(--color-pf-text-tertiary)]">
+                  {msg.createdAt ? timeAgo(msg.createdAt) : ''}
+                </span>
+              </div>
+              <p className="text-sm text-[var(--color-pf-text)] whitespace-pre-wrap">{msg.body}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Reply */}
+      <form
+        onSubmit={handleReply}
+        className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-4"
+      >
+        <textarea
+          value={reply}
+          onChange={(e) => setReply(e.target.value)}
+          placeholder="Type your reply..."
+          rows={4}
+          className="w-full px-3 py-2 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] mb-3 resize-y"
+        />
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={sending || !reply.trim()}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm rounded-md bg-[var(--color-pf-cyan-500)] text-white hover:bg-[var(--color-pf-cyan-600)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Send size={14} />
+            {sending ? 'Sending...' : 'Reply'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

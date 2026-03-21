@@ -1,0 +1,178 @@
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { adminApi } from '@/lib/api';
+import { formatDateTime } from '@/lib/utils';
+
+type LogTab = 'audit' | 'events' | 'logins';
+
+export function Component() {
+  const [tab, setTab] = useState<LogTab>('audit');
+  const [logs, setLogs] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+
+  const limit = 25;
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      let res: any;
+      if (tab === 'audit') res = await adminApi.auditLogs({ page, limit });
+      else if (tab === 'events') res = await adminApi.eventLogs({ page, limit });
+      else res = await adminApi.loginLogs({ page, limit });
+      setLogs(res.data ?? []);
+      setTotalPages(res.totalPages ?? 1);
+    } catch {
+      toast.error('Failed to load logs');
+    } finally {
+      setLoading(false);
+    }
+  }, [tab, page]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  function changeTab(t: LogTab) {
+    setTab(t);
+    setPage(1);
+  }
+
+  const tabs: { key: LogTab; label: string }[] = [
+    { key: 'audit', label: 'Audit' },
+    { key: 'events', label: 'Events' },
+    { key: 'logins', label: 'Logins' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Logs</h2>
+
+      {/* Tabs */}
+      <div className="flex gap-1 bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-1 w-fit">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => changeTab(t.key)}
+            className={`px-4 py-1.5 text-sm rounded-md transition-colors ${
+              tab === t.key
+                ? 'bg-[var(--color-pf-cyan-500)]/10 text-[var(--color-pf-cyan-500)] font-medium'
+                : 'text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)]'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Log Table */}
+      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[var(--color-pf-border)]">
+                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Timestamp</th>
+                {tab === 'audit' && (
+                  <>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Action</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Target</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">IP</th>
+                  </>
+                )}
+                {tab === 'events' && (
+                  <>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Type</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Details</th>
+                  </>
+                )}
+                {tab === 'logins' && (
+                  <>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">User</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">IP</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Status</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Reason</th>
+                  </>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--color-pf-text-tertiary)]">Loading...</td>
+                </tr>
+              ) : logs.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--color-pf-text-tertiary)]">No logs found</td>
+                </tr>
+              ) : (
+                logs.map((log) => (
+                  <tr key={log.id} className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] transition-colors">
+                    <td className="px-4 py-3 text-[var(--color-pf-text-tertiary)] whitespace-nowrap">
+                      {formatDateTime(log.createdAt)}
+                    </td>
+                    {tab === 'audit' && (
+                      <>
+                        <td className="px-4 py-3">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--color-pf-bg)] text-[var(--color-pf-cyan-500)] border border-[var(--color-pf-border)]">
+                            {log.action}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">
+                          {log.target && `${log.target}`}
+                          {log.targetId && ` #${log.targetId.slice(0, 8)}`}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs text-[var(--color-pf-text-tertiary)]">{log.ip ?? '-'}</td>
+                      </>
+                    )}
+                    {tab === 'events' && (
+                      <>
+                        <td className="px-4 py-3">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-violet-400/10 text-violet-400">
+                            {log.type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-[var(--color-pf-text-secondary)] max-w-[300px] truncate font-mono text-xs">
+                          {JSON.stringify(log.payload)}
+                        </td>
+                      </>
+                    )}
+                    {tab === 'logins' && (
+                      <>
+                        <td className="px-4 py-3 text-[var(--color-pf-text)]">{log.username}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-[var(--color-pf-text-tertiary)]">{log.ip}</td>
+                        <td className="px-4 py-3">
+                          {log.success ? (
+                            <span className="text-xs text-emerald-400">Success</span>
+                          ) : (
+                            <span className="text-xs text-red-400">Failed</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-[var(--color-pf-text-tertiary)]">{log.failReason ?? '-'}</td>
+                      </>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--color-pf-border)]">
+            <span className="text-xs text-[var(--color-pf-text-tertiary)]">Page {page} of {totalPages}</span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed">
+                <ChevronLeft size={16} />
+              </button>
+              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed">
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
