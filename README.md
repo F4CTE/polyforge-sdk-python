@@ -13,6 +13,8 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Real-time updates** — WebSocket-driven order fills, strategy events, notification bell, and ticket polling
 - **API key management** — Generate scoped API keys (READ / WRITE / TRADE) for external tool integration, AI agents, and programmatic access
 - **Interactive UI** — Tooltips, drag-and-drop reordering, sparkline charts, hover effects, page animations
+- **Dark/light theme toggle** — Sun/moon switcher with localStorage persistence on both user-app and admin-app
+- **API documentation page** — Interactive API reference at `/api-docs` in user-app
 - **Design system** — Dark theme with design tokens (section colors, status colors, typography scale), loading screen with animated logo
 - **Accessibility** — `focus-visible` outlines, `aria-label` attributes, responsive mobile layouts
 - **OnPush change detection** — Key components use `ChangeDetectionStrategy.OnPush` for rendering performance
@@ -175,7 +177,11 @@ pnpm build
 |---|---|
 | http://localhost | User app (landing at `/`, Angular SPA, api-service, auth-service, WebSocket) |
 | http://localhost:8080 | Admin console (admin-app, admin-api-service, admin-auth-service) |
+| https://localhost | User app over HTTPS (requires `docker-compose.ssl.yml` overlay) |
+| https://localhost:8443 | Admin console over HTTPS |
 | http://localhost:8025 | MailHog — inspect all outbound emails |
+
+> **HTTPS:** To enable local HTTPS, generate self-signed certificates with `bash scripts/generate-certs.sh` and start with `docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml up -d`. See [`docs/09-dev-setup.md`](./docs/09-dev-setup.md) for details.
 
 ## Service Ports (direct, dev)
 

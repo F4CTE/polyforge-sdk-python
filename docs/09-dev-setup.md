@@ -343,16 +343,18 @@ For testing HTTPS locally (WebSocket `wss://`, secure cookies, CORS matching pro
 ### 1. Generate self-signed certificates
 
 ```bash
-bash scripts/generate-dev-certs.sh
+bash scripts/generate-certs.sh
 ```
 
-This creates `services/gateway/certs/dev.crt` and `dev.key` (gitignored).
+This creates `services/gateway/certs/dev.crt` and `dev.key` (gitignored). The script also generates a local CA certificate (`ca.crt`) that you can optionally add to your OS/browser trusted certificate store to avoid browser warnings.
 
 ### 2. Start with HTTPS
 
 ```bash
 docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml up -d
 ```
+
+The `docker-compose.ssl.yml` file is a compose overlay — it layers SSL-specific nginx config and port mappings on top of the base `docker-compose.infra.yml`.
 
 ### 3. Access
 
@@ -362,11 +364,17 @@ docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml up -d
 | `https://localhost:8443`     | Admin app |
 | `wss://localhost/ws`         | WebSocket |
 
-Your browser will show a certificate warning (self-signed) — accept it to proceed.
+Your browser will show a certificate warning (self-signed) — click "Advanced" and proceed. To eliminate the warning permanently, add `services/gateway/certs/ca.crt` to your OS trusted certificate store:
 
-> **Note:** HTTP on ports 80/8080 automatically redirects to HTTPS.
+- **macOS:** `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain services/gateway/certs/ca.crt`
+- **Windows:** Double-click `ca.crt` → Install → Local Machine → Trusted Root Certification Authorities
+- **Linux:** Copy to `/usr/local/share/ca-certificates/` and run `sudo update-ca-certificates`
+
+> **Note:** HTTP on ports 80/8080 automatically redirects to HTTPS when using the SSL overlay.
 
 ### 4. Switch back to HTTP
+
+Simply omit the SSL overlay file:
 
 ```bash
 docker compose -f docker-compose.infra.yml up -d

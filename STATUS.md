@@ -25,14 +25,26 @@ All phases complete. Polyforge is production-ready.
 ### UI Enhancements
 
 - [x] API Keys tab in user Settings page
-- [x] Dark/light theme toggle on both user-app and admin-app
+- [x] Dark/light theme toggle on both user-app and admin-app (sun/moon icon, localStorage, data-theme)
 - [x] Sidebar collapse button moved to sidebar top
-- [x] Strategy builder full-screen canvas with drag-and-drop from panel
+- [x] Strategy builder full-screen canvas with floating panel and drag-and-drop blocks
+- [x] API documentation page (`/api-docs`) in user-app
+- [x] Landing page: 7th feature card (Developer API)
+- [x] Admin edit dialog: password confirmation field with match validation
+
+### Infrastructure
+
+- [x] Local HTTPS: self-signed certs (`scripts/generate-certs.sh`), `docker-compose.ssl.yml`, nginx SSL on 443/8443
 
 ### Bug Fixes
 
+- [x] Admin dialog dark theme fix (all PrimeNG dialogs use dark overrides)
 - [x] Landing page feature card hover inconsistency
 - [x] Strategy builder palette closing on tab switch
+
+### Tests
+
+- [x] E2E page objects updated for canvas builder (full-screen canvas, floating panel)
 
 ---
 

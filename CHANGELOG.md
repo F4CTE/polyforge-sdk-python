@@ -18,14 +18,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added — UI Enhancements
 
-- **Dark/light theme toggle** — Theme switcher on both user-app and admin-app.
+- **Dark/light theme toggle** — Theme switcher (sun/moon icon) on both user-app and admin-app with localStorage persistence and `data-theme` attribute on `<html>`.
 - **Sidebar collapse button** — Moved collapse button to the top of the sidebar.
-- **Strategy builder full-screen canvas** — Full-screen canvas mode with drag-and-drop from the block palette panel.
+- **Strategy builder full-screen canvas** — Full-screen canvas mode with floating panel and drag-and-drop blocks from the palette.
+- **API documentation page** — New `/api-docs` route in user-app with interactive API reference.
+- **Landing page Developer API card** — 7th feature card on landing page highlighting the Developer API.
+- **Admin password confirmation** — Edit admin dialog shows a confirm password field when a new password is entered, with match validation (`passwordsMatch` getter).
+
+### Added — Infrastructure
+
+- **Local HTTPS** — Self-signed certificate generation (`bash scripts/generate-certs.sh`) and `docker-compose.ssl.yml` overlay for nginx SSL. Access via `https://localhost` (user) and `https://localhost:8443` (admin). HTTP automatically redirects to HTTPS.
 
 ### Fixed
 
+- **Admin dialog dark theme** — All PrimeNG dialogs in admin-app now use dark theme overrides consistently.
 - **Landing page feature card hover** — Fixed inconsistent hover effect on feature cards.
 - **Strategy builder palette closing** — Fixed palette closing unexpectedly on tab switch.
+
+### Tests
+
+- **E2E page objects updated** — Canvas builder page objects updated for full-screen canvas and floating panel interactions.
 
 ---
 

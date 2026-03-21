@@ -668,4 +668,33 @@ This flow makes API changes safe: you cannot silently break the frontend because
 
 ---
 
+---
+
+## 9. HTTPS and Docker Compose Overlays
+
+The project uses **Docker Compose overlay files** to layer optional configuration on top of the base stack.
+
+### Pattern
+
+The base file `docker-compose.infra.yml` defines all services with HTTP-only networking. Optional features are added via overlay files that Docker Compose merges at startup:
+
+- **`docker-compose.ssl.yml`** — Adds nginx SSL termination (ports 443 and 8443), mounts self-signed certificates, and configures HTTP-to-HTTPS redirect.
+- **`docker-compose.override.yml`** — Mounts local `dist/` directories for dev volume-mount mode (auto-applied by Docker Compose when present).
+
+### Usage
+
+```bash
+# HTTP only (default)
+docker compose -f docker-compose.infra.yml up -d
+
+# HTTP + HTTPS
+docker compose -f docker-compose.infra.yml -f docker-compose.ssl.yml up -d
+```
+
+When adding new infrastructure features, prefer creating a new overlay file rather than modifying the base compose file. This keeps the base stack simple and allows features to be toggled independently.
+
+See [`docs/09-dev-setup.md`](./09-dev-setup.md) for full HTTPS setup instructions including certificate generation.
+
+---
+
 *Next: [OpenAPI Code Generation](./03-openapi-codegen.md) | [Database & Redis](./04-database-and-redis.md)*

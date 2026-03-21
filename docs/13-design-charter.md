@@ -24,6 +24,9 @@
 24. [Status / Semantic Colors](#24-status--semantic-colors)
 25. [Responsive Design](#25-responsive-design)
 26. [API Keys UI](#26-api-keys-ui)
+27. [Dark/Light Theme Toggle](#27-darklight-theme-toggle)
+28. [Admin Dialog Styling](#28-admin-dialog-styling)
+29. [Password Confirmation Pattern](#29-password-confirmation-pattern)
 
 ---
 
@@ -1448,6 +1451,77 @@ Badges use `letter-spacing: 0.08em`, `text-transform: uppercase`, `font-size: 11
 |---|---|---|
 | ACTIVE | Green (`--pf-success` / `#10B981`) | `--pf-success-bg` background |
 | REVOKED | Red (`--pf-danger` / `#EF4444`) | `--pf-danger-bg` background |
+
+---
+
+## 27. Dark/Light Theme Toggle
+
+Both user-app and admin-app support a dark/light theme toggle.
+
+### Implementation
+
+- **Toggle control:** Sun/moon icon button in the topbar. Uses `pi pi-sun` (dark mode active) and `pi pi-moon` (light mode active).
+- **Service:** `ThemeService` (injectable, `providedIn: 'root'`). Exposes an `isDark` signal (default: `true`) and a `toggle()` method.
+- **Persistence:** Theme preference is stored in `localStorage` under the key `pf-theme` (`'dark'` or `'light'`). On init, the service reads the saved value and applies it.
+- **DOM attribute:** The active theme is set via `document.documentElement.setAttribute('data-theme', 'dark' | 'light')`. CSS rules use `[data-theme="light"]` selectors for light overrides.
+- **Default:** Dark mode. The app loads dark unless `localStorage` contains `pf-theme: 'light'`.
+
+### CSS Pattern
+
+```css
+/* Default (dark) styles use standard design tokens */
+.my-component {
+  background: var(--pf-bg-surface);
+  color: var(--pf-text-primary);
+}
+
+/* Light overrides */
+[data-theme="light"] .my-component {
+  background: #f8f9fa;
+  color: #1a1a2e;
+}
+```
+
+---
+
+## 28. Admin Dialog Styling
+
+All PrimeNG dialogs in admin-app must use dark theme overrides to match the application's dark design language.
+
+### Requirements
+
+- Every `p-dialog` must render with dark background (`--pf-bg-elevated`), light text (`--pf-text-primary`), and dark borders (`--pf-border-default`).
+- Form inputs inside dialogs inherit dark input tokens (`--pf-input-bg`, `--pf-input-border`, etc.).
+- Dialog backdrop uses `rgba(0, 0, 0, 0.7)`.
+- The PrimeNG theme preset (`polyforge.theme.ts`) defines dialog component overrides under `components.dialog.colorScheme.dark` — these apply globally and should not be overridden per-dialog.
+
+---
+
+## 29. Password Confirmation Pattern
+
+When editing an admin account, the password change flow uses a confirmation field.
+
+### Behavior
+
+- The "Confirm Password" field is shown **only when** the "New Password" field has a value (conditional rendering).
+- A `passwordsMatch` getter compares `editPassword` and `editConfirmPassword` and returns a boolean.
+- The "Save" button is disabled when `editPassword` is non-empty and `passwordsMatch` is `false`.
+- The `submitEdit()` method returns early if passwords do not match.
+- If the password field is left empty, no password change is sent to the API.
+
+### Implementation Reference
+
+```typescript
+// admins.component.ts
+editPassword = '';
+editConfirmPassword = '';
+
+get passwordsMatch(): boolean {
+  return this.editPassword === this.editConfirmPassword;
+}
+```
+
+This pattern should be reused wherever password changes are offered in admin dialogs.
 
 ---
 
