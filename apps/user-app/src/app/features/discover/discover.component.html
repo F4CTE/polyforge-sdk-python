@@ -18,8 +18,8 @@
   </div>
 
   <!-- ─── Grid ─────────────────────────────────────────────────────────── -->
-  <div class="discover-grid">
-    @if (loading()) {
+  <div class="discover-grid" [class.loading]="loading() && strategies().length > 0">
+    @if (loading() && strategies().length === 0) {
       @for (s of skeletons; track $index) {
         <div class="discover-card">
           <p-skeleton height="14px" width="60%" styleClass="mb-2" />
