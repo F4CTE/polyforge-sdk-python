@@ -40,7 +40,7 @@ html, body {
   background: none;
   border: 1px solid var(--pf-border-subtle);
   cursor: pointer;
-  padding: 4px;
+  padding: var(--pf-space-1);
   border-radius: 50%;
   color: var(--pf-text-muted);
   display: flex;
@@ -509,11 +509,11 @@ html, body {
 
 .strategy-filter-tabs {
   display: flex;
-  gap: 4px;
+  gap: var(--pf-space-1);
   background: var(--pf-bg-surface);
   border: 1px solid var(--pf-border-subtle);
   border-radius: var(--pf-radius-md);
-  padding: 4px;
+  padding: var(--pf-space-1);
   width: fit-content;
 }
 
@@ -593,7 +593,7 @@ html, body {
 .admin-form-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--pf-space-2);
   margin-bottom: var(--pf-space-3);
 }
 
@@ -742,7 +742,7 @@ html, body {
   .health-card-header {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--pf-space-2);
     margin-bottom: var(--pf-space-3);
   }
 
@@ -876,7 +876,7 @@ html, body {
   font-weight: 700;
   min-width: 16px;
   height: 16px;
-  padding: 0 4px;
+  padding: 0 var(--pf-space-1);
   border-radius: 8px;
   line-height: 1;
 }
@@ -902,7 +902,7 @@ html, body {
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--pf-text-muted);
-    margin-bottom: 6px;
+    margin-bottom: var(--pf-space-2);
   }
 
   .cache-stat-value {
@@ -978,7 +978,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: var(--pf-space-2) 0;
   border-bottom: 1px solid rgba(42, 61, 82, 0.3);
   font-size: 13px;
 
@@ -1024,7 +1024,7 @@ input.pf-dark-input {
   border: 1px solid var(--pf-input-border) !important;
   color: var(--pf-input-text) !important;
   border-radius: var(--pf-radius-md);
-  padding: 8px 12px;
+  padding: var(--pf-space-2) var(--pf-space-3);
   font-size: 13px;
   transition: border-color var(--pf-duration-fast) ease, box-shadow var(--pf-duration-fast) ease;
 
@@ -1067,7 +1067,7 @@ p-inputnumber.w-full .p-inputnumber { width: 100%; }
 .invite-code-chip {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  padding: var(--pf-space-1) 10px;
   border-radius: 6px;
   background: var(--pf-bg-raised);
   border: 1px solid var(--pf-border);
@@ -1097,7 +1097,7 @@ p-inputnumber.w-full .p-inputnumber { width: 100%; }
   font-size: 10px;
   font-weight: 700;
   border-radius: 99px;
-  padding: 0 5px;
+  padding: 0 var(--pf-space-1);
   line-height: 1;
 }
 
@@ -1107,7 +1107,7 @@ p-inputnumber.w-full .p-inputnumber { width: 100%; }
   font-size: 13px;
   color: var(--pf-text-muted, #6b7280);
   background: rgba(255,255,255,0.05);
-  padding: 4px 12px;
+  padding: var(--pf-space-1) var(--pf-space-3);
   border-radius: 999px;
   font-variant-numeric: tabular-nums;
 }
@@ -1299,7 +1299,7 @@ p-inputnumber.w-full .p-inputnumber { width: 100%; }
   margin: 0 0 4px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--pf-space-2);
 }
 
 .launch-control-desc {
@@ -1496,9 +1496,9 @@ textarea:focus-visible,
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
+  padding: var(--pf-space-8) var(--pf-space-5);
   text-align: center;
-  gap: 12px;
+  gap: var(--pf-space-3);
 }
 .empty-state-icon {
   font-size: 48px;
@@ -1516,7 +1516,7 @@ textarea:focus-visible,
   max-width: 360px;
 }
 .empty-state-action {
-  margin-top: 8px;
+  margin-top: var(--pf-space-2);
 }
 
 // ─── Responsive tables ──────────────────────────────────────────────────────
@@ -1558,7 +1558,7 @@ textarea:focus-visible,
   cursor: pointer;
   color: var(--pf-text-secondary);
   font-size: 18px;
-  padding: 8px;
+  padding: var(--pf-space-2);
   border-radius: 6px;
   transition: color 0.15s, background 0.15s;
   display: inline-flex;
@@ -1650,6 +1650,24 @@ textarea:focus-visible,
   .invite-code-chip { background: var(--pf-bg-surface); border-color: var(--pf-border-default); }
 
   .dlq-count, .nav-badge { color: #FFFFFF; }
+  .launch-control-card { background: var(--pf-bg-elevated); border-color: var(--pf-border-default); }
+  .launch-control-row { border-top-color: var(--pf-border-subtle); }
+  .admin-detail-row { border-bottom-color: var(--pf-border-subtle); }
+  .sidebar-collapse-btn { border-color: var(--pf-border-default); }
+  .overall-status { border-color: var(--pf-border-default); }
+  .p-dialog .p-dialog-header, .p-dialog .p-dialog-content, .p-dialog .p-dialog-footer { background: var(--pf-bg-elevated) !important; color: var(--pf-text-primary) !important; }
+  .p-dialog .p-dialog-header { border-bottom-color: var(--pf-border-default) !important; }
+  .p-dialog .p-dialog-footer { border-top-color: var(--pf-border-default) !important; }
+  .p-dialog-mask { background: rgba(0,0,0,0.3) !important; }
+  .p-dialog { box-shadow: var(--pf-shadow-lg) !important; }
+  .p-tooltip .p-tooltip-text { background: var(--pf-bg-elevated) !important; color: var(--pf-text-primary) !important; }
+  .p-popover { background: var(--pf-bg-elevated) !important; border-color: var(--pf-border-default) !important; }
+  .p-menu .p-menuitem-link:hover { background: rgba(6,182,212,0.06) !important; }
+  .admin-login-page { background: radial-gradient(ellipse at 50% 0%,rgba(6,182,212,0.05) 0%,transparent 60%),var(--pf-bg-base); }
+  .admin-login-card { box-shadow: var(--pf-shadow-lg); }
+  .data-table th { background: var(--pf-bg-surface); }
+  .p-toast-message { background: var(--pf-bg-elevated) !important; border-color: var(--pf-border-default) !important; color: var(--pf-text-primary) !important; }
+  .p-datatable-loading-overlay { background: rgba(248,250,252,0.6) !important; }
 
   input[type="date"],
   input[type="datetime-local"],

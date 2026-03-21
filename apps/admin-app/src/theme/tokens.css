@@ -59,6 +59,8 @@
   --pf-space-4: 16px;
   --pf-space-5: 24px;
   --pf-space-6: 32px;
+  --pf-space-7: 40px;
+  --pf-space-8: 48px;
 
   /* Radius */
   --pf-radius-sm: 4px;
@@ -149,4 +151,34 @@
   --pf-input-text: #0F172A;
   --pf-input-placeholder: #94A3B8;
   --pf-input-focus-glow: rgba(6, 182, 212, 0.15);
+
+  /* Text — disabled */
+  --pf-text-disabled: #94A3B8;
+
+  /* Accent glows — softer on light */
+  --pf-gold-glow: rgba(245, 158, 11, 0.1);
+  --pf-purple-glow: rgba(139, 92, 246, 0.1);
+  --pf-cyan-glow: rgba(6, 182, 212, 0.1);
+
+  /* Semantic backgrounds */
+  --pf-success-bg: rgba(16, 185, 129, 0.06);
+  --pf-danger-bg:  rgba(239, 68, 68, 0.06);
+  --pf-warning-bg: rgba(245, 158, 11, 0.06);
+  --pf-info-bg:    rgba(59, 130, 246, 0.06);
+
+  /* P&L */
+  --pf-pnl-positive: #059669;
+  --pf-pnl-negative: #DC2626;
+
+  /* Block section backgrounds */
+  --pf-safety-bg:     rgba(239, 68, 68, 0.06);
+  --pf-triggers-bg:   rgba(245, 158, 11, 0.06);
+  --pf-conditions-bg: rgba(59, 130, 246, 0.06);
+  --pf-actions-bg:    rgba(34, 197, 94, 0.06);
+
+  /* Status backgrounds */
+  --pf-status-active-bg:  rgba(34, 197, 94, 0.06);
+  --pf-status-warning-bg: rgba(245, 158, 11, 0.06);
+  --pf-status-error-bg:   rgba(239, 68, 68, 0.06);
+  --pf-status-info-bg:    rgba(59, 130, 246, 0.06);
 }
