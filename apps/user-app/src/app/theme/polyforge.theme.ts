@@ -59,7 +59,7 @@ export const PolyforgeTheme = definePreset(Aura, {
             paddingY:     '8px',
             fontSize:     '14px',
             fontWeight:   '500',
-            fontFamily:   "'Outfit', sans-serif",
+            fontFamily:   "'Inter', sans-serif",
           },
           primary: {
             background:       '#06B6D4',

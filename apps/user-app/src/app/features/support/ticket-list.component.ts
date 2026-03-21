@@ -191,7 +191,7 @@ interface FaqItem {
       color: var(--pf-text-primary);
       font-size: 14px;
       font-weight: 500;
-      font-family: 'Outfit', sans-serif;
+      font-family: 'Inter', sans-serif;
       cursor: pointer;
       text-align: left;
       transition: color 0.15s;

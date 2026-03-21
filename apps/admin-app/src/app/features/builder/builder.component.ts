@@ -55,7 +55,7 @@ export class BuilderComponent implements OnInit {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { labels: { color: '#B0C0D4', font: { family: 'Outfit' } } },
+        legend: { labels: { color: '#B0C0D4', font: { family: 'Inter' } } },
       },
       scales: {
         x: { ticks: { color: '#7A94B4', font: { family: 'JetBrains Mono', size: 11 } }, grid: { color: 'rgba(42,61,82,0.4)' } },

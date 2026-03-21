@@ -97,6 +97,24 @@ ACCENT — CYAN (couleur signature Polyforge)
 --pf-cyan-glow      rgba(6,182,212,0.15)  ← Halos, glows subtils
 
 ─────────────────────────────────────────────────────────────
+ACCENT — GOLD (financial data, trust, premium)
+─────────────────────────────────────────────────────────────
+--pf-gold-300       #FCD34D
+--pf-gold-400       #FBBF24
+--pf-gold-500       #F59E0B   ← Accent financier
+--pf-gold-600       #D97706
+--pf-gold-glow      rgba(245,158,11,0.15)
+
+─────────────────────────────────────────────────────────────
+ACCENT — PURPLE (premium features, tech, AI)
+─────────────────────────────────────────────────────────────
+--pf-purple-300     #C4B5FD
+--pf-purple-400     #A78BFA
+--pf-purple-500     #8B5CF6   ← Premium / AI accent
+--pf-purple-600     #7C3AED
+--pf-purple-glow    rgba(139,92,246,0.15)
+
+─────────────────────────────────────────────────────────────
 SÉMANTIQUE
 ─────────────────────────────────────────────────────────────
 --pf-success        #10B981   Profit, confirmer, connecté
@@ -124,6 +142,34 @@ DONNÉES FINANCIÈRES
 - Ne jamais utiliser le cyan sur du texte courant — réservé aux éléments interactifs et aux signaux
 - Les fonds ne sont **jamais** `#000000` pur — toujours une teinte de bleu-nuit
 - Le rouge et le vert sont **exclusivement sémantiques** — jamais utilisés pour décorer
+- `--pf-gold-500` pour les indicateurs financiers, signaux de confiance, features premium
+- `--pf-purple-500` pour les features AI, éléments tech, badges premium
+
+### Elevation (shadow scale)
+
+4 niveaux de profondeur + un glow pour les accents :
+
+```
+--pf-shadow-xs    0 1px 2px rgba(0,0,0,0.2)                                        Éléments plats (topbar, cartes au repos)
+--pf-shadow-sm    0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.15)            Sidebar, cartes légèrement élevées
+--pf-shadow-md    0 4px 12px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.15)          Cartes en hover, panneaux flottants
+--pf-shadow-lg    0 8px 24px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.2)            Dialogs, modals
+--pf-shadow-glow  0 0 20px rgba(6,182,212,0.15)                                     Glow accent cyan
+```
+
+En light theme, les ombres utilisent des opacités réduites (0.05 à 0.12).
+
+### Button hierarchy
+
+```
+Primary     — fond cyan-500, texte sombre (#080C14), font-weight 600, shadow-xs → shadow-sm au hover
+Secondary   — transparent, bordure border-default, texte secondaire
+Ghost/Text  — transparent, pas de bordure, texte secondaire
+Danger      — fond danger (#EF4444), texte blanc, glow rouge au hover
+Success     — fond success (#10B981), texte blanc
+```
+
+Tous les boutons utilisent `font-family: 'Inter'`, `border-radius: 8px`, `transition: all 0.15s ease`.
 
 ---
 
@@ -132,17 +178,24 @@ DONNÉES FINANCIÈRES
 ### Familles de polices
 
 ```
-Display / UI         : Outfit (Google Fonts)
-                       weights: 400, 500, 600, 700
-                       usage: titres, labels, navigation, boutons
+Display / UI         : Inter (Google Fonts)
+                       weights: 300, 400, 500, 600, 700
+                       usage: titres, labels, navigation, boutons, corps de texte
 
 Données / Chiffres   : JetBrains Mono (Google Fonts)
-                       weights: 400, 500
+                       weights: 400, 500, 600, 700
                        usage: TOUS les prix, P&L, pourcentages,
                               timestamps, order IDs, hashes
 
-Fallback système     : 'Outfit', system-ui, sans-serif
+Fallback système     : 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif
                        'JetBrains Mono', 'Fira Code', monospace
+```
+
+### Utility classes
+
+```css
+.font-mono    { font-family: 'JetBrains Mono', monospace; }
+.font-heading { font-family: 'Inter', sans-serif; font-weight: 600; }
 ```
 
 ### Échelle typographique
@@ -163,7 +216,7 @@ Fallback système     : 'Outfit', system-ui, sans-serif
 - La taille de base du corps de texte est **14px** — dense mais lisible sur des interfaces data-heavy
 - Tous les **prix** utilisent `JetBrains Mono` — sans exception
 - Les **labels de catégorie** (statuts, badges, colonnes de tableau) utilisent `letter-spacing: 0.08em` + `text-transform: uppercase` + `font-size: 11px`
-- Les **titres de page** utilisent `Outfit 600`, pas 700 — éviter le trop gras
+- Les **titres de page** utilisent `Inter 600`, pas 700 — éviter le trop gras
 - Les **nombres de P&L** utilisent `JetBrains Mono 500` avec coloration sémantique
 
 ### Exemples d'usage
@@ -171,7 +224,7 @@ Fallback système     : 'Outfit', system-ui, sans-serif
 ```css
 /* Titre de page */
 .page-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 22px;
   font-weight: 600;
   color: var(--pf-text-primary);
@@ -196,7 +249,7 @@ Fallback système     : 'Outfit', system-ui, sans-serif
 
 /* Label de colonne */
 .column-label {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 11px;
   font-weight: 500;
   text-transform: uppercase;
@@ -351,7 +404,7 @@ export const PolyforgeTheme = definePreset(Aura, {
             paddingY:         '8px',
             fontSize:         '14px',
             fontWeight:       '500',
-            fontFamily:       "'Outfit', sans-serif",
+            fontFamily:       "'Inter', sans-serif",
           },
           primary: {
             background:       '#06B6D4',
@@ -675,7 +728,7 @@ export const POLYFORGE_CHART_DEFAULTS = {
     legend: {
       labels: {
         color:    '#7A94B4',
-        font:     { family: "'Outfit', sans-serif", size: 12 },
+        font:     { family: "'Inter', sans-serif", size: 12 },
         padding:  16,
       }
     },
@@ -687,7 +740,7 @@ export const POLYFORGE_CHART_DEFAULTS = {
       borderWidth:     1,
       padding:         12,
       cornerRadius:    6,
-      titleFont:       { family: "'Outfit', sans-serif", size: 13, weight: '600' },
+      titleFont:       { family: "'Inter', sans-serif", size: 13, weight: '600' },
       bodyFont:        { family: "'JetBrains Mono', monospace", size: 12 },
     }
   },
@@ -879,7 +932,7 @@ Le logomark est un **polygone (hexagone outline) + bolt** rendu en SVG. Il est u
 
 ```
 Logomark   : hexagone outline + bolt SVG
-Logotype   : "Polyforge" en Outfit 600
+Logotype   : "Polyforge" en Inter 600
 Couleur    : #06B6D4 (cyan) sur fond sombre
 Favicon    : logomark seul sur fond #080C14
 Loading    : logomark anime (pulse/rotation) sur l'ecran de chargement
@@ -1047,7 +1100,7 @@ apps/user-app/src/
 
 ```css
 /* apps/user-app/src/styles.css */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import 'theme/tokens.css';
 @import 'primeng/resources/primeng.css';
 @import 'primeicons/primeicons.css';
@@ -1062,7 +1115,7 @@ html, body {
   height: 100%;
   background: var(--pf-bg-base);
   color: var(--pf-text-primary);
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;

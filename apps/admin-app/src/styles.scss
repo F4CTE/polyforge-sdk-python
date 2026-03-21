@@ -1,5 +1,5 @@
 // ─── Fonts ────────────────────────────────────────────────────────────────────
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 @import './theme/tokens.css';
@@ -16,7 +16,7 @@ html, body {
   height: 100%;
   background: var(--pf-bg-base);
   color: var(--pf-text-primary);
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -57,6 +57,8 @@ html, body {
 // ─── Typography utilities ─────────────────────────────────────────────────────
 
 .pf-mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+.font-heading { font-family: 'Inter', sans-serif; font-weight: 600; }
 
 .pf-col-label {
   font-size: 11px;
@@ -1654,4 +1656,72 @@ textarea:focus-visible,
   input[type="time"] {
     color-scheme: light;
   }
+}
+
+// ─── Button hierarchy ─────────────────────────────────────────────────────────
+
+/* Button hierarchy */
+.p-button {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+/* Primary — cyan, high contrast */
+.p-button:not(.p-button-text):not(.p-button-outlined):not(.p-button-secondary) {
+  background: var(--pf-cyan-500);
+  border-color: var(--pf-cyan-500);
+  color: #080C14;
+  font-weight: 600;
+  box-shadow: var(--pf-shadow-xs);
+}
+.p-button:not(.p-button-text):not(.p-button-outlined):not(.p-button-secondary):hover {
+  background: var(--pf-cyan-400);
+  border-color: var(--pf-cyan-400);
+  box-shadow: var(--pf-shadow-sm);
+  transform: translateY(-1px);
+}
+
+/* Secondary — subtle, outlined */
+.p-button-secondary,
+.p-button-outlined {
+  background: transparent;
+  border: 1px solid var(--pf-border-default);
+  color: var(--pf-text-secondary);
+}
+.p-button-secondary:hover,
+.p-button-outlined:hover {
+  background: var(--pf-bg-overlay);
+  border-color: var(--pf-border-strong);
+  color: var(--pf-text-primary);
+}
+
+/* Ghost/Text — minimal */
+.p-button-text {
+  background: transparent;
+  border: none;
+  color: var(--pf-text-secondary);
+}
+.p-button-text:hover {
+  background: var(--pf-bg-overlay);
+  color: var(--pf-text-primary);
+}
+
+/* Danger */
+.p-button-danger {
+  background: var(--pf-danger);
+  border-color: var(--pf-danger);
+  color: white;
+}
+.p-button-danger:hover {
+  background: #DC2626;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Success */
+.p-button-success {
+  background: var(--pf-success);
+  border-color: var(--pf-success);
+  color: white;
 }

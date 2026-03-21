@@ -63,7 +63,7 @@
 
   <!-- Wordmark: Polyforge -->
   <text x="220" y="208"
-        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
         font-size="52"
         font-weight="700"
         letter-spacing="-1"
@@ -71,7 +71,7 @@
 
   <!-- Tagline -->
   <text x="148" y="270"
-        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
         font-size="20"
         font-weight="400"
         fill="#9898b0">Algorithmic trading for prediction markets</text>
@@ -81,26 +81,26 @@
 
   <!-- Headline -->
   <text x="148" y="380"
-        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
         font-size="40"
         font-weight="700"
         fill="#f0f0f5">Build. Backtest.</text>
   <text x="148" y="432"
-        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
         font-size="40"
         font-weight="700"
         fill="url(#text-grad)">Deploy on autopilot.</text>
 
   <!-- Sub-copy -->
   <text x="148" y="488"
-        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
         font-size="18"
         fill="#9898b0">No code required — from idea to live strategy in minutes.</text>
 
   <!-- CTA pill -->
   <rect x="148" y="522" width="210" height="44" rx="8" fill="#06b6d4"/>
   <text x="253" y="549"
-        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
         font-size="16"
         font-weight="600"
         fill="#000000"
@@ -186,7 +186,7 @@
   <rect x="148" y="594" width="130" height="26" rx="13"
         fill="#12121a" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="1"/>
   <text x="213" y="611"
-        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
         font-size="12"
         fill="#9898b0"
         text-anchor="middle">No-code builder</text>
@@ -195,7 +195,7 @@
   <rect x="292" y="594" width="120" height="26" rx="13"
         fill="#12121a" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="1"/>
   <text x="352" y="611"
-        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
         font-size="12"
         fill="#9898b0"
         text-anchor="middle">Backtesting</text>
@@ -204,7 +204,7 @@
   <rect x="426" y="594" width="120" height="26" rx="13"
         fill="#12121a" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="1"/>
   <text x="486" y="611"
-        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
         font-size="12"
         fill="#9898b0"
         text-anchor="middle">24/7 execution</text>
@@ -213,7 +213,7 @@
   <rect x="560" y="594" width="130" height="26" rx="13"
         fill="#12121a" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="1"/>
   <text x="625" y="611"
-        font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif"
+        font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
         font-size="12"
         fill="#9898b0"
         text-anchor="middle">Free beta access</text>

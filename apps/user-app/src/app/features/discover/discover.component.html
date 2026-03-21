@@ -74,7 +74,7 @@
             <span class="discover-stat"><i class="pi pi-heart"></i> {{ s.likeCount }}</span>
             <span class="discover-stat"><i class="pi pi-clone"></i> {{ s.forkCount }}</span>
             <span class="discover-pnl pf-mono" [class.positive]="mockPnl(s) > 0" [class.negative]="mockPnl(s) < 0" [class.neutral]="mockPnl(s) === 0">
-              <span style="font-size:10px;color:var(--pf-text-muted);font-family:'Outfit',sans-serif;margin-right:2px">24h</span>
+              <span style="font-size:10px;color:var(--pf-text-muted);font-family:'Inter',sans-serif;margin-right:2px">24h</span>
               {{ mockPnl(s) !== 0 ? (mockPnl(s) > 0 ? '+' : '') + mockPnl(s).toFixed(1) + '%' : '—' }}
             </span>
             <span class="discover-stat-date pf-mono">{{ s.createdAt | date:'MMM d, yyyy' }}</span>

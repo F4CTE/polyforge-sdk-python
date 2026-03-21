@@ -68,17 +68,17 @@
     <div class="markets-featured">
       @for (s of [1,2,3]; track $index) {
         <div class="market-card featured-card">
-          <div class="market-card-header">
-            <p-skeleton width="56px" height="56px" borderRadius="10px" />
+          <div class="mc-header">
+            <p-skeleton width="48px" height="48px" borderRadius="10px" />
             <div style="flex:1;display:flex;flex-direction:column;gap:8px">
               <p-skeleton height="16px" width="85%" />
-              <p-skeleton height="14px" width="60%" />
-              <p-skeleton height="12px" width="40%" />
+              <p-skeleton height="12px" width="50%" />
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <p-skeleton height="38px" borderRadius="8px" />
-            <p-skeleton height="38px" borderRadius="8px" />
+          <p-skeleton height="6px" borderRadius="3px" />
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <p-skeleton height="36px" borderRadius="8px" />
+            <p-skeleton height="36px" borderRadius="8px" />
           </div>
         </div>
       }
@@ -86,16 +86,17 @@
     <div class="market-grid">
       @for (s of skeletons; track $index) {
         <div class="market-card">
-          <div class="market-card-header">
-            <p-skeleton width="48px" height="48px" borderRadius="8px" />
+          <div class="mc-header">
+            <p-skeleton width="48px" height="48px" borderRadius="10px" />
             <div style="flex:1;display:flex;flex-direction:column;gap:8px">
               <p-skeleton height="15px" width="90%" />
-              <p-skeleton height="13px" width="50%" />
+              <p-skeleton height="12px" width="45%" />
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <p-skeleton height="38px" borderRadius="8px" />
-            <p-skeleton height="38px" borderRadius="8px" />
+          <p-skeleton height="6px" borderRadius="3px" />
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <p-skeleton height="36px" borderRadius="8px" />
+            <p-skeleton height="36px" borderRadius="8px" />
           </div>
         </div>
       }
@@ -119,68 +120,72 @@
         <div class="markets-featured">
           @for (market of featuredMarkets(); track market.id) {
             <a class="market-card featured-card" [routerLink]="['/markets', market.id]">
-              <div class="market-card-header">
+              <!-- Header: image + title -->
+              <div class="mc-header">
                 @if (market.image) {
-                  <img class="market-card-image featured-image"
-                       [src]="market.image"
-                       [alt]="market.title"
-                       loading="lazy" />
+                  <img class="mc-image" [src]="market.image" [alt]="market.title" loading="lazy" />
                 } @else {
-                  <div class="market-card-image-placeholder featured-image"
-                       [style.background]="categoryColor(market.category).bg"
-                       [style.color]="categoryColor(market.category).text">
-                    <i class="pi {{ categoryIcons[market.category] }}"></i>
+                  <div class="mc-image-placeholder"
+                       [style.background]="categoryColor(market.category).bg">
+                    <i class="pi {{ categoryIcons[market.category] }}"
+                       [style.color]="categoryColor(market.category).text"></i>
                   </div>
                 }
-                <div class="market-card-info">
-                  <div class="market-card-title">{{ market.title }}</div>
-                  <div class="market-card-meta">
-                    <span>{{ volume(market) }} Vol</span>
-                    <span class="meta-dot">·</span>
-                    <span>{{ daysUntil(market.endDate) }}</span>
-                    @if (isClosingSoon(market.endDate)) {
-                      <span class="meta-dot">·</span>
-                      <span class="closing-soon-text">Closing soon</span>
-                    }
+                <div class="mc-title-area">
+                  <h3 class="mc-title">{{ market.title }}</h3>
+                  <div class="mc-meta">
+                    <span class="mc-volume">{{ volume(market) }} Vol</span>
+                    <span class="mc-dot">&middot;</span>
+                    <span class="mc-closing" [class.closing-soon]="isClosingSoon(market.endDate)">
+                      {{ daysUntil(market.endDate) }}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <!-- Outcomes -->
-              <div class="market-outcomes">
-                @if (market.tokens.length <= 2) {
-                  <div class="market-outcome-buttons">
-                    <button class="market-outcome-btn yes" type="button">
+              <!-- Binary market: probability bar + buttons -->
+              @if (market.tokens.length <= 2) {
+                <div class="mc-binary">
+                  <div class="mc-probability">
+                    <div class="mc-prob-bar">
+                      <div class="mc-prob-fill" [style.width.%]="yesPercent(market)"></div>
+                    </div>
+                    <span class="mc-prob-label">{{ yesPercent(market) }}% chance</span>
+                  </div>
+                  <div class="mc-actions">
+                    <button class="mc-bet-btn mc-yes" type="button" (click)="$event.stopPropagation(); $event.preventDefault()">
                       Yes {{ priceCents(market, 'YES') }}
                     </button>
-                    <button class="market-outcome-btn no" type="button">
+                    <button class="mc-bet-btn mc-no" type="button" (click)="$event.stopPropagation(); $event.preventDefault()">
                       No {{ priceCents(market, 'NO') }}
                     </button>
                   </div>
-                } @else {
+                </div>
+              } @else {
+                <!-- Multi-outcome market -->
+                <div class="mc-multi">
                   @for (token of market.tokens.slice(0, 4); track token.tokenId) {
-                    <div class="market-outcome">
-                      <span class="market-outcome-label">{{ token.outcome }}</span>
-                      <div class="market-outcome-bar">
-                        <div class="market-outcome-fill multi" [style.width.%]="tokenPercent(token)"></div>
+                    <div class="mc-outcome">
+                      <span class="mc-outcome-name">{{ token.outcome }}</span>
+                      <div class="mc-outcome-bar">
+                        <div class="mc-outcome-fill" [style.width.%]="tokenPercent(token)"></div>
                       </div>
-                      <span class="market-outcome-pct">{{ tokenPercent(token) }}%</span>
+                      <span class="mc-outcome-pct">{{ tokenPercent(token) }}%</span>
                     </div>
                   }
                   @if (market.tokens.length > 4) {
-                    <span class="market-outcome-more">+{{ market.tokens.length - 4 }} more</span>
+                    <span class="mc-more">+{{ market.tokens.length - 4 }} more</span>
                   }
-                }
-              </div>
+                </div>
+              }
 
-              <!-- Footer -->
-              <div class="market-card-footer">
-                <span class="market-card-vol">{{ volume(market) }} Vol</span>
-                <span class="market-card-strategies">
+              <!-- Footer: strategy count -->
+              @if (strategyCount(market) > 0) {
+                <div class="mc-footer">
                   <i class="pi pi-bolt" style="font-size:11px"></i>
                   {{ strategyCount(market) }} strategies
-                </span>
-              </div>
+                </div>
+              }
             </a>
           }
         </div>
@@ -191,68 +196,72 @@
         <div class="market-grid">
           @for (market of gridMarkets(); track market.id) {
             <a class="market-card" [routerLink]="['/markets', market.id]">
-              <div class="market-card-header">
+              <!-- Header: image + title -->
+              <div class="mc-header">
                 @if (market.image) {
-                  <img class="market-card-image"
-                       [src]="market.image"
-                       [alt]="market.title"
-                       loading="lazy" />
+                  <img class="mc-image" [src]="market.image" [alt]="market.title" loading="lazy" />
                 } @else {
-                  <div class="market-card-image-placeholder"
-                       [style.background]="categoryColor(market.category).bg"
-                       [style.color]="categoryColor(market.category).text">
-                    <i class="pi {{ categoryIcons[market.category] }}"></i>
+                  <div class="mc-image-placeholder"
+                       [style.background]="categoryColor(market.category).bg">
+                    <i class="pi {{ categoryIcons[market.category] }}"
+                       [style.color]="categoryColor(market.category).text"></i>
                   </div>
                 }
-                <div class="market-card-info">
-                  <div class="market-card-title">{{ market.title }}</div>
-                  <div class="market-card-meta">
-                    <span>{{ volume(market) }} Vol</span>
-                    <span class="meta-dot">·</span>
-                    <span>{{ daysUntil(market.endDate) }}</span>
-                    @if (isClosingSoon(market.endDate)) {
-                      <span class="meta-dot">·</span>
-                      <span class="closing-soon-text">Closing soon</span>
-                    }
+                <div class="mc-title-area">
+                  <h3 class="mc-title">{{ market.title }}</h3>
+                  <div class="mc-meta">
+                    <span class="mc-volume">{{ volume(market) }} Vol</span>
+                    <span class="mc-dot">&middot;</span>
+                    <span class="mc-closing" [class.closing-soon]="isClosingSoon(market.endDate)">
+                      {{ daysUntil(market.endDate) }}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <!-- Outcomes -->
-              <div class="market-outcomes">
-                @if (market.tokens.length <= 2) {
-                  <div class="market-outcome-buttons">
-                    <button class="market-outcome-btn yes" type="button">
+              <!-- Binary market: probability bar + buttons -->
+              @if (market.tokens.length <= 2) {
+                <div class="mc-binary">
+                  <div class="mc-probability">
+                    <div class="mc-prob-bar">
+                      <div class="mc-prob-fill" [style.width.%]="yesPercent(market)"></div>
+                    </div>
+                    <span class="mc-prob-label">{{ yesPercent(market) }}% chance</span>
+                  </div>
+                  <div class="mc-actions">
+                    <button class="mc-bet-btn mc-yes" type="button" (click)="$event.stopPropagation(); $event.preventDefault()">
                       Yes {{ priceCents(market, 'YES') }}
                     </button>
-                    <button class="market-outcome-btn no" type="button">
+                    <button class="mc-bet-btn mc-no" type="button" (click)="$event.stopPropagation(); $event.preventDefault()">
                       No {{ priceCents(market, 'NO') }}
                     </button>
                   </div>
-                } @else {
+                </div>
+              } @else {
+                <!-- Multi-outcome market -->
+                <div class="mc-multi">
                   @for (token of market.tokens.slice(0, 4); track token.tokenId) {
-                    <div class="market-outcome">
-                      <span class="market-outcome-label">{{ token.outcome }}</span>
-                      <div class="market-outcome-bar">
-                        <div class="market-outcome-fill multi" [style.width.%]="tokenPercent(token)"></div>
+                    <div class="mc-outcome">
+                      <span class="mc-outcome-name">{{ token.outcome }}</span>
+                      <div class="mc-outcome-bar">
+                        <div class="mc-outcome-fill" [style.width.%]="tokenPercent(token)"></div>
                       </div>
-                      <span class="market-outcome-pct">{{ tokenPercent(token) }}%</span>
+                      <span class="mc-outcome-pct">{{ tokenPercent(token) }}%</span>
                     </div>
                   }
                   @if (market.tokens.length > 4) {
-                    <span class="market-outcome-more">+{{ market.tokens.length - 4 }} more</span>
+                    <span class="mc-more">+{{ market.tokens.length - 4 }} more</span>
                   }
-                }
-              </div>
+                </div>
+              }
 
-              <!-- Footer -->
-              <div class="market-card-footer">
-                <span class="market-card-vol">{{ volume(market) }} Vol</span>
-                <span class="market-card-strategies">
+              <!-- Footer: strategy count -->
+              @if (strategyCount(market) > 0) {
+                <div class="mc-footer">
                   <i class="pi pi-bolt" style="font-size:11px"></i>
                   {{ strategyCount(market) }} strategies
-                </span>
-              </div>
+                </div>
+              }
             </a>
           }
         </div>

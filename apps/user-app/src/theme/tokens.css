@@ -25,6 +25,20 @@
   --pf-cyan-700:  #0E7490;
   --pf-cyan-glow: rgba(6, 182, 212, 0.15);
 
+  /* Gold accent — financial data, trust, premium */
+  --pf-gold-300: #FCD34D;
+  --pf-gold-400: #FBBF24;
+  --pf-gold-500: #F59E0B;
+  --pf-gold-600: #D97706;
+  --pf-gold-glow: rgba(245, 158, 11, 0.15);
+
+  /* Purple accent — premium features, tech, AI */
+  --pf-purple-300: #C4B5FD;
+  --pf-purple-400: #A78BFA;
+  --pf-purple-500: #8B5CF6;
+  --pf-purple-600: #7C3AED;
+  --pf-purple-glow: rgba(139, 92, 246, 0.15);
+
   /* Semantic */
   --pf-success:     #10B981;
   --pf-success-bg:  rgba(16, 185, 129, 0.08);
@@ -63,10 +77,12 @@
   --pf-radius-xl:   12px;
   --pf-radius-full: 9999px;
 
-  /* Shadows */
-  --pf-shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.4);
-  --pf-shadow-md:   0 4px 12px rgba(0, 0, 0, 0.5);
-  --pf-shadow-lg:   0 8px 24px rgba(0, 0, 0, 0.6);
+  /* Elevation — depth layers */
+  --pf-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --pf-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --pf-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15);
+  --pf-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
+  --pf-shadow-glow: 0 0 20px rgba(6, 182, 212, 0.15);
   --pf-shadow-cyan: 0 0 16px rgba(6, 182, 212, 0.2);
 
   /* Icons */
@@ -126,6 +142,12 @@
 
 /* ── Light theme overrides ──────────────────────────────────────────────────── */
 [data-theme="light"] {
+  --pf-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --pf-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --pf-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --pf-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+  --pf-shadow-glow: 0 0 20px rgba(6, 182, 212, 0.1);
+
   --pf-bg-base: #F8FAFC;
   --pf-bg-elevated: #FFFFFF;
   --pf-bg-overlay: rgba(0, 0, 0, 0.04);

@@ -4,7 +4,7 @@ export const POLYFORGE_CHART_DEFAULTS = {
     legend: {
       labels: {
         color:   '#7A94B4',
-        font:    { family: "'Outfit', sans-serif", size: 12 },
+        font:    { family: "'Inter', sans-serif", size: 12 },
         padding: 16,
       },
     },
@@ -16,7 +16,7 @@ export const POLYFORGE_CHART_DEFAULTS = {
       borderWidth:     1,
       padding:         12,
       cornerRadius:    6,
-      titleFont:       { family: "'Outfit', sans-serif", size: 13, weight: '600' },
+      titleFont:       { family: "'Inter', sans-serif", size: 13, weight: '600' },
       bodyFont:        { family: "'JetBrains Mono', monospace", size: 12 },
     },
   },
