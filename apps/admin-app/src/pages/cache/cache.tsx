@@ -71,19 +71,19 @@ export function Component() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-4">
+          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
             <div className="text-xs text-[var(--color-pf-text-tertiary)] mb-1">Hit Rate</div>
             <div className="text-2xl font-bold text-[var(--color-pf-text)]">
               {(stats.hitRate * 100).toFixed(1)}%
             </div>
           </div>
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-4">
+          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
             <div className="text-xs text-[var(--color-pf-text-tertiary)] mb-1">Total Keys</div>
             <div className="text-2xl font-bold text-[var(--color-pf-text)]">
               {stats.keyCount.toLocaleString()}
             </div>
           </div>
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-4">
+          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
             <div className="text-xs text-[var(--color-pf-text-tertiary)] mb-1">Memory Usage</div>
             <div className="text-2xl font-bold text-[var(--color-pf-text)]">
               {stats.memoryUsageMb.toFixed(1)} MB
@@ -93,7 +93,7 @@ export function Component() {
       )}
 
       {/* Flush */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-5">
+      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
           <Trash2 size={16} className="text-amber-400" />
           <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">Flush by Pattern</h3>
@@ -118,7 +118,7 @@ export function Component() {
 
       {/* Patterns Table */}
       {stats && stats.patterns.length > 0 && (
-        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-5">
+        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
           <div className="flex items-center gap-2 mb-4">
             <Database size={16} className="text-[var(--color-pf-cyan-500)]" />
             <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">Cache Patterns</h3>

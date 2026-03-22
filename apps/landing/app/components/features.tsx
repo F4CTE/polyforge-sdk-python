@@ -59,7 +59,7 @@ const features = [
     title: 'Live 24/7 Execution',
     description:
       'Deploy strategies to our cloud runner. Polyforge monitors markets around the clock and places orders the instant your conditions are met \u2014 even while you sleep.',
-    gradientClass: 'from-green-400/[0.03]',
+    gradientClass: 'from-pf-success/[0.03]',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
@@ -122,7 +122,7 @@ const features = [
     title: 'Community Strategies',
     description:
       'Discover and fork top-performing public strategies from the community. Build on what works and share your own edge with the Polyforge leaderboard.',
-    gradientClass: 'from-yellow-400/[0.03]',
+    gradientClass: 'from-pf-gold-400/[0.03]',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.5" />
@@ -157,7 +157,7 @@ const features = [
     title: 'Security First',
     description:
       'JWT authentication with short-lived tokens, optional two-factor auth, and role-based access controls. Your account and API keys stay under your control.',
-    gradientClass: 'from-indigo-500/[0.04]',
+    gradientClass: 'from-pf-purple-500/[0.04]',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -177,7 +177,7 @@ const features = [
     title: 'Developer API',
     description:
       'Generate scoped API keys to integrate with custom tools, AI agents, and trading bots. Full REST API with 50+ endpoints for markets, strategies, orders, and more.',
-    gradientClass: 'from-purple-500/[0.04]',
+    gradientClass: 'from-pf-purple-400/[0.04]',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <polyline points="16 18 22 12 16 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

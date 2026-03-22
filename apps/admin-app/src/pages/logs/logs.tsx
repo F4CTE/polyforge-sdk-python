@@ -51,7 +51,7 @@ export function Component() {
       <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Logs</h2>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-1 w-fit">
+      <div className="flex gap-1 bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-1 w-fit">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -68,7 +68,7 @@ export function Component() {
       </div>
 
       {/* Log Table */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg overflow-hidden">
+      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

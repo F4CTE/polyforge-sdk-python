@@ -177,7 +177,7 @@ export function AdminSidebar({ collapsed, onToggle }: Props) {
       {/* Footer */}
       <div className="border-t border-[var(--color-pf-border)] p-3 shrink-0">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-pf-elevated)] text-[var(--color-pf-cyan-400)] text-[11px] font-bold shrink-0">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-pf-elevated)] text-[var(--color-pf-cyan-500)] text-[11px] font-bold shrink-0">
             {initials}
           </div>
           {!collapsed && (

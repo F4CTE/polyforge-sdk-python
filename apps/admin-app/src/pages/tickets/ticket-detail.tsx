@@ -115,7 +115,7 @@ export function Component() {
       </button>
 
       {/* Header */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-6">
+      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6">
         <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
           <div>
             <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">
@@ -180,7 +180,7 @@ export function Component() {
           return (
             <div
               key={msg.id ?? i}
-              className={`p-4 rounded-lg border ${
+              className={`p-4 rounded-pf-lg border ${
                 isAdmin
                   ? 'bg-[var(--color-pf-cyan-500)]/5 border-[var(--color-pf-cyan-500)]/20 ml-8'
                   : 'bg-[var(--color-pf-elevated)] border-[var(--color-pf-border)] mr-8'
@@ -203,7 +203,7 @@ export function Component() {
       {/* Reply */}
       <form
         onSubmit={handleReply}
-        className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-4"
+        className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4"
       >
         <textarea
           value={reply}
@@ -216,7 +216,7 @@ export function Component() {
           <button
             type="submit"
             disabled={sending || !reply.trim()}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm rounded-md bg-[var(--color-pf-cyan-500)] text-white hover:bg-[var(--color-pf-cyan-600)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-md bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send size={14} />
             {sending ? 'Sending...' : 'Reply'}

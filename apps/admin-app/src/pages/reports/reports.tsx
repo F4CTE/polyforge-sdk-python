@@ -64,7 +64,7 @@ export function Component() {
         </select>
       </div>
 
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg overflow-hidden">
+      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -151,7 +151,7 @@ export function Component() {
 
       {/* Review Dialog */}
       {reviewingId && (
-        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-5">
+        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
           <h3 className="text-sm font-semibold text-[var(--color-pf-text)] mb-3">Review Report</h3>
           <textarea
             value={adminNote}

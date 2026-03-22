@@ -47,11 +47,11 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
   if (status === 'success') {
     return (
       <div className={`text-center ${className}`}>
-        <p className="text-sm text-green-400 flex items-center justify-center gap-1.5">
+        <p className="text-sm text-pf-success flex items-center justify-center gap-1.5">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path
               d="M3 8l3.5 3.5L13 5"
-              stroke="#4ade80"
+              stroke="currentColor"
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -109,7 +109,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
         Join the early-access list &mdash; no spam, ever.
       </p>
       {status === 'error' && errorMsg && (
-        <p className="text-[13px] text-red-400 mt-2 text-center">{errorMsg}</p>
+        <p className="text-[13px] text-pf-danger mt-2 text-center">{errorMsg}</p>
       )}
     </form>
   );

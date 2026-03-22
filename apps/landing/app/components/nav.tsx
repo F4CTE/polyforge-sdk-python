@@ -101,19 +101,31 @@ export function Nav() {
         <div className="flex md:hidden flex-col gap-1 px-6 pb-4 border-t border-pf-border-subtle">
           <a
             href="#features"
-            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text"
+            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text transition-colors"
           >
             Features
           </a>
           <a
             href="#how-it-works"
-            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text"
+            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text transition-colors"
           >
             How it works
           </a>
           <a
+            href="/terms"
+            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text transition-colors"
+          >
+            Terms
+          </a>
+          <a
+            href="/privacy"
+            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text transition-colors"
+          >
+            Privacy
+          </a>
+          <a
             href="/login"
-            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text"
+            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text transition-colors"
           >
             Sign in
           </a>

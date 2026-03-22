@@ -58,7 +58,7 @@ export function Component() {
         {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-6 space-y-4"
+          className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 space-y-4"
         >
           <div>
             <label htmlFor="email" className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1.5">
@@ -94,7 +94,7 @@ export function Component() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 text-sm font-medium rounded-md bg-[var(--color-pf-cyan-500)] text-white hover:bg-[var(--color-pf-cyan-600)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-2 px-4 text-sm font-semibold rounded-md bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>

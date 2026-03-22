@@ -109,7 +109,7 @@ export function Component() {
       </button>
 
       {/* User Info */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-6">
+      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6">
         <div className="flex items-start justify-between mb-4">
           <div>
             <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">
@@ -226,7 +226,7 @@ export function Component() {
       </div>
 
       {/* API Keys */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-5">
+      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
           <Key size={16} className="text-[var(--color-pf-cyan-500)]" />
           <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">API Keys</h3>

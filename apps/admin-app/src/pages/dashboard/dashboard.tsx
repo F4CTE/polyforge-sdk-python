@@ -115,7 +115,7 @@ export function Component() {
         {statCards.map((card) => (
           <div
             key={card.label}
-            className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-4"
+            className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4"
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-medium text-[var(--color-pf-text-secondary)]">
@@ -135,7 +135,7 @@ export function Component() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* System Health */}
         {health && (
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-5">
+          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
             <div className="flex items-center gap-2 mb-4">
               <Activity size={16} className="text-[var(--color-pf-cyan-500)]" />
               <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
@@ -179,7 +179,7 @@ export function Component() {
         {/* Infrastructure */}
         {health && (
           <div className="space-y-4">
-            <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-5">
+            <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Database size={16} className="text-[var(--color-pf-cyan-500)]" />
                 <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
@@ -196,7 +196,7 @@ export function Component() {
               </div>
             </div>
 
-            <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-5">
+            <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Server size={16} className="text-[var(--color-pf-cyan-500)]" />
                 <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
@@ -214,7 +214,7 @@ export function Component() {
             </div>
 
             {/* Launch Control */}
-            <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-5">
+            <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
@@ -242,7 +242,7 @@ export function Component() {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-5">
+      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
         <h2 className="text-sm font-semibold text-[var(--color-pf-text)] mb-4">
           Recent Activity
         </h2>

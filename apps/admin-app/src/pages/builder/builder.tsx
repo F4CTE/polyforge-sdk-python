@@ -50,21 +50,21 @@ export function Component() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-4">
+        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <Award size={16} className="text-amber-400" />
             <span className="text-xs text-[var(--color-pf-text-tertiary)]">Current Tier</span>
           </div>
           <div className="text-2xl font-bold text-[var(--color-pf-text)] capitalize">{stats.tier}</div>
         </div>
-        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-4">
+        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign size={16} className="text-emerald-400" />
             <span className="text-xs text-[var(--color-pf-text-tertiary)]">Weekly Reward</span>
           </div>
           <div className="text-2xl font-bold text-[var(--color-pf-text)]">${stats.weeklyRewardUsdc}</div>
         </div>
-        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-4">
+        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp size={16} className="text-blue-400" />
             <span className="text-xs text-[var(--color-pf-text-tertiary)]">Attributed Volume</span>
@@ -74,7 +74,7 @@ export function Component() {
       </div>
 
       {/* Weekly History */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-5">
+      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
           <Hammer size={16} className="text-[var(--color-pf-cyan-500)]" />
           <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">Weekly History</h3>

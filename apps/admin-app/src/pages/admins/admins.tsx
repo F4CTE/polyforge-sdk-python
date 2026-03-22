@@ -136,7 +136,7 @@ export function Component() {
         <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Admin Accounts</h2>
         <button
           onClick={openAdd}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-[var(--color-pf-cyan-500)] text-white hover:bg-[var(--color-pf-cyan-600)] transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-md bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] transition-colors"
         >
           <Plus size={14} />
           Add Admin
@@ -144,7 +144,7 @@ export function Component() {
       </div>
 
       {/* Table */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg overflow-hidden">
+      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -224,7 +224,7 @@ export function Component() {
       {/* Add/Edit Dialog */}
       {dialogMode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="admin-dialog-title">
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
               <h3 id="admin-dialog-title" className="text-base font-semibold text-[var(--color-pf-text)]">
                 {dialogMode === 'add' ? 'Add Admin' : 'Edit Admin'}
@@ -287,7 +287,7 @@ export function Component() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 py-2 text-sm font-medium rounded-md bg-[var(--color-pf-cyan-500)] text-white hover:bg-[var(--color-pf-cyan-600)] disabled:opacity-50 transition-colors"
+                  className="flex-1 py-2 text-sm font-semibold rounded-md bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 transition-colors"
                 >
                   {submitting ? 'Saving...' : dialogMode === 'add' ? 'Create Admin' : 'Save Changes'}
                 </button>
@@ -307,7 +307,7 @@ export function Component() {
       {/* Delete Confirmation Dialog */}
       {deleteConfirmId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="deactivate-dialog-title">
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-6 w-full max-w-sm mx-4">
+          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 w-full max-w-sm mx-4">
             <h3 id="deactivate-dialog-title" className="text-base font-semibold text-[var(--color-pf-text)] mb-2">
               Deactivate Admin
             </h3>

@@ -16,6 +16,10 @@
   --color-pf-text: #f8fafc;
   --color-pf-text-secondary: #94a3b8;
   --color-pf-text-muted: #64748b;
+  --color-pf-text-tertiary: #64748b;
+
+  /* Background aliases */
+  --color-pf-bg: #020817;
 
   /* Cyan accent */
   --color-pf-cyan-300: #67E8F9;
@@ -87,6 +91,8 @@ body {
   --color-pf-text: #0f172a;
   --color-pf-text-secondary: #475569;
   --color-pf-text-muted: #94a3b8;
+  --color-pf-text-tertiary: #94a3b8;
+  --color-pf-bg: #ffffff;
   --shadow-pf-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-pf-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
   --shadow-pf-md: 0 4px 12px rgba(0, 0, 0, 0.08);
