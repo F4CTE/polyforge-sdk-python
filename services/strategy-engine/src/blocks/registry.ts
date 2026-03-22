@@ -1,4 +1,4 @@
-import { BlockEvaluator, ActionEvaluator } from "./block.types";
+import { BlockEvaluator, ActionEvaluator, LogicBlockEvaluator } from "./block.types";
 
 import {
   StopIfDailyLossBlock,
@@ -36,6 +36,14 @@ import {
   NoExistingPositionBlock,
   TimeWindowBlock,
 } from "./condition.blocks";
+
+import {
+  IfThenElseBlock,
+  AndGateBlock,
+  OrGateBlock,
+  NotGateBlock,
+  DelayBlock,
+} from "./logic.blocks";
 
 import {
   BuyYesAction,
@@ -115,4 +123,12 @@ export const ACTION_REGISTRY: Record<string, ActionEvaluator> = {
   cancel_all_orders: CancelAllOrdersAction,
   WAIT: SkipBetAction,
   skip_bet: SkipBetAction,
+};
+
+export const LOGIC_REGISTRY: Record<string, LogicBlockEvaluator> = {
+  IF_THEN_ELSE: IfThenElseBlock,
+  AND_GATE: AndGateBlock,
+  OR_GATE: OrGateBlock,
+  NOT_GATE: NotGateBlock,
+  DELAY: DelayBlock,
 };

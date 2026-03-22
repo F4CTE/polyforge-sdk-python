@@ -5,12 +5,13 @@ import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { StrategyVariable } from "@polyforge/shared-types";
-import { EvalContext, OrderIntent } from "../blocks/block.types";
+import { EvalContext, OrderIntent, DelayedAction } from "../blocks/block.types";
 import {
   SAFETY_REGISTRY,
   TRIGGER_REGISTRY,
   CONDITION_REGISTRY,
   ACTION_REGISTRY,
+  LOGIC_REGISTRY,
 } from "../blocks/registry";
 import { resolveParams } from "../blocks/resolve-params";
 import { StateService } from "../state/state.service";
@@ -26,6 +27,17 @@ interface Block {
   params?: Record<string, unknown>;
 }
 
+interface LogicBlock extends Block {
+  outputs?: string[];
+}
+
+interface LogicConnection {
+  source: string;
+  sourceHandle?: string;
+  target: string;
+  targetHandle?: string;
+}
+
 /**
  * Runs a single strategy's evaluation loop.
  *
@@ -38,6 +50,7 @@ export class StrategyRunner {
   status: StrategyRunnerStatus = "RUNNING";
   private timer: NodeJS.Timeout | null = null;
   private pauseReason: string | null = null;
+  private delayedActions: Map<string, NodeJS.Timeout> = new Map();
 
   constructor(
     private readonly strategyId: string,
@@ -57,6 +70,8 @@ export class StrategyRunner {
       status: StrategyRunnerStatus,
       reason?: string,
     ) => Promise<void>,
+    private readonly logicBlocks: LogicBlock[] = [],
+    private readonly logicConnections: LogicConnection[] = [],
   ) {
     this.logger = new Logger(`StrategyRunner:${strategyId}`);
   }
@@ -87,6 +102,11 @@ export class StrategyRunner {
       clearInterval(this.timer);
       this.timer = null;
     }
+    // Clear all delayed action timers
+    for (const timer of this.delayedActions.values()) {
+      clearTimeout(timer);
+    }
+    this.delayedActions.clear();
     this.logger.log("Stopped");
   }
 
@@ -246,7 +266,22 @@ export class StrategyRunner {
       if (!result.fired) return; // condition failed, skip tick
     }
 
-    // 5. ACTIONS — collect all OrderIntents
+    // 5. LOGIC BLOCKS — evaluate in topological order if present
+    if (this.logicBlocks.length > 0) {
+      const logicResults = this.evaluateLogicGraph(ctx);
+      // If any logic block produces false and gates the action pipeline,
+      // the downstream connections determine whether actions fire.
+      // For now, store results in context variables so actions can reference them.
+      for (const [blockId, result] of logicResults.entries()) {
+        const block = this.logicBlocks.find((b) => b.id === blockId);
+        if (block) {
+          ctx.variables = ctx.variables ?? {};
+          ctx.variables[`__logic_${blockId}`] = result.value ? 1 : 0;
+        }
+      }
+    }
+
+    // 6. ACTIONS — collect all OrderIntents
     const allIntents: OrderIntent[] = [];
     for (const block of this.actions) {
       const evaluator = ACTION_REGISTRY[block.type];
@@ -275,6 +310,104 @@ export class StrategyRunner {
 
       await this.onIntents(allIntents);
     }
+  }
+
+  // ─── Logic graph evaluation ──────────────────────────────────────────────
+
+  private evaluateLogicGraph(
+    ctx: EvalContext,
+  ): Map<string, { value: boolean; activeOutput?: string }> {
+    const results = new Map<string, { value: boolean; activeOutput?: string }>();
+
+    // Build adjacency: which logic blocks feed into which
+    const incomingEdges = new Map<string, { source: string; sourceHandle?: string }[]>();
+    for (const conn of this.logicConnections) {
+      const list = incomingEdges.get(conn.target) ?? [];
+      list.push({ source: conn.source, sourceHandle: conn.sourceHandle });
+      incomingEdges.set(conn.target, list);
+    }
+
+    // Topological sort using Kahn's algorithm
+    const blockIds = this.logicBlocks.map((b) => b.id);
+    const inDegree = new Map<string, number>();
+    for (const id of blockIds) inDegree.set(id, 0);
+
+    for (const conn of this.logicConnections) {
+      if (inDegree.has(conn.target)) {
+        inDegree.set(conn.target, (inDegree.get(conn.target) ?? 0) + 1);
+      }
+    }
+
+    const queue: string[] = [];
+    for (const [id, deg] of inDegree) {
+      if (deg === 0) queue.push(id);
+    }
+
+    const sorted: string[] = [];
+    while (queue.length > 0) {
+      const id = queue.shift()!;
+      sorted.push(id);
+
+      for (const conn of this.logicConnections) {
+        if (conn.source === id && inDegree.has(conn.target)) {
+          const newDeg = (inDegree.get(conn.target) ?? 1) - 1;
+          inDegree.set(conn.target, newDeg);
+          if (newDeg === 0) queue.push(conn.target);
+        }
+      }
+    }
+
+    // Evaluate in topological order
+    for (const blockId of sorted) {
+      const block = this.logicBlocks.find((b) => b.id === blockId);
+      if (!block) continue;
+
+      const evaluator = LOGIC_REGISTRY[block.type];
+      if (!evaluator) continue;
+
+      // Gather input values from upstream blocks
+      const incoming = incomingEdges.get(blockId) ?? [];
+      const inputs: boolean[] = incoming.map((edge) => {
+        const upstream = results.get(edge.source);
+        if (!upstream) return false;
+        // For IF_THEN_ELSE, check which output port matches
+        if (edge.sourceHandle && upstream.activeOutput) {
+          return edge.sourceHandle === upstream.activeOutput;
+        }
+        return upstream.value;
+      });
+
+      const resolvedBlock = {
+        ...block,
+        params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+      };
+
+      const result = evaluator.evaluate(resolvedBlock, inputs, ctx);
+      results.set(blockId, result);
+
+      // Handle DELAY blocks: schedule delayed execution
+      if (block.type === "DELAY" && result.value) {
+        const seconds = Number(block.params?.seconds ?? 0);
+        if (seconds > 0) {
+          this.scheduleDelayedAction(blockId, seconds, result.value);
+        }
+      }
+    }
+
+    return results;
+  }
+
+  private scheduleDelayedAction(blockId: string, seconds: number, value: boolean) {
+    // Clear any existing timer for this block
+    const existing = this.delayedActions.get(blockId);
+    if (existing) clearTimeout(existing);
+
+    const timer = setTimeout(() => {
+      this.delayedActions.delete(blockId);
+      this.logger.debug(`Delay block ${blockId} fired after ${seconds}s`);
+    }, seconds * 1000);
+
+    this.delayedActions.set(blockId, timer);
   }
 
   /** Returns the first tokenId found in triggers or actions (for variable scope). */

@@ -72,6 +72,7 @@ export interface Strategy {
   conditions: Block[];
   actions: Block[];
   safety: Block[];
+  logicBlocks?: LogicBlock[];
   status: StrategyStatus;
   errorMessage: string | null;
   forkedFromId: string | null;
@@ -84,6 +85,23 @@ export interface Strategy {
   version: number;
   createdAt: string;
   updatedAt: string;
+}
+
+// ─── Logic blocks ───────────────────────────────────────────────────────────
+
+export type LogicBlockType =
+  | 'IF_THEN_ELSE'
+  | 'AND_GATE'
+  | 'OR_GATE'
+  | 'NOT_GATE'
+  | 'DELAY';
+
+export interface LogicBlock {
+  id: string;
+  type: LogicBlockType;
+  params: Record<string, unknown>;
+  /** Output port IDs for multi-output blocks (e.g. IF_THEN_ELSE has 'true' and 'false') */
+  outputs?: string[];
 }
 
 // ─── Calculation variables ───────────────────────────────────────────────────

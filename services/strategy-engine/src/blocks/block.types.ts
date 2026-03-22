@@ -70,6 +70,30 @@ export interface ActionResult {
   intents: OrderIntent[];
 }
 
+// ─── Logic blocks ───────────────────────────────────────────────────────────
+
+export interface LogicBlockResult {
+  /** The boolean value produced by this logic block */
+  value: boolean;
+  /** For multi-output blocks: which output port is active (e.g. 'true' or 'false') */
+  activeOutput?: string;
+}
+
+export interface LogicBlockEvaluator {
+  evaluate(
+    block: Record<string, unknown>,
+    inputs: boolean[],
+    ctx: EvalContext,
+  ): LogicBlockResult;
+}
+
+export interface DelayedAction {
+  strategyId: string;
+  blockId: string;
+  fireAt: number; // epoch ms
+  value: boolean;
+}
+
 export interface ActionEvaluator {
   execute(
     block: Record<string, unknown>,

@@ -1,6 +1,6 @@
 // ─── Block definitions for the strategy builder ─────────────────────────────
 
-export type BlockSection = 'safety' | 'triggers' | 'conditions' | 'actions';
+export type BlockSection = 'safety' | 'triggers' | 'conditions' | 'actions' | 'logic';
 
 export interface BlockField {
   key: string;
@@ -14,6 +14,8 @@ export interface BlockDef {
   label: string;
   description: string;
   fields: BlockField[];
+  /** Output port IDs for multi-output logic blocks (e.g. ['true', 'false'] for IF/THEN/ELSE) */
+  outputs?: string[];
 }
 
 export const SECTION_META: Record<
@@ -24,13 +26,15 @@ export const SECTION_META: Record<
   triggers:   { label: 'Triggers',   color: '#F59E0B', icon: 'zap' },
   conditions: { label: 'Conditions', color: '#3B82F6', icon: 'filter' },
   actions:    { label: 'Actions',    color: '#22C55E', icon: 'play' },
+  logic:      { label: 'Logic',      color: '#3B82F6', icon: 'git-branch' },
 };
 
 export const SECTION_COLUMNS: Record<BlockSection, number> = {
   safety:     100,
   triggers:   450,
   conditions: 800,
-  actions:    1150,
+  logic:      1050,
+  actions:    1350,
 };
 
 export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
@@ -251,6 +255,41 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
         { key: 'startHour', label: 'Start Hour', type: 'number', placeholder: '9' },
         { key: 'endHour', label: 'End Hour', type: 'number', placeholder: '17' },
       ],
+    },
+  ],
+
+  // ── Logic blocks (5) ───────────────────────────────────────────────────────
+  logic: [
+    {
+      type: 'IF_THEN_ELSE',
+      label: 'If / Then / Else',
+      description: 'Conditional branching based on expression.',
+      fields: [{ key: 'condition', label: 'Condition', type: 'text', placeholder: '$price > 0.5' }],
+      outputs: ['true', 'false'],
+    },
+    {
+      type: 'AND_GATE',
+      label: 'AND',
+      description: 'Outputs true only if ALL inputs are true.',
+      fields: [],
+    },
+    {
+      type: 'OR_GATE',
+      label: 'OR',
+      description: 'Outputs true if ANY input is true.',
+      fields: [],
+    },
+    {
+      type: 'NOT_GATE',
+      label: 'NOT',
+      description: 'Inverts the boolean input.',
+      fields: [],
+    },
+    {
+      type: 'DELAY',
+      label: 'Delay',
+      description: 'Delays signal propagation by specified seconds.',
+      fields: [{ key: 'seconds', label: 'Seconds', type: 'number', placeholder: '5' }],
     },
   ],
 

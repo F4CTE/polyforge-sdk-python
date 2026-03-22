@@ -30,6 +30,17 @@ export interface BlockNodeData {
   [key: string]: unknown;
 }
 
+export interface LogicNodeData {
+  type: string;
+  label: string;
+  section: 'logic';
+  color: string;
+  config: Record<string, string>;
+  fields: BlockField[];
+  outputs?: string[];
+  [key: string]: unknown;
+}
+
 export type { VariableNodeData };
 
 // ─── Store types ─────────────────────────────────────────────────────────────
@@ -89,6 +100,15 @@ const SECTION_COLORS: Record<BlockSection, string> = {
   triggers: '#F59E0B',
   conditions: '#3B82F6',
   actions: '#22C55E',
+  logic: '#3B82F6',
+};
+
+const LOGIC_COLORS: Record<string, string> = {
+  IF_THEN_ELSE: '#F59E0B',
+  AND_GATE: '#3B82F6',
+  OR_GATE: '#3B82F6',
+  NOT_GATE: '#3B82F6',
+  DELAY: '#6B7280',
 };
 
 const VARIABLE_COLUMN_X = 0;
@@ -147,6 +167,32 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
   addNode: (blockDef, section, position) => {
     const { nodes } = get();
+
+    if (section === 'logic') {
+      // Logic blocks use logicNode type
+      const existingLogic = nodes.filter((n) => n.type === 'logicNode');
+      const x = position?.x ?? SECTION_COLUMNS.logic;
+      const y = position?.y ?? 100 + existingLogic.length * 160;
+
+      const newNode: Node<LogicNodeData> = {
+        id: crypto.randomUUID(),
+        type: 'logicNode',
+        position: { x, y },
+        data: {
+          type: blockDef.type,
+          label: blockDef.label,
+          section: 'logic',
+          color: LOGIC_COLORS[blockDef.type] ?? '#3B82F6',
+          config: Object.fromEntries(blockDef.fields.map((f) => [f.key, ''])),
+          fields: blockDef.fields,
+          outputs: blockDef.outputs,
+        },
+      };
+
+      set({ nodes: [...nodes, newNode], dirty: true });
+      return;
+    }
+
     const existingInSection = nodes.filter(
       (n) => (n.data as BlockNodeData).section === section,
     );
@@ -312,6 +358,39 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         });
       }
 
+      // Restore logic block nodes
+      const storedLogicBlocks = (s.logicBlocks ?? canvasLayout?.logicBlocks ?? []) as {
+        id?: string;
+        type: string;
+        config: Record<string, any>;
+        outputs?: string[];
+      }[];
+      storedLogicBlocks.forEach((lb, i) => {
+        const lbId = lb.id || crypto.randomUUID();
+        const storedPos = storedPositions[lbId];
+        const def = findBlockDef(lb.type);
+
+        nodes.push({
+          id: lbId,
+          type: 'logicNode',
+          position: {
+            x: storedPos?.x ?? SECTION_COLUMNS.logic,
+            y: storedPos?.y ?? 100 + i * 160,
+          },
+          data: {
+            type: lb.type,
+            label: def?.label ?? lb.type,
+            section: 'logic',
+            color: LOGIC_COLORS[lb.type] ?? '#3B82F6',
+            config: Object.fromEntries(
+              Object.entries(lb.config).map(([k, v]) => [k, String(v)]),
+            ),
+            fields: def?.fields ?? [],
+            outputs: lb.outputs ?? def?.outputs,
+          } satisfies LogicNodeData,
+        });
+      });
+
       // Restore variable nodes from strategy.variables or canvas.variables
       const storedVariables = (s.variables ?? canvasLayout?.variables ?? []) as {
         id?: string;
@@ -338,10 +417,12 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       // Restore edges from canvas.connections if present
       const storedConnections = canvasLayout?.connections ?? [];
       const edges: Edge[] = storedConnections.map(
-        (c: { id?: string; source: string; target: string }) => ({
+        (c: { id?: string; source: string; sourceHandle?: string; target: string; targetHandle?: string }) => ({
           id: c.id || crypto.randomUUID(),
           source: c.source,
+          sourceHandle: c.sourceHandle ?? null,
           target: c.target,
+          targetHandle: c.targetHandle ?? null,
           type: 'smoothstep',
           animated: true,
         }),
@@ -375,12 +456,20 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     set({ saving: true });
 
     const blockNodes = state.nodes.filter((n) => n.type === 'blockNode');
+    const logicNodes = state.nodes.filter((n) => n.type === 'logicNode');
     const variableNodes = state.nodes.filter((n) => n.type === 'variableNode');
 
     const toBlock = (n: Node<BlockNodeData>) => ({
       id: n.id,
       type: (n.data as BlockNodeData).type,
       config: (n.data as BlockNodeData).config,
+    });
+
+    const toLogicBlock = (n: Node<LogicNodeData>) => ({
+      id: n.id,
+      type: (n.data as LogicNodeData).type,
+      config: (n.data as LogicNodeData).config,
+      outputs: (n.data as LogicNodeData).outputs,
     });
 
     const positions: Record<string, { x: number; y: number }> = {};
@@ -391,7 +480,9 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     const connections = state.edges.map((e) => ({
       id: e.id,
       source: e.source,
+      sourceHandle: e.sourceHandle,
       target: e.target,
+      targetHandle: e.targetHandle,
     }));
 
     // Extract variables from variable nodes
@@ -419,6 +510,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       actions: blockNodes
         .filter((n) => (n.data as BlockNodeData).section === 'actions')
         .map(toBlock),
+      logicBlocks: logicNodes.map(toLogicBlock),
       tags: state.tags
         .split(',')
         .map((t) => t.trim())

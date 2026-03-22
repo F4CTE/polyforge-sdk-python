@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useBuilderStore } from './builder-store';
 import { isValidVariableName } from '../components/builder/nodes/variable-node';
+import { BLOCK_DEFS } from '../components/builder/block-definitions';
 
 // Reset the store between tests
 beforeEach(() => {
@@ -270,5 +271,160 @@ describe('loadStrategy', () => {
     const varNodes = useBuilderStore.getState().nodes.filter((n) => n.type === 'variableNode');
     expect(varNodes).toHaveLength(1);
     expect(varNodes[0].data.variableName).toBe('gamma');
+  });
+});
+
+// ─── Logic blocks ──────────────────────────────────────────────────────────
+
+describe('addNode with logic blocks', () => {
+  it('creates a logicNode for IF_THEN_ELSE', () => {
+    const ifDef = BLOCK_DEFS.logic.find((d) => d.type === 'IF_THEN_ELSE')!;
+    useBuilderStore.getState().addNode(ifDef, 'logic');
+
+    const nodes = useBuilderStore.getState().nodes;
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].type).toBe('logicNode');
+    expect(nodes[0].data.type).toBe('IF_THEN_ELSE');
+    expect(nodes[0].data.section).toBe('logic');
+    expect(nodes[0].data.outputs).toEqual(['true', 'false']);
+  });
+
+  it('creates a logicNode for AND_GATE', () => {
+    const andDef = BLOCK_DEFS.logic.find((d) => d.type === 'AND_GATE')!;
+    useBuilderStore.getState().addNode(andDef, 'logic');
+
+    const nodes = useBuilderStore.getState().nodes;
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].type).toBe('logicNode');
+    expect(nodes[0].data.type).toBe('AND_GATE');
+  });
+
+  it('creates a logicNode for OR_GATE', () => {
+    const orDef = BLOCK_DEFS.logic.find((d) => d.type === 'OR_GATE')!;
+    useBuilderStore.getState().addNode(orDef, 'logic');
+
+    const nodes = useBuilderStore.getState().nodes;
+    expect(nodes[0].type).toBe('logicNode');
+    expect(nodes[0].data.type).toBe('OR_GATE');
+  });
+
+  it('creates a logicNode for NOT_GATE', () => {
+    const notDef = BLOCK_DEFS.logic.find((d) => d.type === 'NOT_GATE')!;
+    useBuilderStore.getState().addNode(notDef, 'logic');
+
+    const nodes = useBuilderStore.getState().nodes;
+    expect(nodes[0].type).toBe('logicNode');
+    expect(nodes[0].data.type).toBe('NOT_GATE');
+  });
+
+  it('creates a logicNode for DELAY', () => {
+    const delayDef = BLOCK_DEFS.logic.find((d) => d.type === 'DELAY')!;
+    useBuilderStore.getState().addNode(delayDef, 'logic');
+
+    const nodes = useBuilderStore.getState().nodes;
+    expect(nodes[0].type).toBe('logicNode');
+    expect(nodes[0].data.type).toBe('DELAY');
+    expect(nodes[0].data.fields).toHaveLength(1);
+    expect(nodes[0].data.fields[0].key).toBe('seconds');
+  });
+
+  it('uses amber color for IF_THEN_ELSE', () => {
+    const ifDef = BLOCK_DEFS.logic.find((d) => d.type === 'IF_THEN_ELSE')!;
+    useBuilderStore.getState().addNode(ifDef, 'logic');
+
+    const node = useBuilderStore.getState().nodes[0];
+    expect(node.data.color).toBe('#F59E0B');
+  });
+
+  it('uses blue color for AND_GATE', () => {
+    const andDef = BLOCK_DEFS.logic.find((d) => d.type === 'AND_GATE')!;
+    useBuilderStore.getState().addNode(andDef, 'logic');
+
+    const node = useBuilderStore.getState().nodes[0];
+    expect(node.data.color).toBe('#3B82F6');
+  });
+
+  it('uses gray color for DELAY', () => {
+    const delayDef = BLOCK_DEFS.logic.find((d) => d.type === 'DELAY')!;
+    useBuilderStore.getState().addNode(delayDef, 'logic');
+
+    const node = useBuilderStore.getState().nodes[0];
+    expect(node.data.color).toBe('#6B7280');
+  });
+});
+
+describe('save includes logic blocks', () => {
+  it('includes logicBlocks in the save payload', async () => {
+    useBuilderStore.setState({ name: 'Test Strategy' });
+
+    const ifDef = BLOCK_DEFS.logic.find((d) => d.type === 'IF_THEN_ELSE')!;
+    useBuilderStore.getState().addNode(ifDef, 'logic');
+    const nodeId = useBuilderStore.getState().nodes[0].id;
+    useBuilderStore.getState().updateNodeConfig(nodeId, 'condition', '$price > 0.5');
+
+    let capturedBody: any;
+    globalThis.fetch = vi.fn().mockImplementation(async (_url, opts) => {
+      capturedBody = JSON.parse(opts.body);
+      return {
+        ok: true,
+        json: async () => ({ id: 'new-id' }),
+      };
+    });
+
+    await useBuilderStore.getState().save();
+
+    expect(capturedBody.logicBlocks).toBeDefined();
+    expect(capturedBody.logicBlocks).toHaveLength(1);
+    expect(capturedBody.logicBlocks[0].type).toBe('IF_THEN_ELSE');
+    expect(capturedBody.logicBlocks[0].config.condition).toBe('$price > 0.5');
+    expect(capturedBody.logicBlocks[0].outputs).toEqual(['true', 'false']);
+  });
+});
+
+describe('loadStrategy restores logic blocks', () => {
+  it('creates logicNode nodes from strategy data', async () => {
+    const strategyData = {
+      name: 'My Strategy',
+      description: '',
+      execMode: 'TICK',
+      tickMs: 1000,
+      visibility: 'PRIVATE',
+      tags: [],
+      safety: [],
+      triggers: [],
+      conditions: [],
+      actions: [],
+      logicBlocks: [
+        { id: 'lb1', type: 'IF_THEN_ELSE', config: { condition: 'price > 0.5' }, outputs: ['true', 'false'] },
+        { id: 'lb2', type: 'AND_GATE', config: {} },
+      ],
+      variables: [],
+      canvas: {
+        positions: {
+          lb1: { x: 1050, y: 100 },
+          lb2: { x: 1050, y: 260 },
+        },
+        connections: [],
+      },
+    };
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => strategyData,
+    });
+
+    await useBuilderStore.getState().loadStrategy('test-id-logic');
+
+    const nodes = useBuilderStore.getState().nodes;
+    const logicNodes = nodes.filter((n) => n.type === 'logicNode');
+
+    expect(logicNodes).toHaveLength(2);
+    expect(logicNodes[0].id).toBe('lb1');
+    expect(logicNodes[0].data.type).toBe('IF_THEN_ELSE');
+    expect(logicNodes[0].data.config.condition).toBe('price > 0.5');
+    expect(logicNodes[0].position).toEqual({ x: 1050, y: 100 });
+
+    expect(logicNodes[1].id).toBe('lb2');
+    expect(logicNodes[1].data.type).toBe('AND_GATE');
   });
 });

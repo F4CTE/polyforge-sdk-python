@@ -4,6 +4,7 @@ import {
   Zap,
   Filter,
   Play,
+  GitBranch,
   GripVertical,
   X,
   ChevronRight,
@@ -28,6 +29,7 @@ const SECTIONS: { key: PaletteTab; icon: React.ReactNode }[] = [
   { key: 'safety', icon: <Shield className="size-3" /> },
   { key: 'triggers', icon: <Zap className="size-3" /> },
   { key: 'conditions', icon: <Filter className="size-3" /> },
+  { key: 'logic', icon: <GitBranch className="size-3" /> },
   { key: 'actions', icon: <Play className="size-3" /> },
 ];
 
@@ -60,10 +62,15 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
   const addVariable = useBuilderStore((s) => s.addVariable);
 
   const sectionCount = useCallback(
-    (section: PaletteTab) =>
-      section === 'variables'
-        ? nodes.filter((n) => n.type === 'variableNode').length
-        : nodes.filter((n) => (n.data as any).section === section).length,
+    (section: PaletteTab) => {
+      if (section === 'variables') {
+        return nodes.filter((n) => n.type === 'variableNode').length;
+      }
+      if (section === 'logic') {
+        return nodes.filter((n) => n.type === 'logicNode').length;
+      }
+      return nodes.filter((n) => (n.data as any).section === section).length;
+    },
     [nodes],
   );
 
