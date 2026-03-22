@@ -11,6 +11,7 @@ import '@xyflow/react/dist/style.css';
 
 import { BlockNode } from './nodes/block-node';
 import { useBuilderStore, type BlockNodeData } from '../../stores/builder-store';
+import { useThemeStore } from '../../stores/theme-store';
 import {
   BLOCK_DEFS,
   type BlockSection,
@@ -75,6 +76,11 @@ export function StrategyCanvas() {
     [addNode, reactFlow],
   );
 
+  // ─── Theme-aware colors ──────────────────────────────────────────────
+
+  const isDark = useThemeStore((s) => s.isDark);
+  const dotColor = isDark ? '#1e293b' : '#cbd5e1';
+
   // ─── Empty state ──────────────────────────────────────────────────────
 
   const isEmpty = nodes.length === 0;
@@ -109,7 +115,7 @@ export function StrategyCanvas() {
           variant={BackgroundVariant.Dots}
           gap={20}
           size={1.5}
-          color="#1e293b"
+          color={dotColor}
         />
         <Controls
           showInteractive={false}
