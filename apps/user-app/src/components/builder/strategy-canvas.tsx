@@ -79,7 +79,7 @@ export function StrategyCanvas() {
   // ─── Theme-aware colors ──────────────────────────────────────────────
 
   const isDark = useThemeStore((s) => s.isDark);
-  const dotColor = isDark ? '#1e293b' : '#cbd5e1';
+  const dotColor = isDark ? '#334155' : '#cbd5e1';
 
   // ─── Empty state ──────────────────────────────────────────────────────
 
@@ -114,7 +114,7 @@ export function StrategyCanvas() {
         <Background
           variant={BackgroundVariant.Dots}
           gap={20}
-          size={1.5}
+          size={2}
           color={dotColor}
         />
         <Controls
