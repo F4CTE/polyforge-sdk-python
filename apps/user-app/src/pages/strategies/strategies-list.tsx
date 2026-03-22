@@ -9,7 +9,10 @@ import {
   Zap,
   FileText,
   Code2,
+  Download,
+  Upload,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -176,6 +179,65 @@ export function Component() {
     }
   }
 
+  async function handleExport(e: React.MouseEvent, strategyId: string) {
+    e.stopPropagation();
+    try {
+      const res = await fetch(`/api/v1/strategies/${strategyId}/export`, {
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        toast.error('Failed to export strategy');
+        return;
+      }
+      const blob = await res.blob();
+      const disposition = res.headers.get('Content-Disposition');
+      const filenameMatch = disposition?.match(/filename="(.+)"/);
+      const filename = filenameMatch?.[1] ?? 'strategy.polyforge';
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Failed to export strategy');
+    }
+  }
+
+  function handleImport() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.polyforge,.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        const res = await fetch('/api/v1/strategies/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          toast.error(err.message ?? 'Failed to import strategy');
+          return;
+        }
+        const created = await res.json();
+        toast.success('Strategy imported successfully');
+        navigate(`/strategies/${created.id}`);
+      } catch {
+        toast.error('Invalid strategy file');
+      }
+    };
+    input.click();
+  }
+
   function isActive(s: Strategy) { return s.status === 'RUNNING' || s.status === 'PAPER'; }
   function isPaused(s: Strategy) { return s.status === 'PAUSED'; }
   function isIdle(s: Strategy) { return s.status === 'IDLE' || s.status === 'ERROR'; }
@@ -185,12 +247,20 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-pf-text">My Strategies</h1>
-        <Link
-          to="/strategies/new"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
-        >
-          <Plus className="size-4" /> New Strategy
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleImport}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary font-medium hover:border-pf-border-strong transition-colors"
+          >
+            <Upload className="size-4" /> Import Strategy
+          </button>
+          <Link
+            to="/strategies/new"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
+          >
+            <Plus className="size-4" /> New Strategy
+          </Link>
+        </div>
       </div>
 
       {/* Filter tabs */}
@@ -371,6 +441,15 @@ export function Component() {
                         </button>
                       </>
                     )}
+
+                    {/* Export */}
+                    <button
+                      onClick={(e) => handleExport(e, strategy.id)}
+                      className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
+                      title="Export"
+                    >
+                      <Download className="size-3.5" />
+                    </button>
 
                     {/* Edit */}
                     <Link

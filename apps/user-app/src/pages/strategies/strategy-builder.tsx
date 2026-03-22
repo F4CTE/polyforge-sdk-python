@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ReactFlowProvider } from '@xyflow/react';
-import { ArrowLeft, Check, Loader2, Pencil, Blocks } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { StrategyCanvas } from '../../components/builder/strategy-canvas';
@@ -16,6 +16,8 @@ export function Component() {
 
   const [panelOpen, setPanelOpen] = useState(true);
   const [editingName, setEditingName] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const dragCounterRef = useRef(0);
 
   const name = useBuilderStore((s) => s.name);
   const setName = useBuilderStore((s) => s.setName);
@@ -59,6 +61,70 @@ export function Component() {
       toast.error(err?.message ?? 'Save failed');
     }
   }, [save, isEdit, strategyId, navigate]);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current++;
+    if (dragCounterRef.current === 1) setDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) setDragOver(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current = 0;
+    setDragOver(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.polyforge') && !file.name.endsWith('.json')) {
+      toast.error('Please drop a .polyforge or .json file');
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (!data.strategy?.name) {
+        toast.error('Invalid strategy file format');
+        return;
+      }
+
+      const confirmed = window.confirm(
+        `Load strategy "${data.strategy.name}"? This will replace the current blocks.`,
+      );
+      if (!confirmed) return;
+
+      const res = await fetch('/api/v1/strategies/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message ?? 'Failed to import strategy');
+        return;
+      }
+
+      const created = await res.json();
+      toast.success('Strategy imported successfully');
+      navigate(`/strategies/${created.id}/edit`);
+    } catch {
+      toast.error('Invalid strategy file');
+    }
+  }, [navigate]);
 
   // ─── Loading state ────────────────────────────────────────────────────
 
@@ -146,8 +212,22 @@ export function Component() {
       <ReactFlowProvider>
         <div className="flex-1 flex overflow-hidden">
           {/* Canvas */}
-          <div className="flex-1 relative min-w-0">
+          <div
+            className="flex-1 relative min-w-0"
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
             <StrategyCanvas />
+            {dragOver && (
+              <div className="absolute inset-0 z-50 flex items-center justify-center bg-pf-surface/80 backdrop-blur-sm border-2 border-dashed border-pf-cyan-500 rounded-pf-lg pointer-events-none">
+                <div className="flex flex-col items-center gap-2 text-pf-cyan-400">
+                  <Upload className="size-8" />
+                  <span className="text-sm font-medium">Drop .polyforge file to import</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Side panel — always mounted, collapsed via width to prevent React Flow reflow issues */}

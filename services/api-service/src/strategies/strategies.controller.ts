@@ -11,7 +11,9 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  Res,
 } from "@nestjs/common";
+import { Response } from "express";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { StrategiesService } from "./strategies.service";
@@ -21,6 +23,7 @@ import { StartStrategyDto } from "./dto/start-strategy.dto";
 import { CreateCommentDto } from "./dto/create-comment.dto";
 import { ReportStrategyDto } from "./dto/report-strategy.dto";
 import { StrategyQueryDto } from "./dto/strategy-query.dto";
+import { ImportStrategyDto } from "./dto/import-strategy.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
 
 @ApiTags("strategies")
@@ -64,6 +67,29 @@ export class StrategiesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.strategies.remove(id, user.sub);
+  }
+
+  @Get(":id/export")
+  async exportStrategy(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: any,
+    @Res() res: Response,
+  ) {
+    const { payload, filename } = await this.strategies.exportStrategy(
+      id,
+      user.sub,
+    );
+    res.set({
+      "Content-Type": "application/json",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+    });
+    res.json(payload);
+  }
+
+  @Post("import")
+  @HttpCode(HttpStatus.CREATED)
+  importStrategy(@CurrentUser() user: any, @Body() dto: ImportStrategyDto) {
+    return this.strategies.importStrategy(dto, user.sub);
   }
 
   @Post(":id/start")

@@ -23,6 +23,7 @@ import { StartStrategyDto } from "./dto/start-strategy.dto";
 import { CreateCommentDto } from "./dto/create-comment.dto";
 import { ReportStrategyDto } from "./dto/report-strategy.dto";
 import { StrategyQueryDto } from "./dto/strategy-query.dto";
+import { ImportStrategyDto } from "./dto/import-strategy.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
 
 const MAX_STRATEGIES = 50;
@@ -470,6 +471,102 @@ export class StrategiesService {
     ]);
 
     return paginate(templates, total, page, limit);
+  }
+
+  async exportStrategy(
+    id: string,
+    userId: string,
+  ): Promise<{ payload: object; filename: string }> {
+    const strategy = await this.prisma.strategy.findUnique({ where: { id } });
+    if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
+      throw new NotFoundException({
+        code: "NOT_FOUND",
+        message: "Strategy not found",
+      });
+    }
+
+    const isOwner = strategy.userId === userId;
+
+    if (
+      strategy.visibility === StrategyVisibility.PRIVATE &&
+      !isOwner
+    ) {
+      throw new ForbiddenException({
+        code: "FORBIDDEN",
+        message: "Access denied",
+      });
+    }
+
+    const payload = {
+      polyforge: "1.0",
+      exportedAt: new Date().toISOString(),
+      strategy: {
+        name: strategy.name,
+        description: strategy.description ?? "",
+        execMode: strategy.execMode,
+        tickMs: strategy.tickMs,
+        visibility: strategy.visibility,
+        tags: strategy.tags ?? [],
+        variables: (strategy as any).variables ?? [],
+        blocks: {
+          safety: strategy.safety ?? [],
+          triggers: strategy.triggers ?? [],
+          conditions: strategy.conditions ?? [],
+          actions: strategy.actions ?? [],
+        },
+        // Only include canvas layout for the owner
+        ...(isOwner && strategy.canvas
+          ? { canvas: strategy.canvas }
+          : {}),
+      },
+    };
+
+    const safeName = strategy.name
+      .replace(/[^a-zA-Z0-9_-]/g, "-")
+      .replace(/-+/g, "-")
+      .toLowerCase();
+    const filename = `${safeName}.polyforge`;
+
+    return { payload, filename };
+  }
+
+  async importStrategy(
+    dto: ImportStrategyDto,
+    userId: string,
+  ): Promise<Strategy> {
+    const count = await this.prisma.strategy.count({
+      where: { userId, status: { not: StrategyStatus.ARCHIVED } },
+    });
+    if (count >= MAX_STRATEGIES) {
+      throw new UnprocessableEntityException({
+        code: "STRATEGY_LIMIT_REACHED",
+        message: "Strategy limit reached",
+      });
+    }
+
+    const s = dto.strategy;
+    const blocks = s.blocks ?? {};
+
+    return this.prisma.strategy.create({
+      data: {
+        userId,
+        name: s.name,
+        description: s.description ?? "",
+        visibility: StrategyVisibility.PRIVATE,
+        execMode: (s.execMode as ExecMode) ?? ExecMode.TICK,
+        tickMs: s.tickMs ?? 1000,
+        triggers: (blocks.triggers ?? []) as unknown as Prisma.InputJsonValue,
+        conditions: (blocks.conditions ??
+          []) as unknown as Prisma.InputJsonValue,
+        actions: (blocks.actions ?? []) as unknown as Prisma.InputJsonValue,
+        safety: (blocks.safety ?? []) as unknown as Prisma.InputJsonValue,
+        tags: s.tags ?? [],
+        canvas: s.canvas as unknown as Prisma.InputJsonValue | undefined,
+        status: StrategyStatus.IDLE,
+        version: 1,
+        template: false,
+      },
+    });
   }
 
   private async getOwned(id: string, userId: string): Promise<Strategy> {

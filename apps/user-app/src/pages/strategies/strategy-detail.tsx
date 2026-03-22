@@ -11,7 +11,10 @@ import {
   Filter,
   PlayCircle,
   FileText,
+  Download,
+  Share2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -173,6 +176,45 @@ export function Component() {
     }
   }
 
+  async function handleExport() {
+    if (!strategy) return;
+    try {
+      const res = await fetch(`/api/v1/strategies/${strategy.id}/export`, {
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        toast.error('Failed to export strategy');
+        return;
+      }
+      const blob = await res.blob();
+      const disposition = res.headers.get('Content-Disposition');
+      const filenameMatch = disposition?.match(/filename="(.+)"/);
+      const filename = filenameMatch?.[1] ?? `${strategy.name}.polyforge`;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Strategy exported');
+    } catch {
+      toast.error('Failed to export strategy');
+    }
+  }
+
+  function handleShare() {
+    if (!strategy) return;
+    const url = `${window.location.origin}/strategies/${strategy.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success('Link copied to clipboard');
+    }).catch(() => {
+      toast.error('Failed to copy link');
+    });
+  }
+
   const status = strategy?.status ?? 'IDLE';
   const statusStyle = STATUS_STYLES[status] ?? STATUS_STYLES.IDLE;
   const totalBlocks = strategy
@@ -306,6 +348,20 @@ export function Component() {
               >
                 <Pencil className="size-4" />
               </Link>
+              <button
+                onClick={handleExport}
+                className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                title="Export"
+              >
+                <Download className="size-4" />
+              </button>
+              <button
+                onClick={handleShare}
+                className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                title="Share"
+              >
+                <Share2 className="size-4" />
+              </button>
             </div>
           </div>
 

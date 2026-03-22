@@ -1592,4 +1592,249 @@ describe("StrategiesService", () => {
       expect(result.canvas).toBeUndefined();
     });
   });
+
+  // ── exportStrategy ─────────────────────────────────────────────────────
+
+  describe("exportStrategy", () => {
+    it("returns correct .polyforge format for owner", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        name: "My Momentum Strategy",
+        description: "Test desc",
+        execMode: "TICK",
+        tickMs: 5000,
+        visibility: "PRIVATE",
+        tags: ["momentum"],
+        triggers: [{ type: "PRICE_CROSSES_UP", config: { threshold: "0.6" } }],
+        conditions: [{ type: "PRICE_IN_RANGE", config: { min: "0.3", max: "0.8" } }],
+        actions: [{ type: "BUY_YES", config: { size: "50" } }],
+        safety: [{ type: "STOP_IF_DAILY_LOSS", config: { maxLoss: "50" } }],
+        canvas: { positions: { "b1": { x: 100, y: 100 } }, connections: [] },
+      });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      const result = await service.exportStrategy(strategy.id, "user-1");
+
+      expect(result.payload).toHaveProperty("polyforge", "1.0");
+      expect(result.payload).toHaveProperty("exportedAt");
+      expect((result.payload as any).strategy.name).toBe("My Momentum Strategy");
+      expect((result.payload as any).strategy.blocks.triggers).toHaveLength(1);
+      expect((result.payload as any).strategy.blocks.safety).toHaveLength(1);
+      expect((result.payload as any).strategy.blocks.conditions).toHaveLength(1);
+      expect((result.payload as any).strategy.blocks.actions).toHaveLength(1);
+      expect((result.payload as any).strategy.canvas).toBeDefined();
+      expect(result.filename).toBe("my-momentum-strategy.polyforge");
+    });
+
+    it("throws NOT_FOUND for archived strategy", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.ARCHIVED,
+      });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      await expect(
+        service.exportStrategy(strategy.id, "user-1"),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it("throws FORBIDDEN for private strategy when not owner", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        visibility: "PRIVATE",
+      });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      await expect(
+        service.exportStrategy(strategy.id, "other-user"),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it("allows export of public strategy by non-owner (without canvas)", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        visibility: "PUBLIC",
+        canvas: { positions: { "b1": { x: 100, y: 100 } }, connections: [] },
+      });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      const result = await service.exportStrategy(strategy.id, "other-user");
+
+      expect((result.payload as any).strategy.name).toBe("My Strategy");
+      expect((result.payload as any).strategy.canvas).toBeUndefined();
+    });
+
+    it("allows export of unlisted strategy by non-owner (without canvas)", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        visibility: "UNLISTED",
+        canvas: { positions: {}, connections: [] },
+      });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      const result = await service.exportStrategy(strategy.id, "other-user");
+
+      expect((result.payload as any).strategy.canvas).toBeUndefined();
+    });
+
+    it("throws NOT_FOUND when strategy does not exist", async () => {
+      db.strategy.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.exportStrategy("nonexistent", "user-1"),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  // ── importStrategy ─────────────────────────────────────────────────────
+
+  describe("importStrategy", () => {
+    it("creates a new strategy from import data", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        exportedAt: "2026-03-22T12:00:00Z",
+        strategy: {
+          name: "Imported Strategy",
+          description: "Imported desc",
+          execMode: "TICK",
+          tickMs: 5000,
+          visibility: "PUBLIC",
+          tags: ["tag1"],
+          blocks: {
+            safety: [{ type: "STOP_IF_DAILY_LOSS", config: { maxLoss: "50" } }],
+            triggers: [{ type: "PRICE_CROSSES_UP", config: { threshold: "0.6" } }],
+            conditions: [],
+            actions: [{ type: "BUY_YES", config: { size: "50" } }],
+          },
+          canvas: { positions: {}, connections: [] },
+        },
+      };
+      const created = makeStrategy({ name: "Imported Strategy" });
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockResolvedValue(created as any);
+
+      const result = await service.importStrategy(importDto as any, "user-2");
+
+      expect(result).toEqual(created);
+      expect(db.strategy.create).toHaveBeenCalledOnce();
+
+      const dataArg = (db.strategy.create as any).mock.calls[0][0].data;
+      expect(dataArg.userId).toBe("user-2");
+      expect(dataArg.name).toBe("Imported Strategy");
+      expect(dataArg.visibility).toBe("PRIVATE");
+      expect(dataArg.status).toBe(StrategyStatus.IDLE);
+      expect(dataArg.version).toBe(1);
+      expect(dataArg.template).toBe(false);
+    });
+
+    it("strips original ID and generates new one (no id in data)", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "Test Import",
+          blocks: {
+            triggers: [{ type: "PRICE_CROSSES_UP", config: {} }],
+          },
+        },
+      };
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockResolvedValue(makeStrategy() as any);
+
+      await service.importStrategy(importDto as any, "user-1");
+
+      const dataArg = (db.strategy.create as any).mock.calls[0][0].data;
+      expect(dataArg.id).toBeUndefined();
+    });
+
+    it("always sets visibility to PRIVATE regardless of import data", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "Public Strat",
+          visibility: "PUBLIC",
+          blocks: {},
+        },
+      };
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockResolvedValue(makeStrategy() as any);
+
+      await service.importStrategy(importDto as any, "user-1");
+
+      const dataArg = (db.strategy.create as any).mock.calls[0][0].data;
+      expect(dataArg.visibility).toBe("PRIVATE");
+    });
+
+    it("sets owner to the authenticated user", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "Someone Else's Strategy",
+          blocks: {},
+        },
+      };
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockResolvedValue(makeStrategy() as any);
+
+      await service.importStrategy(importDto as any, "user-42");
+
+      const dataArg = (db.strategy.create as any).mock.calls[0][0].data;
+      expect(dataArg.userId).toBe("user-42");
+    });
+
+    it("throws STRATEGY_LIMIT_REACHED when at max strategies", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "Over limit",
+          blocks: {},
+        },
+      };
+      db.strategy.count.mockResolvedValue(50);
+
+      await expect(
+        service.importStrategy(importDto as any, "user-1"),
+      ).rejects.toMatchObject({
+        response: { code: "STRATEGY_LIMIT_REACHED" },
+        status: 422,
+      });
+      expect(db.strategy.create).not.toHaveBeenCalled();
+    });
+
+    it("handles missing blocks gracefully", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "No blocks",
+        },
+      };
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockResolvedValue(makeStrategy() as any);
+
+      await service.importStrategy(importDto as any, "user-1");
+
+      const dataArg = (db.strategy.create as any).mock.calls[0][0].data;
+      expect(dataArg.triggers).toEqual([]);
+      expect(dataArg.conditions).toEqual([]);
+      expect(dataArg.actions).toEqual([]);
+      expect(dataArg.safety).toEqual([]);
+    });
+
+    it("uses default execMode and tickMs when not provided", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "Defaults",
+          blocks: {},
+        },
+      };
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockResolvedValue(makeStrategy() as any);
+
+      await service.importStrategy(importDto as any, "user-1");
+
+      const dataArg = (db.strategy.create as any).mock.calls[0][0].data;
+      expect(dataArg.execMode).toBe("TICK");
+      expect(dataArg.tickMs).toBe(1000);
+    });
+  });
 });
