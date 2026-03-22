@@ -7,13 +7,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Planned — Advanced Strategy Builder (v3.2)
+No unreleased changes.
 
-- **Strategy Import/Export** — export strategies as `.polyforge` JSON files; import via upload, drag-and-drop, or encoded URL; API endpoints for programmatic export/import
-- **Variables UI** — visual variable blocks on the canvas (purple `#A855F7`); variable definition panel in builder sidebar; `$varName` highlighting in block configs
-- **Logic Blocks** — IF/THEN/ELSE conditional branching with true/false output ports; AND/OR/NOT gates; Delay block
-- **Calculation Blocks** — Math (arithmetic expressions), Aggregation (moving average, min/max, cumulative sum), Comparison (boolean output); typed input/output ports
-- **Sub-Strategies (Strategy Composition)** — "Run Strategy" action block with fire-and-forget, managed, and scoped modes; `parentStrategyId` lineage; circular dependency detection; resource limits (max depth 3, max concurrent 10); P&L rollup; parent lifecycle propagation
+---
+
+## [3.2.0] — 2026-03-22
+
+### Added — Advanced Strategy Builder
+
+- **Strategy Import/Export** — export strategies as `.polyforge` JSON files containing name, description, execMode, variables, blocks, and canvas layout; import via file upload or drag-and-drop onto canvas; share strategies via encoded URL; version field for forward compatibility; API endpoints for programmatic export/import (`GET /strategies/:id/export`, `POST /strategies/import`)
+- **Variables UI** — visual variable blocks rendered as purple (`#A855F7`) nodes on the strategy canvas; variable definition panel in builder sidebar with name + expression (expr-eval); `$varName` highlighting in block configs with purple accent; connected to existing backend `StrategyVariable` model and expr-eval resolver
+- **Logic Blocks** — IF/THEN/ELSE conditional branching block with true (green) / false (red) output ports; AND gate (all inputs must be true); OR gate (any input must be true); NOT gate (inverts boolean); Delay block (wait N seconds/ticks before propagating); `LogicBlockEvaluator` interface for engine integration
+- **Calculation Blocks** — Math block for arithmetic expressions with named inputs; Aggregation block for moving average, min/max, and cumulative sum over N ticks; Comparison block with boolean output (>, <, ==, between); typed input/output ports on all calculation blocks
+- **Sub-Strategies (Strategy Composition)** — "Run Strategy" action block type with three execution modes: fire-and-forget, managed, and scoped; `parentStrategyId` field on Strategy model for lineage tracking; circular dependency detection; resource limits (max depth 3, max concurrent 10); P&L attribution with sub-strategy rollup to parent; parent lifecycle propagation (stopping parent stops children)
 
 ---
 

@@ -7,53 +7,53 @@
 
 ## Next Up
 
-Phase 8 competitive features in planning. v3.2.0 Advanced Strategy Builder in planning.
+Phase 8 competitive features in planning. v3.2.0 Advanced Strategy Builder shipped.
 
 ---
 
-## v3.2.0 — Advanced Strategy Builder (Planned)
+## v3.2.0 — Advanced Strategy Builder
 
 ### Strategy Import/Export
 
-- [ ] Export strategies as `.polyforge` JSON files (name, description, execMode, variables, blocks, canvas layout)
-- [ ] Import via file upload or drag-and-drop onto canvas
-- [ ] Share via encoded URL
-- [ ] Version field for forward compatibility
-- [ ] API endpoint for programmatic export/import (`GET /strategies/:id/export`, `POST /strategies/import`)
+- [x] Export strategies as `.polyforge` JSON files (name, description, execMode, variables, blocks, canvas layout)
+- [x] Import via file upload or drag-and-drop onto canvas
+- [x] Share via encoded URL
+- [x] Version field for forward compatibility
+- [x] API endpoint for programmatic export/import (`GET /strategies/:id/export`, `POST /strategies/import`)
 
 ### Variables UI
 
-- [ ] Visual variable blocks on canvas (purple section color `#A855F7`)
-- [ ] Variable definition: name + expression (expr-eval)
-- [ ] Variables panel in builder sidebar
-- [ ] `$varName` highlighted in block configs with purple accent
-- [ ] Connect frontend to existing backend (`StrategyVariable` + expr-eval resolver)
+- [x] Visual variable blocks on canvas (purple section color `#A855F7`)
+- [x] Variable definition: name + expression (expr-eval)
+- [x] Variables panel in builder sidebar
+- [x] `$varName` highlighted in block configs with purple accent
+- [x] Connect frontend to existing backend (`StrategyVariable` + expr-eval resolver)
 
 ### Logic Blocks
 
-- [ ] IF/THEN/ELSE block — conditional branching with true (green) / false (red) output ports
-- [ ] AND gate — all inputs must be true
-- [ ] OR gate — any input must be true
-- [ ] NOT gate — inverts boolean
-- [ ] Delay block — wait N seconds/ticks before propagating
-- [ ] Logic block evaluator interface (`LogicBlockEvaluator`)
+- [x] IF/THEN/ELSE block — conditional branching with true (green) / false (red) output ports
+- [x] AND gate — all inputs must be true
+- [x] OR gate — any input must be true
+- [x] NOT gate — inverts boolean
+- [x] Delay block — wait N seconds/ticks before propagating
+- [x] Logic block evaluator interface (`LogicBlockEvaluator`)
 
 ### Calculation Blocks
 
-- [ ] Math block — arithmetic expression with named inputs
-- [ ] Aggregation block — moving average, min/max, cumulative sum over N ticks
-- [ ] Comparison block — outputs boolean (>, <, ==, between)
-- [ ] Typed input/output ports on calculation blocks
+- [x] Math block — arithmetic expression with named inputs
+- [x] Aggregation block — moving average, min/max, cumulative sum over N ticks
+- [x] Comparison block — outputs boolean (>, <, ==, between)
+- [x] Typed input/output ports on calculation blocks
 
 ### Sub-Strategies (Strategy Composition)
 
-- [ ] "Run Strategy" action block type
-- [ ] Three modes: fire-and-forget, managed, scoped
-- [ ] `parentStrategyId` field on Strategy model
-- [ ] Circular dependency detection
-- [ ] Resource limits: max depth 3, max concurrent 10
-- [ ] P&L attribution: sub-strategy P&L rolls up to parent
-- [ ] Parent lifecycle propagation (stop parent stops children)
+- [x] "Run Strategy" action block type
+- [x] Three modes: fire-and-forget, managed, scoped
+- [x] `parentStrategyId` field on Strategy model
+- [x] Circular dependency detection
+- [x] Resource limits: max depth 3, max concurrent 10
+- [x] P&L attribution: sub-strategy P&L rolls up to parent
+- [x] Parent lifecycle propagation (stop parent stops children)
 
 ---
 

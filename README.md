@@ -6,7 +6,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 
 ### Key Features
 
-- **SVG canvas strategy builder** — 2D drag-and-drop canvas with pan/zoom, bezier connection lines, color-coded blocks, and auto-layout
+- **Advanced strategy builder** — 2D drag-and-drop canvas with pan/zoom, bezier connection lines, color-coded blocks, auto-layout, logic blocks (IF/THEN/ELSE, AND/OR/NOT, Delay), calculation blocks (Math, Aggregation, Comparison), visual variable nodes, sub-strategy composition (fire-and-forget/managed/scoped), and `.polyforge` JSON import/export
 - **Market cards** — Polymarket-style card grid with images, probability bars, multi-outcome support, and card/table toggle
 - **Market detail page** — Stats bar and "Run Strategy" dialog with strategy selector
 - **Support ticket system** — User-to-admin tickets with assignment, priority, reminders, and email notifications
