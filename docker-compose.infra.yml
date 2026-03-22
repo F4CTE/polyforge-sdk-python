@@ -462,29 +462,6 @@ services:
     networks: [internal]
     restart: unless-stopped
 
-  # ─── REACT / NEXT.JS FRONTEND APPS ─────────────────────────────────────
-
-  user-app:
-    build:
-      context: .
-      dockerfile: apps/user-app/Dockerfile
-    networks: [internal]
-    restart: unless-stopped
-
-  admin-app:
-    build:
-      context: .
-      dockerfile: apps/admin-app/Dockerfile
-    networks: [internal, admin-only]
-    restart: unless-stopped
-
-  landing:
-    build:
-      context: .
-      dockerfile: apps/landing/Dockerfile
-    networks: [internal]
-    restart: unless-stopped
-
   # ─── GATEWAY ─────────────────────────────────────────────────────────────
   # Port 80  → user app (landing + SPA + api-service + auth-service)
   # Port 8080 → admin app (SPA + admin-api-service + admin-auth-service)
