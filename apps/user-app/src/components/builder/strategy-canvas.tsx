@@ -108,9 +108,8 @@ export function StrategyCanvas() {
         <Background
           variant={BackgroundVariant.Dots}
           gap={20}
-          size={1}
-          className="!bg-pf-base"
-          color="color-mix(in srgb, var(--color-pf-text) 5%, transparent)"
+          size={1.5}
+          color="#1e293b"
         />
         <Controls
           showInteractive={false}
