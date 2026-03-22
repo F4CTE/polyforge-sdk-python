@@ -605,6 +605,55 @@ UX improvement that reduces friction for new users.
 - **Fee model** — offset gas costs through platform fee (e.g., 0.5% trade fee)
 - **Threshold** — gasless for trades under $100, user pays above
 
+### 8.9 · Advanced Strategy Builder `HIGH PRIORITY`
+
+Extends the strategy builder with import/export, variables UI, logic blocks, calculation blocks, and sub-strategies (strategy composition).
+
+#### 8.9.1 · Strategy Import/Export `LOW EFFORT · HIGH VALUE`
+
+- **Export strategies as `.polyforge` JSON files** — includes name, description, execMode, variables, blocks, and canvas layout
+- **Import via upload or drag-and-drop** onto the strategy builder canvas
+- **Share via link** — encoded URL containing the full strategy definition
+- **Version field** for forward compatibility (schema versioning)
+- **API endpoint** for programmatic export/import — AI agent friendly (`POST /api/v1/strategies/import`, `GET /api/v1/strategies/:id/export`)
+
+#### 8.9.2 · Variables UI `MEDIUM EFFORT · MEDIUM VALUE`
+
+- **Visual variable blocks on the canvas** — purple section color `#A855F7`
+- **Variable definition** — name + expression (using `expr-eval`)
+- **Variables panel** in builder sidebar showing all defined vars
+- **Referenced variables highlighted** in block configs (`$varName` rendered with purple accent)
+- Backend already implemented (`StrategyVariable` + `expr-eval` resolver)
+
+#### 8.9.3 · Logic Blocks `MEDIUM EFFORT · HIGH VALUE`
+
+- **IF/THEN/ELSE** — conditional branching with true/false output ports
+- **AND gate** — all inputs must be true
+- **OR gate** — any input must be true
+- **NOT gate** — inverts boolean
+- **Delay** — wait N seconds/ticks before propagating
+- These blocks have **multiple output ports** (true/false paths)
+
+#### 8.9.4 · Calculation Blocks `MEDIUM EFFORT · MEDIUM VALUE`
+
+- **Math block** — arithmetic expression with named inputs
+- **Aggregation** — moving average, min/max, cumulative sum over N ticks
+- **Comparison** — outputs boolean (>, <, ==, between)
+- These blocks have **typed input/output ports**
+
+#### 8.9.5 · Sub-Strategies (Strategy Composition) `HIGH EFFORT · HIGH VALUE`
+
+- **New "Run Strategy" action block type** — triggers another strategy from within a parent strategy
+- **Three execution modes:**
+  - **Fire-and-forget** — child runs independently
+  - **Managed** — parent controls child lifecycle (start/stop/pause)
+  - **Scoped** — child inherits parent context (variables, state)
+- **`parentStrategyId` field** on Strategy model for lineage tracking
+- **Circular dependency detection** — prevents infinite recursion
+- **Resource limits:** max depth 3, max concurrent sub-strategies 10
+- **P&L attribution** — sub-strategy P&L rolls up to parent
+- **Parent lifecycle propagation** — stopping parent stops all children
+
 ---
 
 ## Phase 8 Priority Matrix
@@ -619,6 +668,7 @@ UX improvement that reduces friction for new users.
 | Mobile App | 🟡 MEDIUM | 🟡 MEDIUM | 🟡 MEDIUM | **P2** |
 | Social Reputation | 🟢 LOW | 🟡 MEDIUM | 🟢 LOW | **P3** |
 | Gasless Trading | 🟢 LOW | 🟡 MEDIUM | 🟢 LOW | **P3** |
+| Advanced Strategy Builder | 🔴 HIGH | 🔴 HIGH | 🟢 LOW (no competitor) | **P0** |
 
 ---
 

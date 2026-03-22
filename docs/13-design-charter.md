@@ -33,6 +33,7 @@
 33. [Custom Scrollbars](#33-custom-scrollbars)
 34. [Market Card Redesign — Polymarket-Style](#34-market-card-redesign--polymarket-style)
 35. [Inline Editable Titles](#35-inline-editable-titles)
+36. [Advanced Strategy Builder — Visual Design (v3.2)](#36-advanced-strategy-builder--visual-design-v32)
 
 ---
 
@@ -1790,6 +1791,83 @@ The strategy builder topbar uses an inline editable title pattern for the strate
 - Static mode: `Inter 600`, `--pf-text-primary`, no visible border
 - Edit mode: `Inter 600`, same font size, subtle `--pf-border-default` border, `--pf-bg-elevated` background
 - Transition between modes is instant (no animation) to feel like native OS rename behavior
+
+---
+
+## 36. Advanced Strategy Builder — Visual Design (v3.2)
+
+### Logic Block Visual Design
+
+Logic blocks have a distinct visual treatment to communicate their control-flow nature.
+
+**IF/THEN/ELSE block:**
+
+- Two output ports instead of one:
+  - **True port** (top-right): `#10B981` (green / `--pf-success`) filled circle
+  - **False port** (bottom-right): `#EF4444` (red / `--pf-danger`) filled circle
+- Block header displays `IF` label in `Inter 600`
+- Block body shows the condition expression in `JetBrains Mono 400`, `--pf-text-secondary`
+- Connection wires from the true port use `stroke: #10B981`; wires from the false port use `stroke: #EF4444`
+
+**AND/OR/NOT gate blocks:**
+
+- Single output port (standard placement)
+- Block header displays the gate icon:
+  - AND: `&` symbol in `JetBrains Mono 700`
+  - OR: `|` symbol in `JetBrains Mono 700`
+  - NOT: `!` symbol in `JetBrains Mono 700`
+- Gate blocks use a compact square aspect ratio (120x80px) instead of the standard block rectangle
+
+**Delay block:**
+
+- Single input, single output
+- Block body displays the delay value in `JetBrains Mono 500` with unit label (e.g., "5s", "10 ticks")
+- A subtle clock icon (`Lucide: Timer`) in the block header
+
+### Variable Block Purple Color
+
+Variable blocks use `#A855F7` as their section color, consistent with section 31 of this charter.
+
+- Section header: `#A855F7` background with white text
+- Block left border: `3px solid #A855F7`
+- `$varName` references in block configs are rendered with `color: #A855F7` and `font-family: 'JetBrains Mono'`
+- The Variables panel in the builder sidebar uses a purple accent dot next to each variable name
+
+### Calculation Block Visual Design
+
+Calculation blocks display their mathematical nature prominently.
+
+- Block body shows the expression or operation type in `JetBrains Mono 400`
+- Input ports are labeled with their expected type:
+  - Number inputs: `--pf-cyan-500` port color
+  - Boolean inputs: `--pf-warning` port color (amber)
+- Output port color matches the output type (number = cyan, boolean = amber)
+- Math block displays the expression (e.g., `$price * $size`) centered in the block body
+- Aggregation block shows the function name and window (e.g., `AVG(10)`)
+- Comparison block shows the operator (e.g., `> 0.5`)
+
+### Import/Export UI Patterns
+
+**Export:**
+
+- Download button in the strategy builder topbar (icon: `Lucide: Download`)
+- Button label: "Export"
+- Clicking triggers a browser download of the `.polyforge` JSON file
+- Filename format: `{strategy-name}.polyforge`
+
+**Import:**
+
+- Import button in the strategy list page header (icon: `Lucide: Upload`)
+- Two import methods:
+  1. **File upload** — clicking the import button opens a file picker filtered to `.polyforge` files
+  2. **Drag-and-drop** — a dashed-border drop zone appears on the strategy builder canvas when a file is dragged over the window
+- Drop zone styling:
+  - Border: `2px dashed var(--pf-cyan-500)` with `border-radius: 12px`
+  - Background: `var(--pf-cyan-glow)` (semi-transparent cyan)
+  - Center text: "Drop .polyforge file to import" in `Inter 500`, `--pf-text-secondary`
+  - Icon: `Lucide: FileUp` at 48px, `--pf-cyan-400`
+- On successful import, a success toast displays the imported strategy name
+- On error (invalid file, schema mismatch), an error toast displays the reason
 
 ---
 

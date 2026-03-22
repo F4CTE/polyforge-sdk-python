@@ -16,6 +16,8 @@
 8. [Code Style & Conventions](#8-code-style--conventions)
 9. [HTTPS and Docker Compose Overlays](#9-https-and-docker-compose-overlays)
 10. [React App Structure (v3.0)](#10-react-app-structure-v30)
+11. [Strategy Export/Import File Format (.polyforge)](#11-strategy-exportimport-file-format-polyforge)
+12. [Logic Blocks vs Regular Blocks](#12-logic-blocks-vs-regular-blocks)
 
 ---
 
@@ -818,6 +820,123 @@ Route protection uses wrapper components instead of Angular route guards:
 ```
 
 Guards redirect to `/login` or `/verify-email` as appropriate.
+
+---
+
+## 11. Strategy Export/Import File Format (.polyforge)
+
+### File Schema
+
+The `.polyforge` file is a JSON document used for strategy import/export. It captures the full strategy definition including canvas layout for visual reconstruction.
+
+```json
+{
+  "version": "1.0",
+  "name": "My Strategy",
+  "description": "Description text",
+  "execMode": "TICK",
+  "tickMs": 1000,
+  "variables": [
+    {
+      "name": "threshold",
+      "expression": "dailyPnl * 0.1"
+    }
+  ],
+  "blocks": [
+    {
+      "id": "uuid-1",
+      "type": "price_crosses_up",
+      "category": "trigger",
+      "config": {
+        "tokenId": "token123",
+        "threshold": "$threshold"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-1",
+      "fromBlockId": "uuid-1",
+      "toBlockId": "uuid-2"
+    }
+  ],
+  "canvasLayout": {
+    "blocks": {
+      "uuid-1": { "x": 100, "y": 200 }
+    },
+    "viewport": { "x": 0, "y": 0, "zoom": 1 }
+  }
+}
+```
+
+**Key rules:**
+
+- The `version` field enables forward compatibility. The importer checks the version and applies migrations if the schema has changed.
+- Block IDs are regenerated on import to avoid collisions with existing strategies.
+- `$varName` references in block configs are preserved as strings and resolved at runtime.
+- The `canvasLayout` is optional. If omitted, the builder applies auto-layout on import.
+
+### API Endpoints
+
+```
+GET  /api/v1/strategies/:id/export   → returns .polyforge JSON (Content-Type: application/json)
+POST /api/v1/strategies/import       → accepts .polyforge JSON body, creates a new strategy
+```
+
+Both endpoints require authentication. The import endpoint creates a new PRIVATE strategy owned by the authenticated user.
+
+---
+
+## 12. Logic Blocks vs Regular Blocks
+
+### Regular Blocks
+
+Standard blocks (safety, trigger, condition, action) have a single output port. They evaluate to a boolean (`fired: true/false`) or produce a side effect (action blocks). Connections flow left-to-right through the section columns: SAFETY → TRIGGERS → CONDITIONS → ACTIONS.
+
+### Logic Blocks
+
+Logic blocks introduce **multiple output ports** and **boolean evaluation** for control flow:
+
+- **IF/THEN/ELSE** has two output ports: `true` and `false`. The block evaluates a condition expression and routes the signal to the corresponding output port.
+- **AND/OR gates** accept multiple input connections and produce a single boolean output.
+- **NOT gate** inverts a single boolean input.
+- **Delay** has one input and one output but introduces a time delay before propagating.
+
+### Evaluation Differences
+
+```
+Regular block evaluation:
+  evaluate(block, ctx) → { fired: boolean, reason: string }
+
+Logic block evaluation:
+  evaluate(block, ctx) → { outputs: { true: boolean, false: boolean }, reason: string }
+```
+
+Logic blocks are evaluated **after** conditions and **before** actions in the pipeline:
+
+1. Variables (expr-eval)
+2. SAFETY blocks
+3. TRIGGERS
+4. CONDITIONS
+5. **LOGIC blocks** (route signals through true/false paths)
+6. ACTIONS (only reached via true-path connections)
+
+### Block Type Registration
+
+Logic blocks use the same registry pattern as regular blocks but implement a `LogicBlockEvaluator` interface instead of `BlockEvaluator`:
+
+```typescript
+// services/strategy-engine/src/blocks/logic/if-then-else.block.ts
+export class IfThenElseEvaluator implements LogicBlockEvaluator<IfThenElseBlock> {
+  async evaluate(block: IfThenElseBlock, ctx: EvalContext): Promise<LogicBlockResult> {
+    const conditionMet = /* evaluate condition expression */;
+    return {
+      outputs: { true: conditionMet, false: !conditionMet },
+      reason: conditionMet ? 'condition met' : 'condition not met',
+    };
+  }
+}
+```
 
 ---
 

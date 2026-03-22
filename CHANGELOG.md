@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Planned — Advanced Strategy Builder (v3.2)
+
+- **Strategy Import/Export** — export strategies as `.polyforge` JSON files; import via upload, drag-and-drop, or encoded URL; API endpoints for programmatic export/import
+- **Variables UI** — visual variable blocks on the canvas (purple `#A855F7`); variable definition panel in builder sidebar; `$varName` highlighting in block configs
+- **Logic Blocks** — IF/THEN/ELSE conditional branching with true/false output ports; AND/OR/NOT gates; Delay block
+- **Calculation Blocks** — Math (arithmetic expressions), Aggregation (moving average, min/max, cumulative sum), Comparison (boolean output); typed input/output ports
+- **Sub-Strategies (Strategy Composition)** — "Run Strategy" action block with fire-and-forget, managed, and scoped modes; `parentStrategyId` lineage; circular dependency detection; resource limits (max depth 3, max concurrent 10); P&L rollup; parent lifecycle propagation
+
+---
+
 ## [3.1.0] — 2026-03-22
 
 ### Design

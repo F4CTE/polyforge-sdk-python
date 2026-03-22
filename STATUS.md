@@ -7,7 +7,53 @@
 
 ## Next Up
 
-Phase 8 competitive features in planning.
+Phase 8 competitive features in planning. v3.2.0 Advanced Strategy Builder in planning.
+
+---
+
+## v3.2.0 — Advanced Strategy Builder (Planned)
+
+### Strategy Import/Export
+
+- [ ] Export strategies as `.polyforge` JSON files (name, description, execMode, variables, blocks, canvas layout)
+- [ ] Import via file upload or drag-and-drop onto canvas
+- [ ] Share via encoded URL
+- [ ] Version field for forward compatibility
+- [ ] API endpoint for programmatic export/import (`GET /strategies/:id/export`, `POST /strategies/import`)
+
+### Variables UI
+
+- [ ] Visual variable blocks on canvas (purple section color `#A855F7`)
+- [ ] Variable definition: name + expression (expr-eval)
+- [ ] Variables panel in builder sidebar
+- [ ] `$varName` highlighted in block configs with purple accent
+- [ ] Connect frontend to existing backend (`StrategyVariable` + expr-eval resolver)
+
+### Logic Blocks
+
+- [ ] IF/THEN/ELSE block — conditional branching with true (green) / false (red) output ports
+- [ ] AND gate — all inputs must be true
+- [ ] OR gate — any input must be true
+- [ ] NOT gate — inverts boolean
+- [ ] Delay block — wait N seconds/ticks before propagating
+- [ ] Logic block evaluator interface (`LogicBlockEvaluator`)
+
+### Calculation Blocks
+
+- [ ] Math block — arithmetic expression with named inputs
+- [ ] Aggregation block — moving average, min/max, cumulative sum over N ticks
+- [ ] Comparison block — outputs boolean (>, <, ==, between)
+- [ ] Typed input/output ports on calculation blocks
+
+### Sub-Strategies (Strategy Composition)
+
+- [ ] "Run Strategy" action block type
+- [ ] Three modes: fire-and-forget, managed, scoped
+- [ ] `parentStrategyId` field on Strategy model
+- [ ] Circular dependency detection
+- [ ] Resource limits: max depth 3, max concurrent 10
+- [ ] P&L attribution: sub-strategy P&L rolls up to parent
+- [ ] Parent lifecycle propagation (stop parent stops children)
 
 ---
 

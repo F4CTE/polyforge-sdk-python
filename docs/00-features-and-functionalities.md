@@ -23,6 +23,8 @@
 14. [User Settings](#14-user-settings)
 15. [Admin Panel](#15-admin-panel)
 16. [Platform Infrastructure](#16-platform-infrastructure)
+17. [Support Ticket System](#17-support-ticket-system)
+18. [Advanced Strategy Builder (v3.2+)](#18-advanced-strategy-builder-v32)
 
 ---
 
@@ -669,6 +671,74 @@ In-app support ticket system allowing users to submit and track support requests
 ### 17.5 Admin Role: SUPPORT
 
 - [x] New `SUPPORT` role in `AdminRole` enum — dedicated support accounts that can access ticket management
+
+---
+
+## 18. Advanced Strategy Builder (v3.2+)
+
+Extends the core strategy builder (section 4) with import/export, a visual variables UI, logic blocks, calculation blocks, and sub-strategy composition.
+
+### 18.1 Strategy Import/Export
+
+- Export any strategy as a `.polyforge` JSON file containing: name, description, execution mode, variables, blocks (with configs), and canvas layout
+- Import a strategy via file upload or drag-and-drop onto the strategy builder canvas
+- Share a strategy via encoded URL (link contains the full strategy definition, base64-encoded)
+- Schema includes a `version` field for forward compatibility
+- API endpoints for programmatic export/import:
+  - `GET /api/v1/strategies/:id/export` — returns the `.polyforge` JSON
+  - `POST /api/v1/strategies/import` — creates a new strategy from the JSON payload
+- The `.polyforge` file format is a JSON document with the following top-level fields: `version`, `name`, `description`, `execMode`, `tickMs`, `variables`, `blocks`, `connections`, `canvasLayout`
+
+### 18.2 Variables UI
+
+- Visual variable blocks rendered on the strategy builder canvas in a dedicated purple section (`#A855F7`)
+- Each variable block defines a name and an expression (evaluated using `expr-eval`)
+- A Variables panel in the builder sidebar lists all defined variables with their current expressions
+- Block config fields that reference a variable (`$varName`) are highlighted with a purple accent
+- Backend support is already implemented: `StrategyVariable` model + `expr-eval` resolver in the strategy-engine evaluation pipeline
+
+### 18.3 Logic Blocks
+
+New block category for control flow logic. Logic blocks differ from standard blocks in that they have **multiple output ports** (true/false paths) instead of a single output.
+
+| Block | Behavior |
+|---|---|
+| `if_then_else` | Conditional branching — evaluates a condition expression and routes to true or false output port |
+| `and_gate` | All connected inputs must be true to output true |
+| `or_gate` | Any connected input being true outputs true |
+| `not_gate` | Inverts the boolean value from its input |
+| `delay` | Waits N seconds or N ticks before propagating the signal to the output port |
+
+Logic blocks are rendered with a distinct visual style: IF/THEN/ELSE blocks show two output ports (green for true, red for false). AND/OR/NOT gates display their logic icon in the block header.
+
+### 18.4 Calculation Blocks
+
+New block category for mathematical operations. Calculation blocks have **typed input/output ports** (number, boolean, or string).
+
+| Block | Behavior |
+|---|---|
+| `math` | Evaluates an arithmetic expression with named inputs (e.g., `$price * $size`) |
+| `aggregation` | Computes moving average, min, max, or cumulative sum over the last N ticks |
+| `comparison` | Outputs a boolean result from a comparison operation (>, <, ==, between) |
+
+Calculation blocks display their expression in the block body and show input/output port types.
+
+### 18.5 Sub-Strategies (Strategy Composition)
+
+Allows strategies to invoke other strategies, enabling modular strategy design.
+
+- **New "Run Strategy" action block** — references another strategy by ID
+- **Three execution modes:**
+  - **Fire-and-forget** — child strategy starts and runs independently
+  - **Managed** — parent controls child lifecycle (start, stop, pause, resume)
+  - **Scoped** — child inherits the parent's context (variables, strategy state)
+- **Data model:** `parentStrategyId` field on the Strategy model tracks lineage
+- **Circular dependency detection** — the engine validates the strategy graph before starting to prevent infinite recursion
+- **Resource limits:**
+  - Maximum nesting depth: 3 levels
+  - Maximum concurrent sub-strategies: 10 per parent
+- **P&L attribution:** sub-strategy P&L rolls up to the parent strategy's total P&L
+- **Lifecycle propagation:** stopping a parent strategy automatically stops all running child strategies
 
 ---
 
