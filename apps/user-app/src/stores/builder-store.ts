@@ -16,6 +16,7 @@ import {
   SECTION_COLUMNS,
   findBlockDef,
 } from '../components/builder/block-definitions';
+import type { VariableNodeData } from '../components/builder/nodes/variable-node';
 
 // ─── Node data shape ─────────────────────────────────────────────────────────
 
@@ -28,6 +29,8 @@ export interface BlockNodeData {
   fields: BlockField[];
   [key: string]: unknown;
 }
+
+export type { VariableNodeData };
 
 // ─── Store types ─────────────────────────────────────────────────────────────
 
@@ -62,6 +65,11 @@ interface BuilderState {
   removeNode: (nodeId: string) => void;
   updateNodeConfig: (nodeId: string, key: string, value: string) => void;
 
+  // Variable actions
+  addVariable: () => void;
+  updateVariable: (nodeId: string, field: 'variableName' | 'expression', value: string) => void;
+  removeVariable: (nodeId: string) => void;
+
   // Metadata actions
   setName: (name: string) => void;
   setDescription: (description: string) => void;
@@ -82,6 +90,8 @@ const SECTION_COLORS: Record<BlockSection, string> = {
   conditions: '#3B82F6',
   actions: '#22C55E',
 };
+
+const VARIABLE_COLUMN_X = 0;
 
 function initialState() {
   return {
@@ -187,6 +197,59 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     });
   },
 
+  // ─── Variable actions ──────────────────────────────────────────────────
+
+  addVariable: () => {
+    const { nodes } = get();
+    const variableNodes = nodes.filter((n) => n.type === 'variableNode');
+
+    // Generate default name: var1, var2, ...
+    let idx = variableNodes.length + 1;
+    const existingNames = new Set(
+      variableNodes.map((n) => (n.data as VariableNodeData).variableName),
+    );
+    while (existingNames.has(`var${idx}`)) idx++;
+
+    const newNode: Node = {
+      id: crypto.randomUUID(),
+      type: 'variableNode',
+      position: {
+        x: VARIABLE_COLUMN_X,
+        y: 100 + variableNodes.length * 160,
+      },
+      data: {
+        variableName: `var${idx}`,
+        expression: '',
+      } satisfies VariableNodeData,
+    };
+
+    set({ nodes: [...nodes, newNode], dirty: true });
+  },
+
+  updateVariable: (nodeId, field, value) => {
+    set({
+      nodes: get().nodes.map((n) =>
+        n.id === nodeId
+          ? {
+              ...n,
+              data: { ...n.data, [field]: value },
+            }
+          : n,
+      ),
+      dirty: true,
+    });
+  },
+
+  removeVariable: (nodeId) => {
+    set({
+      nodes: get().nodes.filter((n) => n.id !== nodeId),
+      edges: get().edges.filter(
+        (e) => e.source !== nodeId && e.target !== nodeId,
+      ),
+      dirty: true,
+    });
+  },
+
   // ─── Metadata setters ───────────────────────────────────────────────────
 
   setName: (name) => set({ name, dirty: true }),
@@ -249,6 +312,29 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         });
       }
 
+      // Restore variable nodes from strategy.variables or canvas.variables
+      const storedVariables = (s.variables ?? canvasLayout?.variables ?? []) as {
+        id?: string;
+        name: string;
+        expression: string;
+      }[];
+      storedVariables.forEach((v, i) => {
+        const varId = v.id || crypto.randomUUID();
+        const storedPos = storedPositions[varId];
+        nodes.push({
+          id: varId,
+          type: 'variableNode',
+          position: {
+            x: storedPos?.x ?? VARIABLE_COLUMN_X,
+            y: storedPos?.y ?? 100 + i * 160,
+          },
+          data: {
+            variableName: v.name,
+            expression: v.expression,
+          } satisfies VariableNodeData,
+        });
+      });
+
       // Restore edges from canvas.connections if present
       const storedConnections = canvasLayout?.connections ?? [];
       const edges: Edge[] = storedConnections.map(
@@ -288,7 +374,9 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
     set({ saving: true });
 
-    const blocks = state.nodes;
+    const blockNodes = state.nodes.filter((n) => n.type === 'blockNode');
+    const variableNodes = state.nodes.filter((n) => n.type === 'variableNode');
+
     const toBlock = (n: Node<BlockNodeData>) => ({
       id: n.id,
       type: (n.data as BlockNodeData).type,
@@ -296,7 +384,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     });
 
     const positions: Record<string, { x: number; y: number }> = {};
-    for (const n of blocks) {
+    for (const n of state.nodes) {
       positions[n.id] = { x: n.position.x, y: n.position.y };
     }
 
@@ -306,28 +394,36 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       target: e.target,
     }));
 
+    // Extract variables from variable nodes
+    const variables = variableNodes.map((n) => ({
+      id: n.id,
+      name: (n.data as VariableNodeData).variableName,
+      expression: (n.data as VariableNodeData).expression,
+    }));
+
     const dto = {
       name: state.name.trim(),
       description: state.description.trim(),
       visibility: state.visibility,
       execMode: state.execMode,
       tickMs: Number(state.tickMs),
-      safety: blocks
+      safety: blockNodes
         .filter((n) => (n.data as BlockNodeData).section === 'safety')
         .map(toBlock),
-      triggers: blocks
+      triggers: blockNodes
         .filter((n) => (n.data as BlockNodeData).section === 'triggers')
         .map(toBlock),
-      conditions: blocks
+      conditions: blockNodes
         .filter((n) => (n.data as BlockNodeData).section === 'conditions')
         .map(toBlock),
-      actions: blocks
+      actions: blockNodes
         .filter((n) => (n.data as BlockNodeData).section === 'actions')
         .map(toBlock),
       tags: state.tags
         .split(',')
         .map((t) => t.trim())
         .filter(Boolean),
+      variables,
       canvas: { positions, connections },
     };
 

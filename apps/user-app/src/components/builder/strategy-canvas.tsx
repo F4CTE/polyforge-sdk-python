@@ -10,6 +10,7 @@ import {
 // Styles imported in globals.css (before our overrides)
 
 import { BlockNode } from './nodes/block-node';
+import { VariableNode } from './nodes/variable-node';
 import { useBuilderStore, type BlockNodeData } from '../../stores/builder-store';
 import { useThemeStore } from '../../stores/theme-store';
 import {
@@ -21,6 +22,7 @@ import {
 
 const nodeTypes = {
   blockNode: BlockNode,
+  variableNode: VariableNode,
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -122,6 +124,7 @@ export function StrategyCanvas() {
         <MiniMap
           position="bottom-right"
           nodeColor={(node) => {
+            if (node.type === 'variableNode') return '#A855F7';
             const data = node.data as BlockNodeData;
             return data?.color ?? '#6B7280';
           }}

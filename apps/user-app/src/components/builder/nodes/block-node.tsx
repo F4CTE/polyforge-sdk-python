@@ -80,13 +80,27 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                 <label className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                   {field.label}
                 </label>
-                <input
-                  type={field.type}
-                  placeholder={field.placeholder}
-                  value={d.config[field.key] ?? ''}
-                  onChange={(e) => onFieldChange(field.key, e.target.value)}
-                  className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
-                />
+                <div className="relative">
+                  <input
+                    type={field.type}
+                    placeholder={field.placeholder}
+                    value={d.config[field.key] ?? ''}
+                    onChange={(e) => onFieldChange(field.key, e.target.value)}
+                    className={`w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors ${
+                      (d.config[field.key] ?? '').startsWith('$')
+                        ? 'text-purple-400 font-mono'
+                        : 'text-pf-text'
+                    }`}
+                  />
+                  {(d.config[field.key] ?? '').startsWith('$') && (
+                    <span
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-purple-400/70 pointer-events-none"
+                      title={`Variable: ${d.config[field.key]}`}
+                    >
+                      var
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>

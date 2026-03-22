@@ -8,6 +8,8 @@ import {
   X,
   ChevronRight,
   Settings2,
+  Variable,
+  Plus,
 } from 'lucide-react';
 import {
   BLOCK_DEFS,
@@ -19,12 +21,17 @@ import { useBuilderStore } from '../../stores/builder-store';
 
 // ─── Section config ──────────────────────────────────────────────────────────
 
-const SECTIONS: { key: BlockSection; icon: React.ReactNode }[] = [
+type PaletteTab = BlockSection | 'variables';
+
+const SECTIONS: { key: PaletteTab; icon: React.ReactNode }[] = [
+  { key: 'variables', icon: <Variable className="size-3" /> },
   { key: 'safety', icon: <Shield className="size-3" /> },
   { key: 'triggers', icon: <Zap className="size-3" /> },
   { key: 'conditions', icon: <Filter className="size-3" /> },
   { key: 'actions', icon: <Play className="size-3" /> },
 ];
+
+const VARIABLE_TAB_META = { label: 'Variables', color: '#A855F7' };
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -34,7 +41,7 @@ interface BlockPaletteProps {
 }
 
 export function BlockPalette({ open, onClose }: BlockPaletteProps) {
-  const [activeSection, setActiveSection] = useState<BlockSection>('safety');
+  const [activeSection, setActiveSection] = useState<PaletteTab>('safety');
 
   const name = useBuilderStore((s) => s.name);
   const description = useBuilderStore((s) => s.description);
@@ -50,10 +57,13 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
   const setVisibility = useBuilderStore((s) => s.setVisibility);
   const setTags = useBuilderStore((s) => s.setTags);
   const addNode = useBuilderStore((s) => s.addNode);
+  const addVariable = useBuilderStore((s) => s.addVariable);
 
   const sectionCount = useCallback(
-    (section: BlockSection) =>
-      nodes.filter((n) => (n.data as any).section === section).length,
+    (section: PaletteTab) =>
+      section === 'variables'
+        ? nodes.filter((n) => n.type === 'variableNode').length
+        : nodes.filter((n) => (n.data as any).section === section).length,
     [nodes],
   );
 
@@ -70,7 +80,9 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
 
   const onBlockClick = useCallback(
     (def: BlockDef) => {
-      addNode(def, activeSection);
+      if (activeSection !== 'variables') {
+        addNode(def, activeSection);
+      }
     },
     [addNode, activeSection],
   );
@@ -190,7 +202,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           {/* Section tabs */}
           <div className="flex gap-1 mb-3 overflow-x-auto scrollbar-none">
             {SECTIONS.map(({ key, icon }) => {
-              const meta = SECTION_META[key];
+              const meta = key === 'variables' ? VARIABLE_TAB_META : SECTION_META[key as BlockSection];
               const count = sectionCount(key);
               const isActive = activeSection === key;
               return (
@@ -222,29 +234,51 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
             })}
           </div>
 
-          {/* Block list */}
-          <div className="space-y-1">
-            {BLOCK_DEFS[activeSection].map((def) => (
-              <div
-                key={def.type}
-                draggable
-                onDragStart={(e) => onDragStart(e, def, activeSection)}
-                onClick={() => onBlockClick(def)}
-                className="group flex items-start gap-2 px-2.5 py-2 rounded-pf-sm cursor-pointer hover:bg-pf-overlay/60 transition-colors border border-transparent hover:border-pf-border-subtle"
+          {/* Block list or Variables panel */}
+          {activeSection === 'variables' ? (
+            <div className="space-y-3">
+              <p className="text-[10px] text-pf-text-muted leading-snug">
+                Variables let you define reusable expressions. Reference them
+                in block fields with <code className="text-purple-400 font-mono">$varName</code>.
+              </p>
+              <button
+                onClick={addVariable}
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-pf-sm text-xs font-medium text-white transition-colors hover:opacity-90"
+                style={{ backgroundColor: '#A855F7' }}
               >
-                <GripVertical className="size-3 text-pf-text-muted/40 mt-0.5 shrink-0 cursor-grab group-hover:text-pf-text-muted" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-pf-text">{def.label}</span>
-                    <ChevronRight className="size-3 text-pf-text-muted/0 group-hover:text-pf-text-muted/60 transition-all" />
+                <Plus className="size-3.5" />
+                Add Variable
+              </button>
+              {sectionCount('variables') > 0 && (
+                <p className="text-[10px] text-pf-text-muted">
+                  {sectionCount('variables')} variable{sectionCount('variables') !== 1 ? 's' : ''} on canvas
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {BLOCK_DEFS[activeSection as BlockSection].map((def) => (
+                <div
+                  key={def.type}
+                  draggable
+                  onDragStart={(e) => onDragStart(e, def, activeSection as BlockSection)}
+                  onClick={() => onBlockClick(def)}
+                  className="group flex items-start gap-2 px-2.5 py-2 rounded-pf-sm cursor-pointer hover:bg-pf-overlay/60 transition-colors border border-transparent hover:border-pf-border-subtle"
+                >
+                  <GripVertical className="size-3 text-pf-text-muted/40 mt-0.5 shrink-0 cursor-grab group-hover:text-pf-text-muted" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-pf-text">{def.label}</span>
+                      <ChevronRight className="size-3 text-pf-text-muted/0 group-hover:text-pf-text-muted/60 transition-all" />
+                    </div>
+                    <p className="text-[10px] text-pf-text-muted leading-snug mt-0.5">
+                      {def.description}
+                    </p>
                   </div>
-                  <p className="text-[10px] text-pf-text-muted leading-snug mt-0.5">
-                    {def.description}
-                  </p>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
