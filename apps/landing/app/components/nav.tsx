@@ -46,25 +46,25 @@ export function Nav() {
         <div className="hidden md:flex gap-6 mr-auto">
           <a
             href="#features"
-            className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+            className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors duration-150"
           >
             Features
           </a>
           <a
             href="#how-it-works"
-            className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+            className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors duration-150"
           >
             How it works
           </a>
           <a
             href="/terms"
-            className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+            className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors duration-150"
           >
             Terms
           </a>
           <a
             href="/privacy"
-            className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+            className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors duration-150"
           >
             Privacy
           </a>
@@ -79,7 +79,7 @@ export function Nav() {
           </a>
           <a
             href="/register"
-            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
+            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5"
           >
             Get early access
           </a>
@@ -131,7 +131,7 @@ export function Nav() {
           </a>
           <a
             href="/register"
-            className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
+            className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5"
           >
             Get early access
           </a>

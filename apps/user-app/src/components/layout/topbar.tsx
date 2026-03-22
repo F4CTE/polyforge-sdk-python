@@ -68,7 +68,7 @@ export function Topbar() {
         </button>
 
         {notifOpen && (
-          <div className="absolute right-0 top-12 w-80 bg-pf-elevated border border-pf-border rounded-pf shadow-xl z-50">
+          <div className="animate-slide-up absolute right-0 top-12 w-80 bg-pf-elevated border border-pf-border rounded-pf shadow-xl z-50">
             <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border">
               <strong className="text-sm text-pf-text">Notifications</strong>
               <button
@@ -146,7 +146,7 @@ export function Topbar() {
         </button>
 
         {menuOpen && (
-          <div className="absolute right-0 top-12 w-48 bg-pf-elevated border border-pf-border rounded-pf shadow-xl z-50 py-1">
+          <div className="animate-slide-up absolute right-0 top-12 w-48 bg-pf-elevated border border-pf-border rounded-pf shadow-xl z-50 py-1">
             <button
               onClick={() => {
                 setMenuOpen(false);

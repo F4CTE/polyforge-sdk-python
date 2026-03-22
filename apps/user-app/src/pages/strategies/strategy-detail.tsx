@@ -181,7 +181,7 @@ export function Component() {
   const pnl = strategy?.totalPnl ?? null;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">
       {/* Back */}
       <Link
         to="/strategies"
@@ -234,7 +234,7 @@ export function Component() {
               <div className="flex items-center gap-3 mb-1.5">
                 <h1 className="text-xl font-semibold text-pf-text">{strategy.name}</h1>
                 <span data-testid="status-badge" className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot} ${isActive(status) ? 'animate-pulse' : ''}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot} ${isActive(status) ? 'animate-pulse-dot' : ''}`} />
                   {status}
                 </span>
               </div>
@@ -394,7 +394,7 @@ export function Component() {
                 <span className="text-sm font-medium text-pf-text">Live Events</span>
                 {isActive(status) && (
                   <span className="flex items-center gap-1.5 text-xs text-pf-cyan-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-pf-cyan-400 animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-pf-cyan-400 animate-pulse-dot" />
                     Live
                   </span>
                 )}

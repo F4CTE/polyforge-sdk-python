@@ -161,7 +161,7 @@ export function Component() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-8">
+    <div className="animate-fade-in p-6 max-w-4xl mx-auto space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-pf-text mb-1">API Documentation</h1>

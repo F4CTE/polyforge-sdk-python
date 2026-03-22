@@ -80,7 +80,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
         <button
           type="submit"
           disabled={status === 'loading'}
-          className="inline-flex items-center justify-center font-semibold text-[15px] px-6 py-3 rounded-pf-md bg-pf-cyan-500 text-black cursor-pointer transition-colors hover:bg-pf-cyan-400 disabled:opacity-60 whitespace-nowrap"
+          className="inline-flex items-center justify-center font-semibold text-[15px] px-6 py-3 rounded-pf-md bg-pf-cyan-500 text-black cursor-pointer transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 disabled:opacity-60 whitespace-nowrap"
         >
           <span>Request access</span>
           {status === 'loading' && (

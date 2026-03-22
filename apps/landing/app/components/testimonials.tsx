@@ -38,11 +38,11 @@ export function Testimonials() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6 stagger-children">
           {testimonials.map((t) => (
             <div
               key={t.name}
-              className="bg-pf-base border border-pf-border-subtle rounded-pf-lg p-8 transition-all duration-250 hover:border-pf-cyan-500/20 hover:-translate-y-0.5"
+              className="animate-fade-in bg-pf-base border border-pf-border-subtle rounded-pf-lg p-8 transition-all duration-200 hover:border-pf-cyan-500/20 hover:-translate-y-0.5"
             >
               <div
                 className="text-5xl font-extrabold leading-none text-pf-cyan-500/15 -mb-2 font-serif"

@@ -47,7 +47,7 @@ export function Component() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="animate-fade-in space-y-4">
       <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Logs</h2>
 
       {/* Tabs */}

@@ -216,7 +216,7 @@ export function Features() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5 stagger-children">
           {features.map((feature) => (
             <article
               key={feature.title}

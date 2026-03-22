@@ -100,7 +100,7 @@ export function Component() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-pf-text">Orders</h1>
@@ -238,7 +238,7 @@ export function Component() {
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-end" role="dialog" aria-modal="true" aria-label="Order Details">
           <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedOrder(null)} />
-          <div className="relative w-full max-w-md h-full bg-pf-surface border-l border-pf-border overflow-y-auto">
+          <div className="animate-slide-right relative w-full max-w-md h-full bg-pf-surface border-l border-pf-border overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-pf-border-subtle">
               <h2 className="text-lg font-semibold text-pf-text">Order Details</h2>
               <button onClick={() => setSelectedOrder(null)} className="text-pf-text-muted hover:text-pf-text transition-colors">

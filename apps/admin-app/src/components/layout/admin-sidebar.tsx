@@ -149,7 +149,7 @@ export function AdminSidebar({ collapsed, onToggle }: Props) {
                   to={item.path}
                   title={collapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    `flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors ${
+                    `flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors duration-150 ${
                       isActive
                         ? 'bg-[var(--color-pf-cyan-500)]/10 text-[var(--color-pf-cyan-500)] font-medium'
                         : 'text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] hover:text-[var(--color-pf-text)]'

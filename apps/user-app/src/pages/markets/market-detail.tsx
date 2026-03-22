@@ -272,7 +272,7 @@ export function Component() {
   const days = market ? daysUntil(market.endDate) : 0;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Back */}
       <Link
         to="/markets"
@@ -536,7 +536,7 @@ export function Component() {
           {/* Run Strategy Dialog */}
           {showRunStrategy && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Run Strategy">
-              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg w-full max-w-md p-6 shadow-pf-lg">
+              <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg w-full max-w-md p-6 shadow-pf-lg">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-semibold text-pf-text">Run Strategy on This Market</h2>
                   <button

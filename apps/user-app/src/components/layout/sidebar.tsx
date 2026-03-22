@@ -111,7 +111,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   to={item.route}
                   title={collapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors ${
+                    `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 ${
                       isActive
                         ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
                         : 'text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text'
@@ -131,7 +131,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="border-t border-pf-border px-2 py-2 space-y-0.5">
         <button
           onClick={onToggle}
-          className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text w-full"
+          className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text w-full"
           aria-label="Toggle sidebar"
         >
           {collapsed ? (
@@ -144,7 +144,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <NavLink
           to="/settings"
           className={({ isActive }) =>
-            `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors ${
+            `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 ${
               isActive
                 ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
                 : 'text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text'

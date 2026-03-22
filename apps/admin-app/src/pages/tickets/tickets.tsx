@@ -39,7 +39,7 @@ export function Component() {
   }, [load]);
 
   return (
-    <div className="space-y-4">
+    <div className="animate-fade-in space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">
           Tickets <span className="text-sm font-normal text-[var(--color-pf-text-tertiary)]">({total})</span>

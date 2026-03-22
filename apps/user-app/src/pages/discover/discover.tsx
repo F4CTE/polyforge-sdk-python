@@ -66,7 +66,7 @@ function formatDate(d: string): string {
 
 function CardSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-pulse">
+    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
       <div className="h-3.5 bg-pf-overlay rounded w-[60%]" />
       <div className="h-2.5 bg-pf-overlay rounded w-[90%]" />
       <div className="h-2.5 bg-pf-overlay rounded w-[75%]" />
@@ -110,7 +110,7 @@ export function Component() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-pf-text">Discover</h1>
@@ -146,14 +146,14 @@ export function Component() {
           <p className="text-sm text-pf-text-muted mt-1">Be the first to publish a public strategy.</p>
         </div>
       ) : (
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${loading ? 'opacity-60' : ''}`}>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children ${loading ? 'opacity-60' : ''}`}>
           {strategies.map(s => {
             const pnl = mockPnl(s);
             return (
               <Link
                 key={s.id}
                 to={`/strategies/${s.id}`}
-                className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 hover:border-pf-border-strong hover:shadow-pf-md transition-all"
+                className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-0.5"
               >
                 {/* Author row */}
                 <div className="flex items-center gap-2 mb-3">

@@ -104,7 +104,7 @@ export function Component() {
   const messages = ticket.messages ?? [];
 
   return (
-    <div className="space-y-6">
+    <div className="animate-fade-in space-y-6">
       {/* Back */}
       <button
         onClick={() => navigate('/tickets')}

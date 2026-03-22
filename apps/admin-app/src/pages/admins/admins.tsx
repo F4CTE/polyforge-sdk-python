@@ -131,7 +131,7 @@ export function Component() {
     role === 'SUPER_ADMIN' ? 'Super Admin' : role === 'ADMIN' ? 'Admin' : 'Viewer';
 
   return (
-    <div className="space-y-4">
+    <div className="animate-fade-in space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Admin Accounts</h2>
         <button
@@ -224,7 +224,7 @@ export function Component() {
       {/* Add/Edit Dialog */}
       {dialogMode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="admin-dialog-title">
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 w-full max-w-md mx-4">
+          <div className="animate-scale-in bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
               <h3 id="admin-dialog-title" className="text-base font-semibold text-[var(--color-pf-text)]">
                 {dialogMode === 'add' ? 'Add Admin' : 'Edit Admin'}
@@ -307,7 +307,7 @@ export function Component() {
       {/* Delete Confirmation Dialog */}
       {deleteConfirmId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="deactivate-dialog-title">
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 w-full max-w-sm mx-4">
+          <div className="animate-scale-in bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 w-full max-w-sm mx-4">
             <h3 id="deactivate-dialog-title" className="text-base font-semibold text-[var(--color-pf-text)] mb-2">
               Deactivate Admin
             </h3>

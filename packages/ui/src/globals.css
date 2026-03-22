@@ -80,6 +80,78 @@ body {
 }
 
 /* Light theme overrides */
+/* ─── Animations ───────────────────────────────────────────── */
+
+/* Page transition */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scale in (for modals, popovers) */
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Slide in from right (panels, drawers) */
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Slide in from left */
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Slide up (toasts, dropdowns) */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Pulse (live indicators) */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Utility classes */
+.animate-fade-in { animation: fade-in 0.3s ease-out both; }
+.animate-scale-in { animation: scale-in 0.2s ease-out both; }
+.animate-slide-right { animation: slide-in-right 0.3s ease-out both; }
+.animate-slide-left { animation: slide-in-left 0.3s ease-out both; }
+.animate-slide-up { animation: slide-up 0.2s ease-out both; }
+.animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 25%, var(--color-pf-overlay) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Stagger children */
+.stagger-children > * { animation: fade-in 0.3s ease-out both; }
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+
+/* Transition utilities */
+.transition-smooth { transition: all 0.2s ease; }
+
+/* Light theme overrides */
 .light {
   --color-pf-base: #ffffff;
   --color-pf-surface: #f8fafc;

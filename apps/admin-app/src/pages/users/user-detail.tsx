@@ -98,7 +98,7 @@ export function Component() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="animate-fade-in space-y-6">
       {/* Back */}
       <button
         onClick={() => navigate('/users')}

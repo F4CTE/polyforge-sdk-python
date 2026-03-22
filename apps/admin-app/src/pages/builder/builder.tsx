@@ -45,7 +45,7 @@ export function Component() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="animate-fade-in space-y-6">
       <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Builder Program</h2>
 
       {/* Stats Cards */}

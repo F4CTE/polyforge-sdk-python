@@ -130,7 +130,7 @@ function strategyCount(market: Market): number {
 
 function CardSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-pulse">
+    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
       <div className="flex items-start gap-3">
         <div className="w-12 h-12 rounded-pf-md bg-pf-overlay shrink-0" />
         <div className="flex-1 space-y-2">
@@ -156,7 +156,7 @@ function MarketCard({ market, featured }: { market: Market; featured?: boolean }
   return (
     <Link
       to={`/markets/${market.id}`}
-      className={`group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 hover:border-pf-border-strong hover:shadow-pf-md transition-all ${featured ? 'ring-1 ring-pf-cyan-500/20' : ''}`}
+      className={`group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-0.5 ${featured ? 'ring-1 ring-pf-cyan-500/20' : ''}`}
     >
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
@@ -317,7 +317,7 @@ export function Component() {
   const grid = filtered.slice(3);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-pf-text">Markets</h1>
@@ -423,13 +423,13 @@ export function Component() {
             <>
               {/* Featured */}
               {featured.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 stagger-children">
                   {featured.map((m) => <MarketCard key={m.id} market={m} featured />)}
                 </div>
               )}
               {/* Grid */}
               {grid.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 stagger-children">
                   {grid.map((m) => <MarketCard key={m.id} market={m} />)}
                 </div>
               )}

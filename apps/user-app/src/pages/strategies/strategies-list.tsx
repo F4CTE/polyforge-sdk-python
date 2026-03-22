@@ -102,7 +102,7 @@ function formatDate(dateStr: string): string {
 
 function CardSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 space-y-3 animate-pulse">
+    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 space-y-3 animate-shimmer">
       <div className="h-5 bg-pf-overlay rounded w-[60%]" />
       <div className="h-3 bg-pf-overlay rounded w-[40%]" />
       <div className="h-3 bg-pf-overlay rounded w-[80%]" />
@@ -170,7 +170,7 @@ export function Component() {
   function isIdle(s: Strategy) { return s.status === 'IDLE' || s.status === 'ERROR'; }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-pf-text">My Strategies</h1>
@@ -223,7 +223,7 @@ export function Component() {
 
       {/* Strategy grid */}
       {!loading && strategies.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
           {strategies.map((strategy) => {
             const statusStyle = STATUS_STYLES[strategy.status] ?? STATUS_STYLES.IDLE;
             const pnl = strategy.totalPnl ?? null;
@@ -237,7 +237,7 @@ export function Component() {
                 tabIndex={0}
                 onClick={() => navigate(`/strategies/${strategy.id}`)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/strategies/${strategy.id}`); }}
-                className="group bg-pf-elevated border border-pf-border rounded-pf-lg p-5 cursor-pointer hover:border-pf-border-strong hover:shadow-pf-md transition-all"
+                className="group bg-pf-elevated border border-pf-border rounded-pf-lg p-5 cursor-pointer transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-0.5"
               >
                 {/* Name + status */}
                 <div className="flex items-start justify-between gap-3 mb-2">
@@ -245,7 +245,7 @@ export function Component() {
                     {strategy.name}
                   </h3>
                   <span data-testid="status-badge" className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot} ${isActive(strategy) ? 'animate-pulse' : ''}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot} ${isActive(strategy) ? 'animate-pulse-dot' : ''}`} />
                     {strategy.status}
                   </span>
                 </div>
