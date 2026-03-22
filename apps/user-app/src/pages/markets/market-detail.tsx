@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
+import { toast } from 'sonner';
 import {
   ArrowLeft,
   Play,
@@ -180,7 +181,7 @@ export function Component() {
         setMarket(m);
         setLoadingMarket(false);
       })
-      .catch(() => setLoadingMarket(false));
+      .catch(() => { toast.error('Failed to load market'); setLoadingMarket(false); });
   }, [id]);
 
   // Load chart
@@ -209,7 +210,7 @@ export function Component() {
           );
           setLoadingChart(false);
         })
-        .catch(() => setLoadingChart(false));
+        .catch(() => { toast.error('Failed to load chart data'); setLoadingChart(false); });
     },
     [],
   );
@@ -223,7 +224,7 @@ export function Component() {
         setOrderBook(b);
         setLoadingBook(false);
       })
-      .catch(() => setLoadingBook(false));
+      .catch(() => { toast.error('Failed to load order book'); setLoadingBook(false); });
   }, []);
 
   // When market loads, fetch chart + book
@@ -251,7 +252,7 @@ export function Component() {
       .then((res: { data: { id: string; name: string }[] }) => {
         setStrategyOptions(res.data.map((s) => ({ id: s.id, name: s.name })));
       })
-      .catch(() => {});
+      .catch(() => { toast.error('Failed to load strategies'); });
   }, [showRunStrategy]);
 
   function onStartStrategy() {
@@ -313,7 +314,7 @@ export function Component() {
                   </span>
                 )}
               </div>
-              <h1 className="text-xl font-semibold text-pf-text leading-snug">
+              <h1 className="text-2xl font-semibold text-pf-text leading-snug">
                 {market.title}
               </h1>
               <p className="text-sm text-pf-text-secondary">
@@ -541,6 +542,7 @@ export function Component() {
                   <h2 className="text-base font-semibold text-pf-text">Run Strategy on This Market</h2>
                   <button
                     onClick={() => setShowRunStrategy(false)}
+                    aria-label="Close dialog"
                     className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
                   >
                     <X className="size-4" />

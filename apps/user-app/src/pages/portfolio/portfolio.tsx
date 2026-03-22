@@ -178,7 +178,7 @@ export function Component() {
         body: JSON.stringify({ tokenId: pos.tokenId }),
       });
       if (res.ok) loadPortfolio();
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to close position'); }
     setClosingPosition(prev => ({ ...prev, [pos.id]: false }));
   }
 
@@ -188,7 +188,7 @@ export function Component() {
     try {
       const res = await fetch('/api/v1/paper/reset', { method: 'POST', credentials: 'include' });
       if (res.ok) setPaper({ pnl: '0', positions: [], orderCount: 0 });
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to reset paper account'); }
     setResettingPaper(false);
   }
 
@@ -198,7 +198,10 @@ export function Component() {
     pnl: parseFloat(s.pnl),
   })) ?? [];
   const isProfitable = parseFloat(pnl?.totalPnl ?? '0') >= 0;
-  const chartColor = isProfitable ? '#10B981' : '#EF4444';
+  const chartColorResolved = isProfitable
+    ? (styles?.getPropertyValue('--color-pf-success').trim() || '#10B981')
+    : (styles?.getPropertyValue('--color-pf-danger').trim() || '#EF4444');
+  const chartColor = chartColorResolved;
 
   return (
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">

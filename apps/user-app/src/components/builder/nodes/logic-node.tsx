@@ -25,10 +25,10 @@ const LOGIC_SYMBOLS: Record<string, string> = {
 };
 
 const LOGIC_COLORS: Record<string, string> = {
-  IF_THEN_ELSE: '#F59E0B', // amber
-  AND_GATE: '#3B82F6',     // blue
-  OR_GATE: '#3B82F6',      // blue
-  NOT_GATE: '#3B82F6',     // blue
+  IF_THEN_ELSE: 'var(--color-pf-warning)', // amber
+  AND_GATE: 'var(--color-pf-info)',     // blue
+  OR_GATE: 'var(--color-pf-info)',      // blue
+  NOT_GATE: 'var(--color-pf-info)',     // blue
   DELAY: '#6B7280',        // gray
 };
 
@@ -125,6 +125,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           <button
             onClick={onDelete}
             className="p-0.5 rounded hover:bg-white/20 transition-colors"
+            aria-label="Remove block"
             title="Remove block"
           >
             <X className="size-3" />

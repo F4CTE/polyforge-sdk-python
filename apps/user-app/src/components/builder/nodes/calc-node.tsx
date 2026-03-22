@@ -8,7 +8,7 @@ type CalcNode = Node<CalcNodeData, 'calcNode'>;
 
 // ─── Type-specific config ───────────────────────────────────────────────────
 
-const CALC_COLOR = '#10B981';
+const CALC_COLOR = 'var(--color-pf-success)';
 
 const CALC_ICONS: Record<string, React.ReactNode> = {
   MATH: <Calculator className="size-3" />,
@@ -224,6 +224,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           <button
             onClick={onDelete}
             className="p-0.5 rounded hover:bg-white/20 transition-colors"
+            aria-label="Remove block"
             title="Remove block"
           >
             <X className="size-3" />

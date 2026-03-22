@@ -35,7 +35,7 @@ const SECTIONS: { key: PaletteTab; icon: React.ReactNode }[] = [
   { key: 'actions', icon: <Play className="size-3" /> },
 ];
 
-const VARIABLE_TAB_META = { label: 'Variables', color: '#A855F7' };
+const VARIABLE_TAB_META = { label: 'Variables', color: 'var(--color-pf-purple-500)' };
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -109,6 +109,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
         </div>
         <button
           onClick={onClose}
+          aria-label="Close panel"
           className="p-1 rounded hover:bg-pf-overlay text-pf-text-muted hover:text-pf-text transition-colors"
         >
           <X className="size-4" />
@@ -256,7 +257,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               <button
                 onClick={addVariable}
                 className="flex items-center gap-2 w-full px-3 py-2 rounded-pf-sm text-xs font-medium text-white transition-colors hover:opacity-90"
-                style={{ backgroundColor: '#A855F7' }}
+                style={{ backgroundColor: 'var(--color-pf-purple-500)' }}
               >
                 <Plus className="size-3.5" />
                 Add Variable

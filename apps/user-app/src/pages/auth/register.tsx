@@ -101,7 +101,7 @@ export function Component() {
     }
   }
 
-  const inputClass = 'w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-lg text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors';
+  const inputClass = 'w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors';
 
   return (
     <div
@@ -117,17 +117,17 @@ export function Component() {
               <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="currentColor"/>
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold mt-4 bg-gradient-to-r from-cyan-400 to-cyan-200 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-semibold mt-4 bg-gradient-to-r from-pf-cyan-400 to-pf-cyan-300 bg-clip-text text-transparent">
             Create your account
           </h1>
           <p className="text-pf-text-muted text-sm mt-1">Start trading on autopilot</p>
         </div>
 
         {/* Card */}
-        <div className="bg-pf-elevated border border-pf-border rounded-xl p-8 shadow-lg shadow-black/20">
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg">
 
           {error && (
-            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg px-4 py-3 mb-4 text-sm">
+            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-pf px-4 py-3 mb-4 text-sm">
               <AlertCircle className="size-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -253,7 +253,7 @@ export function Component() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-pf-cyan-500 text-pf-base font-semibold rounded-lg hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Creating account...' : 'Create account'}
             </button>

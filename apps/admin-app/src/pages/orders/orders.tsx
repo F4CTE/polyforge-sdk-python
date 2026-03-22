@@ -88,7 +88,7 @@ export function Component() {
             {dlqEntries.map((entry) => (
               <div
                 key={entry.intentId}
-                className="flex items-center justify-between p-3 rounded-md bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)]"
+                className="flex items-center justify-between p-3 rounded-pf-sm bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)]"
               >
                 <div className="min-w-0">
                   <div className="text-sm text-[var(--color-pf-text)]">

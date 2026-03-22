@@ -4,6 +4,7 @@ import {
   ArrowLeft, Link2, Unlink, CheckCircle, XCircle, Loader2,
   Copy, QrCode, Eye, EyeOff,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuthStore } from '../../stores/auth-store';
 
 /* ─── Component ──────────────────────────────────────────────────────── */
@@ -51,7 +52,7 @@ export function Component() {
         setApiPassphrase('');
         setSafeAddress('');
       }
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to import credentials'); }
     setImporting(false);
   }
 
@@ -62,7 +63,7 @@ export function Component() {
     try {
       const res = await fetch('/auth/v1/credentials', { method: 'DELETE', credentials: 'include' });
       if (res.ok) patchUser({ polymarketConnected: false });
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to disconnect account'); }
     setDeleting(false);
   }
 
@@ -76,7 +77,7 @@ export function Component() {
         setBotCode(data.code);
         setBotCodeExpiry(data.expiresAt);
       }
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to generate bot code'); }
     setBotCodeLoading(false);
   }
 
@@ -87,7 +88,7 @@ export function Component() {
   const canImport = privateKey && apiKey && apiSecret && apiPassphrase && !importing;
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
+    <div className="animate-fade-in p-6 max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

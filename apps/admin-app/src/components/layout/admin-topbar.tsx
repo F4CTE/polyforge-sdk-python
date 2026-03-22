@@ -49,7 +49,7 @@ export function AdminTopbar() {
       <div className="flex items-center gap-3">
         <button
           onClick={toggle}
-          className="p-2 rounded-md hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] transition-colors"
+          className="p-2 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] transition-colors"
           aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
@@ -71,7 +71,7 @@ export function AdminTopbar() {
 
         <button
           onClick={logout}
-          className="p-2 rounded-md hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:text-red-400 transition-colors"
+          className="p-2 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:text-red-400 transition-colors"
           aria-label="Logout"
         >
           <LogOut size={16} />

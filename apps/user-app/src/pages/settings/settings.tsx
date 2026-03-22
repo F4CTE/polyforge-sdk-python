@@ -190,7 +190,7 @@ export function Component() {
         credentials: 'include',
         body: JSON.stringify(notifPrefs),
       });
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to save notification preferences'); }
     setNotifSaving(false);
   }
 
@@ -200,7 +200,7 @@ export function Component() {
     try {
       const res = await fetch('/api/v1/api-keys', { credentials: 'include' });
       if (res.ok) setApiKeys(await res.json());
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to load API keys'); }
     setApiKeysLoading(false);
   }
 
@@ -228,7 +228,7 @@ export function Component() {
         setNewKeyScopes({ read: true, write: false, trade: false });
         setNewKeyExpiration('');
       }
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to create API key'); }
     setApiKeysCreating(false);
   }
 
@@ -237,7 +237,7 @@ export function Component() {
     try {
       const res = await fetch(`/api/v1/api-keys/${id}`, { method: 'DELETE', credentials: 'include' });
       if (res.ok) setApiKeys(prev => prev.map(k => k.id === id ? { ...k, revoked: true } : k));
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to revoke API key'); }
   }
 
   function copyKey(key: string) {
@@ -295,7 +295,7 @@ export function Component() {
           </div>
           <div className="flex justify-end">
             <button onClick={saveProfile} disabled={profileSaving}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors">
               {profileSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Save Profile
             </button>
@@ -325,7 +325,7 @@ export function Component() {
           ))}
           <div className="flex justify-end pt-4">
             <button onClick={saveNotifications} disabled={notifSaving}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors">
               {notifSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Save Preferences
             </button>
@@ -367,7 +367,7 @@ export function Component() {
           </div>
           <div className="flex justify-end">
             <button onClick={savePassword} disabled={pwSaving || !currentPassword || !newPassword || newPassword !== confirmPassword}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors">
               {pwSaving ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}
               Change Password
             </button>
@@ -418,7 +418,7 @@ export function Component() {
                 </div>
               )}
               <button onClick={confirmTotp} disabled={totpSaving || !totpCode}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
+                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors">
                 {totpSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                 Confirm & Enable 2FA
               </button>
@@ -468,7 +468,7 @@ export function Component() {
                 className="w-full max-w-[220px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
             <button onClick={createApiKey} disabled={apiKeysCreating || !newKeyName.trim()}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors">
               {apiKeysCreating ? <Loader2 className="size-4 animate-spin" /> : <Key className="size-4" />}
               Generate API Key
             </button>
@@ -496,9 +496,16 @@ export function Component() {
           <div className="border-t border-pf-border-subtle pt-6">
             <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider mb-4">Your API Keys</h2>
             {apiKeysLoading ? (
-              <p className="text-sm text-pf-text-muted">Loading...</p>
+              <div className="space-y-2">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-10 bg-pf-overlay rounded animate-pulse" />
+                ))}
+              </div>
             ) : apiKeys.length === 0 ? (
-              <p className="text-sm text-pf-text-muted">No API keys yet. Generate one to get started.</p>
+              <div className="flex flex-col items-center py-6 text-center">
+                <Key className="size-8 text-pf-text-muted mb-2" />
+                <p className="text-sm text-pf-text-muted">No API keys yet. Generate one to get started.</p>
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

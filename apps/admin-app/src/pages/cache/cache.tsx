@@ -61,7 +61,7 @@ export function Component() {
         <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Cache</h2>
         <button
           onClick={loadStats}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors"
         >
           <RefreshCw size={14} />
           Refresh
@@ -104,12 +104,12 @@ export function Component() {
             value={pattern}
             onChange={(e) => setPattern(e.target.value)}
             placeholder="e.g. user:*, strategy:abc*"
-            className="flex-1 px-3 py-2 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] font-mono"
+            className="flex-1 px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] font-mono"
           />
           <button
             onClick={handleFlush}
             disabled={flushing || !pattern.trim()}
-            className="px-4 py-2 text-sm rounded-md bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm rounded-pf-sm bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {flushing ? 'Flushing...' : 'Flush'}
           </button>

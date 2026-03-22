@@ -192,7 +192,7 @@ export function Component() {
             <button
               onClick={submit}
               disabled={!canSubmit}
-              className="w-full h-9 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="w-full h-9 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {submitting ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
               Run Backtest

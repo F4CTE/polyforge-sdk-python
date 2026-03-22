@@ -29,7 +29,7 @@ export function AppLayout() {
         <div className="flex items-center">
           <button
             onClick={() => setMobileOpen(true)}
-            className="p-2 ml-2 rounded-md text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors md:hidden"
+            className="p-2 ml-2 rounded-pf-sm text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors md:hidden"
             aria-label="Open menu"
           >
             <Menu size={20} />

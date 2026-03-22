@@ -77,8 +77,15 @@ export function Component() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-sm text-[var(--color-pf-text-secondary)]">Loading user...</div>
+      <div className="animate-pulse space-y-6">
+        <div className="h-4 bg-[var(--color-pf-elevated)] rounded w-32" />
+        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 space-y-4">
+          <div className="h-5 bg-[var(--color-pf-bg)] rounded w-48" />
+          <div className="h-4 bg-[var(--color-pf-bg)] rounded w-64" />
+          <div className="grid grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => <div key={i} className="h-12 bg-[var(--color-pf-bg)] rounded" />)}
+          </div>
+        </div>
       </div>
     );
   }
@@ -178,7 +185,7 @@ export function Component() {
             <button
               onClick={handleUnsuspend}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50 transition-colors"
             >
               <CheckCircle size={14} />
               Unsuspend
@@ -187,7 +194,7 @@ export function Component() {
             <button
               onClick={() => setShowSuspendDialog(true)}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-50 transition-colors"
             >
               <Ban size={14} />
               Suspend
@@ -197,26 +204,26 @@ export function Component() {
 
         {/* Suspend Dialog */}
         {showSuspendDialog && (
-          <div className="mt-4 p-4 rounded-md border border-red-500/20 bg-red-500/5">
+          <div className="mt-4 p-4 rounded-pf-sm border border-red-500/20 bg-red-500/5">
             <h4 className="text-sm font-medium text-red-400 mb-2">Suspend User</h4>
             <textarea
               value={suspendReason}
               onChange={(e) => setSuspendReason(e.target.value)}
               placeholder="Reason for suspension..."
               rows={3}
-              className="w-full px-3 py-2 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-red-500 mb-3"
+              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-red-500 mb-3"
             />
             <div className="flex gap-2">
               <button
                 onClick={handleSuspend}
                 disabled={actionLoading || !suspendReason.trim()}
-                className="px-3 py-1.5 text-sm rounded-md bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
+                className="px-3 py-1.5 text-sm rounded-pf-sm bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
               >
                 Confirm Suspend
               </button>
               <button
                 onClick={() => setShowSuspendDialog(false)}
-                className="px-3 py-1.5 text-sm rounded-md border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors"
+                className="px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors"
               >
                 Cancel
               </button>

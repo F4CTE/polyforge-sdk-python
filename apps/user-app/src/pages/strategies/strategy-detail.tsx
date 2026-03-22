@@ -311,7 +311,7 @@ export function Component() {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-1.5">
-                <h1 className="text-xl font-semibold text-pf-text">{strategy.name}</h1>
+                <h1 className="text-2xl font-semibold text-pf-text">{strategy.name}</h1>
                 <span data-testid="status-badge" className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot} ${isActive(status) ? 'animate-pulse-dot' : ''}`} />
                   {status}
@@ -329,7 +329,7 @@ export function Component() {
                   <button
                     onClick={() => doAction('start', { mode: 'live' })}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-40 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
                   >
                     <Zap className="size-3.5" /> Start Live
                   </button>
@@ -365,7 +365,7 @@ export function Component() {
                   <button
                     onClick={() => doAction('resume')}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-40 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
                   >
                     <Play className="size-3.5" /> Resume
                   </button>

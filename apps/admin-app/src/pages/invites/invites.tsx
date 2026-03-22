@@ -82,7 +82,7 @@ export function Component() {
               max={50}
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
             />
           </div>
           <div>
@@ -93,7 +93,7 @@ export function Component() {
               max={100}
               value={maxUses}
               onChange={(e) => setMaxUses(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
             />
           </div>
           <div>
@@ -104,13 +104,13 @@ export function Component() {
               max={365}
               value={ttlDays}
               onChange={(e) => setTtlDays(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
             />
           </div>
           <button
             type="submit"
             disabled={generating}
-            className="px-4 py-2 text-sm font-semibold rounded-md bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 transition-colors"
+            className="px-4 py-2 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 transition-colors"
           >
             {generating ? 'Generating...' : 'Generate'}
           </button>
@@ -118,7 +118,7 @@ export function Component() {
 
         {/* Generated Codes */}
         {generatedCodes.length > 0 && (
-          <div className="mt-4 p-3 rounded-md bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)]">
+          <div className="mt-4 p-3 rounded-pf-sm bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)]">
             <div className="text-xs text-[var(--color-pf-text-tertiary)] mb-2">Generated codes:</div>
             <div className="space-y-1">
               {generatedCodes.map((code) => (

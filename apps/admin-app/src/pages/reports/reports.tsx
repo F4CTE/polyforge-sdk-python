@@ -55,7 +55,7 @@ export function Component() {
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          className="px-3 py-2 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+          className="px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
         >
           <option value="">All statuses</option>
           <option value="PENDING">Pending</option>
@@ -158,26 +158,26 @@ export function Component() {
             onChange={(e) => setAdminNote(e.target.value)}
             placeholder="Admin note (optional)..."
             rows={3}
-            className="w-full px-3 py-2 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] mb-3"
+            className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] mb-3"
           />
           <div className="flex gap-3">
             <button
               onClick={() => handleResolve(reviewingId, 'REVIEWED')}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
             >
               <CheckCircle size={14} />
               Approve
             </button>
             <button
               onClick={() => handleResolve(reviewingId, 'DISMISSED')}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] transition-colors"
             >
               <XCircle size={14} />
               Dismiss
             </button>
             <button
               onClick={() => setReviewingId(null)}
-              className="px-3 py-1.5 text-sm rounded-md text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text-secondary)] transition-colors"
+              className="px-3 py-1.5 text-sm rounded-pf-sm text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text-secondary)] transition-colors"
             >
               Cancel
             </button>

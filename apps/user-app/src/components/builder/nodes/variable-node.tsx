@@ -15,7 +15,7 @@ type VariableNodeType = Node<VariableNodeData, 'variableNode'>;
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const VARIABLE_COLOR = '#A855F7';
+const VARIABLE_COLOR = 'var(--color-pf-purple-500)';
 const NAME_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
 /** Validate a variable name: must be alphanumeric + underscore, starting with letter or underscore */
@@ -99,6 +99,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
           <button
             onClick={onDelete}
             className="p-0.5 rounded hover:bg-white/20 transition-colors"
+            aria-label="Remove variable"
             title="Remove variable"
           >
             <X className="size-3" />

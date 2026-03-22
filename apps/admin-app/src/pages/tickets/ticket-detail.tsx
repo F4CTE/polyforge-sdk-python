@@ -81,8 +81,14 @@ export function Component() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-sm text-[var(--color-pf-text-secondary)]">Loading ticket...</div>
+      <div className="animate-pulse space-y-6">
+        <div className="h-4 bg-[var(--color-pf-elevated)] rounded w-32" />
+        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 space-y-4">
+          <div className="h-5 bg-[var(--color-pf-bg)] rounded w-64" />
+          <div className="h-4 bg-[var(--color-pf-bg)] rounded w-48" />
+          <div className="h-4 bg-[var(--color-pf-bg)] rounded w-32" />
+        </div>
+        <div className="h-32 bg-[var(--color-pf-elevated)] rounded-pf-lg animate-pulse" />
       </div>
     );
   }
@@ -147,7 +153,7 @@ export function Component() {
             <select
               value={statusValue}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className="px-3 py-1.5 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+              className="px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
             >
               <option value="OPEN">Open</option>
               <option value="IN_PROGRESS">In Progress</option>
@@ -160,7 +166,7 @@ export function Component() {
             <select
               value={assignedTo}
               onChange={(e) => handleAssign(e.target.value)}
-              className="px-3 py-1.5 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+              className="px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
             >
               <option value="">Unassigned</option>
               {admins.map((a) => (
@@ -210,13 +216,13 @@ export function Component() {
           onChange={(e) => setReply(e.target.value)}
           placeholder="Type your reply..."
           rows={4}
-          className="w-full px-3 py-2 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] mb-3 resize-y"
+          className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] mb-3 resize-y"
         />
         <div className="flex justify-end">
           <button
             type="submit"
             disabled={sending || !reply.trim()}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-md bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send size={14} />
             {sending ? 'Sending...' : 'Reply'}

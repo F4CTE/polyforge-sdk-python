@@ -241,7 +241,7 @@ export function Component() {
           <div className="animate-slide-right relative w-full max-w-md h-full bg-pf-surface border-l border-pf-border overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-pf-border-subtle">
               <h2 className="text-lg font-semibold text-pf-text">Order Details</h2>
-              <button onClick={() => setSelectedOrder(null)} className="text-pf-text-muted hover:text-pf-text transition-colors">
+              <button onClick={() => setSelectedOrder(null)} aria-label="Close order details" className="text-pf-text-muted hover:text-pf-text transition-colors">
                 <X className="size-5" />
               </button>
             </div>

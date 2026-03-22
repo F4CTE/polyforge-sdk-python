@@ -61,7 +61,7 @@ export function Topbar() {
         >
           <Bell size={18} />
           {unread > 0 && (
-            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold text-white bg-pf-danger rounded-full">
               {unread > 9 ? '9+' : unread}
             </span>
           )}
@@ -90,6 +90,9 @@ export function Topbar() {
                   <div
                     key={n.id}
                     onClick={() => markRead(n.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') markRead(n.id); }}
                     className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-pf-surface transition-colors ${
                       !n.read ? 'bg-pf-cyan-500/5' : ''
                     }`}
@@ -136,6 +139,7 @@ export function Topbar() {
           data-testid="user-menu-btn"
           onClick={() => setMenuOpen((v) => !v)}
           className="flex items-center gap-2 p-1 rounded-pf-sm hover:bg-pf-elevated transition-colors"
+          aria-label="User menu"
           aria-expanded={menuOpen}
         >
           <div className="w-8 h-8 rounded-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-xs font-semibold">

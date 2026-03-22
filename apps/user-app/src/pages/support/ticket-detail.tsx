@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router';
 import {
   ArrowLeft, Send, Loader2, Lock, RefreshCw,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -66,7 +67,7 @@ export function Component() {
     try {
       const res = await fetch(`/api/v1/tickets/${id}`, { credentials: 'include' });
       if (res.ok) setTicket(await res.json());
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to load ticket'); }
     setLoading(false);
   }, [id]);
 
@@ -98,7 +99,7 @@ export function Component() {
         setReply('');
         loadTicket();
       }
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to send reply'); }
     setSending(false);
   }
 
@@ -112,7 +113,7 @@ export function Component() {
         credentials: 'include',
       });
       if (res.ok) loadTicket();
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to close ticket'); }
     setClosing(false);
   }
 
@@ -144,7 +145,7 @@ export function Component() {
   const ss = STATUS_STYLES[ticket.status] ?? STATUS_STYLES.OPEN;
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
+    <div className="animate-fade-in p-6 max-w-3xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -155,7 +156,7 @@ export function Component() {
             <ArrowLeft className="size-4" />
           </button>
           <div>
-            <h1 className="text-xl font-semibold text-pf-text">{ticket.subject}</h1>
+            <h1 className="text-2xl font-semibold text-pf-text">{ticket.subject}</h1>
             <div className="flex items-center gap-3 mt-1 text-xs text-pf-text-muted">
               <span className={`inline-flex px-2 py-0.5 rounded font-medium ${ss.bg} ${ss.text}`}>
                 {ticket.status.replace(/_/g, ' ')}
@@ -233,7 +234,7 @@ export function Component() {
             <button
               onClick={sendReply}
               disabled={!reply.trim() || sending}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
               Send Reply

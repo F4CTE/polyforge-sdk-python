@@ -56,7 +56,7 @@ export function Component() {
           <button
             key={t.key}
             onClick={() => changeTab(t.key)}
-            className={`px-4 py-1.5 text-sm rounded-md transition-colors ${
+            className={`px-4 py-1.5 text-sm rounded-pf-sm transition-colors ${
               tab === t.key
                 ? 'bg-[var(--color-pf-cyan-500)]/10 text-[var(--color-pf-cyan-500)] font-medium'
                 : 'text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)]'

@@ -36,7 +36,7 @@ export function Component() {
         <div className="flex items-center">
           <button
             onClick={() => setMobileOpen(true)}
-            className="p-2 ml-2 rounded-md text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors md:hidden"
+            className="p-2 ml-2 rounded-pf-sm text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors md:hidden"
             aria-label="Open menu"
           >
             <Menu size={20} />

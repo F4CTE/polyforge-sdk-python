@@ -102,8 +102,15 @@ export function Component() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-sm text-[var(--color-pf-text-secondary)]">Loading dashboard...</div>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4 animate-pulse">
+              <div className="h-3 bg-[var(--color-pf-bg)] rounded w-24 mb-3" />
+              <div className="h-7 bg-[var(--color-pf-bg)] rounded w-16" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -134,7 +141,7 @@ export function Component() {
                 <span className="text-xs font-medium text-[var(--color-pf-text-secondary)]">
                   {card.label}
                 </span>
-                <div className={`p-2 rounded-md ${card.bg}`}>
+                <div className={`p-2 rounded-pf-sm ${card.bg}`}>
                   <span className={card.color}>{card.icon}</span>
                 </div>
               </div>
@@ -181,7 +188,7 @@ export function Component() {
               {Object.entries(health.services ?? {}).map(([name, svc]) => (
                 <div
                   key={name}
-                  className="flex items-center justify-between p-2.5 rounded-md bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)]"
+                  className="flex items-center justify-between p-2.5 rounded-pf-sm bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)]"
                 >
                   <div>
                     <div className="text-xs font-medium text-[var(--color-pf-text)] capitalize">

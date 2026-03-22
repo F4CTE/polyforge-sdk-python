@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import {
   Plus, LifeBuoy, ChevronDown, ChevronUp,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -69,13 +70,13 @@ export function Component() {
           const data: TicketsResponse = await res.json();
           setTickets(data.data);
         }
-      } catch { /* keep state */ }
+      } catch { toast.error('Failed to load tickets'); }
       setLoading(false);
     })();
   }, []);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-pf-text">Support</h1>

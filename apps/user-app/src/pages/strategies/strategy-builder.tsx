@@ -181,6 +181,7 @@ export function Component() {
                 ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
                 : 'text-pf-text-muted hover:text-pf-text-secondary hover:bg-pf-overlay'
             }`}
+            aria-label={panelOpen ? 'Hide blocks panel' : 'Show blocks panel'}
             title={panelOpen ? 'Hide blocks' : 'Show blocks'}
           >
             <Blocks className="size-4" />

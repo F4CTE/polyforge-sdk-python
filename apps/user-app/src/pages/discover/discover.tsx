@@ -160,7 +160,7 @@ export function Component() {
                   {s.author.avatarUrl ? (
                     <img src={s.author.avatarUrl} alt="" className="size-7 rounded-full object-cover" />
                   ) : (
-                    <div className="size-7 rounded-full bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center text-[10px] font-bold text-cyan-400">
+                    <div className="size-7 rounded-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-[10px] font-bold text-pf-cyan-400">
                       {authorInitials(s)}
                     </div>
                   )}
