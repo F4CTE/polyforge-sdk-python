@@ -131,24 +131,6 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Tech stack strip */}
-        <div className="flex items-center gap-4 py-4 border-t border-pf-border-subtle">
-          <span className="text-xs text-pf-text-muted uppercase tracking-wide">Built with</span>
-          {/* NestJS */}
-          <svg className="w-5 h-5 text-pf-text-muted opacity-50 hover:opacity-80 transition-opacity" viewBox="0 0 24 24" fill="currentColor" aria-label="NestJS">
-            <path d="M14.131.047c-.173 0-.334.037-.483.087.316.21.49.49.576.806.015.063.027.126.036.19l.012.126c.012.16.004.322-.03.48a1.94 1.94 0 0 1-.142.422c-.088.166-.197.32-.334.445a1.37 1.37 0 0 1-.158.124c.085.022.17.04.255.053a2.33 2.33 0 0 0 1.166-.124l.054-.026.038-.02a.693.693 0 0 1 .1-.04c.063-.019.13-.031.197-.037.275-.012.554.07.779.23-.084-.127-.178-.244-.282-.35A3.232 3.232 0 0 0 14.131.047z" />
-          </svg>
-          {/* Angular */}
-          <svg className="w-5 h-5 text-pf-text-muted opacity-50 hover:opacity-80 transition-opacity" viewBox="0 0 24 24" fill="currentColor" aria-label="Angular">
-            <path d="M9.931 12.645h4.138l-2.07-4.908z" />
-            <path d="m12.001.001-11 3.97 1.675 14.528L12 24l9.324-5.5L22.999 3.97 12.001.001zm6.85 17.195h-2.541l-1.37-3.428H9.058l-1.37 3.428H5.147L12 2.677l6.852 14.519z" />
-          </svg>
-          {/* PostgreSQL */}
-          <svg className="w-5 h-5 text-pf-text-muted opacity-50 hover:opacity-80 transition-opacity" viewBox="0 0 24 24" fill="currentColor" aria-label="PostgreSQL">
-            <path d="M17.128 0a10.134 10.134 0 0 0-2.755.403l-.063.02A10.922 10.922 0 0 0 12.6.258C11.422.238 10.295.497 9.372.945 8.817.717 7.779.353 6.583.353c-.998 0-2.046.275-2.922.917C2.615 2.044 1.89 3.195 1.526 4.84c-.483 2.178-.09 5.032.86 8.386.578 2.043 1.46 3.615 2.564 4.425.554.407 1.177.61 1.833.581.476-.02.937-.18 1.359-.455l.085.08c.505.473 1.122.754 1.803.764l.047.001c.768 0 1.47-.382 1.926-.98.224.217.474.401.748.543.325.17.676.255 1.043.248.378-.008.723-.108 1.034-.286a5.83 5.83 0 0 0 .273-.183l.148-.107c.463.36.963.574 1.49.615l.061.003c.508 0 .972-.166 1.378-.48.413-.322.747-.794.968-1.366a8.403 8.403 0 0 0 .378-1.297c.168-.738.266-1.271.33-1.728.046-.32.073-.594.087-.837.013-.24.02-.433.02-.6a.948.948 0 0 0-.005-.1l-.003-.037.069-.092c.456-.598.78-1.298.943-2.077.09-.432.137-.87.146-1.27v-.004a9.39 9.39 0 0 0-.054-1.27 8.867 8.867 0 0 0-.36-1.608c-.116-.35-.257-.677-.42-.98-.338-.626-.77-1.133-1.275-1.51C19.01.52 18.08.063 17.128 0z" opacity="0.4" />
-          </svg>
-        </div>
-
         {/* Copyright */}
         <div className="pt-6 border-t border-pf-border-subtle text-[13px] text-pf-text-muted">
           &copy; 2026 Polyforge. All rights reserved.
