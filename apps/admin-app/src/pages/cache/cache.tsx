@@ -117,7 +117,7 @@ export function Component() {
       </div>
 
       {/* Patterns Table */}
-      {stats && stats.patterns.length > 0 && (
+      {stats && stats.patterns && stats.patterns.length > 0 && (
         <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
           <div className="flex items-center gap-2 mb-4">
             <Database size={16} className="text-[var(--color-pf-cyan-500)]" />
