@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router';
+import { NavLink, Link } from 'react-router';
 import {
   LayoutDashboard,
   Users,
@@ -102,25 +102,27 @@ export function AdminSidebar({ collapsed, onToggle }: Props) {
     >
       {/* Brand */}
       <div className="flex items-center gap-2 h-14 px-3 border-b border-[var(--color-pf-border)] shrink-0">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="shrink-0">
-          <path
-            d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
-            stroke="var(--color-pf-cyan-500)"
-            strokeWidth="1.2"
-            fill="none"
-            opacity="0.4"
-          />
-          <path
-            d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z"
-            fill="var(--color-pf-cyan-500)"
-          />
-        </svg>
-        {!collapsed && (
-          <span className="text-sm font-semibold text-[var(--color-pf-text)] whitespace-nowrap">
-            Polyforge{' '}
-            <span className="text-[var(--color-pf-cyan-500)]">Admin</span>
-          </span>
-        )}
+        <Link to="/dashboard" className="flex items-center gap-2 min-w-0">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="shrink-0">
+            <path
+              d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
+              stroke="var(--color-pf-cyan-500)"
+              strokeWidth="1.2"
+              fill="none"
+              opacity="0.4"
+            />
+            <path
+              d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z"
+              fill="var(--color-pf-cyan-500)"
+            />
+          </svg>
+          {!collapsed && (
+            <span className="text-sm font-semibold text-[var(--color-pf-text)] whitespace-nowrap">
+              Polyforge{' '}
+              <span className="text-[var(--color-pf-cyan-500)]">Admin</span>
+            </span>
+          )}
+        </Link>
         <button
           onClick={onToggle}
           className="ml-auto p-1 rounded hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] transition-colors"

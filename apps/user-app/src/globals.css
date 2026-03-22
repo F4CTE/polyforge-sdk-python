@@ -1,1 +1,19 @@
 @import "@polyforge/ui/globals.css";
+
+.react-flow__renderer {
+  background: var(--color-pf-base) !important;
+}
+.react-flow__background {
+  background: var(--color-pf-base) !important;
+}
+.react-flow__controls button {
+  background: var(--color-pf-elevated) !important;
+  color: var(--color-pf-text) !important;
+  border-color: var(--color-pf-border) !important;
+}
+.react-flow__controls button:hover {
+  background: var(--color-pf-overlay) !important;
+}
+.react-flow__minimap {
+  background: var(--color-pf-surface) !important;
+}

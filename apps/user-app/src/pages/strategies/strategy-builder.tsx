@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ReactFlowProvider } from '@xyflow/react';
-import { ArrowLeft, Check, Loader2, Settings2 } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Pencil, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { StrategyCanvas } from '../../components/builder/strategy-canvas';
@@ -15,8 +15,10 @@ export function Component() {
   const navigate = useNavigate();
 
   const [panelOpen, setPanelOpen] = useState(true);
+  const [editingName, setEditingName] = useState(false);
 
   const name = useBuilderStore((s) => s.name);
+  const setName = useBuilderStore((s) => s.setName);
   const saving = useBuilderStore((s) => s.saving);
   const loading = useBuilderStore((s) => s.loading);
   const strategyId = useBuilderStore((s) => s.strategyId);
@@ -85,9 +87,24 @@ export function Component() {
 
         <div className="w-px h-4 bg-pf-border-subtle" />
 
-        <h1 className="text-sm font-medium text-pf-text truncate flex-1">
-          {name || (isEdit ? 'Edit Strategy' : 'New Strategy')}
-        </h1>
+        {editingName ? (
+          <input
+            className="text-lg font-semibold bg-transparent border-b border-pf-cyan-500 outline-none text-pf-text px-1 flex-1 min-w-0"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={() => setEditingName(false)}
+            onKeyDown={(e) => { if (e.key === 'Enter') setEditingName(false); }}
+            autoFocus
+          />
+        ) : (
+          <h1
+            className="text-lg font-semibold cursor-pointer hover:text-pf-cyan-400 transition-colors group flex items-center gap-2 truncate flex-1"
+            onClick={() => setEditingName(true)}
+          >
+            {name || 'Untitled Strategy'}
+            <Pencil size={14} className="opacity-0 group-hover:opacity-50 transition-opacity shrink-0" />
+          </h1>
+        )}
 
         <div className="flex items-center gap-2 shrink-0">
           {/* Panel toggle */}

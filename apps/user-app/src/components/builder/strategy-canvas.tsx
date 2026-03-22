@@ -103,6 +103,7 @@ export function StrategyCanvas() {
         }}
         proOptions={{ hideAttribution: true }}
         className="strategy-builder-flow"
+        style={{ background: 'var(--color-pf-base)' }}
       >
         <Background
           variant={BackgroundVariant.Dots}

@@ -78,7 +78,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
   if (!open) return null;
 
   return (
-    <div className="absolute top-3 right-3 bottom-3 w-80 bg-pf-elevated border border-pf-border rounded-pf-lg shadow-pf-lg z-20 flex flex-col overflow-hidden">
+    <div className="absolute top-0 right-0 bottom-0 w-80 bg-pf-elevated border-l border-pf-border shadow-pf-lg z-20 flex flex-col overflow-x-hidden">
       {/* Panel header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
         <div className="flex items-center gap-2">
@@ -94,7 +94,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
       </div>
 
       {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {/* Metadata form */}
         <div className="px-4 py-3 space-y-3 border-b border-pf-border-subtle">
           <div>

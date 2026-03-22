@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router';
+import { NavLink, Link } from 'react-router';
 import {
   BarChart3,
   Zap,
@@ -10,6 +10,7 @@ import {
   Code,
   HelpCircle,
   ChevronLeft,
+  ChevronRight,
   Settings,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -66,40 +67,32 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 h-14 border-b border-pf-border">
-        <div className="text-pf-cyan-500">
-          <svg
-            className="shrink-0"
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
-              stroke="currentColor"
-              strokeWidth="1.2"
+        <Link to="/markets" className="flex items-center gap-3 min-w-0">
+          <div className="text-pf-cyan-500">
+            <svg
+              className="shrink-0"
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
               fill="none"
-              opacity="0.4"
-            />
-            <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="currentColor" />
-          </svg>
-        </div>
-        {!collapsed && (
-          <span className="text-pf-text font-semibold text-base tracking-tight">
-            Polyforge
-          </span>
-        )}
-        <button
-          onClick={onToggle}
-          className="ml-auto p-1 rounded hover:bg-pf-elevated text-pf-text-muted transition-colors"
-          aria-label="Toggle sidebar"
-        >
-          <ChevronLeft
-            size={16}
-            className={`transition-transform ${collapsed ? 'rotate-180' : ''}`}
-          />
-        </button>
+              aria-hidden="true"
+            >
+              <path
+                d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                fill="none"
+                opacity="0.4"
+              />
+              <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="currentColor" />
+            </svg>
+          </div>
+          {!collapsed && (
+            <span className="text-pf-text font-semibold text-base tracking-tight">
+              Polyforge
+            </span>
+          )}
+        </Link>
       </div>
 
       {/* Nav sections */}
@@ -134,8 +127,20 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         ))}
       </nav>
 
-      {/* Bottom settings link */}
-      <div className="border-t border-pf-border px-2 py-2">
+      {/* Bottom collapse + settings */}
+      <div className="border-t border-pf-border px-2 py-2 space-y-0.5">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text w-full"
+          aria-label="Toggle sidebar"
+        >
+          {collapsed ? (
+            <ChevronRight size={18} className="shrink-0" />
+          ) : (
+            <ChevronLeft size={18} className="shrink-0" />
+          )}
+          {!collapsed && <span>Collapse</span>}
+        </button>
         <NavLink
           to="/settings"
           className={({ isActive }) =>
