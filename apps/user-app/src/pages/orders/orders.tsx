@@ -129,7 +129,7 @@ export function Component() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-pf-surface text-left text-xs text-pf-text-muted uppercase tracking-wider">
+              <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                 <th className="px-4 py-3 font-medium w-10">#</th>
                 <th className="px-4 py-3 font-medium">Side</th>
                 <th className="px-4 py-3 font-medium">Outcome</th>
@@ -270,7 +270,7 @@ export function Component() {
                 { label: 'Created', value: <span className="font-mono text-xs">{formatDate(selectedOrder.placedAt ?? selectedOrder.createdAt)}</span> },
               ] as { label: string; value: React.ReactNode }[]).map(row => (
                 <div key={row.label} className="flex items-center justify-between py-2 border-b border-pf-border-subtle last:border-0">
-                  <span className="text-sm text-pf-text-muted">{row.label}</span>
+                  <span className="text-sm text-pf-text-secondary">{row.label}</span>
                   <span className="text-sm text-pf-text">{row.value}</span>
                 </div>
               ))}

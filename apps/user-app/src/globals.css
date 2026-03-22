@@ -1,23 +1,30 @@
 @import "@polyforge/ui/globals.css";
 @import "@xyflow/react/dist/style.css";
 
-/* ─── React Flow theme overrides (must come AFTER react-flow styles) ─ */
-.react-flow,
-.react-flow__renderer,
-.react-flow__background {
-  background: var(--color-pf-base, #020817) !important;
-  background-color: var(--color-pf-base, #020817) !important;
+/* ─── React Flow CSS variable theming (must come AFTER react-flow styles) ─ */
+.dark .react-flow {
+  --xy-background-color: var(--color-pf-base);
+  --xy-node-background-color: var(--color-pf-elevated);
+  --xy-node-border-color: var(--color-pf-border);
+  --xy-node-color: var(--color-pf-text);
+  --xy-edge-stroke: var(--color-pf-border-strong);
+  --xy-minimap-background-color: var(--color-pf-surface);
+  --xy-minimap-node-background-color: var(--color-pf-cyan-500);
+  --xy-controls-button-background-color: var(--color-pf-elevated);
+  --xy-controls-button-border-color: var(--color-pf-border);
+  --xy-controls-button-color: var(--color-pf-text);
 }
-.react-flow__controls button {
-  background: var(--color-pf-elevated) !important;
-  color: var(--color-pf-text) !important;
-  border-color: var(--color-pf-border) !important;
-}
-.react-flow__controls button:hover {
-  background: var(--color-pf-overlay) !important;
-}
-.react-flow__minimap {
-  background: var(--color-pf-surface) !important;
+
+.light .react-flow {
+  --xy-background-color: #ffffff;
+  --xy-node-background-color: #ffffff;
+  --xy-node-border-color: #e2e8f0;
+  --xy-node-color: #0f172a;
+  --xy-edge-stroke: #cbd5e1;
+  --xy-minimap-background-color: #f8fafc;
+  --xy-controls-button-background-color: #ffffff;
+  --xy-controls-button-border-color: #e2e8f0;
+  --xy-controls-button-color: #0f172a;
 }
 /* Block node override — React Flow default styles set white bg */
 .react-flow__node {

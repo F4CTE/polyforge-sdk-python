@@ -64,13 +64,13 @@ const SORT_OPTIONS: { label: string; value: SortOption }[] = [
 const CATEGORIES = ['all', 'Sports', 'Crypto', 'Politics', 'Economics', 'Finance', 'Technology'] as const;
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  all: <LayoutGrid className="size-3.5" />,
-  Sports: <Trophy className="size-3.5" />,
-  Crypto: <Bitcoin className="size-3.5" />,
-  Politics: <Landmark className="size-3.5" />,
-  Economics: <TrendingUp className="size-3.5" />,
-  Finance: <Wallet className="size-3.5" />,
-  Technology: <Cpu className="size-3.5" />,
+  all: <LayoutGrid className="size-4" />,
+  Sports: <Trophy className="size-4" />,
+  Crypto: <Bitcoin className="size-4" />,
+  Politics: <Landmark className="size-4" />,
+  Economics: <TrendingUp className="size-4" />,
+  Finance: <Wallet className="size-4" />,
+  Technology: <Cpu className="size-4" />,
 };
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
@@ -169,10 +169,10 @@ function MarketCard({ market, featured }: { market: Market; featured?: boolean }
           />
         ) : (
           <div
-            className={`w-12 h-12 rounded-pf-md flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-pf-overlay'}`}
+            className={`w-[52px] h-[52px] rounded-pf-md flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-pf-overlay'}`}
           >
-            <span className={catColor?.text ?? 'text-pf-text-muted'}>
-              {CATEGORY_ICONS[market.category] ?? <LayoutGrid className="size-5" />}
+            <span className={`[&_svg]:size-6 ${catColor?.text ?? 'text-pf-text-muted'}`}>
+              {CATEGORY_ICONS[market.category] ?? <LayoutGrid className="size-6" />}
             </span>
           </div>
         )}
@@ -180,7 +180,7 @@ function MarketCard({ market, featured }: { market: Market; featured?: boolean }
           <h3 className="text-sm font-medium text-pf-text leading-snug line-clamp-2 group-hover:text-pf-cyan-400 transition-colors">
             {market.title}
           </h3>
-          <div className="flex items-center gap-1.5 mt-1 text-xs text-pf-text-muted">
+          <div className="flex items-center gap-1.5 mt-1 text-xs text-pf-text-secondary">
             <span>{formatVolume(market.volume24h)} Vol</span>
             <span>&middot;</span>
             <span className={isClosingSoon(market.endDate) ? 'text-pf-warning' : ''}>
@@ -384,7 +384,7 @@ export function Component() {
 
           {/* Sort */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-pf-text-muted">Sort by</span>
+            <span className="text-xs text-pf-text-secondary">Sort by</span>
             <select
               value={sort}
               onChange={(e) => { setSort(e.target.value as SortOption); setPage(1); }}
@@ -451,7 +451,7 @@ export function Component() {
             <div className="border border-pf-border rounded-pf-lg overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-pf-surface text-left text-xs text-pf-text-muted uppercase tracking-wider">
+                  <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                     <th className="px-4 py-3 font-medium">Market</th>
                     <th className="px-4 py-3 font-medium">Category</th>
                     <th className="px-4 py-3 font-medium text-right">YES</th>

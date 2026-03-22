@@ -160,7 +160,7 @@ export function Component() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="text-xs text-pf-text-muted uppercase tracking-wider mb-1.5 block">Strategy</label>
+            <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Strategy</label>
             <select
               value={selectedStratId}
               onChange={e => setSelectedStratId(e.target.value)}
@@ -171,7 +171,7 @@ export function Component() {
             </select>
           </div>
           <div>
-            <label className="text-xs text-pf-text-muted uppercase tracking-wider mb-1.5 block">Start Date</label>
+            <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Start Date</label>
             <input
               type="date"
               value={dateStart}
@@ -180,7 +180,7 @@ export function Component() {
             />
           </div>
           <div>
-            <label className="text-xs text-pf-text-muted uppercase tracking-wider mb-1.5 block">End Date</label>
+            <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">End Date</label>
             <input
               type="date"
               value={dateEnd}
@@ -192,7 +192,7 @@ export function Component() {
             <button
               onClick={submit}
               disabled={!canSubmit}
-              className="w-full h-9 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="w-full h-9 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {submitting ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
               Run Backtest
@@ -271,7 +271,7 @@ export function Component() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-pf-surface text-left text-xs text-pf-text-muted uppercase tracking-wider">
+              <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                 <th className="px-4 py-3 font-medium">Strategy</th>
                 <th className="px-4 py-3 font-medium">Date Range</th>
                 <th className="px-4 py-3 font-medium">Status</th>

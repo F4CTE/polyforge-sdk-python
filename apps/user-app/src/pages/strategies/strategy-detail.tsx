@@ -250,7 +250,7 @@ export function Component() {
                   <button
                     onClick={() => doAction('start', { mode: 'live' })}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-40 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-40 transition-colors"
                   >
                     <Zap className="size-3.5" /> Start Live
                   </button>
@@ -286,7 +286,7 @@ export function Component() {
                   <button
                     onClick={() => doAction('resume')}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-40 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-40 transition-colors"
                   >
                     <Play className="size-3.5" /> Resume
                   </button>
@@ -358,7 +358,7 @@ export function Component() {
                 .filter(({ blocks }) => blocks.length > 0)
                 .map(({ key, title, blocks }) => (
                   <div key={key}>
-                    <h4 className="text-xs font-medium text-pf-text-muted uppercase tracking-wider mb-2">
+                    <h4 className="text-xs font-medium text-pf-text-secondary uppercase tracking-wider mb-2">
                       {title}
                     </h4>
                     <div className="flex flex-wrap gap-2">

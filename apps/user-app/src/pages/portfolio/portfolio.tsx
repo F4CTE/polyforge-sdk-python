@@ -209,7 +209,7 @@ export function Component() {
           <button
             onClick={() => handleTabChange('live')}
             className={`px-4 py-1.5 text-sm font-medium rounded-pf transition-colors ${
-              tab === 'live' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-muted hover:text-pf-text-secondary'
+              tab === 'live' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-secondary hover:text-pf-text'
             }`}
           >
             Live
@@ -217,7 +217,7 @@ export function Component() {
           <button
             onClick={() => handleTabChange('paper')}
             className={`px-4 py-1.5 text-sm font-medium rounded-pf transition-colors ${
-              tab === 'paper' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-muted hover:text-pf-text-secondary'
+              tab === 'paper' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-secondary hover:text-pf-text'
             }`}
           >
             Paper
@@ -235,25 +235,25 @@ export function Component() {
             ) : portfolio ? (
               <>
                 <div className={`bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 ${pnlBorderColor(portfolio.totalUnrealizedPnl)}`}>
-                  <span className="text-xs text-pf-text-muted uppercase tracking-wider">Unrealized P&L</span>
+                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Unrealized P&L</span>
                   <span className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalUnrealizedPnl)}`}>
                     {formatPnl(portfolio.totalUnrealizedPnl)}
                   </span>
                 </div>
                 <div className={`bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 ${pnlBorderColor(portfolio.totalRealizedPnl)}`}>
-                  <span className="text-xs text-pf-text-muted uppercase tracking-wider">Realized P&L</span>
+                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Realized P&L</span>
                   <span className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalRealizedPnl)}`}>
                     {formatPnl(portfolio.totalRealizedPnl)}
                   </span>
                 </div>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 border-l-cyan-500">
-                  <span className="text-xs text-pf-text-muted uppercase tracking-wider">Win Rate</span>
+                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Win Rate</span>
                   <span className="block mt-1 text-xl font-mono font-semibold text-cyan-400">
                     {winRatePct(pnl?.winRate ?? '0')}
                   </span>
                 </div>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 border-l-pf-text">
-                  <span className="text-xs text-pf-text-muted uppercase tracking-wider">Open Positions</span>
+                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Open Positions</span>
                   <span className="block mt-1 text-xl font-mono font-semibold text-pf-text">
                     {portfolio.positions.length}
                   </span>
@@ -266,7 +266,7 @@ export function Component() {
                 <p className="text-xs text-pf-text-muted mb-4">Something went wrong while fetching your data.</p>
                 <button
                   onClick={loadPortfolio}
-                  className="px-4 py-2 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 transition-colors"
+                  className="px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 transition-colors"
                 >
                   Retry
                 </button>
@@ -286,7 +286,7 @@ export function Component() {
                     className={`px-2.5 py-1 text-xs font-medium rounded-pf transition-colors ${
                       period === p.value
                         ? 'bg-pf-cyan-500/15 text-pf-cyan-400'
-                        : 'text-pf-text-muted hover:text-pf-text-secondary'
+                        : 'text-pf-text-secondary hover:text-pf-text'
                     }`}
                   >
                     {p.label}
@@ -355,7 +355,7 @@ export function Component() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-pf-surface text-left text-xs text-pf-text-muted uppercase tracking-wider">
+                    <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                       <th className="px-4 py-3 font-medium">Market</th>
                       <th className="px-4 py-3 font-medium">Side</th>
                       <th className="px-4 py-3 font-medium text-right">Size</th>
@@ -436,17 +436,17 @@ export function Component() {
               {/* Paper summary */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-                  <span className="text-xs text-pf-text-muted uppercase tracking-wider">Paper P&L</span>
+                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Paper P&L</span>
                   <span className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(paper.pnl)}`}>
                     {formatPnl(paper.pnl)}
                   </span>
                 </div>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-                  <span className="text-xs text-pf-text-muted uppercase tracking-wider">Positions</span>
+                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Positions</span>
                   <span className="block mt-1 text-xl font-mono font-semibold text-pf-text">{paper.positions.length}</span>
                 </div>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-                  <span className="text-xs text-pf-text-muted uppercase tracking-wider">Total Orders</span>
+                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Total Orders</span>
                   <span className="block mt-1 text-xl font-mono font-semibold text-pf-text">{paper.orderCount}</span>
                 </div>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 flex items-end justify-end">
@@ -478,7 +478,7 @@ export function Component() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="bg-pf-surface text-left text-xs text-pf-text-muted uppercase tracking-wider">
+                        <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                           <th className="px-4 py-3 font-medium">Token</th>
                           <th className="px-4 py-3 font-medium">Side</th>
                           <th className="px-4 py-3 font-medium text-right">Size</th>

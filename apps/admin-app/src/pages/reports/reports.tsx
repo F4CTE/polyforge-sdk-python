@@ -49,7 +49,7 @@ export function Component() {
   }
 
   return (
-    <div className="animate-fade-in space-y-4">
+    <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Content Reports</h2>
         <select

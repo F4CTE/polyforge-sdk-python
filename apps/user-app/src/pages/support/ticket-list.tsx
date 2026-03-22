@@ -81,7 +81,7 @@ export function Component() {
         <h1 className="text-2xl font-semibold text-pf-text">Support</h1>
         <Link
           to="/support/new"
-          className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 transition-colors"
         >
           <Plus className="size-4" />
           New Ticket
@@ -93,7 +93,7 @@ export function Component() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-pf-surface text-left text-xs text-pf-text-muted uppercase tracking-wider">
+              <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                 <th className="px-4 py-3 font-medium">Subject</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Priority</th>
@@ -165,18 +165,18 @@ export function Component() {
             <div key={idx} className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
               <button
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                className="w-full flex items-center justify-between px-4 py-3 text-left"
+                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-pf-surface/50 transition-colors"
                 aria-expanded={openFaq === idx}
               >
                 <span className="text-sm font-medium text-pf-text">{item.q}</span>
                 {openFaq === idx ? (
-                  <ChevronUp className="size-4 text-pf-text-muted shrink-0" />
+                  <ChevronUp size={20} className="text-pf-text-muted shrink-0" />
                 ) : (
-                  <ChevronDown className="size-4 text-pf-text-muted shrink-0" />
+                  <ChevronDown size={20} className="text-pf-text-muted shrink-0" />
                 )}
               </button>
               {openFaq === idx && (
-                <div className="px-4 pb-3 text-sm text-pf-text-secondary leading-relaxed">
+                <div className="px-4 pb-3 text-sm text-pf-text-secondary leading-relaxed border-l-2 border-pf-cyan-500/40 ml-4 mr-4">
                   {item.a}
                 </div>
               )}

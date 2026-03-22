@@ -127,7 +127,7 @@ export function Component() {
               Enter your Polymarket API credentials to enable live trading. These are encrypted at rest.
             </p>
             <div>
-              <label className="text-xs text-pf-text-muted mb-1.5 block">
+              <label className="text-xs text-pf-text-secondary mb-1.5 block">
                 Private Key <span className="text-red-400">*</span>
               </label>
               <div className="relative">
@@ -139,14 +139,14 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label className="text-xs text-pf-text-muted mb-1.5 block">
+              <label className="text-xs text-pf-text-secondary mb-1.5 block">
                 API Key <span className="text-red-400">*</span>
               </label>
               <input type="text" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="API Key"
                 className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
             <div>
-              <label className="text-xs text-pf-text-muted mb-1.5 block">
+              <label className="text-xs text-pf-text-secondary mb-1.5 block">
                 API Secret <span className="text-red-400">*</span>
               </label>
               <div className="relative">
@@ -158,7 +158,7 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label className="text-xs text-pf-text-muted mb-1.5 block">
+              <label className="text-xs text-pf-text-secondary mb-1.5 block">
                 API Passphrase <span className="text-red-400">*</span>
               </label>
               <div className="relative">
@@ -170,14 +170,14 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label className="text-xs text-pf-text-muted mb-1.5 block">
+              <label className="text-xs text-pf-text-secondary mb-1.5 block">
                 Safe Address <span className="text-pf-text-muted text-[10px]">(optional)</span>
               </label>
               <input type="text" value={safeAddress} onChange={e => setSafeAddress(e.target.value)} placeholder="0x..."
                 className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
             <button onClick={importCredentials} disabled={!canImport}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {importing ? <Loader2 className="size-4 animate-spin" /> : <Link2 className="size-4" />}
               Connect Account
             </button>

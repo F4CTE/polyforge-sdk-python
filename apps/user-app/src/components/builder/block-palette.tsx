@@ -183,7 +183,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
 
         {/* Block palette */}
         <div className="px-4 py-3">
-          <h3 className="text-xs font-medium text-pf-text-muted uppercase tracking-wider mb-2">
+          <h3 className="text-xs font-medium text-pf-text-secondary uppercase tracking-wider mb-2">
             Blocks
           </h3>
 

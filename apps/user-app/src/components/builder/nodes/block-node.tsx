@@ -43,7 +43,16 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         style={{ borderColor: d.color }}
       />
 
-      <div className="w-[260px] bg-pf-elevated border border-pf-border rounded-pf-md shadow-pf-md overflow-hidden">
+      <div
+        className="w-[260px] rounded-pf-md shadow-pf-md overflow-hidden"
+        style={{
+          backgroundColor: 'var(--color-pf-elevated)',
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: 'var(--color-pf-border)',
+          color: 'var(--color-pf-text)',
+        }}
+      >
         {/* Header bar */}
         <div
           className="flex items-center gap-2 px-3 py-2"

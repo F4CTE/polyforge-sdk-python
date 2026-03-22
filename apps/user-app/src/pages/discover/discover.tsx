@@ -195,14 +195,17 @@ export function Component() {
                   </div>
                 )}
 
+                {/* Separator */}
+                <div className="border-t border-pf-border-subtle my-2" />
+
                 {/* Footer stats */}
-                <div className="flex items-center gap-3 text-xs text-pf-text-muted pt-2 border-t border-pf-border-subtle">
-                  <span className="flex items-center gap-1"><Heart className="size-3" /> {s.likeCount}</span>
-                  <span className="flex items-center gap-1"><GitFork className="size-3" /> {s.forkCount}</span>
-                  <span className={`ml-auto font-mono ${
+                <div className="flex items-center gap-3 text-sm text-pf-text-muted pt-1">
+                  <span className="flex items-center gap-1"><Heart className="size-3.5" /> {s.likeCount}</span>
+                  <span className="flex items-center gap-1"><GitFork className="size-3.5" /> {s.forkCount}</span>
+                  <span className={`ml-auto font-mono text-sm font-bold ${
                     pnl > 0 ? 'text-emerald-400' : pnl < 0 ? 'text-red-400' : 'text-pf-text-muted'
                   }`}>
-                    <span className="text-[10px] text-pf-text-muted font-sans mr-0.5">24h</span>
+                    <span className="text-[11px] text-pf-text-muted font-sans font-normal mr-0.5">24h</span>
                     {pnl !== 0 ? `${pnl > 0 ? '+' : ''}${pnl.toFixed(1)}%` : '\u2014'}
                   </span>
                   <span className="font-mono text-[11px]">{formatDate(s.createdAt)}</span>

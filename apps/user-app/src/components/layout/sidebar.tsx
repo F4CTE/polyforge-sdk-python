@@ -62,7 +62,7 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <aside
-      className="flex flex-col h-full bg-pf-surface border-r border-pf-border transition-all duration-200"
+      className="flex flex-col h-full bg-pf-elevated border-r border-pf-border transition-all duration-200"
       style={{ width: collapsed ? 64 : 240, minWidth: collapsed ? 64 : 240 }}
     >
       {/* Logo */}
@@ -100,7 +100,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {navSections.map((section) => (
           <div key={section.title}>
             {!collapsed && (
-              <div className="px-2 mb-1 text-[11px] font-medium uppercase tracking-wider text-pf-text-muted">
+              <div className="px-2 mb-1 text-[11px] font-semibold uppercase tracking-wider text-pf-text-secondary">
                 {section.title}
               </div>
             )}
@@ -114,7 +114,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 ${
                       isActive
                         ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
-                        : 'text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text'
+                        : 'text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text'
                     }`
                   }
                 >
@@ -131,7 +131,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="border-t border-pf-border px-2 py-2 space-y-0.5">
         <button
           onClick={onToggle}
-          className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text w-full"
+          className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text w-full"
           aria-label="Toggle sidebar"
         >
           {collapsed ? (
@@ -147,7 +147,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 ${
               isActive
                 ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
-                : 'text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text'
+                : 'text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text'
             }`
           }
         >

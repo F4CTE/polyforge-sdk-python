@@ -125,7 +125,7 @@ export function Component() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-pf-surface text-left text-xs text-pf-text-muted uppercase tracking-wider">
+              <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                 <th className="px-4 py-3 font-medium text-right w-16">Rank</th>
                 <th className="px-4 py-3 font-medium">Trader</th>
                 <th className="px-4 py-3 font-medium text-right">P&L</th>

@@ -79,8 +79,6 @@ export function StrategyCanvas() {
   // ─── Theme-aware colors ──────────────────────────────────────────────
 
   const isDark = useThemeStore((s) => s.isDark);
-  const bgColor = isDark ? '#020817' : '#ffffff';
-  const dotColor = isDark ? '#334155' : '#cbd5e1';
 
   // ─── Empty state ──────────────────────────────────────────────────────
 
@@ -89,6 +87,7 @@ export function StrategyCanvas() {
   return (
     <div ref={reactFlowWrapper} className="w-full h-full relative">
       <ReactFlow
+        colorMode={isDark ? 'dark' : 'light'}
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
@@ -110,25 +109,22 @@ export function StrategyCanvas() {
         }}
         proOptions={{ hideAttribution: true }}
         className="strategy-builder-flow"
-        style={{ background: bgColor }}
       >
         <Background
           variant={BackgroundVariant.Dots}
           gap={20}
-          size={2}
-          color={dotColor}
+          size={1}
         />
         <Controls
+          position="bottom-left"
           showInteractive={false}
-          className="!bg-pf-elevated !border-pf-border !rounded-pf-md !shadow-pf-md [&>button]:!bg-pf-elevated [&>button]:!border-pf-border-subtle [&>button]:!text-pf-text-secondary [&>button:hover]:!bg-pf-overlay"
         />
         <MiniMap
+          position="bottom-right"
           nodeColor={(node) => {
             const data = node.data as BlockNodeData;
             return data?.color ?? '#6B7280';
           }}
-          maskColor="rgba(0, 0, 0, 0.7)"
-          className="!bg-pf-surface !border-pf-border !rounded-pf-md"
           pannable
           zoomable
         />
@@ -138,9 +134,9 @@ export function StrategyCanvas() {
       {isEmpty && (
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
           <div className="flex flex-col items-center gap-3 text-center">
-            <div className="w-16 h-16 rounded-full bg-pf-surface border border-pf-border-subtle flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-pf-surface border border-pf-border flex items-center justify-center">
               <svg
-                className="size-8 text-pf-text-muted/30"
+                className="size-8 text-pf-text-muted dark:opacity-40 opacity-60"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

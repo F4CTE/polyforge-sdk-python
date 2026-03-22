@@ -74,7 +74,7 @@ export function Component() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
         <div>
-          <label className="text-xs text-pf-text-muted uppercase tracking-wider mb-1.5 block">Subject</label>
+          <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Subject</label>
           <input
             type="text"
             value={subject}
@@ -86,7 +86,7 @@ export function Component() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs text-pf-text-muted uppercase tracking-wider mb-1.5 block">Category</label>
+            <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Category</label>
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
@@ -96,7 +96,7 @@ export function Component() {
             </select>
           </div>
           <div>
-            <label className="text-xs text-pf-text-muted uppercase tracking-wider mb-1.5 block">Priority</label>
+            <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Priority</label>
             <select
               value={priority}
               onChange={e => setPriority(e.target.value)}
@@ -108,7 +108,7 @@ export function Component() {
         </div>
 
         <div>
-          <label className="text-xs text-pf-text-muted uppercase tracking-wider mb-1.5 block">Description</label>
+          <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Description</label>
           <textarea
             value={body}
             onChange={e => setBody(e.target.value)}
@@ -126,7 +126,7 @@ export function Component() {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             Submit Ticket

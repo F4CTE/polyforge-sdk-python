@@ -45,7 +45,7 @@ export function Topbar() {
       {/* Theme toggle */}
       <button
         onClick={toggleTheme}
-        className="p-2 rounded-pf-sm text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors"
+        className="p-2 rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text transition-colors"
         aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       >
         {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -55,7 +55,7 @@ export function Topbar() {
       <div className="relative" ref={notifRef}>
         <button
           onClick={() => setNotifOpen((v) => !v)}
-          className="relative p-2 rounded-pf-sm text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors"
+          className="relative p-2 rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text transition-colors"
           aria-label="Notifications"
           aria-expanded={notifOpen}
         >
@@ -65,6 +65,8 @@ export function Topbar() {
               {unread > 9 ? '9+' : unread}
             </span>
           )}
+          {/* WebSocket active indicator */}
+          <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-dot" />
         </button>
 
         {notifOpen && (
@@ -142,7 +144,7 @@ export function Topbar() {
           <span className="text-sm text-pf-text hidden sm:inline">
             {displayName}
           </span>
-          <ChevronDown size={14} className="text-pf-text-muted" />
+          <ChevronDown size={14} className="text-pf-text-secondary" />
         </button>
 
         {menuOpen && (

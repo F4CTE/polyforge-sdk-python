@@ -279,23 +279,23 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
           <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Public Profile</h2>
           <div>
-            <label className="text-xs text-pf-text-muted mb-1.5 block">Display Name</label>
+            <label className="text-xs text-pf-text-secondary mb-1.5 block">Display Name</label>
             <input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your display name"
               className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
           </div>
           <div>
-            <label className="text-xs text-pf-text-muted mb-1.5 block">Bio</label>
+            <label className="text-xs text-pf-text-secondary mb-1.5 block">Bio</label>
             <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="Tell others about yourself..."
               className="w-full px-3 py-2.5 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors resize-y" />
           </div>
           <div>
-            <label className="text-xs text-pf-text-muted mb-1.5 block">Avatar URL</label>
+            <label className="text-xs text-pf-text-secondary mb-1.5 block">Avatar URL</label>
             <input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://..."
               className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
           </div>
           <div className="flex justify-end">
             <button onClick={saveProfile} disabled={profileSaving}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
               {profileSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Save Profile
             </button>
@@ -311,7 +311,7 @@ export function Component() {
             <div key={item.key} className="flex items-center justify-between py-3 border-b border-pf-border-subtle last:border-0">
               <div>
                 <div className="text-sm font-medium text-pf-text">{item.label}</div>
-                <div className="text-xs text-pf-text-muted mt-0.5">{item.desc}</div>
+                <div className="text-xs text-pf-text-secondary mt-0.5">{item.desc}</div>
               </div>
               <button
                 role="switch"
@@ -325,7 +325,7 @@ export function Component() {
           ))}
           <div className="flex justify-end pt-4">
             <button onClick={saveNotifications} disabled={notifSaving}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
               {notifSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Save Preferences
             </button>
@@ -338,7 +338,7 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
           <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Change Password</h2>
           <div>
-            <label className="text-xs text-pf-text-muted mb-1.5 block">Current Password</label>
+            <label className="text-xs text-pf-text-secondary mb-1.5 block">Current Password</label>
             <div className="relative">
               <input type={showCurrentPw ? 'text' : 'password'} value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
                 className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
@@ -348,7 +348,7 @@ export function Component() {
             </div>
           </div>
           <div>
-            <label className="text-xs text-pf-text-muted mb-1.5 block">New Password</label>
+            <label className="text-xs text-pf-text-secondary mb-1.5 block">New Password</label>
             <div className="relative">
               <input type={showNewPw ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)}
                 className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
@@ -358,7 +358,7 @@ export function Component() {
             </div>
           </div>
           <div>
-            <label className="text-xs text-pf-text-muted mb-1.5 block">Confirm New Password</label>
+            <label className="text-xs text-pf-text-secondary mb-1.5 block">Confirm New Password</label>
             <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
               className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             {confirmPassword && newPassword !== confirmPassword && (
@@ -367,7 +367,7 @@ export function Component() {
           </div>
           <div className="flex justify-end">
             <button onClick={savePassword} disabled={pwSaving || !currentPassword || !newPassword || newPassword !== confirmPassword}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
               {pwSaving ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}
               Change Password
             </button>
@@ -386,7 +386,7 @@ export function Component() {
                 2FA is currently <strong className="text-emerald-400">enabled</strong>.
               </p>
               <div>
-                <label className="text-xs text-pf-text-muted mb-1.5 block">Enter your TOTP code to disable</label>
+                <label className="text-xs text-pf-text-secondary mb-1.5 block">Enter your TOTP code to disable</label>
                 <input value={totpCode} onChange={e => setTotpCode(e.target.value)} placeholder="6-digit code" maxLength={6}
                   className="w-full max-w-[200px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
               </div>
@@ -403,13 +403,13 @@ export function Component() {
                 <img src={totpSetupData.qrCodeUri} alt="TOTP QR Code" className="w-48 h-48 rounded-pf-lg bg-white p-2" />
               </div>
               <div>
-                <label className="text-xs text-pf-text-muted mb-1.5 block">Verification Code</label>
+                <label className="text-xs text-pf-text-secondary mb-1.5 block">Verification Code</label>
                 <input value={totpCode} onChange={e => setTotpCode(e.target.value)} placeholder="6-digit code" maxLength={6}
                   className="w-full max-w-[200px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
               </div>
               {totpSetupData.backupCodes.length > 0 && (
                 <div className="bg-pf-surface rounded-pf p-4">
-                  <div className="text-xs text-pf-text-muted mb-2 font-medium">Backup Codes (save these!)</div>
+                  <div className="text-xs text-pf-text-secondary mb-2 font-medium">Backup Codes (save these!)</div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {totpSetupData.backupCodes.map(code => (
                       <span key={code} className="font-mono text-xs text-pf-text bg-pf-overlay px-2 py-1 rounded text-center">{code}</span>
@@ -418,7 +418,7 @@ export function Component() {
                 </div>
               )}
               <button onClick={confirmTotp} disabled={totpSaving || !totpCode}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
+                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
                 {totpSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                 Confirm & Enable 2FA
               </button>
@@ -445,12 +445,12 @@ export function Component() {
           <div className="space-y-4">
             <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Generate API Key</h2>
             <div>
-              <label className="text-xs text-pf-text-muted mb-1.5 block">Key Name</label>
+              <label className="text-xs text-pf-text-secondary mb-1.5 block">Key Name</label>
               <input value={newKeyName} onChange={e => setNewKeyName(e.target.value)} placeholder="My Integration"
                 className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
             <div>
-              <label className="text-xs text-pf-text-muted mb-1.5 block">Scopes</label>
+              <label className="text-xs text-pf-text-secondary mb-1.5 block">Scopes</label>
               <div className="flex gap-4 mt-1">
                 {(['read', 'write', 'trade'] as const).map(scope => (
                   <label key={scope} className="flex items-center gap-1.5 cursor-pointer text-sm text-pf-text-secondary">
@@ -463,12 +463,12 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label className="text-xs text-pf-text-muted mb-1.5 block">Expiration (optional)</label>
+              <label className="text-xs text-pf-text-secondary mb-1.5 block">Expiration (optional)</label>
               <input type="date" value={newKeyExpiration} onChange={e => setNewKeyExpiration(e.target.value)}
                 className="w-full max-w-[220px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
             <button onClick={createApiKey} disabled={apiKeysCreating || !newKeyName.trim()}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors">
               {apiKeysCreating ? <Loader2 className="size-4 animate-spin" /> : <Key className="size-4" />}
               Generate API Key
             </button>
@@ -503,7 +503,7 @@ export function Component() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-xs text-pf-text-muted uppercase tracking-wider border-b border-pf-border-subtle">
+                    <tr className="text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border-subtle">
                       <th className="pb-2 font-medium">Name</th>
                       <th className="pb-2 font-medium">Key Prefix</th>
                       <th className="pb-2 font-medium">Scopes</th>

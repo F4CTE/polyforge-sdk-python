@@ -272,8 +272,8 @@ export function Component() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-pf-border">
-                <th className="text-left py-2 px-3 text-xs text-pf-text-muted font-semibold">Code</th>
-                <th className="text-left py-2 px-3 text-xs text-pf-text-muted font-semibold">Meaning</th>
+                <th className="text-left py-2 px-3 text-xs text-pf-text-secondary font-semibold">Code</th>
+                <th className="text-left py-2 px-3 text-xs text-pf-text-secondary font-semibold">Meaning</th>
               </tr>
             </thead>
             <tbody>

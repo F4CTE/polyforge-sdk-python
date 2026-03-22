@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ReactFlowProvider } from '@xyflow/react';
-import { ArrowLeft, Check, Loader2, Pencil, Settings2 } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Pencil, Blocks } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { StrategyCanvas } from '../../components/builder/strategy-canvas';
@@ -115,9 +115,9 @@ export function Component() {
                 ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
                 : 'text-pf-text-muted hover:text-pf-text-secondary hover:bg-pf-overlay'
             }`}
-            title={panelOpen ? 'Close panel' : 'Open panel'}
+            title={panelOpen ? 'Hide blocks' : 'Show blocks'}
           >
-            <Settings2 className="size-4" />
+            <Blocks className="size-4" />
           </button>
 
           <Link
@@ -130,7 +130,7 @@ export function Component() {
           <button
             onClick={onSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm bg-pf-cyan-500 text-white text-xs font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm bg-pf-cyan-500 text-black text-xs font-medium hover:bg-pf-cyan-600 disabled:opacity-50 transition-colors"
           >
             {saving ? (
               <Loader2 className="size-3 animate-spin" />
@@ -148,17 +148,6 @@ export function Component() {
           {/* Canvas */}
           <div className="flex-1 relative min-w-0">
             <StrategyCanvas />
-
-            {/* Panel toggle when closed */}
-            {!panelOpen && (
-              <button
-                onClick={() => setPanelOpen(true)}
-                className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border shadow-pf-md text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
-              >
-                <Settings2 className="size-4" />
-                <span>Blocks</span>
-              </button>
-            )}
           </div>
 
           {/* Side panel — always mounted, collapsed via width to prevent React Flow reflow issues */}
