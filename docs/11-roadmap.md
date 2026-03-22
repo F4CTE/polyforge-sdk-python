@@ -16,6 +16,7 @@
 | [Phase 5](#phase-5--angular-user-app) | Angular User App 🔴 | 10 semaines | S18–S27 |
 | [Phase 6](#phase-6--admin-bots--notifications) | Admin, Bots & Notifications | 5 semaines | S28–S32 |
 | [Phase 7](#phase-7--qa--production) | QA & Production | 4 semaines | S33–S36 |
+| [Phase 8](#phase-8--competitive-features-post-launch) | Competitive Features (Post-Launch) | ongoing | Post-S36 |
 
 ---
 
@@ -513,4 +514,112 @@ Un service en amont bloqué bloque tout ce qui est en dessous. L'ordre de dével
 
 ---
 
-*Documents de référence : [Architecture](./01-architecture.md) · [Fonctionnalités](./00-features-and-functionalities.md) · [API Catalog](./06-api-catalog.md) · [Dev Setup](./09-dev-setup.md)*
+---
+
+## Phase 8 — Competitive Features (Post-Launch)
+
+**Based on [Competitor Audit](./polyforge_competitor_audit.md) — 199 Polymarket Builders Program participants analyzed.**
+
+### 8.1 · Copy Trading `HIGH PRIORITY`
+
+The most contested feature space in the ecosystem. Polyforge's advantage: combine copy trading with our existing risk controls (Safety blocks) and self-custodial architecture.
+
+- **Wallet tracking service** — monitor on-chain transactions of specified wallets
+- **Copy trading engine** — automatically mirror trades from tracked wallets
+  - Position sizing controls (percentage, fixed amount, max exposure)
+  - Risk filters: min win-rate, max drawdown, min trade size
+  - Price offset — adjust entry price relative to copied trade
+- **Top traders discovery** — surface profitable wallets by P&L, win rate, volume
+- **Copy trading UI** — user-app page to browse/follow/configure copy targets
+- **Self-custodial** — user signs every trade (unlike PolyCop's custodial model)
+
+### 8.2 · Whale Tracking & Alerts `HIGH PRIORITY`
+
+Low-hanging fruit — monitor large on-chain trades and notify users.
+
+- **Whale detection service** — monitor Polymarket CLOB for trades above configurable threshold ($5K+)
+- **Real-time whale feed** — WebSocket events for large trades
+- **Whale notifications** — Telegram/Discord/email alerts when whales move
+- **Whale analytics** — track whale P&L, portfolio composition, market impact
+- **Smart money dashboard** — admin + user-facing whale activity feed
+- **Whale follow** — users can follow specific whale wallets for notifications
+
+### 8.3 · AI News-to-Trade Pipeline `HIGH PRIORITY`
+
+No dominant player exists. LLM-powered market intelligence.
+
+- **News ingestion service** — aggregate news from RSS, Twitter/X, news APIs
+- **LLM market matcher** — identify which Polymarket markets relate to breaking news
+- **Trade signal generation** — suggest buy/sell based on news sentiment + market state
+- **News feed UI** — curated news tied to user's positions and watchlist
+- **AI market summaries** — auto-generated market analysis (similar to Polymtrade's 55K resolved markets AI)
+- **API endpoint** — expose signals via API for external AI agents
+
+### 8.4 · Advanced Order Types `MEDIUM PRIORITY`
+
+Essential for serious traders. Stand.trade's TP/SL is the benchmark.
+
+- **Take-Profit orders** — auto-sell when position reaches target profit
+- **Stop-Loss orders** — auto-sell when position drops below threshold
+- **Trailing Stop** — dynamic stop that follows price movement
+- **Pegged (moving limit) orders** — for Polymarket Rewards farming
+- **Multi-order management** — apply TP/SL across entire portfolio
+- **Order automation UI** — simple interface for setting up advanced orders
+
+### 8.5 · Multi-Platform Aggregation `MEDIUM PRIORITY`
+
+Stand.trade + Kreo + Bullpen have proven demand for cross-platform trading.
+
+- **Kalshi integration** — browse and trade Kalshi markets alongside Polymarket
+- **Unified portfolio** — combined P&L across platforms
+- **Cross-platform arbitrage scanner** — detect price discrepancies
+- **Unified order book** — side-by-side comparison of same-topic markets
+- **Market mapping** — auto-match equivalent markets across platforms
+
+### 8.6 · Mobile App `MEDIUM PRIORITY`
+
+Polymtrade proved mobile-first demand. React Native or Capacitor for code sharing.
+
+- **React Native app** (or Capacitor wrapper of React web app)
+- **Push notifications** — native mobile alerts
+- **Biometric auth** — Face ID / fingerprint login
+- **Quick trade** — simplified trading flow for mobile
+- **Offline portfolio view** — cached positions accessible without network
+
+### 8.7 · Social Reputation System `LOW PRIORITY`
+
+Open infrastructure gap — no competitor has built this.
+
+- **Trader score** — calculated from win rate, P&L, consistency, market diversity
+- **Public track record** — verifiable trading history on user profiles
+- **Reputation badges** — earned through trading milestones
+- **Trust tiers** — unlock features based on reputation (e.g., copy trading eligibility)
+- **On-chain verification** — optional blockchain-verifiable track record
+
+### 8.8 · Gasless Trading `LOW PRIORITY`
+
+UX improvement that reduces friction for new users.
+
+- **Gas sponsorship** — platform absorbs Polygon gas fees
+- **Meta-transactions** — use EIP-2771 for gasless execution
+- **Fee model** — offset gas costs through platform fee (e.g., 0.5% trade fee)
+- **Threshold** — gasless for trades under $100, user pays above
+
+---
+
+## Phase 8 Priority Matrix
+
+| Feature | Business Impact | Technical Effort | Competitive Urgency | Priority |
+|---------|:-:|:-:|:-:|:-:|
+| Copy Trading | 🔴 HIGH | 🟡 MEDIUM | 🔴 HIGH (most contested) | **P0** |
+| Whale Tracking | 🔴 HIGH | 🟢 LOW | 🟡 MEDIUM | **P0** |
+| News-to-Trade AI | 🔴 HIGH | 🔴 HIGH | 🟢 LOW (no dominant player) | **P1** |
+| Advanced Orders (TP/SL) | 🟡 MEDIUM | 🟡 MEDIUM | 🟡 MEDIUM | **P1** |
+| Multi-Platform | 🟡 MEDIUM | 🔴 HIGH | 🟡 MEDIUM | **P2** |
+| Mobile App | 🟡 MEDIUM | 🟡 MEDIUM | 🟡 MEDIUM | **P2** |
+| Social Reputation | 🟢 LOW | 🟡 MEDIUM | 🟢 LOW | **P3** |
+| Gasless Trading | 🟢 LOW | 🟡 MEDIUM | 🟢 LOW | **P3** |
+
+---
+
+*Documents de référence : [Architecture](./01-architecture.md) · [Fonctionnalités](./00-features-and-functionalities.md) · [API Catalog](./06-api-catalog.md) · [Dev Setup](./09-dev-setup.md) · [Competitor Audit](./polyforge_competitor_audit.md)*
