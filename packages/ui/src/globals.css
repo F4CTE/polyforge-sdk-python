@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  /* Backgrounds */
-  --color-pf-base: #080C14;
-  --color-pf-surface: #0D1421;
-  --color-pf-elevated: #111D2E;
-  --color-pf-overlay: #162030;
+  /* Backgrounds — shadcn near-black */
+  --color-pf-base: #020817;
+  --color-pf-surface: #0f172a;
+  --color-pf-elevated: #0f172a;
+  --color-pf-overlay: #1e293b;
 
-  /* Borders */
-  --color-pf-border-subtle: #1A2840;
-  --color-pf-border: #1E3350;
-  --color-pf-border-strong: #264060;
+  /* Borders — shadcn slate-800/700 */
+  --color-pf-border-subtle: #1e293b;
+  --color-pf-border: #1e293b;
+  --color-pf-border-strong: #334155;
 
-  /* Text */
-  --color-pf-text: #E8EDF5;
-  --color-pf-text-secondary: #7A94B4;
-  --color-pf-text-muted: #445E7A;
+  /* Text — shadcn slate-50/400/500 */
+  --color-pf-text: #f8fafc;
+  --color-pf-text-secondary: #94a3b8;
+  --color-pf-text-muted: #64748b;
 
   /* Cyan accent */
   --color-pf-cyan-300: #67E8F9;
@@ -41,11 +41,11 @@
   --color-pf-warning: #F59E0B;
   --color-pf-info: #3B82F6;
 
-  /* Shadows */
-  --shadow-pf-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-pf-sm: 0 2px 4px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15);
-  --shadow-pf-md: 0 4px 12px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15);
-  --shadow-pf-lg: 0 8px 24px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* Shadows — minimal for shadcn dark */
+  --shadow-pf-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-pf-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-pf-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-pf-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
 
   /* Radius */
   --radius-pf-sm: 6px;
@@ -77,16 +77,16 @@ body {
 
 /* Light theme overrides */
 .light {
-  --color-pf-base: #F8FAFC;
-  --color-pf-surface: #F1F5F9;
-  --color-pf-elevated: #FFFFFF;
-  --color-pf-overlay: rgba(0, 0, 0, 0.04);
-  --color-pf-border-subtle: #F1F5F9;
-  --color-pf-border: #E2E8F0;
-  --color-pf-border-strong: #CBD5E1;
-  --color-pf-text: #0F172A;
-  --color-pf-text-secondary: #334155;
-  --color-pf-text-muted: #64748B;
+  --color-pf-base: #ffffff;
+  --color-pf-surface: #f8fafc;
+  --color-pf-elevated: #ffffff;
+  --color-pf-overlay: #f1f5f9;
+  --color-pf-border-subtle: #f1f5f9;
+  --color-pf-border: #e2e8f0;
+  --color-pf-border-strong: #cbd5e1;
+  --color-pf-text: #0f172a;
+  --color-pf-text-secondary: #475569;
+  --color-pf-text-muted: #94a3b8;
   --shadow-pf-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-pf-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
   --shadow-pf-md: 0 4px 12px rgba(0, 0, 0, 0.08);
