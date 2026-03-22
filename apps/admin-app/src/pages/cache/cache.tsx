@@ -74,19 +74,19 @@ export function Component() {
           <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
             <div className="text-xs text-[var(--color-pf-text-tertiary)] mb-1">Hit Rate</div>
             <div className="text-2xl font-bold text-[var(--color-pf-text)]">
-              {(stats.hitRate * 100).toFixed(1)}%
+              {((stats.hitRate ?? 0) * 100).toFixed(1)}%
             </div>
           </div>
           <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
             <div className="text-xs text-[var(--color-pf-text-tertiary)] mb-1">Total Keys</div>
             <div className="text-2xl font-bold text-[var(--color-pf-text)]">
-              {stats.keyCount.toLocaleString()}
+              {(stats.keyCount ?? 0).toLocaleString()}
             </div>
           </div>
           <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
             <div className="text-xs text-[var(--color-pf-text-tertiary)] mb-1">Memory Usage</div>
             <div className="text-2xl font-bold text-[var(--color-pf-text)]">
-              {stats.memoryUsageMb.toFixed(1)} MB
+              {(stats.memoryUsageMb ?? 0).toFixed(1)} MB
             </div>
           </div>
         </div>
