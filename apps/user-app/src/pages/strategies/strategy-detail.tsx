@@ -13,6 +13,7 @@ import {
   FileText,
   Download,
   Share2,
+  GitBranch,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -40,13 +41,26 @@ interface Strategy {
   status: StrategyStatus;
   version: number;
   template: boolean;
+  parentStrategyId: string | null;
   forkedFromId: string | null;
   forkCount: number;
   likeCount: number;
+  childCount: number;
   tags: string[];
   createdAt: string;
   updatedAt: string;
   totalPnl?: number;
+}
+
+interface ChildStrategy {
+  id: string;
+  name: string;
+  status: StrategyStatus;
+}
+
+interface ParentStrategy {
+  id: string;
+  name: string;
 }
 
 interface LiveLogEntry {
@@ -140,6 +154,8 @@ export function Component() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [liveLog] = useState<LiveLogEntry[]>([]);
+  const [childStrategies, setChildStrategies] = useState<ChildStrategy[]>([]);
+  const [parentStrategy, setParentStrategy] = useState<ParentStrategy | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -152,7 +168,28 @@ export function Component() {
         return r.json();
       })
       .then((s: Strategy | null) => {
-        if (s) { setStrategy(s); setLoading(false); }
+        if (s) {
+          setStrategy(s);
+          setLoading(false);
+
+          // Fetch children if any
+          if (s.childCount > 0) {
+            fetch(`/api/v1/strategies/${s.id}/children`, { credentials: 'include' })
+              .then((r) => r.ok ? r.json() : { children: [] })
+              .then((res) => setChildStrategies(res.children ?? []))
+              .catch(() => setChildStrategies([]));
+          }
+
+          // Fetch parent if has one
+          if (s.parentStrategyId) {
+            fetch(`/api/v1/strategies/${s.parentStrategyId}`, { credentials: 'include' })
+              .then((r) => r.ok ? r.json() : null)
+              .then((parent) => {
+                if (parent) setParentStrategy({ id: parent.id, name: parent.name });
+              })
+              .catch(() => {});
+          }
+        }
       })
       .catch(() => { setLoadError('Failed to load strategy. Please try again.'); setLoading(false); });
   }, [id]);
@@ -388,6 +425,51 @@ export function Component() {
               Updated {formatDate(strategy.updatedAt)}
             </span>
           </div>
+
+          {/* Parent strategy link */}
+          {parentStrategy && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-pf-elevated border border-pf-border rounded-pf-lg">
+              <GitBranch className="size-3.5 text-pf-text-muted" />
+              <span className="text-xs text-pf-text-muted">Part of:</span>
+              <Link
+                to={`/strategies/${parentStrategy.id}`}
+                className="text-xs text-pf-cyan-400 hover:underline font-medium"
+              >
+                {parentStrategy.name}
+              </Link>
+            </div>
+          )}
+
+          {/* Sub-Strategies */}
+          {childStrategies.length > 0 && (
+            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <h3 className="text-sm font-medium text-pf-text mb-3 flex items-center gap-2">
+                <GitBranch className="size-4" />
+                Sub-Strategies
+                <span className="text-xs text-pf-text-muted">({childStrategies.length})</span>
+              </h3>
+              <div className="space-y-2">
+                {childStrategies.map((child) => {
+                  const childStyle = STATUS_STYLES[child.status] ?? STATUS_STYLES.IDLE;
+                  return (
+                    <Link
+                      key={child.id}
+                      to={`/strategies/${child.id}`}
+                      className="flex items-center justify-between px-3 py-2 rounded-pf-sm border border-pf-border-subtle hover:border-pf-border-strong transition-colors"
+                    >
+                      <span className="text-xs text-pf-text font-medium">{child.name}</span>
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${childStyle.bg} ${childStyle.text}`}
+                      >
+                        <span className={`w-1 h-1 rounded-full ${childStyle.dot}`} />
+                        {child.status}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* P&L */}
           {pnl !== null && (

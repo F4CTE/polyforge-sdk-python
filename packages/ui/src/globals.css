@@ -199,18 +199,18 @@ body {
 
 /* Light theme overrides */
 .light {
-  --color-pf-base: #ffffff;
-  --color-pf-surface: #f8fafc;
+  --color-pf-base: #f8fafc;
+  --color-pf-surface: #f1f5f9;
   --color-pf-elevated: #ffffff;
-  --color-pf-overlay: #f1f5f9;
-  --color-pf-border-subtle: #f1f5f9;
+  --color-pf-overlay: #e2e8f0;
+  --color-pf-border-subtle: #e2e8f0;
   --color-pf-border: #e2e8f0;
   --color-pf-border-strong: #cbd5e1;
   --color-pf-text: #0f172a;
-  --color-pf-text-secondary: #475569;
-  --color-pf-text-muted: #94a3b8;
-  --color-pf-text-tertiary: #94a3b8;
-  --color-pf-bg: #ffffff;
+  --color-pf-text-secondary: #334155;
+  --color-pf-text-muted: #64748b;
+  --color-pf-text-tertiary: #64748b;
+  --color-pf-bg: #f8fafc;
   --shadow-pf-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-pf-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
   --shadow-pf-md: 0 4px 12px rgba(0, 0, 0, 0.08);

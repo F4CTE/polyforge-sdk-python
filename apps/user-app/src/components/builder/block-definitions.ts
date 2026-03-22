@@ -5,8 +5,10 @@ export type BlockSection = 'safety' | 'triggers' | 'conditions' | 'actions' | 'l
 export interface BlockField {
   key: string;
   label: string;
-  type: 'text' | 'number';
+  type: 'text' | 'number' | 'select';
   placeholder: string;
+  /** Options for 'select' type fields */
+  options?: string[];
 }
 
 export interface BlockDef {
@@ -396,6 +398,15 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Notify',
       description: 'Send a notification when this action fires.',
       fields: [{ key: 'message', label: 'Message', type: 'text', placeholder: 'Alert triggered' }],
+    },
+    {
+      type: 'RUN_STRATEGY',
+      label: 'Run Strategy',
+      description: 'Launch another strategy as a sub-strategy.',
+      fields: [
+        { key: 'strategyId', label: 'Strategy', type: 'select', placeholder: 'Select a strategy' },
+        { key: 'mode', label: 'Mode', type: 'select', placeholder: 'Select mode', options: ['fire_and_forget', 'managed', 'scoped'] },
+      ],
     },
   ],
 };

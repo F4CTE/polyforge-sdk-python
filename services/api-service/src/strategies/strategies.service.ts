@@ -100,7 +100,7 @@ export class StrategiesService {
     });
   }
 
-  async findOne(id: string, userId: string): Promise<Strategy> {
+  async findOne(id: string, userId: string): Promise<Strategy & { childCount: number }> {
     const strategy = await this.prisma.strategy.findUnique({ where: { id } });
     if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
       throw new NotFoundException({
@@ -117,7 +117,10 @@ export class StrategiesService {
         message: "Access denied",
       });
     }
-    return strategy;
+    const childCount = await this.prisma.strategy.count({
+      where: { parentStrategyId: id, status: { not: StrategyStatus.ARCHIVED } },
+    });
+    return { ...strategy, childCount };
   }
 
   async update(
@@ -173,6 +176,11 @@ export class StrategiesService {
         message: "Stop strategy before deleting",
       });
     }
+    // Detach children (don't delete them)
+    await this.prisma.strategy.updateMany({
+      where: { parentStrategyId: id },
+      data: { parentStrategyId: null },
+    });
     await this.prisma.strategy.update({
       where: { id },
       data: { status: StrategyStatus.ARCHIVED },
@@ -238,6 +246,24 @@ export class StrategiesService {
     userId: string,
   ): Promise<{ status: string; stoppedAt: string }> {
     await this.getOwned(id, userId);
+
+    // Stop managed children first
+    const children = await this.prisma.strategy.findMany({
+      where: { parentStrategyId: id, status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] } },
+      select: { id: true },
+    });
+    for (const child of children) {
+      try {
+        await this.client.delete(
+          this.engineUrl,
+          "strategy-engine",
+          `/internal/strategies/${child.id}`,
+        );
+      } catch {
+        this.logger.warn(`Failed to stop child strategy ${child.id}`);
+      }
+    }
+
     const res = await this.client.delete(
       this.engineUrl,
       "strategy-engine",
@@ -450,6 +476,19 @@ export class StrategiesService {
       },
     });
     return { reportId: report.id };
+  }
+
+  async listChildren(
+    id: string,
+    userId: string,
+  ): Promise<{ children: Array<{ id: string; name: string; status: string }> }> {
+    await this.getOwned(id, userId);
+    const children = await this.prisma.strategy.findMany({
+      where: { parentStrategyId: id, status: { not: StrategyStatus.ARCHIVED } },
+      select: { id: true, name: true, status: true },
+      orderBy: { createdAt: "desc" },
+    });
+    return { children };
   }
 
   async listTemplates(

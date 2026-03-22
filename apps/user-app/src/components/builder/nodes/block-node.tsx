@@ -1,10 +1,15 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { X, GripVertical, Shield, Zap, Filter, Play } from 'lucide-react';
 import type { BlockNodeData } from '../../../stores/builder-store';
 import { useBuilderStore } from '../../../stores/builder-store';
 
 type BlockNode = Node<BlockNodeData, 'blockNode'>;
+
+interface StrategyOption {
+  id: string;
+  name: string;
+}
 
 const SECTION_ICONS: Record<string, React.ReactNode> = {
   safety: <Shield className="size-3" />,
@@ -17,6 +22,24 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   const d = data;
   const removeNode = useBuilderStore((s) => s.removeNode);
   const updateNodeConfig = useBuilderStore((s) => s.updateNodeConfig);
+  const currentStrategyId = useBuilderStore((s) => s.strategyId);
+
+  // Fetch user strategies for RUN_STRATEGY block's strategyId selector
+  const [strategies, setStrategies] = useState<StrategyOption[]>([]);
+  const isRunStrategy = d.type === 'RUN_STRATEGY';
+
+  useEffect(() => {
+    if (!isRunStrategy) return;
+    fetch('/api/v1/strategies?limit=100', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : { data: [] }))
+      .then((res) => {
+        const list: StrategyOption[] = (res.data ?? [])
+          .filter((s: any) => s.id !== currentStrategyId) // exclude self
+          .map((s: any) => ({ id: s.id, name: s.name }));
+        setStrategies(list);
+      })
+      .catch(() => setStrategies([]));
+  }, [isRunStrategy, currentStrategyId]);
 
   const onDelete = useCallback(
     (e: React.MouseEvent) => {
@@ -32,6 +55,43 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
     },
     [id, updateNodeConfig],
   );
+
+  /** Render a select field for strategy picker or mode picker */
+  function renderSelectField(field: { key: string; label: string; placeholder: string; options?: string[] }) {
+    // Strategy selector: fetch from API
+    if (field.key === 'strategyId' && isRunStrategy) {
+      return (
+        <select
+          value={d.config[field.key] ?? ''}
+          onChange={(e) => onFieldChange(field.key, e.target.value)}
+          className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+        >
+          <option value="">{field.placeholder}</option>
+          {strategies.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    // Generic select with static options
+    return (
+      <select
+        value={d.config[field.key] ?? ''}
+        onChange={(e) => onFieldChange(field.key, e.target.value)}
+        className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+      >
+        <option value="">{field.placeholder}</option>
+        {(field.options ?? []).map((opt) => (
+          <option key={opt} value={opt}>
+            {opt.replace(/_/g, ' ')}
+          </option>
+        ))}
+      </select>
+    );
+  }
 
   return (
     <>
@@ -80,27 +140,31 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                 <label className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                   {field.label}
                 </label>
-                <div className="relative">
-                  <input
-                    type={field.type}
-                    placeholder={field.placeholder}
-                    value={d.config[field.key] ?? ''}
-                    onChange={(e) => onFieldChange(field.key, e.target.value)}
-                    className={`w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors ${
-                      (d.config[field.key] ?? '').startsWith('$')
-                        ? 'text-purple-400 font-mono'
-                        : 'text-pf-text'
-                    }`}
-                  />
-                  {(d.config[field.key] ?? '').startsWith('$') && (
-                    <span
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-purple-400/70 pointer-events-none"
-                      title={`Variable: ${d.config[field.key]}`}
-                    >
-                      var
-                    </span>
-                  )}
-                </div>
+                {field.type === 'select' ? (
+                  renderSelectField(field)
+                ) : (
+                  <div className="relative">
+                    <input
+                      type={field.type}
+                      placeholder={field.placeholder}
+                      value={d.config[field.key] ?? ''}
+                      onChange={(e) => onFieldChange(field.key, e.target.value)}
+                      className={`w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors ${
+                        (d.config[field.key] ?? '').startsWith('$')
+                          ? 'text-purple-400 font-mono'
+                          : 'text-pf-text'
+                      }`}
+                    />
+                    {(d.config[field.key] ?? '').startsWith('$') && (
+                      <span
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-purple-400/70 pointer-events-none"
+                        title={`Variable: ${d.config[field.key]}`}
+                      >
+                        var
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>

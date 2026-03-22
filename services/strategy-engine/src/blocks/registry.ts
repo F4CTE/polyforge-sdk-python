@@ -61,6 +61,7 @@ import {
   ScaleOutAction,
   CancelAllOrdersAction,
   SkipBetAction,
+  RunStrategyAction,
 } from "./action.blocks";
 
 export const SAFETY_REGISTRY: Record<string, BlockEvaluator> = {
@@ -130,6 +131,8 @@ export const ACTION_REGISTRY: Record<string, ActionEvaluator> = {
   cancel_all_orders: CancelAllOrdersAction,
   WAIT: SkipBetAction,
   skip_bet: SkipBetAction,
+  RUN_STRATEGY: RunStrategyAction,
+  run_strategy: RunStrategyAction,
 };
 
 export const LOGIC_REGISTRY: Record<string, LogicBlockEvaluator> = {

@@ -64,7 +64,11 @@ export function makePrisma(overrides: Record<string, unknown> = {}) {
       findUnique: vi.fn().mockResolvedValue(null),
     },
     strategy: {
+      findUnique: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]),
       update: vi.fn().mockResolvedValue({}),
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+      count: vi.fn().mockResolvedValue(0),
     },
     ...overrides,
   } as any;

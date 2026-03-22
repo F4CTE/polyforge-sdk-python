@@ -155,6 +155,14 @@ export class StrategiesController {
     return this.strategies.deleteComment(strategyId, commentId, user.sub);
   }
 
+  @Get(":id/children")
+  listChildren(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.strategies.listChildren(id, user.sub);
+  }
+
   @Post(":id/report")
   @HttpCode(HttpStatus.CREATED)
   report(

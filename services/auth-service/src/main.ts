@@ -67,7 +67,7 @@ async function bootstrap() {
         'https://www.polyforge.app',
         // dev origins — stripped in production by env check
         ...(process.env.NODE_ENV !== 'production'
-          ? ['http://localhost', 'http://localhost:4200'] // gateway (prod-equivalent) + ng serve
+          ? ['http://localhost', 'http://localhost:4200', 'http://localhost:5173', 'http://127.0.0.1'] // gateway + vite dev + IP
           : []),
       ];
       if (!origin || allowed.includes(origin)) {

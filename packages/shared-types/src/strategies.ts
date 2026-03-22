@@ -23,6 +23,10 @@ export enum ExecMode {
   HYBRID = "HYBRID",
 }
 
+// ─── Sub-strategy modes ──────────────────────────────────────────────────────
+
+export type SubStrategyMode = 'fire_and_forget' | 'managed' | 'scoped';
+
 // ─── Blocks ──────────────────────────────────────────────────────────────────
 
 export enum BlockType {
@@ -45,6 +49,7 @@ export enum BlockType {
   BUY = "BUY",
   SELL = "SELL",
   WAIT = "WAIT",
+  RUN_STRATEGY = "RUN_STRATEGY",
 
   // Safety
   DAILY_LOSS_LIMIT = "DAILY_LOSS_LIMIT",
@@ -76,6 +81,7 @@ export interface Strategy {
   calcBlocks?: CalcBlock[];
   status: StrategyStatus;
   errorMessage: string | null;
+  parentStrategyId?: string;
   forkedFromId: string | null;
   forkedFromUserId: string | null;
   forkCount: number;

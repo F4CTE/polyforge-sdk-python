@@ -263,3 +263,43 @@ export const SkipBetAction: ActionEvaluator = {
     return { intents: [] };
   },
 };
+
+// ─── run_strategy — launches a sub-strategy (handled by strategy runner) ───────
+// This is a marker evaluator; the actual sub-strategy launch is handled by
+// the StrategyRunner when it detects a RUN_STRATEGY action block. The evaluator
+// itself returns no order intents — it produces a special __run_strategy__ intent
+// that the runner intercepts and delegates to the registry service.
+export const RunStrategyAction: ActionEvaluator = {
+  async execute(block, ctx, _redis, prisma): Promise<ActionResult> {
+    const { strategyId, mode } = (block["params"] as any) ?? {};
+    if (!strategyId || !mode) return { intents: [] };
+
+    // Self-reference check
+    if (strategyId === ctx.strategyId) return { intents: [] };
+
+    // Validate child strategy exists and is owned by the same user
+    const child = await prisma.strategy.findUnique({
+      where: { id: strategyId },
+      select: { id: true, userId: true },
+    });
+    if (!child || child.userId !== ctx.userId) return { intents: [] };
+
+    // Return a sentinel intent that the runner intercepts
+    return {
+      intents: [
+        {
+          intentId: uuidv4(),
+          userId: ctx.userId,
+          strategyId: ctx.strategyId,
+          marketId: "__run_strategy__",
+          tokenId: strategyId, // child strategy ID
+          side: "BUY",
+          outcome: "YES",
+          size: mode, // sub-strategy mode stored in size field
+          price: "0",
+          orderType: "GTC",
+        },
+      ],
+    };
+  },
+};

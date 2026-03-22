@@ -3,11 +3,13 @@ import {
   Logger,
   NotFoundException,
   ConflictException,
+  UnprocessableEntityException,
   OnApplicationBootstrap,
 } from "@nestjs/common";
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
+import { SubStrategyMode } from "@polyforge/shared-types";
 import { StrategyRunner, StrategyRunnerStatus } from "./strategy-runner";
 import { StateService } from "../state/state.service";
 import { OrderIntent } from "../blocks/block.types";
@@ -19,6 +21,8 @@ const PAPER_ORDER_STREAM = "stream:paper_orders";
 export class StrategyRegistryService implements OnApplicationBootstrap {
   private readonly logger = new Logger(StrategyRegistryService.name);
   private readonly runners = new Map<string, StrategyRunner>();
+  /** Maps child strategy ID -> parent strategy ID */
+  private readonly parentChildMap = new Map<string, string>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -91,6 +95,8 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
             logicBlocks,
             logicConnections,
             calcBlocks,
+            (childId, parentId, mode, context) =>
+              this.startAsChild(childId, parentId, mode, context),
           );
 
           this.runners.set(strategy.id, runner);
@@ -161,6 +167,8 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       logicBlocks,
       logicConnections,
       calcBlocks,
+      (childId, parentId, mode, context) =>
+        this.startAsChild(childId, parentId, mode, context),
     );
 
     this.runners.set(strategyId, runner);
@@ -215,12 +223,33 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
   async stop(strategyId: string): Promise<void> {
     const runner = this.runners.get(strategyId);
     if (runner) {
+      // Cascade stop to managed and scoped children
+      const childIds = [...runner.childStrategies];
+      for (const childId of childIds) {
+        const mode = runner.getChildMode(childId);
+        if (mode === "managed" || mode === "scoped") {
+          try {
+            await this.stop(childId);
+            this.logger.log(
+              `Cascade-stopped child strategy ${childId} (mode=${mode}) of parent ${strategyId}`,
+            );
+          } catch (err) {
+            this.logger.warn(
+              `Failed to cascade-stop child ${childId}: ${String(err)}`,
+            );
+          }
+        }
+        runner.removeChild(childId);
+      }
+
       runner.stop();
       this.runners.delete(strategyId);
+      // Clean up parent-child tracking
+      this.parentChildMap.delete(strategyId);
     }
     await this.prisma.strategy.update({
       where: { id: strategyId },
-      data: { status: StrategyStatus.IDLE },
+      data: { status: StrategyStatus.IDLE, parentStrategyId: null },
     });
     await this.emitEvent(
       strategyId,
@@ -239,6 +268,162 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
 
   getStatus(strategyId: string): StrategyRunnerStatus | null {
     return this.runners.get(strategyId)?.status ?? null;
+  }
+
+  // ─── Sub-strategy management ─────────────────────────────────────────────
+
+  /**
+   * Start a strategy as a child of another strategy.
+   * Validates ownership, circular dependencies (max depth 3), and concurrent limits.
+   */
+  async startAsChild(
+    childStrategyId: string,
+    parentId: string,
+    mode: SubStrategyMode,
+    context?: { userId: string },
+  ): Promise<void> {
+    // Already running check
+    if (this.runners.has(childStrategyId)) {
+      throw new ConflictException(
+        `Strategy ${childStrategyId} is already running`,
+      );
+    }
+
+    const child = await this.prisma.strategy.findUnique({
+      where: { id: childStrategyId },
+    });
+    if (!child)
+      throw new NotFoundException(`Child strategy ${childStrategyId} not found`);
+
+    // Ownership check
+    const parentRunner = this.runners.get(parentId);
+    if (context?.userId && child.userId !== context.userId) {
+      throw new UnprocessableEntityException(
+        `Child strategy ${childStrategyId} is not owned by the same user`,
+      );
+    }
+
+    // Self-reference check
+    if (childStrategyId === parentId) {
+      throw new UnprocessableEntityException(
+        `Strategy cannot launch itself as a sub-strategy`,
+      );
+    }
+
+    // Circular dependency check (max depth 3)
+    if (this.hasCircularDependency(parentId, childStrategyId)) {
+      throw new UnprocessableEntityException(
+        `Circular dependency detected: ${childStrategyId} is an ancestor of ${parentId}`,
+      );
+    }
+
+    // Max concurrent sub-strategies per parent
+    if (parentRunner && parentRunner.childStrategies.size >= 10) {
+      throw new UnprocessableEntityException(
+        `Parent strategy ${parentId} already has 10 concurrent sub-strategies`,
+      );
+    }
+
+    // Set parent relationship in DB
+    await this.prisma.strategy.update({
+      where: { id: childStrategyId },
+      data: { parentStrategyId: parentId },
+    });
+
+    // Track parent-child relationship
+    this.parentChildMap.set(childStrategyId, parentId);
+
+    // Determine stream based on parent's status
+    const parentStrategy = await this.prisma.strategy.findUnique({
+      where: { id: parentId },
+      select: { status: true },
+    });
+    const isPaper = parentStrategy?.status === StrategyStatus.PAPER;
+    const stream = isPaper ? PAPER_ORDER_STREAM : ORDER_STREAM;
+    const newStatus = isPaper ? StrategyStatus.PAPER : StrategyStatus.RUNNING;
+
+    const canvas = child.canvas as Record<string, unknown> | null;
+    const variables = Array.isArray((canvas as any)?.variables)
+      ? (canvas as any).variables
+      : [];
+    const logicBlocks = Array.isArray((canvas as any)?.logicBlocks)
+      ? (canvas as any).logicBlocks
+      : [];
+    const logicConnections = Array.isArray((canvas as any)?.connections)
+      ? (canvas as any).connections
+      : [];
+    const calcBlocks = Array.isArray((canvas as any)?.calcBlocks)
+      ? (canvas as any).calcBlocks
+      : (child as any).calcBlocks ?? [];
+
+    const runner = new StrategyRunner(
+      childStrategyId,
+      child.userId,
+      child.execMode,
+      child.tickMs ?? 1000,
+      (child.triggers as any[]) ?? [],
+      (child.conditions as any[]) ?? [],
+      (child.actions as any[]) ?? [],
+      (child.safety as any[]) ?? [],
+      variables,
+      this.redis,
+      this.prisma,
+      this.state,
+      (intents) => this.publishIntents(intents, stream),
+      (status, reason) =>
+        this.onRunnerStatusChange(childStrategyId, child.userId, status, reason),
+      logicBlocks,
+      logicConnections,
+      calcBlocks,
+      (grandchildId, pId, m, ctx) => this.startAsChild(grandchildId, pId, m, ctx),
+    );
+
+    this.runners.set(childStrategyId, runner);
+    runner.start();
+
+    await this.prisma.strategy.update({
+      where: { id: childStrategyId },
+      data: { status: newStatus },
+    });
+
+    await this.emitEvent(childStrategyId, child.userId, "STRATEGY_STARTED");
+    this.logger.log(
+      `Child strategy ${childStrategyId} started (parent=${parentId}, mode=${mode})`,
+    );
+  }
+
+  /**
+   * Check if starting childId under parentId would create a circular dependency.
+   * Walks up the parent chain from parentId. Max depth 3.
+   */
+  hasCircularDependency(parentId: string, childId: string): boolean {
+    let current: string | undefined = parentId;
+    let depth = 0;
+    const MAX_DEPTH = 3;
+
+    while (current && depth < MAX_DEPTH) {
+      if (current === childId) return true;
+      current = this.parentChildMap.get(current);
+      depth++;
+    }
+
+    // Also check if depth would exceed max
+    let parentDepth = 0;
+    let walk: string | undefined = parentId;
+    while (walk && parentDepth < MAX_DEPTH + 1) {
+      walk = this.parentChildMap.get(walk);
+      parentDepth++;
+    }
+    if (parentDepth >= MAX_DEPTH) return true; // would exceed max depth
+
+    return false;
+  }
+
+  /** Get children of a strategy */
+  getChildStrategies(strategyId: string): string[] {
+    const runner = this.runners.get(strategyId);
+    if (!runner) return [];
+    return [...runner.childStrategies];
   }
 
   // ─── Private helpers ──────────────────────────────────────────────────────

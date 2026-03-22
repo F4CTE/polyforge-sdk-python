@@ -4,7 +4,7 @@ import { Parser } from "expr-eval";
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
-import { StrategyVariable } from "@polyforge/shared-types";
+import { StrategyVariable, SubStrategyMode } from "@polyforge/shared-types";
 import { EvalContext, OrderIntent, DelayedAction } from "../blocks/block.types";
 import {
   SAFETY_REGISTRY,
@@ -53,6 +53,11 @@ export class StrategyRunner {
   private pauseReason: string | null = null;
   private delayedActions: Map<string, NodeJS.Timeout> = new Map();
 
+  /** Tracks child strategy IDs launched by RUN_STRATEGY action blocks */
+  readonly childStrategies: Set<string> = new Set();
+  /** Maps child strategy IDs to their sub-strategy mode */
+  private readonly childModes: Map<string, SubStrategyMode> = new Map();
+
   constructor(
     private readonly strategyId: string,
     private readonly userId: string,
@@ -74,8 +79,31 @@ export class StrategyRunner {
     private readonly logicBlocks: LogicBlock[] = [],
     private readonly logicConnections: LogicConnection[] = [],
     private readonly calcBlocks: Block[] = [],
+    private readonly onRunStrategy?: (
+      childStrategyId: string,
+      parentId: string,
+      mode: SubStrategyMode,
+      context?: { userId: string },
+    ) => Promise<void>,
   ) {
     this.logger = new Logger(`StrategyRunner:${strategyId}`);
+  }
+
+  /** Register a child strategy launched by this runner */
+  addChild(childId: string, mode: SubStrategyMode) {
+    this.childStrategies.add(childId);
+    this.childModes.set(childId, mode);
+  }
+
+  /** Remove a child strategy (e.g. when it stops on its own) */
+  removeChild(childId: string) {
+    this.childStrategies.delete(childId);
+    this.childModes.delete(childId);
+  }
+
+  /** Get the mode for a child strategy */
+  getChildMode(childId: string): SubStrategyMode | undefined {
+    return this.childModes.get(childId);
   }
 
   start() {
@@ -109,6 +137,12 @@ export class StrategyRunner {
       clearTimeout(timer);
     }
     this.delayedActions.clear();
+    // Note: cascade stop of managed/scoped children is handled by StrategyRegistryService
+    if (this.childStrategies.size > 0) {
+      this.logger.log(
+        `Stopping with ${this.childStrategies.size} child strategies to cascade`,
+      );
+    }
     this.logger.log("Stopped");
   }
 
@@ -329,15 +363,61 @@ export class StrategyRunner {
       allIntents.push(...result.intents);
     }
 
-    if (allIntents.length > 0) {
+    // Separate RUN_STRATEGY sentinel intents from real order intents
+    const runStrategyIntents = allIntents.filter(
+      (i) => i.marketId === "__run_strategy__",
+    );
+    const orderIntents = allIntents.filter(
+      (i) => i.marketId !== "__run_strategy__",
+    );
+
+    // Handle sub-strategy launches
+    for (const intent of runStrategyIntents) {
+      const childStrategyId = intent.tokenId;
+      const mode = intent.size as SubStrategyMode;
+
+      // Enforce max 10 concurrent sub-strategies
+      if (this.childStrategies.size >= 10) {
+        this.logger.warn(
+          `Max concurrent sub-strategies (10) reached, skipping launch of ${childStrategyId}`,
+        );
+        continue;
+      }
+
+      // Skip if already running as a child
+      if (this.childStrategies.has(childStrategyId)) {
+        this.logger.debug(
+          `Child strategy ${childStrategyId} already running, skipping`,
+        );
+        continue;
+      }
+
+      if (this.onRunStrategy) {
+        try {
+          await this.onRunStrategy(childStrategyId, this.strategyId, mode, {
+            userId: ctx.userId,
+          });
+          this.addChild(childStrategyId, mode);
+          this.logger.log(
+            `Launched sub-strategy ${childStrategyId} in ${mode} mode`,
+          );
+        } catch (err) {
+          this.logger.error(
+            `Failed to launch sub-strategy ${childStrategyId}: ${String(err)}`,
+          );
+        }
+      }
+    }
+
+    if (orderIntents.length > 0) {
       // Update state: increment betsToday
       await this.state.update(this.strategyId, {
-        betsToday: stateData.betsToday + allIntents.length,
-        totalOrders: stateData.totalOrders + allIntents.length,
+        betsToday: stateData.betsToday + orderIntents.length,
+        totalOrders: stateData.totalOrders + orderIntents.length,
         lastTradeAt: ctx.now,
       });
 
-      await this.onIntents(allIntents);
+      await this.onIntents(orderIntents);
     }
   }
 

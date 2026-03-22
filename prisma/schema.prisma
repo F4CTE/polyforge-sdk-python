@@ -384,6 +384,7 @@ model Strategy {
   safety           Json               @default("[]")
   status           StrategyStatus     @default(IDLE)
   errorMessage     String?
+  parentStrategyId String?
   forkedFromId     String?
   forkedFromUserId String?
   forkCount        Int                @default(0)
@@ -396,6 +397,8 @@ model Strategy {
   updatedAt        DateTime           @updatedAt
 
   user          User                    @relation(fields: [userId],       references: [id])
+  parent        Strategy?               @relation("SubStrategies", fields: [parentStrategyId], references: [id])
+  children      Strategy[]              @relation("SubStrategies")
   forkedFrom    Strategy?               @relation("Forks",   fields: [forkedFromId], references: [id])
   forks         Strategy[]              @relation("Forks")
   orders        Order[]
@@ -412,6 +415,7 @@ model Strategy {
   @@index([status])
   @@index([userId, status])
   @@index([template])
+  @@index([parentStrategyId])
   @@map("strategies")
 }
 
