@@ -13,14 +13,21 @@
     <!-- Loading screen -->
     <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#020817">
       <div style="text-align:center">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="animation:pulse-logo 1.5s ease-in-out infinite">
-          <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" stroke="#06b6d4" stroke-width="1.2" fill="none" opacity="0.4"/>
-          <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="#06b6d4"/>
-        </svg>
+        <div style="position:relative;width:48px;height:48px;margin:0 auto">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="position:absolute;animation:spin-hex 4s linear infinite">
+            <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" stroke="#06b6d4" stroke-width="1.2" fill="none" opacity="0.4"/>
+          </svg>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="position:absolute;animation:pulse-bolt 1.5s ease-in-out infinite">
+            <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="#06b6d4"/>
+          </svg>
+        </div>
         <p style="color:#64748b;font-family:Inter,system-ui;font-size:14px;margin-top:16px">Loading Polyforge...</p>
       </div>
     </div>
-    <style>@keyframes pulse-logo{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.95)}}</style>
+    <style>
+      @keyframes spin-hex{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+      @keyframes pulse-bolt{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.9)}}
+    </style>
   </div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
