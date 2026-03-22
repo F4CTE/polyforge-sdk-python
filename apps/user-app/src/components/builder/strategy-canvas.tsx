@@ -79,6 +79,7 @@ export function StrategyCanvas() {
   // ─── Theme-aware colors ──────────────────────────────────────────────
 
   const isDark = useThemeStore((s) => s.isDark);
+  const bgColor = isDark ? '#020817' : '#ffffff';
   const dotColor = isDark ? '#334155' : '#cbd5e1';
 
   // ─── Empty state ──────────────────────────────────────────────────────
@@ -109,7 +110,7 @@ export function StrategyCanvas() {
         }}
         proOptions={{ hideAttribution: true }}
         className="strategy-builder-flow"
-        style={{ background: 'var(--color-pf-base)' }}
+        style={{ background: bgColor }}
       >
         <Background
           variant={BackgroundVariant.Dots}

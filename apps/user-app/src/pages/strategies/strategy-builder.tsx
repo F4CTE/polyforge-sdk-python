@@ -161,8 +161,10 @@ export function Component() {
             )}
           </div>
 
-          {/* Side panel */}
-          {panelOpen && <BlockPalette open={panelOpen} onClose={() => setPanelOpen(false)} />}
+          {/* Side panel — always mounted, collapsed via width to prevent React Flow reflow issues */}
+          <div className={`transition-all duration-200 overflow-hidden ${panelOpen ? 'w-80' : 'w-0'}`}>
+            <BlockPalette open={panelOpen} onClose={() => setPanelOpen(false)} />
+          </div>
         </div>
       </ReactFlowProvider>
     </div>

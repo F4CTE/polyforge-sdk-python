@@ -75,10 +75,8 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
     [addNode, activeSection],
   );
 
-  if (!open) return null;
-
   return (
-    <div className="w-80 shrink-0 bg-pf-elevated border-l border-pf-border shadow-pf-lg flex flex-col overflow-x-hidden overflow-y-auto">
+    <div className="w-80 shrink-0 bg-pf-elevated border-l border-pf-border shadow-pf-lg flex flex-col overflow-x-hidden overflow-y-auto h-full">
       {/* Panel header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
         <div className="flex items-center gap-2">
