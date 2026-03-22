@@ -48,23 +48,23 @@ export function Component() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-pf-base">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-pf-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="relative w-full max-w-md px-4">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(6,182,212,0.08) 0%, transparent 60%), var(--color-pf-base)' }}
+    >
+      <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="text-pf-cyan-500">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <div className="text-center mb-8">
+          <div className="text-pf-cyan-500 inline-block">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" stroke="currentColor" strokeWidth="1.2" fill="none" opacity="0.4"/>
               <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="currentColor"/>
             </svg>
           </div>
-          <span className="text-xl font-semibold text-pf-text">Polyforge</span>
         </div>
 
         {/* Card */}
-        <div className="bg-pf-elevated border border-pf-border rounded-xl p-8">
+        <div className="bg-pf-elevated border border-pf-border rounded-xl p-8 shadow-lg shadow-black/20">
           {!done ? (
             <>
               <h2 className="text-xl font-semibold text-pf-text mb-1">Set new password</h2>

@@ -89,8 +89,8 @@ export function Component() {
                     <td className="px-4 py-3 text-[var(--color-pf-text)]">{bt.username}</td>
                     <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{bt.strategyName ?? '-'}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(bt.status)}`}>
-                        {bt.status}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(bt.status ?? 'UNKNOWN')}`}>
+                        {bt.status ?? 'UNKNOWN'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{getDuration(bt)}</td>

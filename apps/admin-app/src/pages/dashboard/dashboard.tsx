@@ -38,32 +38,52 @@ export function Component() {
   async function load() {
     setLoading(true);
     setError(false);
+    let anyFailed = false;
+
+    // Fetch each API call independently so one failure doesn't block others
     try {
-      const [healthRes, configRes, usersRes, strategiesRes, ordersRes, ticketsRes, logsRes] =
-        await Promise.all([
-          adminApi.health(),
-          adminApi.config(),
-          adminApi.users({ limit: 1 }),
-          adminApi.strategies({ limit: 1, status: 'RUNNING' }),
-          adminApi.orders({ limit: 1 }),
-          adminApi.tickets({ limit: 1, status: 'OPEN' }),
-          adminApi.auditLogs({ limit: 5 }),
-        ]);
-      setHealth(healthRes);
-      setConfig(configRes);
-      setStats({
-        totalUsers: usersRes.total ?? 0,
-        activeStrategies: strategiesRes.total ?? 0,
-        totalOrders: ordersRes.total ?? 0,
-        openTickets: ticketsRes.total ?? 0,
-      });
-      setAuditLogs(logsRes.data ?? []);
+      const healthRes = await adminApi.health();
+      setHealth(healthRes ?? null);
     } catch {
-      setError(true);
-      toast.error('Failed to load dashboard data');
-    } finally {
-      setLoading(false);
+      anyFailed = true;
     }
+
+    try {
+      const configRes = await adminApi.config();
+      setConfig(configRes ?? null);
+    } catch {
+      anyFailed = true;
+    }
+
+    try {
+      const [usersRes, strategiesRes, ordersRes, ticketsRes] = await Promise.all([
+        adminApi.users({ limit: 1 }),
+        adminApi.strategies({ limit: 1, status: 'RUNNING' }),
+        adminApi.orders({ limit: 1 }),
+        adminApi.tickets({ limit: 1, status: 'OPEN' }),
+      ]);
+      setStats({
+        totalUsers: usersRes?.total ?? 0,
+        activeStrategies: strategiesRes?.total ?? 0,
+        totalOrders: ordersRes?.total ?? 0,
+        openTickets: ticketsRes?.total ?? 0,
+      });
+    } catch {
+      anyFailed = true;
+    }
+
+    try {
+      const logsRes = await adminApi.auditLogs({ limit: 5 });
+      setAuditLogs(Array.isArray(logsRes?.data) ? logsRes.data : []);
+    } catch {
+      anyFailed = true;
+    }
+
+    if (anyFailed) {
+      setError(true);
+      toast.error('Some dashboard data failed to load');
+    }
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -148,7 +168,7 @@ export function Component() {
               </span>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {Object.entries(health.services).map(([name, svc]) => (
+              {Object.entries(health.services ?? {}).map(([name, svc]) => (
                 <div
                   key={name}
                   className="flex items-center justify-between p-2.5 rounded-md bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)]"
@@ -158,14 +178,14 @@ export function Component() {
                       {name}
                     </div>
                     <div className="text-[11px] text-[var(--color-pf-text-tertiary)]">
-                      {svc.latencyMs}ms
+                      {svc?.latencyMs ?? 0}ms
                     </div>
                   </div>
                   <span
                     className={`w-2 h-2 rounded-full ${
-                      svc.status === 'healthy'
+                      svc?.status === 'healthy'
                         ? 'bg-emerald-400'
-                        : svc.status === 'degraded'
+                        : svc?.status === 'degraded'
                           ? 'bg-amber-400'
                           : 'bg-red-400'
                     }`}
@@ -179,6 +199,7 @@ export function Component() {
         {/* Infrastructure */}
         {health && (
           <div className="space-y-4">
+            {health.db && (
             <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Database size={16} className="text-[var(--color-pf-cyan-500)]" />
@@ -186,16 +207,18 @@ export function Component() {
                   Database
                 </h2>
                 <span
-                  className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(health.db.status)}`}
+                  className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(health.db?.status)}`}
                 >
-                  {health.db.status}
+                  {health.db?.status ?? 'UNKNOWN'}
                 </span>
               </div>
               <div className="text-sm text-[var(--color-pf-text-secondary)]">
-                Active connections: <span className="text-[var(--color-pf-text)] font-medium">{health.db.connections}</span>
+                Active connections: <span className="text-[var(--color-pf-text)] font-medium">{health.db?.connections ?? 0}</span>
               </div>
             </div>
+            )}
 
+            {health.redis && (
             <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Server size={16} className="text-[var(--color-pf-cyan-500)]" />
@@ -203,15 +226,16 @@ export function Component() {
                   Redis
                 </h2>
                 <span
-                  className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(health.redis.status)}`}
+                  className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(health.redis?.status)}`}
                 >
-                  {health.redis.status}
+                  {health.redis?.status ?? 'UNKNOWN'}
                 </span>
               </div>
               <div className="text-sm text-[var(--color-pf-text-secondary)]">
-                Memory usage: <span className="text-[var(--color-pf-text)] font-medium">{health.redis.memoryUsageMb.toFixed(1)} MB</span>
+                Memory usage: <span className="text-[var(--color-pf-text)] font-medium">{(health.redis?.memoryUsageMb ?? 0).toFixed(1)} MB</span>
               </div>
             </div>
+            )}
 
             {/* Launch Control */}
             <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">

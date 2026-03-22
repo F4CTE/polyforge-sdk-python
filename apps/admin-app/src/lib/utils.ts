@@ -35,7 +35,8 @@ export function formatDateTime(dateStr: string): string {
 }
 
 /** Status badge color helpers */
-export function statusColor(status: string): string {
+export function statusColor(status: string | undefined | null): string {
+  if (!status) return 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]';
   const s = status.toUpperCase();
   const colors: Record<string, string> = {
     HEALTHY: 'text-emerald-400 bg-emerald-400/10',

@@ -25,12 +25,15 @@ export function Component() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[var(--color-pf-bg)]">
-      <div className="w-full max-w-sm mx-4">
+    <div
+      className="flex items-center justify-center min-h-screen p-4"
+      style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(6,182,212,0.06) 0%, transparent 60%), var(--color-pf-bg)' }}
+    >
+      <div className="w-full max-w-sm">
         {/* Brand */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
                 stroke="var(--color-pf-cyan-500)"
@@ -44,7 +47,7 @@ export function Component() {
               />
             </svg>
           </div>
-          <h1 className="text-xl font-semibold text-[var(--color-pf-text)]">
+          <h1 className="text-2xl font-semibold text-[var(--color-pf-text)]">
             Polyforge Admin
           </h1>
           <div className="flex items-center justify-center gap-1.5 mt-2">
@@ -58,7 +61,7 @@ export function Component() {
         {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 space-y-4"
+          className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 space-y-4 shadow-lg shadow-black/20"
         >
           <div>
             <label htmlFor="email" className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1.5">

@@ -104,25 +104,27 @@ export function Component() {
   const inputClass = 'w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-lg text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors';
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-pf-base py-8">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-pf-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="relative w-full max-w-md px-4">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="text-pf-cyan-500">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 py-8"
+      style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(6,182,212,0.08) 0%, transparent 60%), var(--color-pf-base)' }}
+    >
+      <div className="w-full max-w-md">
+        {/* Logo centered above card */}
+        <div className="text-center mb-8">
+          <div className="text-pf-cyan-500 inline-block">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" stroke="currentColor" strokeWidth="1.2" fill="none" opacity="0.4"/>
               <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="currentColor"/>
             </svg>
           </div>
-          <span className="text-xl font-semibold text-pf-text">Polyforge</span>
+          <h1 className="text-2xl font-semibold mt-4 bg-gradient-to-r from-cyan-400 to-cyan-200 bg-clip-text text-transparent">
+            Create your account
+          </h1>
+          <p className="text-pf-text-muted text-sm mt-1">Start trading on autopilot</p>
         </div>
 
         {/* Card */}
-        <div className="bg-pf-elevated border border-pf-border rounded-xl p-8">
-          <h2 className="text-xl font-semibold text-pf-text mb-1">Create account</h2>
-          <p className="text-sm text-pf-text-muted mb-6">Start trading on autopilot</p>
+        <div className="bg-pf-elevated border border-pf-border rounded-xl p-8 shadow-lg shadow-black/20">
 
           {error && (
             <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg px-4 py-3 mb-4 text-sm">
@@ -257,13 +259,15 @@ export function Component() {
             </button>
           </form>
 
-          <div className="border-t border-pf-border mt-6 pt-4 text-center text-sm text-pf-text-muted">
-            Already have an account?{' '}
-            <Link to="/login" className="text-pf-cyan-500 hover:text-pf-cyan-400 transition-colors">
-              Sign in
-            </Link>
-          </div>
         </div>
+
+        {/* Links below card */}
+        <p className="text-center text-sm text-pf-text-muted mt-6">
+          Already have an account?{' '}
+          <Link to="/login" className="text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors">
+            Sign in
+          </Link>
+        </p>
       </div>
     </div>
   );

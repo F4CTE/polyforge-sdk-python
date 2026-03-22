@@ -105,8 +105,8 @@ export function Component() {
                     <td className="px-4 py-3 font-medium text-[var(--color-pf-text)]">{t.subject}</td>
                     <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{t.username ?? t.userId?.slice(0, 8)}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(t.status)}`}>
-                        {t.status}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(t.status ?? 'UNKNOWN')}`}>
+                        {t.status ?? 'UNKNOWN'}
                       </span>
                     </td>
                     <td className="px-4 py-3">

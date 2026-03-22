@@ -142,17 +142,17 @@ export function Component() {
                     className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3 font-medium text-[var(--color-pf-text)]">
-                      {user.username}
+                      {user.username ?? ''}
                       {user.suspended && (
                         <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium text-red-400 bg-red-400/10">
                           SUSPENDED
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{user.email}</td>
+                    <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{user.email ?? ''}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(user.status)}`}>
-                        {user.status}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(user.status ?? 'UNKNOWN')}`}>
+                        {user.status ?? 'UNKNOWN'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
