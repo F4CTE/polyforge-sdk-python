@@ -1,11 +1,12 @@
 @import "@polyforge/ui/globals.css";
+@import "@xyflow/react/dist/style.css";
 
-/* ─── React Flow theme overrides ───────────────────────────────────── */
-.react-flow__renderer {
-  background: var(--color-pf-base) !important;
-}
+/* ─── React Flow theme overrides (must come AFTER react-flow styles) ─ */
+.react-flow,
+.react-flow__renderer,
 .react-flow__background {
-  background: var(--color-pf-base) !important;
+  background: var(--color-pf-base, #020817) !important;
+  background-color: var(--color-pf-base, #020817) !important;
 }
 .react-flow__controls button {
   background: var(--color-pf-elevated) !important;

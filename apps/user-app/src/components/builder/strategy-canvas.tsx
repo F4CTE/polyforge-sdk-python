@@ -7,7 +7,7 @@ import {
   BackgroundVariant,
   useReactFlow,
 } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
+// Styles imported in globals.css (before our overrides)
 
 import { BlockNode } from './nodes/block-node';
 import { useBuilderStore, type BlockNodeData } from '../../stores/builder-store';
