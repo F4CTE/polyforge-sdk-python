@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router';
+import { toast } from 'sonner';
 import { ChevronLeft, ChevronRight, Trophy } from 'lucide-react';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -83,7 +84,7 @@ export function Component() {
         setTotal(data.total);
         setTotalPages(data.totalPages);
       }
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to load data'); }
     setLoading(false);
   }, []);
 

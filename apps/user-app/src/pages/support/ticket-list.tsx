@@ -166,6 +166,7 @@ export function Component() {
               <button
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                 className="w-full flex items-center justify-between px-4 py-3 text-left"
+                aria-expanded={openFaq === idx}
               >
                 <span className="text-sm font-medium text-pf-text">{item.q}</span>
                 {openFaq === idx ? (

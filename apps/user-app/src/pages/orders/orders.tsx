@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import {
   ChevronLeft, ChevronRight, ClipboardList, X,
 } from 'lucide-react';
@@ -87,7 +88,7 @@ export function Component() {
         setTotal(data.total);
         setTotalPages(data.totalPages);
       }
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to load orders'); }
     setLoading(false);
   }, []);
 
@@ -166,7 +167,9 @@ export function Component() {
                   return (
                     <tr
                       key={order.id}
+                      tabIndex={0}
                       onClick={() => setSelectedOrder(order)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedOrder(order); }}
                       className="hover:bg-pf-surface/50 transition-colors cursor-pointer"
                     >
                       <td className="px-4 py-3">
@@ -233,7 +236,7 @@ export function Component() {
 
       {/* Order detail dialog */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end">
+        <div className="fixed inset-0 z-50 flex items-center justify-end" role="dialog" aria-modal="true" aria-label="Order Details">
           <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedOrder(null)} />
           <div className="relative w-full max-w-md h-full bg-pf-surface border-l border-pf-border overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-pf-border-subtle">

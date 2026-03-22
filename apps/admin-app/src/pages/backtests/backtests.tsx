@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FlaskConical } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime } from '@/lib/utils';
 
@@ -65,12 +65,22 @@ export function Component() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-[var(--color-pf-text-tertiary)]">Loading...</td>
-                </tr>
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 8 }).map((_, j) => (
+                      <td key={j} className="px-4 py-3">
+                        <div className="h-4 bg-pf-surface rounded animate-pulse" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
               ) : backtests.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-[var(--color-pf-text-tertiary)]">No backtests found</td>
+                  <td colSpan={8} className="text-center py-12">
+                    <FlaskConical className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
+                    <p className="text-[var(--color-pf-text-secondary)] font-medium">No backtests found</p>
+                    <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Backtest runs will appear here</p>
+                  </td>
                 </tr>
               ) : (
                 backtests.map((bt) => (

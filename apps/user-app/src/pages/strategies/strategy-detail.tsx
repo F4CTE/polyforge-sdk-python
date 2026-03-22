@@ -233,7 +233,7 @@ export function Component() {
             <div>
               <div className="flex items-center gap-3 mb-1.5">
                 <h1 className="text-xl font-semibold text-pf-text">{strategy.name}</h1>
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
+                <span data-testid="status-badge" className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot} ${isActive(status) ? 'animate-pulse' : ''}`} />
                   {status}
                 </span>

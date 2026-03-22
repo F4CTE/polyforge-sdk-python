@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { toast } from 'sonner';
-import { Mail, Plus, Trash2, Copy } from 'lucide-react';
+import { Mail, Plus, Trash2, Copy, KeyRound } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 
 interface Invite {
@@ -146,9 +146,27 @@ export function Component() {
           </h3>
         </div>
         {loading ? (
-          <p className="text-sm text-[var(--color-pf-text-tertiary)]">Loading...</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <tbody>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 4 }).map((_, j) => (
+                      <td key={j} className="px-4 py-3">
+                        <div className="h-4 bg-pf-surface rounded animate-pulse" />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : invites.length === 0 ? (
-          <p className="text-sm text-[var(--color-pf-text-tertiary)]">No active invites</p>
+          <div className="text-center py-12">
+            <KeyRound className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
+            <p className="text-[var(--color-pf-text-secondary)] font-medium">No active invites</p>
+            <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Generate invite codes above to get started</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

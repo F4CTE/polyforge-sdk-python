@@ -4,8 +4,9 @@ import {
 } from 'recharts';
 import {
   TrendingUp, TrendingDown, Wallet, Target, BarChart3,
-  ChevronLeft, ChevronRight, RefreshCw, X, Loader2,
+  ChevronLeft, ChevronRight, RefreshCw, X, Loader2, AlertTriangle,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -105,6 +106,13 @@ function TableSkeleton() {
 /* ─── Component ──────────────────────────────────────────────────────── */
 
 export function Component() {
+  // Read CSS variables for Recharts (which needs raw color strings)
+  const styles = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
+  const textMuted = styles?.getPropertyValue('--color-pf-text-muted').trim() || '#445E7A';
+  const bgElevated = styles?.getPropertyValue('--color-pf-elevated').trim() || '#111D2E';
+  const borderColor = styles?.getPropertyValue('--color-pf-border').trim() || '#1E3350';
+  const textPrimary = styles?.getPropertyValue('--color-pf-text').trim() || '#E8EDF5';
+
   const [tab, setTab] = useState<Tab>('live');
   const [period, setPeriodState] = useState<Period>('7d');
 
@@ -123,7 +131,7 @@ export function Component() {
     try {
       const res = await fetch('/api/v1/portfolio', { credentials: 'include' });
       if (res.ok) setPortfolio(await res.json());
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to load data'); }
     setLoadingPortfolio(false);
   }, []);
 
@@ -132,7 +140,7 @@ export function Component() {
     try {
       const res = await fetch(`/api/v1/portfolio/pnl?period=${p}`, { credentials: 'include' });
       if (res.ok) setPnl(await res.json());
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to load data'); }
     setLoadingChart(false);
   }, []);
 
@@ -141,7 +149,7 @@ export function Component() {
     try {
       const res = await fetch('/api/v1/paper/summary', { credentials: 'include' });
       if (res.ok) setPaper(await res.json());
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to load data'); }
     setLoadingPaper(false);
   }, []);
 
@@ -251,7 +259,19 @@ export function Component() {
                   </span>
                 </div>
               </>
-            ) : null}
+            ) : (
+              <div className="col-span-full bg-pf-elevated border border-red-500/20 rounded-pf-lg p-6 text-center">
+                <AlertTriangle className="mx-auto mb-3 text-red-400 opacity-60" size={32} />
+                <p className="text-sm font-medium text-pf-text mb-1">Failed to load portfolio</p>
+                <p className="text-xs text-pf-text-muted mb-4">Something went wrong while fetching your data.</p>
+                <button
+                  onClick={loadPortfolio}
+                  className="px-4 py-2 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
           </div>
 
           {/* P&L Chart */}
@@ -287,19 +307,19 @@ export function Component() {
                       </linearGradient>
                     </defs>
                     <XAxis
-                      dataKey="time" tick={{ fill: '#445E7A', fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
+                      dataKey="time" tick={{ fill: textMuted, fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
                       axisLine={false} tickLine={false}
                     />
                     <YAxis
-                      tick={{ fill: '#445E7A', fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
+                      tick={{ fill: textMuted, fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
                       axisLine={false} tickLine={false} tickFormatter={v => `$${v}`}
                     />
                     <Tooltip
                       contentStyle={{
-                        background: '#111D2E', border: '1px solid #1E3350', borderRadius: 6,
+                        background: bgElevated, border: `1px solid ${borderColor}`, borderRadius: 6,
                         fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
                       }}
-                      labelStyle={{ color: '#E8EDF5' }}
+                      labelStyle={{ color: textPrimary }}
                       formatter={(value: number) => [`${value >= 0 ? '+' : ''}$${value.toFixed(2)}`, 'P&L']}
                     />
                     <Area

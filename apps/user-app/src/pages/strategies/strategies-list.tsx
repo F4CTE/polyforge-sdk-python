@@ -176,22 +176,22 @@ export function Component() {
         <h1 className="text-2xl font-semibold text-pf-text">My Strategies</h1>
         <Link
           to="/strategies/new"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
         >
           <Plus className="size-4" /> New Strategy
         </Link>
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 p-1 bg-pf-surface rounded-pf-md border border-pf-border-subtle w-fit">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {FILTERS.map((f) => (
           <button
             key={f.value}
             onClick={() => onFilterChange(f.value)}
-            className={`px-3 py-1.5 rounded-pf-sm text-xs font-medium transition-colors ${
+            className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
               filter === f.value
-                ? 'bg-pf-elevated text-pf-text shadow-pf-xs'
-                : 'text-pf-text-muted hover:text-pf-text-secondary'
+                ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
+                : 'border-pf-border text-pf-text-muted hover:text-pf-text-secondary'
             }`}
           >
             {f.label}
@@ -214,7 +214,7 @@ export function Component() {
           <p className="text-sm text-pf-text-muted mt-1">Create your first strategy to start trading.</p>
           <Link
             to="/strategies/new"
-            className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-600 transition-colors"
+            className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
           >
             <Plus className="size-4" /> New Strategy
           </Link>
@@ -233,7 +233,10 @@ export function Component() {
               <div
                 key={strategy.id}
                 data-testid="strategy-card"
+                role="link"
+                tabIndex={0}
                 onClick={() => navigate(`/strategies/${strategy.id}`)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/strategies/${strategy.id}`); }}
                 className="group bg-pf-elevated border border-pf-border rounded-pf-lg p-5 cursor-pointer hover:border-pf-border-strong hover:shadow-pf-md transition-all"
               >
                 {/* Name + status */}

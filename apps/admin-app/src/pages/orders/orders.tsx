@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight, RotateCcw, Trash2, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCcw, Trash2, AlertTriangle, ClipboardList, AlertCircle } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime } from '@/lib/utils';
 
@@ -11,11 +11,13 @@ export function Component() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const limit = 20;
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(false);
     try {
       const [ordersRes, dlqRes] = await Promise.all([
         adminApi.orders({ page, limit }),
@@ -26,6 +28,7 @@ export function Component() {
       setTotalPages(ordersRes.totalPages ?? 1);
       setDlqEntries(dlqRes ?? []);
     } catch {
+      setError(true);
       toast.error('Failed to load orders');
     } finally {
       setLoading(false);
@@ -61,6 +64,16 @@ export function Component() {
       <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">
         Orders <span className="text-sm font-normal text-[var(--color-pf-text-tertiary)]">({total})</span>
       </h2>
+
+      {error && (
+        <div className="text-center py-12">
+          <AlertCircle className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)]" size={40} />
+          <p className="text-[var(--color-pf-text-secondary)] mb-4">Failed to load data</p>
+          <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-sm">
+            Try again
+          </button>
+        </div>
+      )}
 
       {/* DLQ Section */}
       {dlqEntries.length > 0 && (
@@ -126,12 +139,22 @@ export function Component() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-[var(--color-pf-text-tertiary)]">Loading...</td>
-                </tr>
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 7 }).map((_, j) => (
+                      <td key={j} className="px-4 py-3">
+                        <div className="h-4 bg-pf-surface rounded animate-pulse" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-[var(--color-pf-text-tertiary)]">No orders found</td>
+                  <td colSpan={7} className="text-center py-12">
+                    <ClipboardList className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
+                    <p className="text-[var(--color-pf-text-secondary)] font-medium">No orders found</p>
+                    <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Orders will appear here once users start trading</p>
+                  </td>
                 </tr>
               ) : (
                 orders.map((o) => (

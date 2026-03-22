@@ -109,7 +109,7 @@ export function StrategyCanvas() {
           gap={20}
           size={1}
           className="!bg-pf-base"
-          color="rgba(255,255,255,0.05)"
+          color="color-mix(in srgb, var(--color-pf-text) 5%, transparent)"
         />
         <Controls
           showInteractive={false}

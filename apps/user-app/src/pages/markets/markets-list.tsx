@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router';
+import { toast } from 'sonner';
 import {
   Search,
   Grid3X3,
@@ -285,7 +286,7 @@ export function Component() {
         setTotal(data.total);
         setTotalPages(data.totalPages);
       } catch {
-        // keep existing state on error
+        toast.error('Failed to load markets');
       } finally {
         setLoading(false);
       }

@@ -145,6 +145,14 @@ export function Component() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // Read CSS variables for Recharts (which needs raw color strings)
+  const styles = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
+  const textMuted = styles?.getPropertyValue('--color-pf-text-muted').trim() || '#445E7A';
+  const bgElevated = styles?.getPropertyValue('--color-pf-elevated').trim() || '#111D2E';
+  const borderColor = styles?.getPropertyValue('--color-pf-border').trim() || '#1E3350';
+  const textSecondary = styles?.getPropertyValue('--color-pf-text-secondary').trim() || '#7A94B4';
+  const cyan500 = styles?.getPropertyValue('--color-pf-cyan-500').trim() || '#06B6D4';
+
   const [market, setMarket] = useState<Market | null>(null);
   const [loadingMarket, setLoadingMarket] = useState(true);
 
@@ -342,7 +350,7 @@ export function Component() {
           </div>
 
           {/* Stats bar */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { icon: <BarChart3 className="size-4 text-pf-text-muted" />, label: '24h Volume', value: formatVolume(market.volume24h) },
               { icon: <Droplets className="size-4 text-pf-text-muted" />, label: 'Liquidity', value: totalLiquidity(market.tokens) },
@@ -389,20 +397,20 @@ export function Component() {
                     <AreaChart data={chartData}>
                       <defs>
                         <linearGradient id="cyanGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#06B6D4" stopOpacity={0.15} />
-                          <stop offset="100%" stopColor="#06B6D4" stopOpacity={0} />
+                          <stop offset="0%" stopColor={cyan500} stopOpacity={0.15} />
+                          <stop offset="100%" stopColor={cyan500} stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <XAxis
                         dataKey="time"
-                        tick={{ fontSize: 10, fill: '#445E7A' }}
+                        tick={{ fontSize: 10, fill: textMuted }}
                         tickLine={false}
                         axisLine={false}
                         interval="preserveStartEnd"
                       />
                       <YAxis
                         domain={[0, 1]}
-                        tick={{ fontSize: 10, fill: '#445E7A' }}
+                        tick={{ fontSize: 10, fill: textMuted }}
                         tickLine={false}
                         axisLine={false}
                         tickFormatter={(v: number) => v.toFixed(2)}
@@ -410,24 +418,24 @@ export function Component() {
                       />
                       <Tooltip
                         contentStyle={{
-                          background: '#111D2E',
-                          border: '1px solid #1E3350',
+                          background: bgElevated,
+                          border: `1px solid ${borderColor}`,
                           borderRadius: 6,
                           fontSize: 12,
                           fontFamily: "'JetBrains Mono', monospace",
                         }}
-                        labelStyle={{ color: '#7A94B4' }}
-                        itemStyle={{ color: '#06B6D4' }}
+                        labelStyle={{ color: textSecondary }}
+                        itemStyle={{ color: cyan500 }}
                         formatter={(value: number) => [value.toFixed(3), 'YES']}
                       />
                       <Area
                         type="monotone"
                         dataKey="close"
-                        stroke="#06B6D4"
+                        stroke={cyan500}
                         strokeWidth={1.5}
                         fill="url(#cyanGrad)"
                         dot={false}
-                        activeDot={{ r: 3, fill: '#06B6D4' }}
+                        activeDot={{ r: 3, fill: cyan500 }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -527,7 +535,7 @@ export function Component() {
 
           {/* Run Strategy Dialog */}
           {showRunStrategy && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Run Strategy">
               <div className="bg-pf-elevated border border-pf-border rounded-pf-lg w-full max-w-md p-6 shadow-pf-lg">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-semibold text-pf-text">Run Strategy on This Market</h2>

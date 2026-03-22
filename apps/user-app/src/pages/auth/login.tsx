@@ -52,10 +52,12 @@ export function Component() {
       <div className="relative w-full max-w-md px-4">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" stroke="#06b6d4" strokeWidth="1.2" fill="none" opacity="0.4"/>
-            <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="#06b6d4"/>
-          </svg>
+          <div className="text-pf-cyan-500">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z" stroke="currentColor" strokeWidth="1.2" fill="none" opacity="0.4"/>
+              <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="currentColor"/>
+            </svg>
+          </div>
           <span className="text-xl font-semibold text-pf-text">Polyforge</span>
         </div>
 

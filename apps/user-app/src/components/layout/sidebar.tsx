@@ -66,23 +66,25 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 h-14 border-b border-pf-border">
-        <svg
-          className="shrink-0"
-          width="28"
-          height="28"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
-            stroke="#06b6d4"
-            strokeWidth="1.2"
+        <div className="text-pf-cyan-500">
+          <svg
+            className="shrink-0"
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
             fill="none"
-            opacity="0.4"
-          />
-          <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="#06b6d4" />
-        </svg>
+            aria-hidden="true"
+          >
+            <path
+              d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              fill="none"
+              opacity="0.4"
+            />
+            <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="currentColor" />
+          </svg>
+        </div>
         {!collapsed && (
           <span className="text-pf-text font-semibold text-base tracking-tight">
             Polyforge
@@ -116,9 +118,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   to={item.route}
                   title={collapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-2 py-2 rounded-md text-sm transition-colors ${
+                    `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors ${
                       isActive
-                        ? 'bg-pf-cyan/10 text-pf-cyan'
+                        ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
                         : 'text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text'
                     }`
                   }
@@ -137,9 +139,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <NavLink
           to="/settings"
           className={({ isActive }) =>
-            `flex items-center gap-3 px-2 py-2 rounded-md text-sm transition-colors ${
+            `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors ${
               isActive
-                ? 'bg-pf-cyan/10 text-pf-cyan'
+                ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
                 : 'text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text'
             }`
           }

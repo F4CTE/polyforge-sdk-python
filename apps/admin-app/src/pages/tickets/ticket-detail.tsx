@@ -3,14 +3,7 @@ import { useParams, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { ArrowLeft, Send } from 'lucide-react';
 import { adminApi } from '@/lib/api';
-import { statusColor, formatDateTime, timeAgo } from '@/lib/utils';
-
-const priorityColor: Record<string, string> = {
-  LOW: 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]',
-  MEDIUM: 'text-amber-400 bg-amber-400/10',
-  HIGH: 'text-orange-400 bg-orange-400/10',
-  URGENT: 'text-red-400 bg-red-400/10',
-};
+import { statusColor, formatDateTime, timeAgo, priorityColor } from '@/lib/utils';
 
 export function Component() {
   const { id } = useParams<{ id: string }>();

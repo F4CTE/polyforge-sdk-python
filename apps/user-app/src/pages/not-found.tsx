@@ -8,7 +8,7 @@ export function Component() {
         <p className="text-pf-text-muted mt-4 text-lg">Page not found</p>
         <Link
           to="/markets"
-          className="inline-block mt-6 px-4 py-2 bg-pf-cyan text-white rounded-md hover:bg-pf-cyan/80 transition-colors"
+          className="inline-block mt-6 px-4 py-2 bg-pf-cyan-500 text-white rounded-pf hover:bg-pf-cyan-400 transition-colors focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40"
         >
           Go to Markets
         </Link>

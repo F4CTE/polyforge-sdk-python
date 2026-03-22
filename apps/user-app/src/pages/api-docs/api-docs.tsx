@@ -164,7 +164,7 @@ export function Component() {
     <div className="p-6 max-w-4xl mx-auto space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-pf-text mb-1">API Documentation</h1>
+        <h1 className="text-2xl font-semibold text-pf-text mb-1">API Documentation</h1>
         <p className="text-sm text-pf-text-secondary leading-relaxed">
           Use your API key to integrate with external tools, AI agents, and custom applications.
         </p>
@@ -219,6 +219,7 @@ export function Component() {
                   <button
                     onClick={() => toggleEndpoint(key)}
                     className="w-full flex items-center gap-3 px-3 py-2.5 bg-pf-elevated border border-pf-border rounded-pf hover:border-pf-border-strong transition-colors text-left"
+                    aria-expanded={isOpen}
                   >
                     <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${ms.bg} ${ms.text}`}>{ep.method}</span>
                     <code className="flex-1 text-xs font-mono text-pf-text">{ep.path}</code>

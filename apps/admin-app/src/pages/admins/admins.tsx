@@ -158,12 +158,22 @@ export function Component() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-[var(--color-pf-text-tertiary)]">Loading...</td>
-                </tr>
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <td key={j} className="px-4 py-3">
+                        <div className="h-4 bg-pf-surface rounded animate-pulse" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
               ) : admins.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-[var(--color-pf-text-tertiary)]">No admins found</td>
+                  <td colSpan={5} className="text-center py-12">
+                    <ShieldCheck className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
+                    <p className="text-[var(--color-pf-text-secondary)] font-medium">No admins found</p>
+                    <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Add an admin account to get started</p>
+                  </td>
                 </tr>
               ) : (
                 admins.map((a) => (
@@ -213,10 +223,10 @@ export function Component() {
 
       {/* Add/Edit Dialog */}
       {dialogMode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="admin-dialog-title">
           <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-[var(--color-pf-text)]">
+              <h3 id="admin-dialog-title" className="text-base font-semibold text-[var(--color-pf-text)]">
                 {dialogMode === 'add' ? 'Add Admin' : 'Edit Admin'}
               </h3>
               <button
@@ -296,9 +306,9 @@ export function Component() {
 
       {/* Delete Confirmation Dialog */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="deactivate-dialog-title">
           <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-6 w-full max-w-sm mx-4">
-            <h3 className="text-base font-semibold text-[var(--color-pf-text)] mb-2">
+            <h3 id="deactivate-dialog-title" className="text-base font-semibold text-[var(--color-pf-text)] mb-2">
               Deactivate Admin
             </h3>
             <p className="text-sm text-[var(--color-pf-text-secondary)] mb-4">

@@ -21,7 +21,7 @@ export function ProofStrip() {
                   aria-hidden="true"
                 />
               )}
-              <div className="flex flex-col items-center gap-1 px-10 py-3 sm:px-10">
+              <div className="flex flex-col items-center gap-1 px-6 sm:px-10 py-3">
                 <span className="text-[28px] font-bold text-pf-cyan-300 font-mono">
                   {stat.number}
                 </span>

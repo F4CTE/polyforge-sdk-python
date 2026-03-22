@@ -69,3 +69,11 @@ export function statusColor(status: string): string {
   };
   return colors[s] ?? 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]';
 }
+
+/** Priority badge color helpers */
+export const priorityColor: Record<string, string> = {
+  LOW: 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]',
+  MEDIUM: 'text-amber-400 bg-amber-400/10',
+  HIGH: 'text-orange-400 bg-orange-400/10',
+  URGENT: 'text-red-400 bg-red-400/10',
+};

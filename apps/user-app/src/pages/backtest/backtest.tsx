@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import {
   Play, ChevronLeft, ChevronRight, History, X, AlertTriangle, XCircle, Loader2,
 } from 'lucide-react';
@@ -100,7 +101,7 @@ export function Component() {
         setTotal(data.total);
         setTotalPages(data.totalPages);
       }
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to load backtests'); }
     setLoading(false);
   }, []);
 
@@ -135,7 +136,7 @@ export function Component() {
         setPage(1);
         loadHistory(1);
       }
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to load data'); }
     setSubmitting(false);
   }
 
@@ -305,7 +306,9 @@ export function Component() {
                   return (
                     <tr
                       key={run.id}
+                      tabIndex={0}
                       onClick={() => selectRun(run)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectRun(run); }}
                       className={`hover:bg-pf-surface/50 transition-colors cursor-pointer ${
                         selectedRun?.id === run.id ? 'bg-pf-cyan-500/5' : ''
                       }`}

@@ -30,7 +30,7 @@ export function Component() {
         {/* Brand */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
                 stroke="var(--color-pf-cyan-500)"
@@ -61,10 +61,11 @@ export function Component() {
           className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-lg p-6 space-y-4"
         >
           <div>
-            <label className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1.5">
+            <label htmlFor="email" className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1.5">
               Email
             </label>
             <input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -76,10 +77,11 @@ export function Component() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1.5">
+            <label htmlFor="password" className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1.5">
               Password
             </label>
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

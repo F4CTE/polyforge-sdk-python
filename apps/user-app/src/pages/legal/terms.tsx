@@ -5,7 +5,7 @@ const LAST_UPDATED = 'January 15, 2025';
 
 export function Component() {
   return (
-    <div className="min-h-screen bg-pf-bg">
+    <div className="min-h-screen bg-pf-base">
       <div className="max-w-3xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -18,7 +18,7 @@ export function Component() {
           </div>
         </div>
 
-        <h1 className="text-3xl font-bold text-pf-text mb-2">Terms of Service</h1>
+        <h1 className="text-2xl font-semibold text-pf-text mb-2">Terms of Service</h1>
         <p className="text-sm text-pf-text-muted mb-10">Last updated: {LAST_UPDATED}</p>
 
         <div className="space-y-8 text-sm text-pf-text-secondary leading-relaxed">

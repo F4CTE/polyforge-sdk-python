@@ -88,6 +88,7 @@ export function Nav() {
         <button
           className="flex md:hidden flex-col gap-1 bg-transparent border-none cursor-pointer p-1 ml-auto"
           aria-label="Open menu"
+          aria-expanded={mobileOpen}
           onClick={() => setMobileOpen(!mobileOpen)}
         >
           <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" />

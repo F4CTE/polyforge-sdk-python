@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Flag, CheckCircle, XCircle } from 'lucide-react';
+import { Flag, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime } from '@/lib/utils';
 
@@ -10,18 +10,25 @@ export function Component() {
   const [statusFilter, setStatusFilter] = useState('');
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [adminNote, setAdminNote] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 20;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   useEffect(() => {
     loadReports();
-  }, [statusFilter]);
+  }, [statusFilter, page]);
 
   async function loadReports() {
     setLoading(true);
     try {
       const res = await adminApi.reports({
         status: statusFilter || undefined,
+        page,
+        limit,
       });
       setReports(res.data ?? []);
+      setTotal(res.total ?? 0);
     } catch {
       toast.error('Failed to load reports');
     } finally {
@@ -47,7 +54,7 @@ export function Component() {
         <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Content Reports</h2>
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           className="px-3 py-2 text-sm rounded-md border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
         >
           <option value="">All statuses</option>
@@ -72,12 +79,22 @@ export function Component() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--color-pf-text-tertiary)]">Loading...</td>
-                </tr>
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 6 }).map((_, j) => (
+                      <td key={j} className="px-4 py-3">
+                        <div className="h-4 bg-pf-surface rounded animate-pulse" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
               ) : reports.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--color-pf-text-tertiary)]">No reports found</td>
+                  <td colSpan={6} className="text-center py-12">
+                    <Flag className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
+                    <p className="text-[var(--color-pf-text-secondary)] font-medium">No reports found</p>
+                    <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Content reports will appear here</p>
+                  </td>
                 </tr>
               ) : (
                 reports.map((r) => (
@@ -116,6 +133,20 @@ export function Component() {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--color-pf-border)]">
+            <span className="text-xs text-[var(--color-pf-text-tertiary)]">Page {page} of {totalPages}</span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed">
+                <ChevronLeft size={16} />
+              </button>
+              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed">
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Review Dialog */}

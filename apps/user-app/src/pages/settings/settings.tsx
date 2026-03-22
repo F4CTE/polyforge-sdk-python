@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
+import { toast } from 'sonner';
 import {
   User, Bell, Lock, Shield, Key, Loader2, Check, Copy, Ban, Eye, EyeOff,
 } from 'lucide-react';
@@ -108,7 +109,7 @@ export function Component() {
         body: JSON.stringify({ displayName: displayName || undefined, bio: bio || undefined, avatarUrl: avatarUrl || undefined }),
       });
       if (res.ok) patchUser({ displayName, bio, avatarUrl });
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to save profile'); }
     setProfileSaving(false);
   }
 
@@ -129,7 +130,7 @@ export function Component() {
         setNewPassword('');
         setConfirmPassword('');
       }
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to change password'); }
     setPwSaving(false);
   }
 
@@ -138,7 +139,7 @@ export function Component() {
     try {
       const res = await fetch('/auth/v1/totp/setup', { method: 'POST', credentials: 'include' });
       if (res.ok) setTotpSetupData(await res.json());
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to start 2FA setup'); }
   }
 
   async function confirmTotp() {
@@ -156,7 +157,7 @@ export function Component() {
         setTotpSetupData(null);
         setTotpCode('');
       }
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to confirm 2FA'); }
     setTotpSaving(false);
   }
 
@@ -174,7 +175,7 @@ export function Component() {
         patchUser({ totpEnabled: false });
         setTotpCode('');
       }
-    } catch { /* keep state */ }
+    } catch { toast.error('Failed to disable 2FA'); }
     setTotpSaving(false);
   }
 
@@ -313,10 +314,12 @@ export function Component() {
                 <div className="text-xs text-pf-text-muted mt-0.5">{item.desc}</div>
               </div>
               <button
+                role="switch"
+                aria-checked={notifPrefs[item.key]}
                 onClick={() => setNotifPrefs(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
                 className={`relative w-10 h-5 rounded-full transition-colors ${notifPrefs[item.key] ? 'bg-pf-cyan-500' : 'bg-pf-overlay'}`}
               >
-                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${notifPrefs[item.key] ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${notifPrefs[item.key] ? 'translate-x-5' : 'translate-x-0.5'}`} />
               </button>
             </div>
           ))}

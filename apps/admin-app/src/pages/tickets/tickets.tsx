@@ -1,16 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 import { adminApi } from '@/lib/api';
-import { statusColor, formatDateTime } from '@/lib/utils';
-
-const priorityColor: Record<string, string> = {
-  LOW: 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]',
-  MEDIUM: 'text-amber-400 bg-amber-400/10',
-  HIGH: 'text-orange-400 bg-orange-400/10',
-  URGENT: 'text-red-400 bg-red-400/10',
-};
+import { statusColor, formatDateTime, priorityColor } from '@/lib/utils';
 
 export function Component() {
   const navigate = useNavigate();
@@ -82,18 +75,31 @@ export function Component() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--color-pf-text-tertiary)]">Loading...</td>
-                </tr>
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 6 }).map((_, j) => (
+                      <td key={j} className="px-4 py-3">
+                        <div className="h-4 bg-pf-surface rounded animate-pulse" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
               ) : tickets.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--color-pf-text-tertiary)]">No tickets found</td>
+                  <td colSpan={6} className="text-center py-12">
+                    <MessageSquare className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
+                    <p className="text-[var(--color-pf-text-secondary)] font-medium">No tickets found</p>
+                    <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Support tickets will appear here</p>
+                  </td>
                 </tr>
               ) : (
                 tickets.map((t) => (
                   <tr
                     key={t.id}
+                    role="link"
+                    tabIndex={0}
                     onClick={() => navigate(`/tickets/${t.id}`)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/tickets/${t.id}`); }}
                     className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3 font-medium text-[var(--color-pf-text)]">{t.subject}</td>

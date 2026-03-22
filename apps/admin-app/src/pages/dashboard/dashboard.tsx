@@ -10,6 +10,7 @@ import {
   Server,
   ToggleLeft,
   ToggleRight,
+  AlertCircle,
 } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, timeAgo } from '@/lib/utils';
@@ -32,35 +33,40 @@ export function Component() {
     openTickets: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  async function load() {
+    setLoading(true);
+    setError(false);
+    try {
+      const [healthRes, configRes, usersRes, strategiesRes, ordersRes, ticketsRes, logsRes] =
+        await Promise.all([
+          adminApi.health(),
+          adminApi.config(),
+          adminApi.users({ limit: 1 }),
+          adminApi.strategies({ limit: 1, status: 'RUNNING' }),
+          adminApi.orders({ limit: 1 }),
+          adminApi.tickets({ limit: 1, status: 'OPEN' }),
+          adminApi.auditLogs({ limit: 5 }),
+        ]);
+      setHealth(healthRes);
+      setConfig(configRes);
+      setStats({
+        totalUsers: usersRes.total ?? 0,
+        activeStrategies: strategiesRes.total ?? 0,
+        totalOrders: ordersRes.total ?? 0,
+        openTickets: ticketsRes.total ?? 0,
+      });
+      setAuditLogs(logsRes.data ?? []);
+    } catch {
+      setError(true);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function load() {
-      try {
-        const [healthRes, configRes, usersRes, strategiesRes, ordersRes, ticketsRes, logsRes] =
-          await Promise.all([
-            adminApi.health(),
-            adminApi.config(),
-            adminApi.users({ limit: 1 }),
-            adminApi.strategies({ limit: 1, status: 'RUNNING' }),
-            adminApi.orders({ limit: 1 }),
-            adminApi.tickets({ limit: 1, status: 'OPEN' }),
-            adminApi.auditLogs({ limit: 5 }),
-          ]);
-        setHealth(healthRes);
-        setConfig(configRes);
-        setStats({
-          totalUsers: usersRes.total ?? 0,
-          activeStrategies: strategiesRes.total ?? 0,
-          totalOrders: ordersRes.total ?? 0,
-          openTickets: ticketsRes.total ?? 0,
-        });
-        setAuditLogs(logsRes.data ?? []);
-      } catch {
-        toast.error('Failed to load dashboard data');
-      } finally {
-        setLoading(false);
-      }
-    }
     load();
   }, []);
 
@@ -79,6 +85,18 @@ export function Component() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-sm text-[var(--color-pf-text-secondary)]">Loading dashboard...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)]" size={40} />
+        <p className="text-[var(--color-pf-text-secondary)] mb-4">Failed to load data</p>
+        <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-sm">
+          Try again
+        </button>
       </div>
     );
   }

@@ -45,7 +45,7 @@ export function Topbar() {
       {/* Theme toggle */}
       <button
         onClick={toggleTheme}
-        className="p-2 rounded-md text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors"
+        className="p-2 rounded-pf-sm text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors"
         aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       >
         {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -55,8 +55,9 @@ export function Topbar() {
       <div className="relative" ref={notifRef}>
         <button
           onClick={() => setNotifOpen((v) => !v)}
-          className="relative p-2 rounded-md text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors"
+          className="relative p-2 rounded-pf-sm text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors"
           aria-label="Notifications"
+          aria-expanded={notifOpen}
         >
           <Bell size={18} />
           {unread > 0 && (
@@ -67,12 +68,12 @@ export function Topbar() {
         </button>
 
         {notifOpen && (
-          <div className="absolute right-0 top-12 w-80 bg-pf-elevated border border-pf-border rounded-lg shadow-xl z-50">
+          <div className="absolute right-0 top-12 w-80 bg-pf-elevated border border-pf-border rounded-pf shadow-xl z-50">
             <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border">
               <strong className="text-sm text-pf-text">Notifications</strong>
               <button
                 onClick={markAllRead}
-                className="text-xs text-pf-cyan hover:underline"
+                className="text-xs text-pf-cyan-400 hover:underline"
               >
                 Mark all read
               </button>
@@ -88,7 +89,7 @@ export function Topbar() {
                     key={n.id}
                     onClick={() => markRead(n.id)}
                     className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-pf-surface transition-colors ${
-                      !n.read ? 'bg-pf-cyan/5' : ''
+                      !n.read ? 'bg-pf-cyan-500/5' : ''
                     }`}
                   >
                     <span
@@ -99,7 +100,7 @@ export function Topbar() {
                             ? 'bg-yellow-500'
                             : n.severity === 'success'
                               ? 'bg-green-500'
-                              : 'bg-pf-cyan'
+                              : 'bg-pf-cyan-500'
                       }`}
                     />
                     <div className="min-w-0">
@@ -119,7 +120,7 @@ export function Topbar() {
                 setNotifOpen(false);
                 navigate('/settings');
               }}
-              className="block w-full text-center text-xs text-pf-cyan py-3 border-t border-pf-border hover:bg-pf-surface transition-colors"
+              className="block w-full text-center text-xs text-pf-cyan-400 py-3 border-t border-pf-border hover:bg-pf-surface transition-colors"
             >
               See all notifications
             </button>
@@ -130,10 +131,12 @@ export function Topbar() {
       {/* User menu */}
       <div className="relative ml-2" ref={menuRef}>
         <button
+          data-testid="user-menu-btn"
           onClick={() => setMenuOpen((v) => !v)}
-          className="flex items-center gap-2 p-1 rounded-md hover:bg-pf-elevated transition-colors"
+          className="flex items-center gap-2 p-1 rounded-pf-sm hover:bg-pf-elevated transition-colors"
+          aria-expanded={menuOpen}
         >
-          <div className="w-8 h-8 rounded-full bg-pf-cyan/20 text-pf-cyan flex items-center justify-center text-xs font-semibold">
+          <div className="w-8 h-8 rounded-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-xs font-semibold">
             {initials}
           </div>
           <span className="text-sm text-pf-text hidden sm:inline">
@@ -143,7 +146,7 @@ export function Topbar() {
         </button>
 
         {menuOpen && (
-          <div className="absolute right-0 top-12 w-48 bg-pf-elevated border border-pf-border rounded-lg shadow-xl z-50 py-1">
+          <div className="absolute right-0 top-12 w-48 bg-pf-elevated border border-pf-border rounded-pf shadow-xl z-50 py-1">
             <button
               onClick={() => {
                 setMenuOpen(false);
