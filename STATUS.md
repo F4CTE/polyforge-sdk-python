@@ -7,7 +7,62 @@
 
 ## Next Up
 
-v3.0 frontend migration in progress.
+Phase 8 competitive features in planning.
+
+---
+
+## v3.1.0 — Design Polish, Security Hardening & Market Redesign
+
+### Design Improvements
+
+- [x] Strategy card gradient headers with status indicator dots
+- [x] Discover card social stats
+- [x] FAQ hover effect and cyan accent
+- [x] Hero SVG glow animation
+- [x] Notification bell active indicator
+- [x] Market placeholder icons
+- [x] Admin sidebar spacing improvements
+- [x] Page header spacing consistency
+- [x] Loading logo animation (polygon rotates, bolt pulses)
+- [x] shadcn dark theme alignment (slate palette CSS vars)
+- [x] Custom scrollbars (thin, dark-themed, all apps)
+
+### Security Hardening
+
+- [x] SQL injection fix in price-cache (C-1)
+- [x] Internal JWT on signer calls (H-1)
+- [x] Refresh token revocation on password change (H-2)
+- [x] Redis authentication (H-3)
+- [x] Notification DTO validation (H-4)
+- [x] TOTP timing-safe compare (M-1)
+- [x] Swagger production guard (M-3)
+- [x] WebSocket origin validation (M-5)
+- [x] Signer bind address restriction (L-5)
+
+### Fixes
+
+- [x] Light theme accessibility — text contrast, button text, table headers, form labels (WCAG compliance)
+- [x] Strategy builder dark mode (React Flow `colorMode`, block node inline styles)
+- [x] Duplicate panel button removed from strategy builder
+- [x] Zoom controls and minimap restored in strategy builder
+- [x] Admin dashboard independent error states
+- [x] User status derived from booleans (`emailVerified`, `polymarketConnected`)
+- [x] Health endpoint path fix (admin)
+- [x] Cache/builder API path fixes (admin)
+- [x] CORS: added `http://127.0.0.1` and `http://localhost:5173` to allowed origins
+
+### Features
+
+- [x] "Built with" removed from landing footer
+- [x] Sidebar collapse button moved to bottom
+- [x] Logo links to home on both apps
+- [x] Inline editable strategy name in builder topbar
+- [x] Market page redesign: Polymarket-style cards with images, probability bars, multi-outcome support
+
+### Docs
+
+- [x] Competitor audit: 199-platform analysis (`docs/polyforge_competitor_audit.md`)
+- [x] Roadmap Phase 8: copy trading, whale tracking, AI news pipeline, advanced orders, multi-platform, mobile, social reputation, gasless
 
 ---
 

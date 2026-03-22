@@ -5,6 +5,61 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [3.1.0] — 2026-03-22
+
+### Design
+
+- **Strategy card gradient headers** — gradient header backgrounds with status indicator dots
+- **Discover card social stats** — social engagement metrics on discover page cards
+- **FAQ hover and accent** — hover effect and cyan accent styling on FAQ items
+- **Hero SVG glow** — animated glow effect on hero section SVG illustration
+- **Notification bell active indicator** — visual indicator when notifications are pending
+- **Market placeholder icons** — placeholder icons for markets without images
+- **Admin sidebar spacing** — improved spacing and padding in admin sidebar
+- **Page header spacing consistency** — unified page header spacing across all pages
+- **Loading logo animation** — polygon rotates, bolt pulses during loading screen
+- **shadcn dark theme alignment** — updated all CSS variables to match shadcn slate palette
+- **Custom scrollbars** — thin dark-themed scrollbars across all apps
+
+### Security
+
+- **SQL injection fix in price-cache** (C-1) — parameterized queries in price cache service
+- **Internal JWT on signer calls** (H-1) — all signer-service calls now require internal JWT authentication
+- **Refresh token revocation on password change** (H-2) — all active sessions invalidated when user changes password
+- **Redis authentication** (H-3) — Redis instances now require password authentication
+- **Notification DTO validation** (H-4) — strict DTO validation on notification service inputs
+- **TOTP timing-safe compare** (M-1) — TOTP verification uses constant-time comparison to prevent timing attacks
+- **Swagger production guard** (M-3) — Swagger UI disabled in production environments
+- **WebSocket origin validation** (M-5) — WebSocket connections validated against allowed origin list
+- **Signer bind address** (L-5) — signer-service binds to internal network address only
+
+### Fixes
+
+- **Light theme accessibility** — comprehensive contrast fixes across all pages: muted text upgraded to secondary, button text on cyan changed from white to black, table headers and form labels upgraded for WCAG compliance
+- **Strategy builder dark mode** — canvas dark mode via React Flow `colorMode` prop, block node inline styles for correct theming
+- **Duplicate panel button removed** — removed duplicate panel toggle button from strategy builder
+- **Zoom controls and minimap restored** — React Flow zoom controls and minimap re-enabled in strategy builder
+- **Admin dashboard independent error states** — each dashboard card handles errors independently
+- **User status derived from booleans** — user status computed from `emailVerified` and `polymarketConnected` flags instead of stored enum
+- **Health endpoint path fix** — corrected admin health check endpoint path
+- **Cache/builder API path fixes** — corrected admin cache and builder API endpoint paths
+- **CORS fix** — added `http://127.0.0.1` and `http://localhost:5173` to allowed origins
+
+### Features
+
+- **"Built with" removed** from landing footer
+- **Sidebar collapse button** moved to bottom of sidebar
+- **Logo links to home** on both user app and admin app
+- **Inline editable strategy name** — strategy name is editable inline in builder topbar
+- **Market page redesign** — Polymarket-style cards with images, probability bars, and multi-outcome support
+
+### Docs
+
+- **Competitor audit** — 199-platform analysis added to `docs/polyforge_competitor_audit.md`
+- **Roadmap Phase 8** — 8 competitive features planned: copy trading, whale tracking, AI news pipeline, advanced orders, multi-platform support, mobile app, social reputation, gasless transactions
+
+---
+
 ## [3.0.0] — 2026-03-21
 
 ### Changed — Frontend Rewrite

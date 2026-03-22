@@ -30,6 +30,9 @@
 30. [Strategy Builder — Connection Ports & Wires](#30-strategy-builder--connection-ports--wires)
 31. [Strategy Builder — Variable Blocks](#31-strategy-builder--variable-blocks)
 32. [v3.0 — React + shadcn/ui Migration](#32-v30--react--shadcnui-migration)
+33. [Custom Scrollbars](#33-custom-scrollbars)
+34. [Market Card Redesign — Polymarket-Style](#34-market-card-redesign--polymarket-style)
+35. [Inline Editable Titles](#35-inline-editable-titles)
 
 ---
 
@@ -1721,6 +1724,72 @@ Dark/light mode theming uses **Tailwind's `dark:` variant** with the `class` str
 - Components use `dark:` prefixed utilities: `bg-white dark:bg-pf-bg-surface`, `text-gray-900 dark:text-pf-text-primary`.
 - The theme toggle (sun/moon icon, now from Lucide React) toggles the `dark` class and persists the choice.
 - Default mode is dark, consistent with the Polyforge "Precision Instrument" identity.
+
+### shadcn Slate Palette Alignment (v3.1)
+
+As of v3.1, all shadcn/ui CSS variables are aligned with the **shadcn slate palette** for consistency with the broader shadcn ecosystem. The dark theme CSS custom properties (`--background`, `--foreground`, `--card`, `--popover`, `--muted`, `--accent`, `--border`, `--input`, `--ring`, `--primary`, `--secondary`, `--destructive`) now use slate-based values instead of the previous custom values. This ensures that shadcn components render correctly out of the box while still matching the Polyforge deep blue-night aesthetic through the Tailwind `@theme` overrides.
+
+**Light theme accessibility (v3.1):** Comprehensive contrast fixes were applied across all pages for the light theme:
+- Muted text (`text-muted-foreground`) upgraded to secondary contrast levels for readability
+- Button text on cyan backgrounds changed from white to black for WCAG AA compliance
+- Table headers and form labels upgraded to stronger contrast values
+- Canvas empty state text made visible in light mode
+
+---
+
+## 33. Custom Scrollbars
+
+All apps use thin, dark-themed custom scrollbars for visual consistency. The scrollbar styling is applied globally and adapts to both dark and light themes.
+
+**Specification:**
+
+- **Width:** 6px (thin profile to minimize visual clutter)
+- **Track:** transparent background
+- **Thumb (dark mode):** `rgba(255, 255, 255, 0.15)` at rest, `rgba(255, 255, 255, 0.3)` on hover
+- **Thumb (light mode):** `rgba(0, 0, 0, 0.15)` at rest, `rgba(0, 0, 0, 0.3)` on hover
+- **Border radius:** `3px` (rounded ends)
+
+Applied via `scrollbar-width: thin` for Firefox and `::-webkit-scrollbar` pseudo-elements for Chromium browsers. Consistent across user-app, admin-app, and landing page.
+
+---
+
+## 34. Market Card Redesign — Polymarket-Style
+
+The market page was redesigned in v3.1 to match the Polymarket visual language more closely.
+
+**Card anatomy:**
+
+- **Event image** — full-width image at the top of each card, sourced from market metadata. Fallback placeholder icon displayed when no image is available.
+- **Title** — market question text below the image
+- **Probability bars** — horizontal bar segments showing outcome probabilities with percentage labels. Color-coded per outcome.
+- **Multi-outcome support** — cards expand to show all outcomes for markets with more than two options (not just Yes/No)
+- **Social stats** — volume, liquidity, and strategy count displayed as compact metadata
+
+**Layout:**
+- Responsive card grid (auto-fill, minimum 300px card width)
+- Cards use `--pf-bg-surface` background with `--pf-border-subtle` borders
+- Hover state lifts the card with `--pf-shadow-md`
+
+---
+
+## 35. Inline Editable Titles
+
+The strategy builder topbar uses an inline editable title pattern for the strategy name.
+
+**Behavior:**
+
+- Displays as static text by default (styled as a page heading)
+- Clicking the title switches to an inline text input
+- Input auto-focuses and selects all text on activation
+- Pressing Enter or blurring the input saves the new name
+- Pressing Escape reverts to the previous value
+- Empty submissions are rejected (previous name is restored)
+
+**Styling:**
+
+- Static mode: `Inter 600`, `--pf-text-primary`, no visible border
+- Edit mode: `Inter 600`, same font size, subtle `--pf-border-default` border, `--pf-bg-elevated` background
+- Transition between modes is instant (no animation) to feel like native OS rename behavior
 
 ---
 

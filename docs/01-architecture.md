@@ -307,6 +307,18 @@ Login (with 2FA):
   → return { token: JWT(7d) }
 ```
 
+### Refresh Token Revocation
+
+When a user changes their password, all active refresh tokens and sessions are revoked immediately. This prevents continued access from previously authenticated sessions after a password change.
+
+**Flow:**
+1. User submits password change via `PATCH /auth/v1/password`
+2. auth-service verifies current password
+3. auth-service hashes new password (bcrypt cost 12)
+4. All refresh tokens for the user are deleted from Redis
+5. All active JWT sessions are invalidated by incrementing the user's token version
+6. The current session receives a new JWT with the updated token version
+
 ### Polymarket Credential Import
 
 Users import existing Polymarket credentials — Polyforge never generates them.
@@ -367,16 +379,24 @@ All 9 layers are mandatory:
 8. **Canary** — honeypot credentials for breach detection
 9. **Rotation** — quarterly master key rotation
 
+### Redis Authentication
+
+All Redis instances require password authentication. Unauthenticated connections are rejected. The Redis password is set via the `REDIS_PASSWORD` environment variable and configured in `docker-compose.infra.yml` with the `--requirepass` flag.
+
+- All services connect via `ioredis` with the `password` option set from `REDIS_PASSWORD`
+- Redis is on the `internal` Docker network only — never exposed to the public network
+- Connection failures due to missing authentication are logged and the service exits with a non-zero code
+
 ### Content Security
 
 ```
 HTTPS:         TLS 1.2/1.3 only, strong cipher suites
 Headers:       HSTS, X-Frame-Options, CSP, X-Content-Type-Options
-CORS:          polyforge.app, admin.polyforge.app, localhost only
+CORS:          polyforge.app, admin.polyforge.app, localhost, 127.0.0.1, localhost:5173
 Rate limiting: Redis sliding window per userId per endpoint
 Validation:    Zod (runtime) + class-validator (NestJS controllers)
 SQL injection: Prisma parameterized queries — no raw SQL
-XSS:           Angular escapes output by default
+XSS:           Angular escapes output by default; React escapes by default
 CSRF:          JWT bearer tokens (not cookies)
 ```
 
@@ -616,6 +636,8 @@ Polymarket WS ──► market-data-service ──► Redis Streams
 { type: 'TICKET_CLOSED',      ticketId, subject }
 { type: 'AUTH_ERROR',          message }
 ```
+
+**Origin validation:** WebSocket upgrade requests are validated against an allowlist of permitted origins (`polyforge.app`, `admin.polyforge.app`, `localhost`, `127.0.0.1`, `localhost:5173`). Connections from unlisted origins are rejected during the handshake phase before authentication.
 
 **Keepalive:** client sends `PING` every 30 seconds, server responds `PONG`. Connection dropped after 90 seconds of inactivity.
 

@@ -7,7 +7,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 ### Key Features
 
 - **SVG canvas strategy builder** — 2D drag-and-drop canvas with pan/zoom, bezier connection lines, color-coded blocks, and auto-layout
-- **Market cards** — Polymarket-style card grid with gradient headers, sparklines, and card/table toggle
+- **Market cards** — Polymarket-style card grid with images, probability bars, multi-outcome support, and card/table toggle
 - **Market detail page** — Stats bar and "Run Strategy" dialog with strategy selector
 - **Support ticket system** — User-to-admin tickets with assignment, priority, reminders, and email notifications
 - **Real-time updates** — WebSocket-driven order fills, strategy events, notification bell, and ticket polling
@@ -15,7 +15,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Interactive UI** — Tooltips, drag-and-drop reordering, sparkline charts, hover effects, page animations
 - **Dark/light theme toggle** — Sun/moon switcher with localStorage persistence on both user-app and admin-app
 - **API documentation page** — Interactive API reference at `/api-docs` in user-app
-- **Design system** — Dark theme with design tokens (section colors, status colors, typography scale), loading screen with animated logo
+- **Design system** — Dark theme aligned with shadcn slate palette, design tokens (section colors, status colors, typography scale), loading screen with animated logo, custom scrollbars
 - **Accessibility** — `focus-visible` outlines, `aria-label` attributes, responsive mobile layouts
 - **OnPush change detection** — Key components use `ChangeDetectionStrategy.OnPush` for rendering performance
 - **Local HTTPS** — Self-signed cert generation and `docker-compose.ssl.yml` for secure local development
@@ -225,4 +225,5 @@ See [`docs/06-api-catalog.md`](./docs/06-api-catalog.md) for the full endpoint r
 | [`docs/09-dev-setup.md`](./docs/09-dev-setup.md) | Local development setup |
 | [`docs/10-env-reference.md`](./docs/10-env-reference.md) | Environment variable reference |
 | [`docs/11-roadmap.md`](./docs/11-roadmap.md) | Feature roadmap |
+| [`docs/polyforge_competitor_audit.md`](./docs/polyforge_competitor_audit.md) | 199-platform competitor analysis |
 | [`CHANGELOG.md`](./CHANGELOG.md) | Release history |

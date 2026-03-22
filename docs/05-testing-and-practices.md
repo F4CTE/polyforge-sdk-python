@@ -796,6 +796,73 @@ export class SecretsService implements OnApplicationBootstrap {
 }
 ```
 
+### Testing timing-safe comparison (TOTP)
+
+TOTP verification must use constant-time comparison to prevent timing attacks. Tests should verify that the comparison function does not short-circuit on the first mismatched character.
+
+```typescript
+describe('TOTP verification', () => {
+  it('uses timing-safe comparison for token validation', () => {
+    // Verify crypto.timingSafeEqual is used, not === or localeCompare
+    const validToken = generateTOTP(secret);
+    const result = verifyTOTP(secret, validToken);
+    expect(result).toBe(true);
+  });
+
+  it('rejects expired TOTP tokens', () => {
+    vi.useFakeTimers();
+    const token = generateTOTP(secret);
+    vi.advanceTimersByTime(31_000); // past 30s window
+    expect(verifyTOTP(secret, token)).toBe(false);
+  });
+});
+```
+
+### Testing Redis authentication
+
+Integration tests must verify that Redis connections require authentication. Unauthenticated connections should be rejected.
+
+```typescript
+describe('Redis authentication', () => {
+  it('rejects connections without a password', async () => {
+    const unauthClient = new Redis({ host: 'localhost', port: 6379 });
+    await expect(unauthClient.ping()).rejects.toThrow(/NOAUTH/);
+    unauthClient.disconnect();
+  });
+
+  it('accepts connections with valid password', async () => {
+    const authClient = new Redis({ host: 'localhost', port: 6379, password: process.env.REDIS_PASSWORD });
+    const result = await authClient.ping();
+    expect(result).toBe('PONG');
+    authClient.disconnect();
+  });
+});
+```
+
+### Testing DTO validation on notification inputs
+
+Notification service inputs must be validated with strict DTOs. Tests should verify that malformed payloads are rejected before processing.
+
+```typescript
+describe('Notification DTO validation', () => {
+  it('rejects notification with missing required fields', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/notifications')
+      .send({ /* missing title, userId, type */ })
+      .expect(400);
+
+    expect(response.body.message).toContain('validation');
+  });
+
+  it('rejects notification with invalid severity value', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/notifications')
+      .send({ userId: 'user1', title: 'Test', type: 'ALERT', severity: 'INVALID' })
+      .expect(400);
+  });
+});
+```
+
 ---
 
 ## 12. Money & Decimal Arithmetic
