@@ -78,7 +78,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
   if (!open) return null;
 
   return (
-    <div className="absolute top-0 right-0 bottom-0 w-80 bg-pf-elevated border-l border-pf-border shadow-pf-lg z-[50] flex flex-col overflow-x-hidden">
+    <div className="w-80 shrink-0 bg-pf-elevated border-l border-pf-border shadow-pf-lg flex flex-col overflow-x-hidden overflow-y-auto">
       {/* Panel header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
         <div className="flex items-center gap-2">

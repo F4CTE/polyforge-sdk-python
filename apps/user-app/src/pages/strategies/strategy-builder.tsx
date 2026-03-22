@@ -142,25 +142,28 @@ export function Component() {
         </div>
       </div>
 
-      {/* ─── Canvas area ──────────────────────────────────────────────────── */}
-      <div className="flex-1 relative overflow-hidden">
-        <ReactFlowProvider>
-          <StrategyCanvas />
-        </ReactFlowProvider>
+      {/* ─── Canvas + Panel ─────────────────────────────────────────────── */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Canvas */}
+        <div className="flex-1 relative">
+          <ReactFlowProvider>
+            <StrategyCanvas />
+          </ReactFlowProvider>
 
-        {/* Floating side panel */}
-        <BlockPalette open={panelOpen} onClose={() => setPanelOpen(false)} />
+          {/* Panel toggle when closed */}
+          {!panelOpen && (
+            <button
+              onClick={() => setPanelOpen(true)}
+              className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border shadow-pf-md text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
+            >
+              <Settings2 className="size-4" />
+              <span>Blocks</span>
+            </button>
+          )}
+        </div>
 
-        {/* Panel toggle when closed */}
-        {!panelOpen && (
-          <button
-            onClick={() => setPanelOpen(true)}
-            className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border shadow-pf-md text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
-          >
-            <Settings2 className="size-4" />
-            <span>Blocks</span>
-          </button>
-        )}
+        {/* Side panel — rendered as flex sibling, not absolute */}
+        {panelOpen && <BlockPalette open={panelOpen} onClose={() => setPanelOpen(false)} />}
       </div>
     </div>
   );
