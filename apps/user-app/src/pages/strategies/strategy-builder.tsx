@@ -143,28 +143,28 @@ export function Component() {
       </div>
 
       {/* ─── Canvas + Panel ─────────────────────────────────────────────── */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Canvas */}
-        <div className="flex-1 relative">
-          <ReactFlowProvider>
+      <ReactFlowProvider>
+        <div className="flex-1 flex overflow-hidden">
+          {/* Canvas */}
+          <div className="flex-1 relative min-w-0">
             <StrategyCanvas />
-          </ReactFlowProvider>
 
-          {/* Panel toggle when closed */}
-          {!panelOpen && (
-            <button
-              onClick={() => setPanelOpen(true)}
-              className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border shadow-pf-md text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
-            >
-              <Settings2 className="size-4" />
-              <span>Blocks</span>
-            </button>
-          )}
+            {/* Panel toggle when closed */}
+            {!panelOpen && (
+              <button
+                onClick={() => setPanelOpen(true)}
+                className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border shadow-pf-md text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
+              >
+                <Settings2 className="size-4" />
+                <span>Blocks</span>
+              </button>
+            )}
+          </div>
+
+          {/* Side panel */}
+          {panelOpen && <BlockPalette open={panelOpen} onClose={() => setPanelOpen(false)} />}
         </div>
-
-        {/* Side panel — rendered as flex sibling, not absolute */}
-        {panelOpen && <BlockPalette open={panelOpen} onClose={() => setPanelOpen(false)} />}
-      </div>
+      </ReactFlowProvider>
     </div>
   );
 }

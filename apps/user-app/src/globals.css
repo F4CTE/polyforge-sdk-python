@@ -1,5 +1,6 @@
 @import "@polyforge/ui/globals.css";
 
+/* ─── React Flow theme overrides ───────────────────────────────────── */
 .react-flow__renderer {
   background: var(--color-pf-base) !important;
 }
@@ -16,4 +17,25 @@
 }
 .react-flow__minimap {
   background: var(--color-pf-surface) !important;
+}
+/* Block node override — React Flow default styles set white bg */
+.react-flow__node {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+/* Edge styling */
+.react-flow__edge-path {
+  stroke: var(--color-pf-cyan-500) !important;
+  stroke-width: 2 !important;
+}
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke-dasharray: 5 5 !important;
+}
+/* Selection */
+.react-flow__node.selected > div {
+  outline: 2px solid var(--color-pf-cyan-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-pf-md);
 }

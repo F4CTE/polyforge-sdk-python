@@ -190,7 +190,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           </h3>
 
           {/* Section tabs */}
-          <div className="flex gap-1 mb-3">
+          <div className="flex gap-1 mb-3 overflow-x-auto scrollbar-none">
             {SECTIONS.map(({ key, icon }) => {
               const meta = SECTION_META[key];
               const count = sectionCount(key);
@@ -199,7 +199,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 <button
                   key={key}
                   onClick={() => setActiveSection(key)}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-pf-sm text-[11px] font-medium transition-all ${
+                  className={`flex items-center gap-1 px-2 py-1 rounded-pf-sm text-[11px] font-medium transition-all shrink-0 whitespace-nowrap ${
                     isActive
                       ? 'text-white shadow-pf-xs'
                       : 'text-pf-text-muted hover:text-pf-text-secondary bg-transparent hover:bg-pf-overlay'
