@@ -82,6 +82,52 @@ body {
 /* Light theme overrides */
 /* ─── Animations ───────────────────────────────────────────── */
 
+/* ─── Custom Scrollbars ────────────────────────────────────────────── */
+
+/* Thin, dark scrollbars for all scrollable elements */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-pf-overlay) transparent;
+}
+
+/* WebKit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-pf-overlay);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-pf-border-strong);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Light theme scrollbars */
+.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.light * {
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* ─── Animations ───────────────────────────────────────────────────── */
+
 /* Page transition */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(8px); }
