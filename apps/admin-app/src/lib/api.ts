@@ -51,7 +51,7 @@ export const authApi = {
 
 export const adminApi = {
   // Dashboard
-  health: () => request<any>(buildUrl(API_BASE, '/health')),
+  health: () => request<any>(buildUrl(API_BASE, '/dashboard')),
   config: () => request<{ inviteOnly: boolean }>(buildUrl(API_BASE, '/config')),
   setInviteOnly: (enabled: boolean) =>
     request<{ inviteOnly: boolean }>(buildUrl(API_BASE, '/config/invite-only'), {

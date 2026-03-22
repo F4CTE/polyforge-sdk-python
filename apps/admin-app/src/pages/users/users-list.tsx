@@ -5,6 +5,13 @@ import { Search, ChevronLeft, ChevronRight, Check, X, Wifi, Shield, Users, Alert
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDate } from '@/lib/utils';
 
+function computeUserStatus(user: any): string {
+  if (user.suspended) return 'SUSPENDED';
+  if (user.polymarketConnected) return 'CONNECTED';
+  if (user.emailVerified) return 'VERIFIED';
+  return 'UNVERIFIED';
+}
+
 export function Component() {
   const navigate = useNavigate();
   const [users, setUsers] = useState<any[]>([]);
@@ -22,15 +29,24 @@ export function Component() {
     setLoading(true);
     setError(false);
     try {
-      const res = await adminApi.users({
+      const params: Record<string, any> = {
         page,
         limit,
         search: search || undefined,
-        status: statusFilter || undefined,
-      });
-      setUsers(res.data ?? []);
-      setTotal(res.total ?? 0);
-      setTotalPages(res.totalPages ?? 1);
+      };
+      // Map status filter to backend-supported query params
+      if (statusFilter === 'SUSPENDED') {
+        params.suspended = true;
+      }
+      const res = await adminApi.users(params);
+      let data = res.data ?? [];
+      // Client-side filtering for statuses not supported by backend
+      if (statusFilter && statusFilter !== 'SUSPENDED') {
+        data = data.filter((u: any) => computeUserStatus(u) === statusFilter);
+      }
+      setUsers(data);
+      setTotal(statusFilter && statusFilter !== 'SUSPENDED' ? data.length : (res.total ?? 0));
+      setTotalPages(statusFilter && statusFilter !== 'SUSPENDED' ? 1 : (res.pages ?? 1));
     } catch {
       setError(true);
       toast.error('Failed to load users');
@@ -83,6 +99,7 @@ export function Component() {
           <option value="UNVERIFIED">Unverified</option>
           <option value="VERIFIED">Verified</option>
           <option value="CONNECTED">Connected</option>
+          <option value="SUSPENDED">Suspended</option>
         </select>
       </div>
 
@@ -151,8 +168,8 @@ export function Component() {
                     </td>
                     <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{user.email ?? ''}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(user.status ?? 'UNKNOWN')}`}>
-                        {user.status ?? 'UNKNOWN'}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(computeUserStatus(user))}`}>
+                        {computeUserStatus(user)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">

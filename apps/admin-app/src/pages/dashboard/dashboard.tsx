@@ -33,26 +33,29 @@ export function Component() {
     openTickets: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [healthError, setHealthError] = useState(false);
+  const [statsError, setStatsError] = useState(false);
+  const [logsError, setLogsError] = useState(false);
 
   async function load() {
     setLoading(true);
-    setError(false);
-    let anyFailed = false;
+    setHealthError(false);
+    setStatsError(false);
+    setLogsError(false);
 
     // Fetch each API call independently so one failure doesn't block others
     try {
       const healthRes = await adminApi.health();
       setHealth(healthRes ?? null);
     } catch {
-      anyFailed = true;
+      setHealthError(true);
     }
 
     try {
       const configRes = await adminApi.config();
       setConfig(configRes ?? null);
     } catch {
-      anyFailed = true;
+      // config failure is non-critical, toggle just won't show current state
     }
 
     try {
@@ -69,20 +72,16 @@ export function Component() {
         openTickets: ticketsRes?.total ?? 0,
       });
     } catch {
-      anyFailed = true;
+      setStatsError(true);
     }
 
     try {
       const logsRes = await adminApi.auditLogs({ limit: 5 });
       setAuditLogs(Array.isArray(logsRes?.data) ? logsRes.data : []);
     } catch {
-      anyFailed = true;
+      setLogsError(true);
     }
 
-    if (anyFailed) {
-      setError(true);
-      toast.error('Some dashboard data failed to load');
-    }
     setLoading(false);
   }
 
@@ -109,18 +108,6 @@ export function Component() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <AlertCircle className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)]" size={40} />
-        <p className="text-[var(--color-pf-text-secondary)] mb-4">Failed to load data</p>
-        <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-sm">
-          Try again
-        </button>
-      </div>
-    );
-  }
-
   const statCards = [
     { label: 'Total Users', value: stats.totalUsers, icon: <Users size={20} />, color: 'text-blue-400', bg: 'bg-blue-400/10' },
     { label: 'Active Strategies', value: stats.activeStrategies, icon: <Blocks size={20} />, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
@@ -131,30 +118,53 @@ export function Component() {
   return (
     <div className="animate-fade-in space-y-6">
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
-        {statCards.map((card) => (
-          <div
-            key={card.label}
-            className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-medium text-[var(--color-pf-text-secondary)]">
-                {card.label}
-              </span>
-              <div className={`p-2 rounded-md ${card.bg}`}>
-                <span className={card.color}>{card.icon}</span>
+      {statsError ? (
+        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 text-center">
+          <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={24} />
+          <p className="text-sm text-[var(--color-pf-text-secondary)]">Stats unavailable</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
+          {statCards.map((card) => (
+            <div
+              key={card.label}
+              className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-[var(--color-pf-text-secondary)]">
+                  {card.label}
+                </span>
+                <div className={`p-2 rounded-md ${card.bg}`}>
+                  <span className={card.color}>{card.icon}</span>
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-[var(--color-pf-text)]">
+                {card.value.toLocaleString()}
               </div>
             </div>
-            <div className="text-2xl font-bold text-[var(--color-pf-text)]">
-              {card.value.toLocaleString()}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* System Health */}
-        {health && (
+        {healthError ? (
+          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Activity size={16} className="text-[var(--color-pf-text-tertiary)]" />
+              <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
+                System Health
+              </h2>
+            </div>
+            <div className="text-center py-6">
+              <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={24} />
+              <p className="text-sm text-[var(--color-pf-text-secondary)]">Health unavailable</p>
+              <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2">
+                Retry
+              </button>
+            </div>
+          </div>
+        ) : health ? (
           <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
             <div className="flex items-center gap-2 mb-4">
               <Activity size={16} className="text-[var(--color-pf-cyan-500)]" />
@@ -194,75 +204,73 @@ export function Component() {
               ))}
             </div>
           </div>
-        )}
+        ) : null}
 
-        {/* Infrastructure */}
-        {health && (
-          <div className="space-y-4">
-            {health.db && (
-            <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Database size={16} className="text-[var(--color-pf-cyan-500)]" />
-                <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
-                  Database
-                </h2>
-                <span
-                  className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(health.db?.status)}`}
-                >
-                  {health.db?.status ?? 'UNKNOWN'}
-                </span>
-              </div>
-              <div className="text-sm text-[var(--color-pf-text-secondary)]">
-                Active connections: <span className="text-[var(--color-pf-text)] font-medium">{health.db?.connections ?? 0}</span>
-              </div>
+        {/* Infrastructure + Launch Control */}
+        <div className="space-y-4">
+          {health?.db && (
+          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Database size={16} className="text-[var(--color-pf-cyan-500)]" />
+              <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
+                Database
+              </h2>
+              <span
+                className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(health.db?.status)}`}
+              >
+                {health.db?.status ?? 'UNKNOWN'}
+              </span>
             </div>
-            )}
-
-            {health.redis && (
-            <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Server size={16} className="text-[var(--color-pf-cyan-500)]" />
-                <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
-                  Redis
-                </h2>
-                <span
-                  className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(health.redis?.status)}`}
-                >
-                  {health.redis?.status ?? 'UNKNOWN'}
-                </span>
-              </div>
-              <div className="text-sm text-[var(--color-pf-text-secondary)]">
-                Memory usage: <span className="text-[var(--color-pf-text)] font-medium">{(health.redis?.memoryUsageMb ?? 0).toFixed(1)} MB</span>
-              </div>
-            </div>
-            )}
-
-            {/* Launch Control */}
-            <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
-                    Launch Control
-                  </h2>
-                  <p className="text-xs text-[var(--color-pf-text-tertiary)] mt-0.5">
-                    Invite-only registration
-                  </p>
-                </div>
-                <button
-                  onClick={toggleInviteOnly}
-                  className="text-[var(--color-pf-cyan-500)] hover:text-[var(--color-pf-cyan-400)] transition-colors"
-                  aria-label="Toggle invite-only"
-                >
-                  {config?.inviteOnly ? (
-                    <ToggleRight size={32} />
-                  ) : (
-                    <ToggleLeft size={32} className="text-[var(--color-pf-text-tertiary)]" />
-                  )}
-                </button>
-              </div>
+            <div className="text-sm text-[var(--color-pf-text-secondary)]">
+              Active connections: <span className="text-[var(--color-pf-text)] font-medium">{health.db?.connections ?? 0}</span>
             </div>
           </div>
-        )}
+          )}
+
+          {health?.redis && (
+          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Server size={16} className="text-[var(--color-pf-cyan-500)]" />
+              <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
+                Redis
+              </h2>
+              <span
+                className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(health.redis?.status)}`}
+              >
+                {health.redis?.status ?? 'UNKNOWN'}
+              </span>
+            </div>
+            <div className="text-sm text-[var(--color-pf-text-secondary)]">
+              Memory usage: <span className="text-[var(--color-pf-text)] font-medium">{(health.redis?.memoryUsageMb ?? 0).toFixed(1)} MB</span>
+            </div>
+          </div>
+          )}
+
+          {/* Launch Control */}
+          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
+                  Launch Control
+                </h2>
+                <p className="text-xs text-[var(--color-pf-text-tertiary)] mt-0.5">
+                  Invite-only registration
+                </p>
+              </div>
+              <button
+                onClick={toggleInviteOnly}
+                className="text-[var(--color-pf-cyan-500)] hover:text-[var(--color-pf-cyan-400)] transition-colors"
+                aria-label="Toggle invite-only"
+              >
+                {config?.inviteOnly ? (
+                  <ToggleRight size={32} />
+                ) : (
+                  <ToggleLeft size={32} className="text-[var(--color-pf-text-tertiary)]" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Recent Activity */}
@@ -270,7 +278,14 @@ export function Component() {
         <h2 className="text-sm font-semibold text-[var(--color-pf-text)] mb-4">
           Recent Activity
         </h2>
-        {auditLogs.length === 0 ? (
+        {logsError ? (
+          <div className="text-center py-4">
+            <p className="text-sm text-[var(--color-pf-text-secondary)]">Audit logs unavailable</p>
+            <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-1">
+              Retry
+            </button>
+          </div>
+        ) : auditLogs.length === 0 ? (
           <p className="text-sm text-[var(--color-pf-text-tertiary)]">No recent activity</p>
         ) : (
           <div className="space-y-3">
