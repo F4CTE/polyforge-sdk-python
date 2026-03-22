@@ -4,6 +4,7 @@ import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { SettingsService } from "./settings.service";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UpdatePasswordDto } from "./dto/update-password.dto";
+import { UpdateNotificationsDto } from "./dto/update-notifications.dto";
 
 @ApiTags("settings")
 @ApiBearerAuth("jwt")
@@ -20,7 +21,7 @@ export class SettingsController {
   @Patch("notifications")
   updateNotifications(
     @CurrentUser() user: any,
-    @Body() dto: Record<string, boolean>,
+    @Body() dto: UpdateNotificationsDto,
   ) {
     return this.settings.updateNotifications(user.sub, dto);
   }

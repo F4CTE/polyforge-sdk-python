@@ -109,10 +109,12 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
 
-  // Always write swagger.json alongside the compiled output — consumed by
+  // Write swagger.json alongside the compiled output — consumed by
   // Postman, SDK generators, and the admin builder stats page.
   const outPath = path.join(__dirname, "..", "swagger.json");
-  fs.writeFileSync(outPath, JSON.stringify(document, null, 2), "utf8");
+  if (process.env.NODE_ENV !== "production") {
+    fs.writeFileSync(outPath, JSON.stringify(document, null, 2), "utf8");
+  }
 
   // Security headers
   app

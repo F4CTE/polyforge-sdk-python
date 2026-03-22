@@ -9,6 +9,7 @@ import {
   createDecipheriv,
   randomBytes,
   createHash,
+  timingSafeEqual,
 } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 
@@ -203,12 +204,19 @@ export class TotpService {
       // invalid code format — fall through to backup code check
     }
 
-    // Try backup codes (constant-time comparison via hash)
+    // Try backup codes (constant-time comparison)
     if (!valid) {
       const codeHash = createHash('sha256')
         .update(code.toUpperCase())
         .digest('hex');
-      const matchIdx = user.totpBackupCodes.indexOf(codeHash);
+      const input = Buffer.from(codeHash, 'hex');
+      let matchIdx = -1;
+      for (let i = 0; i < user.totpBackupCodes.length; i++) {
+        const stored = Buffer.from(user.totpBackupCodes[i], 'hex');
+        if (stored.length === input.length && timingSafeEqual(stored, input)) {
+          matchIdx = i;
+        }
+      }
       if (matchIdx >= 0) {
         const remaining = [...user.totpBackupCodes];
         remaining.splice(matchIdx, 1);

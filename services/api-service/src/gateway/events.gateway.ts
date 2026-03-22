@@ -7,6 +7,7 @@ import {
 } from "@nestjs/websockets";
 import { Logger } from "@nestjs/common";
 import { Server, WebSocket } from "ws";
+import { IncomingMessage } from "http";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "@polyforge/shared-db";
@@ -63,7 +64,18 @@ export class EventsGateway
     return null;
   }
 
-  handleConnection(client: AuthedSocket, req: any) {
+  handleConnection(client: AuthedSocket, req: IncomingMessage) {
+    // Validate Origin header against allowed origins
+    const origin = req.headers.origin;
+    const allowed = [
+      this.config.get<string>("FRONTEND_URL"),
+      this.config.get<string>("ADMIN_URL"),
+    ].filter(Boolean);
+    if (origin && allowed.length > 0 && !allowed.includes(origin)) {
+      client.close(4003, "Origin not allowed");
+      return;
+    }
+
     client.isAuthenticated = false;
     client.subscribedTokens = new Set();
     client.subscribedStrategies = new Set();

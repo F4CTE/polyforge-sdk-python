@@ -124,19 +124,18 @@ export class PriceCacheService {
     this.snapshotBuffer.clear();
 
     try {
-      await this.prisma.$executeRaw`
-                INSERT INTO price_snapshots (time, "tokenId", open, high, low, close, volume)
-                VALUES ${snapshots
-                  .map(
-                    (s) =>
-                      `('${s.time.toISOString()}', '${s.tokenId}', ${s.open}, ${s.high}, ${s.low}, ${s.close}, ${s.volume})`,
-                  )
-                  .join(", ")}
-                ON CONFLICT (time, "tokenId") DO UPDATE
-                SET high = GREATEST(price_snapshots.high, EXCLUDED.high),
-                    low  = LEAST(price_snapshots.low, EXCLUDED.low),
-                    close = EXCLUDED.close
-            `;
+      await this.prisma.priceSnapshot.createMany({
+        data: snapshots.map((s) => ({
+          time: s.time,
+          tokenId: s.tokenId,
+          open: s.open,
+          high: s.high,
+          low: s.low,
+          close: s.close,
+          volume: s.volume,
+        })),
+        skipDuplicates: true,
+      });
     } catch (err) {
       this.logger.error("Failed to flush price snapshots to TimescaleDB", err);
       // Re-buffer failed snapshots (best-effort)

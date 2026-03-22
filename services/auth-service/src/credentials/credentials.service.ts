@@ -1,7 +1,9 @@
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '@polyforge/shared-db';
 import { ImportCredentialsDto } from './dto/import-credentials.dto';
+import { randomUUID } from 'crypto';
 
 /**
  * Forwards encrypted credential storage to signer-service.
@@ -13,14 +15,24 @@ import { ImportCredentialsDto } from './dto/import-credentials.dto';
 export class CredentialsService {
   private readonly logger = new Logger(CredentialsService.name);
   private readonly signerUrl: string;
+  private readonly internalJwtSecret: string;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly jwt: JwtService,
   ) {
     this.signerUrl = this.config.get<string>(
       'SIGNER_SERVICE_URL',
       'http://signer-service:3004',
+    );
+    this.internalJwtSecret = this.config.getOrThrow<string>('INTERNAL_JWT_SECRET');
+  }
+
+  private issueInternalToken(): string {
+    return this.jwt.sign(
+      { sub: 'auth-service', jti: randomUUID() },
+      { secret: this.internalJwtSecret, audience: 'signer-service', expiresIn: '30s' },
     );
   }
 
@@ -99,9 +111,13 @@ export class CredentialsService {
     const url = `${this.signerUrl}/internal/v1/credentials`;
 
     try {
+      const token = this.issueInternalToken();
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ userId, ...dto }),
         signal: AbortSignal.timeout(10_000),
       });
@@ -137,8 +153,10 @@ export class CredentialsService {
     const url = `${this.signerUrl}/internal/v1/credentials/${userId}`;
 
     try {
+      const token = this.issueInternalToken();
       const res = await fetch(url, {
         method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
         signal: AbortSignal.timeout(10_000),
       });
 

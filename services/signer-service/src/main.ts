@@ -34,10 +34,11 @@ async function bootstrap() {
     exclude: [{ path: "health", method: RequestMethod.GET }],
   });
 
-  // Bind only to localhost — this service MUST NOT be reachable from the
-  // internet. In Docker it's on the signer-only network with no published ports.
-  await app.listen(PORT, "127.0.0.1");
-  logger.log(`signer-service listening on port ${PORT} (localhost only)`);
+  // In Docker, bind to 0.0.0.0 so other containers on the signer-only network
+  // can reach this service. It has no published ports, so it remains unreachable
+  // from the internet.
+  await app.listen(PORT, "0.0.0.0");
+  logger.log(`signer-service listening on port ${PORT}`);
 }
 
 bootstrap().catch((err) => {
