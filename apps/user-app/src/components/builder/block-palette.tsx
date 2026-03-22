@@ -5,6 +5,7 @@ import {
   Filter,
   Play,
   GitBranch,
+  Calculator,
   GripVertical,
   X,
   ChevronRight,
@@ -30,6 +31,7 @@ const SECTIONS: { key: PaletteTab; icon: React.ReactNode }[] = [
   { key: 'triggers', icon: <Zap className="size-3" /> },
   { key: 'conditions', icon: <Filter className="size-3" /> },
   { key: 'logic', icon: <GitBranch className="size-3" /> },
+  { key: 'calc', icon: <Calculator className="size-3" /> },
   { key: 'actions', icon: <Play className="size-3" /> },
 ];
 
@@ -68,6 +70,9 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
       }
       if (section === 'logic') {
         return nodes.filter((n) => n.type === 'logicNode').length;
+      }
+      if (section === 'calc') {
+        return nodes.filter((n) => n.type === 'calcNode').length;
       }
       return nodes.filter((n) => (n.data as any).section === section).length;
     },

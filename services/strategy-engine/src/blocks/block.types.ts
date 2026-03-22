@@ -102,3 +102,20 @@ export interface ActionEvaluator {
     prisma: PrismaService,
   ): Promise<ActionResult>;
 }
+
+// ─── Calculation blocks ─────────────────────────────────────────────────────
+
+export interface CalcBlockResult {
+  /** The computed numeric value (or NaN on error) */
+  value: number;
+  /** For comparison blocks: the boolean result */
+  booleanValue?: boolean;
+}
+
+export interface CalcBlockEvaluator {
+  evaluate(
+    block: Record<string, unknown>,
+    inputs: number[],
+    ctx: EvalContext,
+  ): CalcBlockResult;
+}

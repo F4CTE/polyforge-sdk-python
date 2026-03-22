@@ -57,6 +57,16 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
             ? (canvas as any).variables
             : [];
 
+          const logicBlocks = Array.isArray((canvas as any)?.logicBlocks)
+            ? (canvas as any).logicBlocks
+            : [];
+          const logicConnections = Array.isArray((canvas as any)?.connections)
+            ? (canvas as any).connections
+            : [];
+          const calcBlocks = Array.isArray((canvas as any)?.calcBlocks)
+            ? (canvas as any).calcBlocks
+            : (strategy as any).calcBlocks ?? [];
+
           const runner = new StrategyRunner(
             strategy.id,
             strategy.userId,
@@ -78,6 +88,9 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
                 status,
                 reason,
               ),
+            logicBlocks,
+            logicConnections,
+            calcBlocks,
           );
 
           this.runners.set(strategy.id, runner);
@@ -119,6 +132,15 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     const variables = Array.isArray((canvas as any)?.variables)
       ? (canvas as any).variables
       : [];
+    const logicBlocks = Array.isArray((canvas as any)?.logicBlocks)
+      ? (canvas as any).logicBlocks
+      : [];
+    const logicConnections = Array.isArray((canvas as any)?.connections)
+      ? (canvas as any).connections
+      : [];
+    const calcBlocks = Array.isArray((canvas as any)?.calcBlocks)
+      ? (canvas as any).calcBlocks
+      : (strategy as any).calcBlocks ?? [];
 
     const runner = new StrategyRunner(
       strategyId,
@@ -136,6 +158,9 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       (intents) => this.publishIntents(intents, stream),
       (status, reason) =>
         this.onRunnerStatusChange(strategyId, strategy.userId, status, reason),
+      logicBlocks,
+      logicConnections,
+      calcBlocks,
     );
 
     this.runners.set(strategyId, runner);

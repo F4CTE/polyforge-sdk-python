@@ -1,6 +1,6 @@
 // ─── Block definitions for the strategy builder ─────────────────────────────
 
-export type BlockSection = 'safety' | 'triggers' | 'conditions' | 'actions' | 'logic';
+export type BlockSection = 'safety' | 'triggers' | 'conditions' | 'actions' | 'logic' | 'calc';
 
 export interface BlockField {
   key: string;
@@ -27,6 +27,7 @@ export const SECTION_META: Record<
   conditions: { label: 'Conditions', color: '#3B82F6', icon: 'filter' },
   actions:    { label: 'Actions',    color: '#22C55E', icon: 'play' },
   logic:      { label: 'Logic',      color: '#3B82F6', icon: 'git-branch' },
+  calc:       { label: 'Calculate', color: '#10B981', icon: 'calculator' },
 };
 
 export const SECTION_COLUMNS: Record<BlockSection, number> = {
@@ -34,7 +35,8 @@ export const SECTION_COLUMNS: Record<BlockSection, number> = {
   triggers:   450,
   conditions: 800,
   logic:      1050,
-  actions:    1350,
+  calc:       1200,
+  actions:    1500,
 };
 
 export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
@@ -290,6 +292,46 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Delay',
       description: 'Delays signal propagation by specified seconds.',
       fields: [{ key: 'seconds', label: 'Seconds', type: 'number', placeholder: '5' }],
+    },
+  ],
+
+  // ── Calculation blocks (4) ─────────────────────────────────────────────────
+  calc: [
+    {
+      type: 'MATH',
+      label: 'Math',
+      description: 'Perform arithmetic on two inputs (A, B).',
+      fields: [
+        { key: 'operation', label: 'Operation', type: 'text', placeholder: 'add' },
+      ],
+    },
+    {
+      type: 'AGGREGATION',
+      label: 'Aggregation',
+      description: 'Compute aggregate over a rolling window.',
+      fields: [
+        { key: 'function', label: 'Function', type: 'text', placeholder: 'moving_average' },
+        { key: 'windowSize', label: 'Window Size', type: 'number', placeholder: '20' },
+      ],
+    },
+    {
+      type: 'COMPARISON',
+      label: 'Comparison',
+      description: 'Compare two values, outputs boolean.',
+      fields: [
+        { key: 'operator', label: 'Operator', type: 'text', placeholder: '>' },
+        { key: 'min', label: 'Min (between)', type: 'number', placeholder: '0' },
+        { key: 'max', label: 'Max (between)', type: 'number', placeholder: '100' },
+      ],
+    },
+    {
+      type: 'ABS_ROUND',
+      label: 'Abs / Round',
+      description: 'Apply math function to a single value.',
+      fields: [
+        { key: 'function', label: 'Function', type: 'text', placeholder: 'abs' },
+        { key: 'decimals', label: 'Decimals', type: 'number', placeholder: '0' },
+      ],
     },
   ],
 

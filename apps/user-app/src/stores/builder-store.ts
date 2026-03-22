@@ -41,6 +41,16 @@ export interface LogicNodeData {
   [key: string]: unknown;
 }
 
+export interface CalcNodeData {
+  type: string;
+  label: string;
+  section: 'calc';
+  color: string;
+  config: Record<string, string>;
+  fields: BlockField[];
+  [key: string]: unknown;
+}
+
 export type { VariableNodeData };
 
 // ─── Store types ─────────────────────────────────────────────────────────────
@@ -101,6 +111,7 @@ const SECTION_COLORS: Record<BlockSection, string> = {
   conditions: '#3B82F6',
   actions: '#22C55E',
   logic: '#3B82F6',
+  calc: '#10B981',
 };
 
 const LOGIC_COLORS: Record<string, string> = {
@@ -186,6 +197,30 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
           config: Object.fromEntries(blockDef.fields.map((f) => [f.key, ''])),
           fields: blockDef.fields,
           outputs: blockDef.outputs,
+        },
+      };
+
+      set({ nodes: [...nodes, newNode], dirty: true });
+      return;
+    }
+
+    if (section === 'calc') {
+      // Calculation blocks use calcNode type
+      const existingCalc = nodes.filter((n) => n.type === 'calcNode');
+      const x = position?.x ?? SECTION_COLUMNS.calc;
+      const y = position?.y ?? 100 + existingCalc.length * 160;
+
+      const newNode: Node<CalcNodeData> = {
+        id: crypto.randomUUID(),
+        type: 'calcNode',
+        position: { x, y },
+        data: {
+          type: blockDef.type,
+          label: blockDef.label,
+          section: 'calc',
+          color: '#10B981',
+          config: Object.fromEntries(blockDef.fields.map((f) => [f.key, ''])),
+          fields: blockDef.fields,
         },
       };
 
@@ -391,6 +426,37 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         });
       });
 
+      // Restore calc block nodes
+      const storedCalcBlocks = (s.calcBlocks ?? canvasLayout?.calcBlocks ?? []) as {
+        id?: string;
+        type: string;
+        config: Record<string, any>;
+      }[];
+      storedCalcBlocks.forEach((cb, i) => {
+        const cbId = cb.id || crypto.randomUUID();
+        const storedPos = storedPositions[cbId];
+        const def = findBlockDef(cb.type);
+
+        nodes.push({
+          id: cbId,
+          type: 'calcNode',
+          position: {
+            x: storedPos?.x ?? SECTION_COLUMNS.calc,
+            y: storedPos?.y ?? 100 + i * 160,
+          },
+          data: {
+            type: cb.type,
+            label: def?.label ?? cb.type,
+            section: 'calc',
+            color: '#10B981',
+            config: Object.fromEntries(
+              Object.entries(cb.config).map(([k, v]) => [k, String(v)]),
+            ),
+            fields: def?.fields ?? [],
+          } satisfies CalcNodeData,
+        });
+      });
+
       // Restore variable nodes from strategy.variables or canvas.variables
       const storedVariables = (s.variables ?? canvasLayout?.variables ?? []) as {
         id?: string;
@@ -457,6 +523,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
     const blockNodes = state.nodes.filter((n) => n.type === 'blockNode');
     const logicNodes = state.nodes.filter((n) => n.type === 'logicNode');
+    const calcNodes = state.nodes.filter((n) => n.type === 'calcNode');
     const variableNodes = state.nodes.filter((n) => n.type === 'variableNode');
 
     const toBlock = (n: Node<BlockNodeData>) => ({
@@ -470,6 +537,12 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       type: (n.data as LogicNodeData).type,
       config: (n.data as LogicNodeData).config,
       outputs: (n.data as LogicNodeData).outputs,
+    });
+
+    const toCalcBlock = (n: Node<CalcNodeData>) => ({
+      id: n.id,
+      type: (n.data as CalcNodeData).type,
+      config: (n.data as CalcNodeData).config,
     });
 
     const positions: Record<string, { x: number; y: number }> = {};
@@ -511,6 +584,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         .filter((n) => (n.data as BlockNodeData).section === 'actions')
         .map(toBlock),
       logicBlocks: logicNodes.map(toLogicBlock),
+      calcBlocks: calcNodes.map(toCalcBlock),
       tags: state.tags
         .split(',')
         .map((t) => t.trim())

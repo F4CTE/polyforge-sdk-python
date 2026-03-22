@@ -12,7 +12,8 @@ import {
 import { BlockNode } from './nodes/block-node';
 import { VariableNode } from './nodes/variable-node';
 import { LogicNode } from './nodes/logic-node';
-import { useBuilderStore, type BlockNodeData, type LogicNodeData } from '../../stores/builder-store';
+import { CalcNode } from './nodes/calc-node';
+import { useBuilderStore, type BlockNodeData, type LogicNodeData, type CalcNodeData } from '../../stores/builder-store';
 import { useThemeStore } from '../../stores/theme-store';
 import {
   BLOCK_DEFS,
@@ -25,6 +26,7 @@ const nodeTypes = {
   blockNode: BlockNode,
   variableNode: VariableNode,
   logicNode: LogicNode,
+  calcNode: CalcNode,
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -130,6 +132,7 @@ export function StrategyCanvas() {
           nodeColor={(node) => {
             if (node.type === 'variableNode') return '#A855F7';
             if (node.type === 'logicNode') return '#3B82F6';
+            if (node.type === 'calcNode') return '#10B981';
             const data = node.data as BlockNodeData;
             return data?.color ?? '#6B7280';
           }}

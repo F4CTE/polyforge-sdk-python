@@ -73,6 +73,7 @@ export interface Strategy {
   actions: Block[];
   safety: Block[];
   logicBlocks?: LogicBlock[];
+  calcBlocks?: CalcBlock[];
   status: StrategyStatus;
   errorMessage: string | null;
   forkedFromId: string | null;
@@ -102,6 +103,20 @@ export interface LogicBlock {
   params: Record<string, unknown>;
   /** Output port IDs for multi-output blocks (e.g. IF_THEN_ELSE has 'true' and 'false') */
   outputs?: string[];
+}
+
+// ─── Calculation blocks ─────────────────────────────────────────────────────
+
+export type CalcBlockType =
+  | 'MATH'
+  | 'AGGREGATION'
+  | 'COMPARISON'
+  | 'ABS_ROUND';
+
+export interface CalcBlock {
+  id: string;
+  type: CalcBlockType;
+  params: Record<string, unknown>;
 }
 
 // ─── Calculation variables ───────────────────────────────────────────────────

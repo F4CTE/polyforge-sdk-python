@@ -1,4 +1,4 @@
-import { BlockEvaluator, ActionEvaluator, LogicBlockEvaluator } from "./block.types";
+import { BlockEvaluator, ActionEvaluator, LogicBlockEvaluator, CalcBlockEvaluator } from "./block.types";
 
 import {
   StopIfDailyLossBlock,
@@ -44,6 +44,13 @@ import {
   NotGateBlock,
   DelayBlock,
 } from "./logic.blocks";
+
+import {
+  MathBlockEvaluator,
+  AggregationBlockEvaluator,
+  ComparisonBlockEvaluator,
+  AbsRoundBlockEvaluator,
+} from "./calc.blocks";
 
 import {
   BuyYesAction,
@@ -131,4 +138,11 @@ export const LOGIC_REGISTRY: Record<string, LogicBlockEvaluator> = {
   OR_GATE: OrGateBlock,
   NOT_GATE: NotGateBlock,
   DELAY: DelayBlock,
+};
+
+export const CALC_REGISTRY: Record<string, CalcBlockEvaluator> = {
+  MATH: MathBlockEvaluator,
+  AGGREGATION: AggregationBlockEvaluator,
+  COMPARISON: ComparisonBlockEvaluator,
+  ABS_ROUND: AbsRoundBlockEvaluator,
 };

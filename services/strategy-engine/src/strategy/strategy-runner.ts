@@ -12,6 +12,7 @@ import {
   CONDITION_REGISTRY,
   ACTION_REGISTRY,
   LOGIC_REGISTRY,
+  CALC_REGISTRY,
 } from "../blocks/registry";
 import { resolveParams } from "../blocks/resolve-params";
 import { StateService } from "../state/state.service";
@@ -72,6 +73,7 @@ export class StrategyRunner {
     ) => Promise<void>,
     private readonly logicBlocks: LogicBlock[] = [],
     private readonly logicConnections: LogicConnection[] = [],
+    private readonly calcBlocks: Block[] = [],
   ) {
     this.logger = new Logger(`StrategyRunner:${strategyId}`);
   }
@@ -171,6 +173,33 @@ export class StrategyRunner {
       }
     }
     ctx.variables = variables;
+
+    // 0.5 Evaluate calculation blocks — produce computed values for downstream use
+    if (this.calcBlocks.length > 0) {
+      for (const block of this.calcBlocks) {
+        const evaluator = CALC_REGISTRY[block.type];
+        if (!evaluator) continue;
+
+        const resolvedBlock = {
+          ...block,
+          params: resolveParams(block.params ?? {}, ctx.variables ?? {}),
+        };
+
+        // Gather numeric inputs from variables referenced in params
+        const inputA = Number(resolvedBlock.params?.inputA ?? 0);
+        const inputB = Number(resolvedBlock.params?.inputB ?? 0);
+        const inputs = [inputA, inputB];
+
+        const result = evaluator.evaluate(resolvedBlock as any, inputs, ctx);
+
+        // Store the result in context variables so other blocks can reference it
+        ctx.variables = ctx.variables ?? {};
+        ctx.variables[`__calc_${block.id}`] = result.value;
+        if (result.booleanValue !== undefined) {
+          ctx.variables[`__calc_bool_${block.id}`] = result.booleanValue ? 1 : 0;
+        }
+      }
+    }
 
     // 1. Check stale data — pause if any subscribed token's price is stale
     const staleToken = await this.detectStaleData();
