@@ -17,7 +17,7 @@
     "seed": "ts-node prisma/seed.ts",
     "seed:admin": "ts-node prisma/seed.admin.ts",
     "generate:api": "openapi-ts --config openapi-ts.config.ts && openapi-ts --config openapi-ts.admin.config.ts",
-    "generate:api:react": "openapi-ts --config openapi-ts.react.config.ts && openapi-ts --config openapi-ts.react.admin.config.ts"
+    "generate:api": "openapi-ts --config openapi-ts.react.config.ts && openapi-ts --config openapi-ts.react.admin.config.ts"
   },
   "dependencies": {
     "@angular/cdk": "^21.2.0",

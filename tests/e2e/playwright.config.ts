@@ -5,10 +5,10 @@ import { defineConfig, devices } from '@playwright/test';
  *
  * Requires the full dev stack running:
  *   docker compose up -d
- *   pnpm --filter user-app dev   (or: ng serve in apps/user-app)
+ *   pnpm --filter user-app-react dev
  *
  * Environment variables:
- *   BASE_URL     — Angular app URL (default: http://localhost:4200)
+ *   BASE_URL     — React app URL (default: http://localhost:5173)
  *   API_URL      — api-service URL  (default: http://localhost:3002)
  *   AUTH_URL     — auth-service URL (default: http://localhost:3001)
  *   MAILHOG_URL  — MailHog web URL  (default: http://localhost:8025)
@@ -23,7 +23,7 @@ export default defineConfig({
     reporter:  [['html', { open: 'never' }], ['list']],
 
     use: {
-        baseURL:       process.env.BASE_URL    ?? 'http://localhost:4200',
+        baseURL:       process.env.BASE_URL    ?? 'http://localhost:5173',
         trace:         'on-first-retry',
         screenshot:    'only-on-failure',
         video:         'retain-on-failure',

@@ -464,24 +464,24 @@ services:
 
   # ─── REACT / NEXT.JS FRONTEND APPS ─────────────────────────────────────
 
-  user-app-react:
+  user-app:
     build:
       context: .
-      dockerfile: apps/user-app-react/Dockerfile
+      dockerfile: apps/user-app/Dockerfile
     networks: [internal]
     restart: unless-stopped
 
-  admin-app-react:
+  admin-app:
     build:
       context: .
-      dockerfile: apps/admin-app-react/Dockerfile
+      dockerfile: apps/admin-app/Dockerfile
     networks: [internal, admin-only]
     restart: unless-stopped
 
-  landing-next:
+  landing:
     build:
       context: .
-      dockerfile: apps/landing-next/Dockerfile
+      dockerfile: apps/landing/Dockerfile
     networks: [internal]
     restart: unless-stopped
 
@@ -498,9 +498,9 @@ services:
       - "8080:8080"
     networks: [internal, admin-only]
     depends_on:
-      - user-app-react
-      - admin-app-react
-      - landing-next
+      - user-app
+      - admin-app
+      - landing
       - api-service
       - auth-service
       - admin-api-service

@@ -2,6 +2,10 @@ import { type Page, type Locator, expect } from '@playwright/test';
 
 /**
  * Page Object for the Trading Account settings page (/settings/trading-account).
+ *
+ * Updated for React + shadcn frontend (replaces Angular + PrimeNG).
+ * The page uses plain HTML inputs with show/hide toggle buttons for
+ * sensitive fields, and a status badge in the header area.
  */
 export class TradingAccountPage {
     readonly page:              Page;
@@ -16,15 +20,18 @@ export class TradingAccountPage {
 
     constructor(page: Page) {
         this.page               = page;
-        // p-password wraps <input> — target inner input
-        this.privateKeyInput    = page.locator('p-password').filter({ has: page.locator('input[placeholder="0x…"]') }).locator('input');
+        // React renders plain <input> elements with placeholder text
+        // Private key is an input (type toggles text/password) with placeholder "0x..."
+        // It is the first "0x..." placeholder input (the second is Safe Address which is always type="text")
+        this.privateKeyInput    = page.locator('input[placeholder="0x..."]').first();
         this.apiKeyInput        = page.locator('input[placeholder="API Key"]');
-        this.apiSecretInput     = page.locator('p-password').filter({ has: page.locator('input[placeholder="API Secret"]') }).locator('input');
-        this.apiPassphraseInput = page.locator('p-password').filter({ has: page.locator('input[placeholder="Passphrase"]') }).locator('input');
-        this.safeAddressInput   = page.locator('input[placeholder="0x…"]').last(); // plain input, not p-password
+        this.apiSecretInput     = page.locator('input[placeholder="API Secret"]');
+        this.apiPassphraseInput = page.locator('input[placeholder="Passphrase"]');
+        this.safeAddressInput   = page.locator('input[placeholder="0x..."]').last();
         this.connectButton      = page.locator('button', { hasText: 'Connect Account' });
         this.disconnectButton   = page.locator('button', { hasText: 'Disconnect Account' });
-        this.statusBadge        = page.locator('.trading-status-badge');
+        // Status badge is a span with rounded-full containing "Connected" or "Not Connected"
+        this.statusBadge        = page.locator('span.rounded-full').filter({ hasText: /Connected|Not Connected/ });
     }
 
     async goto(): Promise<void> {
@@ -35,7 +42,8 @@ export class TradingAccountPage {
     }
 
     async isConnected(): Promise<boolean> {
-        return this.statusBadge.locator('.pi-check-circle').isVisible();
+        const text = (await this.statusBadge.textContent()) ?? '';
+        return text.includes('Connected') && !text.includes('Not Connected');
     }
 
     async connect(params: {

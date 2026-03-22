@@ -1,9 +1,17 @@
-FROM nginx:1.27-alpine
+FROM node:24-alpine AS builder
+WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/ui/package.json packages/ui/
+COPY apps/landing/package.json apps/landing/
+RUN corepack enable && pnpm install --frozen-lockfile
+COPY packages/ui/ packages/ui/
+COPY apps/landing/ apps/landing/
+RUN pnpm --filter @polyforge/landing build
 
-COPY apps/landing/ /usr/share/nginx/html/
-
-COPY apps/landing/nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+FROM node:24-alpine
+WORKDIR /app
+COPY --from=builder /app/apps/landing/.next/standalone ./
+COPY --from=builder /app/apps/landing/.next/static ./apps/landing/.next/static
+COPY --from=builder /app/apps/landing/public ./apps/landing/public
+EXPOSE 3000
+CMD ["node", "apps/landing/server.js"]

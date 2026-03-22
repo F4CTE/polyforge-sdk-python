@@ -233,7 +233,7 @@ test.describe('Strategy lifecycle', () => {
         }
         await expect(page).toHaveURL(/\/strategies\/[a-z0-9-]+$/);
         await expect(page.locator('h1', { hasText: strategyName })).toBeVisible({ timeout: 15_000 });
-        await expect(page.locator('.status-badge')).toContainText(/IDLE/i);
+        await expect(page.locator('span.rounded-full')).toContainText(/IDLE/i);
     });
 
 });

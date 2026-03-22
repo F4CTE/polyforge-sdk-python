@@ -62,9 +62,9 @@ test.describe('Smoke', () => {
         const loginPage = new LoginPage(page);
         await loginPage.goto();
         await loginPage.loginAndRedirect(ALICE_EMAIL, ALICE_PASSWORD);
-        // Sidebar nav items
-        await expect(page.locator('.app-sidebar .nav-item', { hasText: 'Strategies' })).toBeVisible();
-        await expect(page.locator('.app-sidebar .nav-item', { hasText: 'Markets' })).toBeVisible();
+        // Sidebar nav items — React uses NavLink elements inside an <aside> with <nav>
+        await expect(page.locator('aside nav a', { hasText: 'Strategies' })).toBeVisible();
+        await expect(page.locator('aside nav a', { hasText: 'Markets' })).toBeVisible();
     });
 
     test('@smoke direct API health check — auth-service responds', async () => {

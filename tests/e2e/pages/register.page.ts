@@ -2,6 +2,8 @@ import { type Page, type Locator, expect } from '@playwright/test';
 
 /**
  * Page Object for the Register page (/register).
+ *
+ * Updated for React + shadcn frontend (replaces Angular + PrimeNG).
  */
 export class RegisterPage {
     readonly page:            Page;
@@ -17,13 +19,14 @@ export class RegisterPage {
         this.page            = page;
         this.email           = page.locator('#email');
         this.username        = page.locator('#username');
-        // p-password: target the inner <input> inside the p-password host
-        this.password        = page.locator('#password input').or(page.locator('input[formcontrolname="password"]'));
-        this.confirmPassword = page.locator('#confirmPassword input').or(page.locator('input[formcontrolname="confirmPassword"]'));
-        // PrimeNG p-checkbox: target the visible checkbox wrapper (clicking the hidden input won't work)
-        this.tosCheckbox     = page.locator('p-checkbox[formcontrolname="tosAccepted"]').first();
-        this.submit          = page.locator('p-button[type="submit"] button').or(page.locator('button', { hasText: 'Create account' }));
-        this.error           = page.locator('p-message[severity="error"]');
+        // React renders plain <input type="password"> with id attributes
+        this.password        = page.locator('#password');
+        this.confirmPassword = page.locator('#confirmPassword');
+        // Standard HTML checkbox with id="tos"
+        this.tosCheckbox     = page.locator('#tos');
+        this.submit          = page.locator('button', { hasText: 'Create account' });
+        // Error alert: styled div with AlertCircle icon
+        this.error           = page.locator('.bg-red-500\\/10');
     }
 
     async goto(): Promise<void> {
@@ -44,15 +47,15 @@ export class RegisterPage {
         await this.email.fill(params.email);
         await this.username.fill(params.username);
         await this.password.fill(params.password);
-        // Click elsewhere to dismiss PrimeNG password strength popup
+        // Blur the password field to trigger validation and dismiss any popups
         await this.email.click();
         await this.page.waitForTimeout(300);
         await this.confirmPassword.fill(params.password);
-        // Click elsewhere to dismiss any popup
+        // Blur confirm password field
         await this.email.click();
         await this.page.waitForTimeout(300);
-        // PrimeNG checkbox needs a click on the visual element
-        await this.tosCheckbox.click();
+        // Standard HTML checkbox — click directly
+        await this.tosCheckbox.check();
         await this.submit.click();
     }
 

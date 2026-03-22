@@ -2,6 +2,10 @@ import { type Page, type Locator, expect } from '@playwright/test';
 
 /**
  * Page Object for the Strategies list page (/strategies).
+ *
+ * Updated for React + shadcn frontend (replaces Angular + PrimeNG).
+ * Strategy cards are plain divs with cursor-pointer and group class.
+ * Action buttons use Lucide icons with title attributes for identification.
  */
 export class StrategiesListPage {
     readonly page:          Page;
@@ -10,8 +14,10 @@ export class StrategiesListPage {
 
     constructor(page: Page) {
         this.page          = page;
-        this.newButton     = page.locator('p-button').filter({ hasText: 'New Strategy' }).locator('button').first();
-        this.strategyCards = page.locator('.strategy-card');
+        // "New Strategy" is an <a> (Link) in React, not a p-button
+        this.newButton     = page.locator('a', { hasText: 'New Strategy' });
+        // Each strategy card is a div with cursor-pointer inside the grid
+        this.strategyCards = page.locator('.grid > div[class*="cursor-pointer"]');
     }
 
     async goto(): Promise<void> {
@@ -21,12 +27,13 @@ export class StrategiesListPage {
 
     /** Find a strategy card by name */
     cardByName(name: string): Locator {
-        return this.strategyCards.filter({ has: this.page.locator('.strategy-name', { hasText: name }) });
+        return this.strategyCards.filter({ has: this.page.locator('h3', { hasText: name }) });
     }
 
     /** Get the status badge text for a strategy card */
     async statusOf(name: string): Promise<string> {
-        const badge = this.cardByName(name).locator('.status-badge');
+        // Status badge is a span with rounded-full containing the status text
+        const badge = this.cardByName(name).locator('span.rounded-full').first();
         await expect(badge).toBeVisible();
         return (await badge.textContent() ?? '').trim();
     }
@@ -47,23 +54,22 @@ export class StrategiesListPage {
         await card.locator('button', { hasText: 'Live' }).click();
     }
 
-    /** Click the Pause button (icon-only) on a specific strategy card */
+    /** Click the Pause button (icon-only, identified by title) on a specific strategy card */
     async pauseStrategy(name: string): Promise<void> {
         const card = this.cardByName(name);
-        // Pause button has only an icon (pi-pause), no text label
-        await card.locator('button:has(.pi-pause)').click();
+        await card.locator('button[title="Pause"]').click();
     }
 
-    /** Click the Resume button (icon-only) on a specific strategy card */
+    /** Click the Resume button (icon-only, identified by title) on a specific strategy card */
     async resumeStrategy(name: string): Promise<void> {
         const card = this.cardByName(name);
-        await card.locator('button:has(.pi-play)').click();
+        await card.locator('button[title="Resume"]').click();
     }
 
-    /** Click the Stop button (icon-only) on a specific strategy card */
+    /** Click the Stop button (icon-only, identified by title) on a specific strategy card */
     async stopStrategy(name: string): Promise<void> {
         const card = this.cardByName(name);
-        await card.locator('button:has(.pi-stop-circle)').click();
+        await card.locator('button[title="Stop"]').click();
     }
 
     async clickNew(): Promise<void> {

@@ -142,9 +142,9 @@ test.describe('Auth flow', () => {
         await loginPage.goto();
         await loginPage.loginAndRedirect('alice@dev.local', 'password123');
 
-        // Open user menu and click Logout
-        await page.locator('p-avatar').click();
-        await page.locator('[class*="p-menu"]').locator('li', { hasText: /logout|sign out/i }).click();
+        // Open user menu dropdown and click Sign out
+        await page.locator('header button:has(.rounded-full)').click();
+        await page.locator('button', { hasText: /sign out/i }).click();
 
         await expect(page).toHaveURL(/\/login/);
     });

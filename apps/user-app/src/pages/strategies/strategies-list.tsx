@@ -232,6 +232,7 @@ export function Component() {
             return (
               <div
                 key={strategy.id}
+                data-testid="strategy-card"
                 onClick={() => navigate(`/strategies/${strategy.id}`)}
                 className="group bg-pf-elevated border border-pf-border rounded-pf-lg p-5 cursor-pointer hover:border-pf-border-strong hover:shadow-pf-md transition-all"
               >
@@ -240,7 +241,7 @@ export function Component() {
                   <h3 className="text-sm font-medium text-pf-text leading-snug line-clamp-1 group-hover:text-pf-cyan-400 transition-colors">
                     {strategy.name}
                   </h3>
-                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}>
+                  <span data-testid="status-badge" className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot} ${isActive(strategy) ? 'animate-pulse' : ''}`} />
                     {strategy.status}
                   </span>

@@ -3,8 +3,8 @@ import { type Page, type Locator, expect } from '@playwright/test';
 /**
  * Page Object for the Login page (/login).
  *
- * PrimeNG p-password wraps the actual <input> inside a component host;
- * we target the inner input via the parent id or placeholder.
+ * Updated for React + shadcn frontend (replaces Angular + PrimeNG).
+ * Uses semantic selectors (id, type, role, text) where possible.
  */
 export class LoginPage {
     readonly page:     Page;
@@ -17,11 +17,13 @@ export class LoginPage {
     constructor(page: Page) {
         this.page     = page;
         this.email    = page.locator('#email');
-        // p-password renders an <input> inside the component; target via id
-        this.password = page.locator('#password input').or(page.locator('input[formcontrolname="password"]'));
+        // React renders a plain <input type="password"> with id="password"
+        this.password = page.locator('#password');
         this.submit   = page.locator('button', { hasText: 'Sign in' });
-        this.error    = page.locator('p-message[severity="error"]');
-        this.totpInput = page.locator('p-inputotp input').first();
+        // Error alert: a div with AlertCircle icon and error text
+        this.error    = page.locator('.bg-red-500\\/10');
+        // TOTP input: plain <input id="totp"> shown conditionally
+        this.totpInput = page.locator('#totp');
     }
 
     async goto(): Promise<void> {

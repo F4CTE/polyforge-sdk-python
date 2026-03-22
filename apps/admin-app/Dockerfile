@@ -1,22 +1,28 @@
 FROM node:24-alpine AS builder
+RUN corepack enable
+WORKDIR /app
 
-WORKDIR /build
+# Copy workspace config
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 
-COPY apps/admin-app/package.json ./
+# Copy package.json files for dependency resolution
+COPY packages/ui/package.json packages/ui/
+COPY packages/api-client/package.json packages/api-client/
+COPY apps/admin-app/package.json apps/admin-app/
 
-RUN npm install
+RUN pnpm install --frozen-lockfile
 
-COPY apps/admin-app/ ./
+# Copy source
+COPY packages/ui/ packages/ui/
+COPY packages/api-client/ packages/api-client/
+COPY apps/admin-app/ apps/admin-app/
 
-RUN npm run build
+# Build
+RUN pnpm --filter @polyforge/admin-app build
 
-# ── Runtime ──────────────────────────────────────────────────────────────────
+# Runtime
 FROM nginx:1.27-alpine
-
-COPY --from=builder /build/dist/admin-app/browser /usr/share/nginx/html
-
+COPY --from=builder /app/apps/admin-app/dist /usr/share/nginx/html
 COPY apps/admin-app/nginx.conf /etc/nginx/conf.d/default.conf
-
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]
