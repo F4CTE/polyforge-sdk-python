@@ -5,6 +5,46 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [4.0.0] — 2026-03-23
+
+### Added — Phase 8: Competitive Trading Features (72 files, 8,564 lines)
+
+#### Whale Tracking & Alerts (19 files, 1,843 lines)
+
+- **Whale detection stream** — real-time monitoring of large Polymarket wallet activity with configurable thresholds
+- **Whale feed** — chronological feed of whale transactions with filtering by token, size, and direction
+- **Top whales leaderboard** — ranked whale addresses by volume, win rate, and P&L
+- **Whale address profiles** — per-address activity history, holdings, and performance stats
+- **Follow/unfollow whales** — follow whale addresses to receive alerts on their activity
+- **API endpoints** — `GET /whales/feed`, `GET /whales/top`, `GET /whales/:address`, `POST /whales/:address/follow`, `GET /whales/following`
+
+#### Copy Trading with Risk Controls (18 files, 2,807 lines)
+
+- **Copy trading engine** — mirror trades from followed traders with configurable allocation and risk parameters
+- **Risk controls** — max position size, daily loss limit, per-trade size cap, drawdown circuit breaker
+- **Copy session management** — create, pause, resume, and delete copy sessions with full trade history
+- **Trade attribution** — all copied trades linked to source trader and copy session for auditability
+- **API endpoints** — `POST /copy`, `GET /copy`, `GET /copy/:id`, `PATCH /copy/:id`, `POST /copy/:id/pause`, `POST /copy/:id/resume`, `DELETE /copy/:id`, `GET /copy/:id/trades`
+
+#### Advanced Order Types (10 files, 1,562 lines)
+
+- **Take-profit / stop-loss** — conditional exit orders attached to open positions with configurable trigger prices
+- **Trailing stop** — dynamic stop-loss that follows favorable price movement by a configurable offset
+- **Limit orders** — price-triggered entry orders that execute when market reaches target price
+- **Pegged orders** — orders that track a reference price (mid, best bid/ask) with a configurable offset
+- **Conditional order evaluator** — background service that monitors price feeds and triggers conditional orders
+- **API endpoints** — `POST /orders/conditional`, `GET /orders/conditional`, `GET /orders/conditional/:id`, `DELETE /orders/conditional/:id`
+
+#### AI News-to-Trade Pipeline (25 files, 2,352 lines)
+
+- **News ingestion** — real-time news feed aggregation with relevance scoring for prediction market events
+- **LLM dual-provider pattern** — Claude as primary analyst with GPT-4o fallback for signal generation
+- **Signal extraction** — AI-generated trade signals with confidence scores, direction, and reasoning
+- **News feed UI** — browsable news feed with signal overlays and direct trade-from-signal actions
+- **API endpoints** — `GET /news`, `GET /news/signals`, `GET /news/:id`
+
+---
+
 ## [3.4.0] — 2026-03-23
 
 ### Added — Phase 7 Completion: Load Testing, Infrastructure & Operational Docs

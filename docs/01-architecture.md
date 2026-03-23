@@ -42,6 +42,10 @@ Polyforge is a strategy automation platform for Polymarket — the world's large
 - **Notifications** — Email, Telegram, Discord alerts
 - **Interactive Bots** — Telegram and Discord bots with command interface
 - **Builder Program** — platform earns USDC weekly rewards from Polymarket for attributed volume
+- **Whale Tracking** — real-time whale detection stream, activity feed, address profiles, follow/alerts
+- **Copy Trading** — mirror trades from followed traders with risk controls (position limits, loss limits, drawdown breaker)
+- **Advanced Orders** — take-profit, stop-loss, trailing stop, limit, and pegged conditional order types
+- **AI News Pipeline** — news ingestion, LLM dual-provider signal extraction (Claude + GPT-4o fallback)
 
 ### User States
 
@@ -163,7 +167,20 @@ stream:events         order-service, paper-order-service,
                       → admin-api-service (WebSocket to admins)
                       → notification-service
 stream:notifications  notification-service internal queue
+stream:whale_txns     market-data-service → api-service (whale detection)
+stream:copy_trades    api-service → order-service (copy trade execution)
+stream:news_signals   api-service → notification-service (signal alerts)
 ```
+
+### Phase 8 Subsystems
+
+**Whale Detection Stream** — `market-data-service` monitors on-chain Polymarket transactions against configurable size thresholds and publishes whale activity to `stream:whale_txns`. `api-service` consumes the stream, persists whale profiles, and pushes real-time updates to WebSocket subscribers who follow whale addresses.
+
+**Copy Trading Engine** — when a followed trader executes a trade, `api-service` evaluates all active copy sessions targeting that trader. Each session applies its risk controls (max position size, daily loss limit, per-trade cap, drawdown circuit breaker) before publishing a sized copy order to `stream:copy_trades` for execution by `order-service`. Sessions can be paused/resumed independently.
+
+**Conditional Order Evaluator** — a background worker in `api-service` subscribes to price updates from `market-data-service` Redis cache and evaluates pending conditional orders (TP/SL/trailing/limit/pegged) on each tick. When trigger conditions are met, the order is converted to a market order and submitted to `stream:orders`. Trailing stops dynamically update their trigger price on favorable movement.
+
+**LLM Dual-Provider Pattern** — the news-to-trade pipeline uses Claude as the primary LLM for news analysis and signal extraction. If the Claude API is unavailable or returns an error, the system falls back to GPT-4o. Both providers use identical structured output schemas for signal generation (direction, confidence score, reasoning). Provider selection and fallback are transparent to downstream consumers.
 
 ### API Versioning
 

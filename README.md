@@ -22,10 +22,14 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Local HTTPS** — Self-signed cert generation and `docker-compose.ssl.yml` for secure local development
 - **CI/CD pipeline** — Lint, typecheck, test, build, and E2E stages with Playwright; dependency audit via `pnpm audit`
 - **Load testing** — k6 suite with 7 scenarios (auth, markets, strategies, orders, WebSocket, spike)
+- **Whale tracking & alerts** — real-time whale activity feed, top whales leaderboard, address profiles, follow/unfollow with notifications
+- **Copy trading** — mirror trades from followed traders with risk controls (max position, daily loss limit, drawdown breaker), session management, trade attribution
+- **Advanced order types** — take-profit/stop-loss, trailing stop, limit orders, pegged orders, conditional order evaluator
+- **AI news-to-trade pipeline** — real-time news ingestion, LLM signal extraction (Claude + GPT-4o fallback), confidence-scored trade signals
 - **Operational docs** — Backup & Recovery (RDS/Redis/EBS), Incident Response (P0-P3), Performance Tuning guides
 - **AWS infrastructure** — Terraform with tfvars template (20 variables), budget alerts ($800/month)
 
-> **All 7 development phases are complete.** See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
+> **All 8 development phases are complete — 72 files and 8,564 lines added in Phase 8.** See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
 
 ---
 

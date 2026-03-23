@@ -7,7 +7,45 @@
 
 ## Next Up
 
-Phase 7 complete — all 7 phases done. Phase 8 competitive features in planning. v3.4.0 shipped: k6 load testing suite, Terraform tfvars template, AWS budget alerts, CI dependency audit, and operational documentation (Backup & Recovery, Incident Response, Performance Tuning).
+All 8 development phases complete. v4.0.0 shipped: whale tracking & alerts, copy trading with risk controls, advanced order types (TP/SL/trailing/limit/pegged), and AI news-to-trade pipeline with Claude + GPT-4o fallback. 72 files, 8,564 lines of new code across Phase 8.
+
+---
+
+## v4.0.0 — Competitive Trading Features (Phase 8 — 100%)
+
+### Whale Tracking & Alerts (19 files, 1,843 lines)
+
+- [x] Whale detection stream with configurable thresholds
+- [x] Whale feed with filtering by token, size, and direction
+- [x] Top whales leaderboard (volume, win rate, P&L)
+- [x] Whale address profiles with activity history and holdings
+- [x] Follow/unfollow whale addresses with alert notifications
+- [x] API: `GET /whales/feed`, `GET /whales/top`, `GET /whales/:address`, `POST /whales/:address/follow`, `GET /whales/following`
+
+### Copy Trading with Risk Controls (18 files, 2,807 lines)
+
+- [x] Copy trading engine mirroring trades from followed traders
+- [x] Risk controls: max position size, daily loss limit, per-trade cap, drawdown circuit breaker
+- [x] Copy session lifecycle: create, pause, resume, delete
+- [x] Full trade history with source trader attribution
+- [x] API: `POST /copy`, `GET /copy`, `GET /copy/:id`, `PATCH /copy/:id`, `POST /copy/:id/pause`, `POST /copy/:id/resume`, `DELETE /copy/:id`, `GET /copy/:id/trades`
+
+### Advanced Order Types (10 files, 1,562 lines)
+
+- [x] Take-profit / stop-loss conditional exit orders
+- [x] Trailing stop with configurable offset
+- [x] Limit orders with price-triggered execution
+- [x] Pegged orders tracking reference price (mid, best bid/ask)
+- [x] Conditional order evaluator background service
+- [x] API: `POST /orders/conditional`, `GET /orders/conditional`, `GET /orders/conditional/:id`, `DELETE /orders/conditional/:id`
+
+### AI News-to-Trade Pipeline (25 files, 2,352 lines)
+
+- [x] Real-time news feed aggregation with relevance scoring
+- [x] LLM dual-provider pattern: Claude primary + GPT-4o fallback
+- [x] AI-generated trade signals with confidence scores and reasoning
+- [x] News feed UI with signal overlays and trade-from-signal actions
+- [x] API: `GET /news`, `GET /news/signals`, `GET /news/:id`
 
 ---
 

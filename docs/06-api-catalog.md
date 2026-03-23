@@ -1770,6 +1770,287 @@ All standard user WS messages plus:
 
 ---
 
+## API Service — Whale Tracking (`/api/v1/whales`)
+
+### GET /api/v1/whales/feed
+
+List recent whale transactions. Supports filtering by token, size, and direction.
+
+**Auth:** User JWT
+
+**Query params:** `?token=string&minSize=number&direction=BUY|SELL&page=1&limit=20`
+
+**Response `200`:** Array of whale transaction objects with address, token, size, direction, price, and timestamp.
+
+---
+
+### GET /api/v1/whales/top
+
+Ranked leaderboard of whale addresses by volume, win rate, and P&L.
+
+**Auth:** User JWT
+
+**Query params:** `?sortBy=volume|winRate|pnl&page=1&limit=20`
+
+**Response `200`:** Array of whale profile summaries with address, total volume, win rate, P&L, and trade count.
+
+---
+
+### GET /api/v1/whales/:address
+
+Detailed profile for a specific whale address including activity history, holdings, and performance stats.
+
+**Auth:** User JWT
+
+**Response `200`:** Whale profile object with address, holdings, recent trades, volume, win rate, and P&L.
+
+**Errors:** `404 NOT_FOUND`
+
+---
+
+### POST /api/v1/whales/:address/follow
+
+Follow a whale address to receive alerts on their activity.
+
+**Auth:** User JWT
+
+**Response `201`:** `{ "followed": true }`
+
+**Errors:** `409 ALREADY_FOLLOWING`
+
+---
+
+### GET /api/v1/whales/following
+
+List all whale addresses the authenticated user is following.
+
+**Auth:** User JWT
+
+**Response `200`:** Array of followed whale addresses with follow timestamps.
+
+---
+
+## API Service — Copy Trading (`/api/v1/copy`)
+
+### POST /api/v1/copy
+
+Create a new copy trading session for a target trader.
+
+**Auth:** User JWT
+
+**Request:**
+```json
+{
+  "targetUserId": "uuid",
+  "allocation": 1000,
+  "maxPositionSize": 500,
+  "dailyLossLimit": 200,
+  "perTradeCap": 100,
+  "drawdownBreaker": 0.15
+}
+```
+
+**Response `201`:** Copy session object with id, status, risk controls, and creation timestamp.
+
+---
+
+### GET /api/v1/copy
+
+List all copy trading sessions for the authenticated user.
+
+**Auth:** User JWT
+
+**Query params:** `?status=ACTIVE|PAUSED&page=1&limit=20`
+
+**Response `200`:** Array of copy session objects.
+
+---
+
+### GET /api/v1/copy/:id
+
+Get details of a specific copy trading session.
+
+**Auth:** User JWT
+
+**Response `200`:** Copy session object with current P&L, trade count, and risk control status.
+
+**Errors:** `404 NOT_FOUND`
+
+---
+
+### PATCH /api/v1/copy/:id
+
+Update risk controls or allocation on an existing copy session.
+
+**Auth:** User JWT
+
+**Request:**
+```json
+{
+  "allocation": 1500,
+  "maxPositionSize": 750,
+  "dailyLossLimit": 300
+}
+```
+
+**Response `200`:** Updated copy session object.
+
+**Errors:** `404 NOT_FOUND`
+
+---
+
+### POST /api/v1/copy/:id/pause
+
+Pause an active copy trading session. No new trades will be copied.
+
+**Auth:** User JWT
+
+**Response `200`:** `{ "status": "PAUSED" }`
+
+**Errors:** `404 NOT_FOUND` · `422 ALREADY_PAUSED`
+
+---
+
+### POST /api/v1/copy/:id/resume
+
+Resume a paused copy trading session.
+
+**Auth:** User JWT
+
+**Response `200`:** `{ "status": "ACTIVE" }`
+
+**Errors:** `404 NOT_FOUND` · `422 ALREADY_ACTIVE`
+
+---
+
+### DELETE /api/v1/copy/:id
+
+Delete a copy trading session. Open positions are not automatically closed.
+
+**Auth:** User JWT
+
+**Response `200`:** `{ "deleted": true }`
+
+**Errors:** `404 NOT_FOUND`
+
+---
+
+### GET /api/v1/copy/:id/trades
+
+List all trades executed by a copy trading session with source trader attribution.
+
+**Auth:** User JWT
+
+**Query params:** `?page=1&limit=50`
+
+**Response `200`:** Array of copied trade objects with source trade reference, size, price, and timestamp.
+
+**Errors:** `404 NOT_FOUND`
+
+---
+
+## API Service — Conditional Orders (`/api/v1/orders/conditional`)
+
+### POST /api/v1/orders/conditional
+
+Create a conditional order (take-profit, stop-loss, trailing stop, limit, or pegged).
+
+**Auth:** User JWT
+
+**Request:**
+```json
+{
+  "marketId": "uuid",
+  "type": "TAKE_PROFIT | STOP_LOSS | TRAILING_STOP | LIMIT | PEGGED",
+  "side": "BUY | SELL",
+  "size": 100,
+  "triggerPrice": 0.65,
+  "trailingOffset": 0.05,
+  "pegReference": "MID | BEST_BID | BEST_ASK",
+  "pegOffset": 0.01
+}
+```
+
+Fields are conditional on `type`: `triggerPrice` for TP/SL/LIMIT, `trailingOffset` for TRAILING_STOP, `pegReference`+`pegOffset` for PEGGED.
+
+**Response `201`:** Conditional order object with id, status `PENDING`, and creation timestamp.
+
+---
+
+### GET /api/v1/orders/conditional
+
+List all conditional orders for the authenticated user.
+
+**Auth:** User JWT
+
+**Query params:** `?status=PENDING|TRIGGERED|CANCELLED&marketId=uuid&page=1&limit=20`
+
+**Response `200`:** Array of conditional order objects.
+
+---
+
+### GET /api/v1/orders/conditional/:id
+
+Get details of a specific conditional order.
+
+**Auth:** User JWT
+
+**Response `200`:** Conditional order object with current status, trigger conditions, and execution details if triggered.
+
+**Errors:** `404 NOT_FOUND`
+
+---
+
+### DELETE /api/v1/orders/conditional/:id
+
+Cancel a pending conditional order.
+
+**Auth:** User JWT
+
+**Response `200`:** `{ "status": "CANCELLED" }`
+
+**Errors:** `404 NOT_FOUND` · `422 ALREADY_TRIGGERED`
+
+---
+
+## API Service — News & AI Signals (`/api/v1/news`)
+
+### GET /api/v1/news
+
+List recent news articles with relevance scoring for prediction market events.
+
+**Auth:** User JWT
+
+**Query params:** `?marketId=uuid&minRelevance=0.5&page=1&limit=20`
+
+**Response `200`:** Array of news article objects with title, source, summary, relevance score, and timestamp.
+
+---
+
+### GET /api/v1/news/signals
+
+List AI-generated trade signals derived from news analysis. Signals include confidence scores, direction, and LLM reasoning.
+
+**Auth:** User JWT
+
+**Query params:** `?marketId=uuid&minConfidence=0.6&provider=CLAUDE|GPT4O&page=1&limit=20`
+
+**Response `200`:** Array of signal objects with news reference, market, direction, confidence, reasoning, and provider.
+
+---
+
+### GET /api/v1/news/:id
+
+Get a specific news article with full content and any associated trade signals.
+
+**Auth:** User JWT
+
+**Response `200`:** News article object with full content, associated signals, and metadata.
+
+**Errors:** `404 NOT_FOUND`
+
+---
+
 ## Common Error Codes
 
 | Code | Status | Meaning |
