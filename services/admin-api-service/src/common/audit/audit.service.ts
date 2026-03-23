@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaAdminService } from "@polyforge/shared-db";
 
+// SECURITY: Audit logs are append-only. The DB has an INSERT-only rule preventing updates/deletes.
 @Injectable()
 export class AuditService {
   constructor(private readonly adminDb: PrismaAdminService) {}

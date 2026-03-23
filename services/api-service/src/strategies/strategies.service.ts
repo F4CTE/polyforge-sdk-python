@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   UnprocessableEntityException,
+  ConflictException,
   Logger,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -192,13 +193,21 @@ export class StrategiesService {
     userId: string,
     dto: StartStrategyDto,
   ): Promise<{ status: string; startedAt: string }> {
-    const strategy = await this.getOwned(id, userId);
-
-    if (strategy.status === StrategyStatus.RUNNING) {
-      throw new UnprocessableEntityException({
-        code: "ALREADY_RUNNING",
-        message: "Strategy is already running",
-      });
+    // R4-01: Atomic check-and-update to prevent race conditions
+    const updated = await this.prisma.strategy.updateMany({
+      where: { id, userId, status: StrategyStatus.IDLE },
+      data: { status: dto.mode === "paper" ? StrategyStatus.PAPER : StrategyStatus.RUNNING, startedAt: new Date() },
+    });
+    if (updated.count === 0) {
+      // Either not found, not owned, or not in IDLE state
+      const strategy = await this.prisma.strategy.findUnique({ where: { id } });
+      if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
+        throw new NotFoundException({ code: "NOT_FOUND", message: "Strategy not found" });
+      }
+      if (strategy.userId !== userId) {
+        throw new ForbiddenException({ code: "FORBIDDEN", message: "Access denied" });
+      }
+      throw new ConflictException({ code: "ALREADY_RUNNING", message: "Strategy is already running or not in IDLE state" });
     }
 
     if (dto.mode === "live") {
@@ -207,19 +216,16 @@ export class StrategiesService {
         select: { polymarketConnected: true },
       });
       if (!user?.polymarketConnected) {
+        // Roll back status since we already set it
+        await this.prisma.strategy.update({
+          where: { id },
+          data: { status: StrategyStatus.IDLE },
+        });
         throw new UnprocessableEntityException({
           code: "NOT_CONNECTED",
           message: "Polymarket credentials required for live mode",
         });
       }
-    }
-
-    // Set PAPER status before calling engine so the engine routes to stream:paper_orders
-    if (dto.mode === "paper") {
-      await this.prisma.strategy.update({
-        where: { id },
-        data: { status: StrategyStatus.PAPER },
-      });
     }
 
     const res = await this.client.post(
@@ -228,6 +234,11 @@ export class StrategiesService {
       `/internal/strategies/${id}/start`,
     );
     if (!res.ok && res.status !== 204) {
+      // Roll back status on engine failure
+      await this.prisma.strategy.update({
+        where: { id },
+        data: { status: StrategyStatus.IDLE },
+      });
       const body = (await res.json().catch(() => ({}))) as {
         code?: string;
         message?: string;
@@ -245,7 +256,21 @@ export class StrategiesService {
     id: string,
     userId: string,
   ): Promise<{ status: string; stoppedAt: string }> {
-    await this.getOwned(id, userId);
+    // R4-01: Atomic check-and-update — only stop if currently RUNNING or PAPER
+    const updated = await this.prisma.strategy.updateMany({
+      where: { id, userId, status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] } },
+      data: { status: StrategyStatus.IDLE },
+    });
+    if (updated.count === 0) {
+      const strategy = await this.prisma.strategy.findUnique({ where: { id } });
+      if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
+        throw new NotFoundException({ code: "NOT_FOUND", message: "Strategy not found" });
+      }
+      if (strategy.userId !== userId) {
+        throw new ForbiddenException({ code: "FORBIDDEN", message: "Access denied" });
+      }
+      throw new ConflictException({ code: "NOT_RUNNING", message: "Strategy is not in a running state" });
+    }
 
     // Stop managed children first
     const children = await this.prisma.strategy.findMany({
@@ -272,15 +297,26 @@ export class StrategiesService {
     if (!res.ok && res.status !== 204) {
       this.logger.warn(`Engine stop returned ${res.status} for ${id}`);
     }
-    await this.prisma.strategy.update({
-      where: { id },
-      data: { status: StrategyStatus.IDLE },
-    });
     return { status: "IDLE", stoppedAt: new Date().toISOString() };
   }
 
   async pause(id: string, userId: string): Promise<{ status: string }> {
-    await this.getOwned(id, userId);
+    // R4-01: Atomic check-and-update — only pause if currently RUNNING or PAPER
+    const updated = await this.prisma.strategy.updateMany({
+      where: { id, userId, status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] } },
+      data: { status: StrategyStatus.PAUSED },
+    });
+    if (updated.count === 0) {
+      const strategy = await this.prisma.strategy.findUnique({ where: { id } });
+      if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
+        throw new NotFoundException({ code: "NOT_FOUND", message: "Strategy not found" });
+      }
+      if (strategy.userId !== userId) {
+        throw new ForbiddenException({ code: "FORBIDDEN", message: "Access denied" });
+      }
+      throw new ConflictException({ code: "NOT_RUNNING", message: "Strategy is not in a running state" });
+    }
+
     await this.client.post(
       this.engineUrl,
       "strategy-engine",
@@ -290,7 +326,22 @@ export class StrategiesService {
   }
 
   async resume(id: string, userId: string): Promise<{ status: string }> {
-    await this.getOwned(id, userId);
+    // R4-01: Atomic check-and-update — only resume if currently PAUSED
+    const updated = await this.prisma.strategy.updateMany({
+      where: { id, userId, status: StrategyStatus.PAUSED },
+      data: { status: StrategyStatus.RUNNING },
+    });
+    if (updated.count === 0) {
+      const strategy = await this.prisma.strategy.findUnique({ where: { id } });
+      if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
+        throw new NotFoundException({ code: "NOT_FOUND", message: "Strategy not found" });
+      }
+      if (strategy.userId !== userId) {
+        throw new ForbiddenException({ code: "FORBIDDEN", message: "Access denied" });
+      }
+      throw new ConflictException({ code: "NOT_PAUSED", message: "Strategy is not in PAUSED state" });
+    }
+
     await this.client.post(
       this.engineUrl,
       "strategy-engine",

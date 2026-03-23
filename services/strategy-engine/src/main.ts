@@ -5,6 +5,7 @@ import {
 } from "@nestjs/platform-fastify";
 import { Logger, RequestMethod } from "@nestjs/common";
 import { AppModule } from "./app.module";
+import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 
 const PORT = parseInt(process.env.PORT ?? "3006", 10);
 const logger = new Logger("Bootstrap");
@@ -30,8 +31,24 @@ async function bootstrap() {
     { bufferLogs: true },
   );
 
+  // R4-04: Global exception filter to strip stack traces in production
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
   app.setGlobalPrefix("", {
     exclude: [{ path: "health", method: RequestMethod.GET }],
+  });
+
+  // R4-07: Graceful shutdown with timeout
+  app.enableShutdownHooks();
+  process.on('SIGTERM', async () => {
+    logger.log('SIGTERM received, starting graceful shutdown...');
+    const forceTimeout = setTimeout(() => {
+      logger.warn('Graceful shutdown timed out, forcing exit');
+      process.exit(1);
+    }, 10_000);
+    await app.close();
+    clearTimeout(forceTimeout);
+    process.exit(0);
   });
 
   await app.listen(PORT, "0.0.0.0");

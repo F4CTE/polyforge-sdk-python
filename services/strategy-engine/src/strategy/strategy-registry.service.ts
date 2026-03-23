@@ -223,29 +223,32 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
   async stop(strategyId: string): Promise<void> {
     const runner = this.runners.get(strategyId);
     if (runner) {
-      // Cascade stop to managed and scoped children
-      const childIds = [...runner.childStrategies];
-      for (const childId of childIds) {
-        const mode = runner.getChildMode(childId);
-        if (mode === "managed" || mode === "scoped") {
-          try {
-            await this.stop(childId);
-            this.logger.log(
-              `Cascade-stopped child strategy ${childId} (mode=${mode}) of parent ${strategyId}`,
-            );
-          } catch (err) {
-            this.logger.warn(
-              `Failed to cascade-stop child ${childId}: ${String(err)}`,
-            );
+      try {
+        // Cascade stop to managed and scoped children
+        const childIds = [...runner.childStrategies];
+        for (const childId of childIds) {
+          const mode = runner.getChildMode(childId);
+          if (mode === "managed" || mode === "scoped") {
+            try {
+              await this.stop(childId);
+              this.logger.log(
+                `Cascade-stopped child strategy ${childId} (mode=${mode}) of parent ${strategyId}`,
+              );
+            } catch (err) {
+              this.logger.warn(
+                `Failed to cascade-stop child ${childId}: ${String(err)}`,
+              );
+            }
           }
+          runner.removeChild(childId);
         }
-        runner.removeChild(childId);
-      }
 
-      runner.stop();
-      this.runners.delete(strategyId);
-      // Clean up parent-child tracking
-      this.parentChildMap.delete(strategyId);
+        runner.stop();
+      } finally {
+        // R4-02: Ensure runner is always cleaned up even if an error occurs
+        this.runners.delete(strategyId);
+        this.parentChildMap.delete(strategyId);
+      }
     }
     await this.prisma.strategy.update({
       where: { id: strategyId },

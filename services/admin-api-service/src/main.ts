@@ -85,7 +85,19 @@ async function bootstrap() {
     exclude: [{ path: "health", method: RequestMethod.GET }],
   });
 
+  // R4-07: Graceful shutdown with timeout
   app.enableShutdownHooks();
+  const appLogger = app.get(Logger);
+  process.on('SIGTERM', async () => {
+    appLogger.log('SIGTERM received, starting graceful shutdown...');
+    const forceTimeout = setTimeout(() => {
+      appLogger.warn('Graceful shutdown timed out, forcing exit');
+      process.exit(1);
+    }, 10_000);
+    await app.close();
+    clearTimeout(forceTimeout);
+    process.exit(0);
+  });
 
   const port = process.env.PORT ?? 3004;
   await app.listen(port, "0.0.0.0");

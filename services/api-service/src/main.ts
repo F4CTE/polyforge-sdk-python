@@ -135,9 +135,23 @@ async function bootstrap() {
     });
   }
 
+  // R4-07: Graceful shutdown with timeout
+  app.enableShutdownHooks();
+  const appLogger = app.get(Logger);
+  process.on('SIGTERM', async () => {
+    appLogger.log('SIGTERM received, starting graceful shutdown...');
+    const forceTimeout = setTimeout(() => {
+      appLogger.warn('Graceful shutdown timed out, forcing exit');
+      process.exit(1);
+    }, 10_000);
+    await app.close();
+    clearTimeout(forceTimeout);
+    process.exit(0);
+  });
+
   await app.listen(PORT, "0.0.0.0");
-  app.get(Logger).log(`api-service listening on port ${PORT}`);
-  app.get(Logger).log(`Swagger JSON written to ${outPath}`);
+  appLogger.log(`api-service listening on port ${PORT}`);
+  appLogger.log(`Swagger JSON written to ${outPath}`);
 }
 
 bootstrap().catch((err) => {

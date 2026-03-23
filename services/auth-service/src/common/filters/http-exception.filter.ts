@@ -24,16 +24,23 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
+    // R4-04: In production, mask error details for 500+ responses to prevent information leakage
+    const isProduction = process.env.NODE_ENV === 'production';
+
     const message =
-      exception instanceof HttpException
-        ? ((exception.getResponse() as any).message ?? exception.message)
-        : 'Internal server error';
+      status >= 500 && isProduction
+        ? 'Internal server error'
+        : exception instanceof HttpException
+          ? ((exception.getResponse() as any).message ?? exception.message)
+          : 'Internal server error';
 
     const code =
-      exception instanceof HttpException
-        ? ((exception.getResponse() as any).code ??
-          exception.constructor.name.toUpperCase())
-        : 'INTERNAL_SERVER_ERROR';
+      status >= 500 && isProduction
+        ? 'INTERNAL_SERVER_ERROR'
+        : exception instanceof HttpException
+          ? ((exception.getResponse() as any).code ??
+            exception.constructor.name.toUpperCase())
+          : 'INTERNAL_SERVER_ERROR';
 
     if (status >= 500) {
       this.logger.error(

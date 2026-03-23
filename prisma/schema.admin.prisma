@@ -61,6 +61,9 @@ model AdminSession {
 }
 
 // Insert only — never update, never delete, never truncate
+// SECURITY: In production, audit logs should be:
+//   1. Written to an append-only table (the INSERT-only trigger/rule is already in place)
+//   2. Backed up to an immutable store (e.g., S3 with Object Lock) for tamper-proof retention
 model AuditLog {
   id         BigInt   @id @default(autoincrement())
   adminId    String

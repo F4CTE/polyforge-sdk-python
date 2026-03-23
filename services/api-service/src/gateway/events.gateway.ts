@@ -114,20 +114,34 @@ export class EventsGateway
   }
 
   handleDisconnect(client: AuthedSocket) {
-    if (client.userId) {
-      const sockets = this.clients.get(client.userId);
+    const userId = client.userId;
+    if (userId) {
+      const sockets = this.clients.get(userId);
       if (sockets) {
         sockets.delete(client);
         if (sockets.size === 0) {
-          this.clients.delete(client.userId);
+          this.clients.delete(userId);
         }
       }
+
+      // R4-06: Clean up price and strategy subscriptions for this client
       for (const tokenId of client.subscribedTokens) {
-        this.tokenSubscribers.get(tokenId)?.delete(client.userId);
+        this.tokenSubscribers.get(tokenId)?.delete(userId);
+        // Remove empty subscriber sets to prevent memory leaks
+        if (this.tokenSubscribers.get(tokenId)?.size === 0) {
+          this.tokenSubscribers.delete(tokenId);
+        }
       }
       for (const strategyId of client.subscribedStrategies) {
-        this.strategySubscribers.get(strategyId)?.delete(client.userId);
+        this.strategySubscribers.get(strategyId)?.delete(userId);
+        if (this.strategySubscribers.get(strategyId)?.size === 0) {
+          this.strategySubscribers.delete(strategyId);
+        }
       }
+
+      this.logger.debug(
+        `Client ${client.id ?? 'unknown'} disconnected, cleaned up ${client.subscribedTokens.size} price and ${client.subscribedStrategies.size} strategy subscriptions`,
+      );
     }
   }
 
