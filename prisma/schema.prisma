@@ -141,6 +141,26 @@ enum TicketCategory {
   FEATURE_REQUEST
 }
 
+enum ConditionalOrderType {
+  TAKE_PROFIT
+  STOP_LOSS
+  TRAILING_STOP
+  LIMIT
+  PEGGED
+
+  @@map("conditional_order_type")
+}
+
+enum ConditionalOrderStatus {
+  PENDING
+  TRIGGERED
+  CANCELLED
+  EXPIRED
+  FAILED
+
+  @@map("conditional_order_status")
+}
+
 // ─────────────────────────────────────────────
 // AUTH TABLES
 // ─────────────────────────────────────────────
@@ -197,6 +217,7 @@ model User {
   tickets             Ticket[]
   whaleFollows         WhaleFollow[]
   copyConfigs          CopyConfig[]
+  conditionalOrders    ConditionalOrder[]
 
   @@map("users")
 }
@@ -705,8 +726,9 @@ model Market {
   firstSeenAt   DateTime  @default(now())
   lastUpdatedAt DateTime  @updatedAt
 
-  tokens      Token[]
-  whaleAlerts WhaleAlert[]
+  tokens            Token[]
+  whaleAlerts       WhaleAlert[]
+  conditionalOrders ConditionalOrder[]
 
   @@index([category])
   @@index([closed])
@@ -954,4 +976,34 @@ model CopyTrade {
   @@index([configId])
   @@index([createdAt(sort: Desc)])
   @@map("copy_trades")
+}
+
+// ─── CONDITIONAL ORDERS ──────────────────────────
+
+model ConditionalOrder {
+  id              String                 @id @default(uuid())
+  userId          String
+  marketId        String
+  tokenId         String                 @db.VarChar(255)
+  type            ConditionalOrderType
+  side            OrderSide
+  outcome         OrderOutcome
+  size            Decimal                @db.Decimal(20, 6)
+  triggerPrice    Decimal                @db.Decimal(10, 6)
+  limitPrice      Decimal?               @db.Decimal(10, 6)
+  trailingPct     Decimal?               @db.Decimal(5, 2)
+  peakPrice       Decimal?               @db.Decimal(10, 6)
+  status          ConditionalOrderStatus @default(PENDING)
+  triggeredAt     DateTime?
+  orderId         String?
+  expiresAt       DateTime?
+  createdAt       DateTime               @default(now())
+
+  user            User                   @relation(fields: [userId], references: [id])
+  market          Market                 @relation(fields: [marketId], references: [id])
+
+  @@index([userId, status])
+  @@index([tokenId, status])
+  @@index([expiresAt])
+  @@map("conditional_orders")
 }

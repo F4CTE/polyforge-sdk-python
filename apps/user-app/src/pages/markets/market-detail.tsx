@@ -166,6 +166,14 @@ export function Component() {
   const [strategyOptions, setStrategyOptions] = useState<StrategyOption[]>([]);
   const [selectedStrategyId, setSelectedStrategyId] = useState('');
 
+  // Conditional order dialog state
+  const [showConditional, setShowConditional] = useState(false);
+  const [condType, setCondType] = useState<'TAKE_PROFIT' | 'STOP_LOSS'>('TAKE_PROFIT');
+  const [condOutcome, setCondOutcome] = useState<'YES' | 'NO'>('YES');
+  const [condSize, setCondSize] = useState('');
+  const [condTriggerPrice, setCondTriggerPrice] = useState('');
+  const [condSubmitting, setCondSubmitting] = useState(false);
+
   // Load market
   useEffect(() => {
     if (!id) return;
@@ -272,6 +280,46 @@ export function Component() {
     });
   }
 
+  function openConditional(type: 'TAKE_PROFIT' | 'STOP_LOSS', outcome: 'YES' | 'NO') {
+    setCondType(type);
+    setCondOutcome(outcome);
+    setCondSize('');
+    setCondTriggerPrice('');
+    setShowConditional(true);
+  }
+
+  async function submitConditional() {
+    if (!market || !condSize || !condTriggerPrice) return;
+    setCondSubmitting(true);
+    const token = market.tokens.find((t) => t.outcome === condOutcome);
+    if (!token) { setCondSubmitting(false); return; }
+    try {
+      const res = await fetch('/api/v1/orders/conditional', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          marketId: market.id,
+          tokenId: token.tokenId,
+          type: condType,
+          side: 'BUY',
+          outcome: condOutcome,
+          size: condSize,
+          triggerPrice: condTriggerPrice,
+        }),
+      });
+      if (res.ok) {
+        toast.success(`${condType === 'TAKE_PROFIT' ? 'Take Profit' : 'Stop Loss'} order created`);
+        setShowConditional(false);
+      } else {
+        toast.error('Failed to create conditional order');
+      }
+    } catch {
+      toast.error('Failed to create conditional order');
+    }
+    setCondSubmitting(false);
+  }
+
   const yesPrice = market?.tokens.find((t) => t.outcome === 'YES')?.price ?? null;
   const noPrice = market?.tokens.find((t) => t.outcome === 'NO')?.price ?? null;
   const days = market ? daysUntil(market.endDate) : 0;
@@ -329,7 +377,7 @@ export function Component() {
               </p>
             </div>
 
-            {/* Price pills + Run Strategy */}
+            {/* Price pills + TP/SL + Run Strategy */}
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex gap-2">
                 <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-pf-success/10 border border-pf-success/20">
@@ -337,12 +385,40 @@ export function Component() {
                   <span className="text-lg font-mono font-semibold text-pf-success">
                     {yesPrice ?? '\u2014'}
                   </span>
+                  <div className="flex gap-1 mt-1">
+                    <button
+                      onClick={() => openConditional('TAKE_PROFIT', 'YES')}
+                      className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-success/20 text-pf-success hover:bg-pf-success/30 transition-colors"
+                    >
+                      TP
+                    </button>
+                    <button
+                      onClick={() => openConditional('STOP_LOSS', 'YES')}
+                      className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-danger/20 text-pf-danger hover:bg-pf-danger/30 transition-colors"
+                    >
+                      SL
+                    </button>
+                  </div>
                 </div>
                 <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-pf-danger/10 border border-pf-danger/20">
                   <span className="text-[10px] uppercase tracking-wide text-pf-danger/70">NO</span>
                   <span className="text-lg font-mono font-semibold text-pf-danger">
                     {noPrice ?? '\u2014'}
                   </span>
+                  <div className="flex gap-1 mt-1">
+                    <button
+                      onClick={() => openConditional('TAKE_PROFIT', 'NO')}
+                      className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-success/20 text-pf-success hover:bg-pf-success/30 transition-colors"
+                    >
+                      TP
+                    </button>
+                    <button
+                      onClick={() => openConditional('STOP_LOSS', 'NO')}
+                      className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-danger/20 text-pf-danger hover:bg-pf-danger/30 transition-colors"
+                    >
+                      SL
+                    </button>
+                  </div>
                 </div>
               </div>
               <button
@@ -535,6 +611,70 @@ export function Component() {
             <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
               <h3 className="text-sm font-medium text-pf-text mb-2">About</h3>
               <p className="text-sm text-pf-text-secondary leading-relaxed">{market.description}</p>
+            </div>
+          )}
+
+          {/* Conditional Order Dialog (TP/SL) */}
+          {showConditional && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Set Conditional Order">
+              <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg w-full max-w-sm p-6 shadow-pf-lg">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-base font-semibold text-pf-text">
+                    {condType === 'TAKE_PROFIT' ? 'Set Take Profit' : 'Set Stop Loss'} &mdash; {condOutcome}
+                  </h2>
+                  <button
+                    onClick={() => setShowConditional(false)}
+                    aria-label="Close dialog"
+                    className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-pf-text-secondary mb-1.5">Trigger Price</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      max="0.99"
+                      value={condTriggerPrice}
+                      onChange={(e) => setCondTriggerPrice(e.target.value)}
+                      placeholder="e.g. 0.75"
+                      className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-pf-text-secondary mb-1.5">Size (shares)</label>
+                    <input
+                      type="number"
+                      step="1"
+                      min="1"
+                      value={condSize}
+                      onChange={(e) => setCondSize(e.target.value)}
+                      placeholder="e.g. 100"
+                      className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                    />
+                  </div>
+                  <div className="flex gap-2 justify-end pt-3 border-t border-pf-border-subtle">
+                    <button
+                      onClick={() => setShowConditional(false)}
+                      className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={submitConditional}
+                      disabled={!condSize || !condTriggerPrice || condSubmitting}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-pf text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${
+                        condType === 'TAKE_PROFIT' ? 'bg-pf-success' : 'bg-pf-danger'
+                      }`}
+                    >
+                      {condType === 'TAKE_PROFIT' ? 'Set TP' : 'Set SL'}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

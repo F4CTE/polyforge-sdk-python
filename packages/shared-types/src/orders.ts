@@ -91,6 +91,44 @@ export interface Position {
   updatedAt: string;
 }
 
+// ─── Conditional Orders ──────────────────────────────────────────────────────
+
+export enum ConditionalOrderType {
+  TAKE_PROFIT = "TAKE_PROFIT",
+  STOP_LOSS = "STOP_LOSS",
+  TRAILING_STOP = "TRAILING_STOP",
+  LIMIT = "LIMIT",
+  PEGGED = "PEGGED",
+}
+
+export enum ConditionalOrderStatus {
+  PENDING = "PENDING",
+  TRIGGERED = "TRIGGERED",
+  CANCELLED = "CANCELLED",
+  EXPIRED = "EXPIRED",
+  FAILED = "FAILED",
+}
+
+export interface ConditionalOrder {
+  id: string;
+  userId: string;
+  marketId: string;
+  tokenId: string;
+  type: ConditionalOrderType;
+  side: OrderSide;
+  outcome: OrderOutcome;
+  size: string;
+  triggerPrice: string;
+  limitPrice: string | null;
+  trailingPct: string | null;
+  peakPrice: string | null;
+  status: ConditionalOrderStatus;
+  triggeredAt: string | null;
+  orderId: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
 // ─── Order intent (Redis stream payload) ─────────────────────────────────────
 
 export interface OrderIntent {

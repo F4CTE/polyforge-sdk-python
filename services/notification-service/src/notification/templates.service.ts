@@ -146,6 +146,13 @@ export class TemplatesService {
           severity: "error",
         };
 
+      case "ORDER_CONDITIONAL_TRIGGERED":
+        return {
+          title: "Conditional Order Triggered",
+          body: `Your ${data.conditionalType ?? "conditional"} order on token ${data.tokenId ?? "unknown"} triggered at ${data.triggerPrice ?? "unknown"}. ${data.side ?? ""} ${data.size ?? ""} shares.`,
+          severity: "success",
+        };
+
       case "WHALE_TRADE":
         return {
           title: "\u{1F40B} Whale Alert",
