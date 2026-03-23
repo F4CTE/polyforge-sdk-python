@@ -23,14 +23,14 @@ interface EndpointCategory {
 const METHOD_STYLES: Record<string, { bg: string; text: string }> = {
   GET:    { bg: 'bg-pf-success/10', text: 'text-pf-success' },
   POST:   { bg: 'bg-blue-500/10', text: 'text-blue-400' },
-  PATCH:  { bg: 'bg-amber-500/10', text: 'text-amber-400' },
+  PATCH:  { bg: 'bg-pf-warning/10', text: 'text-pf-warning' },
   DELETE: { bg: 'bg-pf-danger/10', text: 'text-pf-danger' },
 };
 
 const SCOPE_STYLES: Record<string, { bg: string; text: string }> = {
   READ:  { bg: 'bg-pf-success/10', text: 'text-pf-success' },
   WRITE: { bg: 'bg-blue-500/10', text: 'text-blue-400' },
-  TRADE: { bg: 'bg-amber-500/10', text: 'text-amber-400' },
+  TRADE: { bg: 'bg-pf-warning/10', text: 'text-pf-warning' },
 };
 
 const ERROR_SHAPE = `{

@@ -29,8 +29,8 @@ interface TicketsResponse {
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 const STATUS_STYLES: Record<TicketStatus, { text: string; bg: string }> = {
-  OPEN:           { text: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-  AWAITING_USER:  { text: 'text-amber-400', bg: 'bg-amber-500/10' },
+  OPEN:           { text: 'text-pf-cyan-400', bg: 'bg-pf-cyan-500/10' },
+  AWAITING_USER:  { text: 'text-pf-warning', bg: 'bg-pf-warning/10' },
   AWAITING_ADMIN: { text: 'text-blue-400', bg: 'bg-blue-500/10' },
   CLOSED:         { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
 };
@@ -38,7 +38,7 @@ const STATUS_STYLES: Record<TicketStatus, { text: string; bg: string }> = {
 const PRIORITY_STYLES: Record<TicketPriority, { text: string; bg: string }> = {
   LOW:    { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
   MEDIUM: { text: 'text-blue-400', bg: 'bg-blue-500/10' },
-  HIGH:   { text: 'text-amber-400', bg: 'bg-amber-500/10' },
+  HIGH:   { text: 'text-pf-warning', bg: 'bg-pf-warning/10' },
   URGENT: { text: 'text-pf-danger', bg: 'bg-pf-danger/10' },
 };
 

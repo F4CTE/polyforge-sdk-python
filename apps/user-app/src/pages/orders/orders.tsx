@@ -73,10 +73,10 @@ const FILTERS: { label: string; value: FilterStatus }[] = [
 ];
 
 const STATUS_STYLES: Record<OrderStatus, { text: string; bg: string }> = {
-  PENDING:   { text: 'text-amber-400', bg: 'bg-amber-500/10' },
-  SUBMITTED: { text: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-  LIVE:      { text: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-  MATCHED:   { text: 'text-cyan-300', bg: 'bg-cyan-500/8' },
+  PENDING:   { text: 'text-pf-warning', bg: 'bg-pf-warning/10' },
+  SUBMITTED: { text: 'text-pf-cyan-400', bg: 'bg-pf-cyan-500/10' },
+  LIVE:      { text: 'text-pf-cyan-400', bg: 'bg-pf-cyan-500/10' },
+  MATCHED:   { text: 'text-pf-cyan-300', bg: 'bg-pf-cyan-500/8' },
   CONFIRMED: { text: 'text-pf-success', bg: 'bg-pf-success/10' },
   CANCELLED: { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
   FAILED:    { text: 'text-pf-danger', bg: 'bg-pf-danger/10' },
@@ -85,13 +85,13 @@ const STATUS_STYLES: Record<OrderStatus, { text: string; bg: string }> = {
 const CONDITIONAL_TYPE_STYLES: Record<ConditionalOrderType, { text: string; bg: string; label: string }> = {
   TAKE_PROFIT:   { text: 'text-pf-success', bg: 'bg-pf-success/10', label: 'TP' },
   STOP_LOSS:     { text: 'text-pf-danger', bg: 'bg-pf-danger/10', label: 'SL' },
-  TRAILING_STOP: { text: 'text-amber-400', bg: 'bg-amber-500/10', label: 'TRAILING' },
+  TRAILING_STOP: { text: 'text-pf-warning', bg: 'bg-pf-warning/10', label: 'TRAILING' },
   LIMIT:         { text: 'text-blue-400', bg: 'bg-blue-500/10', label: 'LIMIT' },
   PEGGED:        { text: 'text-purple-400', bg: 'bg-purple-500/10', label: 'PEGGED' },
 };
 
 const CONDITIONAL_STATUS_STYLES: Record<ConditionalOrderStatus, { text: string; bg: string }> = {
-  PENDING:   { text: 'text-amber-400', bg: 'bg-amber-500/10' },
+  PENDING:   { text: 'text-pf-warning', bg: 'bg-pf-warning/10' },
   TRIGGERED: { text: 'text-pf-success', bg: 'bg-pf-success/10' },
   CANCELLED: { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
   EXPIRED:   { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },

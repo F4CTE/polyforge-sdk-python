@@ -54,9 +54,9 @@ function rankMedal(rank: number): string {
 }
 
 function rankColor(rank: number): string {
-  if (rank === 1) return 'text-amber-400';
+  if (rank === 1) return 'text-pf-warning'; /* gold */
   if (rank === 2) return 'text-gray-400';
-  if (rank === 3) return 'text-amber-700';
+  if (rank === 3) return 'text-amber-700'; /* bronze – no pf-* equivalent */
   return 'text-pf-text-muted';
 }
 

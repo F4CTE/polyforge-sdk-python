@@ -183,7 +183,7 @@ export function Component() {
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                         a.role === 'SUPER_ADMIN'
-                          ? 'text-amber-400 bg-amber-400/10'
+                          ? 'text-pf-warning bg-pf-warning/10'
                           : a.role === 'ADMIN'
                             ? 'text-blue-400 bg-blue-400/10'
                             : 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]'

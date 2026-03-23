@@ -63,7 +63,7 @@ interface TradesResponse {
 
 const STATUS_STYLES: Record<CopyStatus, { dot: string; bg: string; text: string }> = {
   ACTIVE:  { dot: 'bg-pf-success', bg: 'bg-pf-success/10', text: 'text-pf-success' },
-  PAUSED:  { dot: 'bg-amber-400',  bg: 'bg-amber-500/10',  text: 'text-amber-400' },
+  PAUSED:  { dot: 'bg-pf-warning',  bg: 'bg-pf-warning/10',  text: 'text-pf-warning' },
   STOPPED: { dot: 'bg-gray-400',   bg: 'bg-gray-500/10',   text: 'text-gray-400' },
 };
 
@@ -75,7 +75,7 @@ const MODE_STYLES: Record<CopyMode, { bg: string; text: string }> = {
 
 const TRADE_STATUS_STYLES: Record<TradeStatus, string> = {
   FILLED:  'bg-pf-success/15 text-pf-success',
-  PARTIAL: 'bg-amber-500/15 text-amber-400',
+  PARTIAL: 'bg-pf-warning/15 text-pf-warning',
   FAILED:  'bg-pf-danger/15 text-pf-danger',
   PENDING: 'bg-gray-500/15 text-gray-400',
 };
@@ -423,7 +423,7 @@ export function Component() {
             <button
               onClick={() => doAction('pause')}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-warning/30 text-pf-warning hover:bg-pf-warning/10 disabled:opacity-40 transition-colors"
             >
               <Pause className="size-3.5" /> Pause
             </button>

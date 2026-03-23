@@ -119,7 +119,7 @@ export function Component() {
                 <button
                   type="submit"
                   disabled={loading || !token}
-                  className="w-full py-2.5 bg-pf-cyan-500 text-pf-base font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? 'Resetting...' : 'Reset password'}
                 </button>
@@ -134,7 +134,7 @@ export function Component() {
               <p className="text-sm text-pf-text-muted mb-6">You can now sign in with your new password.</p>
               <Link
                 to="/login"
-                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-pf-base font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors"
+                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors"
               >
                 Sign in
               </Link>

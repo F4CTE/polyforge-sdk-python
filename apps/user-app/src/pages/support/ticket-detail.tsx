@@ -35,8 +35,8 @@ interface TicketDetail {
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 const STATUS_STYLES: Record<TicketStatus, { text: string; bg: string }> = {
-  OPEN:           { text: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-  AWAITING_USER:  { text: 'text-amber-400', bg: 'bg-amber-500/10' },
+  OPEN:           { text: 'text-pf-cyan-400', bg: 'bg-pf-cyan-500/10' },
+  AWAITING_USER:  { text: 'text-pf-warning', bg: 'bg-pf-warning/10' },
   AWAITING_ADMIN: { text: 'text-blue-400', bg: 'bg-blue-500/10' },
   CLOSED:         { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
 };
@@ -189,16 +189,16 @@ export function Component() {
             <div
               className={`max-w-[80%] rounded-pf-lg p-4 ${
                 msg.isAdmin
-                  ? 'bg-cyan-500/10 border border-cyan-500/20'
+                  ? 'bg-pf-cyan-500/10 border border-cyan-500/20'
                   : 'bg-pf-elevated border border-pf-border'
               }`}
             >
               <div className="flex items-center gap-2 mb-2">
-                <span className={`text-xs font-medium ${msg.isAdmin ? 'text-cyan-400' : 'text-pf-text'}`}>
+                <span className={`text-xs font-medium ${msg.isAdmin ? 'text-pf-cyan-400' : 'text-pf-text'}`}>
                   {msg.senderName}
                 </span>
                 {msg.isAdmin && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-400 font-medium">Staff</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-pf-cyan-400 font-medium">Staff</span>
                 )}
                 <span className="text-[11px] text-pf-text-muted ml-auto font-mono">
                   {formatDateTime(msg.createdAt)}

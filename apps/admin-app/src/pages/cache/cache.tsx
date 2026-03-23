@@ -96,7 +96,7 @@ export function Component() {
       {/* Flush */}
       <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Trash2 size={16} className="text-amber-400" />
+          <Trash2 size={16} className="text-pf-warning" />
           <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">Flush by Pattern</h3>
         </div>
         <div className="flex gap-3">
@@ -110,7 +110,7 @@ export function Component() {
           <button
             onClick={handleFlush}
             disabled={flushing || !pattern.trim()}
-            className="px-4 py-2 text-sm rounded-pf-sm bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm rounded-pf-sm bg-pf-warning text-white hover:bg-pf-warning/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {flushing ? 'Flushing...' : 'Flush'}
           </button>

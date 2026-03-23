@@ -73,8 +73,8 @@ function pnlColor(val: string): string {
 
 function pnlBorderColor(val: string): string {
   const n = parseFloat(val);
-  if (n > 0) return 'border-l-emerald-400';
-  if (n < 0) return 'border-l-red-400';
+  if (n > 0) return 'border-l-pf-success';
+  if (n < 0) return 'border-l-pf-danger';
   return 'border-l-pf-text-muted';
 }
 

@@ -506,7 +506,7 @@ export function Component() {
           {/* Newly created key */}
           {createdKey?.key && (
             <div className="space-y-3">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-amber-500/10 text-amber-400 text-xs">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-warning/10 text-pf-warning text-xs">
                 <Shield className="size-3.5 shrink-0" />
                 Copy this key now -- it won't be shown again!
               </div>
@@ -560,7 +560,7 @@ export function Component() {
                               <span key={scope} className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
                                 scope === 'READ' ? 'bg-pf-success/10 text-pf-success' :
                                 scope === 'WRITE' ? 'bg-blue-500/10 text-blue-400' :
-                                'bg-amber-500/10 text-amber-400'
+                                'bg-pf-warning/10 text-pf-warning'
                               }`}>{scope}</span>
                             ))}
                           </div>

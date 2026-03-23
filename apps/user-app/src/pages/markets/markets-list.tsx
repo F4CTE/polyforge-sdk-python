@@ -75,10 +75,10 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   Sports: { bg: 'bg-blue-500/15', text: 'text-blue-400' },
-  Crypto: { bg: 'bg-amber-500/15', text: 'text-amber-400' },
+  Crypto: { bg: 'bg-pf-warning/15', text: 'text-pf-warning' },
   Politics: { bg: 'bg-purple-500/15', text: 'text-purple-400' },
   Economics: { bg: 'bg-pf-success/15', text: 'text-pf-success' },
-  Finance: { bg: 'bg-cyan-500/15', text: 'text-cyan-400' },
+  Finance: { bg: 'bg-pf-cyan-500/15', text: 'text-pf-cyan-400' },
   Technology: { bg: 'bg-pink-500/15', text: 'text-pink-400' },
 };
 

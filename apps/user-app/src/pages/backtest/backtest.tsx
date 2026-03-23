@@ -249,7 +249,7 @@ export function Component() {
                 <span className="text-lg font-mono font-semibold text-pf-text">{selectedRun.filledOrders ?? '\u2014'}</span>
               </div>
               {selectedRun.hasDataGaps && (
-                <div className="col-span-full flex items-center gap-2 px-3 py-2 rounded-pf bg-amber-500/10 text-amber-400 text-xs">
+                <div className="col-span-full flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-warning/10 text-pf-warning text-xs">
                   <AlertTriangle className="size-3.5 shrink-0" />
                   Results may be affected by data gaps in the selected date range.
                 </div>

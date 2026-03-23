@@ -681,11 +681,11 @@ export function Component() {
                     <span className="text-xs text-pf-text truncate flex-1">{signal.articleTitle}</span>
                     <div className="flex items-center gap-1.5 min-w-[70px]">
                       <div className={`h-1.5 rounded-full flex-1 ${
-                        signal.confidence > 70 ? 'bg-pf-success/15' : signal.confidence >= 40 ? 'bg-amber-500/15' : 'bg-pf-danger/15'
+                        signal.confidence > 70 ? 'bg-pf-success/15' : signal.confidence >= 40 ? 'bg-pf-warning/15' : 'bg-pf-danger/15'
                       }`}>
                         <div
                           className={`h-full rounded-full ${
-                            signal.confidence > 70 ? 'bg-pf-success' : signal.confidence >= 40 ? 'bg-amber-500' : 'bg-pf-danger'
+                            signal.confidence > 70 ? 'bg-pf-success' : signal.confidence >= 40 ? 'bg-pf-warning' : 'bg-pf-danger'
                           }`}
                           style={{ width: `${signal.confidence}%` }}
                         />

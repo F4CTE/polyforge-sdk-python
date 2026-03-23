@@ -52,7 +52,7 @@ export function Component() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Award size={16} className="text-amber-400" />
+            <Award size={16} className="text-pf-warning" />
             <span className="text-xs text-[var(--color-pf-text-tertiary)]">Current Tier</span>
           </div>
           <div className="text-2xl font-bold text-[var(--color-pf-text)] capitalize">{stats.tier ?? 'N/A'}</div>

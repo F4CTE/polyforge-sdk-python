@@ -65,7 +65,7 @@ function sourceColor(source: string): string {
   const map: Record<string, string> = {
     Reuters: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
     CNN: 'bg-pf-danger/15 text-pf-danger border-pf-danger/30',
-    CoinGecko: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+    CoinGecko: 'bg-pf-warning/15 text-pf-warning border-pf-warning/30',
     Bloomberg: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
     'AP News': 'bg-teal-500/15 text-teal-400 border-teal-500/30',
   };
@@ -80,13 +80,13 @@ function sentimentColor(s: Sentiment): string {
 
 function confidenceColor(c: number): string {
   if (c > 70) return 'bg-pf-success';
-  if (c >= 40) return 'bg-amber-500';
+  if (c >= 40) return 'bg-pf-warning';
   return 'bg-pf-danger';
 }
 
 function confidenceBarBg(c: number): string {
   if (c > 70) return 'bg-pf-success/15';
-  if (c >= 40) return 'bg-amber-500/15';
+  if (c >= 40) return 'bg-pf-warning/15';
   return 'bg-pf-danger/15';
 }
 

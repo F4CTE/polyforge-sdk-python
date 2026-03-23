@@ -77,10 +77,10 @@ export function Component() {
 
       {/* DLQ Section */}
       {dlqEntries.length > 0 && (
-        <div className="bg-[var(--color-pf-elevated)] border border-amber-500/30 rounded-pf-lg p-5">
+        <div className="bg-[var(--color-pf-elevated)] border border-pf-warning/30 rounded-pf-lg p-5">
           <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle size={16} className="text-amber-400" />
-            <h3 className="text-sm font-semibold text-amber-400">
+            <AlertTriangle size={16} className="text-pf-warning" />
+            <h3 className="text-sm font-semibold text-pf-warning">
               Dead Letter Queue ({dlqEntries.length})
             </h3>
           </div>

@@ -78,7 +78,7 @@ export function Component() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 bg-pf-cyan-500 text-pf-base font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? 'Sending...' : 'Send reset link'}
                 </button>

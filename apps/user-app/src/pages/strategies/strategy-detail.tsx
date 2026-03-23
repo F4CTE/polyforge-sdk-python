@@ -74,8 +74,8 @@ interface LiveLogEntry {
 
 const STATUS_STYLES: Record<StrategyStatus, { dot: string; bg: string; text: string }> = {
   RUNNING:  { dot: 'bg-pf-success', bg: 'bg-pf-success/10', text: 'text-pf-success' },
-  PAPER:    { dot: 'bg-cyan-400',    bg: 'bg-cyan-500/10',    text: 'text-cyan-400' },
-  PAUSED:   { dot: 'bg-amber-400',   bg: 'bg-amber-500/10',   text: 'text-amber-400' },
+  PAPER:    { dot: 'bg-pf-cyan-400',    bg: 'bg-pf-cyan-500/10',    text: 'text-pf-cyan-400' },
+  PAUSED:   { dot: 'bg-pf-warning',   bg: 'bg-pf-warning/10',   text: 'text-pf-warning' },
   IDLE:     { dot: 'bg-gray-400',    bg: 'bg-gray-500/10',    text: 'text-gray-400' },
   ERROR:    { dot: 'bg-pf-danger',     bg: 'bg-pf-danger/10',     text: 'text-pf-danger' },
   ARCHIVED: { dot: 'bg-gray-500',    bg: 'bg-gray-500/10',    text: 'text-gray-500' },
@@ -84,14 +84,14 @@ const STATUS_STYLES: Record<StrategyStatus, { dot: string; bg: string; text: str
 const LOG_COLORS: Record<LiveLogEntry['severity'], string> = {
   success: 'text-pf-success',
   info: 'text-pf-cyan-400',
-  warning: 'text-amber-400',
+  warning: 'text-pf-warning',
   error: 'text-pf-danger',
 };
 
 const LOG_DOT_COLORS: Record<LiveLogEntry['severity'], string> = {
   success: 'bg-pf-success',
   info: 'bg-pf-cyan-400',
-  warning: 'bg-amber-400',
+  warning: 'bg-pf-warning',
   error: 'bg-pf-danger',
 };
 
@@ -136,7 +136,7 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
 };
 
 const SECTION_STYLES: Record<string, string> = {
-  safety: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  safety: 'bg-pf-warning/10 text-pf-warning border-pf-warning/20',
   trigger: 'bg-pf-cyan-500/10 text-pf-cyan-400 border-pf-cyan-500/20',
   condition: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
   action: 'bg-pf-success/10 text-pf-success border-pf-success/20',

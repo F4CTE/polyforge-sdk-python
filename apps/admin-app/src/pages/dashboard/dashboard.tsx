@@ -119,7 +119,7 @@ export function Component() {
     { label: 'Total Users', value: stats.totalUsers, icon: <Users size={20} />, color: 'text-blue-400', bg: 'bg-blue-400/10' },
     { label: 'Active Strategies', value: stats.activeStrategies, icon: <Blocks size={20} />, color: 'text-pf-success', bg: 'bg-pf-success/10' },
     { label: 'Total Orders', value: stats.totalOrders, icon: <ShoppingCart size={20} />, color: 'text-violet-400', bg: 'bg-violet-400/10' },
-    { label: 'Open Tickets', value: stats.openTickets, icon: <TicketCheck size={20} />, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+    { label: 'Open Tickets', value: stats.openTickets, icon: <TicketCheck size={20} />, color: 'text-pf-warning', bg: 'bg-pf-warning/10' },
   ];
 
   return (
@@ -203,7 +203,7 @@ export function Component() {
                       svc?.status === 'healthy'
                         ? 'bg-pf-success'
                         : svc?.status === 'degraded'
-                          ? 'bg-amber-400'
+                          ? 'bg-pf-warning'
                           : 'bg-pf-danger'
                     }`}
                   />
