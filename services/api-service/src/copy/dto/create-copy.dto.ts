@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsNumberString,
   MaxLength,
+  Matches,
 } from "class-validator";
 
 export enum CopyModeDto {
@@ -15,6 +16,7 @@ export enum CopyModeDto {
 export class CreateCopyDto {
   @IsString()
   @MaxLength(255)
+  @Matches(/^0x[a-fA-F0-9]{40}$/, { message: 'Invalid Ethereum address' })
   targetWallet: string;
 
   @IsOptional()

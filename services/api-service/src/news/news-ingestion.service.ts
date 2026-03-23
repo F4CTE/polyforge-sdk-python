@@ -72,8 +72,14 @@ export class NewsIngestionService implements OnModuleInit {
       throw new Error(`HTTP ${res.status} from ${feedUrl}`);
     }
 
+    // H-04: Limit RSS response body to 1MB max
     const xml = await res.text();
-    const articles = this.parseRss(xml, feedUrl);
+    if (xml.length > 1_048_576) {
+      throw new Error(`RSS response too large (${xml.length} bytes) from ${feedUrl}`);
+    }
+    // H-04: Strip null bytes and control characters before parsing
+    const sanitizedXml = xml.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+    const articles = this.parseRss(sanitizedXml, feedUrl);
 
     let newCount = 0;
     for (const article of articles) {
@@ -107,10 +113,14 @@ export class NewsIngestionService implements OnModuleInit {
     let match: RegExpExecArray | null;
 
     while ((match = itemRegex.exec(xml)) !== null) {
-      const itemXml = match[1];
-      const article = this.parseItem(itemXml, source);
-      if (article) {
-        articles.push(article);
+      try {
+        const itemXml = match[1];
+        const article = this.parseItem(itemXml, source);
+        if (article) {
+          articles.push(article);
+        }
+      } catch (err: any) {
+        this.logger.warn(`Failed to parse RSS item: ${err?.message}`);
       }
     }
 
@@ -118,10 +128,14 @@ export class NewsIngestionService implements OnModuleInit {
     if (articles.length === 0) {
       const entryRegex = /<entry[\s>]([\s\S]*?)<\/entry>/gi;
       while ((match = entryRegex.exec(xml)) !== null) {
-        const entryXml = match[1];
-        const article = this.parseEntry(entryXml, source);
-        if (article) {
-          articles.push(article);
+        try {
+          const entryXml = match[1];
+          const article = this.parseEntry(entryXml, source);
+          if (article) {
+            articles.push(article);
+          }
+        } catch (err: any) {
+          this.logger.warn(`Failed to parse Atom entry: ${err?.message}`);
         }
       }
     }
@@ -143,7 +157,7 @@ export class NewsIngestionService implements OnModuleInit {
     return {
       source,
       title: this.stripHtml(title).slice(0, 500),
-      summary: description ? this.stripHtml(description) : null,
+      summary: description ? this.stripHtml(description).slice(0, 2000) : null,
       url: link,
       imageUrl,
       publishedAt: pubDate ? new Date(pubDate) : new Date(),
@@ -166,7 +180,7 @@ export class NewsIngestionService implements OnModuleInit {
     return {
       source,
       title: this.stripHtml(title).slice(0, 500),
-      summary: summary ? this.stripHtml(summary) : null,
+      summary: summary ? this.stripHtml(summary).slice(0, 2000) : null,
       url: link,
       imageUrl: null,
       publishedAt: updated ? new Date(updated) : new Date(),

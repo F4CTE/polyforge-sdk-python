@@ -301,6 +301,8 @@ export class EventsGateway
   }
 
   private handleSubscribeWhales(client: AuthedSocket) {
+    // M-06: Require authentication before subscribing to whale feed
+    if (!client.isAuthenticated) return;
     client.subscribedWhales = true;
     this.whaleSubscribers.add(client.userId!);
   }

@@ -122,13 +122,13 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
           `Copy failed for config ${config.id}: ${err?.message}`,
         );
 
-        // Emit failure notification
+        // Emit failure notification (H-03: don't expose internal error messages)
         await this.redis.xadd(STREAM, {
           type: "COPY_TRADE_FAILED",
           userId: config.userId,
           configId: config.id,
           targetWallet: walletAddress,
-          reason: err?.message ?? "Unknown error",
+          error: "Copy trade failed",
           ts: String(Date.now()),
         });
       }
@@ -141,12 +141,15 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     sourceSize: number,
     sourcePrice: number,
   ) {
-    // 1. Check daily loss limit
-    const dailyPnl = await this.getDailyPnl(config.id);
+    // 1. Check daily loss limit (H-02: use Redis atomic operations to prevent race condition)
+    const notional = sourceSize * sourcePrice;
     const maxDailyLoss = parseFloat(config.maxDailyLoss.toString());
-    if (dailyPnl <= -maxDailyLoss) {
+    const newLoss = await this.redis.getClient().incrbyfloat(`copy:${config.id}:daily_loss`, notional);
+    if (parseFloat(String(newLoss)) > maxDailyLoss) {
+      // Rollback the increment
+      await this.redis.getClient().incrbyfloat(`copy:${config.id}:daily_loss`, -notional);
       this.logger.warn(
-        `Config ${config.id} exceeded daily loss limit (${dailyPnl} <= -${maxDailyLoss})`,
+        `Config ${config.id} exceeded daily loss limit`,
       );
       return;
     }

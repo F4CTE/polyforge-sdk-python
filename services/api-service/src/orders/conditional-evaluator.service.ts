@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Interval } from "@nestjs/schedule";
+import { Interval, Cron } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { randomUUID } from "crypto";
@@ -16,7 +16,7 @@ export class ConditionalEvaluatorService {
     private readonly redis: RedisService,
   ) {}
 
-  @Interval(1000)
+  @Interval(5000)
   async evaluate(): Promise<void> {
     try {
       await this.processOrders();
@@ -28,19 +28,10 @@ export class ConditionalEvaluatorService {
   async processOrders(): Promise<void> {
     const pendingOrders = await this.prisma.conditionalOrder.findMany({
       where: { status: "PENDING" },
+      take: 100,
     });
 
     for (const order of pendingOrders) {
-      // Check expiration first
-      if (order.expiresAt && new Date() >= order.expiresAt) {
-        await this.prisma.conditionalOrder.update({
-          where: { id: order.id },
-          data: { status: "CANCELLED" },
-        });
-        this.logger.log(`Conditional order ${order.id} expired`);
-        continue;
-      }
-
       // Get current price from Redis cache
       const priceStr = await this.redis.get(`cache:price:${order.tokenId}`);
       if (!priceStr) continue;
@@ -200,5 +191,28 @@ export class ConditionalEvaluatorService {
     this.logger.log(
       `Conditional order ${order.id} (${order.type}) triggered — intent ${intentId}`,
     );
+  }
+
+  // L-03: Separate expiration check on its own schedule (every 30 seconds)
+  @Cron("*/30 * * * * *")
+  async checkExpiredOrders(): Promise<void> {
+    try {
+      const expiredOrders = await this.prisma.conditionalOrder.findMany({
+        where: {
+          status: "PENDING",
+          expiresAt: { not: null, lte: new Date() },
+        },
+      });
+
+      for (const order of expiredOrders) {
+        await this.prisma.conditionalOrder.update({
+          where: { id: order.id },
+          data: { status: "CANCELLED" },
+        });
+        this.logger.log(`Conditional order ${order.id} expired`);
+      }
+    } catch (err) {
+      this.logger.error("Expiration check failed", err);
+    }
   }
 }

@@ -10,6 +10,13 @@ export class LlmService {
   constructor(private readonly config: ConfigService) {
     this.claudeApiKey = this.config.get<string>("ANTHROPIC_API_KEY", "");
     this.openaiApiKey = this.config.get<string>("OPENAI_API_KEY", "");
+
+    // M-04: Validate at startup that at least one API key is configured
+    if (!this.claudeApiKey && !this.openaiApiKey) {
+      this.logger.warn(
+        "No LLM API keys configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY for AI-powered features.",
+      );
+    }
   }
 
   /**

@@ -196,6 +196,12 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
           new Prisma.Decimal(0),
         );
 
+        // TODO: Calculate win rate from resolved positions. This requires
+        // position resolution data (e.g., market outcomes) to determine which
+        // trades were winners vs losers. Once available, compute:
+        //   winRate = resolvedWins / totalResolved
+        // and include in the update below.
+
         await this.prisma.whaleProfile.update({
           where: { walletAddress: profile.walletAddress },
           data: {

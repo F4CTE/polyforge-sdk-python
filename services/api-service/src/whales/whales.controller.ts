@@ -9,6 +9,7 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { WhalesService } from "./whales.service";
 import { WhaleFeedQueryDto, WhaleTopQueryDto } from "./dto/whale-query.dto";
@@ -21,11 +22,13 @@ export class WhalesController {
   constructor(private readonly whales: WhalesService) {}
 
   @Get("feed")
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
   getFeed(@Query() query: WhaleFeedQueryDto) {
     return this.whales.getFeed(query);
   }
 
   @Get("top")
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
   getTopWhales(@Query() query: WhaleTopQueryDto) {
     return this.whales.getTopWhales(query);
   }

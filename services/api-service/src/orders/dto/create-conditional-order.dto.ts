@@ -1,10 +1,14 @@
 import {
   IsString,
   IsEnum,
+  IsNumber,
   IsNumberString,
   IsOptional,
   IsDateString,
+  Min,
+  Max,
 } from "class-validator";
+import { Type } from "class-transformer";
 
 export class CreateConditionalOrderDto {
   @IsString()
@@ -22,11 +26,16 @@ export class CreateConditionalOrderDto {
   @IsEnum(["YES", "NO"])
   declare outcome: string;
 
-  @IsNumberString()
-  declare size: string;
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  declare size: number;
 
-  @IsNumberString()
-  declare triggerPrice: string;
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0.001)
+  @Max(1)
+  declare triggerPrice: number;
 
   @IsOptional()
   @IsNumberString()

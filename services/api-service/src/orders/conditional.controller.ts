@@ -11,6 +11,7 @@ import {
   HttpStatus,
   NotFoundException,
   ForbiddenException,
+  UnprocessableEntityException,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
@@ -42,6 +43,17 @@ export class ConditionalController {
     @CurrentUser() user: any,
     @Body() dto: CreateConditionalOrderDto,
   ) {
+    // H-01: Enforce per-user cap on pending conditional orders
+    const count = await this.prisma.conditionalOrder.count({
+      where: { userId: user.sub, status: 'PENDING' },
+    });
+    if (count >= 50) {
+      throw new UnprocessableEntityException({
+        code: 'CONDITIONAL_ORDER_LIMIT',
+        message: 'Maximum 50 pending conditional orders',
+      });
+    }
+
     const order = await this.prisma.conditionalOrder.create({
       data: {
         userId: user.sub,
