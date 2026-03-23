@@ -132,6 +132,20 @@ export class TemplatesService {
           severity: "info",
         };
 
+      case "COPY_TRADE_EXECUTED":
+        return {
+          title: "Copy Trade Executed",
+          body: `Copied ${data.side ?? "trade"} of $${data.copiedSize ?? "?"} on market ${data.marketId ?? "unknown"} from wallet ${data.targetWallet?.slice(0, 8) ?? "?"}...`,
+          severity: "success",
+        };
+
+      case "COPY_TRADE_FAILED":
+        return {
+          title: "Copy Trade Failed",
+          body: `Failed to copy trade from wallet ${data.targetWallet?.slice(0, 8) ?? "?"}...: ${data.reason ?? "unknown error"}.`,
+          severity: "error",
+        };
+
       case "WHALE_TRADE":
         return {
           title: "\u{1F40B} Whale Alert",

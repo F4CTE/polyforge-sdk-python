@@ -196,6 +196,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   tickets             Ticket[]
   whaleFollows         WhaleFollow[]
+  copyConfigs          CopyConfig[]
 
   @@map("users")
 }
@@ -884,4 +885,73 @@ model WhaleProfile {
   updatedAt     DateTime @updatedAt
 
   @@map("whale_profiles")
+}
+
+// ─── COPY TRADING ──────────────────────────────
+enum CopyMode {
+  PERCENTAGE    // Copy X% of source trade size
+  FIXED         // Copy fixed $ amount
+  MIRROR        // Exact same size as source
+
+  @@map("copy_mode")
+}
+
+enum CopyStatus {
+  ACTIVE
+  PAUSED
+  STOPPED
+  ERROR
+
+  @@map("copy_status")
+}
+
+model CopyConfig {
+  id              String     @id @default(uuid())
+  userId          String
+  targetWallet    String     @db.VarChar(255)
+  mode            CopyMode   @default(PERCENTAGE)
+  sizeValue       Decimal    @db.Decimal(20, 6) @default(10) // % or $ depending on mode
+  maxExposure     Decimal    @db.Decimal(20, 6) @default(500)
+  maxDailyLoss    Decimal    @db.Decimal(20, 6) @default(100)
+  priceOffset     Decimal    @db.Decimal(10, 6) @default(0) // +/- % from source price
+  status          CopyStatus @default(ACTIVE)
+  totalPnl        Decimal    @db.Decimal(20, 6) @default(0)
+  totalCopied     Int        @default(0)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  stoppedAt       DateTime?
+
+  user            User       @relation(fields: [userId], references: [id])
+  trades          CopyTrade[]
+
+  @@unique([userId, targetWallet])
+  @@index([userId])
+  @@index([targetWallet])
+  @@index([status])
+  @@map("copy_configs")
+}
+
+model CopyTrade {
+  id              String    @id @default(uuid())
+  configId        String
+  sourceWallet    String    @db.VarChar(255)
+  sourceTxHash    String?   @db.VarChar(255)
+  marketId        String
+  tokenId         String    @db.VarChar(255)
+  side            OrderSide
+  outcome         OrderOutcome
+  sourceSize      Decimal   @db.Decimal(20, 6)
+  sourcePrice     Decimal   @db.Decimal(10, 6)
+  copiedSize      Decimal   @db.Decimal(20, 6)
+  copiedPrice     Decimal?  @db.Decimal(10, 6)
+  status          String    @default("PENDING") @db.VarChar(50)
+  orderId         String?
+  pnl             Decimal?  @db.Decimal(20, 6)
+  createdAt       DateTime  @default(now())
+
+  config          CopyConfig @relation(fields: [configId], references: [id])
+
+  @@index([configId])
+  @@index([createdAt(sort: Desc)])
+  @@map("copy_trades")
 }

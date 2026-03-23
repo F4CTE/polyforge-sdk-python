@@ -7,6 +7,7 @@ import {
   FlaskConical,
   Compass,
   Fish,
+  UserPlus,
   Trophy,
   Code,
   HelpCircle,
@@ -36,6 +37,7 @@ const navSections: NavSection[] = [
       { label: 'Portfolio', icon: Wallet, route: '/portfolio' },
       { label: 'Orders', icon: ClipboardList, route: '/orders' },
       { label: 'Backtest', icon: FlaskConical, route: '/backtest' },
+      { label: 'Copy Trading', icon: UserPlus, route: '/copy' },
     ],
   },
   {

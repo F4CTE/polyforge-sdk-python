@@ -224,9 +224,12 @@ export function Component() {
           >
             {following ? <><UserCheck className="size-4" /> Following</> : <><UserPlus className="size-4" /> Follow</>}
           </button>
-          <button className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-colors">
+          <Link
+            to={`/copy/new?wallet=${address}`}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+          >
             <Copy className="size-4" /> Copy This Whale
-          </button>
+          </Link>
         </div>
       </div>
 

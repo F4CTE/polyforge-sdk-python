@@ -22,6 +22,7 @@ import { ProfileModule } from "./profile/profile.module";
 import { SettingsModule } from "./settings/settings.module";
 import { EventsModule } from "./gateway/events.module";
 import { WhalesModule } from "./whales/whales.module";
+import { CopyModule } from "./copy/copy.module";
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { WhalesModule } from "./whales/whales.module";
     SettingsModule,
     EventsModule,
     WhalesModule,
+    CopyModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ApiKeyThrottlerGuard }],
