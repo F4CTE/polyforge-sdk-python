@@ -393,7 +393,7 @@ export function Component() {
                           {parseFloat(pos.avgEntryPrice).toFixed(3)}
                         </td>
                         <td className="px-4 py-3 text-right font-mono text-cyan-400">
-                          {+pos.currentPrice === 0 ? '\u2014' : parseFloat(pos.currentPrice).toFixed(3)}
+                          {pos.currentPrice && pos.currentPrice !== '0' ? `$${parseFloat(pos.currentPrice).toFixed(3)}` : <span className="text-pf-text-muted">N/A</span>}
                         </td>
                         <td className={`px-4 py-3 text-right font-mono ${pnlColor(pos.unrealizedPnl)}`}>
                           {formatPnl(pos.unrealizedPnl)}

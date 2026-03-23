@@ -139,7 +139,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           ) : (
             <ChevronLeft size={18} className="shrink-0" />
           )}
-          {!collapsed && <span>Collapse</span>}
         </button>
         <NavLink
           to="/settings"

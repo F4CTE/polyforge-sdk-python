@@ -8,6 +8,7 @@ import { Logger } from "nestjs-pino";
 import fastifyCookie from "@fastify/cookie";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
+import { PrismaAdminService } from "@polyforge/shared-db";
 
 const REQUIRED_ENV = [
   "ADMIN_JWT_SECRET",
@@ -54,7 +55,7 @@ async function bootstrap() {
       const allowed = [
         "https://admin.polyforge.app",
         ...(process.env.NODE_ENV !== "production"
-          ? ["http://localhost:4300", "http://localhost:8080"]
+          ? ["http://localhost:4300", "http://localhost:8080", "http://127.0.0.1:8080"]
           : []),
       ];
       if (!origin || allowed.includes(origin)) {
@@ -84,8 +85,22 @@ async function bootstrap() {
     exclude: [{ path: "health", method: RequestMethod.GET }],
   });
 
+  app.enableShutdownHooks();
+
   const port = process.env.PORT ?? 3004;
   await app.listen(port, "0.0.0.0");
+
+  const logger = app.get(Logger);
+  const prisma = app.get(PrismaAdminService);
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    logger.log('Database connection verified');
+  } catch (err) {
+    logger.error('Database connection failed on startup, retrying...', err);
+    await new Promise(r => setTimeout(r, 2000));
+    await prisma.$queryRaw`SELECT 1`;
+    logger.log('Database connection verified on retry');
+  }
 }
 
 bootstrap().catch((err) => {

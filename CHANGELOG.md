@@ -7,7 +7,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-No unreleased changes.
+### Fixed
+
+- **Admin auth/API DB connection pool stale after restart** — added Prisma `SELECT 1` warmup query on startup with retry logic and `enableShutdownHooks()` for clean disconnects
+- **Sidebar collapse button text** — removed "Collapse" text label; now shows only chevron icon (left when expanded, right when collapsed)
+- **Portfolio current price placeholder** — show "N/A" in muted text instead of dash when current price is zero or missing
+- **Admin CORS 127.0.0.1:8080** — added `http://127.0.0.1:8080` to allowed origins in both admin-auth-service and admin-api-service
 
 ---
 
