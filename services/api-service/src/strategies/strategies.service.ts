@@ -475,8 +475,12 @@ export class StrategiesService {
     dto: CreateCommentDto,
   ): Promise<unknown> {
     await this.findOne(id, userId);
+
+    // R5-03: Strip HTML tags from comment content to prevent XSS
+    const sanitizedContent = dto.content.replace(/<[^>]*>/g, '');
+
     return this.prisma.strategyComment.create({
-      data: { strategyId: id, userId, content: dto.content },
+      data: { strategyId: id, userId, content: sanitizedContent },
       include: {
         user: { select: { id: true, username: true, displayName: true } },
       },

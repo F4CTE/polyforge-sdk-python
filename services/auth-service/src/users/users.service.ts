@@ -196,6 +196,8 @@ export class UsersService {
 
     // Revoke all refresh tokens for this user (same as password change flow)
     await this.revokeAllRefreshTokens(record.userId);
+
+    return record.userId;
   }
 
   /** Revoke ALL refresh tokens for a user via Redis SCAN + DEL */

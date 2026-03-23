@@ -6,7 +6,8 @@ export class StrategyQueryDto extends PaginationDto {
   @IsIn(["IDLE", "RUNNING", "PAUSED", "PAPER"])
   status?: string;
 
+  // R5-08: Allowlist for sort parameter to prevent arbitrary column access
   @IsOptional()
-  @IsIn(["createdAt", "updatedAt"])
+  @IsIn(["createdAt", "updatedAt", "name", "status", "likeCount"])
   sort?: string = "createdAt";
 }

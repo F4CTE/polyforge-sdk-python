@@ -1,4 +1,4 @@
-# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
+# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
 FROM node:24-alpine AS builder
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -9,7 +9,7 @@ COPY packages/ui/ packages/ui/
 COPY apps/landing/ apps/landing/
 RUN pnpm --filter @polyforge/landing build
 
-# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
+# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
 FROM node:24-alpine
 WORKDIR /app
 COPY --from=builder /app/apps/landing/.next/standalone ./

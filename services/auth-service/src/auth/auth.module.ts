@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { SharedAuthModule } from '@polyforge/shared-auth';
+import { SharedDbModule } from '@polyforge/shared-db';
 import { RedisModule } from '@polyforge/shared-redis';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -8,7 +9,7 @@ import { MailModule } from '../mail/mail.module';
 import { TotpModule } from '../totp/totp.module';
 
 @Module({
-  imports: [UsersModule, MailModule, SharedAuthModule, TotpModule, RedisModule],
+  imports: [UsersModule, MailModule, SharedAuthModule, TotpModule, RedisModule, SharedDbModule],
   providers: [AuthService],
   controllers: [AuthController],
 })

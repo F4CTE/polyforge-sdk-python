@@ -7,6 +7,7 @@ import {
   HttpCode,
   UseGuards,
   ValidationPipe,
+  ParseUUIDPipe,
 } from "@nestjs/common";
 import { CredentialsService } from "./credentials.service";
 import { ImportCredentialsDto } from "./dto/import-credentials.dto";
@@ -28,7 +29,7 @@ export class CredentialsController {
 
   @Delete(":userId")
   @HttpCode(204)
-  async delete(@Param("userId") userId: string): Promise<void> {
+  async delete(@Param("userId", ParseUUIDPipe) userId: string): Promise<void> {
     await this.credentials.deleteCredentials(userId);
   }
 }

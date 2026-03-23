@@ -1,4 +1,4 @@
-# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
+# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
 FROM node:24-alpine AS builder
 
 WORKDIR /app
@@ -41,7 +41,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     (cd services/strategy-engine && /usr/local/bin/tsc -p tsconfig.build.json)
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
-# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
+# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
 FROM node:24-alpine
 
 WORKDIR /app

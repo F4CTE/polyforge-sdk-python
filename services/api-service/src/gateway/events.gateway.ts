@@ -196,8 +196,17 @@ export class EventsGateway
     }
   }
 
+  private readonly MAX_SUBSCRIPTIONS_PER_CLIENT = 5000;
+
   private handleSubscribePrices(client: AuthedSocket, tokenIds: string[]) {
     if (!Array.isArray(tokenIds) || tokenIds.length > 1000) return;
+
+    // R5-01: Cumulative per-client subscription cap
+    if (client.subscribedTokens.size + tokenIds.length > this.MAX_SUBSCRIPTIONS_PER_CLIENT) {
+      this.send(client, { type: 'ERROR', message: 'Subscription limit exceeded (max 5000)' });
+      return;
+    }
+
     for (const tokenId of tokenIds) {
       client.subscribedTokens.add(tokenId);
       if (!this.tokenSubscribers.has(tokenId)) {
@@ -219,6 +228,12 @@ export class EventsGateway
     strategyId: string,
   ) {
     if (!strategyId) return;
+
+    // R5-01: Cumulative per-client subscription cap (strategies count toward same limit)
+    if (client.subscribedStrategies.size >= this.MAX_SUBSCRIPTIONS_PER_CLIENT) {
+      this.send(client, { type: 'ERROR', message: 'Subscription limit exceeded (max 5000)' });
+      return;
+    }
 
     // Authorization: check strategy ownership or visibility
     try {

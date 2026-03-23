@@ -12,7 +12,7 @@
 
 # ─── Stage 1: user-app build ─────────────────────────────────────────────────
 
-# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
+# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
 FROM node:24-alpine AS user-app-builder
 
 WORKDIR /build
@@ -36,7 +36,7 @@ RUN pnpm --filter @polyforge/shared-types run build && \
 
 # ─── Stage 2: admin-app build ────────────────────────────────────────────────
 
-# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
+# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
 FROM node:24-alpine AS admin-app-builder
 
 WORKDIR /build
@@ -57,7 +57,7 @@ RUN pnpm --filter @polyforge/shared-types run build && \
 
 # ─── Stage 3: nginx runtime ──────────────────────────────────────────────────
 
-# NOTE: Production should pin to a specific digest, e.g. nginx:1.27-alpine@sha256:...
+# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' nginx:1.27-alpine
 FROM nginx:1.27-alpine
 
 # Remove default nginx config

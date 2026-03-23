@@ -109,7 +109,9 @@ export class AuthController {
       (typeof xff === 'string' ? xff.split(',')[0].trim() : undefined) ??
       request.ip ??
       'unknown';
-    const result = await this.authService.login({ ...dto, ip: clientIp });
+    // R5-05: Pass userAgent for login history recording
+    const userAgent = (request.headers['user-agent'] as string) ?? 'unknown';
+    const result = await this.authService.login({ ...dto, ip: clientIp, userAgent });
     reply.setCookie(
       USER_COOKIE,
       result.token,

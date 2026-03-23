@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { RedisService } from '@polyforge/shared-redis';
+import { PrismaService } from '@polyforge/shared-db';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
 import { TotpService } from '../totp/totp.service';
@@ -16,7 +17,8 @@ import { randomUUID, createHash } from 'crypto';
 const INVITE_KEY = (code: string) => `invite:${code.toUpperCase()}`;
 
 const REFRESH_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
-const ACCESS_TOKEN_EXPIRY = '15m';
+// R5-02: Reduced from 15m to 5m to limit window of compromised tokens after password change
+const ACCESS_TOKEN_EXPIRY = '5m';
 
 /** Redis key for a single refresh token: refresh:{userId}:{sha256(token)} */
 const REFRESH_KEY = (userId: string, tokenHash: string) =>
@@ -51,6 +53,7 @@ export class AuthService {
     private readonly totpService: TotpService,
     private readonly config: ConfigService,
     private readonly redis: RedisService,
+    private readonly prisma: PrismaService,
   ) {}
 
   // ─── Register ─────────────────────────────────────────────────────────────────
@@ -144,7 +147,7 @@ export class AuthService {
 
   // ─── Login ────────────────────────────────────────────────────────────────────
 
-  async login(dto: LoginDto & { ip?: string }) {
+  async login(dto: LoginDto & { ip?: string; userAgent?: string }) {
     const user = await this.usersService.findByEmail(dto.email);
 
     if (!user || user.deleted) {
@@ -169,6 +172,15 @@ export class AuthService {
       dto.password,
     );
     if (!isValid) {
+      // R5-05: Record failed login attempt
+      this.prisma.userLoginHistory.create({
+        data: {
+          userId: user.id,
+          ip: dto.ip ?? 'unknown',
+          userAgent: dto.userAgent ?? 'unknown',
+          success: false,
+        },
+      }).catch(() => {}); // Fire and forget
       throw new HttpException(
         { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
         HttpStatus.BAD_REQUEST,
@@ -199,8 +211,19 @@ export class AuthService {
     const accessToken = this.generateAccessToken(user);
     const refreshToken = await this.createRefreshToken(user.id);
 
-    // Record login event for audit trail
+    // R5-05: Record successful login in UserLoginHistory
     const ip = dto.ip ?? 'unknown';
+    const userAgent = dto.userAgent ?? 'unknown';
+    this.prisma.userLoginHistory.create({
+      data: {
+        userId: user.id,
+        ip,
+        userAgent,
+        success: true,
+      },
+    }).catch(() => {}); // Fire and forget — don't fail login if history write fails
+
+    // Record login event for audit trail
     this.logger.log(
       JSON.stringify({
         event: 'LOGIN_SUCCESS',
@@ -302,7 +325,18 @@ export class AuthService {
   // ─── Reset password ───────────────────────────────────────────────────────────
 
   async resetPassword(dto: ResetPasswordDto) {
-    await this.usersService.resetPassword(dto.token, dto.newPassword);
+    const userId = await this.usersService.resetPassword(dto.token, dto.newPassword);
+
+    // R5-02: Mark password change timestamp so JWT guard can reject stale tokens
+    if (userId) {
+      await this.redis
+        .set(`pwchange:${userId}`, Math.floor(Date.now() / 1000).toString(), 300)
+        .catch((err) => this.logger.error('Failed to set pwchange key', err));
+      await this.revokeAllRefreshTokens(userId).catch((err) =>
+        this.logger.error('Failed to revoke refresh tokens after password reset', err),
+      );
+    }
+
     return { message: 'Password reset successfully' };
   }
 

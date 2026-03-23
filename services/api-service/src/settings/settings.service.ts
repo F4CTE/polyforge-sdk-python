@@ -66,6 +66,13 @@ export class SettingsService {
       data: { passwordHash: hash },
     });
 
+    // R5-02: Mark password change timestamp so JWT guard can reject stale tokens
+    try {
+      await this.redis.set(`pwchange:${userId}`, Math.floor(Date.now() / 1000).toString(), 300);
+    } catch (err) {
+      this.logger.error(`Failed to set pwchange key for user ${userId}`, err);
+    }
+
     // Revoke all refresh tokens for this user
     try {
       const client = this.redis.getClient();
