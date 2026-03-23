@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Install pnpm + typescript (globally, so tsc is always available in PATH)
 RUN corepack enable && corepack prepare pnpm@latest --activate && \
-    npm install -g typescript
+    npm install -g typescript@5
 
 # Copy workspace manifests (all packages so pnpm can resolve the full dep tree)
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./

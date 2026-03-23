@@ -65,7 +65,7 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
 
         if (!results) continue;
 
-        for (const [, messages] of results) {
+        for (const [, messages] of results as [string, [string, string[]][]][]) {
           for (const [id, fields] of messages) {
             const event = this.parseFields(fields);
             if (event.type === "WHALE_TRADE") {

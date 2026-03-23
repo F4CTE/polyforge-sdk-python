@@ -67,7 +67,7 @@ export class LlmService {
       throw new Error(`Claude API error ${res.status}: ${text}`);
     }
 
-    const data = await res.json();
+    const data = (await res.json()) as { content: { text: string }[] };
     return data.content[0].text;
   }
 
@@ -90,7 +90,7 @@ export class LlmService {
       throw new Error(`OpenAI API error ${res.status}: ${text}`);
     }
 
-    const data = await res.json();
+    const data = (await res.json()) as { choices: { message: { content: string } }[] };
     return data.choices[0].message.content;
   }
 }

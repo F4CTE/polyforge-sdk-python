@@ -17,7 +17,7 @@ export class CreateCopyDto {
   @IsString()
   @MaxLength(255)
   @Matches(/^0x[a-fA-F0-9]{40}$/, { message: 'Invalid Ethereum address' })
-  targetWallet: string;
+  declare targetWallet: string;
 
   @IsOptional()
   @IsEnum(CopyModeDto)
