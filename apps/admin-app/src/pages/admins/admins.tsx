@@ -106,7 +106,7 @@ export function Component() {
     if (!deleteConfirmId) return;
     setSubmitting(true);
     try {
-      await adminApi.deactivateAdmin(deleteConfirmId);
+      await adminApi.deactivateAdmin(deleteConfirmId, deletePassword);
       setAdmins((a) => a.filter((ad) => ad.id !== deleteConfirmId));
       setDeleteConfirmId(null);
       setDeletePassword('');

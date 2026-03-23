@@ -12,13 +12,15 @@ export default function LandingPage() {
   return (
     <>
       <Nav />
-      <Hero />
-      <ProductPreview />
-      <ProofStrip />
-      <Features />
-      <Testimonials />
-      <HowItWorks />
-      <CtaBanner />
+      <main>
+        <Hero />
+        <ProductPreview />
+        <ProofStrip />
+        <Features />
+        <Testimonials />
+        <HowItWorks />
+        <CtaBanner />
+      </main>
       <Footer />
     </>
   );

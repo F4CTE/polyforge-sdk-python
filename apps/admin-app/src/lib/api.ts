@@ -24,7 +24,23 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   if (!res.ok) {
     // Redirect to login on 401 Unauthorized (expired/invalid session)
     if (res.status === 401 && !url.includes('/auth/')) {
-      window.location.href = '/login';
+      // Try to refresh the session first
+      try {
+        const refreshRes = await fetch(`${AUTH_BASE}/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+        if (refreshRes.ok) {
+          // Retry the original request
+          return request<T>(url, options);
+        }
+      } catch {
+        // refresh failed, fall through to redirect
+      }
+      // Import dynamically to avoid circular deps; show toast before redirect
+      const { toast } = await import('sonner');
+      toast.error('Session expired. Redirecting to login...');
+      setTimeout(() => { window.location.href = '/login'; }, 1500);
       return new Promise<T>(() => {}); // never resolves; page is navigating
     }
     const body = await res.json().catch(() => ({}));
@@ -194,6 +210,9 @@ export const adminApi = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
-  deactivateAdmin: (id: string) =>
-    request<any>(buildUrl(API_BASE, `/admins/${id}`), { method: 'DELETE' }),
+  deactivateAdmin: (id: string, password?: string) =>
+    request<any>(buildUrl(API_BASE, `/admins/${id}`), {
+      method: 'DELETE',
+      ...(password ? { body: JSON.stringify({ password }) } : {}),
+    }),
 };

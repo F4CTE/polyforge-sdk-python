@@ -65,6 +65,7 @@ export function Component() {
 
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Step 1: Target
   const [targetWallet, setTargetWallet] = useState(prefilledWallet);
@@ -113,7 +114,24 @@ export function Component() {
     if (step > 0) setStep(step - 1);
   }
 
+  function validateForm(): boolean {
+    const errors: Record<string, string> = {};
+    if (!/^0x[a-fA-F0-9]{40}$/.test(targetWallet.trim())) {
+      errors.wallet = 'Wallet address must be a valid 0x address (42 characters)';
+    }
+    if (mode !== 'MIRROR' && sizeValue <= 0) {
+      errors.size = 'Size value must be greater than 0';
+    }
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
+  const isFormValid =
+    /^0x[a-fA-F0-9]{40}$/.test(targetWallet.trim()) &&
+    (mode === 'MIRROR' || sizeValue > 0);
+
   async function handleSubmit() {
+    if (!validateForm()) return;
     setSubmitting(true);
     try {
       const res = await fetch('/api/v1/copy', {
@@ -397,17 +415,27 @@ export function Component() {
           <>
             <h2 className="text-sm font-medium text-pf-text">Review Configuration</h2>
             <div className="space-y-3">
-              <div className="flex items-center justify-between py-2 border-b border-pf-border-subtle">
-                <span className="text-xs text-pf-text-secondary">Target Wallet</span>
-                <span className="font-mono text-sm text-pf-text">{truncateAddress(targetWallet)}</span>
+              <div className="py-2 border-b border-pf-border-subtle">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-pf-text-secondary">Target Wallet</span>
+                  <span className="font-mono text-sm text-pf-text">{truncateAddress(targetWallet)}</span>
+                </div>
+                {validationErrors.wallet && (
+                  <p className="text-xs text-pf-danger mt-1">{validationErrors.wallet}</p>
+                )}
               </div>
               <div className="flex items-center justify-between py-2 border-b border-pf-border-subtle">
                 <span className="text-xs text-pf-text-secondary">Mode</span>
                 <span className="text-sm text-pf-text">{mode}</span>
               </div>
-              <div className="flex items-center justify-between py-2 border-b border-pf-border-subtle">
-                <span className="text-xs text-pf-text-secondary">Trade Size</span>
-                <span className="text-sm font-mono text-pf-text">{sizeLabel()}</span>
+              <div className="py-2 border-b border-pf-border-subtle">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-pf-text-secondary">Trade Size</span>
+                  <span className="text-sm font-mono text-pf-text">{sizeLabel()}</span>
+                </div>
+                {validationErrors.size && (
+                  <p className="text-xs text-pf-danger mt-1">{validationErrors.size}</p>
+                )}
               </div>
               <div className="flex items-center justify-between py-2 border-b border-pf-border-subtle">
                 <span className="text-xs text-pf-text-secondary">Max Exposure</span>
@@ -446,7 +474,7 @@ export function Component() {
         ) : (
           <button
             onClick={handleSubmit}
-            disabled={submitting}
+            disabled={submitting || !isFormValid}
             className="flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
           >
             <Rocket className="size-4" />

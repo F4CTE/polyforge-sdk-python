@@ -75,6 +75,7 @@ export function Component() {
   const [totpSetupData, setTotpSetupData] = useState<TotpSetupData | null>(null);
   const [totpCode, setTotpCode] = useState('');
   const [totpSaving, setTotpSaving] = useState(false);
+  const [totpLoading, setTotpLoading] = useState(false);
 
   // Notifications
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({
@@ -144,6 +145,7 @@ export function Component() {
 
   // ── TOTP ──
   async function startTotpSetup() {
+    setTotpLoading(true);
     try {
       const res = await fetch('/auth/v1/totp/setup', { method: 'POST', credentials: 'include' });
       if (res.ok) {
@@ -151,7 +153,7 @@ export function Component() {
       } else {
         toast.error('Failed to start 2FA setup');
       }
-    } catch { toast.error('Failed to start 2FA setup'); }
+    } catch { toast.error('Failed to start 2FA setup'); } finally { setTotpLoading(false); }
   }
 
   async function confirmTotp() {
@@ -457,10 +459,10 @@ export function Component() {
               <p className="text-sm text-pf-text-secondary">
                 2FA is currently <strong className="text-pf-text-muted">disabled</strong>. Add an extra layer of security to your account.
               </p>
-              <button onClick={startTotpSetup}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm font-medium text-pf-text hover:border-pf-border-strong transition-colors">
-                <Shield className="size-4" />
-                Enable 2FA
+              <button onClick={startTotpSetup} disabled={totpLoading}
+                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm font-medium text-pf-text hover:border-pf-border-strong disabled:opacity-50 transition-colors">
+                {totpLoading ? <Loader2 className="size-4 animate-spin" /> : <Shield className="size-4" />}
+                {totpLoading ? 'Setting up...' : 'Enable 2FA'}
               </button>
             </>
           )}

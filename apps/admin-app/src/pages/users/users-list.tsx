@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { Search, ChevronLeft, ChevronRight, Check, X, Wifi, Shield, Users, AlertCircle } from 'lucide-react';
@@ -59,9 +59,13 @@ export function Component() {
     load();
   }, [load]);
 
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   function handleSearch(value: string) {
-    setSearch(value);
-    setPage(1);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearch(value);
+      setPage(1);
+    }, 300);
   }
 
   return (
@@ -82,7 +86,7 @@ export function Component() {
           <input
             type="text"
             placeholder="Search users..."
-            value={search}
+            defaultValue={search}
             onChange={(e) => handleSearch(e.target.value)}
             className="w-full pl-9 pr-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
           />
@@ -213,6 +217,7 @@ export function Component() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
+                aria-label="Previous page"
                 className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={16} />
@@ -220,6 +225,7 @@ export function Component() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
+                aria-label="Next page"
                 className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronRight size={16} />

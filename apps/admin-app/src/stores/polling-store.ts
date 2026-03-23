@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { adminApi } from '@/lib/api';
 
 interface PollingState {
   openTickets: number;
@@ -10,12 +11,8 @@ let intervalId: ReturnType<typeof setInterval> | null = null;
 
 async function fetchOpenTickets(): Promise<number> {
   try {
-    const res = await fetch('/api/v1/tickets?status=OPEN&limit=1', {
-      credentials: 'include',
-    });
-    if (!res.ok) return 0;
-    const data = await res.json();
-    return data.total ?? 0;
+    const res = await adminApi.tickets({ status: 'OPEN', limit: 1 });
+    return res.total ?? 0;
   } catch {
     return 0;
   }

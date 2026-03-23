@@ -34,6 +34,7 @@ export function Component() {
 
   async function handleFlush() {
     if (!pattern.trim()) return;
+    if (!window.confirm(`Are you sure you want to flush cache keys matching "${pattern}"?`)) return;
     setFlushing(true);
     try {
       const res = await adminApi.cacheFlush(pattern);

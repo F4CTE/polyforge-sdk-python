@@ -30,7 +30,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
 
   useEffect(() => {
     if (!isRunStrategy) return;
-    fetch('/api/v1/strategies?limit=100', { credentials: 'include' })
+    fetch('/api/v1/strategies?limit=50', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : { data: [] }))
       .then((res) => {
         const list: StrategyOption[] = (res.data ?? [])
