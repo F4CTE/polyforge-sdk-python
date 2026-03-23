@@ -311,6 +311,9 @@ services:
       MAILHOG_HOST: mailhog
       MAILHOG_PORT: "1025"
       AWS_SES_FROM_EMAIL: noreply@polyforge.app
+      # NOTE: Production should use Docker secrets or an external secret manager
+      # (e.g. Vault, AWS Secrets Manager) instead of plain environment variables
+      # for bot tokens and other sensitive credentials.
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-dev-disabled}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-dev-disabled}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
@@ -339,6 +342,8 @@ services:
       STRATEGY_ENGINE_URL: http://strategy-engine:3006
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
       BOT_JWT_SECRET: ${BOT_JWT_SECRET:-dev-bot-jwt-secret-change-in-production}
+      # NOTE: Production should use Docker secrets or an external secret manager
+      # for bot tokens instead of plain environment variables.
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-dev-disabled}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-dev-disabled}
       PORT: "3011"

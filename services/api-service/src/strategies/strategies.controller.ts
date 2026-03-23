@@ -15,7 +15,7 @@ import {
 } from "@nestjs/common";
 import { Response } from "express";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
 import { StrategiesService } from "./strategies.service";
 import { CreateStrategyDto } from "./dto/create-strategy.dto";
 import { UpdateStrategyDto } from "./dto/update-strategy.dto";
@@ -45,6 +45,8 @@ export class StrategiesController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
   create(@CurrentUser() user: any, @Body() dto: CreateStrategyDto) {
     return this.strategies.create(user.sub, dto);
   }
@@ -55,6 +57,8 @@ export class StrategiesController {
   }
 
   @Patch(":id")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
   update(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: any,
@@ -65,6 +69,8 @@ export class StrategiesController {
 
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
   remove(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.strategies.remove(id, user.sub);
   }
@@ -93,6 +99,8 @@ export class StrategiesController {
   }
 
   @Post(":id/start")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('TRADE')
   start(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: any,
@@ -102,16 +110,22 @@ export class StrategiesController {
   }
 
   @Post(":id/stop")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('TRADE')
   stop(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.strategies.stop(id, user.sub);
   }
 
   @Post(":id/pause")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('TRADE')
   pause(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.strategies.pause(id, user.sub);
   }
 
   @Post(":id/resume")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('TRADE')
   resume(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.strategies.resume(id, user.sub);
   }

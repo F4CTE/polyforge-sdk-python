@@ -1,3 +1,4 @@
+# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
 FROM node:24-alpine AS builder
 
 WORKDIR /app
@@ -44,6 +45,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     (cd services/signer-service && /usr/local/bin/tsc -p tsconfig.build.json)
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
+# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
 FROM node:24-alpine
 
 WORKDIR /app
@@ -75,5 +77,7 @@ WORKDIR /app/services/signer-service
 
 # signer-service listens on localhost only — no EXPOSE needed
 # The container is on signer-only network with no published ports.
+
+USER node
 
 CMD ["node", "dist/main"]

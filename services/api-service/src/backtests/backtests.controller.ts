@@ -11,7 +11,7 @@ import {
   ParseUUIDPipe,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
 import { IsOptional, IsString } from "class-validator";
 import { BacktestsService } from "./backtests.service";
 import { CreateBacktestDto } from "./dto/create-backtest.dto";
@@ -41,6 +41,8 @@ export class BacktestsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
   create(@CurrentUser() user: any, @Body() dto: CreateBacktestDto) {
     return this.backtests.create(user.sub, dto);
   }

@@ -1,3 +1,4 @@
+# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
 FROM node:24-alpine AS builder
 
 WORKDIR /app
@@ -28,6 +29,7 @@ COPY services/mock-polymarket/ ./services/mock-polymarket/
 RUN cd services/mock-polymarket && tsc -p tsconfig.build.json
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
+# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
 FROM node:24-alpine
 
 WORKDIR /app
@@ -50,5 +52,7 @@ COPY --from=builder /app/services/mock-polymarket/dist ./services/mock-polymarke
 WORKDIR /app/services/mock-polymarket
 
 EXPOSE 3096 3097 3098 3099
+
+USER node
 
 CMD ["node", "dist/main"]

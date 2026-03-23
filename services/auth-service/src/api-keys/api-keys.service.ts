@@ -5,6 +5,9 @@ import { CreateApiKeyDto } from './dto/create-api-key.dto';
 
 const MAX_ACTIVE_KEYS = 10;
 
+// TODO: Implement API key rotation flow (create new key → deprecation period → revoke old).
+// This allows users to rotate keys without downtime and should be added in a future version.
+
 @Injectable()
 export class ApiKeysService {
   private readonly logger = new Logger(ApiKeysService.name);
@@ -30,7 +33,10 @@ export class ApiKeysService {
     // Generate plaintext token: pf_ + 32 random bytes hex (64 chars)
     const rawToken = randomBytes(32).toString('hex');
     const plaintext = `pf_${rawToken}`;
-    const prefix = plaintext.slice(0, 7); // "pf_" + first 4 hex chars
+    // The prefix is intentionally the first 7 chars ("pf_" + 4 hex) for identification
+    // purposes only (similar to GitHub's gh_ tokens). It does not weaken security
+    // because the full token is 67 chars and the hash is stored, not the plaintext.
+    const prefix = plaintext.slice(0, 7);
     const tokenHash = createHash('sha256').update(plaintext).digest('hex');
 
     const apiKey = await this.prisma.apiKey.create({

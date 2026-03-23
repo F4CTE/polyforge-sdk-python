@@ -2,6 +2,11 @@ import { Injectable } from "@nestjs/common";
 
 const FRONTEND = process.env.FRONTEND_URL ?? "https://polyforge.app";
 
+/** Escape user-controlled strings before inserting into HTML */
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
 export interface NotificationContent {
   title: string;
   body: string;
@@ -25,6 +30,16 @@ const SEVERITY_LABEL: Record<NotificationContent["severity"], string> = {
 @Injectable()
 export class TemplatesService {
   build(eventType: string, data: Record<string, string>): NotificationContent {
+    // Escape user-controlled fields to prevent HTML injection
+    const safe = { ...data };
+    const fieldsToEscape = [
+      'forkerUsername', 'followerUsername', 'likerUsername', 'commenterUsername',
+      'strategyName', 'adminName', 'subject',
+    ];
+    for (const field of fieldsToEscape) {
+      if (safe[field]) safe[field] = escapeHtml(safe[field]);
+    }
+
     switch (eventType) {
       case "ORDER_FILLED":
         return {
@@ -71,49 +86,49 @@ export class TemplatesService {
       case "SOMEONE_FORKED":
         return {
           title: "Strategy Forked",
-          body: `${data.forkerUsername ?? "Someone"} forked your strategy "${data.strategyName ?? data.strategyId ?? "unknown"}".`,
+          body: `${safe.forkerUsername ?? "Someone"} forked your strategy "${safe.strategyName ?? data.strategyId ?? "unknown"}".`,
           severity: "info",
         };
 
       case "SOMEONE_FOLLOWED":
         return {
           title: "New Follower",
-          body: `${data.followerUsername ?? "Someone"} started following you.`,
+          body: `${safe.followerUsername ?? "Someone"} started following you.`,
           severity: "info",
         };
 
       case "SOMEONE_LIKED":
         return {
           title: "Strategy Liked",
-          body: `${data.likerUsername ?? "Someone"} liked your strategy "${data.strategyName ?? data.strategyId ?? "unknown"}".`,
+          body: `${safe.likerUsername ?? "Someone"} liked your strategy "${safe.strategyName ?? data.strategyId ?? "unknown"}".`,
           severity: "info",
         };
 
       case "SOMEONE_COMMENTED":
         return {
           title: "New Comment",
-          body: `${data.commenterUsername ?? "Someone"} commented on your strategy "${data.strategyName ?? data.strategyId ?? "unknown"}".`,
+          body: `${safe.commenterUsername ?? "Someone"} commented on your strategy "${safe.strategyName ?? data.strategyId ?? "unknown"}".`,
           severity: "info",
         };
 
       case "TICKET_REPLY":
         return {
           title: "Support Reply",
-          body: `${data.adminName ?? "Our support team"} replied to your ticket "${data.subject ?? "unknown"}". Check your ticket for details.`,
+          body: `${safe.adminName ?? "Our support team"} replied to your ticket "${safe.subject ?? "unknown"}". Check your ticket for details.`,
           severity: "info",
         };
 
       case "TICKET_CLOSED":
         return {
           title: "Ticket Closed",
-          body: `Your support ticket "${data.subject ?? "unknown"}" has been closed. If you need further help, you can open a new ticket.`,
+          body: `Your support ticket "${safe.subject ?? "unknown"}" has been closed. If you need further help, you can open a new ticket.`,
           severity: "info",
         };
 
       case "TICKET_CREATED":
         return {
           title: "Ticket Received",
-          body: `Your support ticket "${data.subject ?? "unknown"}" has been received. We'll get back to you as soon as possible.`,
+          body: `Your support ticket "${safe.subject ?? "unknown"}" has been received. We'll get back to you as soon as possible.`,
           severity: "info",
         };
 

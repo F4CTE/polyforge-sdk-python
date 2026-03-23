@@ -1,3 +1,4 @@
+# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
 FROM node:24-alpine AS builder
 
 WORKDIR /app
@@ -44,6 +45,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     (cd services/api-service && /usr/local/bin/tsc -p tsconfig.build.json)
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
+# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
 FROM node:24-alpine
 
 WORKDIR /app
@@ -74,5 +76,7 @@ COPY --from=builder /app/node_modules/@prisma/engines  ./node_modules/@prisma/en
 WORKDIR /app/services/api-service
 
 EXPOSE 3002
+
+USER node
 
 CMD ["node", "dist/main"]

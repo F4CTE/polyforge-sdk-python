@@ -289,7 +289,10 @@ export class NotificationService {
     let success = true;
     let error: string | undefined;
     try {
-      await this.telegram.send(chatId, `<b>${title}</b>\n\n${body}`);
+      // Escape HTML entities for Telegram's HTML parse mode
+      const safeTitle = title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const safeBody = body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      await this.telegram.send(chatId, `<b>${safeTitle}</b>\n\n${safeBody}`);
     } catch (err: any) {
       success = false;
       error = String(err?.message ?? err);

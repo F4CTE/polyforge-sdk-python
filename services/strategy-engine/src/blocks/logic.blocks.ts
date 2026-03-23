@@ -1,6 +1,22 @@
 import { Parser } from "expr-eval";
 import { LogicBlockEvaluator, LogicBlockResult, EvalContext } from "./block.types";
 
+/** Safe wrapper around expr-eval to prevent DoS via long/malicious expressions */
+function safeEvaluate(expression: string, scope: Record<string, number>, maxLength = 200): number {
+  if (expression.length > maxLength) {
+    throw new Error(`Expression too long: ${expression.length} > ${maxLength}`);
+  }
+  // Reject potentially dangerous patterns
+  if (/while|for|function|eval|require|import/.test(expression)) {
+    throw new Error('Expression contains forbidden keywords');
+  }
+  try {
+    return new Parser().evaluate(expression, scope);
+  } catch {
+    return 0; // Safe fallback
+  }
+}
+
 // ─── IF / THEN / ELSE ──────────────────────────────────────────────────────
 
 export const IfThenElseBlock: LogicBlockEvaluator = {
@@ -11,7 +27,6 @@ export const IfThenElseBlock: LogicBlockEvaluator = {
     }
 
     try {
-      const parser = new Parser();
       const scope: Record<string, number> = {
         ...ctx.variables,
         dailyPnl: ctx.state.dailyPnl,
@@ -21,7 +36,7 @@ export const IfThenElseBlock: LogicBlockEvaluator = {
         totalOrders: ctx.state.totalOrders,
       };
 
-      const result = parser.evaluate(condition, scope);
+      const result = safeEvaluate(condition, scope);
       const truthy = Boolean(result);
       return { value: truthy, activeOutput: truthy ? "true" : "false" };
     } catch {

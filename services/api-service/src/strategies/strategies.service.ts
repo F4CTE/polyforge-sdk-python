@@ -586,6 +586,72 @@ export class StrategiesService {
     const s = dto.strategy;
     const blocks = s.blocks ?? {};
 
+    // ── Import validation (R3-M3) ──────────────────────────────────────────
+
+    // Max total block count: 100
+    const totalBlocks =
+      (Array.isArray(blocks.triggers) ? blocks.triggers.length : 0) +
+      (Array.isArray(blocks.conditions) ? blocks.conditions.length : 0) +
+      (Array.isArray(blocks.actions) ? blocks.actions.length : 0) +
+      (Array.isArray(blocks.safety) ? blocks.safety.length : 0);
+    if (totalBlocks > 100) {
+      throw new UnprocessableEntityException({
+        code: "IMPORT_TOO_MANY_BLOCKS",
+        message: `Import exceeds maximum block count (${totalBlocks} > 100)`,
+      });
+    }
+
+    // Validate variables: max expression length 200 chars
+    const variables = Array.isArray(s.variables) ? s.variables : [];
+    for (const v of variables) {
+      if (typeof v.expression === "string" && v.expression.length > 200) {
+        throw new UnprocessableEntityException({
+          code: "IMPORT_EXPRESSION_TOO_LONG",
+          message: `Variable "${v.name}" expression exceeds 200 characters`,
+        });
+      }
+    }
+
+    // Validate block types against known types
+    const KNOWN_BLOCK_TYPES = new Set([
+      // Triggers
+      "PRICE_ABOVE", "PRICE_BELOW", "PRICE_CROSS_ABOVE", "PRICE_CROSS_BELOW",
+      "PRICE_CHANGE_PCT", "CRON", "INTERVAL", "MANUAL",
+      // Conditions
+      "POSITION_OPEN", "POSITION_CLOSED", "MAX_OPEN_POSITIONS",
+      "COOLDOWN", "TIME_WINDOW", "COMPARE",
+      // Actions
+      "BUY", "SELL", "CLOSE_POSITION", "NOTIFY", "RUN_STRATEGY",
+      // Safety
+      "MAX_DAILY_LOSS", "MAX_BETS_PER_DAY", "MAX_CONSECUTIVE_LOSS",
+      "STOP_LOSS", "TAKE_PROFIT",
+      // Logic
+      "IF_THEN_ELSE", "AND_GATE", "OR_GATE", "NOT_GATE", "DELAY",
+      // Calc
+      "MATH_OP", "CLAMP", "MAP_RANGE", "COMPARE_CALC",
+    ]);
+    const allBlocks = [
+      ...(Array.isArray(blocks.triggers) ? blocks.triggers : []),
+      ...(Array.isArray(blocks.conditions) ? blocks.conditions : []),
+      ...(Array.isArray(blocks.actions) ? blocks.actions : []),
+      ...(Array.isArray(blocks.safety) ? blocks.safety : []),
+    ];
+    for (const block of allBlocks) {
+      if (block && typeof block.type === "string" && !KNOWN_BLOCK_TYPES.has(block.type)) {
+        throw new UnprocessableEntityException({
+          code: "IMPORT_UNKNOWN_BLOCK_TYPE",
+          message: `Unknown block type: ${block.type}`,
+        });
+      }
+    }
+
+    // Strip HTML from name/description
+    const stripHtml = (str: string) => str.replace(/<[^>]*>/g, "");
+    if (s.name) s.name = stripHtml(s.name);
+    if (s.description) s.description = stripHtml(s.description);
+
+    // ── End import validation ──────────────────────────────────────────────
+
     return this.prisma.strategy.create({
       data: {
         userId,

@@ -12,6 +12,7 @@
 
 # ─── Stage 1: user-app build ─────────────────────────────────────────────────
 
+# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
 FROM node:24-alpine AS user-app-builder
 
 WORKDIR /build
@@ -35,6 +36,7 @@ RUN pnpm --filter @polyforge/shared-types run build && \
 
 # ─── Stage 2: admin-app build ────────────────────────────────────────────────
 
+# NOTE: Production should pin to a specific digest, e.g. node:24-alpine3.20@sha256:...
 FROM node:24-alpine AS admin-app-builder
 
 WORKDIR /build
@@ -55,6 +57,7 @@ RUN pnpm --filter @polyforge/shared-types run build && \
 
 # ─── Stage 3: nginx runtime ──────────────────────────────────────────────────
 
+# NOTE: Production should pin to a specific digest, e.g. nginx:1.27-alpine@sha256:...
 FROM nginx:1.27-alpine
 
 # Remove default nginx config
@@ -79,6 +82,10 @@ COPY apps/landing/sitemap.xml     /usr/share/nginx/html/landing/
 # Create certbot ACME challenge directory
 RUN mkdir -p /var/www/certbot
 
+RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup
+
 EXPOSE 80 443
+
+USER appuser
 
 CMD ["nginx", "-g", "daemon off;"]

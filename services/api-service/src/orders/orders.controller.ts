@@ -9,7 +9,7 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
 import { IsOptional, IsString } from "class-validator";
 import { OrdersService } from "./orders.service";
 import { ClosePositionDto } from "./dto/close-position.dto";
@@ -47,6 +47,8 @@ export class OrdersController {
 
   @Post("close-position")
   @HttpCode(HttpStatus.ACCEPTED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('TRADE')
   closePosition(@CurrentUser() user: any, @Body() dto: ClosePositionDto) {
     return this.orders.closePosition(user.sub, dto);
   }

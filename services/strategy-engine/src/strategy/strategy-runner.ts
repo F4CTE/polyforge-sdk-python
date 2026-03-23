@@ -20,6 +20,22 @@ import { StateService } from "../state/state.service";
 const MIN_TICK_MS = 200;
 const STALE_PRICE_MS = 5_000;
 
+/** Safe wrapper around expr-eval to prevent DoS via long/malicious expressions */
+function safeEvaluate(expression: string, scope: Record<string, number>, maxLength = 200): number {
+  if (expression.length > maxLength) {
+    throw new Error(`Expression too long: ${expression.length} > ${maxLength}`);
+  }
+  // Reject potentially dangerous patterns
+  if (/while|for|function|eval|require|import/.test(expression)) {
+    throw new Error('Expression contains forbidden keywords');
+  }
+  try {
+    return new Parser().evaluate(expression, scope);
+  } catch {
+    return 0; // Safe fallback
+  }
+}
+
 export type StrategyRunnerStatus = "RUNNING" | "PAUSED" | "STOPPED";
 
 interface Block {
@@ -177,7 +193,6 @@ export class StrategyRunner {
     // 0. Evaluate user-defined calculation variables
     const variables: Record<string, number> = {};
     if (this.variables.length > 0) {
-      const parser = new Parser();
       const scope: Record<string, number> = {
         dailyPnl: stateData.dailyPnl,
         betsToday: stateData.betsToday,
@@ -195,7 +210,7 @@ export class StrategyRunner {
 
       for (const v of this.variables) {
         try {
-          variables[v.name] = parser.evaluate(v.expression, {
+          variables[v.name] = safeEvaluate(v.expression, {
             ...scope,
             ...variables,
           });

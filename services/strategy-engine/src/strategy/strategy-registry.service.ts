@@ -396,12 +396,14 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
    * Check if starting childId under parentId would create a circular dependency.
    * Walks up the parent chain from parentId. Max depth 3.
    */
-  hasCircularDependency(parentId: string, childId: string): boolean {
+  hasCircularDependency(parentId: string, childId: string, visited = new Set<string>()): boolean {
     let current: string | undefined = parentId;
     let depth = 0;
     const MAX_DEPTH = 3;
 
     while (current && depth < MAX_DEPTH) {
+      if (visited.has(current)) return false; // Already checked this node
+      visited.add(current);
       if (current === childId) return true;
       current = this.parentChildMap.get(current);
       depth++;
@@ -411,6 +413,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     let parentDepth = 0;
     let walk: string | undefined = parentId;
     while (walk && parentDepth < MAX_DEPTH + 1) {
+      if (visited.has(walk) && walk !== parentId) break; // Already visited
       walk = this.parentChildMap.get(walk);
       parentDepth++;
     }
