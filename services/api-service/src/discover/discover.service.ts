@@ -99,19 +99,19 @@ export class DiscoverService {
     // Sum realized P&L from pnl_snapshots table grouped by user
     const rows: any[] = await this.prisma.$queryRaw`
             SELECT
-                ps.user_id AS "userId",
-                SUM(ps.realized_pnl) AS pnl,
+                ps."userId" AS "userId",
+                SUM(ps."realizedPnl") AS pnl,
                 COUNT(DISTINCT o.id) AS "tradeCount"
-            FROM pnl_snapshots ps
-            LEFT JOIN orders o ON o.user_id = ps.user_id AND o.created_at >= ${since}
+            FROM "PnlSnapshot" ps
+            LEFT JOIN "Order" o ON o."userId" = ps."userId" AND o."createdAt" >= ${since}
             WHERE ps.time >= ${since}
-            GROUP BY ps.user_id
+            GROUP BY ps."userId"
             ORDER BY pnl DESC
             LIMIT ${limit} OFFSET ${skip}
         `;
 
     const countResult: any[] = await this.prisma.$queryRaw`
-            SELECT COUNT(DISTINCT user_id) AS cnt FROM pnl_snapshots WHERE time >= ${since}
+            SELECT COUNT(DISTINCT "userId") AS cnt FROM "PnlSnapshot" WHERE time >= ${since}
         `;
     const total = Number(countResult[0]?.cnt ?? 0);
 
