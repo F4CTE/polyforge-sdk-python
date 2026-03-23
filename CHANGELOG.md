@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [3.4.0] — 2026-03-23
+
+### Added — Phase 7 Completion: Load Testing, Infrastructure & Operational Docs
+
+- **k6 load testing suite** — 7 scripts covering auth, markets, strategies, orders, WebSocket, and spike scenarios
+- **Terraform tfvars template** — production-ready template with all 20 infrastructure variables
+- **AWS budget alerts** — $800/month budget with 80% forecast and 100% actual spend notifications
+- **CI dependency audit job** — `pnpm audit` integrated into CI pipeline (non-blocking)
+- **Backup & Recovery guide** — RDS automated backups, point-in-time recovery (PITR), Redis snapshots, EBS volume snapshots
+- **Incident Response plan** — severity levels P0-P3, rollback procedures, escalation paths, post-mortem template
+- **Performance Tuning guide** — database index recommendations, Redis caching patterns, horizontal scaling checklist
+
+---
+
 ## [3.3.0] — 2026-03-23
 
 ### Security — Full Audit (47 findings fixed, 2 consecutive clean audits)

@@ -7,7 +7,19 @@
 
 ## Next Up
 
-Phase 8 competitive features in planning. v3.3.0 shipped: security audit complete (47 findings fixed, 2 consecutive clean audits), 25 code review fixes, 153 design token compliance fixes, and critical bug fixes.
+Phase 7 complete — all 7 phases done. Phase 8 competitive features in planning. v3.4.0 shipped: k6 load testing suite, Terraform tfvars template, AWS budget alerts, CI dependency audit, and operational documentation (Backup & Recovery, Incident Response, Performance Tuning).
+
+---
+
+## v3.4.0 — Load Testing, Infrastructure & Operational Docs (Phase 7 — 100%)
+
+- [x] k6 load testing suite (7 scripts: auth, markets, strategies, orders, WebSocket, spike)
+- [x] Terraform tfvars template with all 20 infrastructure variables
+- [x] AWS budget alerts ($800/month, 80% forecast + 100% actual)
+- [x] CI dependency audit job (`pnpm audit`, non-blocking)
+- [x] Backup & Recovery guide (RDS, PITR, Redis, EBS)
+- [x] Incident Response plan (P0-P3, rollback, escalation, post-mortem)
+- [x] Performance Tuning guide (DB indexes, Redis caching, scaling checklist)
 
 ---
 
@@ -774,7 +786,7 @@ Phase 8 competitive features in planning. v3.3.0 shipped: security audit complet
 
 ---
 
-## Phase 7 — QA & Production
+## Phase 7 — QA & Production (100% complete)
 
 - [x] Unit tests: strategy-engine 36 blocks coverage (169 tests, 98%+ stmts/lines/funcs, 79% branches)
 - [x] Integration tests: signer-service (72 tests, AES-256-GCM roundtrip, signing pipeline) + order-service (46 tests, full lifecycle, retry/DLQ, CLOB/signer clients)
