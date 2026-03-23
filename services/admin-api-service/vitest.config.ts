@@ -3,6 +3,9 @@ export default defineConfig({
     test: {
         globals: true,
         environment: 'node',
+        env: {
+            INTERNAL_JWT_SECRET: 'test-internal-jwt-secret-for-admin-api',
+        },
         include: ['src/**/*.spec.ts'],
         coverage: {
             provider: 'v8',

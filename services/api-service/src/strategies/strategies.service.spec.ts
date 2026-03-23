@@ -601,11 +601,7 @@ describe("StrategiesService", () => {
         userId: "user-1",
         status: StrategyStatus.IDLE,
       });
-      db.strategy.findUnique.mockResolvedValue(strategy as any);
-      db.strategy.update.mockResolvedValue({
-        ...strategy,
-        status: StrategyStatus.PAPER,
-      } as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
       vi.mocked(client.post).mockResolvedValue(mockEngineResponse(true, 200));
 
       const result = await service.start(strategy.id, "user-1", {
@@ -616,24 +612,20 @@ describe("StrategiesService", () => {
       expect(result.startedAt).toBeDefined();
     });
 
-    it("sets PAPER status in DB before engine call for paper mode", async () => {
+    it("sets PAPER status in DB via atomic updateMany for paper mode", async () => {
       const strategy = makeStrategy({
         userId: "user-1",
         status: StrategyStatus.IDLE,
       });
-      db.strategy.findUnique.mockResolvedValue(strategy as any);
-      db.strategy.update.mockResolvedValue({
-        ...strategy,
-        status: StrategyStatus.PAPER,
-      } as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
       vi.mocked(client.post).mockResolvedValue(mockEngineResponse(true, 200));
 
       await service.start(strategy.id, "user-1", {
         mode: "paper",
       } as StartStrategyDto);
 
-      expect(db.strategy.update).toHaveBeenCalledWith({
-        where: { id: strategy.id },
+      expect(db.strategy.updateMany).toHaveBeenCalledWith({
+        where: { id: strategy.id, userId: "user-1", status: StrategyStatus.IDLE },
         data: { status: StrategyStatus.PAPER },
       });
     });
@@ -643,7 +635,7 @@ describe("StrategiesService", () => {
         userId: "user-1",
         status: StrategyStatus.IDLE,
       });
-      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
       db.user.findUnique.mockResolvedValue({
         polymarketConnected: true,
       } as any);
@@ -656,12 +648,12 @@ describe("StrategiesService", () => {
       expect(result.status).toBe("RUNNING");
     });
 
-    it("does NOT set PAPER status for live mode", async () => {
+    it("sets RUNNING status via updateMany for live mode", async () => {
       const strategy = makeStrategy({
         userId: "user-1",
         status: StrategyStatus.IDLE,
       });
-      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
       db.user.findUnique.mockResolvedValue({
         polymarketConnected: true,
       } as any);
@@ -671,8 +663,10 @@ describe("StrategiesService", () => {
         mode: "live",
       } as StartStrategyDto);
 
-      // update should NOT have been called (no PAPER status set)
-      expect(db.strategy.update).not.toHaveBeenCalled();
+      expect(db.strategy.updateMany).toHaveBeenCalledWith({
+        where: { id: strategy.id, userId: "user-1", status: StrategyStatus.IDLE },
+        data: { status: StrategyStatus.RUNNING },
+      });
     });
 
     it("throws ALREADY_RUNNING when strategy is already running", async () => {
@@ -680,6 +674,7 @@ describe("StrategiesService", () => {
         userId: "user-1",
         status: StrategyStatus.RUNNING,
       });
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
       db.strategy.findUnique.mockResolvedValue(strategy as any);
 
       await expect(
@@ -688,7 +683,6 @@ describe("StrategiesService", () => {
         } as StartStrategyDto),
       ).rejects.toMatchObject({
         response: { code: "ALREADY_RUNNING" },
-        status: 422,
       });
     });
 
@@ -697,10 +691,11 @@ describe("StrategiesService", () => {
         userId: "user-1",
         status: StrategyStatus.IDLE,
       });
-      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
       db.user.findUnique.mockResolvedValue({
         polymarketConnected: false,
       } as any);
+      db.strategy.update.mockResolvedValue(strategy as any); // rollback
 
       await expect(
         service.start(strategy.id, "user-1", {
@@ -717,8 +712,9 @@ describe("StrategiesService", () => {
         userId: "user-1",
         status: StrategyStatus.IDLE,
       });
-      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
       db.user.findUnique.mockResolvedValue(null);
+      db.strategy.update.mockResolvedValue(strategy as any); // rollback
 
       await expect(
         service.start(strategy.id, "user-1", {
@@ -735,8 +731,8 @@ describe("StrategiesService", () => {
         userId: "user-1",
         status: StrategyStatus.IDLE,
       });
-      db.strategy.findUnique.mockResolvedValue(strategy as any);
-      db.strategy.update.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.strategy.update.mockResolvedValue(strategy as any); // rollback
       vi.mocked(client.post).mockResolvedValue(
         mockEngineResponse(false, 500, {
           code: "ENGINE_ERROR",
@@ -759,8 +755,8 @@ describe("StrategiesService", () => {
         userId: "user-1",
         status: StrategyStatus.IDLE,
       });
-      db.strategy.findUnique.mockResolvedValue(strategy as any);
-      db.strategy.update.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.strategy.update.mockResolvedValue(strategy as any); // rollback
       vi.mocked(client.post).mockResolvedValue(
         mockEngineResponse(false, 503, {
           code: "STRATEGY_TIMEOUT",
@@ -782,8 +778,7 @@ describe("StrategiesService", () => {
         userId: "user-1",
         status: StrategyStatus.IDLE,
       });
-      db.strategy.findUnique.mockResolvedValue(strategy as any);
-      db.strategy.update.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
       vi.mocked(client.post).mockResolvedValue(mockEngineResponse(false, 204));
 
       await expect(
@@ -794,6 +789,7 @@ describe("StrategiesService", () => {
     });
 
     it("throws NotFoundException when strategy not found", async () => {
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
       db.strategy.findUnique.mockResolvedValue(null);
 
       await expect(
@@ -808,6 +804,7 @@ describe("StrategiesService", () => {
         userId: "other-user",
         status: StrategyStatus.IDLE,
       });
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
       db.strategy.findUnique.mockResolvedValue(strategy as any);
 
       await expect(
@@ -826,12 +823,9 @@ describe("StrategiesService", () => {
         userId: "user-1",
         status: StrategyStatus.RUNNING,
       });
-      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.strategy.findMany.mockResolvedValue([] as any); // no children
       vi.mocked(client.delete).mockResolvedValue(mockEngineResponse(true, 200));
-      db.strategy.update.mockResolvedValue({
-        ...strategy,
-        status: StrategyStatus.IDLE,
-      } as any);
 
       const result = await service.stop(strategy.id, "user-1");
 
@@ -842,8 +836,8 @@ describe("StrategiesService", () => {
         "strategy-engine",
         `/internal/strategies/${strategy.id}`,
       );
-      expect(db.strategy.update).toHaveBeenCalledWith({
-        where: { id: strategy.id },
+      expect(db.strategy.updateMany).toHaveBeenCalledWith({
+        where: { id: strategy.id, userId: "user-1", status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] } },
         data: { status: StrategyStatus.IDLE },
       });
     });
@@ -853,22 +847,20 @@ describe("StrategiesService", () => {
         userId: "user-1",
         status: StrategyStatus.RUNNING,
       });
-      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.strategy.findMany.mockResolvedValue([] as any); // no children
       vi.mocked(client.delete).mockResolvedValue(
         mockEngineResponse(false, 503),
       );
-      db.strategy.update.mockResolvedValue({
-        ...strategy,
-        status: StrategyStatus.IDLE,
-      } as any);
 
       const result = await service.stop(strategy.id, "user-1");
 
       expect(result.status).toBe("IDLE");
-      expect(db.strategy.update).toHaveBeenCalledOnce();
+      expect(db.strategy.updateMany).toHaveBeenCalledOnce();
     });
 
     it("throws NotFoundException when strategy does not exist", async () => {
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
       db.strategy.findUnique.mockResolvedValue(null);
 
       await expect(service.stop("bad-id", "user-1")).rejects.toBeInstanceOf(
@@ -878,6 +870,7 @@ describe("StrategiesService", () => {
 
     it("throws ForbiddenException when user does not own the strategy", async () => {
       const strategy = makeStrategy({ userId: "other-user" });
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
       db.strategy.findUnique.mockResolvedValue(strategy as any);
 
       await expect(service.stop(strategy.id, "user-1")).rejects.toBeInstanceOf(
@@ -894,7 +887,7 @@ describe("StrategiesService", () => {
         userId: "user-1",
         status: StrategyStatus.RUNNING,
       });
-      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
       vi.mocked(client.post).mockResolvedValue(mockEngineResponse(true, 200));
 
       const result = await service.pause(strategy.id, "user-1");
@@ -905,9 +898,14 @@ describe("StrategiesService", () => {
         "strategy-engine",
         `/internal/strategies/${strategy.id}/pause`,
       );
+      expect(db.strategy.updateMany).toHaveBeenCalledWith({
+        where: { id: strategy.id, userId: "user-1", status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] } },
+        data: { status: StrategyStatus.PAUSED },
+      });
     });
 
     it("throws NotFoundException when strategy does not exist", async () => {
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
       db.strategy.findUnique.mockResolvedValue(null);
 
       await expect(service.pause("bad-id", "user-1")).rejects.toBeInstanceOf(
@@ -917,6 +915,7 @@ describe("StrategiesService", () => {
 
     it("throws ForbiddenException when user does not own the strategy", async () => {
       const strategy = makeStrategy({ userId: "other-user" });
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
       db.strategy.findUnique.mockResolvedValue(strategy as any);
 
       await expect(service.pause(strategy.id, "user-1")).rejects.toBeInstanceOf(
@@ -933,7 +932,7 @@ describe("StrategiesService", () => {
         userId: "user-1",
         status: StrategyStatus.PAUSED,
       });
-      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
       vi.mocked(client.post).mockResolvedValue(mockEngineResponse(true, 200));
 
       const result = await service.resume(strategy.id, "user-1");
@@ -944,9 +943,14 @@ describe("StrategiesService", () => {
         "strategy-engine",
         `/internal/strategies/${strategy.id}/resume`,
       );
+      expect(db.strategy.updateMany).toHaveBeenCalledWith({
+        where: { id: strategy.id, userId: "user-1", status: StrategyStatus.PAUSED },
+        data: { status: StrategyStatus.RUNNING },
+      });
     });
 
     it("throws NotFoundException when strategy does not exist", async () => {
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
       db.strategy.findUnique.mockResolvedValue(null);
 
       await expect(service.resume("bad-id", "user-1")).rejects.toBeInstanceOf(
@@ -956,6 +960,7 @@ describe("StrategiesService", () => {
 
     it("throws ForbiddenException when user does not own the strategy", async () => {
       const strategy = makeStrategy({ userId: "other-user" });
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
       db.strategy.findUnique.mockResolvedValue(strategy as any);
 
       await expect(

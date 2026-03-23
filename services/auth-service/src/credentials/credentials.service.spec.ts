@@ -3,11 +3,19 @@ import { HttpStatus } from '@nestjs/common';
 import { CredentialsService } from './credentials.service';
 import { createMockDb, MockDb } from '../../test/helpers/mock-db';
 import { userFactory } from '../../test/factories';
+import { JwtService } from '@nestjs/jwt';
 
 function makeMockConfig(overrides: Record<string, string> = {}) {
   return {
     get: vi.fn((key: string, def: string) => overrides[key] ?? def),
+    getOrThrow: vi.fn((key: string) => overrides[key] ?? 'test-internal-jwt-secret'),
   };
+}
+
+function makeMockJwt() {
+  return {
+    sign: vi.fn().mockReturnValue('mock-internal-jwt'),
+  } as unknown as JwtService;
 }
 
 const verifiedUser = () =>
@@ -28,12 +36,14 @@ describe('CredentialsService', () => {
   let service: CredentialsService;
   let db: MockDb;
   let config: ReturnType<typeof makeMockConfig>;
+  let jwt: JwtService;
   let fetchSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     db = createMockDb();
     config = makeMockConfig();
-    service = new CredentialsService(db as any, config as any);
+    jwt = makeMockJwt();
+    service = new CredentialsService(db as any, config as any, jwt);
 
     // Mock global fetch
     fetchSpy = vi.fn();

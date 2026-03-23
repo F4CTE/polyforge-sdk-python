@@ -17,10 +17,12 @@ function makeMocks() {
     token: {
       updateMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
+    priceSnapshot: {
+      createMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
     dataGap: {
       create: vi.fn().mockResolvedValue({}),
     },
-    $executeRaw: vi.fn().mockResolvedValue(0),
   } as any;
 
   return { redis, prisma };
@@ -88,8 +90,8 @@ describe("PriceCacheService", () => {
       // Trigger flush by advancing past the 5s interval
       vi.advanceTimersByTime(5_500);
 
-      // The flush uses $executeRaw
-      expect(prisma.$executeRaw).toHaveBeenCalled();
+      // The flush uses prisma.priceSnapshot.createMany
+      expect(prisma.priceSnapshot.createMany).toHaveBeenCalled();
     });
 
     it("tracks OHLC correctly across multiple updates for same token", async () => {
@@ -117,11 +119,14 @@ describe("PriceCacheService", () => {
       // Flush snapshots
       vi.advanceTimersByTime(5_500);
 
-      const rawCall = prisma.$executeRaw.mock.calls[0];
-      // The raw query is a tagged template, so check the values array
+      expect(prisma.priceSnapshot.createMany).toHaveBeenCalled();
+      const call = prisma.priceSnapshot.createMany.mock.calls[0][0];
       // The snapshot should have: open=0.50, high=0.80, low=0.30, close=0.60
-      const rawStr = String(rawCall);
-      expect(rawStr).toContain("price_snapshots");
+      expect(call.data).toHaveLength(1);
+      expect(call.data[0].open).toBe(0.5);
+      expect(call.data[0].high).toBe(0.8);
+      expect(call.data[0].low).toBe(0.3);
+      expect(call.data[0].close).toBe(0.6);
     });
 
     it("creates separate snapshot entries for different tokens", async () => {
@@ -139,7 +144,9 @@ describe("PriceCacheService", () => {
       // Flush snapshots
       vi.advanceTimersByTime(5_500);
 
-      expect(prisma.$executeRaw).toHaveBeenCalled();
+      expect(prisma.priceSnapshot.createMany).toHaveBeenCalled();
+      const call = prisma.priceSnapshot.createMany.mock.calls[0][0];
+      expect(call.data).toHaveLength(2);
     });
   });
 
@@ -189,7 +196,7 @@ describe("PriceCacheService", () => {
       // Advance past flush interval with no data
       vi.advanceTimersByTime(5_500);
 
-      expect(prisma.$executeRaw).not.toHaveBeenCalled();
+      expect(prisma.priceSnapshot.createMany).not.toHaveBeenCalled();
     });
 
     it("clears the buffer after flushing", async () => {
@@ -201,15 +208,15 @@ describe("PriceCacheService", () => {
 
       // First flush
       vi.advanceTimersByTime(5_500);
-      expect(prisma.$executeRaw).toHaveBeenCalledTimes(1);
+      expect(prisma.priceSnapshot.createMany).toHaveBeenCalledTimes(1);
 
       // Second flush — buffer should be empty now
       vi.advanceTimersByTime(5_500);
-      expect(prisma.$executeRaw).toHaveBeenCalledTimes(1); // no additional call
+      expect(prisma.priceSnapshot.createMany).toHaveBeenCalledTimes(1); // no additional call
     });
 
-    it("does not throw when $executeRaw fails", async () => {
-      prisma.$executeRaw.mockRejectedValue(new Error("TimescaleDB error"));
+    it("does not throw when createMany fails", async () => {
+      prisma.priceSnapshot.createMany.mockRejectedValue(new Error("TimescaleDB error"));
 
       await svc.handlePriceUpdate({
         tokenId: "token-1",

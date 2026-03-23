@@ -254,9 +254,13 @@ describe("DiscoverService", () => {
 
   describe("leaderboard", () => {
     it("returns a paginated leaderboard with user data", async () => {
-      const rows = [
-        { userId: "user-uuid-1", pnl: "500.00", tradeCount: "10" },
-        { userId: "user-uuid-2", pnl: "200.00", tradeCount: "5" },
+      const snapshots = [
+        { userId: "user-uuid-1", _sum: { realizedPnl: { toString: () => "500.00" } } },
+        { userId: "user-uuid-2", _sum: { realizedPnl: { toString: () => "200.00" } } },
+      ];
+      const tradeCounts = [
+        { userId: "user-uuid-1", _count: 10 },
+        { userId: "user-uuid-2", _count: 5 },
       ];
       const users = [
         {
@@ -272,9 +276,10 @@ describe("DiscoverService", () => {
           avatarUrl: null,
         },
       ];
-      db.$queryRaw
-        .mockResolvedValueOnce(rows as any)
-        .mockResolvedValueOnce([{ cnt: "2" }] as any);
+      db.pnlSnapshot.groupBy
+        .mockResolvedValueOnce(snapshots as any)
+        .mockResolvedValueOnce(snapshots as any); // count query
+      db.order.groupBy.mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
@@ -290,9 +295,9 @@ describe("DiscoverService", () => {
     });
 
     it("defaults period to 30d", async () => {
-      db.$queryRaw
+      db.pnlSnapshot.groupBy
         .mockResolvedValueOnce([] as any)
-        .mockResolvedValueOnce([{ cnt: "0" }] as any);
+        .mockResolvedValueOnce([] as any);
       db.user.findMany.mockResolvedValue([] as any);
 
       // Just checking it completes without error with no period specified
@@ -302,9 +307,9 @@ describe("DiscoverService", () => {
     });
 
     it("handles the 7d period", async () => {
-      db.$queryRaw
+      db.pnlSnapshot.groupBy
         .mockResolvedValueOnce([] as any)
-        .mockResolvedValueOnce([{ cnt: "0" }] as any);
+        .mockResolvedValueOnce([] as any);
       db.user.findMany.mockResolvedValue([] as any);
 
       const result = await service.leaderboard(
@@ -315,9 +320,9 @@ describe("DiscoverService", () => {
     });
 
     it("handles the allTime period", async () => {
-      db.$queryRaw
+      db.pnlSnapshot.groupBy
         .mockResolvedValueOnce([] as any)
-        .mockResolvedValueOnce([{ cnt: "0" }] as any);
+        .mockResolvedValueOnce([] as any);
       db.user.findMany.mockResolvedValue([] as any);
 
       const result = await service.leaderboard(
@@ -328,9 +333,9 @@ describe("DiscoverService", () => {
     });
 
     it("caps limit at 100", async () => {
-      db.$queryRaw
+      db.pnlSnapshot.groupBy
         .mockResolvedValueOnce([] as any)
-        .mockResolvedValueOnce([{ cnt: "0" }] as any);
+        .mockResolvedValueOnce([] as any);
       db.user.findMany.mockResolvedValue([] as any);
 
       // Should not throw even with limit=200 — the service caps it internally
@@ -340,12 +345,16 @@ describe("DiscoverService", () => {
     });
 
     it("fills unknown users with empty string fallbacks", async () => {
-      const rows = [
-        { userId: "user-uuid-orphan", pnl: "100", tradeCount: "1" },
+      const snapshots = [
+        { userId: "user-uuid-orphan", _sum: { realizedPnl: { toString: () => "100" } } },
       ];
-      db.$queryRaw
-        .mockResolvedValueOnce(rows as any)
-        .mockResolvedValueOnce([{ cnt: "1" }] as any);
+      const tradeCounts = [
+        { userId: "user-uuid-orphan", _count: 1 },
+      ];
+      db.pnlSnapshot.groupBy
+        .mockResolvedValueOnce(snapshots as any)
+        .mockResolvedValueOnce(snapshots as any);
+      db.order.groupBy.mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue([] as any); // no user record found
 
       const result = await service.leaderboard(makeLeaderboardQuery());
@@ -358,7 +367,12 @@ describe("DiscoverService", () => {
     });
 
     it("handles null pnl in rows gracefully", async () => {
-      const rows = [{ userId: "user-uuid-1", pnl: null, tradeCount: "0" }];
+      const snapshots = [
+        { userId: "user-uuid-1", _sum: { realizedPnl: null } },
+      ];
+      const tradeCounts = [
+        { userId: "user-uuid-1", _count: 0 },
+      ];
       const users = [
         {
           id: "user-uuid-1",
@@ -367,9 +381,10 @@ describe("DiscoverService", () => {
           avatarUrl: null,
         },
       ];
-      db.$queryRaw
-        .mockResolvedValueOnce(rows as any)
-        .mockResolvedValueOnce([{ cnt: "1" }] as any);
+      db.pnlSnapshot.groupBy
+        .mockResolvedValueOnce(snapshots as any)
+        .mockResolvedValueOnce(snapshots as any);
+      db.order.groupBy.mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
@@ -377,10 +392,10 @@ describe("DiscoverService", () => {
       expect(result.data[0].pnl).toBe("0");
     });
 
-    it("handles missing cnt in count result", async () => {
-      db.$queryRaw
+    it("handles empty groupBy count result", async () => {
+      db.pnlSnapshot.groupBy
         .mockResolvedValueOnce([] as any)
-        .mockResolvedValueOnce([{}] as any); // cnt is undefined
+        .mockResolvedValueOnce([] as any);
 
       db.user.findMany.mockResolvedValue([] as any);
 
@@ -390,7 +405,17 @@ describe("DiscoverService", () => {
     });
 
     it("assigns correct rank numbers with pagination offset", async () => {
-      const rows = [{ userId: "user-uuid-1", pnl: "100", tradeCount: "2" }];
+      const snapshots = [
+        { userId: "user-uuid-1", _sum: { realizedPnl: { toString: () => "100" } } },
+      ];
+      // For count, return 21 items worth
+      const allSnapshots = Array.from({ length: 21 }, (_, i) => ({
+        userId: `user-uuid-${i}`,
+        _sum: { realizedPnl: { toString: () => "100" } },
+      }));
+      const tradeCounts = [
+        { userId: "user-uuid-1", _count: 2 },
+      ];
       const users = [
         {
           id: "user-uuid-1",
@@ -399,9 +424,10 @@ describe("DiscoverService", () => {
           avatarUrl: null,
         },
       ];
-      db.$queryRaw
-        .mockResolvedValueOnce(rows as any)
-        .mockResolvedValueOnce([{ cnt: "21" }] as any);
+      db.pnlSnapshot.groupBy
+        .mockResolvedValueOnce(snapshots as any)
+        .mockResolvedValueOnce(allSnapshots as any);
+      db.order.groupBy.mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
 
       const result = await service.leaderboard(

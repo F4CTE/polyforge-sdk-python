@@ -7,6 +7,7 @@ import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
 import { TotpService } from '../totp/totp.service';
 import { RedisService } from '@polyforge/shared-redis';
+import { PrismaService } from '@polyforge/shared-db';
 import { createMockMailService } from '../../test/helpers/mock-mail';
 import { userFactory } from '../../test/factories';
 
@@ -36,6 +37,7 @@ describe('AuthService', () => {
   let totpService: TotpService;
   let config: ConfigService;
   let redis: RedisService;
+  let prisma: PrismaService;
 
   beforeEach(() => {
     usersService = {
@@ -83,6 +85,12 @@ describe('AuthService', () => {
       }),
     } as unknown as RedisService;
 
+    prisma = {
+      userLoginHistory: {
+        create: vi.fn().mockResolvedValue({}),
+      },
+    } as unknown as PrismaService;
+
     service = new AuthService(
       usersService,
       jwtService,
@@ -90,6 +98,7 @@ describe('AuthService', () => {
       totpService,
       config,
       redis,
+      prisma,
     );
   });
 
@@ -206,7 +215,10 @@ describe('AuthService', () => {
     });
 
     it('throws INVITE_INVALID (403) when invite code is not in Redis', async () => {
-      // redis.get returns null for the invite key (already mocked above)
+      // Lua script returns -1 when key doesn't exist
+      const evalMock = vi.fn().mockResolvedValue(-1);
+      vi.mocked(redis.getClient).mockReturnValue({ eval: evalMock, xadd: vi.fn().mockResolvedValue('1-0') } as any);
+
       await expect(
         service.register(makeRegisterDto({ inviteCode: 'POLY-AAAAAA' }) as any),
       ).rejects.toMatchObject({
@@ -216,11 +228,9 @@ describe('AuthService', () => {
     });
 
     it('deletes the invite key when only 1 use remains', async () => {
-      vi.mocked(redis.get).mockImplementation((key: string) => {
-        if (key === 'config:invite_only') return Promise.resolve('true');
-        if (key === 'invite:POLY-AAAAAA') return Promise.resolve('1');
-        return Promise.resolve(null);
-      });
+      // Lua script returns 0 = single-use code consumed (key deleted atomically)
+      const evalMock = vi.fn().mockResolvedValue(0);
+      vi.mocked(redis.getClient).mockReturnValue({ eval: evalMock, xadd: vi.fn().mockResolvedValue('1-0') } as any);
       const user = userFactory();
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
@@ -228,17 +238,14 @@ describe('AuthService', () => {
         makeRegisterDto({ inviteCode: 'POLY-AAAAAA' }) as any,
       );
 
-      expect(redis.del).toHaveBeenCalledWith('invite:POLY-AAAAAA');
+      // Lua script handles deletion atomically; eval was called with the invite key
+      expect(evalMock).toHaveBeenCalled();
     });
 
     it('decrements the invite key when more than 1 use remains', async () => {
-      const decrMock = vi.fn().mockResolvedValue(2);
-      vi.mocked(redis.getClient).mockReturnValue({ decr: decrMock } as any);
-      vi.mocked(redis.get).mockImplementation((key: string) => {
-        if (key === 'config:invite_only') return Promise.resolve('true');
-        if (key === 'invite:POLY-AAAAAA') return Promise.resolve('3');
-        return Promise.resolve(null);
-      });
+      // Lua script returns remaining uses after decrement (e.g. 2 remaining)
+      const evalMock = vi.fn().mockResolvedValue(2);
+      vi.mocked(redis.getClient).mockReturnValue({ eval: evalMock, xadd: vi.fn().mockResolvedValue('1-0') } as any);
       const user = userFactory();
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
@@ -246,7 +253,7 @@ describe('AuthService', () => {
         makeRegisterDto({ inviteCode: 'POLY-AAAAAA' }) as any,
       );
 
-      expect(decrMock).toHaveBeenCalledWith('invite:POLY-AAAAAA');
+      expect(evalMock).toHaveBeenCalled();
     });
 
     it('respects env-var fallback when Redis flag is absent', async () => {

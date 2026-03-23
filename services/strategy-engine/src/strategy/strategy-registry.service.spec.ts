@@ -55,6 +55,7 @@ function makeDbStrategy(
     conditions: unknown[];
     actions: unknown[];
     safety: unknown[];
+    canvas: unknown;
   }> = {},
 ) {
   return {
@@ -67,6 +68,7 @@ function makeDbStrategy(
     conditions: [],
     actions: [],
     safety: [],
+    canvas: null,
     ...overrides,
   };
 }
@@ -187,7 +189,7 @@ describe("StrategyRegistryService — stop()", () => {
     await svc.stop("strat-1");
 
     expect(prisma.strategy.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { status: StrategyStatus.IDLE } }),
+      expect.objectContaining({ data: expect.objectContaining({ status: StrategyStatus.IDLE }) }),
     );
   });
 

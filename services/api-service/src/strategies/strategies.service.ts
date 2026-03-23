@@ -670,21 +670,30 @@ export class StrategiesService {
 
     // Validate block types against known types
     const KNOWN_BLOCK_TYPES = new Set([
+      // Safety (engine registry names)
+      "DAILY_LOSS_LIMIT", "CONSECUTIVE_LOSS", "MAX_POSITION_SIZE",
+      "EXPOSURE_EXCEEDS", "LOSS_STREAK", "WIN_STREAK", "ORDERS_PER_MIN",
+      "BETS_TODAY_LESS_THAN",
+      // Safety (UI names)
+      "STOP_IF_DAILY_LOSS", "STOP_IF_CONSECUTIVE_LOSSES", "STOP_IF_DRAWDOWN",
+      "STOP_IF_POSITION_SIZE", "MAX_DAILY_BETS",
       // Triggers
-      "PRICE_ABOVE", "PRICE_BELOW", "PRICE_CROSS_ABOVE", "PRICE_CROSS_BELOW",
-      "PRICE_CHANGE_PCT", "CRON", "INTERVAL", "MANUAL",
+      "PRICE_ABOVE", "PRICE_BELOW", "PRICE_CROSSES_UP", "PRICE_CROSSES_DOWN",
+      "PRICE_IN_RANGE", "SPREAD_ABOVE", "TICK", "WAIT", "PAUSE_AFTER_FILL",
+      "PRICE_CHANGE_PCT", "VOLUME_SPIKE", "TIME_WINDOW", "TIME_IN_WINDOW",
       // Conditions
-      "POSITION_OPEN", "POSITION_CLOSED", "MAX_OPEN_POSITIONS",
-      "COOLDOWN", "TIME_WINDOW", "COMPARE",
+      "POSITION_OPEN", "NO_POSITION", "POSITION_SIZE_BELOW", "NO_RECENT_BET",
+      "LIQUIDITY_ABOVE", "MIN_LIQUIDITY", "MIN_PRICE", "MAX_PRICE",
+      "MAX_SPREAD", "SPREAD_BELOW", "MARKET_OPEN", "MARKET_RESOLVED",
+      "MARKET_RESOLVING", "DAILY_LOSS_BELOW", "TIME_BETWEEN",
       // Actions
-      "BUY", "SELL", "CLOSE_POSITION", "NOTIFY", "RUN_STRATEGY",
-      // Safety
-      "MAX_DAILY_LOSS", "MAX_BETS_PER_DAY", "MAX_CONSECUTIVE_LOSS",
-      "STOP_LOSS", "TAKE_PROFIT",
+      "BUY", "SELL", "BUY_YES", "BUY_NO", "SELL_YES", "SELL_NO",
+      "CLOSE_POSITION", "SET_STOP_LOSS", "SET_TAKE_PROFIT", "TAKE_PROFIT",
+      "SCALE_IN", "SCALE_OUT", "CANCEL_ALL_ORDERS", "NOTIFY", "RUN_STRATEGY",
       // Logic
       "IF_THEN_ELSE", "AND_GATE", "OR_GATE", "NOT_GATE", "DELAY",
       // Calc
-      "MATH_OP", "CLAMP", "MAP_RANGE", "COMPARE_CALC",
+      "MATH", "AGGREGATION", "COMPARISON", "ABS_ROUND",
     ]);
     const allBlocks = [
       ...(Array.isArray(blocks.triggers) ? blocks.triggers : []),
@@ -693,7 +702,7 @@ export class StrategiesService {
       ...(Array.isArray(blocks.safety) ? blocks.safety : []),
     ];
     for (const block of allBlocks) {
-      if (block && typeof block.type === "string" && !KNOWN_BLOCK_TYPES.has(block.type)) {
+      if (block && typeof block.type === "string" && !KNOWN_BLOCK_TYPES.has(block.type) && !KNOWN_BLOCK_TYPES.has(block.type.toUpperCase())) {
         throw new UnprocessableEntityException({
           code: "IMPORT_UNKNOWN_BLOCK_TYPE",
           message: `Unknown block type: ${block.type}`,
