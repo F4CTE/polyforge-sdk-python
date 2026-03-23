@@ -75,6 +75,9 @@ COPY --from=builder /app/node_modules/@prisma/engines  ./node_modules/@prisma/en
 
 WORKDIR /app/services/api-service
 
+# Allow node user to write swagger.json in dev mode
+RUN chown -R node:node /app/services/api-service
+
 EXPOSE 3002
 
 USER node

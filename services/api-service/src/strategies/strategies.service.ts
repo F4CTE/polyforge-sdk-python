@@ -194,9 +194,10 @@ export class StrategiesService {
     dto: StartStrategyDto,
   ): Promise<{ status: string; startedAt: string }> {
     // R4-01: Atomic check-and-update to prevent race conditions
+    const newStatus = dto.mode === "paper" ? StrategyStatus.PAPER : StrategyStatus.RUNNING;
     const updated = await this.prisma.strategy.updateMany({
       where: { id, userId, status: StrategyStatus.IDLE },
-      data: { status: dto.mode === "paper" ? StrategyStatus.PAPER : StrategyStatus.RUNNING, startedAt: new Date() },
+      data: { status: newStatus },
     });
     if (updated.count === 0) {
       // Either not found, not owned, or not in IDLE state

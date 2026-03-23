@@ -97,25 +97,39 @@ export class DiscoverService {
           : new Date(0); // allTime
 
     // Sum realized P&L from pnl_snapshots table grouped by user
-    const rows: any[] = await this.prisma.$queryRaw`
-            SELECT
-                ps."userId" AS "userId",
-                SUM(ps."realizedPnl") AS pnl,
-                COUNT(DISTINCT o.id) AS "tradeCount"
-            FROM pnl_snapshots ps
-            LEFT JOIN orders o ON o."userId" = ps."userId" AND o."createdAt" >= ${since}
-            WHERE ps.time >= ${since}
-            GROUP BY ps."userId"
-            ORDER BY pnl DESC
-            LIMIT ${limit} OFFSET ${skip}
-        `;
+    // Use Prisma ORM instead of raw SQL to avoid PgBouncer/build issues
+    const snapshots = await this.prisma.pnlSnapshot.groupBy({
+      by: ['userId'],
+      where: { time: { gte: since } },
+      _sum: { realizedPnl: true },
+      orderBy: { _sum: { realizedPnl: 'desc' } },
+      take: limit,
+      skip,
+    });
 
-    const countResult: any[] = await this.prisma.$queryRaw`
-            SELECT COUNT(DISTINCT "userId") AS cnt FROM pnl_snapshots WHERE time >= ${since}
-        `;
-    const total = Number(countResult[0]?.cnt ?? 0);
+    const total = await this.prisma.pnlSnapshot.groupBy({
+      by: ['userId'],
+      where: { time: { gte: since } },
+    }).then(r => r.length);
 
+    const rows = snapshots.map(s => ({
+      userId: s.userId,
+      pnl: s._sum.realizedPnl?.toString() ?? '0',
+      tradeCount: 0, // Will be enriched below
+    }));
+
+    // Enrich with trade counts
     const userIds = rows.map((r) => r.userId);
+    if (userIds.length > 0) {
+      const tradeCounts = await this.prisma.order.groupBy({
+        by: ['userId'],
+        where: { userId: { in: userIds }, createdAt: { gte: since } },
+        _count: true,
+      });
+      const tradeMap = Object.fromEntries(tradeCounts.map(t => [t.userId, t._count]));
+      rows.forEach(r => { r.tradeCount = tradeMap[r.userId] ?? 0; });
+    }
+
     const users = await this.prisma.user.findMany({
       where: { id: { in: userIds } },
       select: { id: true, username: true, displayName: true, avatarUrl: true },

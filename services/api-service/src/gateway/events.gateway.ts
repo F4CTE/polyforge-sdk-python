@@ -140,7 +140,7 @@ export class EventsGateway
       }
 
       this.logger.debug(
-        `Client ${client.id ?? 'unknown'} disconnected, cleaned up ${client.subscribedTokens.size} price and ${client.subscribedStrategies.size} strategy subscriptions`,
+        `Client disconnected, cleaned up ${client.subscribedTokens?.size ?? 0} price and ${client.subscribedStrategies?.size ?? 0} strategy subscriptions`,
       );
     }
   }

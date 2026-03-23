@@ -43,10 +43,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           : "INTERNAL_ERROR";
 
     if (status >= 500) {
+      const errMsg = exception instanceof Error ? exception.message : String(exception);
+      const errStack = exception instanceof Error ? exception.stack : '';
       this.logger.error(
-        `[${requestId}] ${request.method} ${request.url}`,
-        exception,
+        `[${requestId}] ${request.method} ${request.url} — ${errMsg}`,
       );
+      if (errStack && process.env.NODE_ENV !== 'production') {
+        this.logger.error(errStack);
+      }
     }
 
     reply.status(status).send({
