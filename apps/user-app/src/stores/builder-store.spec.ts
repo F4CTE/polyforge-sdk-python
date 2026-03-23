@@ -173,7 +173,7 @@ describe('save', () => {
 
     // Mock fetch
     let capturedBody: any;
-    globalThis.fetch = vi.fn().mockImplementation(async (_url, opts) => {
+    globalThis.fetch = vi.fn().mockImplementation(async (_url: string, opts: any) => {
       capturedBody = JSON.parse(opts.body);
       return {
         ok: true,
@@ -363,7 +363,7 @@ describe('save includes logic blocks', () => {
     useBuilderStore.getState().updateNodeConfig(nodeId, 'condition', '$price > 0.5');
 
     let capturedBody: any;
-    globalThis.fetch = vi.fn().mockImplementation(async (_url, opts) => {
+    globalThis.fetch = vi.fn().mockImplementation(async (_url: string, opts: any) => {
       capturedBody = JSON.parse(opts.body);
       return {
         ok: true,

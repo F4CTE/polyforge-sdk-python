@@ -82,7 +82,10 @@ COPY apps/landing/sitemap.xml     /usr/share/nginx/html/landing/
 # Create certbot ACME challenge directory
 RUN mkdir -p /var/www/certbot
 
-RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup
+RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup && \
+    mkdir -p /var/cache/nginx/client_temp /var/cache/nginx/proxy_temp /var/cache/nginx/fastcgi_temp /var/cache/nginx/uwsgi_temp /var/cache/nginx/scgi_temp && \
+    chown -R appuser:appgroup /var/cache/nginx /var/run /var/log/nginx /var/www/certbot && \
+    touch /run/nginx.pid && chown appuser:appgroup /run/nginx.pid
 
 EXPOSE 80 443
 

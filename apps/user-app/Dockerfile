@@ -26,7 +26,10 @@ RUN pnpm --filter @polyforge/user-app build
 FROM nginx:1.27-alpine
 COPY --from=builder /app/apps/user-app/dist /usr/share/nginx/html
 COPY apps/user-app/nginx.conf /etc/nginx/conf.d/default.conf
-RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup
+RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup && \
+    mkdir -p /var/cache/nginx/client_temp /var/cache/nginx/proxy_temp /var/cache/nginx/fastcgi_temp /var/cache/nginx/uwsgi_temp /var/cache/nginx/scgi_temp && \
+    chown -R appuser:appgroup /var/cache/nginx /var/run /var/log/nginx /usr/share/nginx/html && \
+    touch /run/nginx.pid && chown appuser:appgroup /run/nginx.pid
 
 EXPOSE 80
 

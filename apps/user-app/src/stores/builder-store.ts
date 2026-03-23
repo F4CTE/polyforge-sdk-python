@@ -287,7 +287,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     // Generate default name: var1, var2, ...
     let idx = variableNodes.length + 1;
     const existingNames = new Set(
-      variableNodes.map((n) => (n.data as VariableNodeData).variableName),
+      variableNodes.map((n) => (n.data as unknown as VariableNodeData).variableName),
     );
     while (existingNames.has(`var${idx}`)) idx++;
 
@@ -304,7 +304,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       } satisfies VariableNodeData,
     };
 
-    set({ nodes: [...nodes, newNode], dirty: true });
+    set({ nodes: [...nodes, newNode as Node<BlockNodeData>], dirty: true });
   },
 
   updateVariable: (nodeId, field, value) => {
@@ -353,7 +353,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
       const nodes: Node<BlockNodeData>[] = [];
       const canvasLayout = s.canvas as Record<string, unknown> | undefined;
-      const storedPositions = canvasLayout?.positions || {};
+      const storedPositions = (canvasLayout?.positions || {}) as Record<string, { x: number; y: number }>;
       const sectionOrder: BlockSection[] = [
         'safety',
         'triggers',
@@ -476,14 +476,14 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
           data: {
             variableName: v.name,
             expression: v.expression,
-          } satisfies VariableNodeData,
+          } as unknown as BlockNodeData,
         });
       });
 
       // Restore edges from canvas.connections if present
-      const storedConnections = canvasLayout?.connections ?? [];
+      const storedConnections = (canvasLayout?.connections ?? []) as { id?: string; source: string; sourceHandle?: string; target: string; targetHandle?: string }[];
       const edges: Edge[] = storedConnections.map(
-        (c: { id?: string; source: string; sourceHandle?: string; target: string; targetHandle?: string }) => ({
+        (c) => ({
           id: c.id || crypto.randomUUID(),
           source: c.source,
           sourceHandle: c.sourceHandle ?? null,
@@ -561,8 +561,8 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     // Extract variables from variable nodes
     const variables = variableNodes.map((n) => ({
       id: n.id,
-      name: (n.data as VariableNodeData).variableName,
-      expression: (n.data as VariableNodeData).expression,
+      name: (n.data as unknown as VariableNodeData).variableName,
+      expression: (n.data as unknown as VariableNodeData).expression,
     }));
 
     const dto = {
@@ -583,8 +583,8 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       actions: blockNodes
         .filter((n) => (n.data as BlockNodeData).section === 'actions')
         .map(toBlock),
-      logicBlocks: logicNodes.map(toLogicBlock),
-      calcBlocks: calcNodes.map(toCalcBlock),
+      logicBlocks: (logicNodes as Node<LogicNodeData>[]).map(toLogicBlock),
+      calcBlocks: (calcNodes as Node<CalcNodeData>[]).map(toCalcBlock),
       tags: state.tags
         .split(',')
         .map((t) => t.trim())
