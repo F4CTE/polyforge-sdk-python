@@ -29,15 +29,14 @@ export function CtaBanner() {
             id="cta-heading"
             className="relative text-[clamp(24px,4vw,36px)] font-bold text-pf-text mb-4"
           >
-            Ready to put your edge on{' '}
+            Your edge{' '}
             <span className="bg-gradient-to-br from-pf-cyan-300 to-pf-cyan-500 bg-clip-text text-transparent">
-              autopilot
+              starts here
             </span>
-            ?
           </h2>
           <p className="relative text-base text-pf-text-secondary max-w-[480px] mx-auto mb-8 leading-relaxed">
-            Polyforge is in early access. Request your invite and start trading smarter today
-            &mdash; no credit card required.
+            Start building smarter strategies today. Visual builder, AI signals, whale tracking,
+            copy trading &mdash; all in one platform. No credit card required.
           </p>
 
           <WaitlistForm className="relative max-w-[480px] mx-auto" />

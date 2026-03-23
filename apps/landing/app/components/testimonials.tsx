@@ -3,19 +3,19 @@ const testimonials = [
     initials: 'AK',
     name: 'Alex Kowalski',
     role: 'Quantitative Analyst',
-    text: 'The strategy builder finally made prediction markets accessible for me. I went from zero automation to three live strategies in a single afternoon. The backtesting gave me confidence before I risked real capital.',
+    text: 'The visual canvas builder is incredible. I wired up IF/THEN blocks, logic gates, and variables into a full strategy in under an hour. Backtesting gave me the confidence to go live, and the advanced orders keep my risk locked down.',
   },
   {
     initials: 'SR',
     name: 'Sarah Reeves',
     role: 'Independent Trader',
-    text: 'I was manually trading Polymarket for months. Polyforge let me codify my exact thesis into blocks and run it 24/7. My win rate went from guesswork to measurable and my P&L has never been more consistent.',
+    text: 'Copy trading changed everything for me. I follow two whale wallets and mirror their trades automatically. The whale tracker alerts me the moment big money moves, and I can react instantly without staring at screens all day.',
   },
   {
     initials: 'MC',
     name: 'Marcus Chen',
     role: 'Crypto Fund Analyst',
-    text: 'The community leaderboard is incredibly motivating. I forked a top strategy, tweaked the entry conditions, and it outperformed the original. The iteration cycle is insanely fast compared to writing code from scratch.',
+    text: 'The AI signals pipeline is a game-changer. It picks up breaking news, matches it to markets I care about, and generates trade signals before I even see the headline. I just review and approve. My hit rate has never been higher.',
   },
 ];
 

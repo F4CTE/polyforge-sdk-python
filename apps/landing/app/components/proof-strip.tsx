@@ -1,8 +1,8 @@
 const stats = [
-  { number: '500+', label: 'Markets tracked' },
-  { number: '24/7', label: 'Automated execution' },
-  { number: '< 50 ms', label: 'Order latency' },
-  { number: 'Free', label: 'During beta' },
+  { number: '50+', label: 'Strategy blocks' },
+  { number: '24/7', label: 'Execution' },
+  { number: '< 50 ms', label: 'Latency' },
+  { number: 'AI', label: 'Powered signals' },
 ];
 
 export function ProofStrip() {

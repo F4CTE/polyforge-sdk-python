@@ -1,9 +1,9 @@
 const steps = [
   {
     number: '01',
-    title: 'Build your strategy',
+    title: 'Build',
     description:
-      'Use the visual block builder to define your entry triggers (price thresholds, volume spikes, time-based rules), sizing logic, and exit conditions. Preview the logic in plain English before you run anything.',
+      'Create strategies with our visual canvas builder. Drag blocks, set conditions, wire logic gates and variables. Use IF/THEN/ELSE, AND/OR gates, sub-strategies, and 50+ blocks to define your exact trading thesis.',
     visual: (
       <svg className="w-20 h-20" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="8" y="15" width="28" height="18" rx="4" fill="rgba(6,182,212,0.1)" stroke="rgba(6,182,212,0.3)" strokeWidth="1" />
@@ -16,9 +16,9 @@ const steps = [
   },
   {
     number: '02',
-    title: 'Backtest against history',
+    title: 'Test',
     description:
-      'Run your strategy across months of real market data in seconds. Review the equity curve, per-trade breakdown, and risk metrics. Tune parameters until the numbers satisfy your conviction.',
+      'Backtest against historical data. Paper trade with real-time prices. Analyze P&L curves, win rate, and Sharpe ratio. Export and share strategies with the .polyforge file format.',
     visual: (
       <svg className="w-20 h-20" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
         <line x1="10" y1="65" x2="70" y2="65" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
@@ -30,9 +30,9 @@ const steps = [
   },
   {
     number: '03',
-    title: 'Deploy and monitor',
+    title: 'Deploy',
     description:
-      'Hit Deploy. Polyforge\'s execution engine watches the markets and fires orders automatically. Track live P&L, position sizing, and fill quality from your portfolio dashboard \u2014 or connect via our REST API for programmatic access.',
+      'Go live with one click. Set advanced orders like TP/SL and trailing stops, copy whale traders, or let AI signals guide your trades. Monitor everything from your dashboard or via the REST API.',
     visual: (
       <svg className="w-20 h-20" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="12" y="20" width="56" height="40" rx="6" fill="rgba(6,182,212,0.06)" stroke="rgba(6,182,212,0.2)" strokeWidth="1" />

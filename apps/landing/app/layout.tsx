@@ -17,7 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Polyforge — Algorithmic Trading for Prediction Markets',
   description:
-    'Build, backtest, and deploy automated trading strategies on prediction markets. No-code strategy builder, live execution, real-time analytics.',
+    'Build, backtest, and deploy automated trading strategies on prediction markets. Visual strategy builder, AI-powered signals, whale tracking, copy trading, advanced orders, and developer API.',
   keywords: [
     'prediction markets',
     'algorithmic trading',
@@ -25,6 +25,10 @@ export const metadata: Metadata = {
     'automated trading',
     'Polymarket',
     'trading bot',
+    'copy trading',
+    'whale tracking',
+    'AI trading signals',
+    'paper trading',
   ],
   robots: {
     index: true,
@@ -46,7 +50,7 @@ export const metadata: Metadata = {
     url: 'https://polyforge.app/',
     title: 'Polyforge — Algorithmic Trading for Prediction Markets',
     description:
-      'Build, backtest, and deploy automated trading strategies on prediction markets. No-code strategy builder, live execution, real-time analytics.',
+      'Build, backtest, and deploy automated trading strategies on prediction markets. Visual strategy builder, AI-powered signals, whale tracking, copy trading, advanced orders, and developer API.',
     siteName: 'Polyforge',
     locale: 'en_US',
     images: [
@@ -62,7 +66,7 @@ export const metadata: Metadata = {
     site: '@polyforge',
     title: 'Polyforge — Algorithmic Trading for Prediction Markets',
     description:
-      'Build, backtest, and deploy automated trading strategies on prediction markets.',
+      'Build, backtest, and deploy automated trading strategies on prediction markets. AI signals, whale tracking, copy trading.',
     images: ['https://polyforge.app/og-image.png'],
   },
 };
@@ -73,7 +77,7 @@ const jsonLd = {
   name: 'Polyforge',
   url: 'https://polyforge.app',
   description:
-    'Algorithmic trading platform for prediction markets. Build, backtest, and deploy automated strategies with a no-code builder.',
+    'Algorithmic trading platform for prediction markets. Visual strategy builder, AI-powered signals, whale tracking, copy trading, advanced orders, and developer API.',
   applicationCategory: 'FinanceApplication',
   operatingSystem: 'Web',
   offers: {
@@ -83,11 +87,16 @@ const jsonLd = {
     description: 'Early access — free during beta',
   },
   featureList: [
-    'No-code strategy builder',
-    'Historical backtesting',
-    'Live automated execution',
-    'Real-time market data',
-    'Strategy discovery and community sharing',
+    'Visual drag-and-drop strategy builder with 50+ blocks',
+    'Paper trading and historical backtesting',
+    'Live 24/7 automated execution',
+    'Copy trading with whale mirroring',
+    'AI-powered news analysis and trade signals',
+    'Whale tracking and real-time alerts',
+    'Advanced orders: TP/SL, trailing stops, limit, pegged',
+    'Scoped developer API with REST endpoints',
+    'Strategy import/export with .polyforge format',
+    'Dark and light theme support',
   ],
 };
 

@@ -56,8 +56,8 @@ export function Hero() {
         </h1>
 
         <p className="text-[clamp(16px,2vw,19px)] text-pf-text-secondary max-w-[560px] mx-auto mb-9 leading-relaxed">
-          Polyforge lets you build no-code trading strategies, backtest them against historical
-          data, and deploy them to run 24/7 &mdash; without writing a single line of code.
+          Build automated trading strategies, copy whale traders, get AI-powered signals, and
+          deploy 24/7 &mdash; all without writing code.
         </p>
 
         <WaitlistForm className="max-w-[480px] mx-auto mb-4" />

@@ -1,8 +1,8 @@
 const features = [
   {
-    title: 'No-code Strategy Builder',
+    title: 'Visual Strategy Builder',
     description:
-      'Drag-and-drop blocks to compose entry signals, risk rules, and exit conditions. No programming knowledge required \u2014 just your market thesis.',
+      'Drag-and-drop canvas with 50+ blocks, logic gates, variables, and wiring. Build strategies like visual programs — no code required.',
     gradientClass: 'from-pf-cyan-500/[0.04]',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -14,24 +14,30 @@ const features = [
     ),
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="10" y="20" width="50" height="28" rx="6" fill="rgba(6,182,212,0.1)" stroke="rgba(6,182,212,0.3)" strokeWidth="1" />
-        <text x="35" y="38" textAnchor="middle" fill="#67e8f9" fontSize="7" fontFamily="Inter, sans-serif">Signal</text>
-        <path d="M60 34 L80 34" stroke="rgba(6,182,212,0.4)" strokeWidth="1.5" strokeDasharray="3 2" />
-        <rect x="80" y="20" width="50" height="28" rx="6" fill="rgba(6,182,212,0.1)" stroke="rgba(6,182,212,0.3)" strokeWidth="1" />
-        <text x="105" y="38" textAnchor="middle" fill="#67e8f9" fontSize="7" fontFamily="Inter, sans-serif">Filter</text>
-        <path d="M130 34 L150 50" stroke="rgba(6,182,212,0.4)" strokeWidth="1.5" strokeDasharray="3 2" />
-        <rect x="10" y="55" width="50" height="28" rx="6" fill="rgba(6,182,212,0.1)" stroke="rgba(6,182,212,0.3)" strokeWidth="1" />
-        <text x="35" y="73" textAnchor="middle" fill="#67e8f9" fontSize="7" fontFamily="Inter, sans-serif">Risk</text>
-        <path d="M60 69 L80 69 L130 50" stroke="rgba(6,182,212,0.4)" strokeWidth="1.5" strokeDasharray="3 2" />
-        <rect x="140" y="36" width="50" height="28" rx="6" fill="rgba(74,222,128,0.1)" stroke="rgba(74,222,128,0.3)" strokeWidth="1" />
-        <text x="165" y="54" textAnchor="middle" fill="#4ade80" fontSize="7" fontFamily="Inter, sans-serif">Execute</text>
+        <rect x="5" y="10" width="42" height="24" rx="5" fill="rgba(6,182,212,0.1)" stroke="rgba(6,182,212,0.3)" strokeWidth="1" />
+        <text x="26" y="26" textAnchor="middle" fill="#67e8f9" fontSize="7" fontFamily="Inter, sans-serif">IF Price</text>
+        <rect x="5" y="44" width="42" height="24" rx="5" fill="rgba(6,182,212,0.1)" stroke="rgba(6,182,212,0.3)" strokeWidth="1" />
+        <text x="26" y="60" textAnchor="middle" fill="#67e8f9" fontSize="7" fontFamily="Inter, sans-serif">IF Volume</text>
+        <path d="M47 22 L62 38" stroke="rgba(6,182,212,0.4)" strokeWidth="1.5" strokeDasharray="3 2" />
+        <path d="M47 56 L62 42" stroke="rgba(6,182,212,0.4)" strokeWidth="1.5" strokeDasharray="3 2" />
+        {/* AND gate */}
+        <rect x="62" y="28" width="30" height="24" rx="5" fill="rgba(251,191,36,0.1)" stroke="rgba(251,191,36,0.3)" strokeWidth="1" />
+        <text x="77" y="44" textAnchor="middle" fill="#fbbf24" fontSize="7" fontFamily="Inter, sans-serif">AND</text>
+        <path d="M92 40 L108 40" stroke="rgba(6,182,212,0.4)" strokeWidth="1.5" strokeDasharray="3 2" />
+        {/* Variable */}
+        <rect x="108" y="28" width="38" height="24" rx="5" fill="rgba(168,85,247,0.1)" stroke="rgba(168,85,247,0.3)" strokeWidth="1" />
+        <text x="127" y="44" textAnchor="middle" fill="#c084fc" fontSize="7" fontFamily="Inter, sans-serif">Size = 5%</text>
+        <path d="M146 40 L158 40" stroke="rgba(74,222,128,0.4)" strokeWidth="1.5" strokeDasharray="3 2" />
+        <rect x="158" y="28" width="36" height="24" rx="5" fill="rgba(74,222,128,0.1)" stroke="rgba(74,222,128,0.3)" strokeWidth="1" />
+        <text x="176" y="44" textAnchor="middle" fill="#4ade80" fontSize="7" fontFamily="Inter, sans-serif">Execute</text>
+        <text x="100" y="90" textAnchor="middle" fill="#5a5a72" fontSize="6" fontFamily="Inter, sans-serif">50+ blocks available</text>
       </svg>
     ),
   },
   {
-    title: 'Historical Backtesting',
+    title: 'Paper Trading & Backtesting',
     description:
-      'Replay your strategy against months of real market data before risking a single dollar. Get detailed P&L curves, Sharpe ratio, drawdown, and fill analytics.',
+      'Test against historical data, simulate with real-time prices. Prove your edge before risking capital with detailed P&L curves, Sharpe ratio, and drawdown analytics.',
     gradientClass: 'from-pf-cyan-400/[0.04]',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -52,77 +58,16 @@ const features = [
           </linearGradient>
         </defs>
         <text x="180" y="23" textAnchor="end" fill="#4ade80" fontSize="8" fontFamily="JetBrains Mono, monospace">+34.2%</text>
+        <rect x="20" y="10" width="50" height="14" rx="3" fill="rgba(251,191,36,0.1)" stroke="rgba(251,191,36,0.3)" strokeWidth="0.5" />
+        <text x="45" y="20" textAnchor="middle" fill="#fbbf24" fontSize="6" fontFamily="Inter, sans-serif">Paper Mode</text>
       </svg>
     ),
   },
   {
-    title: 'Live 24/7 Execution',
+    title: 'Copy Trading',
     description:
-      'Deploy strategies to our cloud runner. Polyforge monitors markets around the clock and places orders the instant your conditions are met \u2014 even while you sleep.',
+      'Mirror whale traders automatically with three modes: percentage, fixed size, or full mirror. Built-in risk controls keep you in charge.',
     gradientClass: 'from-pf-success/[0.03]',
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-    visual: (
-      <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="20" y="15" width="70" height="35" rx="6" fill="rgba(6,182,212,0.06)" stroke="rgba(6,182,212,0.2)" strokeWidth="1" />
-        <text x="55" y="32" textAnchor="middle" fill="#5a5a72" fontSize="6" fontFamily="Inter, sans-serif">Status</text>
-        <text x="55" y="44" textAnchor="middle" fill="#4ade80" fontSize="9" fontFamily="JetBrains Mono, monospace">LIVE</text>
-        <circle cx="82" cy="44" r="3" fill="#4ade80">
-          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" />
-        </circle>
-        <rect x="105" y="15" width="75" height="35" rx="6" fill="rgba(6,182,212,0.06)" stroke="rgba(6,182,212,0.2)" strokeWidth="1" />
-        <text x="142" y="32" textAnchor="middle" fill="#5a5a72" fontSize="6" fontFamily="Inter, sans-serif">Uptime</text>
-        <text x="142" y="44" textAnchor="middle" fill="#f0f0f5" fontSize="9" fontFamily="JetBrains Mono, monospace">99.97%</text>
-        <rect x="20" y="60" width="160" height="28" rx="6" fill="rgba(6,182,212,0.04)" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-        <text x="30" y="78" fill="#9898b0" fontSize="7" fontFamily="Inter, sans-serif">Last fill: YES/BTC-100K +0.04</text>
-        <circle cx="170" cy="74" r="3" fill="#22d3ee">
-          <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
-        </circle>
-      </svg>
-    ),
-  },
-  {
-    title: 'Real-Time Market Data',
-    description:
-      'Live order-book prices stream directly to your dashboard via WebSocket. Track YES/NO prices, 24-hour volume, and market sentiment at a glance.',
-    gradientClass: 'from-pf-cyan-500/[0.03]',
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M3 3v18h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M7 14l4-4 4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    visual: (
-      <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <line x1="20" y1="85" x2="180" y2="85" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-        <line x1="35" y1="25" x2="35" y2="70" stroke="#4ade80" strokeWidth="1" />
-        <rect x="30" y="35" width="10" height="20" rx="1" fill="#4ade80" />
-        <line x1="55" y1="30" x2="55" y2="75" stroke="#f87171" strokeWidth="1" />
-        <rect x="50" y="38" width="10" height="25" rx="1" fill="#f87171" />
-        <line x1="75" y1="20" x2="75" y2="65" stroke="#4ade80" strokeWidth="1" />
-        <rect x="70" y="28" width="10" height="22" rx="1" fill="#4ade80" />
-        <line x1="95" y1="25" x2="95" y2="60" stroke="#4ade80" strokeWidth="1" />
-        <rect x="90" y="30" width="10" height="18" rx="1" fill="#4ade80" />
-        <line x1="115" y1="28" x2="115" y2="68" stroke="#f87171" strokeWidth="1" />
-        <rect x="110" y="32" width="10" height="28" rx="1" fill="#f87171" />
-        <line x1="135" y1="22" x2="135" y2="55" stroke="#4ade80" strokeWidth="1" />
-        <rect x="130" y="26" width="10" height="18" rx="1" fill="#4ade80" />
-        <line x1="155" y1="18" x2="155" y2="50" stroke="#4ade80" strokeWidth="1" />
-        <rect x="150" y="22" width="10" height="16" rx="1" fill="#4ade80" />
-        <line x1="175" y1="15" x2="175" y2="48" stroke="#4ade80" strokeWidth="1" />
-        <rect x="170" y="20" width="10" height="14" rx="1" fill="#4ade80" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Community Strategies',
-    description:
-      'Discover and fork top-performing public strategies from the community. Build on what works and share your own edge with the Polyforge leaderboard.',
-    gradientClass: 'from-pf-gold-400/[0.03]',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.5" />
@@ -132,51 +77,144 @@ const features = [
     ),
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="20" y="12" width="160" height="22" rx="4" fill="rgba(74,222,128,0.06)" stroke="rgba(74,222,128,0.2)" strokeWidth="1" />
-        <text x="30" y="27" fill="#fbbf24" fontSize="8" fontFamily="JetBrains Mono, monospace" fontWeight="700">1</text>
-        <circle cx="50" cy="23" r="7" fill="rgba(6,182,212,0.15)" stroke="rgba(6,182,212,0.3)" strokeWidth="0.5" />
-        <text x="50" y="26" textAnchor="middle" fill="#67e8f9" fontSize="6" fontFamily="Inter, sans-serif">AK</text>
-        <text x="66" y="27" fill="#f0f0f5" fontSize="7" fontFamily="Inter, sans-serif">AlphaKing</text>
-        <text x="170" y="27" textAnchor="end" fill="#4ade80" fontSize="7" fontFamily="JetBrains Mono, monospace">+42.1%</text>
-        <rect x="20" y="40" width="160" height="22" rx="4" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-        <text x="30" y="55" fill="#9898b0" fontSize="8" fontFamily="JetBrains Mono, monospace" fontWeight="700">2</text>
-        <circle cx="50" cy="51" r="7" fill="rgba(6,182,212,0.1)" stroke="rgba(6,182,212,0.2)" strokeWidth="0.5" />
-        <text x="50" y="54" textAnchor="middle" fill="#67e8f9" fontSize="6" fontFamily="Inter, sans-serif">MP</text>
-        <text x="66" y="55" fill="#f0f0f5" fontSize="7" fontFamily="Inter, sans-serif">MarketPro</text>
-        <text x="170" y="55" textAnchor="end" fill="#4ade80" fontSize="7" fontFamily="JetBrains Mono, monospace">+38.7%</text>
-        <rect x="20" y="68" width="160" height="22" rx="4" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-        <text x="30" y="83" fill="#9898b0" fontSize="8" fontFamily="JetBrains Mono, monospace" fontWeight="700">3</text>
-        <circle cx="50" cy="79" r="7" fill="rgba(6,182,212,0.1)" stroke="rgba(6,182,212,0.2)" strokeWidth="0.5" />
-        <text x="50" y="82" textAnchor="middle" fill="#67e8f9" fontSize="6" fontFamily="Inter, sans-serif">QT</text>
-        <text x="66" y="83" fill="#f0f0f5" fontSize="7" fontFamily="Inter, sans-serif">QuantTrader</text>
-        <text x="170" y="83" textAnchor="end" fill="#4ade80" fontSize="7" fontFamily="JetBrains Mono, monospace">+31.4%</text>
+        {/* Whale wallet */}
+        <rect x="15" y="20" width="60" height="30" rx="6" fill="rgba(74,222,128,0.08)" stroke="rgba(74,222,128,0.3)" strokeWidth="1" />
+        <text x="45" y="33" textAnchor="middle" fill="#4ade80" fontSize="7" fontFamily="Inter, sans-serif" fontWeight="600">Whale</text>
+        <text x="45" y="44" textAnchor="middle" fill="#9898b0" fontSize="6" fontFamily="JetBrains Mono, monospace">0x8f..3a</text>
+        {/* Arrow */}
+        <path d="M75 35 L95 35" stroke="rgba(74,222,128,0.5)" strokeWidth="1.5" />
+        <polygon points="95,32 100,35 95,38" fill="rgba(74,222,128,0.5)" />
+        {/* Your copy */}
+        <rect x="105" y="20" width="60" height="30" rx="6" fill="rgba(6,182,212,0.08)" stroke="rgba(6,182,212,0.3)" strokeWidth="1" />
+        <text x="135" y="33" textAnchor="middle" fill="#67e8f9" fontSize="7" fontFamily="Inter, sans-serif" fontWeight="600">You</text>
+        <text x="135" y="44" textAnchor="middle" fill="#9898b0" fontSize="6" fontFamily="JetBrains Mono, monospace">Mirrored</text>
+        {/* Modes */}
+        <rect x="15" y="62" width="45" height="18" rx="4" fill="rgba(6,182,212,0.06)" stroke="rgba(6,182,212,0.15)" strokeWidth="0.5" />
+        <text x="37" y="74" textAnchor="middle" fill="#67e8f9" fontSize="6" fontFamily="Inter, sans-serif">% Mode</text>
+        <rect x="67" y="62" width="45" height="18" rx="4" fill="rgba(6,182,212,0.06)" stroke="rgba(6,182,212,0.15)" strokeWidth="0.5" />
+        <text x="89" y="74" textAnchor="middle" fill="#67e8f9" fontSize="6" fontFamily="Inter, sans-serif">Fixed</text>
+        <rect x="119" y="62" width="45" height="18" rx="4" fill="rgba(6,182,212,0.06)" stroke="rgba(6,182,212,0.15)" strokeWidth="0.5" />
+        <text x="141" y="74" textAnchor="middle" fill="#67e8f9" fontSize="6" fontFamily="Inter, sans-serif">Mirror</text>
       </svg>
     ),
   },
   {
-    title: 'Security First',
+    title: 'AI-Powered Signals',
     description:
-      'JWT authentication with short-lived tokens, optional two-factor auth, and role-based access controls. Your account and API keys stay under your control.',
+      'LLM-powered news pipeline analyzes breaking events, matches them to markets, and generates trade signals. AI finds the trades. You decide.',
     gradientClass: 'from-pf-purple-500/[0.04]',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12 2a4 4 0 0 1 4 4c0 1.1-.4 2.1-1.2 2.8L12 11l-2.8-2.2A4 4 0 0 1 12 2z" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M8 14h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M9 18h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M10 22h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     ),
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M100 15 L140 30 L140 60 C140 78 100 90 100 90 C100 90 60 78 60 60 L60 30 Z" fill="rgba(6,182,212,0.06)" stroke="rgba(6,182,212,0.3)" strokeWidth="1.5" />
-        <rect x="88" y="48" width="24" height="18" rx="3" fill="none" stroke="rgba(6,182,212,0.5)" strokeWidth="1.5" />
-        <path d="M94 48 V42 C94 37 106 37 106 42 V48" fill="none" stroke="rgba(6,182,212,0.5)" strokeWidth="1.5" />
-        <circle cx="100" cy="58" r="2" fill="#22d3ee" />
-        <text x="100" y="30" textAnchor="middle" fill="#4ade80" fontSize="8" fontFamily="Inter, sans-serif">2FA</text>
+        {/* News feed */}
+        <rect x="10" y="10" width="75" height="20" rx="4" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
+        <text x="18" y="24" fill="#9898b0" fontSize="6" fontFamily="Inter, sans-serif">Breaking: Fed holds...</text>
+        <rect x="10" y="34" width="75" height="20" rx="4" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
+        <text x="18" y="48" fill="#9898b0" fontSize="6" fontFamily="Inter, sans-serif">Trump announces...</text>
+        {/* Arrow to AI */}
+        <path d="M85 35 L100 35" stroke="rgba(168,85,247,0.5)" strokeWidth="1.5" strokeDasharray="3 2" />
+        {/* AI brain */}
+        <rect x="100" y="18" width="45" height="34" rx="8" fill="rgba(168,85,247,0.08)" stroke="rgba(168,85,247,0.3)" strokeWidth="1" />
+        <text x="122" y="33" textAnchor="middle" fill="#c084fc" fontSize="8" fontFamily="Inter, sans-serif" fontWeight="600">AI</text>
+        <text x="122" y="44" textAnchor="middle" fill="#9898b0" fontSize="5" fontFamily="Inter, sans-serif">Claude + GPT</text>
+        {/* Arrow to signal */}
+        <path d="M145 35 L160 35" stroke="rgba(74,222,128,0.5)" strokeWidth="1.5" strokeDasharray="3 2" />
+        {/* Signal output */}
+        <rect x="160" y="18" width="32" height="34" rx="6" fill="rgba(74,222,128,0.08)" stroke="rgba(74,222,128,0.3)" strokeWidth="1" />
+        <text x="176" y="33" textAnchor="middle" fill="#4ade80" fontSize="7" fontFamily="Inter, sans-serif" fontWeight="600">BUY</text>
+        <text x="176" y="44" textAnchor="middle" fill="#9898b0" fontSize="5" fontFamily="Inter, sans-serif">Signal</text>
+        {/* Confidence bar */}
+        <rect x="10" y="68" width="182" height="20" rx="4" fill="rgba(74,222,128,0.04)" stroke="rgba(74,222,128,0.15)" strokeWidth="0.5" />
+        <text x="18" y="82" fill="#4ade80" fontSize="7" fontFamily="JetBrains Mono, monospace">Confidence: 87%</text>
+        <text x="130" y="82" fill="#9898b0" fontSize="6" fontFamily="Inter, sans-serif">Market: US Election</text>
+      </svg>
+    ),
+  },
+  {
+    title: 'Advanced Orders',
+    description:
+      'Take-profit, stop-loss, trailing stops, limit orders, and pegged orders. Set it and forget it — your positions are always protected.',
+    gradientClass: 'from-pf-cyan-500/[0.03]',
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M3 3v18h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M7 14l4-4 4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+    visual: (
+      <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Price line */}
+        <polyline points="15,60 40,55 60,58 80,48 100,50 120,42 140,45 160,38 185,35" stroke="#22d3ee" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        {/* TP line */}
+        <line x1="15" y1="25" x2="185" y2="25" stroke="rgba(74,222,128,0.4)" strokeWidth="1" strokeDasharray="4 3" />
+        <text x="187" y="28" fill="#4ade80" fontSize="6" fontFamily="JetBrains Mono, monospace">TP 0.85</text>
+        {/* SL line */}
+        <line x1="15" y1="75" x2="185" y2="75" stroke="rgba(248,113,113,0.4)" strokeWidth="1" strokeDasharray="4 3" />
+        <text x="187" y="78" fill="#f87171" fontSize="6" fontFamily="JetBrains Mono, monospace">SL 0.55</text>
+        {/* Trailing stop */}
+        <polyline points="80,58 100,60 120,52 140,55 160,48 185,45" stroke="rgba(251,191,36,0.4)" strokeWidth="1" strokeDasharray="3 2" fill="none" />
+        <text x="187" y="48" fill="#fbbf24" fontSize="6" fontFamily="JetBrains Mono, monospace">Trail</text>
+        {/* Labels */}
+        <rect x="15" y="84" width="36" height="12" rx="3" fill="rgba(74,222,128,0.08)" stroke="rgba(74,222,128,0.2)" strokeWidth="0.5" />
+        <text x="33" y="93" textAnchor="middle" fill="#4ade80" fontSize="5.5" fontFamily="Inter, sans-serif">TP/SL</text>
+        <rect x="56" y="84" width="36" height="12" rx="3" fill="rgba(251,191,36,0.08)" stroke="rgba(251,191,36,0.2)" strokeWidth="0.5" />
+        <text x="74" y="93" textAnchor="middle" fill="#fbbf24" fontSize="5.5" fontFamily="Inter, sans-serif">Trailing</text>
+        <rect x="97" y="84" width="36" height="12" rx="3" fill="rgba(6,182,212,0.08)" stroke="rgba(6,182,212,0.2)" strokeWidth="0.5" />
+        <text x="115" y="93" textAnchor="middle" fill="#67e8f9" fontSize="5.5" fontFamily="Inter, sans-serif">Limit</text>
+        <rect x="138" y="84" width="36" height="12" rx="3" fill="rgba(168,85,247,0.08)" stroke="rgba(168,85,247,0.2)" strokeWidth="0.5" />
+        <text x="156" y="93" textAnchor="middle" fill="#c084fc" fontSize="5.5" fontFamily="Inter, sans-serif">Pegged</text>
+      </svg>
+    ),
+  },
+  {
+    title: 'Whale Tracking',
+    description:
+      'Real-time alerts when large trades happen. Follow wallets, analyze whale profiles, and see what the smart money is buying before the crowd.',
+    gradientClass: 'from-pf-gold-400/[0.03]',
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M11 8v6M8 11h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+    visual: (
+      <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Whale alert row 1 */}
+        <rect x="10" y="8" width="180" height="26" rx="5" fill="rgba(74,222,128,0.06)" stroke="rgba(74,222,128,0.2)" strokeWidth="1" />
+        <circle cx="24" cy="21" r="6" fill="rgba(74,222,128,0.15)" stroke="rgba(74,222,128,0.3)" strokeWidth="0.5" />
+        <text x="24" y="24" textAnchor="middle" fill="#4ade80" fontSize="7" fontFamily="Inter, sans-serif" fontWeight="700">W</text>
+        <text x="38" y="18" fill="#f0f0f5" fontSize="7" fontFamily="Inter, sans-serif" fontWeight="600">0x8f..3a bought</text>
+        <text x="38" y="28" fill="#4ade80" fontSize="7" fontFamily="JetBrains Mono, monospace">$52K YES</text>
+        <text x="182" y="24" textAnchor="end" fill="#9898b0" fontSize="6" fontFamily="Inter, sans-serif">2m ago</text>
+        {/* Whale alert row 2 */}
+        <rect x="10" y="40" width="180" height="26" rx="5" fill="rgba(248,113,113,0.06)" stroke="rgba(248,113,113,0.2)" strokeWidth="1" />
+        <circle cx="24" cy="53" r="6" fill="rgba(248,113,113,0.15)" stroke="rgba(248,113,113,0.3)" strokeWidth="0.5" />
+        <text x="24" y="56" textAnchor="middle" fill="#f87171" fontSize="7" fontFamily="Inter, sans-serif" fontWeight="700">W</text>
+        <text x="38" y="50" fill="#f0f0f5" fontSize="7" fontFamily="Inter, sans-serif" fontWeight="600">0xd4..b7 sold</text>
+        <text x="38" y="60" fill="#f87171" fontSize="7" fontFamily="JetBrains Mono, monospace">$31K NO</text>
+        <text x="182" y="56" textAnchor="end" fill="#9898b0" fontSize="6" fontFamily="Inter, sans-serif">5m ago</text>
+        {/* Whale alert row 3 */}
+        <rect x="10" y="72" width="180" height="26" rx="5" fill="rgba(74,222,128,0.06)" stroke="rgba(74,222,128,0.2)" strokeWidth="1" />
+        <circle cx="24" cy="85" r="6" fill="rgba(74,222,128,0.15)" stroke="rgba(74,222,128,0.3)" strokeWidth="0.5" />
+        <text x="24" y="88" textAnchor="middle" fill="#4ade80" fontSize="7" fontFamily="Inter, sans-serif" fontWeight="700">W</text>
+        <text x="38" y="82" fill="#f0f0f5" fontSize="7" fontFamily="Inter, sans-serif" fontWeight="600">0xa1..9c bought</text>
+        <text x="38" y="92" fill="#4ade80" fontSize="7" fontFamily="JetBrains Mono, monospace">$88K YES</text>
+        <text x="182" y="88" textAnchor="end" fill="#9898b0" fontSize="6" fontFamily="Inter, sans-serif">8m ago</text>
       </svg>
     ),
   },
   {
     title: 'Developer API',
     description:
-      'Generate scoped API keys to integrate with custom tools, AI agents, and trading bots. Full REST API with 50+ endpoints for markets, strategies, orders, and more.',
+      'Scoped API keys with READ, WRITE, and TRADE permissions for external tools, AI agents, and custom bots. Build on top of Polyforge.',
     gradientClass: 'from-pf-purple-400/[0.04]',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -191,10 +229,10 @@ const features = [
         <circle cx="42" cy="22" r="3" fill="rgba(245,158,11,0.5)" />
         <circle cx="52" cy="22" r="3" fill="rgba(34,197,94,0.5)" />
         <line x1="20" y1="30" x2="180" y2="30" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-        <text x="30" y="45" fill="#22d3ee" fontSize="7" fontFamily="JetBrains Mono, monospace">$ curl -X GET /api/v1/</text>
-        <text x="30" y="58" fill="#4ade80" fontSize="7" fontFamily="JetBrains Mono, monospace">{'{ "strategies": [...] }'}</text>
+        <text x="30" y="45" fill="#22d3ee" fontSize="7" fontFamily="JetBrains Mono, monospace">$ curl -H &quot;X-API-Key:&quot;</text>
+        <text x="30" y="58" fill="#4ade80" fontSize="7" fontFamily="JetBrains Mono, monospace">{'{ "scopes": ["TRADE"] }'}</text>
         <text x="30" y="71" fill="#9898b0" fontSize="7" fontFamily="JetBrains Mono, monospace">{`200 OK  \u00b7  14ms`}</text>
-        <text x="30" y="82" fill="#5a5a72" fontSize="7" fontFamily="JetBrains Mono, monospace">50+ endpoints</text>
+        <text x="30" y="82" fill="#5a5a72" fontSize="7" fontFamily="JetBrains Mono, monospace">READ / WRITE / TRADE</text>
       </svg>
     ),
   },

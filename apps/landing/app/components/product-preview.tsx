@@ -40,10 +40,18 @@ export function ProductPreview() {
               <circle cx="28" cy="108" r="3" fill="rgba(255,255,255,0.1)" />
               <text x="44" y="144" fill="#5a5a72" fontSize="11" fontFamily="Inter, sans-serif">Strategies</text>
               <circle cx="28" cy="140" r="3" fill="rgba(255,255,255,0.1)" />
-              <text x="44" y="176" fill="#5a5a72" fontSize="11" fontFamily="Inter, sans-serif">Backtests</text>
-              <circle cx="28" cy="172" r="3" fill="rgba(255,255,255,0.1)" />
-              <text x="44" y="208" fill="#5a5a72" fontSize="11" fontFamily="Inter, sans-serif">Portfolio</text>
-              <circle cx="28" cy="204" r="3" fill="rgba(255,255,255,0.1)" />
+              <text x="44" y="176" fill="#5a5a72" fontSize="11" fontFamily="Inter, sans-serif">Whale Tracker</text>
+              <circle cx="28" cy="172" r="3" fill="rgba(74,222,128,0.4)" />
+              <text x="44" y="208" fill="#5a5a72" fontSize="11" fontFamily="Inter, sans-serif">Copy Trading</text>
+              <circle cx="28" cy="204" r="3" fill="rgba(74,222,128,0.4)" />
+              <text x="44" y="240" fill="#5a5a72" fontSize="11" fontFamily="Inter, sans-serif">AI Signals</text>
+              <circle cx="28" cy="236" r="3" fill="rgba(168,85,247,0.4)" />
+              <text x="44" y="272" fill="#5a5a72" fontSize="11" fontFamily="Inter, sans-serif">Orders</text>
+              <circle cx="28" cy="268" r="3" fill="rgba(255,255,255,0.1)" />
+              <text x="44" y="304" fill="#5a5a72" fontSize="11" fontFamily="Inter, sans-serif">Portfolio</text>
+              <circle cx="28" cy="300" r="3" fill="rgba(255,255,255,0.1)" />
+              <text x="44" y="336" fill="#5a5a72" fontSize="11" fontFamily="Inter, sans-serif">API Keys</text>
+              <circle cx="28" cy="332" r="3" fill="rgba(255,255,255,0.1)" />
 
               {/* Main content area */}
               <rect x="180" y="0" width="720" height="440" fill="#0a0a0f" />
