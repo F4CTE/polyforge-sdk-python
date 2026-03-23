@@ -64,7 +64,7 @@ const SENTIMENT_TABS: { label: string; value: SentimentFilter }[] = [
 function sourceColor(source: string): string {
   const map: Record<string, string> = {
     Reuters: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    CNN: 'bg-red-500/15 text-red-400 border-red-500/30',
+    CNN: 'bg-pf-danger/15 text-pf-danger border-pf-danger/30',
     CoinGecko: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
     Bloomberg: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
     'AP News': 'bg-teal-500/15 text-teal-400 border-teal-500/30',
@@ -181,7 +181,7 @@ export function Component() {
         const data: { data: TopSignal[] } = await res.json();
         setTopSignals(data.data);
       }
-    } catch { /* silent */ }
+    } catch { toast.error('Failed to load signals') }
     setLoadingSignals(false);
   }, []);
 

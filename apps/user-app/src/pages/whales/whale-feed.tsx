@@ -309,7 +309,7 @@ export function Component() {
                 </button>
                 <Link
                   to={`/whales/${trade.walletAddress}`}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border border-pf-success/30 text-pf-success hover:bg-pf-success/10 transition-colors"
                 >
                   <Copy className="size-3.5" /> Copy
                 </Link>

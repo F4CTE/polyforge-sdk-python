@@ -53,7 +53,7 @@ const STATUS_STYLES: Record<CopyStatus, { dot: string; bg: string; text: string 
 const MODE_STYLES: Record<CopyMode, { bg: string; text: string }> = {
   PERCENTAGE: { bg: 'bg-pf-cyan-500/10', text: 'text-pf-cyan-400' },
   FIXED:      { bg: 'bg-purple-500/10',  text: 'text-purple-400' },
-  MIRROR:     { bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
+  MIRROR:     { bg: 'bg-pf-success/10', text: 'text-pf-success' },
 };
 
 const FILTERS: { label: string; value: FilterStatus }[] = [

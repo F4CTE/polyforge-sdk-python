@@ -92,7 +92,7 @@ export function Component() {
           setFollowedWhales(res.data.map((w: { walletAddress: string }) => ({ walletAddress: w.walletAddress })));
         }
       })
-      .catch(() => { /* ignore */ })
+      .catch(() => toast.error('Failed to load followed whales'))
       .finally(() => setLoadingWhales(false));
   }, []);
 
