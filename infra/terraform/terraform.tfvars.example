@@ -1,57 +1,50 @@
-# ─── Polyforge — Example terraform.tfvars ────────────────────────────────────
-# Copy to prod.tfvars, fill in real values, then:
-#   terraform apply -var-file=prod.tfvars
-#
-# prod.tfvars is gitignored (contains secrets). Never commit it.
+# ─── Polyforge Production Configuration ─────────────────────
+# Copy this file to terraform.tfvars and fill in real values.
+# NEVER commit terraform.tfvars to git.
 
-# ── Core ──────────────────────────────────────────────────────────────────────
+# ── General ──
+aws_region   = "us-east-1"
+environment  = "prod"
+project      = "polyforge"
 
-aws_region    = "us-east-1"
-project       = "polyforge"
-environment   = "prod"
+# ── EC2 ──
+ec2_instance_type       = "c5.2xlarge"
+ec2_ami                 = "ami-0c101f26f147fa7fd"  # Amazon Linux 2023 us-east-1
+ec2_key_name            = "CHANGE_ME"              # Create via AWS Console
+admin_cidr_blocks       = ["YOUR_IP/32"]            # REQUIRED: Your office/VPN IP
+ec2_root_volume_size_gb = 80
 
-# ── EC2 ───────────────────────────────────────────────────────────────────────
+# ── RDS ──
+rds_instance_class        = "db.r6g.large"
+rds_allocated_storage_gb  = 100
+rds_max_storage_gb        = 500
+rds_postgres_version      = "16"
+db_user_username          = "poly"
+db_user_password          = "CHANGE_ME_min_16_chars"
+db_admin_username         = "poly_admin"
+db_admin_password         = "CHANGE_ME_min_16_chars"
+rds_backup_retention_days = 30
 
-ec2_instance_type = "c5.2xlarge"   # 8 vCPU, 16 GB — runs all 13 services
-ec2_key_name      = "polyforge-prod"  # Name of EC2 key pair in AWS
+# ── ElastiCache ──
+redis_node_type  = "cache.r7g.large"
+redis_auth_token = "CHANGE_ME_min_16_chars"
 
-# IMPORTANT: Replace with your actual admin/VPN CIDR(s) before deploying.
-# Leaving this as 0.0.0.0/0 allows anyone to attempt SSH.
-admin_cidr_blocks = ["YOUR_OFFICE_IP/32"]
+# ── SES ──
+ses_domain  = "polyforge.app"
+alert_email = "ops@polyforge.app"  # REQUIRED: CloudWatch alarm notifications
 
-# ── RDS ───────────────────────────────────────────────────────────────────────
-
-rds_instance_class    = "db.r6g.large"  # 2 vCPU, 16 GB — handles OHLCV write load
-db_user_username      = "poly"
-db_user_password      = "CHANGE_ME_min16chars_random"
-db_admin_username     = "poly_admin"
-db_admin_password     = "CHANGE_ME_min16chars_random"
-
-# ── ElastiCache ───────────────────────────────────────────────────────────────
-
-redis_node_type = "cache.r7g.large"  # 2 vCPU, 13 GB
-redis_auth_token = "CHANGE_ME_min16chars_random"
-
-# ── SES ───────────────────────────────────────────────────────────────────────
-
-ses_domain    = "polyforge.app"
-alert_email   = "your-admin-email@example.com"
-
-# ── App secrets ───────────────────────────────────────────────────────────────
-# Generate secure values:
-#   openssl rand -hex 32   → for JWT secrets and encryption keys (64 hex chars)
-#   openssl rand -base64 48 → alternative
-
+# ── Secrets Manager ──
+# All values are sensitive. See scripts/fetch-secrets.sh for expected key names.
 app_secrets = {
-  USER_JWT_SECRET         = "GENERATE_WITH: openssl rand -hex 32"
-  ADMIN_JWT_SECRET        = "GENERATE_WITH: openssl rand -hex 32"
-  BOT_JWT_SECRET          = "GENERATE_WITH: openssl rand -hex 32"
-  INTERNAL_JWT_SECRET     = "GENERATE_WITH: openssl rand -hex 32"
-  MASTER_ENCRYPTION_KEY   = "GENERATE_WITH: openssl rand -hex 32"   # 64 hex = 32 bytes
-  TOTP_ENCRYPTION_KEY     = "GENERATE_WITH: openssl rand -hex 32"
-  POLY_BUILDER_API_KEY    = "FROM_POLYMARKET_BUILDER_PROGRAM"
-  POLY_BUILDER_SECRET     = "FROM_POLYMARKET_BUILDER_PROGRAM"
-  POLY_BUILDER_PASSPHRASE = "FROM_POLYMARKET_BUILDER_PROGRAM"
-  TELEGRAM_BOT_TOKEN      = "FROM_BOTFATHER"
-  DISCORD_BOT_TOKEN       = "FROM_DISCORD_DEVELOPER_PORTAL"
+  USER_JWT_SECRET         = "CHANGE_ME"
+  ADMIN_JWT_SECRET        = "CHANGE_ME"
+  BOT_JWT_SECRET          = "CHANGE_ME"
+  INTERNAL_JWT_SECRET     = "CHANGE_ME"
+  MASTER_ENCRYPTION_KEY   = "CHANGE_ME_64_hex_chars"  # 64 hex chars (32 bytes)
+  TOTP_ENCRYPTION_KEY     = "CHANGE_ME_64_hex_chars"  # 64 hex chars (32 bytes)
+  POLY_BUILDER_API_KEY    = "CHANGE_ME"
+  POLY_BUILDER_SECRET     = "CHANGE_ME"
+  POLY_BUILDER_PASSPHRASE = "CHANGE_ME"
+  TELEGRAM_BOT_TOKEN      = "CHANGE_ME"
+  DISCORD_BOT_TOKEN       = "CHANGE_ME"
 }
