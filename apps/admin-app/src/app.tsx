@@ -3,9 +3,11 @@ import { RouterProvider } from 'react-router';
 import { Toaster } from 'sonner';
 import { router } from './router';
 import { useAdminAuthStore } from './stores/admin-auth-store';
+import { useThemeStore } from './stores/theme-store';
 
 export function App() {
   const init = useAdminAuthStore((s) => s.init);
+  const isDark = useThemeStore((s) => s.isDark);
 
   useEffect(() => {
     init();
@@ -15,7 +17,7 @@ export function App() {
     <>
       <RouterProvider router={router} />
       <Toaster
-        theme="dark"
+        theme={isDark ? 'dark' : 'light'}
         position="top-right"
         toastOptions={{
           style: {

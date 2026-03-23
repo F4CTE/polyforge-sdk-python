@@ -17,8 +17,9 @@ export function Component() {
     try {
       await login(email, password);
       navigate('/dashboard', { replace: true });
-    } catch (err: any) {
-      toast.error(err?.body?.message || 'Invalid credentials');
+    } catch (err: unknown) {
+      const apiErr = err as { body?: { message?: string } };
+      toast.error(apiErr?.body?.message || 'Invalid credentials');
     } finally {
       setLoading(false);
     }
@@ -61,7 +62,7 @@ export function Component() {
         {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 space-y-4 shadow-lg shadow-black/20"
+          className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 space-y-4 shadow-pf-lg"
         >
           <div>
             <label htmlFor="email" className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1.5">
@@ -70,6 +71,7 @@ export function Component() {
             <input
               id="email"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -86,6 +88,7 @@ export function Component() {
             <input
               id="password"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

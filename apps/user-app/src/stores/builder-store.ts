@@ -352,7 +352,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       const s = await res.json();
 
       const nodes: Node<BlockNodeData>[] = [];
-      const canvasLayout = s.canvas as any;
+      const canvasLayout = s.canvas as Record<string, unknown> | undefined;
       const storedPositions = canvasLayout?.positions || {};
       const sectionOrder: BlockSection[] = [
         'safety',

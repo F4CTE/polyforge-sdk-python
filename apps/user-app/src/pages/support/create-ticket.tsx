@@ -30,11 +30,16 @@ export function Component() {
   const [body, setBody] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const subjectError = touched.subject && !subject.trim() ? 'Subject is required' : '';
+  const bodyError = touched.body && !body.trim() ? 'Description is required' : '';
 
   const canSubmit = subject.trim() && body.trim() && !submitting;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setTouched({ subject: true, body: true });
     if (!canSubmit) return;
     setSubmitting(true);
     setError('');
@@ -79,9 +84,11 @@ export function Component() {
             type="text"
             value={subject}
             onChange={e => setSubject(e.target.value)}
+            onBlur={() => setTouched(t => ({ ...t, subject: true }))}
             placeholder="Brief description of your issue"
-            className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors"
+            className={`w-full h-10 px-3 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors ${subjectError ? 'border-red-500/50' : 'border-pf-border'}`}
           />
+          {subjectError && <p className="mt-1 text-xs text-red-400">{subjectError}</p>}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -112,10 +119,12 @@ export function Component() {
           <textarea
             value={body}
             onChange={e => setBody(e.target.value)}
+            onBlur={() => setTouched(t => ({ ...t, body: true }))}
             placeholder="Describe your issue in detail..."
             rows={6}
-            className="w-full px-3 py-2.5 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors resize-y"
+            className={`w-full px-3 py-2.5 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors resize-y ${bodyError ? 'border-red-500/50' : 'border-pf-border'}`}
           />
+          {bodyError && <p className="mt-1 text-xs text-red-400">{bodyError}</p>}
         </div>
 
         {error && (

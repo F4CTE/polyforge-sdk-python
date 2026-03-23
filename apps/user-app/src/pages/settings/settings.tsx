@@ -108,7 +108,12 @@ export function Component() {
         credentials: 'include',
         body: JSON.stringify({ displayName: displayName || undefined, bio: bio || undefined, avatarUrl: avatarUrl || undefined }),
       });
-      if (res.ok) patchUser({ displayName, bio, avatarUrl });
+      if (res.ok) {
+        patchUser({ displayName, bio, avatarUrl });
+        toast.success('Profile saved');
+      } else {
+        toast.error('Failed to save profile');
+      }
     } catch { toast.error('Failed to save profile'); }
     setProfileSaving(false);
   }
@@ -129,6 +134,9 @@ export function Component() {
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
+        toast.success('Password changed');
+      } else {
+        toast.error('Failed to change password');
       }
     } catch { toast.error('Failed to change password'); }
     setPwSaving(false);
@@ -138,7 +146,11 @@ export function Component() {
   async function startTotpSetup() {
     try {
       const res = await fetch('/auth/v1/totp/setup', { method: 'POST', credentials: 'include' });
-      if (res.ok) setTotpSetupData(await res.json());
+      if (res.ok) {
+        setTotpSetupData(await res.json());
+      } else {
+        toast.error('Failed to start 2FA setup');
+      }
     } catch { toast.error('Failed to start 2FA setup'); }
   }
 
@@ -156,6 +168,9 @@ export function Component() {
         patchUser({ totpEnabled: true });
         setTotpSetupData(null);
         setTotpCode('');
+        toast.success('Two-factor authentication enabled');
+      } else {
+        toast.error('Failed to confirm 2FA');
       }
     } catch { toast.error('Failed to confirm 2FA'); }
     setTotpSaving(false);
@@ -174,6 +189,9 @@ export function Component() {
       if (res.ok) {
         patchUser({ totpEnabled: false });
         setTotpCode('');
+        toast.success('Two-factor authentication disabled');
+      } else {
+        toast.error('Failed to disable 2FA');
       }
     } catch { toast.error('Failed to disable 2FA'); }
     setTotpSaving(false);
@@ -184,12 +202,17 @@ export function Component() {
     if (notifSaving) return;
     setNotifSaving(true);
     try {
-      await fetch('/api/v1/profile/notifications', {
+      const res = await fetch('/api/v1/profile/notifications', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(notifPrefs),
       });
+      if (res.ok) {
+        toast.success('Notification preferences saved');
+      } else {
+        toast.error('Failed to save notification preferences');
+      }
     } catch { toast.error('Failed to save notification preferences'); }
     setNotifSaving(false);
   }
@@ -227,6 +250,9 @@ export function Component() {
         setNewKeyName('');
         setNewKeyScopes({ read: true, write: false, trade: false });
         setNewKeyExpiration('');
+        toast.success('API key created');
+      } else {
+        toast.error('Failed to create API key');
       }
     } catch { toast.error('Failed to create API key'); }
     setApiKeysCreating(false);
@@ -236,7 +262,10 @@ export function Component() {
     if (!confirm('Revoke this API key? This action cannot be undone.')) return;
     try {
       const res = await fetch(`/api/v1/api-keys/${id}`, { method: 'DELETE', credentials: 'include' });
-      if (res.ok) setApiKeys(prev => prev.map(k => k.id === id ? { ...k, revoked: true } : k));
+      if (res.ok) {
+        setApiKeys(prev => prev.map(k => k.id === id ? { ...k, revoked: true } : k));
+        toast.success('API key revoked');
+      }
     } catch { toast.error('Failed to revoke API key'); }
   }
 
@@ -340,7 +369,7 @@ export function Component() {
           <div>
             <label className="text-xs text-pf-text-secondary mb-1.5 block">Current Password</label>
             <div className="relative">
-              <input type={showCurrentPw ? 'text' : 'password'} value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
+              <input type={showCurrentPw ? 'text' : 'password'} autoComplete="current-password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
                 className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
               <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text">
                 {showCurrentPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -350,7 +379,7 @@ export function Component() {
           <div>
             <label className="text-xs text-pf-text-secondary mb-1.5 block">New Password</label>
             <div className="relative">
-              <input type={showNewPw ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)}
+              <input type={showNewPw ? 'text' : 'password'} autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
                 className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
               <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text">
                 {showNewPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -359,7 +388,7 @@ export function Component() {
           </div>
           <div>
             <label className="text-xs text-pf-text-secondary mb-1.5 block">Confirm New Password</label>
-            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+            <input type="password" autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
               className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             {confirmPassword && newPassword !== confirmPassword && (
               <span className="text-xs text-red-400 mt-1 block">Passwords do not match</span>

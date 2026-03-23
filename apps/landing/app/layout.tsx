@@ -26,6 +26,17 @@ export const metadata: Metadata = {
     'Polymarket',
     'trading bot',
   ],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   metadataBase: new URL('https://polyforge.app'),
   alternates: {
     canonical: '/',

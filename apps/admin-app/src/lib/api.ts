@@ -22,6 +22,11 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
     ...options,
   });
   if (!res.ok) {
+    // Redirect to login on 401 Unauthorized (expired/invalid session)
+    if (res.status === 401 && !url.includes('/auth/')) {
+      window.location.href = '/login';
+      return new Promise<T>(() => {}); // never resolves; page is navigating
+    }
     const body = await res.json().catch(() => ({}));
     throw Object.assign(new Error(body.message || res.statusText), {
       status: res.status,

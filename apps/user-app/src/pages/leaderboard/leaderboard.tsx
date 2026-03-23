@@ -167,7 +167,7 @@ export function Component() {
                     <td className="px-4 py-3">
                       <Link to={`/profile/${entry.username}`} className="flex items-center gap-3 hover:text-pf-cyan-400 transition-colors">
                         {entry.avatarUrl ? (
-                          <img src={entry.avatarUrl} alt="" className="size-8 rounded-full object-cover" />
+                          <img src={entry.avatarUrl} alt={`${entry.displayName ?? entry.username} avatar`} className="size-8 rounded-full object-cover" />
                         ) : (
                           <div className="size-8 rounded-full bg-pf-surface flex items-center justify-center text-[11px] font-semibold text-cyan-400">
                             {userInitials(entry)}

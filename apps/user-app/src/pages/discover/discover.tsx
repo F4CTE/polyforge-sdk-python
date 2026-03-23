@@ -158,7 +158,7 @@ export function Component() {
                 {/* Author row */}
                 <div className="flex items-center gap-2 mb-3">
                   {s.author.avatarUrl ? (
-                    <img src={s.author.avatarUrl} alt="" className="size-7 rounded-full object-cover" />
+                    <img src={s.author.avatarUrl} alt={`${s.author.displayName ?? s.author.username} avatar`} className="size-7 rounded-full object-cover" />
                   ) : (
                     <div className="size-7 rounded-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-[10px] font-bold text-pf-cyan-400">
                       {authorInitials(s)}

@@ -50,7 +50,7 @@ export function Component() {
         </div>
 
         {/* Card */}
-        <div className="bg-pf-elevated border border-pf-border rounded-xl p-8 shadow-lg shadow-black/20">
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg">
           {!sent ? (
             <>
               <h2 className="text-xl font-semibold text-pf-text mb-1">Reset password</h2>
@@ -64,11 +64,12 @@ export function Component() {
                     <input
                       id="email"
                       type="email"
+                      autoComplete="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       onBlur={() => setTouched(true)}
                       placeholder="you@example.com"
-                      className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-lg text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                     />
                   </div>
                   {emailError && <p className="mt-1 text-xs text-red-400">{emailError}</p>}
@@ -77,7 +78,7 @@ export function Component() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 bg-pf-cyan-500 text-pf-base font-semibold rounded-lg hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full py-2.5 bg-pf-cyan-500 text-pf-base font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? 'Sending...' : 'Send reset link'}
                 </button>

@@ -271,7 +271,7 @@ export function Component() {
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(
-    async (p: number, s: string, so: SortOption) => {
+    async (p: number, s: string, so: SortOption, cat: string) => {
       setLoading(true);
       try {
         const params = new URLSearchParams();
@@ -279,6 +279,7 @@ export function Component() {
         params.set('limit', '25');
         if (s) params.set('search', s);
         params.set('sort', so);
+        if (cat !== 'all') params.set('category', cat);
         const res = await fetch(`/api/v1/markets?${params}`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to load');
         const data: MarketsResponse = await res.json();
@@ -294,16 +295,19 @@ export function Component() {
     [],
   );
 
+  // Keep a ref to the latest search value so the debounce callback never captures stale state
+  const searchRef = useRef(search);
+  searchRef.current = search;
+
   useEffect(() => {
-    load(page, search, sort);
-  }, [page, sort, load]); // eslint-disable-line react-hooks/exhaustive-deps
+    load(page, search, sort, category);
+  }, [page, search, sort, category, load]);
 
   function onSearchInput(value: string) {
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
     searchTimeout.current = setTimeout(() => {
       setSearch(value);
       setPage(1);
-      load(1, value, sort);
     }, 300);
   }
 
@@ -312,7 +316,8 @@ export function Component() {
     localStorage.setItem('pf-markets-view', mode);
   }
 
-  const filtered = category === 'all' ? markets : markets.filter((m) => m.category === category);
+  // Category filtering is now done server-side via query param
+  const filtered = markets;
   const featured = filtered.slice(0, 3);
   const grid = filtered.slice(3);
 
@@ -343,7 +348,7 @@ export function Component() {
         {CATEGORIES.map((cat) => (
           <button
             key={cat}
-            onClick={() => setCategory(cat)}
+            onClick={() => { setCategory(cat); setPage(1); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
               category === cat
                 ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'

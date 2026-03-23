@@ -74,7 +74,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
       if (section === 'calc') {
         return nodes.filter((n) => n.type === 'calcNode').length;
       }
-      return nodes.filter((n) => (n.data as any).section === section).length;
+      return nodes.filter((n) => (n.data as Record<string, unknown>).section === section).length;
     },
     [nodes],
   );

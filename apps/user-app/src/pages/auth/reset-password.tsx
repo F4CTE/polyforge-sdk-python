@@ -64,14 +64,14 @@ export function Component() {
         </div>
 
         {/* Card */}
-        <div className="bg-pf-elevated border border-pf-border rounded-xl p-8 shadow-lg shadow-black/20">
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg">
           {!done ? (
             <>
               <h2 className="text-xl font-semibold text-pf-text mb-1">Set new password</h2>
               <p className="text-sm text-pf-text-muted mb-6">Choose a strong password.</p>
 
               {error && (
-                <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg px-4 py-3 mb-4 text-sm">
+                <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-pf px-4 py-3 mb-4 text-sm">
                   <AlertCircle className="size-4 shrink-0" />
                   <span>{error}</span>
                 </div>
@@ -86,11 +86,12 @@ export function Component() {
                     <input
                       id="password"
                       type="password"
+                      autoComplete="new-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       onBlur={() => setTouched((t) => ({ ...t, password: true }))}
                       placeholder="At least 8 characters"
-                      className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-lg text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                     />
                   </div>
                   {passwordError && <p className="mt-1 text-xs text-red-400">{passwordError}</p>}
@@ -104,11 +105,12 @@ export function Component() {
                     <input
                       id="confirm"
                       type="password"
+                      autoComplete="new-password"
                       value={confirm}
                       onChange={(e) => setConfirm(e.target.value)}
                       onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
                       placeholder="Repeat password"
-                      className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-lg text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                     />
                   </div>
                   {confirmError && <p className="mt-1 text-xs text-red-400">{confirmError}</p>}
@@ -117,7 +119,7 @@ export function Component() {
                 <button
                   type="submit"
                   disabled={loading || !token}
-                  className="w-full py-2.5 bg-pf-cyan-500 text-pf-base font-semibold rounded-lg hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full py-2.5 bg-pf-cyan-500 text-pf-base font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? 'Resetting...' : 'Reset password'}
                 </button>
@@ -132,7 +134,7 @@ export function Component() {
               <p className="text-sm text-pf-text-muted mb-6">You can now sign in with your new password.</p>
               <Link
                 to="/login"
-                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-pf-base font-semibold rounded-lg hover:bg-pf-cyan-400 transition-colors"
+                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-pf-base font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors"
               >
                 Sign in
               </Link>

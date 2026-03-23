@@ -142,6 +142,7 @@ export function Component() {
                 <input
                   id="email"
                   type="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, email: true }))}
@@ -160,6 +161,7 @@ export function Component() {
                 <input
                   id="username"
                   type="text"
+                  autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, username: true }))}
@@ -178,6 +180,7 @@ export function Component() {
                 <input
                   id="password"
                   type="password"
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, password: true }))}
@@ -204,6 +207,7 @@ export function Component() {
                 <input
                   id="confirmPassword"
                   type="password"
+                  autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, confirmPassword: true }))}

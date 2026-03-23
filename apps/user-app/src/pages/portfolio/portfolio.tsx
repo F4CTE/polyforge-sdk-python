@@ -3,8 +3,8 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import {
-  TrendingUp, TrendingDown, Wallet, Target, BarChart3,
-  ChevronLeft, ChevronRight, RefreshCw, X, Loader2, AlertTriangle,
+  Wallet, BarChart3,
+  RefreshCw, Loader2, AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -154,9 +154,13 @@ export function Component() {
   }, []);
 
   useEffect(() => {
-    loadPortfolio();
-    loadChart(period);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    let cancelled = false;
+    if (!cancelled) {
+      loadPortfolio();
+      loadChart(period);
+    }
+    return () => { cancelled = true; };
+  }, [loadPortfolio, loadChart, period]);
 
   function setPeriod(p: Period) {
     setPeriodState(p);
@@ -193,10 +197,10 @@ export function Component() {
   }
 
   // Chart data
-  const chartData = pnl?.snapshots.map(s => ({
+  const chartData = (pnl?.snapshots ?? []).map(s => ({
     time: new Date(s.time).toLocaleDateString([], { month: 'short', day: 'numeric' }),
     pnl: parseFloat(s.pnl),
-  })) ?? [];
+  }));
   const isProfitable = parseFloat(pnl?.totalPnl ?? '0') >= 0;
   const chartColorResolved = isProfitable
     ? (styles?.getPropertyValue('--color-pf-success').trim() || '#10B981')

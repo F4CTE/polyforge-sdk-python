@@ -3,9 +3,12 @@ import { RouterProvider } from 'react-router';
 import { Toaster } from 'sonner';
 import { router } from './router';
 import { useAuthStore } from './stores/auth-store';
+import { useThemeStore } from './stores/theme-store';
+import { ErrorBoundary } from './components/error-boundary';
 
 export function App() {
   const init = useAuthStore((s) => s.init);
+  const isDark = useThemeStore((s) => s.isDark);
 
   useEffect(() => {
     init();
@@ -13,9 +16,11 @@ export function App() {
 
   return (
     <>
-      <RouterProvider router={router} />
+      <ErrorBoundary>
+        <RouterProvider router={router} />
+      </ErrorBoundary>
       <Toaster
-        theme="dark"
+        theme={isDark ? 'dark' : 'light'}
         position="top-right"
         toastOptions={{
           style: {

@@ -51,14 +51,15 @@ export function Component() {
     try {
       const result = await save();
       toast.success(isEdit ? 'Strategy saved' : 'Strategy created');
-      const savedId = (result as any)?.id ?? strategyId;
+      const savedId = (result as Record<string, unknown>)?.id ?? strategyId;
       if (savedId) {
         navigate(`/strategies/${savedId}`);
       } else {
         navigate('/strategies');
       }
-    } catch (err: any) {
-      toast.error(err?.message ?? 'Save failed');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Save failed';
+      toast.error(message);
     }
   }, [save, isEdit, strategyId, navigate]);
 

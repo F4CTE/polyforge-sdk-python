@@ -13,8 +13,6 @@ import {
   X,
 } from 'lucide-react';
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -171,6 +169,7 @@ export function Component() {
   // Load market
   useEffect(() => {
     if (!id) return;
+    let cancelled = false;
     setLoadingMarket(true);
     fetch(`/api/v1/markets/${id}`, { credentials: 'include' })
       .then((r) => {
@@ -178,10 +177,13 @@ export function Component() {
         return r.json();
       })
       .then((m: Market) => {
-        setMarket(m);
-        setLoadingMarket(false);
+        if (!cancelled) {
+          setMarket(m);
+          setLoadingMarket(false);
+        }
       })
-      .catch(() => { toast.error('Failed to load market'); setLoadingMarket(false); });
+      .catch(() => { if (!cancelled) { toast.error('Failed to load market'); setLoadingMarket(false); } });
+    return () => { cancelled = true; };
   }, [id]);
 
   // Load chart
@@ -230,12 +232,14 @@ export function Component() {
   // When market loads, fetch chart + book
   useEffect(() => {
     if (!market) return;
+    let cancelled = false;
     const yesToken = market.tokens.find((t) => t.outcome === 'YES');
     if (yesToken) {
       loadChart(yesToken.tokenId, resolution);
       loadBook(yesToken.tokenId);
     }
-  }, [market]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { cancelled = true; };
+  }, [market, resolution, loadChart, loadBook]);
 
   // When resolution changes
   function onResolutionChange(res: Resolution) {

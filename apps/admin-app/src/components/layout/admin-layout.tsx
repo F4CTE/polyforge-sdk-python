@@ -27,7 +27,7 @@ export function Component() {
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
           <div className="relative z-50 h-full">
-            <AdminSidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
+            <AdminSidebar collapsed={false} onToggle={() => setMobileOpen(false)} onNavigate={() => setMobileOpen(false)} />
           </div>
         </div>
       )}

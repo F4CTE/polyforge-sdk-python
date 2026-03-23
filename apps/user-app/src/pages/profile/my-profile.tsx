@@ -33,7 +33,7 @@ export function Component() {
         {/* Identity */}
         <div className="flex items-center gap-4 mb-4">
           {user.avatarUrl ? (
-            <img src={user.avatarUrl} alt="" className="size-20 rounded-full object-cover" />
+            <img src={user.avatarUrl} alt={`${user.displayName ?? user.username} avatar`} className="size-20 rounded-full object-cover" />
           ) : (
             <div className="size-20 rounded-full bg-pf-surface flex items-center justify-center text-2xl font-bold text-cyan-400">
               {initials}

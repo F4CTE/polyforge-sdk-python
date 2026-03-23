@@ -83,7 +83,7 @@ export function Component() {
         </div>
 
         {/* Card */}
-        <div className="bg-pf-elevated border border-pf-border rounded-xl p-8 shadow-lg shadow-black/20">
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg">
           {/* Pending - loading */}
           {state === 'pending' && (
             <div className="text-center py-4">
@@ -102,7 +102,7 @@ export function Component() {
               <p className="text-sm text-pf-text-muted mb-6">Your account is now active.</p>
               <Link
                 to="/markets"
-                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-pf-base font-semibold rounded-lg hover:bg-pf-cyan-400 transition-colors"
+                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-pf-base font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors"
               >
                 Go to Markets
               </Link>
@@ -120,7 +120,7 @@ export function Component() {
               <button
                 onClick={handleResend}
                 disabled={resending}
-                className="inline-block px-6 py-2.5 border border-pf-border text-pf-text font-medium rounded-lg hover:bg-pf-border/30 disabled:opacity-50 transition-colors"
+                className="inline-block px-6 py-2.5 border border-pf-border text-pf-text font-medium rounded-pf hover:bg-pf-border/30 disabled:opacity-50 transition-colors"
               >
                 {resending ? 'Sending...' : 'Resend email'}
               </button>
@@ -141,7 +141,7 @@ export function Component() {
               </p>
 
               {resent && (
-                <div className="flex items-center justify-center gap-2 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg px-4 py-3 mb-4 text-sm">
+                <div className="flex items-center justify-center gap-2 bg-green-500/10 border border-green-500/20 text-green-400 rounded-pf px-4 py-3 mb-4 text-sm">
                   <Check className="size-4" />
                   <span>Verification email resent!</span>
                 </div>
@@ -150,7 +150,7 @@ export function Component() {
               <button
                 onClick={handleResend}
                 disabled={resending}
-                className="w-full py-2.5 border border-pf-border text-pf-text font-medium rounded-lg hover:bg-pf-border/30 disabled:opacity-50 transition-colors"
+                className="w-full py-2.5 border border-pf-border text-pf-text font-medium rounded-pf hover:bg-pf-border/30 disabled:opacity-50 transition-colors"
               >
                 {resending ? 'Sending...' : 'Resend email'}
               </button>

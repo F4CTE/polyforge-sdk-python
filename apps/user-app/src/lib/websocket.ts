@@ -22,6 +22,7 @@ const BACKTEST_EVENT_TYPES = new Set([
 export class WebSocketManager {
   private ws: WebSocket | null = null;
   private reconnectDelay = 1000;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private pingInterval: ReturnType<typeof setInterval> | null = null;
   private destroyed = false;
   private authenticated = false;
@@ -95,7 +96,7 @@ export class WebSocketManager {
       this.stopPing();
       this.authenticated = false;
       if (!this.destroyed) {
-        setTimeout(() => this.connect(), this.reconnectDelay);
+        this.reconnectTimer = setTimeout(() => this.connect(), this.reconnectDelay);
         this.reconnectDelay = Math.min(this.reconnectDelay * 2, 30_000);
       }
     };
@@ -154,6 +155,10 @@ export class WebSocketManager {
 
   destroy(): void {
     this.destroyed = true;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     this.stopPing();
     this.ws?.close();
     this.listeners.clear();

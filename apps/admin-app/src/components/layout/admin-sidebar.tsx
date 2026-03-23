@@ -76,9 +76,10 @@ const navSections: NavSection[] = [
 interface Props {
   collapsed: boolean;
   onToggle: () => void;
+  onNavigate?: () => void;
 }
 
-export function AdminSidebar({ collapsed, onToggle }: Props) {
+export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
   const { isSuperAdmin, admin } = useAdminAuthStore();
   const openTickets = usePollingStore((s) => s.openTickets);
   const initials = admin?.displayName
@@ -148,6 +149,7 @@ export function AdminSidebar({ collapsed, onToggle }: Props) {
                   key={item.path}
                   to={item.path}
                   title={collapsed ? item.label : undefined}
+                  onClick={onNavigate}
                   className={({ isActive }) =>
                     `flex items-center gap-2.5 px-2.5 py-2 rounded-pf-sm text-sm transition-colors duration-150 ${
                       isActive
