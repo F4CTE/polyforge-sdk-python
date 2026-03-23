@@ -154,9 +154,9 @@ export function Component() {
                         <td className="px-4 py-3 font-mono text-xs text-[var(--color-pf-text-tertiary)]">{log.ip}</td>
                         <td className="px-4 py-3">
                           {log.success ? (
-                            <span className="text-xs text-emerald-400">Success</span>
+                            <span className="text-xs text-pf-success">Success</span>
                           ) : (
-                            <span className="text-xs text-red-400">Failed</span>
+                            <span className="text-xs text-pf-danger">Failed</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-xs text-[var(--color-pf-text-tertiary)]">{log.failReason ?? '-'}</td>

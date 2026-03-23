@@ -122,7 +122,7 @@ export function Component() {
             <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">
               {user.username}
               {user.suspended && (
-                <span className="ml-2 px-2 py-0.5 rounded text-xs font-medium text-red-400 bg-red-400/10">
+                <span className="ml-2 px-2 py-0.5 rounded text-xs font-medium text-pf-danger bg-pf-danger/10">
                   SUSPENDED
                 </span>
               )}
@@ -185,7 +185,7 @@ export function Component() {
             <button
               onClick={handleUnsuspend}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 disabled:opacity-50 transition-colors"
             >
               <CheckCircle size={14} />
               Unsuspend
@@ -194,7 +194,7 @@ export function Component() {
             <button
               onClick={() => setShowSuspendDialog(true)}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 disabled:opacity-50 transition-colors"
             >
               <Ban size={14} />
               Suspend
@@ -204,8 +204,8 @@ export function Component() {
 
         {/* Suspend Dialog */}
         {showSuspendDialog && (
-          <div className="mt-4 p-4 rounded-pf-sm border border-red-500/20 bg-red-500/5">
-            <h4 className="text-sm font-medium text-red-400 mb-2">Suspend User</h4>
+          <div className="mt-4 p-4 rounded-pf-sm border border-pf-danger/20 bg-pf-danger/5">
+            <h4 className="text-sm font-medium text-pf-danger mb-2">Suspend User</h4>
             <textarea
               value={suspendReason}
               onChange={(e) => setSuspendReason(e.target.value)}
@@ -217,7 +217,7 @@ export function Component() {
               <button
                 onClick={handleSuspend}
                 disabled={actionLoading || !suspendReason.trim()}
-                className="px-3 py-1.5 text-sm rounded-pf-sm bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
+                className="px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/80 disabled:opacity-50 transition-colors"
               >
                 Confirm Suspend
               </button>
@@ -268,16 +268,17 @@ export function Component() {
                     </td>
                     <td className="px-3 py-2.5">
                       {key.revoked ? (
-                        <span className="text-xs text-red-400">Revoked</span>
+                        <span className="text-xs text-pf-danger">Revoked</span>
                       ) : (
-                        <span className="text-xs text-emerald-400">Active</span>
+                        <span className="text-xs text-pf-success">Active</span>
                       )}
                     </td>
                     <td className="px-3 py-2.5 text-right">
                       {!key.revoked && (
                         <button
                           onClick={() => revokeKey(key.id)}
-                          className="p-1 rounded hover:bg-red-500/10 text-[var(--color-pf-text-tertiary)] hover:text-red-400 transition-colors"
+                          className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
+                          aria-label="Revoke key"
                           title="Revoke key"
                         >
                           <Trash2 size={14} />

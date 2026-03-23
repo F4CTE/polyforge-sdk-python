@@ -73,26 +73,26 @@ interface LiveLogEntry {
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 const STATUS_STYLES: Record<StrategyStatus, { dot: string; bg: string; text: string }> = {
-  RUNNING:  { dot: 'bg-emerald-400', bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
+  RUNNING:  { dot: 'bg-pf-success', bg: 'bg-pf-success/10', text: 'text-pf-success' },
   PAPER:    { dot: 'bg-cyan-400',    bg: 'bg-cyan-500/10',    text: 'text-cyan-400' },
   PAUSED:   { dot: 'bg-amber-400',   bg: 'bg-amber-500/10',   text: 'text-amber-400' },
   IDLE:     { dot: 'bg-gray-400',    bg: 'bg-gray-500/10',    text: 'text-gray-400' },
-  ERROR:    { dot: 'bg-red-400',     bg: 'bg-red-500/10',     text: 'text-red-400' },
+  ERROR:    { dot: 'bg-pf-danger',     bg: 'bg-pf-danger/10',     text: 'text-pf-danger' },
   ARCHIVED: { dot: 'bg-gray-500',    bg: 'bg-gray-500/10',    text: 'text-gray-500' },
 };
 
 const LOG_COLORS: Record<LiveLogEntry['severity'], string> = {
-  success: 'text-emerald-400',
+  success: 'text-pf-success',
   info: 'text-pf-cyan-400',
   warning: 'text-amber-400',
-  error: 'text-red-400',
+  error: 'text-pf-danger',
 };
 
 const LOG_DOT_COLORS: Record<LiveLogEntry['severity'], string> = {
-  success: 'bg-emerald-400',
+  success: 'bg-pf-success',
   info: 'bg-pf-cyan-400',
   warning: 'bg-amber-400',
-  error: 'bg-red-400',
+  error: 'bg-pf-danger',
 };
 
 function blockLabel(type: string): string {
@@ -139,7 +139,7 @@ const SECTION_STYLES: Record<string, string> = {
   safety: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   trigger: 'bg-pf-cyan-500/10 text-pf-cyan-400 border-pf-cyan-500/20',
   condition: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  action: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  action: 'bg-pf-success/10 text-pf-success border-pf-success/20',
 };
 
 /* ─── Component ──────────────────────────────────────────────────────── */
@@ -354,7 +354,7 @@ export function Component() {
                   <button
                     onClick={() => doAction('stop')}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf text-red-400 hover:bg-red-500/10 disabled:opacity-40 transition-colors text-sm"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors text-sm"
                   >
                     <Square className="size-3.5" /> Stop
                   </button>
@@ -372,7 +372,7 @@ export function Component() {
                   <button
                     onClick={() => doAction('stop')}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf text-red-400 hover:bg-red-500/10 disabled:opacity-40 transition-colors text-sm"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors text-sm"
                   >
                     <Square className="size-3.5" /> Stop
                   </button>
@@ -381,6 +381,7 @@ export function Component() {
               <Link
                 to={`/strategies/${strategy.id}/edit`}
                 className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                aria-label="Edit strategy"
                 title="Edit"
               >
                 <Pencil className="size-4" />
@@ -388,6 +389,7 @@ export function Component() {
               <button
                 onClick={handleExport}
                 className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                aria-label="Export strategy"
                 title="Export"
               >
                 <Download className="size-4" />
@@ -395,6 +397,7 @@ export function Component() {
               <button
                 onClick={handleShare}
                 className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                aria-label="Share strategy"
                 title="Share"
               >
                 <Share2 className="size-4" />
@@ -475,7 +478,7 @@ export function Component() {
           {pnl !== null && (
             <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
               <span className="text-xs text-pf-text-muted block mb-1">Total P&L</span>
-              <span className={`font-mono text-2xl font-semibold ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <span className={`font-mono text-2xl font-semibold ${pnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
                 {formatPnl(pnl)}
               </span>
             </div>

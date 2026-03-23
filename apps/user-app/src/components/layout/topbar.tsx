@@ -66,7 +66,7 @@ export function Topbar() {
             </span>
           )}
           {/* WebSocket active indicator */}
-          <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-dot" />
+          <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-pf-success animate-pulse-dot" />
         </button>
 
         {notifOpen && (
@@ -100,11 +100,11 @@ export function Topbar() {
                     <span
                       className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${
                         n.severity === 'error'
-                          ? 'bg-red-500'
+                          ? 'bg-pf-danger'
                           : n.severity === 'warning'
                             ? 'bg-yellow-500'
                             : n.severity === 'success'
-                              ? 'bg-green-500'
+                              ? 'bg-pf-success'
                               : 'bg-pf-cyan-500'
                       }`}
                     />
@@ -176,7 +176,7 @@ export function Topbar() {
             <div className="border-t border-pf-border my-1" />
             <button
               onClick={logout}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-pf-surface transition-colors"
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-pf-danger hover:bg-pf-surface transition-colors"
             >
               <LogOut size={16} />
               Sign out

@@ -57,7 +57,7 @@ export function Component() {
         <div className="flex flex-wrap gap-2">
           <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
             user.emailVerified
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+              ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
               : 'bg-pf-overlay text-pf-text-muted border-pf-border'
           }`}>
             <Mail className="size-3" />
@@ -65,7 +65,7 @@ export function Component() {
           </span>
           <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
             user.polymarketConnected
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+              ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
               : 'bg-pf-overlay text-pf-text-muted border-pf-border'
           }`}>
             <Link2 className="size-3" />
@@ -73,7 +73,7 @@ export function Component() {
           </span>
           <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
             user.totpEnabled
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+              ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
               : 'bg-pf-overlay text-pf-text-muted border-pf-border'
           }`}>
             <Shield className="size-3" />

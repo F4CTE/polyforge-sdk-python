@@ -21,14 +21,14 @@ interface EndpointCategory {
 /* ─── Data ───────────────────────────────────────────────────────────── */
 
 const METHOD_STYLES: Record<string, { bg: string; text: string }> = {
-  GET:    { bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
+  GET:    { bg: 'bg-pf-success/10', text: 'text-pf-success' },
   POST:   { bg: 'bg-blue-500/10', text: 'text-blue-400' },
   PATCH:  { bg: 'bg-amber-500/10', text: 'text-amber-400' },
-  DELETE: { bg: 'bg-red-500/10', text: 'text-red-400' },
+  DELETE: { bg: 'bg-pf-danger/10', text: 'text-pf-danger' },
 };
 
 const SCOPE_STYLES: Record<string, { bg: string; text: string }> = {
-  READ:  { bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
+  READ:  { bg: 'bg-pf-success/10', text: 'text-pf-success' },
   WRITE: { bg: 'bg-blue-500/10', text: 'text-blue-400' },
   TRADE: { bg: 'bg-amber-500/10', text: 'text-amber-400' },
 };

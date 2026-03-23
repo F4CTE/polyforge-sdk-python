@@ -332,15 +332,15 @@ export function Component() {
             {/* Price pills + Run Strategy */}
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex gap-2">
-                <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-emerald-500/10 border border-emerald-500/20">
-                  <span className="text-[10px] uppercase tracking-wide text-emerald-400/70">YES</span>
-                  <span className="text-lg font-mono font-semibold text-emerald-400">
+                <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-pf-success/10 border border-pf-success/20">
+                  <span className="text-[10px] uppercase tracking-wide text-pf-success/70">YES</span>
+                  <span className="text-lg font-mono font-semibold text-pf-success">
                     {yesPrice ?? '\u2014'}
                   </span>
                 </div>
-                <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-red-500/10 border border-red-500/20">
-                  <span className="text-[10px] uppercase tracking-wide text-red-400/70">NO</span>
-                  <span className="text-lg font-mono font-semibold text-red-400">
+                <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-pf-danger/10 border border-pf-danger/20">
+                  <span className="text-[10px] uppercase tracking-wide text-pf-danger/70">NO</span>
+                  <span className="text-lg font-mono font-semibold text-pf-danger">
                     {noPrice ?? '\u2014'}
                   </span>
                 </div>
@@ -480,10 +480,10 @@ export function Component() {
                       .map((ask, idx, arr) => (
                         <div key={`ask-${idx}`} className="relative flex items-center h-6 px-2 text-xs">
                           <div
-                            className="absolute inset-y-0 right-0 bg-red-500/8 rounded-sm"
+                            className="absolute inset-y-0 right-0 bg-pf-danger/8 rounded-sm"
                             style={{ width: `${bookDepth(orderBook.asks.slice(0, 8), arr.length - 1 - idx)}%` }}
                           />
-                          <span className="relative font-mono text-red-400 w-16">{ask.price}</span>
+                          <span className="relative font-mono text-pf-danger w-16">{ask.price}</span>
                           <span className="relative font-mono text-pf-text-muted ml-auto">{ask.size}</span>
                         </div>
                       ))}
@@ -500,10 +500,10 @@ export function Component() {
                     {orderBook.bids.slice(0, 8).map((bid, idx) => (
                       <div key={`bid-${idx}`} className="relative flex items-center h-6 px-2 text-xs">
                         <div
-                          className="absolute inset-y-0 right-0 bg-emerald-500/8 rounded-sm"
+                          className="absolute inset-y-0 right-0 bg-pf-success/8 rounded-sm"
                           style={{ width: `${bookDepth(orderBook.bids.slice(0, 8), idx)}%` }}
                         />
-                        <span className="relative font-mono text-emerald-400 w-16">{bid.price}</span>
+                        <span className="relative font-mono text-pf-success w-16">{bid.price}</span>
                         <span className="relative font-mono text-pf-text-muted ml-auto">{bid.size}</span>
                       </div>
                     ))}

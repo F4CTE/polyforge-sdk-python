@@ -127,7 +127,7 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg">
 
           {error && (
-            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-pf px-4 py-3 mb-4 text-sm">
+            <div className="flex items-center gap-2 bg-pf-danger/10 border border-pf-danger/20 text-pf-danger rounded-pf px-4 py-3 mb-4 text-sm">
               <AlertCircle className="size-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -150,7 +150,7 @@ export function Component() {
                   className={inputClass}
                 />
               </div>
-              {fieldError('email') && <p className="mt-1 text-xs text-red-400">{fieldError('email')}</p>}
+              {fieldError('email') && <p className="mt-1 text-xs text-pf-danger">{fieldError('email')}</p>}
             </div>
 
             {/* Username */}
@@ -169,7 +169,7 @@ export function Component() {
                   className={inputClass}
                 />
               </div>
-              {fieldError('username') && <p className="mt-1 text-xs text-red-400">{fieldError('username')}</p>}
+              {fieldError('username') && <p className="mt-1 text-xs text-pf-danger">{fieldError('username')}</p>}
             </div>
 
             {/* Password */}
@@ -188,7 +188,7 @@ export function Component() {
                   className={inputClass}
                 />
               </div>
-              {fieldError('password') && <p className="mt-1 text-xs text-red-400">{fieldError('password')}</p>}
+              {fieldError('password') && <p className="mt-1 text-xs text-pf-danger">{fieldError('password')}</p>}
               {touched.password && !fieldError('password') && password && (
                 <ul className="mt-1.5 text-xs text-pf-text-muted space-y-0.5 list-disc list-inside">
                   <li>Minimum 8 characters</li>
@@ -215,7 +215,7 @@ export function Component() {
                   className={inputClass}
                 />
               </div>
-              {fieldError('confirmPassword') && <p className="mt-1 text-xs text-red-400">{fieldError('confirmPassword')}</p>}
+              {fieldError('confirmPassword') && <p className="mt-1 text-xs text-pf-danger">{fieldError('confirmPassword')}</p>}
             </div>
 
             {/* Invite Code */}
@@ -252,7 +252,7 @@ export function Component() {
                 </a>
               </label>
             </div>
-            {fieldError('tos') && <p className="text-xs text-red-400 -mt-2">{fieldError('tos')}</p>}
+            {fieldError('tos') && <p className="text-xs text-pf-danger -mt-2">{fieldError('tos')}</p>}
 
             <button
               type="submit"

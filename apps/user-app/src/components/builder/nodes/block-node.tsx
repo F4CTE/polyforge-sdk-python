@@ -125,7 +125,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
           </span>
           <button
             onClick={onDelete}
-            className="p-0.5 rounded hover:bg-red-500/20 text-pf-text-muted hover:text-red-400 transition-colors"
+            className="p-0.5 rounded hover:bg-pf-danger/20 text-pf-text-muted hover:text-pf-danger transition-colors"
             aria-label="Remove block"
             title="Remove block"
           >

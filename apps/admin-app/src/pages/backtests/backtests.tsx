@@ -96,7 +96,7 @@ export function Component() {
                     <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{getDuration(bt)}</td>
                     <td className="px-4 py-3 text-right">
                       {bt.totalPnl != null ? (
-                        <span className={parseFloat(bt.totalPnl) >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                        <span className={parseFloat(bt.totalPnl) >= 0 ? 'text-pf-success' : 'text-pf-danger'}>
                           {parseFloat(bt.totalPnl) >= 0 ? '+' : ''}{bt.totalPnl}
                         </span>
                       ) : (

@@ -37,7 +37,7 @@ const PERIODS: { label: string; value: Period }[] = [
 function pnlColor(pnl: string): string {
   const v = parseFloat(pnl);
   if (isNaN(v)) return 'text-pf-text-secondary';
-  return v >= 0 ? 'text-emerald-400' : 'text-red-400';
+  return v >= 0 ? 'text-pf-success' : 'text-pf-danger';
 }
 
 function pnlSign(pnl: string): string {

@@ -71,7 +71,7 @@ export function AdminTopbar() {
 
         <button
           onClick={logout}
-          className="p-2 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:text-red-400 transition-colors"
+          className="p-2 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:text-pf-danger transition-colors"
           aria-label="Logout"
         >
           <LogOut size={16} />

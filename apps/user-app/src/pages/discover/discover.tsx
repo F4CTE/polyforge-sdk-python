@@ -203,7 +203,7 @@ export function Component() {
                   <span className="flex items-center gap-1"><Heart className="size-3.5" /> {s.likeCount}</span>
                   <span className="flex items-center gap-1"><GitFork className="size-3.5" /> {s.forkCount}</span>
                   <span className={`ml-auto font-mono text-sm font-bold ${
-                    pnl > 0 ? 'text-emerald-400' : pnl < 0 ? 'text-red-400' : 'text-pf-text-muted'
+                    pnl > 0 ? 'text-pf-success' : pnl < 0 ? 'text-pf-danger' : 'text-pf-text-muted'
                   }`}>
                     <span className="text-[11px] text-pf-text-muted font-sans font-normal mr-0.5">24h</span>
                     {pnl !== 0 ? `${pnl > 0 ? '+' : ''}${pnl.toFixed(1)}%` : '\u2014'}

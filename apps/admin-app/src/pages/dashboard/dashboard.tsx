@@ -117,7 +117,7 @@ export function Component() {
 
   const statCards = [
     { label: 'Total Users', value: stats.totalUsers, icon: <Users size={20} />, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-    { label: 'Active Strategies', value: stats.activeStrategies, icon: <Blocks size={20} />, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    { label: 'Active Strategies', value: stats.activeStrategies, icon: <Blocks size={20} />, color: 'text-pf-success', bg: 'bg-pf-success/10' },
     { label: 'Total Orders', value: stats.totalOrders, icon: <ShoppingCart size={20} />, color: 'text-violet-400', bg: 'bg-violet-400/10' },
     { label: 'Open Tickets', value: stats.openTickets, icon: <TicketCheck size={20} />, color: 'text-amber-400', bg: 'bg-amber-400/10' },
   ];
@@ -201,10 +201,10 @@ export function Component() {
                   <span
                     className={`w-2 h-2 rounded-full ${
                       svc?.status === 'healthy'
-                        ? 'bg-emerald-400'
+                        ? 'bg-pf-success'
                         : svc?.status === 'degraded'
                           ? 'bg-amber-400'
-                          : 'bg-red-400'
+                          : 'bg-pf-danger'
                     }`}
                   />
                 </div>

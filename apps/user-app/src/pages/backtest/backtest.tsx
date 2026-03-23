@@ -44,14 +44,14 @@ interface BacktestsResponse {
 const STATUS_STYLES: Record<BacktestStatus, { text: string; bg: string }> = {
   QUEUED:    { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
   RUNNING:   { text: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-  COMPLETED: { text: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-  FAILED:    { text: 'text-red-400', bg: 'bg-red-500/10' },
+  COMPLETED: { text: 'text-pf-success', bg: 'bg-pf-success/10' },
+  FAILED:    { text: 'text-pf-danger', bg: 'bg-pf-danger/10' },
   CANCELLED: { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
 };
 
 function pnlColor(val: string | null): string {
   if (!val) return 'text-pf-text-muted';
-  return parseFloat(val) >= 0 ? 'text-emerald-400' : 'text-red-400';
+  return parseFloat(val) >= 0 ? 'text-pf-success' : 'text-pf-danger';
 }
 
 function pnlSign(val: string | null): string {
@@ -258,7 +258,7 @@ export function Component() {
           )}
 
           {selectedRun.status === 'FAILED' && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-red-500/10 text-red-400 text-sm">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-danger/10 text-pf-danger text-sm">
               <XCircle className="size-4 shrink-0" />
               {selectedRun.error ?? 'Backtest failed.'}
             </div>
@@ -333,7 +333,7 @@ export function Component() {
                             <span className="font-mono text-[11px] text-cyan-400">{run.progress}%</span>
                           </div>
                         ) : run.status === 'COMPLETED' ? (
-                          <span className="font-mono text-[11px] text-emerald-400">100%</span>
+                          <span className="font-mono text-[11px] text-pf-success">100%</span>
                         ) : (
                           <span className="text-pf-text-muted">\u2014</span>
                         )}

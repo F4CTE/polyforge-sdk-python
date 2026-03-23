@@ -130,11 +130,11 @@ export function StrategyCanvas() {
         <MiniMap
           position="bottom-right"
           nodeColor={(node) => {
-            if (node.type === 'variableNode') return '#A855F7';
-            if (node.type === 'logicNode') return '#3B82F6';
-            if (node.type === 'calcNode') return '#10B981';
+            if (node.type === 'variableNode') return 'var(--color-pf-purple-500)';
+            if (node.type === 'logicNode') return 'var(--color-pf-info)';
+            if (node.type === 'calcNode') return 'var(--color-pf-success)';
             const data = node.data as BlockNodeData;
-            return data?.color ?? '#6B7280';
+            return data?.color ?? 'var(--color-pf-text-muted)';
           }}
           pannable
           zoomable

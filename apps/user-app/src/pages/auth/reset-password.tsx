@@ -71,7 +71,7 @@ export function Component() {
               <p className="text-sm text-pf-text-muted mb-6">Choose a strong password.</p>
 
               {error && (
-                <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-pf px-4 py-3 mb-4 text-sm">
+                <div className="flex items-center gap-2 bg-pf-danger/10 border border-pf-danger/20 text-pf-danger rounded-pf px-4 py-3 mb-4 text-sm">
                   <AlertCircle className="size-4 shrink-0" />
                   <span>{error}</span>
                 </div>
@@ -94,7 +94,7 @@ export function Component() {
                       className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                     />
                   </div>
-                  {passwordError && <p className="mt-1 text-xs text-red-400">{passwordError}</p>}
+                  {passwordError && <p className="mt-1 text-xs text-pf-danger">{passwordError}</p>}
                 </div>
 
                 {/* Confirm password */}
@@ -113,7 +113,7 @@ export function Component() {
                       className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                     />
                   </div>
-                  {confirmError && <p className="mt-1 text-xs text-red-400">{confirmError}</p>}
+                  {confirmError && <p className="mt-1 text-xs text-pf-danger">{confirmError}</p>}
                 </div>
 
                 <button
@@ -127,8 +127,8 @@ export function Component() {
             </>
           ) : (
             <div className="text-center">
-              <div className="size-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-                <Check className="size-8 text-green-400" />
+              <div className="size-16 rounded-full bg-pf-success/10 flex items-center justify-center mx-auto mb-4">
+                <Check className="size-8 text-pf-success" />
               </div>
               <h2 className="text-xl font-semibold text-pf-text mb-2">Password reset</h2>
               <p className="text-sm text-pf-text-muted mb-6">You can now sign in with your new password.</p>

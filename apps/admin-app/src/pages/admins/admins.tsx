@@ -197,6 +197,7 @@ export function Component() {
                         <button
                           onClick={() => openEdit(a)}
                           className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text)] transition-colors"
+                          aria-label="Edit admin"
                           title="Edit admin"
                         >
                           <Pencil size={14} />
@@ -206,7 +207,8 @@ export function Component() {
                             setDeleteConfirmId(a.id);
                             setDeletePassword('');
                           }}
-                          className="p-1.5 rounded hover:bg-red-500/10 text-[var(--color-pf-text-tertiary)] hover:text-red-400 transition-colors"
+                          className="p-1.5 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
+                          aria-label="Deactivate admin"
                           title="Deactivate admin"
                         >
                           <Trash2 size={14} />
@@ -325,7 +327,7 @@ export function Component() {
               <button
                 onClick={handleDeactivate}
                 disabled={submitting || !deletePassword}
-                className="flex-1 py-2 text-sm font-medium rounded-pf-sm bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
+                className="flex-1 py-2 text-sm font-medium rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/80 disabled:opacity-50 transition-colors"
               >
                 {submitting ? 'Deactivating...' : 'Deactivate'}
               </button>

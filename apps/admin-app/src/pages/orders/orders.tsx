@@ -95,7 +95,7 @@ export function Component() {
                     <span className="font-medium">{entry.username}</span>
                     <span className="text-[var(--color-pf-text-tertiary)]"> - Intent {entry.intentId.slice(0, 8)}</span>
                   </div>
-                  <div className="text-xs text-red-400 mt-0.5 truncate">{entry.lastError}</div>
+                  <div className="text-xs text-pf-danger mt-0.5 truncate">{entry.lastError}</div>
                   <div className="text-[11px] text-[var(--color-pf-text-tertiary)] mt-0.5">
                     {entry.attempts} attempts - {formatDateTime(entry.enqueuedAt)}
                   </div>
@@ -110,7 +110,7 @@ export function Component() {
                   </button>
                   <button
                     onClick={() => handleDiscard(entry.intentId)}
-                    className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
                   >
                     <Trash2 size={12} />
                     Discard
@@ -164,7 +164,7 @@ export function Component() {
                     </td>
                     <td className="px-4 py-3 text-[var(--color-pf-text)]">{o.username}</td>
                     <td className="px-4 py-3">
-                      <span className={o.side === 'BUY' ? 'text-emerald-400' : 'text-red-400'}>
+                      <span className={o.side === 'BUY' ? 'text-pf-success' : 'text-pf-danger'}>
                         {o.side}
                       </span>
                     </td>

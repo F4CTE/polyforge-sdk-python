@@ -113,7 +113,7 @@ export function Component() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium transition-colors ${
               profile.isFollowing
                 ? 'bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong'
-                : 'bg-pf-cyan-500 text-black hover:bg-pf-cyan-600'
+                : 'bg-pf-cyan-500 text-black hover:bg-pf-cyan-400'
             }`}
           >
             {followLoading ? (

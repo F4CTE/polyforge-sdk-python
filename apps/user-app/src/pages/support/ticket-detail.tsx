@@ -228,7 +228,7 @@ export function Component() {
             className="w-full px-3 py-2.5 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors resize-y"
           />
           <div className="flex items-center justify-between mt-3">
-            <span className={`text-xs font-mono ${isOverWarn ? 'text-red-400' : 'text-pf-text-muted'}`}>
+            <span className={`text-xs font-mono ${isOverWarn ? 'text-pf-danger' : 'text-pf-text-muted'}`}>
               {charCount} / {MAX_CHARS}
             </span>
             <button

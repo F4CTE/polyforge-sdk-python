@@ -121,11 +121,11 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               className={`w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none transition-colors ${
                 nameValid
                   ? 'border-pf-border-subtle focus:border-purple-500/50'
-                  : 'border-red-500/60 focus:border-red-500'
+                  : 'border-pf-danger/60 focus:border-pf-danger'
               }`}
             />
             {!nameValid && (
-              <p className="text-[9px] text-red-400 mt-0.5">
+              <p className="text-[9px] text-pf-danger mt-0.5">
                 Letters, digits, underscores only
               </p>
             )}

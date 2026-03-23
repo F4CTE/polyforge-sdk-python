@@ -86,9 +86,9 @@ export function Component() {
             onChange={e => setSubject(e.target.value)}
             onBlur={() => setTouched(t => ({ ...t, subject: true }))}
             placeholder="Brief description of your issue"
-            className={`w-full h-10 px-3 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors ${subjectError ? 'border-red-500/50' : 'border-pf-border'}`}
+            className={`w-full h-10 px-3 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors ${subjectError ? 'border-pf-danger/50' : 'border-pf-border'}`}
           />
-          {subjectError && <p className="mt-1 text-xs text-red-400">{subjectError}</p>}
+          {subjectError && <p className="mt-1 text-xs text-pf-danger">{subjectError}</p>}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -122,13 +122,13 @@ export function Component() {
             onBlur={() => setTouched(t => ({ ...t, body: true }))}
             placeholder="Describe your issue in detail..."
             rows={6}
-            className={`w-full px-3 py-2.5 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors resize-y ${bodyError ? 'border-red-500/50' : 'border-pf-border'}`}
+            className={`w-full px-3 py-2.5 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors resize-y ${bodyError ? 'border-pf-danger/50' : 'border-pf-border'}`}
           />
-          {bodyError && <p className="mt-1 text-xs text-red-400">{bodyError}</p>}
+          {bodyError && <p className="mt-1 text-xs text-pf-danger">{bodyError}</p>}
         </div>
 
         {error && (
-          <div className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-pf">{error}</div>
+          <div className="text-sm text-pf-danger bg-pf-danger/10 px-3 py-2 rounded-pf">{error}</div>
         )}
 
         <div className="flex justify-end">

@@ -63,7 +63,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
     [id, updateNodeConfig],
   );
 
-  const color = LOGIC_COLORS[d.type] ?? '#3B82F6';
+  const color = LOGIC_COLORS[d.type] ?? 'var(--color-pf-info)';
   const symbol = LOGIC_SYMBOLS[d.type] ?? d.type;
   const icon = LOGIC_ICONS[d.type];
   const inputCount = INPUT_COUNTS[d.type] ?? 1;
@@ -171,11 +171,11 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
         {d.type === 'IF_THEN_ELSE' && d.config.condition && (
           <div className="px-2.5 pb-2">
             <div className="flex items-center gap-2 text-[10px]">
-              <span className="px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 font-medium">
+              <span className="px-1.5 py-0.5 rounded-full bg-pf-success/20 text-pf-success font-medium">
                 TRUE
               </span>
               <span className="text-pf-text-muted">/</span>
-              <span className="px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 font-medium">
+              <span className="px-1.5 py-0.5 rounded-full bg-pf-danger/20 text-pf-danger font-medium">
                 FALSE
               </span>
             </div>
@@ -201,14 +201,14 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
             position={Position.Right}
             id="true-out"
             className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
-            style={{ borderColor: '#22C55E', top: '35%' }}
+            style={{ borderColor: 'var(--color-pf-success)', top: '35%' }}
           />
           <Handle
             type="source"
             position={Position.Right}
             id="false-out"
             className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
-            style={{ borderColor: '#EF4444', top: '65%' }}
+            style={{ borderColor: 'var(--color-pf-danger)', top: '65%' }}
           />
         </>
       ) : (

@@ -391,7 +391,7 @@ export function Component() {
             <input type="password" autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
               className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             {confirmPassword && newPassword !== confirmPassword && (
-              <span className="text-xs text-red-400 mt-1 block">Passwords do not match</span>
+              <span className="text-xs text-pf-danger mt-1 block">Passwords do not match</span>
             )}
           </div>
           <div className="flex justify-end">
@@ -412,7 +412,7 @@ export function Component() {
           {user?.totpEnabled ? (
             <>
               <p className="text-sm text-pf-text-secondary">
-                2FA is currently <strong className="text-emerald-400">enabled</strong>.
+                2FA is currently <strong className="text-pf-success">enabled</strong>.
               </p>
               <div>
                 <label className="text-xs text-pf-text-secondary mb-1.5 block">Enter your TOTP code to disable</label>
@@ -420,7 +420,7 @@ export function Component() {
                   className="w-full max-w-[200px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
               </div>
               <button onClick={disableTotp} disabled={totpSaving || !totpCode}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-red-500/10 text-red-400 border border-red-500/20 text-sm font-medium hover:bg-red-500/20 disabled:opacity-50 transition-colors">
+                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger/10 text-pf-danger border border-pf-danger/20 text-sm font-medium hover:bg-pf-danger/20 disabled:opacity-50 transition-colors">
                 {totpSaving ? <Loader2 className="size-4 animate-spin" /> : <Shield className="size-4" />}
                 Disable 2FA
               </button>
@@ -558,7 +558,7 @@ export function Component() {
                           <div className="flex gap-1">
                             {key.scopes.map(scope => (
                               <span key={scope} className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                                scope === 'READ' ? 'bg-emerald-500/10 text-emerald-400' :
+                                scope === 'READ' ? 'bg-pf-success/10 text-pf-success' :
                                 scope === 'WRITE' ? 'bg-blue-500/10 text-blue-400' :
                                 'bg-amber-500/10 text-amber-400'
                               }`}>{scope}</span>
@@ -569,16 +569,16 @@ export function Component() {
                         <td className="py-2 font-mono text-xs text-pf-text-muted">{key.lastUsedAt ? formatDate(key.lastUsedAt) : '\u2014'}</td>
                         <td className="py-2">
                           {key.revoked ? (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-red-500/10 text-red-400">Revoked</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-danger/10 text-pf-danger">Revoked</span>
                           ) : (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-500/10 text-emerald-400">Active</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-success/10 text-pf-success">Active</span>
                           )}
                         </td>
                         <td className="py-2">
                           <button
                             onClick={() => revokeApiKey(key.id)}
                             disabled={key.revoked}
-                            className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 disabled:opacity-30 transition-colors"
+                            className="flex items-center gap-1 text-xs text-pf-danger hover:text-pf-danger disabled:opacity-30 transition-colors"
                           >
                             <Ban className="size-3" /> Revoke
                           </button>

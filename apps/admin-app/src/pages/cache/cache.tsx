@@ -62,6 +62,7 @@ export function Component() {
         <button
           onClick={loadStats}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors"
+          aria-label="Refresh cache stats"
         >
           <RefreshCw size={14} />
           Refresh

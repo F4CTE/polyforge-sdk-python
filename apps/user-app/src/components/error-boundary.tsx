@@ -34,8 +34,8 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen flex items-center justify-center bg-pf-base p-6">
           <div className="max-w-md w-full text-center space-y-6">
-            <div className="mx-auto size-16 rounded-full bg-red-500/10 flex items-center justify-center">
-              <AlertTriangle className="size-8 text-red-400" />
+            <div className="mx-auto size-16 rounded-full bg-pf-danger/10 flex items-center justify-center">
+              <AlertTriangle className="size-8 text-pf-danger" />
             </div>
             <div>
               <h1 className="text-xl font-semibold text-pf-text mb-2">
@@ -46,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </p>
             </div>
             {this.state.error && (
-              <pre className="text-xs text-left text-red-400 bg-red-500/5 border border-red-500/10 rounded-pf p-3 overflow-auto max-h-32">
+              <pre className="text-xs text-left text-pf-danger bg-pf-danger/5 border border-pf-danger/10 rounded-pf p-3 overflow-auto max-h-32">
                 {this.state.error.message}
               </pre>
             )}

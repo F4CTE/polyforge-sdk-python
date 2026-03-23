@@ -66,8 +66,8 @@ const PERIODS: { label: string; value: Period }[] = [
 
 function pnlColor(val: string): string {
   const n = parseFloat(val);
-  if (n > 0) return 'text-emerald-400';
-  if (n < 0) return 'text-red-400';
+  if (n > 0) return 'text-pf-success';
+  if (n < 0) return 'text-pf-danger';
   return 'text-pf-text-muted';
 }
 
@@ -267,13 +267,13 @@ export function Component() {
                 </div>
               </>
             ) : (
-              <div className="col-span-full bg-pf-elevated border border-red-500/20 rounded-pf-lg p-6 text-center">
-                <AlertTriangle className="mx-auto mb-3 text-red-400 opacity-60" size={32} />
+              <div className="col-span-full bg-pf-elevated border border-pf-danger/20 rounded-pf-lg p-6 text-center">
+                <AlertTriangle className="mx-auto mb-3 text-pf-danger opacity-60" size={32} />
                 <p className="text-sm font-medium text-pf-text mb-1">Failed to load portfolio</p>
                 <p className="text-xs text-pf-text-muted mb-4">Something went wrong while fetching your data.</p>
                 <button
                   onClick={loadPortfolio}
-                  className="px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 transition-colors"
+                  className="px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
                 >
                   Retry
                 </button>
@@ -381,7 +381,7 @@ export function Component() {
                         </td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-                            pos.side === 'BUY' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                            pos.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                           }`}>
                             {pos.side}
                           </span>
@@ -412,7 +412,7 @@ export function Component() {
                             <button
                               onClick={() => closePosition(pos)}
                               disabled={closingPosition[pos.id]}
-                              className="text-xs text-red-400 hover:text-red-300 disabled:opacity-50 transition-colors"
+                              className="text-xs text-pf-danger hover:text-pf-danger disabled:opacity-50 transition-colors"
                             >
                               {closingPosition[pos.id] ? <Loader2 className="size-3 animate-spin" /> : 'Close'}
                             </button>
@@ -460,7 +460,7 @@ export function Component() {
                   <button
                     onClick={resetPaper}
                     disabled={resettingPaper}
-                    className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 disabled:opacity-50 transition-colors"
+                    className="flex items-center gap-1.5 text-xs text-pf-danger hover:text-pf-danger disabled:opacity-50 transition-colors"
                   >
                     <RefreshCw className={`size-3.5 ${resettingPaper ? 'animate-spin' : ''}`} />
                     Reset Paper Account
@@ -500,7 +500,7 @@ export function Component() {
                             </td>
                             <td className="px-4 py-3">
                               <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-                                pos.side === 'BUY' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                                pos.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                               }`}>
                                 {pos.side}
                               </span>

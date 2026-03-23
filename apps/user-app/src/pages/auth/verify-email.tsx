@@ -95,8 +95,8 @@ export function Component() {
           {/* Verified */}
           {state === 'verified' && (
             <div className="text-center">
-              <div className="size-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-                <Check className="size-8 text-green-400" />
+              <div className="size-16 rounded-full bg-pf-success/10 flex items-center justify-center mx-auto mb-4">
+                <Check className="size-8 text-pf-success" />
               </div>
               <h2 className="text-xl font-semibold text-pf-text mb-2">Email verified!</h2>
               <p className="text-sm text-pf-text-muted mb-6">Your account is now active.</p>
@@ -112,11 +112,11 @@ export function Component() {
           {/* Error */}
           {state === 'error' && (
             <div className="text-center">
-              <div className="size-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="size-8 text-red-400" />
+              <div className="size-16 rounded-full bg-pf-danger/10 flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="size-8 text-pf-danger" />
               </div>
               <h2 className="text-xl font-semibold text-pf-text mb-2">Verification failed</h2>
-              <p className="text-sm text-red-400 mb-6">{error}</p>
+              <p className="text-sm text-pf-danger mb-6">{error}</p>
               <button
                 onClick={handleResend}
                 disabled={resending}
@@ -141,7 +141,7 @@ export function Component() {
               </p>
 
               {resent && (
-                <div className="flex items-center justify-center gap-2 bg-green-500/10 border border-green-500/20 text-green-400 rounded-pf px-4 py-3 mb-4 text-sm">
+                <div className="flex items-center justify-center gap-2 bg-pf-success/10 border border-pf-success/20 text-pf-success rounded-pf px-4 py-3 mb-4 text-sm">
                   <Check className="size-4" />
                   <span>Verification email resent!</span>
                 </div>

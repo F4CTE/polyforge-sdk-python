@@ -77,7 +77,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   Sports: { bg: 'bg-blue-500/15', text: 'text-blue-400' },
   Crypto: { bg: 'bg-amber-500/15', text: 'text-amber-400' },
   Politics: { bg: 'bg-purple-500/15', text: 'text-purple-400' },
-  Economics: { bg: 'bg-emerald-500/15', text: 'text-emerald-400' },
+  Economics: { bg: 'bg-pf-success/15', text: 'text-pf-success' },
   Finance: { bg: 'bg-cyan-500/15', text: 'text-cyan-400' },
   Technology: { bg: 'bg-pink-500/15', text: 'text-pink-400' },
 };
@@ -208,14 +208,14 @@ function MarketCard({ market, featured }: { market: Market; featured?: boolean }
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              className="h-9 rounded-pf text-sm font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+              className="h-9 rounded-pf text-sm font-medium bg-pf-success/10 text-pf-success hover:bg-pf-success/20 transition-colors"
             >
               Yes {priceCents(market, 'YES')}
             </button>
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              className="h-9 rounded-pf text-sm font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+              className="h-9 rounded-pf text-sm font-medium bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
             >
               No {priceCents(market, 'NO')}
             </button>
@@ -481,10 +481,10 @@ export function Component() {
                             {market.category}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-emerald-400">
+                        <td className="px-4 py-3 text-right font-mono text-pf-success">
                           {priceCents(market, 'YES')}
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-red-400">
+                        <td className="px-4 py-3 text-right font-mono text-pf-danger">
                           {priceCents(market, 'NO')}
                         </td>
                         <td className="px-4 py-3 text-right font-mono text-pf-text">

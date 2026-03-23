@@ -163,7 +163,7 @@ export function Component() {
           <div className="flex gap-3">
             <button
               onClick={() => handleResolve(reviewingId, 'REVIEWED')}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 transition-colors"
             >
               <CheckCircle size={14} />
               Approve

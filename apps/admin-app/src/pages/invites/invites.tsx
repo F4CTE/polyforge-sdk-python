@@ -201,7 +201,8 @@ export function Component() {
                     <td className="px-3 py-2.5 text-right">
                       <button
                         onClick={() => handleDelete(inv.code)}
-                        className="p-1 rounded hover:bg-red-500/10 text-[var(--color-pf-text-tertiary)] hover:text-red-400 transition-colors"
+                        className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
+                        aria-label="Revoke invite"
                         title="Revoke invite"
                       >
                         <Trash2 size={14} />

@@ -317,11 +317,11 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {/* Input handle labels */}
           {inputCount === 2 && (
             <div className="flex items-center gap-2 text-[10px] text-pf-text-muted">
-              <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-medium">
+              <span className="px-1.5 py-0.5 rounded-full bg-pf-success/20 text-pf-success font-medium">
                 A
               </span>
               <span>/</span>
-              <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-medium">
+              <span className="px-1.5 py-0.5 rounded-full bg-pf-success/20 text-pf-success font-medium">
                 B
               </span>
             </div>

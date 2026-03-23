@@ -161,7 +161,7 @@ export function Component() {
                     <td className="px-4 py-3 font-medium text-[var(--color-pf-text)]">
                       {user.username ?? ''}
                       {user.suspended && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium text-red-400 bg-red-400/10">
+                        <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium text-pf-danger bg-pf-danger/10">
                           SUSPENDED
                         </span>
                       )}
@@ -174,21 +174,21 @@ export function Component() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       {user.emailVerified ? (
-                        <Check size={14} className="inline text-emerald-400" />
+                        <Check size={14} className="inline text-pf-success" />
                       ) : (
                         <X size={14} className="inline text-[var(--color-pf-text-tertiary)]" />
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       {user.totpEnabled ? (
-                        <Shield size={14} className="inline text-emerald-400" />
+                        <Shield size={14} className="inline text-pf-success" />
                       ) : (
                         <X size={14} className="inline text-[var(--color-pf-text-tertiary)]" />
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       {user.polymarketConnected ? (
-                        <Wifi size={14} className="inline text-emerald-400" />
+                        <Wifi size={14} className="inline text-pf-success" />
                       ) : (
                         <X size={14} className="inline text-[var(--color-pf-text-tertiary)]" />
                       )}

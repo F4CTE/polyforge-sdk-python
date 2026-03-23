@@ -64,7 +64,7 @@ function statusGradient(status: StrategyStatus): string {
   switch (status) {
     case 'RUNNING':  return 'var(--color-pf-success)';
     case 'PAPER':    return 'var(--color-pf-cyan-500)';
-    case 'PAUSED':   return '#F59E0B';
+    case 'PAUSED':   return 'var(--color-pf-warning)';
     case 'ERROR':    return 'var(--color-pf-danger)';
     case 'IDLE':
     default:         return 'var(--color-pf-border)';
@@ -72,11 +72,11 @@ function statusGradient(status: StrategyStatus): string {
 }
 
 const STATUS_STYLES: Record<StrategyStatus, { dot: string; bg: string; text: string }> = {
-  RUNNING:  { dot: 'bg-emerald-400', bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
+  RUNNING:  { dot: 'bg-pf-success', bg: 'bg-pf-success/10', text: 'text-pf-success' },
   PAPER:    { dot: 'bg-cyan-400',    bg: 'bg-cyan-500/10',    text: 'text-cyan-400' },
   PAUSED:   { dot: 'bg-amber-400',   bg: 'bg-amber-500/10',   text: 'text-amber-400' },
   IDLE:     { dot: 'bg-gray-400',    bg: 'bg-gray-500/10',    text: 'text-gray-400' },
-  ERROR:    { dot: 'bg-red-400',     bg: 'bg-red-500/10',     text: 'text-red-400' },
+  ERROR:    { dot: 'bg-pf-danger',     bg: 'bg-pf-danger/10',     text: 'text-pf-danger' },
   ARCHIVED: { dot: 'bg-gray-500',    bg: 'bg-gray-500/10',    text: 'text-gray-500' },
 };
 
@@ -364,7 +364,7 @@ export function Component() {
                 {/* P&L */}
                 {pnl !== null && (
                   <div className="mb-3">
-                    <span className={`font-mono text-sm font-medium ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <span className={`font-mono text-sm font-medium ${pnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
                       {formatPnl(pnl)}
                     </span>
                   </div>
@@ -406,6 +406,7 @@ export function Component() {
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'pause'); }}
                           disabled={busy}
                           className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:bg-pf-overlay disabled:opacity-40 transition-colors"
+                          aria-label="Pause strategy"
                           title="Pause"
                         >
                           <Pause className="size-3.5" />
@@ -413,7 +414,8 @@ export function Component() {
                         <button
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'stop'); }}
                           disabled={busy}
-                          className="p-1.5 rounded-pf-sm text-red-400 hover:bg-red-500/10 disabled:opacity-40 transition-colors"
+                          className="p-1.5 rounded-pf-sm text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
+                          aria-label="Stop strategy"
                           title="Stop"
                         >
                           <Square className="size-3.5" />
@@ -427,6 +429,7 @@ export function Component() {
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'resume'); }}
                           disabled={busy}
                           className="p-1.5 rounded-pf-sm text-pf-cyan-400 hover:bg-pf-cyan-500/10 disabled:opacity-40 transition-colors"
+                          aria-label="Resume strategy"
                           title="Resume"
                         >
                           <Play className="size-3.5" />
@@ -434,7 +437,8 @@ export function Component() {
                         <button
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'stop'); }}
                           disabled={busy}
-                          className="p-1.5 rounded-pf-sm text-red-400 hover:bg-red-500/10 disabled:opacity-40 transition-colors"
+                          className="p-1.5 rounded-pf-sm text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
+                          aria-label="Stop strategy"
                           title="Stop"
                         >
                           <Square className="size-3.5" />
@@ -446,6 +450,7 @@ export function Component() {
                     <button
                       onClick={(e) => handleExport(e, strategy.id)}
                       className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
+                      aria-label="Export strategy"
                       title="Export"
                     >
                       <Download className="size-3.5" />
@@ -456,6 +461,7 @@ export function Component() {
                       to={`/strategies/${strategy.id}/edit`}
                       onClick={(e) => e.stopPropagation()}
                       className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
+                      aria-label="Edit strategy"
                       title="Edit"
                     >
                       <Pencil className="size-3.5" />

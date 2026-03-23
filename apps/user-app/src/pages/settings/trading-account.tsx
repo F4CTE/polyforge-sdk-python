@@ -99,7 +99,7 @@ export function Component() {
         </div>
         <span data-testid="trading-status" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${
           isConnected
-            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+            ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
             : 'bg-pf-overlay text-pf-text-muted border-pf-border'
         }`}>
           {isConnected ? <CheckCircle className="size-3.5" /> : <XCircle className="size-3.5" />}
@@ -116,7 +116,7 @@ export function Component() {
               Your Polymarket account is connected. You can disconnect it at any time -- your strategies will stop trading until you reconnect.
             </p>
             <button onClick={deleteCredentials} disabled={deleting}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-red-500/10 text-red-400 border border-red-500/20 text-sm font-medium hover:bg-red-500/20 disabled:opacity-50 transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger/10 text-pf-danger border border-pf-danger/20 text-sm font-medium hover:bg-pf-danger/20 disabled:opacity-50 transition-colors">
               {deleting ? <Loader2 className="size-4 animate-spin" /> : <Unlink className="size-4" />}
               Disconnect Account
             </button>
@@ -129,7 +129,7 @@ export function Component() {
             </p>
             <div>
               <label className="text-xs text-pf-text-secondary mb-1.5 block">
-                Private Key <span className="text-red-400">*</span>
+                Private Key <span className="text-pf-danger">*</span>
               </label>
               <div className="relative">
                 <input type={showPrivateKey ? 'text' : 'password'} value={privateKey} onChange={e => setPrivateKey(e.target.value)} placeholder="0x..."
@@ -141,14 +141,14 @@ export function Component() {
             </div>
             <div>
               <label className="text-xs text-pf-text-secondary mb-1.5 block">
-                API Key <span className="text-red-400">*</span>
+                API Key <span className="text-pf-danger">*</span>
               </label>
               <input type="text" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="API Key"
                 className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
             <div>
               <label className="text-xs text-pf-text-secondary mb-1.5 block">
-                API Secret <span className="text-red-400">*</span>
+                API Secret <span className="text-pf-danger">*</span>
               </label>
               <div className="relative">
                 <input type={showApiSecret ? 'text' : 'password'} value={apiSecret} onChange={e => setApiSecret(e.target.value)} placeholder="API Secret"
@@ -160,7 +160,7 @@ export function Component() {
             </div>
             <div>
               <label className="text-xs text-pf-text-secondary mb-1.5 block">
-                API Passphrase <span className="text-red-400">*</span>
+                API Passphrase <span className="text-pf-danger">*</span>
               </label>
               <div className="relative">
                 <input type={showPassphrase ? 'text' : 'password'} value={apiPassphrase} onChange={e => setApiPassphrase(e.target.value)} placeholder="Passphrase"
@@ -178,7 +178,7 @@ export function Component() {
                 className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
             <button onClick={importCredentials} disabled={!canImport}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {importing ? <Loader2 className="size-4 animate-spin" /> : <Link2 className="size-4" />}
               Connect Account
             </button>
@@ -196,7 +196,7 @@ export function Component() {
         {botCode && (
           <div className="flex items-center gap-3 bg-pf-surface rounded-pf p-3 border border-pf-border">
             <code className="flex-1 font-mono text-lg text-pf-text tracking-wider">{botCode}</code>
-            <button onClick={copyBotCode} className="p-1.5 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text">
+            <button onClick={copyBotCode} className="p-1.5 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text" aria-label="Copy bot code">
               <Copy className="size-4" />
             </button>
           </div>

@@ -48,9 +48,9 @@ const STATUS_STYLES: Record<OrderStatus, { text: string; bg: string }> = {
   SUBMITTED: { text: 'text-cyan-400', bg: 'bg-cyan-500/10' },
   LIVE:      { text: 'text-cyan-400', bg: 'bg-cyan-500/10' },
   MATCHED:   { text: 'text-cyan-300', bg: 'bg-cyan-500/8' },
-  CONFIRMED: { text: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+  CONFIRMED: { text: 'text-pf-success', bg: 'bg-pf-success/10' },
   CANCELLED: { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
-  FAILED:    { text: 'text-red-400', bg: 'bg-red-500/10' },
+  FAILED:    { text: 'text-pf-danger', bg: 'bg-pf-danger/10' },
 };
 
 function fillRatio(order: Order): string {
@@ -177,14 +177,14 @@ export function Component() {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-                          order.side === 'BUY' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                          order.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                         }`}>
                           {order.side}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-                          order.outcome === 'YES' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                          order.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                         }`}>
                           {order.outcome}
                         </span>
@@ -250,12 +250,12 @@ export function Component() {
                 { label: 'Order ID', value: <span className="font-mono text-[11px]">{selectedOrder.id.slice(0, 8)}...</span> },
                 { label: 'Side', value: (
                   <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-                    selectedOrder.side === 'BUY' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                    selectedOrder.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                   }`}>{selectedOrder.side}</span>
                 )},
                 { label: 'Outcome', value: (
                   <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-                    selectedOrder.outcome === 'YES' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                    selectedOrder.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                   }`}>{selectedOrder.outcome}</span>
                 )},
                 { label: 'Size', value: <span className="font-mono">{selectedOrder.size}</span> },

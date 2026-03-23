@@ -59,7 +59,7 @@ export function Component() {
         </div>
         <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
           <div className="flex items-center gap-2 mb-2">
-            <DollarSign size={16} className="text-emerald-400" />
+            <DollarSign size={16} className="text-pf-success" />
             <span className="text-xs text-[var(--color-pf-text-tertiary)]">Weekly Reward</span>
           </div>
           <div className="text-2xl font-bold text-[var(--color-pf-text)]">${stats.weeklyRewardUsdc ?? '0'}</div>
@@ -98,7 +98,7 @@ export function Component() {
                     <td className="px-3 py-2.5 text-right text-[var(--color-pf-text-secondary)]">
                       ${Number(w.volume).toLocaleString()}
                     </td>
-                    <td className="px-3 py-2.5 text-right text-emerald-400 font-medium">
+                    <td className="px-3 py-2.5 text-right text-pf-success font-medium">
                       ${w.reward}
                     </td>
                   </tr>

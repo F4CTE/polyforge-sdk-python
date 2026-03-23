@@ -112,7 +112,7 @@ export function Component() {
                       {(s.status === 'RUNNING' || s.status === 'PAPER') && (
                         <button
                           onClick={() => handleForceStop(s.id)}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
                         >
                           <Square size={12} />
                           Force Stop
