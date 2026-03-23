@@ -255,7 +255,7 @@ export function Component() {
                 </div>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 border-l-cyan-500">
                   <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Win Rate</span>
-                  <span className="block mt-1 text-xl font-mono font-semibold text-cyan-400">
+                  <span className="block mt-1 text-xl font-mono font-semibold text-pf-cyan-400">
                     {winRatePct(pnl?.winRate ?? '0')}
                   </span>
                 </div>
@@ -392,7 +392,7 @@ export function Component() {
                         <td className="px-4 py-3 text-right font-mono text-pf-text">
                           {parseFloat(pos.avgEntryPrice).toFixed(3)}
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-cyan-400">
+                        <td className="px-4 py-3 text-right font-mono text-pf-cyan-400">
                           {pos.currentPrice && pos.currentPrice !== '0' ? `$${parseFloat(pos.currentPrice).toFixed(3)}` : <span className="text-pf-text-muted">N/A</span>}
                         </td>
                         <td className={`px-4 py-3 text-right font-mono ${pnlColor(pos.unrealizedPnl)}`}>
@@ -401,7 +401,7 @@ export function Component() {
                         <td className="px-4 py-3 text-right">
                           <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
                             pos.resolutionStatus === 'UNRESOLVED'
-                              ? 'bg-cyan-500/10 text-cyan-400'
+                              ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
                               : 'bg-pf-overlay text-pf-text-muted'
                           }`}>
                             {pos.resolutionStatus}

@@ -43,7 +43,7 @@ interface BacktestsResponse {
 
 const STATUS_STYLES: Record<BacktestStatus, { text: string; bg: string }> = {
   QUEUED:    { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
-  RUNNING:   { text: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+  RUNNING:   { text: 'text-pf-cyan-400', bg: 'bg-pf-cyan-500/10' },
   COMPLETED: { text: 'text-pf-success', bg: 'bg-pf-success/10' },
   FAILED:    { text: 'text-pf-danger', bg: 'bg-pf-danger/10' },
   CANCELLED: { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
@@ -155,7 +155,7 @@ export function Component() {
       {/* New run panel */}
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Play className="size-4 text-cyan-400" />
+          <Play className="size-4 text-pf-cyan-400" />
           <span className="text-sm font-medium text-pf-text">New Backtest</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -220,10 +220,10 @@ export function Component() {
                 <span className="text-xs text-pf-text-muted">
                   {selectedRun.status === 'QUEUED' ? 'Waiting in queue...' : 'Running...'}
                 </span>
-                <span className="text-xs font-mono text-cyan-400">{selectedRun.progress}%</span>
+                <span className="text-xs font-mono text-pf-cyan-400">{selectedRun.progress}%</span>
               </div>
               <div className="h-1.5 bg-pf-overlay rounded-full overflow-hidden">
-                <div className="h-full bg-cyan-500 rounded-full transition-all" style={{ width: `${selectedRun.progress}%` }} />
+                <div className="h-full bg-pf-cyan-500 rounded-full transition-all" style={{ width: `${selectedRun.progress}%` }} />
               </div>
             </div>
           )}
@@ -328,9 +328,9 @@ export function Component() {
                         {run.status === 'RUNNING' ? (
                           <div className="flex items-center gap-2">
                             <div className="flex-1 h-1.5 bg-pf-overlay rounded-full overflow-hidden">
-                              <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${run.progress}%` }} />
+                              <div className="h-full bg-pf-cyan-500 rounded-full" style={{ width: `${run.progress}%` }} />
                             </div>
-                            <span className="font-mono text-[11px] text-cyan-400">{run.progress}%</span>
+                            <span className="font-mono text-[11px] text-pf-cyan-400">{run.progress}%</span>
                           </div>
                         ) : run.status === 'COMPLETED' ? (
                           <span className="font-mono text-[11px] text-pf-success">100%</span>
