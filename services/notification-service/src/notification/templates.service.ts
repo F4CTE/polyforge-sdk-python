@@ -132,6 +132,13 @@ export class TemplatesService {
           severity: "info",
         };
 
+      case "WHALE_TRADE":
+        return {
+          title: "\u{1F40B} Whale Alert",
+          body: `Whale ${data.walletAddress?.slice(0, 8)}... ${data.side} ${data.outcome} $${data.notional} on ${data.marketTitle ?? "a market"}`,
+          severity: "info",
+        };
+
       default:
         return {
           title: "Polyforge Notification",

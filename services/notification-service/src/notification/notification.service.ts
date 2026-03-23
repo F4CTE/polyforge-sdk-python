@@ -20,6 +20,7 @@ const EVENT_TO_PREF_FIELD: Record<string, keyof DispatchOptions | null> = {
   SOMEONE_COMMENTED: "onSomeoneCommented",
   TICKET_REPLY: "onTicketReply",
   TICKET_CLOSED: "onTicketReply",
+  WHALE_TRADE: null, // always dispatched to followers
 };
 
 interface DispatchOptions {

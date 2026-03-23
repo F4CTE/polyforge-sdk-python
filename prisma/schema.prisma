@@ -195,6 +195,7 @@ model User {
   emailVerifications  EmailVerification[]
   passwordResetTokens PasswordResetToken[]
   tickets             Ticket[]
+  whaleFollows         WhaleFollow[]
 
   @@map("users")
 }
@@ -703,7 +704,8 @@ model Market {
   firstSeenAt   DateTime  @default(now())
   lastUpdatedAt DateTime  @updatedAt
 
-  tokens Token[]
+  tokens      Token[]
+  whaleAlerts WhaleAlert[]
 
   @@index([category])
   @@index([closed])
@@ -835,4 +837,51 @@ model EventLog {
   @@index([eventType])
   @@index([createdAt(sort: Desc)])
   @@map("event_log")
+}
+
+// ─── WHALE TRACKING ────────────────────────────
+model WhaleAlert {
+  id            String   @id @default(uuid())
+  walletAddress String   @db.VarChar(255)
+  marketId      String
+  tokenId       String   @db.VarChar(255)
+  side          OrderSide
+  outcome       OrderOutcome
+  size          Decimal  @db.Decimal(20, 6)
+  price         Decimal  @db.Decimal(10, 6)
+  notional      Decimal  @db.Decimal(20, 6)
+  txHash        String?  @db.VarChar(255)
+  detectedAt    DateTime @default(now())
+
+  market        Market   @relation(fields: [marketId], references: [id])
+
+  @@index([walletAddress])
+  @@index([marketId])
+  @@index([detectedAt(sort: Desc)])
+  @@map("whale_alerts")
+}
+
+model WhaleFollow {
+  id            String   @id @default(uuid())
+  userId        String
+  walletAddress String   @db.VarChar(255)
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, walletAddress])
+  @@index([walletAddress])
+  @@map("whale_follows")
+}
+
+model WhaleProfile {
+  walletAddress String   @id @db.VarChar(255)
+  totalVolume   Decimal  @db.Decimal(20, 6) @default(0)
+  totalPnl      Decimal  @db.Decimal(20, 6) @default(0)
+  tradeCount    Int      @default(0)
+  winRate       Decimal  @db.Decimal(5, 2) @default(0)
+  lastTradeAt   DateTime?
+  updatedAt     DateTime @updatedAt
+
+  @@map("whale_profiles")
 }

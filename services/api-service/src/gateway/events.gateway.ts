@@ -17,6 +17,7 @@ interface AuthedSocket extends WebSocket {
   isAuthenticated?: boolean;
   subscribedTokens: Set<string>;
   subscribedStrategies: Set<string>;
+  subscribedWhales: boolean;
 }
 
 /**
@@ -42,6 +43,7 @@ export class EventsGateway
   private readonly clients = new Map<string, Set<AuthedSocket>>(); // userId → Set of sockets
   private readonly tokenSubscribers = new Map<string, Set<string>>(); // tokenId → Set<userId>
   private readonly strategySubscribers = new Map<string, Set<string>>(); // strategyId → Set<userId>
+  private readonly whaleSubscribers = new Set<string>(); // Set<userId>
 
   constructor(
     private readonly jwt: JwtService,
@@ -79,6 +81,7 @@ export class EventsGateway
     client.isAuthenticated = false;
     client.subscribedTokens = new Set();
     client.subscribedStrategies = new Set();
+    client.subscribedWhales = false;
 
     // Try cookie auth from the HTTP upgrade request (browser clients)
     const cookieHeader: string = req?.headers?.cookie ?? "";
@@ -139,6 +142,11 @@ export class EventsGateway
         }
       }
 
+      // Clean up whale subscriptions
+      if (client.subscribedWhales) {
+        this.whaleSubscribers.delete(userId);
+      }
+
       this.logger.debug(
         `Client disconnected, cleaned up ${client.subscribedTokens?.size ?? 0} price and ${client.subscribedStrategies?.size ?? 0} strategy subscriptions`,
       );
@@ -173,6 +181,12 @@ export class EventsGateway
         break;
       case "UNSUBSCRIBE_STRATEGY":
         this.handleUnsubscribeStrategy(client, payload.strategyId);
+        break;
+      case "SUBSCRIBE_WHALES":
+        this.handleSubscribeWhales(client);
+        break;
+      case "UNSUBSCRIBE_WHALES":
+        this.handleUnsubscribeWhales(client);
         break;
       case "PING":
         this.send(client, { type: "PONG" });
@@ -286,6 +300,16 @@ export class EventsGateway
     this.strategySubscribers.get(strategyId)?.delete(client.userId!);
   }
 
+  private handleSubscribeWhales(client: AuthedSocket) {
+    client.subscribedWhales = true;
+    this.whaleSubscribers.add(client.userId!);
+  }
+
+  private handleUnsubscribeWhales(client: AuthedSocket) {
+    client.subscribedWhales = false;
+    this.whaleSubscribers.delete(client.userId!);
+  }
+
   // ─── Helpers ─────────────────────────────────────────────────────────────────
 
   private addClientToSet(userId: string, client: AuthedSocket) {
@@ -347,6 +371,14 @@ export class EventsGateway
   /** Push an order event to the order owner */
   pushOrderEvent(userId: string, type: string, payload: Record<string, any>) {
     this.broadcastToUser(userId, { type, ...payload });
+  }
+
+  /** Push a whale trade event to all whale subscribers */
+  pushWhaleTrade(payload: Record<string, any>) {
+    const msg = { type: "WHALE_TRADE", ...payload };
+    for (const userId of this.whaleSubscribers) {
+      this.broadcastToUser(userId, msg);
+    }
   }
 
   /** Push a notification to a user */

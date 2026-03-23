@@ -23,3 +23,6 @@ export * from "./websocket";
 
 // Tickets
 export * from "./tickets";
+
+// Whales
+export * from "./whales";

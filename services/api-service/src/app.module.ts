@@ -21,6 +21,7 @@ import { TicketsModule } from "./tickets/tickets.module";
 import { ProfileModule } from "./profile/profile.module";
 import { SettingsModule } from "./settings/settings.module";
 import { EventsModule } from "./gateway/events.module";
+import { WhalesModule } from "./whales/whales.module";
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { EventsModule } from "./gateway/events.module";
     ProfileModule,
     SettingsModule,
     EventsModule,
+    WhalesModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ApiKeyThrottlerGuard }],
