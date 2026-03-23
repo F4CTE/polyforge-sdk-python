@@ -29,3 +29,6 @@ export * from "./whales";
 
 // Copy Trading
 export * from "./copy";
+
+// News Pipeline
+export * from "./news";

@@ -11,6 +11,9 @@ import {
   TrendingUp,
   Zap,
   X,
+  Newspaper,
+  ArrowUpRight,
+  ArrowDownRight,
 } from 'lucide-react';
 import {
   XAxis,
@@ -77,6 +80,15 @@ interface OrderBook {
 interface StrategyOption {
   id: string;
   name: string;
+}
+
+interface RelatedNewsSignal {
+  id: string;
+  articleId: string;
+  articleTitle: string;
+  direction: 'BUY' | 'SELL';
+  confidence: number;
+  reasoning: string;
 }
 
 type Resolution = '1m' | '1h' | '1d';
@@ -174,6 +186,9 @@ export function Component() {
   const [condTriggerPrice, setCondTriggerPrice] = useState('');
   const [condSubmitting, setCondSubmitting] = useState(false);
 
+  const [relatedNews, setRelatedNews] = useState<RelatedNewsSignal[]>([]);
+  const [loadingNews, setLoadingNews] = useState(true);
+
   // Load market
   useEffect(() => {
     if (!id) return;
@@ -248,6 +263,20 @@ export function Component() {
     }
     return () => { cancelled = true; };
   }, [market, resolution, loadChart, loadBook]);
+
+  // Load related news signals
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setLoadingNews(true);
+    fetch(`/api/v1/news/signals?market=${id}&limit=3`, { credentials: 'include' })
+      .then(r => r.json())
+      .then((data: { data: RelatedNewsSignal[] }) => {
+        if (!cancelled) { setRelatedNews(data.data); setLoadingNews(false); }
+      })
+      .catch(() => { if (!cancelled) setLoadingNews(false); });
+    return () => { cancelled = true; };
+  }, [id]);
 
   // When resolution changes
   function onResolutionChange(res: Resolution) {
@@ -604,6 +633,69 @@ export function Component() {
                 <Play className="size-3" /> Run Strategy
               </button>
             </div>
+          </div>
+
+          {/* Related News */}
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Newspaper className="size-4 text-pf-text-muted" />
+                <h3 className="text-sm font-medium text-pf-text">Related News</h3>
+              </div>
+              <Link
+                to={`/news?market=${id}`}
+                className="text-[11px] text-pf-text-muted hover:text-pf-cyan-400 transition-colors"
+              >
+                See all news &rarr;
+              </Link>
+            </div>
+
+            {loadingNews ? (
+              <div className="space-y-2">
+                {Array.from({ length: 3 }, (_, i) => (
+                  <div key={i} className="h-12 bg-pf-overlay rounded-pf-sm animate-pulse" />
+                ))}
+              </div>
+            ) : relatedNews.length === 0 ? (
+              <div className="flex flex-col items-center py-6 text-center">
+                <Newspaper className="size-6 text-pf-text-muted mb-2" />
+                <p className="text-sm text-pf-text-muted">No news signals for this market yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {relatedNews.map(signal => (
+                  <Link
+                    key={signal.id}
+                    to={`/news/${signal.articleId}`}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-pf-sm bg-pf-surface border border-pf-border-subtle hover:border-pf-border-strong transition-colors"
+                  >
+                    <span className={`flex items-center gap-0.5 text-xs font-semibold shrink-0 ${
+                      signal.direction === 'BUY' ? 'text-pf-success' : 'text-pf-danger'
+                    }`}>
+                      {signal.direction === 'BUY'
+                        ? <ArrowUpRight className="size-3.5" />
+                        : <ArrowDownRight className="size-3.5" />
+                      }
+                      {signal.direction}
+                    </span>
+                    <span className="text-xs text-pf-text truncate flex-1">{signal.articleTitle}</span>
+                    <div className="flex items-center gap-1.5 min-w-[70px]">
+                      <div className={`h-1.5 rounded-full flex-1 ${
+                        signal.confidence > 70 ? 'bg-pf-success/15' : signal.confidence >= 40 ? 'bg-amber-500/15' : 'bg-pf-danger/15'
+                      }`}>
+                        <div
+                          className={`h-full rounded-full ${
+                            signal.confidence > 70 ? 'bg-pf-success' : signal.confidence >= 40 ? 'bg-amber-500' : 'bg-pf-danger'
+                          }`}
+                          style={{ width: `${signal.confidence}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-mono text-pf-text-muted w-7 text-right">{signal.confidence}%</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Description */}

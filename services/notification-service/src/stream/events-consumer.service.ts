@@ -41,6 +41,8 @@ function toNotifType(
       return "SOMEONE_LIKED";
     case "STRATEGY_COMMENTED":
       return "SOMEONE_COMMENTED";
+    case "NEWS_SIGNAL":
+      return "NEWS_SIGNAL";
     default:
       return null;
   }

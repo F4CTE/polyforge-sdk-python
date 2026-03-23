@@ -153,6 +153,10 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
         this.gateway.pushWhaleTrade({ ...rest, walletAddress: rest.walletAddress });
         break;
 
+      case "NEWS_SIGNAL":
+        this.gateway.pushNewsSignal(rest);
+        break;
+
       case "NOTIFICATION":
         if (userId) {
           this.gateway.pushNotification(userId, rest);

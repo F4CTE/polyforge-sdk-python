@@ -23,6 +23,7 @@ import { SettingsModule } from "./settings/settings.module";
 import { EventsModule } from "./gateway/events.module";
 import { WhalesModule } from "./whales/whales.module";
 import { CopyModule } from "./copy/copy.module";
+import { NewsModule } from "./news/news.module";
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { CopyModule } from "./copy/copy.module";
     EventsModule,
     WhalesModule,
     CopyModule,
+    NewsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ApiKeyThrottlerGuard }],

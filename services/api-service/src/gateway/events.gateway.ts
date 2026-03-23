@@ -381,6 +381,16 @@ export class EventsGateway
     }
   }
 
+  /** Push a news signal event to all authenticated users */
+  pushNewsSignal(payload: Record<string, any>) {
+    const msg = { type: "NEWS_SIGNAL", ...payload };
+    for (const [, sockets] of this.clients) {
+      for (const socket of sockets) {
+        this.send(socket, msg);
+      }
+    }
+  }
+
   /** Push a notification to a user */
   pushNotification(userId: string, payload: Record<string, any>) {
     this.broadcastToUser(userId, { type: "NOTIFICATION", ...payload });

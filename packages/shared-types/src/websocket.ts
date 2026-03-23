@@ -16,6 +16,7 @@ export enum WsEvent {
   POSITION_UPDATE = "position:update",
   STRATEGY_UPDATE = "strategy:update",
   NOTIFICATION = "notification",
+  NEWS_SIGNAL = "news:signal",
   ERROR = "error",
 }
 

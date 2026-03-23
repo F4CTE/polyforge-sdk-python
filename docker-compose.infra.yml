@@ -244,6 +244,9 @@ services:
       USER_JWT_SECRET: ${USER_JWT_SECRET:-dev-user-jwt-secret-change-in-production}
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
       STRATEGY_ENGINE_URL: http://strategy-engine:3006
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      NEWS_RSS_FEEDS: ${NEWS_RSS_FEEDS:-}
       PORT: "3002"
       NODE_ENV: ${NODE_ENV:-development}
     ports:

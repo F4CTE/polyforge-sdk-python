@@ -21,6 +21,7 @@ const EVENT_TO_PREF_FIELD: Record<string, keyof DispatchOptions | null> = {
   TICKET_REPLY: "onTicketReply",
   TICKET_CLOSED: "onTicketReply",
   WHALE_TRADE: null, // always dispatched to followers
+  NEWS_SIGNAL: null, // always dispatched for high-confidence signals
 };
 
 interface DispatchOptions {

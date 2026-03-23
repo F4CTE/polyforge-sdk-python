@@ -6,6 +6,7 @@ import {
   ClipboardList,
   FlaskConical,
   Compass,
+  Newspaper,
   Fish,
   UserPlus,
   Trophy,
@@ -44,6 +45,7 @@ const navSections: NavSection[] = [
     title: 'Social',
     items: [
       { label: 'Discover', icon: Compass, route: '/discover' },
+      { label: 'News', icon: Newspaper, route: '/news' },
       { label: 'Whales', icon: Fish, route: '/whales' },
       { label: 'Leaderboard', icon: Trophy, route: '/leaderboard' },
     ],

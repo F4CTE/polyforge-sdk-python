@@ -34,7 +34,7 @@ export class TemplatesService {
     const safe = { ...data };
     const fieldsToEscape = [
       'forkerUsername', 'followerUsername', 'likerUsername', 'commenterUsername',
-      'strategyName', 'adminName', 'subject',
+      'strategyName', 'adminName', 'subject', 'articleTitle', 'marketTitle',
     ];
     for (const field of fieldsToEscape) {
       if (safe[field]) safe[field] = escapeHtml(safe[field]);
@@ -158,6 +158,13 @@ export class TemplatesService {
           title: "\u{1F40B} Whale Alert",
           body: `Whale ${data.walletAddress?.slice(0, 8)}... ${data.side} ${data.outcome} $${data.notional} on ${data.marketTitle ?? "a market"}`,
           severity: "info",
+        };
+
+      case "NEWS_SIGNAL":
+        return {
+          title: "News Signal",
+          body: `${data.confidence ?? "?"}% confidence ${data.direction ?? "?"} ${data.outcome ?? "?"} signal on "${safe.marketTitle ?? data.marketId ?? "unknown"}" based on article "${safe.articleTitle ?? "unknown"}".`,
+          severity: parseInt(data.confidence ?? "0", 10) >= 80 ? "warning" : "info",
         };
 
       default:
