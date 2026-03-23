@@ -7,7 +7,68 @@
 
 ## Next Up
 
-Phase 8 competitive features in planning. v3.2.0 Advanced Strategy Builder shipped.
+Phase 8 competitive features in planning. v3.3.0 shipped: security audit complete (47 findings fixed, 2 consecutive clean audits), 25 code review fixes, 153 design token compliance fixes, and critical bug fixes.
+
+---
+
+## v3.3.0 — Security Audit, Code Review & Design Token Compliance
+
+### Security Audit — 47 findings fixed, 2 consecutive clean audits
+
+- [x] R4: Atomic strategy state transitions, runner cleanup in `finally`, cookie SameSite/Secure verified
+- [x] R4: Production error filter (stack trace stripping), audit log integrity docs
+- [x] R4: WebSocket disconnect subscription cleanup
+- [x] R4: Graceful shutdown (10s SIGTERM timeout) on 5 services
+- [x] R5: WebSocket subscription cap (5000/client)
+- [x] R5: JWT access token TTL 15m to 5m + `pwchange` Redis key for immediate invalidation
+- [x] R5: Strategy comment HTML stripping (XSS prevention)
+- [x] R5: Docker digest pinning comments on 17 Dockerfiles
+- [x] R5: `UserLoginHistory` table populated (success + failure)
+- [x] R5: Signer `ParseUUIDPipe`, dev cert `.gitignore`, strategy sort param allowlist
+- [x] R6: Clean audit — no findings
+- [x] R7: Clean audit — no findings (final verification)
+
+### Security Tests (27 new tests)
+
+- [x] Password reset token revocation (3 tests)
+- [x] Logout cookie cleanup (5 tests)
+- [x] Admin RolesGuard authorization (7 tests)
+- [x] Self-follow prevention (3 tests)
+- [x] Login history recording (3 tests)
+- [x] Encryption key validation (6 tests)
+
+### Code Review Fixes (25 items)
+
+- [x] Toaster theme binding (dark/light from Zustand store)
+- [x] Market search stale closure + category as API param
+- [x] Portfolio null guard on P&L snapshots
+- [x] Error boundary wrapping RouterProvider
+- [x] WebSocket reconnection timer cleanup on unmount
+- [x] Success toasts on all settings operations
+- [x] Admin 401 redirect to login
+- [x] Market detail useEffect cleanup
+- [x] Create ticket form validation with inline errors
+- [x] StrictMode double-fetch guards (AbortController)
+- [x] Auth pages remaining token fixes
+- [x] Landing SEO robots meta tag
+- [x] Admin mobile sidebar close on navigation
+- [x] Unused imports removed, type safety improvements
+- [x] Image alt text and form autoComplete attributes
+
+### Design Token Compliance (153 fixes)
+
+- [x] 121 raw Tailwind red/green/emerald replaced with `pf-danger`/`pf-success` tokens
+- [x] 8 hardcoded hex colors replaced with CSS variables
+- [x] 19 aria-labels added to interactive elements
+- [x] 5 hover direction inconsistencies standardized
+
+### Bug Fixes
+
+- [x] Leaderboard 500: raw SQL replaced with Prisma `groupBy`, Docker chown for USER node Swagger write
+- [x] Admin DB warmup on startup with retry logic
+- [x] Admin CORS: `127.0.0.1:8080` added to allowed origins
+- [x] Sidebar collapse: chevron-only (text label removed)
+- [x] Portfolio: "N/A" for missing prices
 
 ---
 

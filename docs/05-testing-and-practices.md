@@ -623,6 +623,32 @@ The following test files were added as part of the design polish and interactivi
 
 These 28 test cases cover pure utility functions and follow the standard pattern: test the happy path, boundary values, and edge cases (unknown/null inputs).
 
+### Security audit test additions (27 tests)
+
+The security audit (rounds 4-7) added 27 targeted tests covering security-critical behaviors:
+
+| Area | Tests | What they verify |
+|---|---|---|
+| Password reset token revocation | 3 | Tokens invalidated after password change |
+| Logout cookie cleanup | 5 | Session cookies cleared on logout, cross-browser coverage |
+| Admin `RolesGuard` | 7 | Role-based access control on admin endpoints |
+| Self-follow prevention | 3 | Users cannot follow themselves |
+| Login history | 3 | `UserLoginHistory` populated on success and failure |
+| Encryption key validation | 6 | AES-256-GCM key format, length, and error handling |
+
+These tests complement the existing security hardening from v3.1.0 (SQL injection, JWT, TOTP, Redis auth, WebSocket origin validation) and bring the total security-focused test count to 36+.
+
+### E2E testing with React (v3.0+)
+
+After the Angular-to-React migration, E2E tests use Playwright against the React SPAs. Key differences from the Angular E2E setup:
+
+- **No PrimeNG locators** — React apps use shadcn/ui components; selectors target `data-testid`, `role`, and semantic HTML instead of `.pi-*` icon classes
+- **StrictMode considerations** — React 19 StrictMode causes double-mounting in development; E2E tests run against production builds where this does not apply
+- **React Router navigation** — `waitForURL` patterns account for client-side routing via React Router v7 instead of Angular Router
+- **Sonner toasts** — Toast assertions target Sonner's DOM structure instead of PrimeNG Toast
+
+The CI pipeline structure remains the same: Lint -> Typecheck -> Test -> Build -> E2E (Chromium-only).
+
 ---
 
 ## 9. Error Handling

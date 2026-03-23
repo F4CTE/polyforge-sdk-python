@@ -16,7 +16,8 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Dark/light theme toggle** — Sun/moon switcher with localStorage persistence on both user-app and admin-app
 - **API documentation page** — Interactive API reference at `/api-docs` in user-app
 - **Design system** — Dark theme aligned with shadcn slate palette, design tokens (section colors, status colors, typography scale), loading screen with animated logo, custom scrollbars
-- **Accessibility** — `focus-visible` outlines, `aria-label` attributes, responsive mobile layouts
+- **Accessibility** — `focus-visible` outlines, `aria-label` attributes, responsive mobile layouts, design token compliance (153 fixes)
+- **Security audit** — 47 findings fixed across 5 audit rounds, 2 consecutive clean audits; covers atomic state transitions, WebSocket hardening, JWT TTL reduction, Docker digest pinning, graceful shutdown, and production error filtering
 - **OnPush change detection** — Key components use `ChangeDetectionStrategy.OnPush` for rendering performance
 - **Local HTTPS** — Self-signed cert generation and `docker-compose.ssl.yml` for secure local development
 - **CI/CD pipeline** — Lint, typecheck, test, build, and E2E stages with Playwright

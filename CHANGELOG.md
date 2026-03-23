@@ -5,14 +5,57 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased]
+## [3.3.0] — 2026-03-23
 
-### Fixed
+### Security — Full Audit (47 findings fixed, 2 consecutive clean audits)
 
-- **Admin auth/API DB connection pool stale after restart** — added Prisma `SELECT 1` warmup query on startup with retry logic and `enableShutdownHooks()` for clean disconnects
-- **Sidebar collapse button text** — removed "Collapse" text label; now shows only chevron icon (left when expanded, right when collapsed)
-- **Portfolio current price placeholder** — show "N/A" in muted text instead of dash when current price is zero or missing
-- **Admin CORS 127.0.0.1:8080** — added `http://127.0.0.1:8080` to allowed origins in both admin-auth-service and admin-api-service
+- **Round 4** — Atomic strategy state transitions preventing race conditions; runner cleanup in `finally` blocks; cookie `SameSite`/`Secure` attributes verified; production error filter strips stack traces from responses; audit log integrity documentation; WebSocket disconnect subscription cleanup; graceful shutdown (10s `SIGTERM` timeout) on 5 services (strategy-engine, order-service, paper-order-service, backtest-service, notification-service)
+- **Round 5** — WebSocket subscription cap (5000 per client); JWT access token TTL reduced from 15m to 5m with `pwchange` Redis key for immediate invalidation; strategy comment HTML stripping (XSS prevention); Docker digest pinning comments added to 17 Dockerfiles; `UserLoginHistory` table populated on both successful and failed login attempts; signer-service `ParseUUIDPipe` on all endpoints; dev certificate added to `.gitignore`; strategy sort parameter allowlist to prevent SQL injection via sort fields
+- **Round 6** — Clean audit, no findings
+- **Round 7** — Clean audit, no findings (final verification)
+
+### Security Tests (27 new tests)
+
+- Password reset token revocation (3 tests)
+- Logout cookie cleanup (5 tests)
+- Admin `RolesGuard` authorization (7 tests)
+- Self-follow prevention (3 tests)
+- Login history recording (3 tests)
+- Encryption key validation (6 tests)
+
+### Fixed — Code Review (25 items)
+
+- **Toaster theme binding** — dark/light mode now reads from Zustand store
+- **Market search stale closure** — fixed stale closure bug; category passed as API param instead of client filter
+- **Portfolio null guard** — null check on P&L snapshots prevents crash on missing data
+- **Error boundary** — `ErrorBoundary` wraps `RouterProvider` for top-level crash recovery
+- **WebSocket reconnection timer** — cleanup on unmount prevents memory leak
+- **Settings success toasts** — all settings operations now show success confirmation
+- **Admin 401 redirect** — unauthorized responses redirect to login page
+- **Market detail useEffect cleanup** — proper cleanup function prevents state updates on unmounted component
+- **Create ticket form validation** — inline error messages with field-level validation
+- **StrictMode double-fetch guards** — `useEffect` cleanup and `AbortController` prevent duplicate API calls
+- **Auth pages token fixes** — remaining token handling issues on auth pages resolved
+- **Landing SEO** — `robots` meta tag added for search engine crawling
+- **Admin mobile sidebar** — sidebar closes on navigation on mobile viewports
+- **Unused imports removed** — dead imports cleaned up across codebase; type safety improvements
+- **Image alt text** — descriptive `alt` attributes on all `<img>` elements
+- **Form autoComplete** — `autoComplete` attributes on all form inputs
+
+### Fixed — Bug Fixes
+
+- **Leaderboard 500 error** — raw SQL replaced with Prisma `groupBy`; TypeScript errors fixed; Docker `chown` for `USER node` Swagger write permissions
+- **Admin DB warmup** — Prisma `SELECT 1` warmup query on startup with retry logic and `enableShutdownHooks()` for clean disconnects
+- **Admin CORS** — added `http://127.0.0.1:8080` to allowed origins in both admin-auth-service and admin-api-service
+- **Sidebar collapse button** — removed "Collapse" text label; now shows only chevron icon
+- **Portfolio current price** — show "N/A" in muted text instead of dash when current price is zero or missing
+
+### Changed — Design Token Compliance (153 fixes)
+
+- 121 raw Tailwind `red`/`green`/`emerald` classes replaced with `pf-danger`/`pf-success` design tokens
+- 8 hardcoded hex colors replaced with CSS variables
+- 19 `aria-label` attributes added to interactive elements
+- 5 hover direction inconsistencies standardized
 
 ---
 

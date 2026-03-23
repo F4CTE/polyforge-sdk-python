@@ -280,7 +280,8 @@ Use the following PrimeNG components for the specified UI patterns:
 
 | Type | Secret | Expiry | Used by |
 |---|---|---|---|
-| User JWT | USER_JWT_SECRET | 7 days | Users → api-service |
+| User access JWT | USER_JWT_SECRET | 5 minutes | Users → api-service (short-lived, auto-refreshed) |
+| User refresh token | USER_JWT_SECRET | 7 days | Users → auth-service (token rotation) |
 | Admin JWT | ADMIN_JWT_SECRET | 1 hour | Admins → admin-api-service |
 | Bot JWT | BOT_JWT_SECRET | 30 days | Bots → api-service (scoped) |
 | Internal JWT | INTERNAL_JWT_SECRET | 30 seconds | Service → service |
@@ -574,6 +575,24 @@ Blocks that write strategy state:
 
 If `cache:price:{tokenId}` age exceeds 5 seconds, strategy-engine must pause affected strategies and emit `STRATEGY_PAUSED` with reason `stale_market_data`. It must resume automatically when fresh data returns.
 
+### Atomic State Transitions
+
+Strategy status changes (IDLE -> RUNNING, RUNNING -> STOPPED, etc.) use atomic Redis operations to prevent race conditions. The state transition is performed as a compare-and-swap: the current status is checked and the new status is set in a single atomic operation. If the expected current status does not match, the transition is rejected. This prevents issues such as double-start or stopping an already-stopped strategy.
+
+Runner cleanup logic executes in `finally` blocks to ensure resources are released even when an error occurs during evaluation.
+
+### Graceful Shutdown
+
+Five services implement graceful shutdown with a 10-second `SIGTERM` timeout:
+
+- `strategy-engine` — stops all running strategy tick loops, flushes pending state to Redis/Postgres
+- `order-service` — completes in-flight order submissions before exiting
+- `paper-order-service` — completes in-flight simulated fills
+- `backtest-service` — checkpoints active backtests
+- `notification-service` — flushes pending notification queue
+
+On receiving `SIGTERM`, each service stops accepting new work, waits up to 10 seconds for in-flight operations to complete, then exits. If the timeout is exceeded, the process exits immediately.
+
 ---
 
 ## 8. Real-Time Communication
@@ -638,6 +657,8 @@ Polymarket WS ──► market-data-service ──► Redis Streams
 ```
 
 **Origin validation:** WebSocket upgrade requests are validated against an allowlist of permitted origins (`polyforge.app`, `admin.polyforge.app`, `localhost`, `127.0.0.1`, `localhost:5173`). Connections from unlisted origins are rejected during the handshake phase before authentication.
+
+**Subscription cap:** Each client is limited to 5000 active subscriptions (price feeds + strategy events combined). Subscription requests beyond the cap are rejected with an error message. On disconnect, all subscriptions for the client are cleaned up immediately to prevent resource leaks.
 
 **Keepalive:** client sends `PING` every 30 seconds, server responds `PONG`. Connection dropped after 90 seconds of inactivity.
 
