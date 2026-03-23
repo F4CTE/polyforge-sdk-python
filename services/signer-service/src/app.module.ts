@@ -1,6 +1,8 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
+import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
+import { APP_GUARD } from "@nestjs/core";
 import { LoggerModule } from "@polyforge/logger";
 import { RedisModule } from "@polyforge/shared-redis";
 import { EncryptionModule } from "./encryption/encryption.module";
@@ -13,6 +15,7 @@ import { HealthController } from "./health/health.controller";
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     JwtModule.register({}),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 1000 }]),
     LoggerModule,
     RedisModule,
     EncryptionModule,
@@ -21,5 +24,6 @@ import { HealthController } from "./health/health.controller";
     CanaryModule,
   ],
   controllers: [HealthController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

@@ -144,7 +144,7 @@ export class AuthService {
 
   // ─── Login ────────────────────────────────────────────────────────────────────
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto & { ip?: string }) {
     const user = await this.usersService.findByEmail(dto.email);
 
     if (!user || user.deleted) {
@@ -198,6 +198,37 @@ export class AuthService {
 
     const accessToken = this.generateAccessToken(user);
     const refreshToken = await this.createRefreshToken(user.id);
+
+    // Record login event for audit trail
+    const ip = dto.ip ?? 'unknown';
+    this.logger.log(
+      JSON.stringify({
+        event: 'LOGIN_SUCCESS',
+        userId: user.id,
+        email: user.email,
+        ip,
+        timestamp: new Date().toISOString(),
+      }),
+    );
+
+    // Emit LOGIN event to Redis stream for notification-service / audit consumers
+    this.redis
+      .getClient()
+      .xadd(
+        'stream:auth:events',
+        '*',
+        'event',
+        'LOGIN',
+        'userId',
+        user.id,
+        'ip',
+        ip,
+        'ts',
+        Date.now().toString(),
+      )
+      .catch((err) =>
+        this.logger.error('Failed to emit LOGIN event to stream', err),
+      );
 
     return {
       token: accessToken,

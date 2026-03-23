@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Body,
+  Req,
   Res,
   HttpCode,
   HttpStatus,
@@ -15,7 +16,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { FastifyReply } from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
 import { AuthService } from './auth.service';
@@ -100,9 +101,15 @@ export class AuthController {
   @ApiResponse({ status: 403, description: 'ACCOUNT_SUSPENDED' })
   async login(
     @Body() dto: LoginDto,
+    @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
-    const result = await this.authService.login(dto);
+    const xff = request.headers['x-forwarded-for'];
+    const clientIp =
+      (typeof xff === 'string' ? xff.split(',')[0].trim() : undefined) ??
+      request.ip ??
+      'unknown';
+    const result = await this.authService.login({ ...dto, ip: clientIp });
     reply.setCookie(
       USER_COOKIE,
       result.token,
@@ -137,10 +144,15 @@ export class AuthController {
   @ApiResponse({ status: 204, description: 'Logged out.' })
   async logout(
     @Body() body: { refreshToken?: string },
+    @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
-    if (body?.refreshToken) {
-      await this.authService.revokeRefreshToken(body.refreshToken);
+    // Revoke refresh token from body (API clients) or cookie (browser clients)
+    const tokenToRevoke =
+      body?.refreshToken ??
+      (request.cookies as Record<string, string>)?.[REFRESH_COOKIE];
+    if (tokenToRevoke) {
+      await this.authService.revokeRefreshToken(tokenToRevoke);
     }
     reply.clearCookie(USER_COOKIE, { path: '/' });
     reply.clearCookie(REFRESH_COOKIE, { path: '/' });

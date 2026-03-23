@@ -1,11 +1,15 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '@polyforge/shared-db';
+import { RedisService } from '@polyforge/shared-redis';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes, createHash } from 'crypto';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   // ─── Finders ─────────────────────────────────────────────────────────────────
 
@@ -189,5 +193,32 @@ export class UsersService {
         data: { passwordHash },
       }),
     ]);
+
+    // Revoke all refresh tokens for this user (same as password change flow)
+    await this.revokeAllRefreshTokens(record.userId);
+  }
+
+  /** Revoke ALL refresh tokens for a user via Redis SCAN + DEL */
+  private async revokeAllRefreshTokens(userId: string): Promise<void> {
+    const client = this.redis.getClient();
+    const pattern = `refresh:${userId}:*`;
+    const stream = client.scanStream({ match: pattern, count: 100 });
+    const pipeline = client.pipeline();
+    let count = 0;
+
+    await new Promise<void>((resolve, reject) => {
+      stream.on('data', (keys: string[]) => {
+        for (const key of keys) {
+          pipeline.del(key);
+          count++;
+        }
+      });
+      stream.on('end', () => resolve());
+      stream.on('error', (err) => reject(err));
+    });
+
+    if (count > 0) {
+      await pipeline.exec();
+    }
   }
 }

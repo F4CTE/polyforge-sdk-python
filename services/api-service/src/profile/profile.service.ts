@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { StrategyStatus } from ".prisma/client";
 
@@ -75,6 +79,13 @@ export class ProfileService {
         code: "NOT_FOUND",
         message: "User not found",
       });
+
+    if (viewerUserId === target.id) {
+      throw new UnprocessableEntityException({
+        code: "CANNOT_FOLLOW_SELF",
+        message: "You cannot follow yourself",
+      });
+    }
 
     const existing = await this.prisma.follow.findUnique({
       where: {

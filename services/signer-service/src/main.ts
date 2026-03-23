@@ -19,6 +19,15 @@ function validateEnv() {
     );
     process.exit(1);
   }
+
+  if (process.env.NODE_ENV === "production") {
+    const masterKey = process.env.MASTER_ENCRYPTION_KEY;
+    if (masterKey === "0".repeat(64)) {
+      throw new Error(
+        "MASTER_ENCRYPTION_KEY must not be all-zeros in production",
+      );
+    }
+  }
 }
 
 async function bootstrap() {

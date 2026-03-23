@@ -7,6 +7,11 @@ import * as bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { AdminLoginDto } from "./dto/login.dto";
 
+// TODO: Implement admin 2FA (TOTP) before production deployment.
+// All admin logins should require a second factor. Follow the same pattern as
+// the user-facing TotpService in auth-service: generate secret, verify code
+// on login, and store totpEnabled/totpSecret on the Admin model.
+
 @Injectable()
 export class AuthService {
   constructor(
