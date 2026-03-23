@@ -69,7 +69,18 @@ describe('AuthService', () => {
       get: vi.fn().mockResolvedValue(null),
       set: vi.fn().mockResolvedValue(undefined),
       del: vi.fn().mockResolvedValue(undefined),
-      getClient: vi.fn().mockReturnValue({ decr: vi.fn() }),
+      getClient: vi.fn().mockReturnValue({
+        decr: vi.fn(),
+        eval: vi.fn().mockResolvedValue(0),
+        xadd: vi.fn().mockResolvedValue('stream-id'),
+        scanStream: vi.fn().mockReturnValue({
+          on: vi.fn().mockImplementation(function (this: any, event: string, cb: Function) {
+            if (event === 'end') cb();
+            return this;
+          }),
+        }),
+        pipeline: vi.fn().mockReturnValue({ del: vi.fn(), exec: vi.fn().mockResolvedValue([]) }),
+      }),
     } as unknown as RedisService;
 
     service = new AuthService(
@@ -376,6 +387,68 @@ describe('AuthService', () => {
       expect(result.user.status).toBeDefined();
       expect(result.user.polymarketConnected).toBe(false);
       expect(result.user.emailVerified).toBe(true);
+    });
+
+    it('emits LOGIN event to Redis stream after successful login (N-M6)', async () => {
+      const user = userFactory({ totpEnabled: false });
+      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+
+      const xaddMock = redis.getClient().xadd;
+
+      await service.login(makeLoginDto({ ip: '192.168.1.1' }) as any);
+
+      // xadd is fire-and-forget, so wait for it to be called
+      await vi.waitFor(() => {
+        expect(xaddMock).toHaveBeenCalledWith(
+          'stream:auth:events',
+          '*',
+          'event',
+          'LOGIN',
+          'userId',
+          user.id,
+          'ip',
+          '192.168.1.1',
+          'ts',
+          expect.any(String),
+        );
+      });
+    });
+
+    it('does not fail login when Redis xadd throws (fire-and-forget) (N-M6)', async () => {
+      const user = userFactory({ totpEnabled: false });
+      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+      redis.getClient().xadd.mockRejectedValue(new Error('Redis down'));
+
+      await expect(
+        service.login(makeLoginDto({ ip: '10.0.0.1' }) as any),
+      ).resolves.toBeDefined();
+    });
+
+    it('uses "unknown" as IP when ip is not provided (N-M6)', async () => {
+      const user = userFactory({ totpEnabled: false });
+      vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(usersService.validatePassword).mockResolvedValue(true);
+
+      const xaddMock = redis.getClient().xadd;
+
+      await service.login(makeLoginDto() as any);
+
+      await vi.waitFor(() => {
+        expect(xaddMock).toHaveBeenCalledWith(
+          'stream:auth:events',
+          '*',
+          'event',
+          'LOGIN',
+          'userId',
+          user.id,
+          'ip',
+          'unknown',
+          'ts',
+          expect.any(String),
+        );
+      });
     });
   });
 

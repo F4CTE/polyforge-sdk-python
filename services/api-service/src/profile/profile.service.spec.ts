@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { NotFoundException } from "@nestjs/common";
+import { NotFoundException, UnprocessableEntityException } from "@nestjs/common";
 import { ProfileService } from "./profile.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
 
@@ -247,6 +247,36 @@ describe("ProfileService", () => {
       expect(db.follow.count).toHaveBeenCalledWith({
         where: { followingId: "target-uuid-1" },
       });
+    });
+
+    it("throws CANNOT_FOLLOW_SELF when userId equals target userId (N-M3)", async () => {
+      const selfId = "user-uuid-self";
+      db.user.findUnique.mockResolvedValue({ id: selfId } as any);
+
+      await expect(
+        service.toggleFollow("alice", selfId),
+      ).rejects.toThrow(UnprocessableEntityException);
+    });
+
+    it("throws with CANNOT_FOLLOW_SELF error code (N-M3)", async () => {
+      const selfId = "user-uuid-self";
+      db.user.findUnique.mockResolvedValue({ id: selfId } as any);
+
+      await expect(
+        service.toggleFollow("alice", selfId),
+      ).rejects.toMatchObject({
+        response: { code: "CANNOT_FOLLOW_SELF" },
+      });
+    });
+
+    it("does not create or delete a follow when self-following (N-M3)", async () => {
+      const selfId = "user-uuid-self";
+      db.user.findUnique.mockResolvedValue({ id: selfId } as any);
+
+      await service.toggleFollow("alice", selfId).catch(() => {});
+
+      expect(db.follow.create).not.toHaveBeenCalled();
+      expect(db.follow.delete).not.toHaveBeenCalled();
     });
   });
 });

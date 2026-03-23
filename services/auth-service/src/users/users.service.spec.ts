@@ -18,15 +18,37 @@ function sha256(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
+function createMockRedis() {
+  const pipelineDel = vi.fn();
+  const pipelineExec = vi.fn().mockResolvedValue([]);
+  const scanStreamInstance = {
+    on: vi.fn().mockImplementation(function (this: any, event: string, cb: Function) {
+      if (event === 'end') cb();
+      return scanStreamInstance;
+    }),
+  };
+  return {
+    getClient: vi.fn().mockReturnValue({
+      scanStream: vi.fn().mockReturnValue(scanStreamInstance),
+      pipeline: vi.fn().mockReturnValue({ del: pipelineDel, exec: pipelineExec }),
+    }),
+    _scanStream: scanStreamInstance,
+    _pipelineDel: pipelineDel,
+    _pipelineExec: pipelineExec,
+  };
+}
+
 // ─── Suite ───────────────────────────────────────────────────────────────────
 
 describe('UsersService', () => {
   let service: UsersService;
   let db: MockDb;
+  let redis: ReturnType<typeof createMockRedis>;
 
   beforeEach(() => {
     db = createMockDb();
-    service = new UsersService(db as any);
+    redis = createMockRedis();
+    service = new UsersService(db as any, redis as any);
   });
 
   // ── findByEmail ───────────────────────────────────────────────────────────
@@ -383,6 +405,65 @@ describe('UsersService', () => {
         response: { code: 'TOKEN_EXPIRED' },
         status: HttpStatus.BAD_REQUEST,
       });
+    });
+
+    it('revokes all refresh tokens after password reset (N-H1)', async () => {
+      const token = rawToken();
+      const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
+      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.$transaction.mockResolvedValue([]);
+
+      // Simulate scanStream emitting keys then ending
+      redis._scanStream.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'data') cb(['refresh:' + record.userId + ':abc123']);
+        if (event === 'end') cb();
+        return redis._scanStream;
+      });
+
+      await service.resetPassword(token, 'NewPassw0rd!');
+
+      expect(redis.getClient().scanStream).toHaveBeenCalledWith({
+        match: `refresh:${record.userId}:*`,
+        count: 100,
+      });
+      expect(redis._pipelineDel).toHaveBeenCalledWith(
+        `refresh:${record.userId}:abc123`,
+      );
+      expect(redis._pipelineExec).toHaveBeenCalledOnce();
+    });
+
+    it('skips pipeline.exec when no refresh tokens exist', async () => {
+      const token = rawToken();
+      const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
+      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.$transaction.mockResolvedValue([]);
+
+      // Simulate scanStream emitting no keys
+      redis._scanStream.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'end') cb();
+        return redis._scanStream;
+      });
+
+      await service.resetPassword(token, 'NewPassw0rd!');
+
+      expect(redis._pipelineDel).not.toHaveBeenCalled();
+      expect(redis._pipelineExec).not.toHaveBeenCalled();
+    });
+
+    it('still updates the password hash when revoking tokens (N-H1)', async () => {
+      const token = rawToken();
+      const record = passwordResetTokenFactory({ tokenHash: sha256(token) });
+      db.passwordResetToken.findUnique.mockResolvedValue(record as any);
+      db.$transaction.mockResolvedValue([]);
+
+      redis._scanStream.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'end') cb();
+        return redis._scanStream;
+      });
+
+      await service.resetPassword(token, 'NewPassw0rd!');
+
+      expect(db.$transaction).toHaveBeenCalledOnce();
     });
   });
 });

@@ -5,30 +5,10 @@ import {
 } from "@nestjs/platform-fastify";
 import { Logger, RequestMethod } from "@nestjs/common";
 import { AppModule } from "./app.module";
+import { validateEnv } from "./validate-env";
 
 const PORT = parseInt(process.env.PORT ?? "3012", 10);
 const logger = new Logger("Bootstrap");
-
-const REQUIRED_ENV = ["INTERNAL_JWT_SECRET", "ENCRYPTION_KEY", "REDIS_URL"];
-
-function validateEnv() {
-  const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
-  if (missing.length) {
-    process.stderr.write(
-      `[signer-service] Missing required env vars: ${missing.join(", ")}\n`,
-    );
-    process.exit(1);
-  }
-
-  if (process.env.NODE_ENV === "production") {
-    const masterKey = process.env.MASTER_ENCRYPTION_KEY;
-    if (masterKey === "0".repeat(64)) {
-      throw new Error(
-        "MASTER_ENCRYPTION_KEY must not be all-zeros in production",
-      );
-    }
-  }
-}
 
 async function bootstrap() {
   validateEnv();

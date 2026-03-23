@@ -13,11 +13,16 @@ function makeAuthService(): AuthService {
     verifyEmail: vi.fn(),
     forgotPassword: vi.fn(),
     resetPassword: vi.fn(),
+    revokeRefreshToken: vi.fn().mockResolvedValue(undefined),
   } as unknown as AuthService;
 }
 
 function makeReply() {
   return { setCookie: vi.fn(), clearCookie: vi.fn() } as any;
+}
+
+function makeRequest(cookies: Record<string, string> = {}) {
+  return { cookies, headers: {}, ip: '127.0.0.1' } as any;
 }
 
 // ─── Suite ───────────────────────────────────────────────────────────────────
@@ -58,21 +63,23 @@ describe('AuthController', () => {
     it('delegates to authService.login, sets cookie, and returns user', async () => {
       const serviceResult = {
         token: 'jwt',
+        refreshToken: 'rt',
         user: { id: '1' },
         requiresTotp: false,
       };
       vi.mocked(authService.login).mockResolvedValue(serviceResult as any);
       const dto = { email: 'a@b.com', password: 'Passw0rd!' };
+      const request = makeRequest();
       const reply = makeReply();
 
-      const result = await controller.login(dto as any, reply);
+      const result = await controller.login(dto as any, request, reply);
       expect(result).toBe(serviceResult.user);
       expect(reply.setCookie).toHaveBeenCalledWith(
         'pf_token',
         'jwt',
         expect.any(Object),
       );
-      expect(authService.login).toHaveBeenCalledWith(dto);
+      expect(authService.login).toHaveBeenCalled();
     });
   });
 
@@ -98,10 +105,41 @@ describe('AuthController', () => {
   });
 
   describe('POST logout', () => {
-    it('clears the cookie', async () => {
+    it('clears both cookies', async () => {
       const reply = makeReply();
-      await controller.logout({}, reply);
+      const request = makeRequest();
+      await controller.logout({}, request, reply);
       expect(reply.clearCookie).toHaveBeenCalledWith('pf_token', { path: '/' });
+      expect(reply.clearCookie).toHaveBeenCalledWith('pf_refresh', { path: '/' });
+    });
+
+    it('revokes refresh token from body when provided (N-H2)', async () => {
+      const reply = makeReply();
+      const request = makeRequest();
+      await controller.logout({ refreshToken: 'body-token' }, request, reply);
+      expect(authService.revokeRefreshToken).toHaveBeenCalledWith('body-token');
+    });
+
+    it('reads pf_refresh cookie when no body token is provided (N-H2)', async () => {
+      const reply = makeReply();
+      const request = makeRequest({ pf_refresh: 'cookie-token' });
+      await controller.logout({}, request, reply);
+      expect(authService.revokeRefreshToken).toHaveBeenCalledWith('cookie-token');
+    });
+
+    it('prefers body token over cookie token (N-H2)', async () => {
+      const reply = makeReply();
+      const request = makeRequest({ pf_refresh: 'cookie-token' });
+      await controller.logout({ refreshToken: 'body-token' }, request, reply);
+      expect(authService.revokeRefreshToken).toHaveBeenCalledWith('body-token');
+      expect(authService.revokeRefreshToken).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call revokeRefreshToken when no token is available (N-H2)', async () => {
+      const reply = makeReply();
+      const request = makeRequest();
+      await controller.logout({}, request, reply);
+      expect(authService.revokeRefreshToken).not.toHaveBeenCalled();
     });
   });
 

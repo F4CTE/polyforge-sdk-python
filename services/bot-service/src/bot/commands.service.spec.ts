@@ -1,4 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+// Set required env var before importing the module (top-level check)
+process.env.INTERNAL_JWT_SECRET = "test-internal-jwt-secret-for-bot-service";
+
 import { CommandsService } from "./commands.service";
 
 // ─── Mock helpers ─────────────────────────────────────────────────────────────
