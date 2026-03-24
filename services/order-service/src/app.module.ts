@@ -5,9 +5,13 @@ import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { APP_GUARD } from "@nestjs/core";
 import { LoggerModule } from "@polyforge/logger";
 import { RedisModule } from "@polyforge/shared-redis";
+import { SharedDbModule } from "@polyforge/shared-db";
+import { ScheduleModule } from "@nestjs/schedule";
 import { OrdersModule } from "./orders/orders.module";
 import { StreamModule } from "./stream/stream.module";
+import { ReconciliationModule } from "./reconciliation/reconciliation.module";
 import { HealthController } from "./health/health.controller";
+import { HeartbeatService } from "./heartbeat/heartbeat.service";
 
 @Module({
   imports: [
@@ -16,10 +20,16 @@ import { HealthController } from "./health/health.controller";
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 1000 }]),
     LoggerModule,
     RedisModule,
+    SharedDbModule,
+    ScheduleModule.forRoot(),
     OrdersModule,
     StreamModule,
+    ReconciliationModule,
   ],
   controllers: [HealthController],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    HeartbeatService,
+  ],
 })
 export class AppModule {}

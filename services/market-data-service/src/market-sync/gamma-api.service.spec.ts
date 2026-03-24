@@ -42,6 +42,9 @@ function makeMocks() {
     token: {
       upsert: vi.fn().mockResolvedValue({}),
     },
+    event: {
+      upsert: vi.fn().mockResolvedValue({}),
+    },
   } as any;
 
   const ws = {
@@ -70,6 +73,62 @@ describe("GammaApiService", () => {
     vi.restoreAllMocks();
   });
 
+  // ── syncAllMarkets — pagination ──────────────────────────────────────────
+
+  describe("syncAllMarkets() — pagination", () => {
+    it("paginates through all markets until fewer than limit returned", async () => {
+      // First page: 100 markets (full page), second page: 50 markets (partial)
+      const fullPage = Array.from({ length: 100 }, (_, i) =>
+        makeGammaMarket({ id: `market-${i}`, slug: `m-${i}` }),
+      );
+      const partialPage = Array.from({ length: 50 }, (_, i) =>
+        makeGammaMarket({ id: `market-${100 + i}`, slug: `m-${100 + i}` }),
+      );
+
+      let callCount = 0;
+      globalThis.fetch = vi.fn().mockImplementation(() => {
+        callCount++;
+        const data = callCount === 1 ? fullPage : partialPage;
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ data }),
+        });
+      });
+
+      await svc.syncAllMarkets();
+
+      // Should have called fetch twice (page 1 + page 2)
+      expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledTimes(2);
+      // Should have upserted all 150 markets
+      expect(prisma.market.upsert).toHaveBeenCalledTimes(150);
+    });
+
+    it("stops when response has fewer than limit items", async () => {
+      const smallPage = [makeGammaMarket()];
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: smallPage }),
+      });
+
+      await svc.syncAllMarkets();
+
+      // Only one fetch call since first page had fewer than 100
+      expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledTimes(1);
+      expect(prisma.market.upsert).toHaveBeenCalledTimes(1);
+    });
+
+    it("handles empty first page", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ data: [] }),
+      });
+
+      await svc.syncAllMarkets();
+
+      expect(prisma.market.upsert).not.toHaveBeenCalled();
+    });
+  });
+
   // ── syncMarkets — happy path ───────────────────────────────────────────────
 
   describe("syncMarkets() — happy path", () => {
@@ -83,7 +142,7 @@ describe("GammaApiService", () => {
         json: () => Promise.resolve({ data: markets }),
       });
 
-      await svc.syncMarkets();
+      await svc.syncAllMarkets();
 
       expect(prisma.market.upsert).toHaveBeenCalledTimes(2);
     });
@@ -95,7 +154,7 @@ describe("GammaApiService", () => {
         json: () => Promise.resolve({ data: [market] }),
       });
 
-      await svc.syncMarkets();
+      await svc.syncAllMarkets();
 
       const call = prisma.market.upsert.mock.calls[0][0];
       expect(call.where).toEqual({ id: "market-1" });
@@ -113,7 +172,7 @@ describe("GammaApiService", () => {
         json: () => Promise.resolve({ data: [market] }),
       });
 
-      await svc.syncMarkets();
+      await svc.syncAllMarkets();
 
       expect(prisma.token.upsert).toHaveBeenCalledTimes(2);
     });
@@ -125,7 +184,7 @@ describe("GammaApiService", () => {
         json: () => Promise.resolve({ data: [market] }),
       });
 
-      await svc.syncMarkets();
+      await svc.syncAllMarkets();
 
       const firstTokenCall = prisma.token.upsert.mock.calls[0][0];
       expect(firstTokenCall.where).toEqual({ id: "token-1" });
@@ -142,7 +201,7 @@ describe("GammaApiService", () => {
         json: () => Promise.resolve({ data: [market] }),
       });
 
-      await svc.syncMarkets();
+      await svc.syncAllMarkets();
 
       expect(ws.subscribeTokens).toHaveBeenCalledWith(["token-1", "token-2"]);
     });
@@ -154,7 +213,7 @@ describe("GammaApiService", () => {
         json: () => Promise.resolve({ data: [market] }),
       });
 
-      await svc.syncMarkets();
+      await svc.syncAllMarkets();
 
       const call = prisma.market.upsert.mock.calls[0][0];
       expect(call.create.image).toBeNull();
@@ -167,7 +226,7 @@ describe("GammaApiService", () => {
         json: () => Promise.resolve({ data: [market] }),
       });
 
-      await svc.syncMarkets();
+      await svc.syncAllMarkets();
 
       const call = prisma.market.upsert.mock.calls[0][0];
       expect(call.create.volume24h).toBe(0);
@@ -180,7 +239,7 @@ describe("GammaApiService", () => {
         json: () => Promise.resolve({ data: [market] }),
       });
 
-      await svc.syncMarkets();
+      await svc.syncAllMarkets();
 
       const call = prisma.market.upsert.mock.calls[0][0];
       expect(call.create.endDate).toEqual(new Date("2026-06-15T12:00:00Z"));
@@ -200,7 +259,7 @@ describe("GammaApiService", () => {
         json: () => Promise.resolve({ data: markets }),
       });
 
-      await svc.syncMarkets();
+      await svc.syncAllMarkets();
 
       expect(prisma.market.upsert).toHaveBeenCalledTimes(1);
       expect(prisma.market.upsert.mock.calls[0][0].where).toEqual({
@@ -215,7 +274,7 @@ describe("GammaApiService", () => {
         json: () => Promise.resolve({ data: markets }),
       });
 
-      await svc.syncMarkets();
+      await svc.syncAllMarkets();
 
       expect(ws.subscribeTokens).not.toHaveBeenCalled();
     });
@@ -279,14 +338,14 @@ describe("GammaApiService", () => {
 
   // ── update payload ─────────────────────────────────────────────────────────
 
-  describe("syncMarkets() — update payload", () => {
+  describe("syncAllMarkets() — update payload", () => {
     it("sets lastUpdatedAt in the update payload", async () => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ data: [makeGammaMarket()] }),
       });
 
-      await svc.syncMarkets();
+      await svc.syncAllMarkets();
 
       const call = prisma.market.upsert.mock.calls[0][0];
       expect(call.update.lastUpdatedAt).toBeInstanceOf(Date);
@@ -301,7 +360,7 @@ describe("GammaApiService", () => {
           }),
       });
 
-      await svc.syncMarkets();
+      await svc.syncAllMarkets();
 
       const call = prisma.market.upsert.mock.calls[0][0];
       expect(call.update.closed).toBe(true);
@@ -314,7 +373,7 @@ describe("GammaApiService", () => {
         json: () => Promise.resolve({ data: [makeGammaMarket()] }),
       });
 
-      await svc.syncMarkets();
+      await svc.syncAllMarkets();
 
       const tokenCall = prisma.token.upsert.mock.calls[0][0];
       expect(tokenCall.update.price).toBe(0.65);

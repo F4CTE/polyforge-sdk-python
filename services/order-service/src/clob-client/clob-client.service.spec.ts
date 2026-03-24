@@ -190,6 +190,87 @@ describe("ClobClientService", () => {
     });
   });
 
+  // ── cancelAll ────────────────────────────────────────────────────────────
+
+  describe("cancelAll()", () => {
+    it("sends DELETE to /cancel-all with API key", async () => {
+      fetchSpy.mockResolvedValue({ ok: true });
+      await svc.cancelAll("api-key-xyz");
+      expect(fetchSpy.mock.calls[0][0]).toBe("http://clob:3099/cancel-all");
+      expect(fetchSpy.mock.calls[0][1].method).toBe("DELETE");
+      expect(fetchSpy.mock.calls[0][1].headers["POLY-API-KEY"]).toBe(
+        "api-key-xyz",
+      );
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue("Internal error"),
+      });
+      await expect(svc.cancelAll("key")).rejects.toThrow("500");
+    });
+  });
+
+  // ── cancelByMarket ──────────────────────────────────────────────────────
+
+  describe("cancelByMarket()", () => {
+    it("sends DELETE to /cancel-orders with market query param", async () => {
+      fetchSpy.mockResolvedValue({ ok: true });
+      await svc.cancelByMarket("api-key-xyz", "market-123");
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/cancel-orders?market=market-123",
+      );
+      expect(fetchSpy.mock.calls[0][1].method).toBe("DELETE");
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 404,
+        text: vi.fn().mockResolvedValue("Market not found"),
+      });
+      await expect(
+        svc.cancelByMarket("key", "bad-market"),
+      ).rejects.toThrow("404");
+    });
+  });
+
+  // ── fetchTrades ─────────────────────────────────────────────────────────
+
+  describe("fetchTrades()", () => {
+    it("sends GET to /trades with user query param", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      });
+      await svc.fetchTrades("0xwallet");
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://clob:3099/trades?user=0xwallet",
+      );
+    });
+
+    it("returns parsed trades array", async () => {
+      const trades = [{ id: "t1", order_id: "o1", status: "FILLED" }];
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(trades),
+      });
+      const result = await svc.fetchTrades("0xwallet");
+      expect(result).toEqual(trades);
+    });
+
+    it("throws on non-OK response", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue("error"),
+      });
+      await expect(svc.fetchTrades("0xwallet")).rejects.toThrow("500");
+    });
+  });
+
   // ── URL config ────────────────────────────────────────────────────────────
 
   describe("URL configuration", () => {

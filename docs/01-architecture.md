@@ -492,6 +492,34 @@ ERROR       → internal error before submission ✓ terminal
 
 Binary markets only. Negative risk (multi-outcome) markets must be filtered out by `market-data-service`. Full neg-risk support is deferred.
 
+### Heartbeat Service (30s interval)
+
+`order-service` runs a `HeartbeatService` that checks the health of GTC orders every 30 seconds. For each LIVE GTC order, it verifies the order is still resting on the Polymarket CLOB book. If a LIVE order has disappeared from the book without a local status update, the heartbeat marks it for reconciliation.
+
+### Trade Reconciliation (2min cron)
+
+`order-service` runs a `TradeReconcilerService` on a 2-minute cron schedule. For each connected user with LIVE orders, it fetches trades from the Polymarket CLOB API (`GET /trades?user={address}`) and compares against local order statuses. Orders that were filled on-chain but missed locally (status stuck at LIVE) are updated to CONFIRMED. All discrepancies are logged for audit.
+
+### Position Reconciliation (5min cron)
+
+Operates independently from trade reconciliation. Every 5 minutes, `order-service` reconciles local position records against on-chain state from the Polymarket Data API. Detects phantom positions (local but not on-chain) and orphan positions (on-chain but not local) and flags them for manual review.
+
+### User WebSocket Channel
+
+Each connected user gets a dedicated Polymarket WebSocket subscription via `market-data-service`. The service multiplexes per-user channels to track real-time order status updates and price changes for tokens the user holds positions in. Status changes received over WebSocket are applied immediately to local order records.
+
+### Builder API Integration
+
+`admin-api-service` fetches attributed trade data from the Polymarket Builder API (`GET /builder-trades`) to display real tier status and weekly USDC rewards in the admin dashboard. The service authenticates using `POLY_BUILDER_API_KEY`, `POLY_BUILDER_SECRET`, and `POLY_BUILDER_PASSPHRASE` environment variables. On API failure, it falls back to computing an estimated tier from local order volume.
+
+### Bulk Cancel
+
+`order-service` supports bulk cancellation through the CLOB API:
+- `DELETE /cancel-all` — cancels all open orders for a user
+- `DELETE /cancel-orders?market={marketId}` — cancels all open orders in a specific market
+
+The `cancel_all_orders` strategy block evaluator emits a sentinel intent (`tokenId: __cancel_all__`) that the order-service stream consumer intercepts and routes to the appropriate bulk cancel endpoint.
+
 ---
 
 ## 7. Strategy System

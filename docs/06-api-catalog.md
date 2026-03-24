@@ -2402,4 +2402,49 @@ Get a specific news article with full content and any associated trade signals.
 
 ---
 
+## Polymarket API Integrations
+
+The following external Polymarket APIs are consumed by Polyforge services.
+
+### Gamma API (market-data-service)
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/markets?closed=false&limit=N&offset=N` | Paginated market discovery (full sync) |
+| `GET` | `/events` | Fetch events that group multiple markets |
+
+### CLOB API (order-service)
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/order` | Submit a signed order |
+| `DELETE` | `/order/:orderId` | Cancel a single order |
+| `DELETE` | `/cancel-all` | Bulk cancel all open orders for a user |
+| `DELETE` | `/cancel-orders?market={marketId}` | Bulk cancel all orders in a market |
+| `GET` | `/trades?user={address}` | Fetch trades for reconciliation |
+
+### Builder API (admin-api-service)
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/builder-trades` | Fetch attributed trades, tier, and weekly rewards |
+
+**Authentication:** Builder API requests carry `POLY-API-KEY`, `POLY-API-SECRET`, and `POLY-API-PASSPHRASE` headers using platform-level builder credentials from environment variables.
+
+### CLOB WebSocket (market-data-service)
+
+| Channel | Purpose |
+|---|---|
+| Price channel | Real-time token price updates |
+| Book channel | Order book snapshots and deltas |
+| User channel | Per-user order status updates |
+
+### Data API (order-service)
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/positions?user={address}` | Position reconciliation (5min cron) |
+
+---
+
 *See also: [Architecture Addendum A3](./Polyforge-Architecture-Addendum.pdf) for the complete stream:events event taxonomy.*

@@ -233,11 +233,14 @@ export const ScaleOutAction: ActionEvaluator = {
   },
 };
 
-// ─── cancel_all_orders — emits a special cancel intent (handled by order-service) ─
+// ─── cancel_all_orders — calls CLOB bulk cancel via order-service ────────────
+// The cancel-all intent carries a sentinel tokenId that the order-service
+// stream consumer intercepts. When the order-service sees __cancel_all__ it
+// calls the CLOB bulk-cancel endpoint (DELETE /cancel-all or
+// DELETE /cancel-orders?market=X) instead of placing an order.
 export const CancelAllOrdersAction: ActionEvaluator = {
   async execute(block, ctx, _redis, _prisma): Promise<ActionResult> {
     const { marketId } = (block["params"] as any) ?? {};
-    // A cancel-all intent has side=SELL, size=0 (special sentinel)
     return {
       intents: [
         {

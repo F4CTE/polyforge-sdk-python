@@ -7,6 +7,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed — Polymarket API Integration Gaps (4–6)
+
+#### Gap 4: Trade Reconciliation + Bulk Cancel
+
+- **Trade reconciler** (`order-service`) — 2-minute cron job reconciles LIVE orders against Polymarket CLOB trades, updates missed fills to CONFIRMED
+- **Bulk cancel endpoints** — `cancelAll()` and `cancelByMarket()` methods added to `ClobClientService`, calling `DELETE /cancel-all` and `DELETE /cancel-orders?market={marketId}`
+- **`fetchTrades()`** — new method on `ClobClientService` to fetch trades from `GET /trades?user={address}` for reconciliation
+- **Reconciliation module** — `ReconciliationModule` registered in order-service `AppModule` with `ScheduleModule`
+- **`cancel_all_orders` block** — updated evaluator comment to document CLOB bulk cancel routing through order-service stream consumer
+
+#### Gap 5: Builder Trades API Integration
+
+- **Builder API client** (`admin-api-service`) — `BuilderService.fetchBuilderData()` calls `GET /builder-trades` on the Polymarket Builder API
+- **Tier calculation** — computes tier from cumulative volume (BRONZE/SILVER/GOLD/PLATINUM/DIAMOND thresholds) when API does not return tier
+- **Graceful fallback** — on API failure, falls back to local volume-based tier estimation
+- **Real data** — `currentTier` and `weeklyRewardUsdc` now populated from Polymarket API instead of null placeholders
+- **Environment variables** — uses existing `POLY_BUILDER_API_KEY`, `POLY_BUILDER_SECRET`, `POLY_BUILDER_PASSPHRASE` for authentication
+
+#### Gap 6: Gamma API Full Pagination
+
+- **Full market pagination** — `syncAllMarkets()` paginates through all active markets using `offset`/`limit` parameters instead of fetching only the first 100
+- **Events fetching** — new `syncEvents()` method fetches events from `GET /events` on the Gamma API and upserts event records
+- **`GammaEvent` interface** — new interface for event data (id, slug, title, description, startDate, endDate, markets)
+- **`upsertEvent()`** — private method to upsert event records into the database
+
 ### Added — Gasless Trading
 
 - **Gas sponsor service** (`signer-service`) — platform-funded wallet absorbs Polygon gas fees for user transactions

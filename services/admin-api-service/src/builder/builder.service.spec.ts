@@ -20,18 +20,33 @@ function makePrisma() {
   };
 }
 
+function makeConfig(overrides: Record<string, string> = {}) {
+  return {
+    get: (key: string) => overrides[key] ?? undefined,
+  } as any;
+}
+
 // ─── Suite ────────────────────────────────────────────────────────────────────
 
 describe("BuilderService", () => {
   let service: BuilderService;
   let prisma: ReturnType<typeof makePrisma>;
+  let fetchSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     prisma = makePrisma();
-    service = new BuilderService(prisma as any);
+    service = new BuilderService(prisma as any, makeConfig({
+      BUILDER_API_URL: "http://builder:3099",
+      POLY_BUILDER_API_KEY: "test-key",
+      POLY_BUILDER_SECRET: "test-secret",
+      POLY_BUILDER_PASSPHRASE: "test-pass",
+    }));
+    fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
@@ -121,13 +136,6 @@ describe("BuilderService", () => {
       expect(call.where.deleted).toBe(false);
     });
 
-    it("sets currentTier and weeklyRewardUsdc to null (placeholder)", async () => {
-      const result = await service.getStats();
-
-      expect(result.currentTier).toBeNull();
-      expect(result.weeklyRewardUsdc).toBeNull();
-    });
-
     it("returns totalOrders as 0 when no confirmed orders exist", async () => {
       prisma.order.aggregate.mockResolvedValue({
         _sum: { size: null },
@@ -137,6 +145,97 @@ describe("BuilderService", () => {
       const result = await service.getStats();
 
       expect(result.totalOrders).toBe(0);
+    });
+  });
+
+  // ── fetchBuilderData ────────────────────────────────────────────────────
+
+  describe("fetchBuilderData", () => {
+    it("fetches trades from Polymarket Builder API", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          trades: [],
+          totalVolume: 300_000,
+          tier: "GOLD",
+          weeklyRewardUsdc: 150,
+        }),
+      });
+
+      const result = await service.fetchBuilderData();
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(fetchSpy.mock.calls[0][0]).toBe(
+        "http://builder:3099/builder-trades",
+      );
+      expect(result.currentTier).toBe("GOLD");
+      expect(result.weeklyRewardUsdc).toBe(150);
+    });
+
+    it("calculates tier from volume when API does not return tier", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          trades: [],
+          totalVolume: 1_500_000,
+          tier: undefined,
+          weeklyRewardUsdc: 500,
+        }),
+      });
+
+      const result = await service.fetchBuilderData();
+
+      expect(result.currentTier).toBe("PLATINUM");
+    });
+
+    it("handles API failure and falls back to local data", async () => {
+      fetchSpy.mockRejectedValue(new Error("network error"));
+
+      prisma.order.aggregate.mockResolvedValue({
+        _sum: { size: 75_000 },
+      });
+
+      const result = await service.fetchBuilderData();
+
+      // Should not throw
+      expect(result.currentTier).toBe("SILVER");
+      expect(result.weeklyRewardUsdc).toBeNull();
+    });
+
+    it("handles non-OK response and falls back to local data", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      prisma.order.aggregate.mockResolvedValue({
+        _sum: { size: null },
+      });
+
+      const result = await service.fetchBuilderData();
+
+      expect(result.currentTier).toBe("BRONZE");
+    });
+  });
+
+  // ── getStats with builder API ───────────────────────────────────────────
+
+  describe("getStats with builder API", () => {
+    it("populates currentTier and weeklyRewardUsdc from API", async () => {
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          trades: [],
+          totalVolume: 100_000,
+          tier: "SILVER",
+          weeklyRewardUsdc: 50,
+        }),
+      });
+
+      const result = await service.getStats();
+
+      expect(result.currentTier).toBe("SILVER");
+      expect(result.weeklyRewardUsdc).toBe(50);
     });
   });
 });
