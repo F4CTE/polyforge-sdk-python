@@ -80,7 +80,7 @@ export class PortfolioService {
       ? await this.prisma.$queryRaw`
                 SELECT
                     time_bucket('1 day'::interval, time) AS time,
-                    last("realizedPnl", time) AS pnl
+                    last(pnl, time) AS pnl
                 FROM pnl_snapshots
                 WHERE "userId" = ${userId}
                   AND "strategyId" = ${strategyId}
@@ -91,9 +91,10 @@ export class PortfolioService {
       : await this.prisma.$queryRaw`
                 SELECT
                     time_bucket('1 day'::interval, time) AS time,
-                    last("realizedPnl", time) AS pnl
+                    last(pnl, time) AS pnl
                 FROM pnl_snapshots
                 WHERE "userId" = ${userId}
+                  AND "strategyId" IS NULL
                   AND time >= ${since}
                 GROUP BY 1
                 ORDER BY 1 ASC

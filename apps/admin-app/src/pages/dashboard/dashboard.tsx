@@ -11,6 +11,7 @@ import {
   ToggleLeft,
   ToggleRight,
   AlertCircle,
+  Clock,
 } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, timeAgo } from '@/lib/utils';
@@ -287,9 +288,11 @@ export function Component() {
         </h2>
         {logsError ? (
           <div className="text-center py-4">
-            <p className="text-sm text-[var(--color-pf-text-secondary)]">Audit logs unavailable</p>
-            <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-1">
-              Retry
+            <Clock className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={20} />
+            <p className="text-sm text-[var(--color-pf-text-secondary)]">No recent activity</p>
+            <p className="text-xs text-[var(--color-pf-text-tertiary)] mt-1">Activity will appear here as admins take actions.</p>
+            <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2">
+              Refresh
             </button>
           </div>
         ) : auditLogs.length === 0 ? (
