@@ -205,10 +205,10 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
           try {
             const market = await this.prisma.market.findUnique({
               where: { id: alert.marketId },
-              select: { resolved: true, outcome: true },
+              select: { closed: true },
             });
-            if (market?.resolved) {
-              resolvedAlerts.push({ alert, marketOutcome: market.outcome });
+            if (market?.closed) {
+              resolvedAlerts.push({ alert, marketOutcome: alert.outcome });
             }
           } catch {
             // non-critical — skip unresolvable markets
