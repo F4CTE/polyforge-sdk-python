@@ -1,13 +1,26 @@
 // Thin TypeScript wrapper around the Rust WASM strategy evaluation engine.
-// Falls back to a no-op TypeScript stub if WASM is not available.
+// SECURITY: In production, WASM is MANDATORY — no fallback allowed.
+// The TypeScript fallback is only permitted in development.
 
 let wasmModule: any = null;
+let wasmAvailable = false;
 
 try {
   wasmModule = require('./pkg/polyforge_engine');
+  wasmAvailable = true;
 } catch {
-  console.warn('polyforge-engine WASM not available, using TypeScript fallback');
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'FATAL: polyforge-engine WASM module not found. ' +
+      'Rust WASM is REQUIRED in production for secure, GC-free strategy evaluation. ' +
+      'Run: cd packages/polyforge-engine && bash build.sh'
+    );
+  }
+  console.warn('[DEV] polyforge-engine WASM not available, using TypeScript fallback');
 }
+
+/** Returns true if the Rust WASM module is active (not the JS fallback) */
+export function isWasmActive(): boolean { return wasmAvailable; }
 
 export interface EvalContext {
   current_price: number;

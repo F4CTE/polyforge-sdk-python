@@ -1,13 +1,26 @@
 // Thin TypeScript wrapper around the Rust WASM module
-// Falls back to Node.js crypto if WASM is not available
+// SECURITY: In production, WASM is MANDATORY — no fallback allowed.
+// Fallback to Node.js crypto is only permitted in development.
 
 let wasmModule: any = null;
+let wasmAvailable = false;
 
 try {
   wasmModule = require('./pkg/polyforge_crypto');
+  wasmAvailable = true;
 } catch {
-  console.warn('polyforge-crypto WASM not available, using Node.js crypto fallback');
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'FATAL: polyforge-crypto WASM module not found. ' +
+      'Rust WASM is REQUIRED in production for memory-safe cryptographic operations. ' +
+      'Run: cd packages/polyforge-crypto && bash build.sh'
+    );
+  }
+  console.warn('[DEV] polyforge-crypto WASM not available, using Node.js crypto fallback');
 }
+
+/** Returns true if the Rust WASM module is active (not the JS fallback) */
+export function isWasmActive(): boolean { return wasmAvailable; }
 
 import * as crypto from 'crypto';
 

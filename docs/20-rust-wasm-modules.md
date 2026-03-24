@@ -1,6 +1,8 @@
 # Rust WASM Modules
 
-Polyforge uses Rust compiled to WebAssembly for CPU-intensive operations that benefit from zero GC pauses, deterministic performance, and near-native speed. All WASM modules live under `packages/` and follow the same conventions.
+Polyforge uses Rust compiled to WebAssembly for security-critical and CPU-intensive operations that benefit from memory safety, zero GC pauses, deterministic performance, and near-native speed. All WASM modules live under `packages/` and follow the same conventions.
+
+> **SECURITY: WASM is mandatory in production.** Both modules throw a fatal error if the compiled WASM binary is not found when `NODE_ENV=production`. The Node.js/TypeScript fallback is only allowed in development mode. This prevents silent degradation to less secure JavaScript implementations in production.
 
 ## Build Prerequisites
 
