@@ -59,7 +59,7 @@ export function Component() {
     load();
   }, [load]);
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   function handleSearch(value: string) {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {

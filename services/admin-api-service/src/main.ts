@@ -40,10 +40,10 @@ async function bootstrap() {
   await app.register(fastifyCookie as any);
 
   // Response compression (brotli preferred, gzip fallback)
-  await app.register(compress, { encodings: ['br', 'gzip'] });
+  await app.register(compress as any, { encodings: ["br", "gzip"] });
 
   // ETag support for conditional requests (304 Not Modified)
-  await app.register(etag);
+  await app.register(etag as any);
 
   app.useLogger(app.get(Logger));
 

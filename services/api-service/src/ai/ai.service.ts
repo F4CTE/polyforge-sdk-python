@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { StrategyStatus } from ".prisma/client";
 
-interface QueryResult {
+export interface QueryResult {
   query: string;
   intent: string;
   filters: Record<string, unknown>;
