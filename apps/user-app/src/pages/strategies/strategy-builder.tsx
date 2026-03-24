@@ -288,20 +288,20 @@ export function Component() {
                 <div className="bg-pf-surface rounded-pf p-2">
                   <span className="text-pf-text-secondary block">P&L</span>
                   <span className={`font-mono font-semibold ${parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
-                    {parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? '+' : ''}{quickResult.totalPnl}
+                    {parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? '+' : ''}{String(quickResult.totalPnl)}
                   </span>
                 </div>
                 <div className="bg-pf-surface rounded-pf p-2">
                   <span className="text-pf-text-secondary block">Win Rate</span>
-                  <span className="font-mono font-semibold text-pf-text">{quickResult.winRate}%</span>
+                  <span className="font-mono font-semibold text-pf-text">{String(quickResult.winRate)}%</span>
                 </div>
                 <div className="bg-pf-surface rounded-pf p-2">
                   <span className="text-pf-text-secondary block">Orders</span>
-                  <span className="font-mono font-semibold text-pf-text">{quickResult.totalOrders}</span>
+                  <span className="font-mono font-semibold text-pf-text">{String(quickResult.totalOrders)}</span>
                 </div>
                 <div className="bg-pf-surface rounded-pf p-2">
                   <span className="text-pf-text-secondary block">Filled</span>
-                  <span className="font-mono font-semibold text-pf-text">{quickResult.filledOrders}</span>
+                  <span className="font-mono font-semibold text-pf-text">{String(quickResult.filledOrders)}</span>
                 </div>
               </div>
             </div>
