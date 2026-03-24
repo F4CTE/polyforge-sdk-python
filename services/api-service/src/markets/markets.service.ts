@@ -12,6 +12,15 @@ export class MarketsService {
   ) {}
 
   async list(query: MarketQueryDto): Promise<PaginatedResponse<any>> {
+    // Build cache key from query params
+    const cacheKey = `cache:markets:list:${JSON.stringify(query)}`;
+
+    // Check Redis cache first (30s TTL)
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      try { return JSON.parse(cached); } catch {}
+    }
+
     const { page, limit, search, category, closed, sort } = query;
     const skip = (page - 1) * limit;
 
@@ -43,10 +52,22 @@ export class MarketsService {
       this.prisma.market.count({ where }),
     ]);
 
-    return paginate(markets, total, page, limit);
+    const result = paginate(markets, total, page, limit);
+
+    // Cache for 30 seconds
+    await this.redis.set(cacheKey, JSON.stringify(result), 30);
+
+    return result;
   }
 
   async findOne(marketId: string): Promise<any> {
+    // Check Redis cache first (60s TTL)
+    const cacheKey = `cache:markets:id:${marketId}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      try { return JSON.parse(cached); } catch {}
+    }
+
     const market = await this.prisma.market.findUnique({
       where: { id: marketId },
       include: { tokens: true },
@@ -57,6 +78,10 @@ export class MarketsService {
         message: "Market not found",
       });
     }
+
+    // Cache for 60 seconds
+    await this.redis.set(cacheKey, JSON.stringify(market), 60);
+
     return market;
   }
 
@@ -65,6 +90,13 @@ export class MarketsService {
     query: PriceHistoryQueryDto,
   ): Promise<any> {
     const { resolution, from, to, limit } = query;
+
+    // Check Redis cache first (10s TTL)
+    const cacheKey = `cache:markets:pricehistory:${tokenId}:${JSON.stringify(query)}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      try { return JSON.parse(cached); } catch {}
+    }
 
     const fromDate = from
       ? new Date(from)
@@ -101,7 +133,7 @@ export class MarketsService {
       where: { tokenId, gapStart: { gte: fromDate }, gapEnd: { lte: toDate } },
     });
 
-    return {
+    const result = {
       tokenId,
       resolution,
       hasGaps: gapCount > 0,
@@ -114,6 +146,11 @@ export class MarketsService {
         volume: String(r.volume ?? "0"),
       })),
     };
+
+    // Cache for 10 seconds
+    await this.redis.set(cacheKey, JSON.stringify(result), 10);
+
+    return result;
   }
 
   async orderBook(tokenId: string): Promise<any> {

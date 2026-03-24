@@ -103,7 +103,8 @@ services:
       DATABASE_URL: "${DATABASE_DIRECT_URL}"     # RDS connection string from .env.prod
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 200
-      DEFAULT_POOL_SIZE: 25
+      DEFAULT_POOL_SIZE: 40
+      MAX_DB_CONNECTIONS: 50
       SERVER_RESET_QUERY: DISCARD ALL
       SERVER_TLS_SSLMODE: require
     networks: [internal]

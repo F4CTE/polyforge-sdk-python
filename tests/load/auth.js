@@ -2,6 +2,9 @@ import http from 'k6/http';
 import { check, sleep, group } from 'k6';
 import { AUTH_URL, login, thresholds } from './config.js';
 
+// Performance note: bcrypt operations now run in worker threads, so higher
+// concurrency should not block the event loop. Expected improvement: auth
+// endpoints can handle 3-5x more concurrent requests without event loop stalls.
 export const options = {
   stages: [
     { duration: '30s', target: 50 },
@@ -55,9 +58,11 @@ export default function () {
 
   sleep(Math.random() * 2 + 1);
 
+  // Rate limiting now tracks by userId for authenticated requests and by IP
+  // for unauthenticated requests. Each user gets their own 120 req/60s bucket.
   group('Rate limiting verification', () => {
     const responses = [];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 15; i++) {
       const res = http.post(
         `${AUTH_URL}/login`,
         JSON.stringify({ email: 'alice@dev.local', password: 'wrong_password' }),

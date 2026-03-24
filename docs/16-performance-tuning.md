@@ -340,4 +340,55 @@ Monitoring
 
 ---
 
+## Load Test Optimizations (March 2026)
+
+The following optimizations were applied based on load test results showing event loop blocking, DB connection exhaustion, and uneven rate limiting.
+
+### Worker threads for CPU-intensive bcrypt
+
+`bcrypt.hash()` and `bcrypt.compare()` block the Node.js event loop for ~250ms per call. At 100 concurrent logins, this causes cascading request timeouts across all endpoints, not just auth.
+
+**Solution:** Moved all bcrypt operations to a dedicated worker thread (`bcrypt-worker.ts`) via the `bcrypt.util.ts` helper. Each hash/compare call spawns a short-lived worker thread, keeping the main event loop free.
+
+- Files: `services/auth-service/src/auth/bcrypt-worker.ts`, `services/auth-service/src/auth/bcrypt.util.ts`
+- Updated: `services/auth-service/src/users/users.service.ts`
+- Expected improvement: Auth endpoints can handle 3-5x more concurrent requests without event loop stalls
+
+### Response caching strategy
+
+Added Redis caching to high-traffic read endpoints that were hitting the database on every request:
+
+| Endpoint | Cache Key Pattern | TTL | Rationale |
+|----------|-------------------|-----|-----------|
+| `GET /markets` (list) | `cache:markets:list:{query}` | 30s | Most frequently hit endpoint; market list rarely changes within 30s |
+| `GET /markets/:id` | `cache:markets:id:{id}` | 60s | Individual market metadata is stable; 60s is safe |
+| `GET /markets/:tokenId/price-history` | `cache:markets:pricehistory:{tokenId}:{query}` | 10s | Price data changes frequently; short TTL balances freshness vs DB load |
+| `GET /markets/:tokenId/book` | `cache:book:{tokenId}` | 2s | Already cached by market-data-service (no change needed) |
+
+Cache invalidation is TTL-based — no explicit invalidation needed for these read-heavy endpoints.
+
+### PgBouncer pool sizing
+
+Load tests showed connection pool exhaustion under sustained traffic (100+ VUs). Increased pool sizes:
+
+| Setting | Dev (was) | Dev (now) | Prod (was) | Prod (now) |
+|---------|-----------|-----------|------------|------------|
+| `DEFAULT_POOL_SIZE` | 20 | 40 | 25 | 40 |
+| `MAX_CLIENT_CONN` | 100 | 200 | 200 | 200 |
+| `MAX_DB_CONNECTIONS` | — | 50 | — | 50 |
+
+The `MAX_DB_CONNECTIONS` cap prevents PgBouncer from opening more connections than the database can handle, even under burst traffic.
+
+### Rate limiting architecture (per-user vs per-IP)
+
+The throttler guard (`api-key-throttler.guard.ts`) now tracks rate limits per identity rather than per IP:
+
+1. **API key requests** — tracked by `apikey:{keyId}` (unchanged)
+2. **Authenticated users** — tracked by `user:{userId}` (new)
+3. **Unauthenticated requests** — tracked by IP (fallback)
+
+This means each authenticated user gets their own rate limit bucket (120 req/60s) instead of sharing a bucket with all users behind the same IP (e.g., corporate NAT, shared VPN).
+
+---
+
 *Previous: [Incident Response](./15-incident-response.md)*

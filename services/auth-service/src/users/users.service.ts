@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '@polyforge/shared-db';
 import { RedisService } from '@polyforge/shared-redis';
 import * as bcrypt from 'bcryptjs';
+import { hashPassword, comparePassword } from '../auth/bcrypt.util';
 import { randomBytes, createHash } from 'crypto';
 
 @Injectable()
@@ -44,7 +45,7 @@ export class UsersService {
       );
     }
 
-    const passwordHash = await bcrypt.hash(data.password, 12);
+    const passwordHash = await hashPassword(data.password, 12);
 
     return this.prisma.user.create({
       data: {
@@ -60,7 +61,7 @@ export class UsersService {
     user: { passwordHash: string },
     password: string,
   ): Promise<boolean> {
-    return bcrypt.compare(password, user.passwordHash);
+    return comparePassword(password, user.passwordHash);
   }
 
   /**
@@ -75,7 +76,7 @@ export class UsersService {
     const MIN_ROUNDS = 12;
     const rounds = bcrypt.getRounds(currentHash);
     if (rounds < MIN_ROUNDS) {
-      const newHash = await bcrypt.hash(password, MIN_ROUNDS);
+      const newHash = await hashPassword(password, MIN_ROUNDS);
       await this.prisma.user.update({
         where: { id: userId },
         data: { passwordHash: newHash },
@@ -181,7 +182,7 @@ export class UsersService {
       );
     }
 
-    const passwordHash = await bcrypt.hash(newPassword, 12);
+    const passwordHash = await hashPassword(newPassword, 12);
 
     await this.prisma.$transaction([
       this.prisma.passwordResetToken.update({
