@@ -58,7 +58,8 @@ export class GammaApiService implements OnModuleInit {
   async syncMarkets() {
     try {
       await this.syncAllMarkets();
-      await this.syncEvents();
+      // TODO: Enable once Event model is added to Prisma schema
+      // await this.syncEvents();
     } catch (err) {
       this.logger.error("Failed to sync markets from Gamma API", err);
     }
@@ -142,25 +143,10 @@ export class GammaApiService implements OnModuleInit {
     return body.data;
   }
 
-  private async upsertEvent(event: GammaEvent) {
-    await this.prisma.event.upsert({
-      where: { id: event.id },
-      create: {
-        id: event.id,
-        slug: event.slug,
-        title: event.title,
-        description: event.description,
-        startDate: event.startDate ? new Date(event.startDate) : undefined,
-        endDate: event.endDate ? new Date(event.endDate) : undefined,
-      },
-      update: {
-        title: event.title,
-        description: event.description,
-        endDate: event.endDate ? new Date(event.endDate) : undefined,
-        lastUpdatedAt: new Date(),
-      },
-    });
-  }
+  // TODO: Enable once Event model is added to Prisma schema
+  // private async upsertEvent(event: GammaEvent) {
+  //   await this.prisma.event.upsert({ ... });
+  // }
 
   private async upsertMarket(market: GammaMarket) {
     // Upsert the market record
