@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ReactFlowProvider } from '@xyflow/react';
-import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { StrategyCanvas } from '../../components/builder/strategy-canvas';
@@ -27,6 +27,9 @@ export function Component() {
   const loadStrategy = useBuilderStore((s) => s.loadStrategy);
   const save = useBuilderStore((s) => s.save);
   const reset = useBuilderStore((s) => s.reset);
+
+  const [quickTesting, setQuickTesting] = useState(false);
+  const [quickResult, setQuickResult] = useState<Record<string, unknown> | null>(null);
 
   const isEdit = !!id;
 
@@ -62,6 +65,34 @@ export function Component() {
       toast.error(message);
     }
   }, [save, isEdit, strategyId, navigate]);
+
+  const onQuickTest = useCallback(async () => {
+    if (!strategyId) {
+      toast.error('Save the strategy first to run a quick test');
+      return;
+    }
+    setQuickTesting(true);
+    setQuickResult(null);
+    try {
+      const res = await fetch('/api/v1/backtests/quick', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ strategyId, quickMode: true }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setQuickResult(result);
+        toast.success('Quick test complete');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message ?? 'Quick test failed');
+      }
+    } catch {
+      toast.error('Quick test failed');
+    }
+    setQuickTesting(false);
+  }, [strategyId]);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -188,6 +219,20 @@ export function Component() {
             <Blocks className="size-4" />
           </button>
 
+          <button
+            onClick={onQuickTest}
+            disabled={quickTesting || !strategyId}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-border-strong disabled:opacity-50 transition-colors"
+            title="Run a 7-day quick backtest"
+          >
+            {quickTesting ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <Zap className="size-3" />
+            )}
+            Quick Test
+          </button>
+
           <Link
             to="/strategies"
             className="px-3 py-1.5 text-xs text-pf-text-secondary hover:text-pf-text rounded-pf-sm hover:bg-pf-overlay transition-colors"
@@ -231,6 +276,36 @@ export function Component() {
               </div>
             )}
           </div>
+
+          {/* Quick test results overlay */}
+          {quickResult && (
+            <div className="absolute bottom-4 left-4 z-40 bg-pf-elevated border border-pf-border rounded-pf-lg p-4 shadow-pf-lg max-w-xs">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold text-pf-text uppercase tracking-wider">Quick Test Results</span>
+                <button onClick={() => setQuickResult(null)} className="text-pf-text-muted hover:text-pf-text text-xs">&times;</button>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-pf-surface rounded-pf p-2">
+                  <span className="text-pf-text-secondary block">P&L</span>
+                  <span className={`font-mono font-semibold ${parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                    {parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? '+' : ''}{quickResult.totalPnl}
+                  </span>
+                </div>
+                <div className="bg-pf-surface rounded-pf p-2">
+                  <span className="text-pf-text-secondary block">Win Rate</span>
+                  <span className="font-mono font-semibold text-pf-text">{quickResult.winRate}%</span>
+                </div>
+                <div className="bg-pf-surface rounded-pf p-2">
+                  <span className="text-pf-text-secondary block">Orders</span>
+                  <span className="font-mono font-semibold text-pf-text">{quickResult.totalOrders}</span>
+                </div>
+                <div className="bg-pf-surface rounded-pf p-2">
+                  <span className="text-pf-text-secondary block">Filled</span>
+                  <span className="font-mono font-semibold text-pf-text">{quickResult.filledOrders}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Side panel — always mounted, collapsed via width to prevent React Flow reflow issues */}
           <div className={`transition-all duration-200 overflow-hidden ${panelOpen ? 'w-80' : 'w-0'}`}>

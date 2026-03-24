@@ -73,6 +73,7 @@ export const authApi = {
 export const adminApi = {
   // Dashboard
   health: () => request<any>(buildUrl(API_BASE, '/dashboard')),
+  rateLimits: () => request<any>(buildUrl(API_BASE, '/dashboard/rate-limits')),
   config: () => request<{ inviteOnly: boolean }>(buildUrl(API_BASE, '/config')),
   setInviteOnly: (enabled: boolean) =>
     request<{ inviteOnly: boolean }>(buildUrl(API_BASE, '/config/invite-only'), {
@@ -133,6 +134,11 @@ export const adminApi = {
   // Backtests
   backtests: (params?: QueryParams) =>
     request<any>(buildUrl(API_BASE, '/backtests', params)),
+  cancelBacktest: (id: string) =>
+    request<any>(buildUrl(API_BASE, `/backtests/${id}/cancel`), {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
 
   // Cache
   cacheStats: () => request<any>(buildUrl(API_BASE, '/cache/stats')),

@@ -191,6 +191,54 @@ export class SigningService {
     return order as Record<string, unknown>;
   }
 
+  // ─── Redeem position ─────────────────────────────────────────────────────
+
+  async redeemPosition(
+    userId: string,
+    tokenId: string,
+  ): Promise<{ txHash: string; gasSponsored: boolean }> {
+    const creds = await this.credentials.getDecryptedCredentials(userId);
+
+    let txHash: string;
+
+    if (this.isDev) {
+      // Stub: return a fake transaction hash
+      txHash = "0x" + crypto.randomBytes(32).toString("hex");
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { ClobClient } = require("@polymarket/clob-client");
+
+      const client = new ClobClient(
+        process.env.CLOB_API_URL ?? "https://clob.polymarket.com",
+        this.chainId,
+        undefined,
+        {
+          key: creds.apiKey,
+          secret: creds.apiSecret,
+          passphrase: creds.apiPassphrase,
+        },
+        creds.sigType,
+        creds.privateKey,
+        creds.safeAddress ?? undefined,
+      );
+
+      const result = await client.redeemPositions([tokenId]);
+      txHash = result?.transactionHash ?? "0x0";
+    }
+
+    const estimatedGasMatic = 0.003;
+    const gasSponsored = await this.gasSponsor.sponsorGas(
+      userId,
+      estimatedGasMatic,
+    );
+
+    this.logger.log(
+      `Position redeemed for user=${userId} tokenId=${tokenId} gasSponsored=${gasSponsored}`,
+    );
+
+    return { txHash, gasSponsored };
+  }
+
   // ─── Builder HMAC headers ─────────────────────────────────────────────────
 
   private buildBuilderHeaders(

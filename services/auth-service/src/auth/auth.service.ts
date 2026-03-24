@@ -11,6 +11,7 @@ import { LoginDto } from './dto/login.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { JwtPayload } from '@polyforge/shared-types';
 import { randomUUID, createHash } from 'crypto';
 
@@ -411,6 +412,74 @@ export class AuthService {
       await pipeline.exec();
       this.logger.log(`Revoked ${count} refresh tokens for user ${userId}`);
     }
+  }
+
+  // ─── Resend verification ──────────────────────────────────────────────────────
+
+  async resendVerification(dto: ResendVerificationDto) {
+    // Always return 200 — prevents email enumeration
+    const user = await this.usersService.findByEmail(dto.email);
+    if (user && !user.deleted && !user.emailVerified) {
+      this.usersService
+        .createEmailVerificationToken(user.id)
+        .then((verifyToken) =>
+          this.mailService.sendVerificationEmail(user.email, verifyToken),
+        )
+        .catch((err) =>
+          this.logger.error('Failed to resend verification email', err),
+        );
+    }
+    return { message: 'If that email exists and is unverified, a verification link has been sent' };
+  }
+
+  // ─── Delete account ─────────────────────────────────────────────────────────
+
+  async deleteAccount(userId: string, password: string) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user || user.deleted) {
+      throw new HttpException(
+        { code: 'UNAUTHORIZED', message: 'User not found' },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const isValid = await this.usersService.validatePassword(user, password);
+    if (!isValid) {
+      throw new HttpException(
+        { code: 'INVALID_PASSWORD', message: 'Password is incorrect' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Soft-delete the user
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { deleted: true, deletedAt: new Date() },
+    });
+
+    // Stop all running strategies — fire and forget
+    this.prisma.strategy
+      .updateMany({
+        where: { userId, status: 'RUNNING' as any },
+        data: { status: 'STOPPED' as any },
+      })
+      .catch((err) => this.logger.error('Failed to stop strategies on account deletion', err));
+
+    // Revoke all refresh tokens
+    await this.revokeAllRefreshTokens(userId).catch((err) =>
+      this.logger.error('Failed to revoke refresh tokens on account deletion', err),
+    );
+
+    // Revoke all API keys — fire and forget
+    this.prisma.apiKey
+      .updateMany({
+        where: { userId, revoked: false },
+        data: { revoked: true },
+      })
+      .catch((err) => this.logger.error('Failed to revoke API keys on account deletion', err));
+
+    this.logger.log(`Account soft-deleted: userId=${userId}`);
   }
 
   // ─── Token helpers ──────────────────────────────────────────────────────────

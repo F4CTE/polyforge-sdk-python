@@ -11,4 +11,9 @@ export class DashboardController {
   getHealth() {
     return this.dashboard.getHealth();
   }
+
+  @Get("rate-limits")
+  getRateLimits() {
+    return this.dashboard.getRateLimits();
+  }
 }

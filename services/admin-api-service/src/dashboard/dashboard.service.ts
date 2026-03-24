@@ -142,4 +142,60 @@ export class DashboardService {
       redis: { status: redisStatus, memoryUsageMb: redisMemoryMb },
     };
   }
+
+  async getRateLimits() {
+    const client = this.redis.getClient();
+
+    // Scan for throttler keys (NestJS throttler uses pattern: <prefix>:<identifier>)
+    const throttlerKeys = await new Promise<string[]>((resolve, reject) => {
+      const found: string[] = [];
+      const stream = client.scanStream({ match: "throttler:*", count: 200 });
+      stream.on("data", (batch: string[]) => found.push(...batch));
+      stream.on("end", () => resolve(found));
+      stream.on("error", (err) => reject(err));
+    });
+
+    // Get TTLs and values for each key
+    const entries: { key: string; hits: number; ttl: number }[] = [];
+    for (const key of throttlerKeys.slice(0, 50)) {
+      try {
+        const [hits, ttl] = await Promise.all([
+          client.get(key),
+          client.ttl(key),
+        ]);
+        entries.push({
+          key: key.replace("throttler:", ""),
+          hits: parseInt(hits ?? "0", 10),
+          ttl,
+        });
+      } catch {
+        // skip unreadable keys
+      }
+    }
+
+    // Sort by hits descending to show top offenders
+    entries.sort((a, b) => b.hits - a.hits);
+
+    // Count recent 429 responses (stored as counter by API services)
+    let recent429Count = 0;
+    try {
+      const count = await client.get("stats:429_count");
+      recent429Count = parseInt(count ?? "0", 10);
+    } catch {
+      // non-critical
+    }
+
+    return {
+      totalTrackedKeys: throttlerKeys.length,
+      recent429Count,
+      topOffenders: entries.slice(0, 20),
+      limits: {
+        register: { limit: 5, windowMs: 3600000 },
+        login: { limit: 10, windowMs: 900000 },
+        forgotPassword: { limit: 3, windowMs: 3600000 },
+        resendVerification: { limit: 3, windowMs: 3600000 },
+        general: { limit: 100, windowMs: 60000 },
+      },
+    };
+  }
 }

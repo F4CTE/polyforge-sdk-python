@@ -47,6 +47,14 @@ export class BacktestsController {
     return this.backtests.create(user.sub, dto);
   }
 
+  @Post("quick")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
+  quick(@CurrentUser() user: any, @Body() dto: CreateBacktestDto) {
+    return this.backtests.create(user.sub, { ...dto, quickMode: true });
+  }
+
   @Get(":id")
   findOne(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.backtests.findOne(id, user.sub);

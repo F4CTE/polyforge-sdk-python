@@ -124,6 +124,7 @@ export function Component() {
   const [loadingChart, setLoadingChart] = useState(true);
   const [loadingPaper, setLoadingPaper] = useState(false);
   const [closingPosition, setClosingPosition] = useState<Record<string, boolean>>({});
+  const [redeemingPosition, setRedeemingPosition] = useState<Record<string, boolean>>({});
   const [resettingPaper, setResettingPaper] = useState(false);
 
   const loadPortfolio = useCallback(async () => {
@@ -181,9 +182,44 @@ export function Component() {
         credentials: 'include',
         body: JSON.stringify({ tokenId: pos.tokenId }),
       });
-      if (res.ok) loadPortfolio();
+      if (res.ok) {
+        loadPortfolio();
+      } else if (res.status === 451) {
+        toast.error('Trading is not available in your region');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        if (err.code === 'GEO_BLOCKED') {
+          toast.error('Trading is not available in your region');
+        } else {
+          toast.error(err.message ?? 'Failed to close position');
+        }
+      }
     } catch { toast.error('Failed to close position'); }
     setClosingPosition(prev => ({ ...prev, [pos.id]: false }));
+  }
+
+  async function redeemPosition(pos: Position) {
+    setRedeemingPosition(prev => ({ ...prev, [pos.id]: true }));
+    try {
+      const res = await fetch('/api/v1/orders/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ positionId: pos.id }),
+      });
+      if (res.ok) {
+        toast.success('Position redeemed');
+        loadPortfolio();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        if (err.code === 'GEO_BLOCKED') {
+          toast.error('Redemption is not available in your region');
+        } else {
+          toast.error(err.message ?? 'Failed to redeem position');
+        }
+      }
+    } catch { toast.error('Failed to redeem position'); }
+    setRedeemingPosition(prev => ({ ...prev, [pos.id]: false }));
   }
 
   async function resetPaper() {
@@ -413,7 +449,7 @@ export function Component() {
                             {pos.resolutionStatus}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
                           {pos.resolutionStatus === 'UNRESOLVED' && (
                             <button
                               onClick={() => closePosition(pos)}
@@ -421,6 +457,15 @@ export function Component() {
                               className="text-xs text-pf-danger hover:text-pf-danger disabled:opacity-50 transition-colors"
                             >
                               {closingPosition[pos.id] ? <Loader2 className="size-3 animate-spin" /> : 'Close'}
+                            </button>
+                          )}
+                          {pos.resolutionStatus === 'RESOLVED' && (
+                            <button
+                              onClick={() => redeemPosition(pos)}
+                              disabled={redeemingPosition[pos.id]}
+                              className="text-xs text-pf-success hover:text-pf-success disabled:opacity-50 transition-colors"
+                            >
+                              {redeemingPosition[pos.id] ? <Loader2 className="size-3 animate-spin" /> : 'Redeem'}
                             </button>
                           )}
                         </td>

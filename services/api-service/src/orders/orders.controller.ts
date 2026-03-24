@@ -13,6 +13,8 @@ import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@pol
 import { IsOptional, IsString } from "class-validator";
 import { OrdersService } from "./orders.service";
 import { ClosePositionDto } from "./dto/close-position.dto";
+import { RedeemPositionDto } from "./dto/redeem-position.dto";
+import { GeoBlockGuard } from "../common/guards/geo.guard";
 import { PaginationDto } from "../common/dto/pagination.dto";
 
 class OrderQueryDto extends PaginationDto {
@@ -47,9 +49,17 @@ export class OrdersController {
 
   @Post("close-position")
   @HttpCode(HttpStatus.ACCEPTED)
-  @UseGuards(ApiKeyScopeGuard)
+  @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes('TRADE')
   closePosition(@CurrentUser() user: any, @Body() dto: ClosePositionDto) {
     return this.orders.closePosition(user.sub, dto);
+  }
+
+  @Post("redeem")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
+  @RequireScopes('TRADE')
+  redeemPosition(@CurrentUser() user: any, @Body() dto: RedeemPositionDto) {
+    return this.orders.redeemPosition(user.sub, dto);
   }
 }

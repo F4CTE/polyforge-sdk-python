@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight, FlaskConical } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FlaskConical, XCircle, Loader2 } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime } from '@/lib/utils';
 
@@ -11,7 +11,21 @@ export function Component() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
 
+  const [cancelling, setCancelling] = useState<Record<string, boolean>>({});
+
   const limit = 20;
+
+  async function cancelBacktest(id: string) {
+    setCancelling(prev => ({ ...prev, [id]: true }));
+    try {
+      await adminApi.cancelBacktest(id);
+      toast.success('Backtest cancelled');
+      load();
+    } catch {
+      toast.error('Failed to cancel backtest');
+    }
+    setCancelling(prev => ({ ...prev, [id]: false }));
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,13 +75,14 @@ export function Component() {
                 <th className="text-right px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">P&L</th>
                 <th className="text-right px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Win Rate</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Created</th>
+                <th className="text-right px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 8 }).map((_, j) => (
+                    {Array.from({ length: 9 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 bg-pf-surface rounded animate-pulse" />
                       </td>
@@ -76,7 +91,7 @@ export function Component() {
                 ))
               ) : backtests.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12">
+                  <td colSpan={9} className="text-center py-12">
                     <FlaskConical className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
                     <p className="text-[var(--color-pf-text-secondary)] font-medium">No backtests found</p>
                     <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Backtest runs will appear here</p>
@@ -107,6 +122,18 @@ export function Component() {
                       {bt.winRate != null ? `${bt.winRate}%` : '-'}
                     </td>
                     <td className="px-4 py-3 text-[var(--color-pf-text-tertiary)]">{formatDateTime(bt.createdAt)}</td>
+                    <td className="px-4 py-3 text-right">
+                      {(bt.status === 'RUNNING' || bt.status === 'PENDING' || bt.status === 'QUEUED') && (
+                        <button
+                          onClick={() => cancelBacktest(bt.id)}
+                          disabled={cancelling[bt.id]}
+                          className="inline-flex items-center gap-1 text-xs text-pf-danger hover:text-pf-danger disabled:opacity-50 transition-colors"
+                        >
+                          {cancelling[bt.id] ? <Loader2 size={12} className="animate-spin" /> : <XCircle size={12} />}
+                          Cancel
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}

@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Body,
   Req,
   Res,
@@ -25,6 +26,8 @@ import { LoginDto } from './dto/login.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 
 const USER_COOKIE = 'pf_token';
 const REFRESH_COOKIE = 'pf_refresh';
@@ -241,5 +244,44 @@ export class AuthController {
   })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === 'production' ? 3 : 300,
+      ttl: 3600000,
+    },
+  })
+  @ApiOperation({
+    summary:
+      'Resend verification email (always returns 200 to prevent email enumeration)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Verification email resent if account exists and is unverified.',
+  })
+  async resendVerification(@Body() dto: ResendVerificationDto) {
+    return this.authService.resendVerification(dto);
+  }
+
+  @Delete('account')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete current user account (soft-delete)' })
+  @ApiResponse({ status: 200, description: 'Account deleted successfully.' })
+  @ApiResponse({ status: 400, description: 'INVALID_PASSWORD' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async deleteAccount(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: DeleteAccountDto,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    await this.authService.deleteAccount(user.sub, dto.password);
+    reply.clearCookie(USER_COOKIE, { path: '/' });
+    reply.clearCookie(REFRESH_COOKIE, { path: '/' });
+    return { message: 'Account deleted successfully' };
   }
 }

@@ -12,6 +12,7 @@ import {
   ToggleRight,
   AlertCircle,
   Clock,
+  ShieldAlert,
 } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, timeAgo } from '@/lib/utils';
@@ -33,16 +34,19 @@ export function Component() {
     totalOrders: 0,
     openTickets: 0,
   });
+  const [rateLimits, setRateLimits] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [healthError, setHealthError] = useState(false);
   const [statsError, setStatsError] = useState(false);
   const [logsError, setLogsError] = useState(false);
+  const [rateLimitsError, setRateLimitsError] = useState(false);
 
   async function load() {
     setLoading(true);
     setHealthError(false);
     setStatsError(false);
     setLogsError(false);
+    setRateLimitsError(false);
 
     // Fetch each API call independently so one failure doesn't block others
     try {
@@ -81,6 +85,13 @@ export function Component() {
       setAuditLogs(Array.isArray(logsRes?.data) ? logsRes.data : []);
     } catch {
       setLogsError(true);
+    }
+
+    try {
+      const rlRes = await adminApi.rateLimits();
+      setRateLimits(rlRes);
+    } catch {
+      setRateLimitsError(true);
     }
 
     setLoading(false);
@@ -279,6 +290,65 @@ export function Component() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Rate Limiting */}
+      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <ShieldAlert size={16} className="text-[var(--color-pf-cyan-500)]" />
+          <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
+            Rate Limiting
+          </h2>
+        </div>
+        {rateLimitsError ? (
+          <div className="text-center py-4">
+            <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={20} />
+            <p className="text-sm text-[var(--color-pf-text-secondary)]">Rate limit data unavailable</p>
+          </div>
+        ) : rateLimits ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] rounded-pf-sm p-3">
+                <span className="text-[11px] text-[var(--color-pf-text-tertiary)] uppercase">Tracked Keys</span>
+                <span className="block text-lg font-bold text-[var(--color-pf-text)]">{rateLimits.totalTrackedKeys}</span>
+              </div>
+              <div className="bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] rounded-pf-sm p-3">
+                <span className="text-[11px] text-[var(--color-pf-text-tertiary)] uppercase">Recent 429s</span>
+                <span className={`block text-lg font-bold ${rateLimits.recent429Count > 0 ? 'text-pf-warning' : 'text-[var(--color-pf-text)]'}`}>
+                  {rateLimits.recent429Count}
+                </span>
+              </div>
+              <div className="bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] rounded-pf-sm p-3">
+                <span className="text-[11px] text-[var(--color-pf-text-tertiary)] uppercase">Top Offenders</span>
+                <span className="block text-lg font-bold text-[var(--color-pf-text)]">{rateLimits.topOffenders?.length ?? 0}</span>
+              </div>
+            </div>
+            {rateLimits.topOffenders?.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-left text-[var(--color-pf-text-tertiary)] uppercase tracking-wider border-b border-[var(--color-pf-border)]">
+                      <th className="pb-2 font-medium">Identifier</th>
+                      <th className="pb-2 font-medium text-right">Hits</th>
+                      <th className="pb-2 font-medium text-right">TTL (s)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--color-pf-border)]">
+                    {rateLimits.topOffenders.slice(0, 10).map((entry: any, i: number) => (
+                      <tr key={i}>
+                        <td className="py-1.5 font-mono text-[var(--color-pf-text-secondary)] truncate max-w-[200px]">{entry.key}</td>
+                        <td className={`py-1.5 text-right font-mono ${entry.hits > 50 ? 'text-pf-danger' : 'text-[var(--color-pf-text)]'}`}>{entry.hits}</td>
+                        <td className="py-1.5 text-right font-mono text-[var(--color-pf-text-secondary)]">{entry.ttl}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-[var(--color-pf-text-tertiary)]">Loading...</p>
+        )}
       </div>
 
       {/* Recent Activity */}

@@ -12,6 +12,7 @@ import {
   PaginationDto,
 } from "../common/dto/pagination.dto";
 import { ClosePositionDto } from "./dto/close-position.dto";
+import { RedeemPositionDto } from "./dto/redeem-position.dto";
 import { randomUUID } from "crypto";
 
 export interface OrderQueryDto extends PaginationDto {
@@ -122,5 +123,66 @@ export class OrdersService {
     });
 
     return { orderId: order.id, intentId, status: "PENDING" };
+  }
+
+  async redeemPosition(
+    userId: string,
+    dto: RedeemPositionDto,
+  ): Promise<any> {
+    if (!dto.positionId && !dto.marketId) {
+      throw new UnprocessableEntityException({
+        code: "MISSING_PARAM",
+        message: "Either positionId or marketId is required",
+      });
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { polymarketConnected: true },
+    });
+    if (!user?.polymarketConnected) {
+      throw new UnprocessableEntityException({
+        code: "NOT_CONNECTED",
+        message: "Polymarket credentials required",
+      });
+    }
+
+    // Find the resolved position
+    const where: any = { userId };
+    if (dto.positionId) where.id = dto.positionId;
+    if (dto.marketId) where.marketId = dto.marketId;
+
+    const position = await this.prisma.position.findFirst({ where });
+    if (!position) {
+      throw new NotFoundException({
+        code: "POSITION_NOT_FOUND",
+        message: "Position not found",
+      });
+    }
+
+    if (position.resolutionStatus !== "RESOLVED") {
+      throw new UnprocessableEntityException({
+        code: "MARKET_NOT_RESOLVED",
+        message: "Market has not been resolved yet",
+      });
+    }
+
+    // Publish redemption intent to stream:redemptions
+    const intentId = randomUUID();
+    await this.redis.xadd("stream:redemptions", {
+      intentId,
+      userId,
+      tokenId: position.tokenId,
+      positionId: position.id,
+      ts: String(Date.now()),
+    });
+
+    // Update position status to REDEEMED
+    await this.prisma.position.update({
+      where: { id: position.id },
+      data: { resolutionStatus: "REDEEMED" as any },
+    });
+
+    return { positionId: position.id, intentId, status: "REDEEMED" };
   }
 }
