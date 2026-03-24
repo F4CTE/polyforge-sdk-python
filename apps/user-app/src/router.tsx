@@ -12,6 +12,7 @@ export const router = createBrowserRouter([
   { path: '/reset-password', lazy: () => import('./pages/auth/reset-password') },
   { path: '/terms', lazy: () => import('./pages/legal/terms') },
   { path: '/privacy', lazy: () => import('./pages/legal/privacy') },
+  { path: '/api-docs', lazy: () => import('./pages/api-docs/api-docs') },
 
   // Protected routes
   {
@@ -47,7 +48,6 @@ export const router = createBrowserRouter([
               { path: 'support', lazy: () => import('./pages/support/ticket-list') },
               { path: 'support/new', lazy: () => import('./pages/support/create-ticket') },
               { path: 'support/:id', lazy: () => import('./pages/support/ticket-detail') },
-              { path: 'api-docs', lazy: () => import('./pages/api-docs/api-docs') },
             ],
           },
           { path: 'settings', lazy: () => import('./pages/settings/settings') },
