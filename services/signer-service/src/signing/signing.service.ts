@@ -274,7 +274,7 @@ export class SigningService implements OnModuleInit {
         { signal: AbortSignal.timeout(5_000) },
       );
       if (res.ok) {
-        const data = await res.json();
+        const data = await res.json() as Record<string, unknown>;
         const nonce = Number(data.nonce ?? data ?? 0);
         await this.redis.set(cacheKey, String(nonce), NONCE_CACHE_TTL);
         return nonce;
@@ -304,7 +304,7 @@ export class SigningService implements OnModuleInit {
         { signal: AbortSignal.timeout(5_000) },
       );
       if (res.ok) {
-        const data = await res.json();
+        const data = await res.json() as Record<string, unknown>;
         const feeRate = String(data.feeRateBps ?? data ?? "0");
         await this.redis.set(cacheKey, feeRate, FEE_RATE_CACHE_TTL);
         return feeRate;
