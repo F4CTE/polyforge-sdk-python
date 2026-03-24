@@ -2447,4 +2447,132 @@ The following external Polymarket APIs are consumed by Polyforge services.
 
 ---
 
+---
+
+## AI-Friendly API (`/api/v1`)
+
+### Webhooks
+
+Register webhook URLs to receive real-time event notifications via HTTP POST with HMAC-SHA256 signature verification.
+
+#### POST /api/v1/webhooks
+
+Register a webhook. Returns the HMAC secret (shown only once).
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Request:**
+```json
+{
+  "url": "https://example.com/webhook",
+  "events": ["ORDER_FILLED", "STRATEGY_ERROR", "WHALE_TRADE", "NEWS_SIGNAL"]
+}
+```
+
+**Response `201`:**
+```json
+{
+  "id": "uuid",
+  "url": "https://example.com/webhook",
+  "events": ["ORDER_FILLED", "STRATEGY_ERROR"],
+  "secret": "hex-string",
+  "active": true,
+  "createdAt": "2026-03-24T..."
+}
+```
+
+Valid event types: `ORDER_FILLED`, `STRATEGY_ERROR`, `WHALE_TRADE`, `NEWS_SIGNAL`, `BACKTEST_COMPLETE`, `DAILY_LOSS_LIMIT`, `MARKET_RESOLVED`, `PRICE_ALERT`
+
+**Webhook payload format:**
+```json
+{
+  "event": "ORDER_FILLED",
+  "timestamp": "2026-03-24T12:00:00Z",
+  "data": { ... }
+}
+```
+
+Signature header: `X-Polyforge-Signature: <HMAC-SHA256 hex digest of JSON body using secret>`
+
+---
+
+#### GET /api/v1/webhooks
+
+List your webhooks (secret is not returned).
+
+**Auth:** JWT or API Key (READ scope)
+
+---
+
+#### DELETE /api/v1/webhooks/:id
+
+Remove a webhook.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+---
+
+#### POST /api/v1/webhooks/:id/test
+
+Send a test event to verify the webhook URL works.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Response `200`:**
+```json
+{ "success": true, "statusCode": 200 }
+```
+
+---
+
+### Natural Language Query
+
+#### POST /api/v1/ai/query
+
+Submit a natural language query to get structured data from the platform.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Request:**
+```json
+{ "query": "show me my running strategies" }
+```
+
+**Response `200`:**
+```json
+{
+  "query": "show me my running strategies",
+  "intent": "list_strategies",
+  "filters": { "status": "RUNNING" },
+  "data": [...],
+  "summary": "You have 2 running strategies: Momentum Blitz and Mean Reversion"
+}
+```
+
+Supported intents: `list_strategies`, `get_portfolio`, `list_orders`, `get_whale_feed`, `get_news_signals`, `get_score`, `list_alerts`, `list_copy_configs`, `search_markets`
+
+---
+
+### Strategy from Description
+
+#### POST /api/v1/strategies/from-description
+
+Create a strategy from a natural language description using the LLM service.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Request:**
+```json
+{
+  "description": "Buy YES on any market where the price drops below 0.30 and liquidity is above $5000, with a 5% daily loss limit",
+  "marketId": "optional-market-id"
+}
+```
+
+**Response `201`:** Same as `POST /api/v1/strategies` — returns the created strategy object.
+
+**Errors:** `422 LLM_PARSE_ERROR` (LLM response was not valid JSON) · `422 LLM_INVALID_BLOCKS` (LLM generated unknown block types)
+
+---
+
 *See also: [Architecture Addendum A3](./Polyforge-Architecture-Addendum.pdf) for the complete stream:events event taxonomy.*

@@ -5,6 +5,7 @@ import { MailService } from "./mail.service";
 import { TelegramService } from "./telegram.service";
 import { DiscordService } from "./discord.service";
 import { TemplatesService } from "./templates.service";
+import { WebhookDispatcherService } from "./webhook-dispatcher.service";
 
 // Map from stream:events type → NotificationEventType field on NotificationPreference
 const EVENT_TO_PREF_FIELD: Record<string, keyof DispatchOptions | null> = {
@@ -57,6 +58,7 @@ export class NotificationService {
     private readonly telegram: TelegramService,
     private readonly discord: DiscordService,
     private readonly templates: TemplatesService,
+    private readonly webhookDispatcher: WebhookDispatcherService,
   ) {}
 
   // ─── Called by EventsConsumerService for each relevant stream:events message ─
@@ -88,6 +90,11 @@ export class NotificationService {
 
     // In-app notification: always push to stream:events (no frequency gating)
     await this.pushInApp(userId, content);
+
+    // Webhook dispatch: fire-and-forget to all matching webhooks
+    this.webhookDispatcher.dispatch(userId, eventType, data).catch((err) => {
+      this.logger.warn(`Webhook dispatch failed for ${eventType}: ${err?.message}`);
+    });
 
     // Determine delivery mode
     const freq = String(prefs.notificationFreq ?? "IMMEDIATE");

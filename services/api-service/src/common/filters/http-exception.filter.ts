@@ -9,6 +9,24 @@ import {
 import { FastifyReply, FastifyRequest } from "fastify";
 import { randomUUID } from "crypto";
 
+const AI_SUGGESTIONS: Record<string, string> = {
+  STRATEGY_LIMIT_REACHED: "Delete unused strategies to make room",
+  ALERT_LIMIT_REACHED: "Remove triggered or unnecessary alerts",
+  NOT_CONNECTED:
+    "Import Polymarket credentials in Settings > Trading Account",
+  ALREADY_RUNNING: "Stop the strategy first, then start again",
+  GEO_BLOCKED: "Trading is not available in your region",
+  INSUFFICIENT_SCOPES:
+    "Your API key needs additional scopes. Generate a new key with the required scope.",
+  RATE_LIMITED:
+    "Wait a moment and try again. Consider using the batch endpoint for multiple operations.",
+  UNAUTHORIZED: "Provide a valid Bearer JWT in the Authorization header",
+  FORBIDDEN: "You do not have permission to access this resource",
+  NOT_FOUND: "The requested resource does not exist. Verify the ID and path.",
+  VALIDATION_ERROR: "Check the request body against the schema at GET /api/v1/actions",
+  CONFLICT: "The resource is in a conflicting state. Refresh and retry.",
+};
+
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
@@ -53,10 +71,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       }
     }
 
+    const suggestion = AI_SUGGESTIONS[code] ?? undefined;
+
     reply.status(status).send({
       statusCode: status,
       code,
       message,
+      ...(suggestion ? { suggestion } : {}),
       requestId,
     });
   }

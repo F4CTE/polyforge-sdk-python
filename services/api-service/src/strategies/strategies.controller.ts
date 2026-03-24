@@ -24,6 +24,7 @@ import { CreateCommentDto } from "./dto/create-comment.dto";
 import { ReportStrategyDto } from "./dto/report-strategy.dto";
 import { StrategyQueryDto } from "./dto/strategy-query.dto";
 import { ImportStrategyDto } from "./dto/import-strategy.dto";
+import { CreateFromDescriptionDto } from "./dto/create-from-description.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
 
 @ApiTags("strategies")
@@ -41,6 +42,14 @@ export class StrategiesController {
   @Get()
   list(@CurrentUser() user: any, @Query() query: StrategyQueryDto) {
     return this.strategies.list(user.sub, query);
+  }
+
+  @Post("from-description")
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("WRITE")
+  createFromDescription(@CurrentUser() user: any, @Body() dto: CreateFromDescriptionDto) {
+    return this.strategies.createFromDescription(user.sub, dto);
   }
 
   @Post()

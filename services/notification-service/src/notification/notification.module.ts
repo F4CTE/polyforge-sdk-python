@@ -4,6 +4,7 @@ import { MailService } from "./mail.service";
 import { TelegramService } from "./telegram.service";
 import { DiscordService } from "./discord.service";
 import { TemplatesService } from "./templates.service";
+import { WebhookDispatcherService } from "./webhook-dispatcher.service";
 
 @Module({
   providers: [
@@ -12,6 +13,7 @@ import { TemplatesService } from "./templates.service";
     TelegramService,
     DiscordService,
     TemplatesService,
+    WebhookDispatcherService,
   ],
   exports: [NotificationService],
 })

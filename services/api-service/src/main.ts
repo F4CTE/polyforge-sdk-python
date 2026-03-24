@@ -144,9 +144,30 @@ async function bootstrap() {
       done();
     });
 
-  // Serve interactive docs in non-production environments
+  // ─── Public OpenAPI / Swagger UI ────────────────────────────────────────────
+  // These routes are public (no auth) so AI agents and SDK generators can
+  // discover the API schema programmatically.
+
+  const fastify = app.getHttpAdapter().getInstance();
+
+  fastify.get("/api/v1/docs/openapi.json", (_req: any, reply: any) => {
+    reply.type("application/json").send(document);
+  });
+
+  fastify.get("/api/v1/docs", (_req: any, reply: any) => {
+    reply.type("text/html").send(`<!DOCTYPE html>
+<html><head><title>Polyforge API</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui.css">
+</head><body>
+<div id="swagger-ui"></div>
+<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui-bundle.js"></script>
+<script>SwaggerUIBundle({url:'/api/v1/docs/openapi.json',dom_id:'#swagger-ui'})</script>
+</body></html>`);
+  });
+
+  // Also keep NestJS Swagger UI in non-production for backwards compat
   if (process.env.NODE_ENV !== "production") {
-    SwaggerModule.setup("api/v1/docs", app, document, {
+    SwaggerModule.setup("api/v1/swagger", app, document, {
       swaggerOptions: { persistAuthorization: false },
     });
   }

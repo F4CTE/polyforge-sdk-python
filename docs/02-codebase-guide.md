@@ -940,4 +940,48 @@ export class IfThenElseEvaluator implements LogicBlockEvaluator<IfThenElseBlock>
 
 ---
 
+## 13. MCP Server (`packages/mcp-server`)
+
+The `@polyforge/mcp-server` package implements the [Model Context Protocol](https://modelcontextprotocol.io) so that AI assistants like Claude can interact with Polyforge directly via tools.
+
+### Setup
+
+```bash
+# Install
+pnpm install
+
+# Build
+cd packages/mcp-server && pnpm build
+
+# Run (requires env vars)
+POLYFORGE_API_URL=http://localhost:3001 POLYFORGE_API_KEY=pf_xxx npx @polyforge/mcp-server
+```
+
+### Claude Desktop configuration
+
+```json
+{
+  "mcpServers": {
+    "polyforge": {
+      "command": "npx",
+      "args": ["@polyforge/mcp-server"],
+      "env": {
+        "POLYFORGE_API_URL": "https://api.polyforge.io",
+        "POLYFORGE_API_KEY": "pf_your_api_key"
+      }
+    }
+  }
+}
+```
+
+### Architecture
+
+The MCP server is a standalone Node.js process that communicates over stdio. It defines 20 tools that map 1:1 to Polyforge API endpoints. Each tool call translates to an authenticated HTTP request to the Polyforge API using the configured API key.
+
+### Available tools
+
+`list_markets`, `list_strategies`, `get_strategy`, `create_strategy`, `create_strategy_from_description`, `start_strategy`, `stop_strategy`, `get_portfolio`, `get_orders`, `get_whale_feed`, `get_news_signals`, `get_score`, `list_alerts`, `list_copy_configs`, `list_webhooks`, `create_webhook`, `ai_query`, `get_strategy_templates`, `get_market`, `export_strategy`
+
+---
+
 *Next: [OpenAPI Code Generation](./03-openapi-codegen.md) | [Database & Redis](./04-database-and-redis.md)*

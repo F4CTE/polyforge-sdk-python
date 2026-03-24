@@ -7,6 +7,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added — AI-Friendly API
+
+- **Webhook callbacks** — `Webhook` model in Prisma schema, CRUD endpoints (`POST/GET/DELETE /api/v1/webhooks`), test endpoint, HMAC-SHA256 signature verification via `X-Polyforge-Signature` header, fire-and-forget dispatcher with single retry in notification-service
+- **Natural language query** — `POST /api/v1/ai/query` accepts plain English queries and returns structured data with intent classification, pattern-matched to 10 query types (strategies, portfolio, orders, whales, news, scores, alerts, copy trading, markets)
+- **Strategy from description** — `POST /api/v1/strategies/from-description` uses LLM service (Claude/GPT-4o) to generate strategy block configurations from natural language, validates against 50+ known block types
+- **MCP server** — `@polyforge/mcp-server` package implementing Model Context Protocol for Claude and other AI assistants, 20 tools covering markets, strategies, portfolio, orders, whales, news, scores, alerts, copy trading, and webhooks
+
 ### Fixed — Polymarket API Integration Gaps (4–6)
 
 #### Gap 4: Trade Reconciliation + Bulk Cancel

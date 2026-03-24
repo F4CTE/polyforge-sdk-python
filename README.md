@@ -26,6 +26,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Copy trading** — mirror trades from followed traders with risk controls (max position, daily loss limit, drawdown breaker), session management, trade attribution
 - **Advanced order types** — take-profit/stop-loss, trailing stop, limit orders, pegged orders, conditional order evaluator
 - **AI news-to-trade pipeline** — real-time news ingestion, LLM signal extraction (Claude + GPT-4o fallback), confidence-scored trade signals
+- **AI-friendly API** — webhook callbacks with HMAC-SHA256 signatures, natural language query endpoint, strategy-from-description via LLM, and MCP server (`@polyforge/mcp-server`) for Claude and other AI assistants
 - **Operational docs** — Backup & Recovery (RDS/Redis/EBS), Incident Response (P0-P3), Performance Tuning guides
 - **AWS infrastructure** — Terraform with tfvars template (20 variables), budget alerts ($800/month)
 - **Gasless trading** — platform absorbs Polygon gas fees with per-user daily budget tracking
@@ -79,7 +80,7 @@ polyforge/
 │   ├── order-service/             # ✅ CLOB order submission
 │   ├── paper-order-service/       # ✅ Simulated fills
 │   ├── backtest-service/          # ✅ Historical replay
-│   ├── notification-service/      # ✅ Email + Telegram + Discord
+│   ├── notification-service/      # ✅ Email + Telegram + Discord + Webhooks
 │   ├── bot-service/               # ✅ Interactive bots
 │   ├── signer-service/            # ✅ Credential vault + EIP712 signing
 │   └── mock-polymarket/           # ✅ Dev-only fake Polymarket APIs
@@ -92,7 +93,8 @@ polyforge/
     ├── shared-auth/               # JWT guards + internal service client
     ├── shared-db/                 # Prisma client NestJS module
     ├── shared-redis/              # ioredis factory + stream helpers
-    └── logger/                    # pino + nestjs-pino
+    ├── logger/                    # pino + nestjs-pino
+    └── mcp-server/                # MCP server for AI assistant integration
 ```
 
 ---

@@ -220,6 +220,7 @@ model User {
   conditionalOrders    ConditionalOrder[]
   traderScore          TraderScore?
   badges               TraderBadge[]
+  webhooks             Webhook[]
 
   @@map("users")
 }
@@ -1091,4 +1092,21 @@ model TraderBadge {
   @@unique([userId, type])
   @@index([userId])
   @@map("trader_badges")
+}
+
+// ─── WEBHOOKS ──────────────────────────────────
+
+model Webhook {
+  id        String   @id @default(uuid())
+  userId    String
+  url       String   @db.VarChar(1000)
+  events    String[] // e.g. ["ORDER_FILLED", "STRATEGY_ERROR", "WHALE_TRADE", "NEWS_SIGNAL"]
+  secret    String   @db.VarChar(255) // HMAC secret for signature verification
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("webhooks")
 }

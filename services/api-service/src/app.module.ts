@@ -25,6 +25,10 @@ import { WhalesModule } from "./whales/whales.module";
 import { CopyModule } from "./copy/copy.module";
 import { NewsModule } from "./news/news.module";
 import { ScoresModule } from "./scores/scores.module";
+import { BatchModule } from "./batch/batch.module";
+import { ActionsModule } from "./actions/actions.module";
+import { WebhooksModule } from "./webhooks/webhooks.module";
+import { AiModule } from "./ai/ai.module";
 
 @Module({
   imports: [
@@ -58,6 +62,10 @@ import { ScoresModule } from "./scores/scores.module";
     CopyModule,
     NewsModule,
     ScoresModule,
+    BatchModule,
+    ActionsModule,
+    WebhooksModule,
+    AiModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ApiKeyThrottlerGuard }],

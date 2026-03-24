@@ -25,7 +25,9 @@ import { CreateCommentDto } from "./dto/create-comment.dto";
 import { ReportStrategyDto } from "./dto/report-strategy.dto";
 import { StrategyQueryDto } from "./dto/strategy-query.dto";
 import { ImportStrategyDto } from "./dto/import-strategy.dto";
+import { CreateFromDescriptionDto } from "./dto/create-from-description.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
+import { LlmService } from "../news/llm.service";
 
 const MAX_STRATEGIES = 50;
 
@@ -38,6 +40,7 @@ export class StrategiesService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly client: InternalClientService,
+    private readonly llm: LlmService,
   ) {
     this.engineUrl = this.config.get<string>(
       "STRATEGY_ENGINE_URL",
@@ -737,6 +740,107 @@ export class StrategiesService {
         template: false,
       },
     });
+  }
+
+  async createFromDescription(
+    userId: string,
+    dto: CreateFromDescriptionDto,
+  ): Promise<Strategy> {
+    const blockTypes = [
+      "Safety: DAILY_LOSS_LIMIT, CONSECUTIVE_LOSS, MAX_POSITION_SIZE, STOP_IF_DRAWDOWN, MAX_DAILY_BETS",
+      "Triggers: PRICE_ABOVE, PRICE_BELOW, PRICE_CROSSES_UP, PRICE_CROSSES_DOWN, PRICE_IN_RANGE, SPREAD_ABOVE, TICK, WAIT, PAUSE_AFTER_FILL, PRICE_CHANGE_PCT, VOLUME_SPIKE, TIME_WINDOW",
+      "Conditions: POSITION_OPEN, NO_POSITION, POSITION_SIZE_BELOW, NO_RECENT_BET, LIQUIDITY_ABOVE, MIN_LIQUIDITY, MIN_PRICE, MAX_PRICE, MAX_SPREAD, SPREAD_BELOW, MARKET_OPEN, DAILY_LOSS_BELOW",
+      "Actions: BUY, SELL, BUY_YES, BUY_NO, SELL_YES, SELL_NO, CLOSE_POSITION, SET_STOP_LOSS, SET_TAKE_PROFIT, SCALE_IN, SCALE_OUT, CANCEL_ALL_ORDERS, NOTIFY, RUN_STRATEGY",
+      "Logic: IF_THEN_ELSE, AND_GATE, OR_GATE, NOT_GATE, DELAY",
+      "Calc: MATH, AGGREGATION, COMPARISON, ABS_ROUND",
+    ].join("\n");
+
+    const prompt = [
+      `Given this trading strategy description: "${dto.description}"`,
+      "",
+      "Generate a Polyforge strategy configuration with blocks.",
+      `Available block types:\n${blockTypes}`,
+      "",
+      "Return ONLY valid JSON (no markdown, no explanation):",
+      '{ "name": "string", "description": "string", "execMode": "TICK"|"EVENT"|"HYBRID",',
+      '  "safety": [{ "type": "BLOCK_TYPE", "config": {...} }],',
+      '  "triggers": [{ "type": "BLOCK_TYPE", "config": {...} }],',
+      '  "conditions": [{ "type": "BLOCK_TYPE", "config": {...} }],',
+      '  "actions": [{ "type": "BLOCK_TYPE", "config": {...} }] }',
+    ].join("\n");
+
+    const raw = await this.llm.analyze(prompt);
+
+    // Extract JSON from response (handle potential markdown wrapping)
+    let jsonStr = raw.trim();
+    const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) jsonStr = jsonMatch[1].trim();
+
+    let parsed: {
+      name?: string;
+      description?: string;
+      execMode?: string;
+      safety?: any[];
+      triggers?: any[];
+      conditions?: any[];
+      actions?: any[];
+    };
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      throw new UnprocessableEntityException({
+        code: "LLM_PARSE_ERROR",
+        message: "Failed to parse LLM response as valid strategy JSON",
+      });
+    }
+
+    // Validate block types against known types
+    const KNOWN = new Set([
+      "DAILY_LOSS_LIMIT", "CONSECUTIVE_LOSS", "MAX_POSITION_SIZE",
+      "EXPOSURE_EXCEEDS", "LOSS_STREAK", "WIN_STREAK", "ORDERS_PER_MIN",
+      "BETS_TODAY_LESS_THAN", "STOP_IF_DAILY_LOSS", "STOP_IF_CONSECUTIVE_LOSSES",
+      "STOP_IF_DRAWDOWN", "STOP_IF_POSITION_SIZE", "MAX_DAILY_BETS",
+      "PRICE_ABOVE", "PRICE_BELOW", "PRICE_CROSSES_UP", "PRICE_CROSSES_DOWN",
+      "PRICE_IN_RANGE", "SPREAD_ABOVE", "TICK", "WAIT", "PAUSE_AFTER_FILL",
+      "PRICE_CHANGE_PCT", "VOLUME_SPIKE", "TIME_WINDOW", "TIME_IN_WINDOW",
+      "POSITION_OPEN", "NO_POSITION", "POSITION_SIZE_BELOW", "NO_RECENT_BET",
+      "LIQUIDITY_ABOVE", "MIN_LIQUIDITY", "MIN_PRICE", "MAX_PRICE",
+      "MAX_SPREAD", "SPREAD_BELOW", "MARKET_OPEN", "MARKET_RESOLVED",
+      "MARKET_RESOLVING", "DAILY_LOSS_BELOW", "TIME_BETWEEN",
+      "BUY", "SELL", "BUY_YES", "BUY_NO", "SELL_YES", "SELL_NO",
+      "CLOSE_POSITION", "SET_STOP_LOSS", "SET_TAKE_PROFIT", "TAKE_PROFIT",
+      "SCALE_IN", "SCALE_OUT", "CANCEL_ALL_ORDERS", "NOTIFY", "RUN_STRATEGY",
+      "IF_THEN_ELSE", "AND_GATE", "OR_GATE", "NOT_GATE", "DELAY",
+      "MATH", "AGGREGATION", "COMPARISON", "ABS_ROUND",
+    ]);
+
+    const allBlocks = [
+      ...(parsed.safety ?? []),
+      ...(parsed.triggers ?? []),
+      ...(parsed.conditions ?? []),
+      ...(parsed.actions ?? []),
+    ];
+    const invalidTypes = allBlocks
+      .filter((b: any) => b?.type && !KNOWN.has(b.type))
+      .map((b: any) => b.type);
+
+    if (invalidTypes.length > 0) {
+      throw new UnprocessableEntityException({
+        code: "LLM_INVALID_BLOCKS",
+        message: `LLM generated unknown block types: ${invalidTypes.join(", ")}`,
+      });
+    }
+
+    // Create the strategy via existing create method
+    return this.create(userId, {
+      name: parsed.name ?? "AI-Generated Strategy",
+      description: parsed.description ?? dto.description,
+      execMode: (["TICK", "EVENT", "HYBRID"].includes(parsed.execMode ?? "") ? parsed.execMode : "TICK") as string,
+      safety: parsed.safety ?? [],
+      triggers: parsed.triggers ?? [],
+      conditions: parsed.conditions ?? [],
+      actions: parsed.actions ?? [],
+    } as CreateStrategyDto);
   }
 
   private async getOwned(id: string, userId: string): Promise<Strategy> {
