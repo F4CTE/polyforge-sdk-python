@@ -97,22 +97,8 @@ export class GammaApiService implements OnModuleInit {
     this.logger.log(`Synced ${totalSynced} markets from Gamma API`);
   }
 
-  /**
-   * Fetch events from the Gamma API. Events group multiple markets together.
-   */
-  async syncEvents(): Promise<void> {
-    try {
-      const events = await this.fetchEvents();
-
-      for (const event of events) {
-        await this.upsertEvent(event);
-      }
-
-      this.logger.log(`Synced ${events.length} events from Gamma API`);
-    } catch (err) {
-      this.logger.error("Failed to sync events from Gamma API", err);
-    }
-  }
+  // TODO: Enable syncEvents once Event model is added to Prisma schema
+  // async syncEvents(): Promise<void> { ... }
 
   // ─── Private ─────────────────────────────────────────────────────────────
 
@@ -132,21 +118,9 @@ export class GammaApiService implements OnModuleInit {
     return body.data;
   }
 
-  private async fetchEvents(): Promise<GammaEvent[]> {
-    const res = await fetch(`${this.gammaUrl}/events`, {
-      signal: AbortSignal.timeout(10_000),
-    });
-
-    if (!res.ok) throw new Error(`Gamma events API returned ${res.status}`);
-
-    const body = (await res.json()) as { data: GammaEvent[] };
-    return body.data;
-  }
-
-  // TODO: Enable once Event model is added to Prisma schema
-  // private async upsertEvent(event: GammaEvent) {
-  //   await this.prisma.event.upsert({ ... });
-  // }
+  // TODO: Enable fetchEvents + upsertEvent once Event model is added to Prisma schema
+  // private async fetchEvents(): Promise<GammaEvent[]> { ... }
+  // private async upsertEvent(event: GammaEvent) { ... }
 
   private async upsertMarket(market: GammaMarket) {
     // Upsert the market record
