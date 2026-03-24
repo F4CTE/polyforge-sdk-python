@@ -9,6 +9,7 @@ import { EncryptionModule } from "./encryption/encryption.module";
 import { CredentialsModule } from "./credentials/credentials.module";
 import { SigningModule } from "./signing/signing.module";
 import { CanaryModule } from "./canary/canary.module";
+import { GasSponsorModule } from "./gas/gas-sponsor.module";
 import { HealthController } from "./health/health.controller";
 
 @Module({
@@ -21,6 +22,7 @@ import { HealthController } from "./health/health.controller";
     EncryptionModule,
     CredentialsModule,
     SigningModule,
+    GasSponsorModule,
     CanaryModule,
   ],
   controllers: [HealthController],

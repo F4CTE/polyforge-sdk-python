@@ -3,6 +3,8 @@ import { Outlet } from 'react-router';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
+import { OnboardingChecklist } from '../onboarding/onboarding-checklist';
+import { TooltipTour } from '../onboarding/tooltip-tour';
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -44,6 +46,10 @@ export function AppLayout() {
           </div>
         </main>
       </div>
+
+      {/* Onboarding overlays — only render for authenticated users */}
+      <OnboardingChecklist />
+      <TooltipTour />
     </div>
   );
 }

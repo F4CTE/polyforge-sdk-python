@@ -5,6 +5,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Added — Gasless Trading
+
+- **Gas sponsor service** (`signer-service`) — platform-funded wallet absorbs Polygon gas fees for user transactions
+- **Daily gas budget** — configurable per-user daily limit tracked in Redis (`GAS_DAILY_LIMIT_MATIC`, default 0.5 MATIC)
+- **Gas usage API** — `GET /api/v1/settings/gas` returns today's usage, daily limit, and remaining allowance
+- **Gas usage UI** — new "Gas Usage" tab in settings with progress bar and usage breakdown
+- **Gasless indicator** — "Gasless" badge on the portfolio page header confirming gas sponsorship is active
+- **Environment variables** — `GAS_SPONSOR_PRIVATE_KEY`, `GAS_SPONSOR_ENABLED`, `GAS_DAILY_LIMIT_MATIC` added to `.env.example` and `docker-compose.infra.yml`
+
+### Added — Educational Onboarding
+
+- **Strategy templates** — 5 pre-built templates in seed data: Simple Momentum, Mean Reversion, News Reactive, Risk Manager, Whale Follower
+- **Onboarding checklist** — floating bottom-right widget for new users (joined within 7 days) with 6 getting-started tasks stored in localStorage
+- **Tooltip tour** — 5-step guided tour highlighting sidebar, market cards, strategy builder, theme toggle, and notification bell
+- **App layout integration** — both onboarding components render as overlays for authenticated users
+
+### Added — Future Features Documentation
+
+- **`docs/19-future-features.md`** — documented 7 potential future features: Arbitrage Scanner, Multi-Platform Aggregation, Browser Extension, Mobile App (React Native), Fund Management, UMA Oracle Dashboard, LP / Market Making
+
+---
+
 ## [4.0.0] — 2026-03-23
 
 ### Added — Phase 8: Competitive Trading Features (72 files, 8,564 lines)

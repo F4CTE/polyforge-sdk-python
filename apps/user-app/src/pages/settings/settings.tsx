@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import {
-  User, Bell, Lock, Shield, Key, Loader2, Check, Copy, Ban, Eye, EyeOff,
+  User, Bell, Lock, Shield, Key, Loader2, Check, Copy, Ban, Eye, EyeOff, Fuel,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
-type Tab = 'profile' | 'notifications' | 'password' | '2fa' | 'apikeys';
+type Tab = 'profile' | 'notifications' | 'password' | '2fa' | 'apikeys' | 'gas';
 
 interface ApiKey {
   id: string;
@@ -19,6 +19,13 @@ interface ApiKey {
   lastUsedAt: string | null;
   revoked: boolean;
   key?: string;
+}
+
+interface GasUsageData {
+  todayUsage: number;
+  dailyLimit: number;
+  remaining: number;
+  sponsorEnabled: boolean;
 }
 
 interface TotpSetupData {
@@ -35,6 +42,7 @@ const TABS: { label: string; value: Tab; icon: React.ReactNode }[] = [
   { label: 'Password', value: 'password', icon: <Lock className="size-3.5" /> },
   { label: '2FA', value: '2fa', icon: <Shield className="size-3.5" /> },
   { label: 'API Keys', value: 'apikeys', icon: <Key className="size-3.5" /> },
+  { label: 'Gas Usage', value: 'gas', icon: <Fuel className="size-3.5" /> },
 ];
 
 const NOTIF_ITEMS = [
@@ -93,9 +101,23 @@ export function Component() {
   const [createdKey, setCreatedKey] = useState<ApiKey | null>(null);
   const [apiKeysCreating, setApiKeysCreating] = useState(false);
 
+  // Gas Usage
+  const [gasUsage, setGasUsage] = useState<GasUsageData | null>(null);
+  const [gasLoading, setGasLoading] = useState(false);
+
+  async function loadGasUsage() {
+    setGasLoading(true);
+    try {
+      const res = await fetch('/api/v1/settings/gas', { credentials: 'include' });
+      if (res.ok) setGasUsage(await res.json());
+    } catch { toast.error('Failed to load gas usage'); }
+    setGasLoading(false);
+  }
+
   function handleTab(t: Tab) {
     setActiveTab(t);
     if (t === 'apikeys' && apiKeys.length === 0) loadApiKeys();
+    if (t === 'gas' && !gasUsage) loadGasUsage();
   }
 
   // ── Profile ──
@@ -465,6 +487,82 @@ export function Component() {
                 {totpLoading ? 'Setting up...' : 'Enable 2FA'}
               </button>
             </>
+          )}
+        </div>
+      )}
+
+      {/* ─── Gas Usage Tab ─── */}
+      {activeTab === 'gas' && (
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
+          <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Gas Sponsorship</h2>
+          <p className="text-sm text-pf-text-secondary">
+            Polyforge absorbs Polygon gas fees so you can trade without worrying about network costs.
+          </p>
+          {gasLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-12 bg-pf-overlay rounded animate-pulse" />
+              ))}
+            </div>
+          ) : gasUsage ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-pf-surface rounded-pf p-4 border border-pf-border-subtle">
+                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Today's Usage</span>
+                  <span className="block mt-1 text-lg font-mono font-semibold text-pf-text">
+                    {gasUsage.todayUsage.toFixed(4)} MATIC
+                  </span>
+                </div>
+                <div className="bg-pf-surface rounded-pf p-4 border border-pf-border-subtle">
+                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Daily Limit</span>
+                  <span className="block mt-1 text-lg font-mono font-semibold text-pf-text">
+                    {gasUsage.dailyLimit.toFixed(4)} MATIC
+                  </span>
+                </div>
+                <div className="bg-pf-surface rounded-pf p-4 border border-pf-border-subtle">
+                  <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Remaining</span>
+                  <span className={`block mt-1 text-lg font-mono font-semibold ${gasUsage.remaining > 0.1 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                    {gasUsage.remaining.toFixed(4)} MATIC
+                  </span>
+                </div>
+              </div>
+
+              {/* Usage bar */}
+              <div>
+                <div className="flex justify-between text-xs text-pf-text-secondary mb-1.5">
+                  <span>Usage</span>
+                  <span>{((gasUsage.todayUsage / gasUsage.dailyLimit) * 100).toFixed(1)}%</span>
+                </div>
+                <div className="w-full h-2 bg-pf-overlay rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      gasUsage.todayUsage / gasUsage.dailyLimit > 0.8 ? 'bg-pf-danger' : 'bg-pf-cyan-500'
+                    }`}
+                    style={{ width: `${Math.min(100, (gasUsage.todayUsage / gasUsage.dailyLimit) * 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm">
+                <div className={`w-2 h-2 rounded-full ${gasUsage.sponsorEnabled ? 'bg-pf-success' : 'bg-pf-danger'}`} />
+                <span className="text-pf-text-secondary">
+                  Gas sponsorship is currently {gasUsage.sponsorEnabled ? 'active' : 'inactive'}
+                </span>
+              </div>
+
+              <div className="flex justify-end">
+                <button onClick={loadGasUsage}
+                  className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm font-medium text-pf-text hover:border-pf-border-strong transition-colors">
+                  <Fuel className="size-4" />
+                  Refresh
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center py-6 text-center">
+              <Fuel className="size-8 text-pf-text-muted mb-2" />
+              <p className="text-sm text-pf-text-muted">Unable to load gas usage data.</p>
+            </div>
           )}
         </div>
       )}

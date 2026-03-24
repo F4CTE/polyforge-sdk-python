@@ -1,4 +1,4 @@
-import { Controller, Patch, Body, UseGuards } from "@nestjs/common";
+import { Controller, Get, Patch, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
 import { SettingsService } from "./settings.service";
@@ -35,5 +35,10 @@ export class SettingsController {
   @RequireScopes('WRITE')
   updatePassword(@CurrentUser() user: any, @Body() dto: UpdatePasswordDto) {
     return this.settings.updatePassword(user.sub, dto);
+  }
+
+  @Get("gas")
+  getGasUsage(@CurrentUser() user: any) {
+    return this.settings.getGasUsage(user.sub);
   }
 }

@@ -7,7 +7,36 @@
 
 ## Next Up
 
-All 8 development phases complete. v4.0.0 shipped: whale tracking & alerts, copy trading with risk controls, advanced order types (TP/SL/trailing/limit/pegged), and AI news-to-trade pipeline with Claude + GPT-4o fallback. 72 files, 8,564 lines of new code across Phase 8.
+Phase 9 features in progress: gasless trading, educational onboarding, and future feature planning.
+
+---
+
+## [Unreleased] — Gasless Trading & Educational Onboarding (Phase 9)
+
+### Gasless Trading
+
+- [x] Gas sponsor service in signer-service (platform-funded wallet)
+- [x] Per-user daily gas budget tracked in Redis
+- [x] `GET /api/v1/settings/gas` endpoint for gas usage stats
+- [x] Gas usage tab in settings page with progress bar
+- [x] "Gasless" indicator badge on portfolio page
+- [x] Environment variables: `GAS_SPONSOR_PRIVATE_KEY`, `GAS_SPONSOR_ENABLED`, `GAS_DAILY_LIMIT_MATIC`
+
+### Educational Onboarding
+
+- [x] 5 strategy templates seeded (Simple Momentum, Mean Reversion, News Reactive, Risk Manager, Whale Follower)
+- [x] Onboarding checklist widget (6 tasks, localStorage, 7-day window)
+- [x] Tooltip tour (5 steps, highlighting key UI elements)
+- [x] Integration into app layout as overlays
+
+### Future Features Documentation
+
+- [x] `docs/19-future-features.md` covering 7 planned features
+- [x] Roadmap Phase 9 added to `docs/11-roadmap.md`
+
+---
+
+## v4.0.0 — Competitive Trading Features (Phase 8 — 100%)
 
 ---
 

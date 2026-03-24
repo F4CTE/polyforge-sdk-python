@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import * as bcrypt from "bcryptjs";
@@ -10,10 +11,17 @@ import { UpdateNotificationsDto } from "./dto/update-notifications.dto";
 export class SettingsService {
   private readonly logger = new Logger(SettingsService.name);
 
+  private readonly dailyLimitMatic: number;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
-  ) {}
+    private readonly config: ConfigService,
+  ) {
+    this.dailyLimitMatic = parseFloat(
+      this.config.get<string>("GAS_DAILY_LIMIT_MATIC") ?? "0.5",
+    );
+  }
 
   async updateProfile(userId: string, dto: UpdateProfileDto): Promise<any> {
     const data: any = {};
@@ -87,5 +95,33 @@ export class SettingsService {
     }
 
     return { message: "Password updated" };
+  }
+
+  async getGasUsage(userId: string): Promise<{
+    todayUsage: number;
+    dailyLimit: number;
+    remaining: number;
+    sponsorEnabled: boolean;
+  }> {
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `gas:spent:${userId}:${today}`;
+
+    let todayUsage = 0;
+    try {
+      const val = await this.redis.get(key);
+      if (val) todayUsage = parseFloat(val);
+    } catch (err) {
+      this.logger.error(`Failed to read gas usage for user ${userId}`, err);
+    }
+
+    const sponsorEnabled =
+      (this.config.get<string>("GAS_SPONSOR_ENABLED") ?? "true") === "true";
+
+    return {
+      todayUsage,
+      dailyLimit: this.dailyLimitMatic,
+      remaining: Math.max(0, this.dailyLimitMatic - todayUsage),
+      sponsorEnabled,
+    };
   }
 }

@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import * as crypto from "crypto";
 import { CredentialsService } from "../credentials/credentials.service";
+import { GasSponsorService } from "../gas/gas-sponsor.service";
 import { SignOrderDto } from "./dto/sign-order.dto";
 
 export interface SignedOrder {
@@ -14,6 +15,8 @@ export interface SignedOrder {
     POLY_BUILDER_PASSPHRASE: string;
     POLY_BUILDER_SIGNATURE: string;
   };
+  /** Whether the platform sponsored gas fees for this transaction */
+  gasSponsored: boolean;
 }
 
 /**
@@ -38,6 +41,7 @@ export class SigningService {
   constructor(
     private readonly credentials: CredentialsService,
     private readonly config: ConfigService,
+    private readonly gasSponsor: GasSponsorService,
   ) {
     this.chainId = parseInt(this.config.get<string>("CHAIN_ID") ?? "137", 10);
     this.builderApiKey = this.config.get<string>("POLY_BUILDER_API_KEY") ?? "";
@@ -87,11 +91,19 @@ export class SigningService {
 
     const builderHeaders = this.buildBuilderHeaders(requestId);
 
-    this.logger.log(
-      `Order signed for user=${userId} requestId=${requestId} tokenId=${tokenId} side=${side}`,
+    // Sponsor gas fees for the user (platform absorbs Polygon gas costs)
+    const estimatedGasMatic = 0.002; // ~2000 gwei typical Polygon tx
+    const gasSponsored = await this.gasSponsor.sponsorGas(
+      userId,
+      estimatedGasMatic,
     );
 
-    return { order, builderHeaders };
+    this.logger.log(
+      `Order signed for user=${userId} requestId=${requestId} tokenId=${tokenId} side=${side}` +
+        ` gasSponsored=${gasSponsored}`,
+    );
+
+    return { order, builderHeaders, gasSponsored };
   }
 
   // ─── Dev stub signer ─────────────────────────────────────────────────────

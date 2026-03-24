@@ -17,6 +17,7 @@
 | [Phase 6](#phase-6--admin-bots--notifications) | Admin, Bots & Notifications | 5 semaines | S28–S32 |
 | [Phase 7](#phase-7--qa--production) | QA & Production | 4 semaines | S33–S36 |
 | [Phase 8](#phase-8--competitive-features-post-launch) | Competitive Features (Post-Launch) | ongoing | Post-S36 |
+| [Phase 9](#phase-9--gasless-trading-educational-onboarding--future-planning) | Gasless Trading, Onboarding & Future Planning | ongoing | Post-Phase 8 |
 
 ---
 
@@ -672,4 +673,60 @@ Extends the strategy builder with import/export, variables UI, logic blocks, cal
 
 ---
 
-*Documents de référence : [Architecture](./01-architecture.md) · [Fonctionnalités](./00-features-and-functionalities.md) · [API Catalog](./06-api-catalog.md) · [Dev Setup](./09-dev-setup.md) · [Competitor Audit](./polyforge_competitor_audit.md)*
+---
+
+## Phase 9 — Gasless Trading, Educational Onboarding & Future Planning
+
+**Post-Phase 8 · Ongoing**
+
+UX-focused improvements to reduce friction for new and existing users, plus forward-looking feature documentation.
+
+### 9.1 · Gasless Trading `HIGH PRIORITY`
+
+Critical for the Polymarket Builder Program — the platform absorbs Polygon gas fees so users never need to hold MATIC.
+
+- **Gas sponsor service** — dedicated platform wallet funds all user transaction gas fees
+- **Per-user daily budget** — configurable daily MATIC limit per user tracked in Redis (default: 0.5 MATIC)
+- **Gas usage API** — `GET /api/v1/settings/gas` returns usage stats (today's usage, daily limit, remaining)
+- **Gas usage UI** — settings tab with progress bar, usage breakdown, and sponsor status indicator
+- **Gasless indicator** — visible badge on portfolio page confirming gas is being sponsored
+- **Environment configuration** — `GAS_SPONSOR_PRIVATE_KEY`, `GAS_SPONSOR_ENABLED`, `GAS_DAILY_LIMIT_MATIC`
+
+### 9.2 · Educational Onboarding `MEDIUM PRIORITY`
+
+Guide new users through the platform to reduce time-to-first-trade and improve retention.
+
+- **Strategy templates** — 5 pre-built forkable strategies in seed data:
+  1. Simple Momentum — buy YES when price > 0.6
+  2. Mean Reversion — buy when price drops below average
+  3. News Reactive — uses AI signals to trigger trades
+  4. Risk Manager — stop-loss + take-profit wrapper
+  5. Whale Follower — copy whale trades with filters
+- **Onboarding checklist** — floating widget (bottom-right) with 6 tasks, localStorage persistence, 7-day display window
+- **Tooltip tour** — 5-step guided tour highlighting key UI elements on first visit
+- **"Take a tour" link** in the onboarding checklist for on-demand access
+
+### 9.3 · Future Features Documentation `LOW PRIORITY`
+
+- **`docs/19-future-features.md`** documenting 7 potential future features:
+  - Arbitrage Scanner (cross-platform price comparison)
+  - Multi-Platform Aggregation (Polymarket + Kalshi unified UI)
+  - Browser Extension (Chrome/Firefox overlay on polymarket.com)
+  - Mobile App (React Native, iOS + Android)
+  - Fund Management (pooled capital, on-chain governance)
+  - UMA Oracle Dashboard (dispute tracking, vote monitoring)
+  - LP / Market Making (automated liquidity provision)
+
+---
+
+## Phase 9 Priority Matrix
+
+| Feature | Business Impact | Technical Effort | Priority |
+|---------|:-:|:-:|:-:|
+| Gasless Trading | HIGH | LOW | **P0** |
+| Educational Onboarding | MEDIUM | LOW | **P1** |
+| Future Features Documentation | LOW | LOW | **P2** |
+
+---
+
+*Documents de référence : [Architecture](./01-architecture.md) · [Fonctionnalités](./00-features-and-functionalities.md) · [API Catalog](./06-api-catalog.md) · [Dev Setup](./09-dev-setup.md) · [Competitor Audit](./polyforge_competitor_audit.md) · [Future Features](./19-future-features.md)*

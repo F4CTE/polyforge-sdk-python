@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router';
 import {
   BarChart3,
@@ -15,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
+  TrendingUp,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -66,6 +68,20 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+  const [myScore, setMyScore] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/v1/scores/me', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.score) setMyScore(data.score.score);
+        }
+      } catch { /* ignore */ }
+    })();
+  }, []);
+
   return (
     <aside
       className="flex flex-col h-full bg-pf-elevated border-r border-pf-border transition-all duration-200"
@@ -135,6 +151,32 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       {/* Bottom collapse + settings */}
       <div className="border-t border-pf-border px-2 py-2 space-y-0.5">
+        {/* Edge Rating */}
+        {myScore !== null && (
+          <Link
+            to="/profile"
+            className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text"
+            title={collapsed ? `Edge Rating: ${myScore}` : undefined}
+          >
+            <TrendingUp size={18} className={`shrink-0 ${
+              myScore >= 80 ? 'text-pf-success' :
+              myScore >= 60 ? 'text-pf-cyan-400' :
+              myScore >= 40 ? 'text-pf-warning' :
+              'text-pf-danger'
+            }`} />
+            {!collapsed && (
+              <span className="flex items-center gap-2">
+                <span>Edge Rating</span>
+                <span className={`font-mono font-bold text-xs ${
+                  myScore >= 80 ? 'text-pf-success' :
+                  myScore >= 60 ? 'text-pf-cyan-400' :
+                  myScore >= 40 ? 'text-pf-warning' :
+                  'text-pf-danger'
+                }`}>{myScore}</span>
+              </span>
+            )}
+          </Link>
+        )}
         <button
           onClick={onToggle}
           className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text w-full"

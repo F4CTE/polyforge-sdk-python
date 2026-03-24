@@ -1342,6 +1342,144 @@ async function main() {
   console.log('  ✓ 5 login history entries');
 
   // ───────────────────────────────────────────────
+  // STRATEGY TEMPLATES (for educational onboarding)
+  // ───────────────────────────────────────────────
+
+  console.log('\n📋 Creating strategy templates...');
+
+  const templates = [
+    {
+      id: 'template-simple-momentum',
+      name: 'Simple Momentum',
+      description: 'Buys YES when price crosses above 0.6 — a straightforward trend-following template for beginners.',
+      isTemplate: true,
+      visibility: 'PUBLIC' as const,
+      userId: alice.id,
+      execMode: 'EVENT',
+      tickMs: 5000,
+      blocks: JSON.stringify({
+        triggers: [{ id: 't1', type: 'PRICE_CROSSES_UP', params: { threshold: '0.60' } }],
+        conditions: [{ id: 'c1', type: 'MAX_POSITION_SIZE', params: { maxSizeUsdc: '200' } }],
+        actions: [{ id: 'a1', type: 'BUY', params: { side: 'YES', size: '50', orderType: 'GTC' } }],
+        safety: [{ id: 's1', type: 'DAILY_LOSS_LIMIT', params: { maxLossUsdc: '100' } }],
+      }),
+      createdAt: daysAgo(30),
+    },
+    {
+      id: 'template-mean-reversion',
+      name: 'Mean Reversion',
+      description: 'Buys when price drops below the recent average — capitalizes on temporary dips that tend to revert.',
+      isTemplate: true,
+      visibility: 'PUBLIC' as const,
+      userId: alice.id,
+      execMode: 'TICK',
+      tickMs: 10000,
+      blocks: JSON.stringify({
+        triggers: [{ id: 't1', type: 'PRICE_BELOW_TICK', params: { threshold: '0.40' } }],
+        conditions: [
+          { id: 'c1', type: 'NO_EXISTING_POSITION', params: {} },
+          { id: 'c2', type: 'MIN_LIQUIDITY', params: { minLiquidity: '1000' } },
+        ],
+        actions: [{ id: 'a1', type: 'BUY', params: { side: 'YES', size: '100', orderType: 'GTC' } }],
+        safety: [
+          { id: 's1', type: 'DAILY_LOSS_LIMIT', params: { maxLossUsdc: '150' } },
+          { id: 's2', type: 'MAX_ORDERS_TOTAL', params: { max: 10 } },
+        ],
+      }),
+      createdAt: daysAgo(28),
+    },
+    {
+      id: 'template-news-reactive',
+      name: 'News Reactive',
+      description: 'Uses AI news signals to trigger trades — buys when high-confidence bullish signals are detected.',
+      isTemplate: true,
+      visibility: 'PUBLIC' as const,
+      userId: bob.id,
+      execMode: 'EVENT',
+      tickMs: 5000,
+      blocks: JSON.stringify({
+        triggers: [{ id: 't1', type: 'PRICE_CROSSES_UP', params: { threshold: '0.55' } }],
+        conditions: [
+          { id: 'c1', type: 'BETS_TODAY_LESS_THAN', params: { max: 3 } },
+          { id: 'c2', type: 'COOLDOWN_AFTER_TRADE', params: { cooldownMs: 60000 } },
+        ],
+        actions: [{ id: 'a1', type: 'BUY', params: { side: 'YES', size: '75', orderType: 'GTC' } }],
+        safety: [{ id: 's1', type: 'DAILY_LOSS_LIMIT', params: { maxLossUsdc: '200' } }],
+      }),
+      createdAt: daysAgo(25),
+    },
+    {
+      id: 'template-risk-manager',
+      name: 'Risk Manager',
+      description: 'Stop-loss and take-profit wrapper — automatically exits positions when price targets are hit.',
+      isTemplate: true,
+      visibility: 'PUBLIC' as const,
+      userId: bob.id,
+      execMode: 'TICK',
+      tickMs: 2000,
+      blocks: JSON.stringify({
+        triggers: [{ id: 't1', type: 'EVERY_TICK', params: {} }],
+        conditions: [{ id: 'c1', type: 'PRICE_IN_RANGE', params: { min: '0.10', max: '0.90' } }],
+        actions: [
+          { id: 'a1', type: 'SET_STOP_LOSS', params: { pct: '10' } },
+          { id: 'a2', type: 'TAKE_PROFIT', params: { pct: '20' } },
+        ],
+        safety: [
+          { id: 's1', type: 'DAILY_LOSS_LIMIT', params: { maxLossUsdc: '100' } },
+          { id: 's2', type: 'CONSECUTIVE_LOSS_STOP', params: { maxConsecutive: 3 } },
+        ],
+      }),
+      createdAt: daysAgo(22),
+    },
+    {
+      id: 'template-whale-follower',
+      name: 'Whale Follower',
+      description: 'Copies whale trades with size and risk filters — follows smart money while managing your exposure.',
+      isTemplate: true,
+      visibility: 'PUBLIC' as const,
+      userId: alice.id,
+      execMode: 'EVENT',
+      tickMs: 5000,
+      blocks: JSON.stringify({
+        triggers: [{ id: 't1', type: 'PRICE_CROSSES_UP', params: { threshold: '0.50' } }],
+        conditions: [
+          { id: 'c1', type: 'MAX_POSITION_SIZE', params: { maxSizeUsdc: '500' } },
+          { id: 'c2', type: 'MIN_LIQUIDITY', params: { minLiquidity: '5000' } },
+        ],
+        actions: [{ id: 'a1', type: 'BUY', params: { side: 'YES', size: '100', orderType: 'GTC' } }],
+        safety: [
+          { id: 's1', type: 'DAILY_LOSS_LIMIT', params: { maxLossUsdc: '250' } },
+          { id: 's2', type: 'MAX_POSITION_SIZE', params: { maxSizeUsdc: '500' } },
+        ],
+      }),
+      createdAt: daysAgo(20),
+    },
+  ];
+
+  for (const tmpl of templates) {
+    await prisma.strategy.upsert({
+      where: { id: tmpl.id },
+      update: {},
+      create: {
+        id: tmpl.id,
+        name: tmpl.name,
+        description: tmpl.description,
+        isTemplate: tmpl.isTemplate,
+        visibility: tmpl.visibility,
+        userId: tmpl.userId,
+        execMode: tmpl.execMode,
+        tickMs: tmpl.tickMs,
+        blocks: tmpl.blocks,
+        status: 'IDLE',
+        version: 1,
+        createdAt: tmpl.createdAt,
+      },
+    });
+  }
+
+  console.log('  ✓ 5 strategy templates (Simple Momentum, Mean Reversion, News Reactive, Risk Manager, Whale Follower)');
+
+  // ───────────────────────────────────────────────
   // DONE
   // ───────────────────────────────────────────────
 

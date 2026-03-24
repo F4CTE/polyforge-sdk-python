@@ -1,13 +1,81 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import {
   Settings, Wallet, Code, ChevronRight, Mail, Link2, Shield,
+  TrendingUp, Award,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
+
+/* ─── Types ──────────────────────────────────────────────────────────── */
+
+interface ScoreData {
+  score: {
+    score: number;
+    winRate: string;
+    sharpeRatio: string;
+    avgReturn: string;
+    totalTrades: number;
+    profitFactor: string;
+    maxDrawdown: string;
+    consistency: string;
+  } | null;
+}
+
+interface Badge {
+  id: string;
+  type: string;
+  name: string;
+  earnedAt: string;
+}
+
+/* ─── Helpers ────────────────────────────────────────────────────────── */
+
+function scoreColor(score: number): string {
+  if (score >= 80) return 'text-pf-success';
+  if (score >= 60) return 'text-pf-cyan-400';
+  if (score >= 40) return 'text-pf-warning';
+  return 'text-pf-danger';
+}
+
+function scoreBg(score: number): string {
+  if (score >= 80) return 'bg-pf-success/15 border-pf-success/25';
+  if (score >= 60) return 'bg-pf-cyan-500/15 border-pf-cyan-500/25';
+  if (score >= 40) return 'bg-pf-warning/15 border-pf-warning/25';
+  return 'bg-pf-danger/15 border-pf-danger/25';
+}
+
+const BADGE_ICONS: Record<string, string> = {
+  FIRST_TRADE: '\u{1F3AF}',
+  WINNING_STREAK_5: '\u{1F525}',
+  WHALE_HUNTER: '\u{1F433}',
+  STRATEGY_MASTER: '\u{1F9E0}',
+  COPY_LEADER: '\u{1F451}',
+  TOP_10: '\u{1F3C6}',
+  TOP_50: '\u{1F31F}',
+  CONSISTENT_WINNER: '\u{1F4C8}',
+  PAPER_GRADUATE: '\u{1F393}',
+  EARLY_ADOPTER: '\u{1F680}',
+};
 
 /* ─── Component ──────────────────────────────────────────────────────── */
 
 export function Component() {
   const { user } = useAuthStore();
+  const [scoreData, setScoreData] = useState<ScoreData | null>(null);
+  const [badges, setBadges] = useState<Badge[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [scoreRes, badgeRes] = await Promise.all([
+          fetch('/api/v1/scores/me', { credentials: 'include' }),
+          fetch('/api/v1/scores/me/badges', { credentials: 'include' }),
+        ]);
+        if (scoreRes.ok) setScoreData(await scoreRes.json());
+        if (badgeRes.ok) setBadges(await badgeRes.json());
+      } catch { /* keep state */ }
+    })();
+  }, []);
 
   if (!user) return null;
 
@@ -80,6 +148,89 @@ export function Component() {
             {user.totpEnabled ? '2FA Enabled' : '2FA Disabled'}
           </span>
         </div>
+      </div>
+
+      {/* Edge Rating card */}
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp className="size-4 text-pf-cyan-400" />
+          <h2 className="text-sm font-semibold text-pf-text">Edge Rating</h2>
+        </div>
+
+        {scoreData?.score ? (
+          <>
+            {/* Score circle + value */}
+            <div className="flex items-center gap-6 mb-4">
+              <div className={`size-16 rounded-full border-2 flex items-center justify-center ${scoreBg(scoreData.score.score)}`}>
+                <span className={`text-2xl font-bold font-mono ${scoreColor(scoreData.score.score)}`}>
+                  {scoreData.score.score}
+                </span>
+              </div>
+              <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-pf-text-muted">Win Rate</span>
+                  <span className="font-mono text-pf-text">{scoreData.score.winRate}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-pf-text-muted">Sharpe</span>
+                  <span className="font-mono text-pf-text">{scoreData.score.sharpeRatio}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-pf-text-muted">Profit Factor</span>
+                  <span className="font-mono text-pf-text">{scoreData.score.profitFactor}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-pf-text-muted">Consistency</span>
+                  <span className="font-mono text-pf-text">{scoreData.score.consistency}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-pf-text-muted">Avg Return</span>
+                  <span className="font-mono text-pf-text">{scoreData.score.avgReturn}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-pf-text-muted">Trades</span>
+                  <span className="font-mono text-pf-text">{scoreData.score.totalTrades}</span>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <p className="text-xs text-pf-text-muted">
+            No score yet. Start trading to build your Edge Rating.
+          </p>
+        )}
+      </div>
+
+      {/* Badges card */}
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Award className="size-4 text-pf-cyan-400" />
+          <h2 className="text-sm font-semibold text-pf-text">Badges</h2>
+          <span className="text-xs text-pf-text-muted ml-auto">{badges.length} earned</span>
+        </div>
+
+        {badges.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {badges.map(badge => (
+              <div
+                key={badge.id}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border-subtle"
+              >
+                <span className="text-lg">{BADGE_ICONS[badge.type] ?? '\u{2B50}'}</span>
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-pf-text truncate">{badge.name}</div>
+                  <div className="text-[10px] text-pf-text-muted">
+                    {new Date(badge.earnedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-pf-text-muted">
+            No badges yet. Keep trading to unlock achievements.
+          </p>
+        )}
       </div>
 
       {/* Quick links */}

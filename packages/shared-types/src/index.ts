@@ -32,3 +32,6 @@ export * from "./copy";
 
 // News Pipeline
 export * from "./news";
+
+// Scores & Badges
+export * from "./scores";

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import {
-  ChevronLeft, ChevronRight, Compass, Heart, GitFork,
+  ChevronLeft, ChevronRight, Compass, Heart, GitFork, TrendingUp,
 } from 'lucide-react';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -22,6 +22,7 @@ interface PublicStrategy {
     username: string;
     displayName?: string;
     avatarUrl?: string;
+    score?: number;
   };
 }
 
@@ -171,6 +172,17 @@ export function Component() {
                   >
                     {s.author.displayName ?? s.author.username}
                   </Link>
+                  {s.author.score != null && s.author.score > 0 && (
+                    <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                      s.author.score >= 80 ? 'text-pf-success bg-pf-success/10 border-pf-success/20' :
+                      s.author.score >= 60 ? 'text-pf-cyan-400 bg-pf-cyan-500/10 border-pf-cyan-500/20' :
+                      s.author.score >= 40 ? 'text-pf-warning bg-pf-warning/10 border-pf-warning/20' :
+                      'text-pf-text-muted bg-pf-overlay border-pf-border'
+                    }`}>
+                      <TrendingUp className="size-2.5" />
+                      {s.author.score}
+                    </span>
+                  )}
                   <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-pf-overlay text-pf-text-muted">
                     {execLabel(s.execMode)}
                   </span>

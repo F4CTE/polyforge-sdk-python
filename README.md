@@ -28,8 +28,11 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **AI news-to-trade pipeline** — real-time news ingestion, LLM signal extraction (Claude + GPT-4o fallback), confidence-scored trade signals
 - **Operational docs** — Backup & Recovery (RDS/Redis/EBS), Incident Response (P0-P3), Performance Tuning guides
 - **AWS infrastructure** — Terraform with tfvars template (20 variables), budget alerts ($800/month)
+- **Gasless trading** — platform absorbs Polygon gas fees with per-user daily budget tracking
+- **Educational onboarding** — guided tour, checklist widget, and 5 pre-built strategy templates for new users
+- **Future features planned** — arbitrage scanner, multi-platform aggregation, browser extension, mobile app, fund management, UMA oracle dashboard, LP/market making (see [`docs/19-future-features.md`](./docs/19-future-features.md))
 
-> **All 8 development phases are complete — 72 files and 8,564 lines added in Phase 8.** See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
+> **All 8 development phases are complete — 72 files and 8,564 lines added in Phase 8.** Phase 9 adds gasless trading (platform-sponsored gas fees), educational onboarding (strategy templates, guided tour, checklist), and documents 7 future features. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
 
 ---
 
@@ -235,5 +238,6 @@ See [`docs/06-api-catalog.md`](./docs/06-api-catalog.md) for the full endpoint r
 | [`docs/09-dev-setup.md`](./docs/09-dev-setup.md) | Local development setup |
 | [`docs/10-env-reference.md`](./docs/10-env-reference.md) | Environment variable reference |
 | [`docs/11-roadmap.md`](./docs/11-roadmap.md) | Feature roadmap |
+| [`docs/19-future-features.md`](./docs/19-future-features.md) | Future feature plans (arbitrage, mobile, etc.) |
 | [`docs/polyforge_competitor_audit.md`](./docs/polyforge_competitor_audit.md) | 199-platform competitor analysis |
 | [`CHANGELOG.md`](./CHANGELOG.md) | Release history |

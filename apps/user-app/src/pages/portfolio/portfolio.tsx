@@ -4,7 +4,7 @@ import {
 } from 'recharts';
 import {
   Wallet, BarChart3,
-  RefreshCw, Loader2, AlertTriangle,
+  RefreshCw, Loader2, AlertTriangle, Fuel,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -211,7 +211,13 @@ export function Component() {
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-pf-text">Portfolio</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-semibold text-pf-text">Portfolio</h1>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pf-success/10 text-pf-success text-xs font-medium border border-pf-success/20">
+            <Fuel className="size-3" />
+            Gasless
+          </span>
+        </div>
         <div className="flex bg-pf-surface rounded-pf border border-pf-border-subtle">
           <button
             onClick={() => handleTabChange('live')}

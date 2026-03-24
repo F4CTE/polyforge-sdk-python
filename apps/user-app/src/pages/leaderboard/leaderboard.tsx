@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight, Trophy } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trophy, TrendingUp } from 'lucide-react';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -16,6 +16,7 @@ interface LeaderboardEntry {
   pnl: string;
   winRate: string;
   tradeCount: number;
+  score?: number;
 }
 
 interface LeaderboardResponse {
@@ -128,6 +129,7 @@ export function Component() {
               <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                 <th className="px-4 py-3 font-medium text-right w-16">Rank</th>
                 <th className="px-4 py-3 font-medium">Trader</th>
+                <th className="px-4 py-3 font-medium text-right">Score</th>
                 <th className="px-4 py-3 font-medium text-right">P&L</th>
                 <th className="px-4 py-3 font-medium text-right">Win Rate</th>
                 <th className="px-4 py-3 font-medium text-right">Trades</th>
@@ -137,14 +139,14 @@ export function Component() {
               {loading ? (
                 Array.from({ length: 10 }, (_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 5 }, (_, j) => (
+                    {Array.from({ length: 6 }, (_, j) => (
                       <td key={j} className="px-4 py-3"><div className="h-3 bg-pf-overlay rounded animate-pulse" /></td>
                     ))}
                   </tr>
                 ))
               ) : entries.length === 0 ? (
                 <tr>
-                  <td colSpan={5}>
+                  <td colSpan={6}>
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                       <Trophy className="size-10 text-pf-text-muted mb-3" />
                       <p className="text-sm font-medium text-pf-text">No data yet</p>
@@ -180,6 +182,21 @@ export function Component() {
                           )}
                         </div>
                       </Link>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {entry.score != null ? (
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono font-bold ${
+                          entry.score >= 80 ? 'text-pf-success bg-pf-success/10' :
+                          entry.score >= 60 ? 'text-pf-cyan-400 bg-pf-cyan-500/10' :
+                          entry.score >= 40 ? 'text-pf-warning bg-pf-warning/10' :
+                          'text-pf-danger bg-pf-danger/10'
+                        }`}>
+                          <TrendingUp className="size-3" />
+                          {entry.score}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-pf-text-muted">&mdash;</span>
+                      )}
                     </td>
                     <td className={`px-4 py-3 text-right font-mono ${pnlColor(entry.pnl)}`}>
                       {pnlSign(entry.pnl)}
