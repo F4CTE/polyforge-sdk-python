@@ -1,16 +1,26 @@
-import { Controller, Get, Post, Query, Req, Res } from "@nestjs/common";
+import { Controller, Get, Post, Query, Req, Res, Logger } from "@nestjs/common";
 import { WhatsAppService } from "./whatsapp.service";
 import type { FastifyRequest, FastifyReply } from "fastify";
+import * as crypto from "crypto";
 
 /**
  * Webhook controller for WhatsApp Business Cloud API.
  *
  * GET  /webhook/whatsapp  — Meta verification challenge
  * POST /webhook/whatsapp  — Incoming message webhook
+ *
+ * SECURITY: POST endpoint validates X-Hub-Signature-256 header
+ * using HMAC-SHA256 with the WHATSAPP_APP_SECRET to prevent
+ * spoofed webhook payloads (Meta standard security practice).
  */
 @Controller("webhook/whatsapp")
 export class WhatsAppWebhookController {
-  constructor(private readonly whatsapp: WhatsAppService) {}
+  private readonly logger = new Logger(WhatsAppWebhookController.name);
+  private readonly appSecret: string;
+
+  constructor(private readonly whatsapp: WhatsAppService) {
+    this.appSecret = process.env.WHATSAPP_APP_SECRET ?? "";
+  }
 
   @Get()
   verify(
@@ -29,6 +39,36 @@ export class WhatsAppWebhookController {
 
   @Post()
   async incoming(@Req() request: FastifyRequest, @Res() reply: FastifyReply) {
+    // SECURITY: Validate X-Hub-Signature-256 from Meta
+    if (this.appSecret) {
+      const signature = request.headers["x-hub-signature-256"] as string;
+      if (!signature) {
+        this.logger.warn("WhatsApp webhook missing X-Hub-Signature-256 header");
+        return reply.status(401).send("Missing signature");
+      }
+
+      const rawBody =
+        typeof request.body === "string"
+          ? request.body
+          : JSON.stringify(request.body);
+      const expectedSignature =
+        "sha256=" +
+        crypto
+          .createHmac("sha256", this.appSecret)
+          .update(rawBody)
+          .digest("hex");
+
+      if (
+        !crypto.timingSafeEqual(
+          Buffer.from(signature),
+          Buffer.from(expectedSignature),
+        )
+      ) {
+        this.logger.warn("WhatsApp webhook signature mismatch — rejecting");
+        return reply.status(403).send("Invalid signature");
+      }
+    }
+
     // Always respond 200 immediately to Meta (they retry on non-200)
     reply.status(200).send("EVENT_RECEIVED");
 

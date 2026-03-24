@@ -179,6 +179,9 @@ services:
       POLY_BUILDER_SECRET: ${POLY_BUILDER_SECRET:-dev-builder-secret}
       POLY_BUILDER_PASSPHRASE: ${POLY_BUILDER_PASSPHRASE:-dev-builder-passphrase}
       CHAIN_ID: ${CHAIN_ID:-137}
+      GAS_SPONSOR_PRIVATE_KEY: ${GAS_SPONSOR_PRIVATE_KEY:-}
+      GAS_SPONSOR_ENABLED: ${GAS_SPONSOR_ENABLED:-true}
+      GAS_DAILY_LIMIT_MATIC: ${GAS_DAILY_LIMIT_MATIC:-0.5}
       PORT: "3012"
       NODE_ENV: ${NODE_ENV:-development}
     networks: [internal, signer-only]
@@ -352,6 +355,7 @@ services:
       WHATSAPP_TOKEN: ${WHATSAPP_TOKEN:-dev-disabled}
       WHATSAPP_PHONE_ID: ${WHATSAPP_PHONE_ID:-}
       WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN:-polyforge-verify}
+      WHATSAPP_APP_SECRET: ${WHATSAPP_APP_SECRET:-}
       API_SERVICE_URL: http://api-service:3002
       PORT: "3011"
       NODE_ENV: ${NODE_ENV:-development}
