@@ -372,7 +372,7 @@ services:
   signer-service:
     image: "${ECR_REGISTRY}/polyforge-signer-service:${IMAGE_TAG}"
     <<: *common
-    networks: [signer-only]
+    networks: [signer-only, internal]
     read_only: true
     tmpfs:
       - /tmp:size=64m,noexec,nosuid

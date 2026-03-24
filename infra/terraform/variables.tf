@@ -155,6 +155,19 @@ variable "app_secrets" {
     POLY_BUILDER_PASSPHRASE  = string
     TELEGRAM_BOT_TOKEN       = string
     DISCORD_BOT_TOKEN        = string
+    WHATSAPP_TOKEN           = string
+    WHATSAPP_PHONE_ID        = string
+    WHATSAPP_VERIFY_TOKEN    = string
+    WHATSAPP_APP_SECRET      = string
+    GAS_SPONSOR_PRIVATE_KEY  = string
+    GAS_SPONSOR_ENABLED      = string  # "true" or "false"
+    GAS_ESTIMATE_MATIC       = string  # e.g. "0.002"
+    ANTHROPIC_API_KEY        = string  # Claude API key for NL query + strategy-from-description
+    OPENAI_API_KEY           = string  # OpenAI API key for NL query + strategy-from-description
+    NEWS_RSS_FEEDS           = string  # comma-separated RSS feed URLs
+    GEO_BLOCKED_COUNTRIES    = string  # comma-separated ISO country codes
+    GEO_CLOSE_ONLY_COUNTRIES = string  # comma-separated ISO country codes
+    BUILDER_TIER             = string  # Polymarket builder tier (e.g. VERIFIED, UNVERIFIED)
   })
   sensitive = true
 }

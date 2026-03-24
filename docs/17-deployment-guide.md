@@ -65,8 +65,19 @@ Have your Polymarket Builder Program credentials ready:
 - `POLY_BUILDER_API_KEY`
 - `POLY_BUILDER_SECRET`
 - `POLY_BUILDER_PASSPHRASE`
+- `BUILDER_TIER` (default: `UNVERIFIED`)
 
-If Telegram/Discord bots are not ready, use `"dev-disabled"` as a placeholder.
+Have your AI API keys ready (required for NL query and strategy-from-description features):
+- `ANTHROPIC_API_KEY` (Claude API key)
+- `OPENAI_API_KEY` (OpenAI API key)
+
+Have your WhatsApp Business credentials ready (optional, for WhatsApp bot):
+- `WHATSAPP_TOKEN` (from Meta Business Platform)
+- `WHATSAPP_PHONE_ID` (from Meta WhatsApp Business)
+- `WHATSAPP_VERIFY_TOKEN` (random string for webhook verification)
+- `WHATSAPP_APP_SECRET` (Meta app secret for X-Hub-Signature-256)
+
+If Telegram/Discord/WhatsApp bots are not ready, use `"dev-disabled"` as a placeholder.
 
 ---
 
@@ -302,7 +313,7 @@ bash scripts/deploy.sh --push-only
 
 This will:
 1. Log in to ECR
-2. Create all 13 ECR repositories (idempotent)
+2. Create all ECR repositories (idempotent)
 3. Build all service images (gateway + 12 NestJS services)
 4. Tag each image with the current git SHA and `latest`
 5. Push all images to ECR
@@ -411,7 +422,71 @@ aws cloudwatch describe-alarms --state-value ALARM --region us-east-1
 
 Confirm the SNS alert subscription by checking the `alert_email` inbox for an AWS SNS confirmation email and clicking the link.
 
-### 9.8 Full checklist
+### 9.8 Geoblocking verification
+
+Verify that geo-blocked countries receive a 451 response on trading endpoints:
+
+```bash
+# From a US IP (or using a VPN exit in a blocked country):
+curl -sI https://polyforge.app/api/v1/markets | grep "HTTP"
+# Should return 200 (read-only endpoints are NOT blocked)
+
+curl -sI -X POST https://polyforge.app/api/v1/orders | grep "HTTP"
+# Should return 451 from a blocked country
+```
+
+Verify that public endpoints are accessible from any country:
+
+```bash
+curl -s https://polyforge.app/api/v1/docs | head -1
+# Should return Swagger JSON (no geo-blocking)
+
+curl -s https://polyforge.app/api/v1/actions | head -1
+# Should return actions list (no geo-blocking)
+```
+
+Verify the X-Country-Code and X-Region-Code headers are passed through by checking the api-service request logs.
+
+### 9.9 AI features verification
+
+Verify the NL query and strategy-from-description features are operational:
+
+```bash
+# Check that the API keys are loaded (via health endpoint extensions)
+curl -s https://polyforge.app/api/v1/health | jq '.features'
+# Should show ai_query: true if ANTHROPIC_API_KEY or OPENAI_API_KEY is set
+```
+
+### 9.10 Webhook verification
+
+For WhatsApp webhook:
+
+```bash
+curl -s "https://polyforge.app/api/v1/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=<your-verify-token>&hub.challenge=test"
+# Should return "test" (the challenge value)
+```
+
+For Telegram webhook, set it via the Bot API:
+
+```bash
+curl "https://api.telegram.org/bot<token>/setWebhook?url=https://polyforge.app/api/v1/webhooks/telegram"
+```
+
+### 9.11 MCP server verification
+
+The MCP server package (`packages/mcp-server`) lets AI assistants interact with the platform. To verify:
+
+```bash
+# Build the MCP server
+pnpm --filter @polyforge/mcp-server build
+
+# Test connectivity (requires a running API service)
+node packages/mcp-server/dist/index.js --help
+```
+
+Configure your AI assistant (e.g., Claude Desktop) with the MCP server endpoint. See `packages/mcp-server/README.md` for configuration details.
+
+### 9.12 Full checklist
 
 See the detailed post-deployment checklist in [07-deployment.md](./07-deployment.md) (Post-Deployment Checklist section) covering SSL, email, API, Polymarket integration, bots, monitoring, and security checks.
 
