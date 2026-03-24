@@ -422,6 +422,62 @@ Join the early-access waitlist.
 
 ---
 
+### POST /auth/v1/refresh
+
+Refresh the access token using the refresh token cookie. No request body needed — reads the `pf_refresh` HTTP-only cookie.
+
+**Auth:** None (cookie-based)
+**Rate limit:** 30 req/15min per user
+
+**Response `200`:**
+```json
+{
+  "token": "eyJ..."
+}
+```
+Sets a new `pf_token` cookie on the response.
+
+**Errors:** `401 REFRESH_TOKEN_INVALID` · `401 REFRESH_TOKEN_EXPIRED`
+
+---
+
+### POST /auth/v1/resend-verification
+
+Resend the email verification link.
+
+**Auth:** None
+**Rate limit:** 3 req/hour per IP
+
+**Request:**
+```json
+{ "email": "alice@example.com" }
+```
+
+**Response `200`:** Always returns 200 (prevents email enumeration).
+```json
+{ "message": "If that email exists and is unverified, a verification link has been sent" }
+```
+
+---
+
+### DELETE /auth/v1/account
+
+Soft-delete the authenticated user's account. Stops all running strategies, revokes all tokens, and clears cookies.
+
+**Auth:** User JWT
+
+**Request:**
+```json
+{ "password": "Test1234!" }
+```
+Password required for confirmation.
+
+**Response `204`:** No body.
+
+**Errors:** `400 INVALID_PASSWORD` · `422 ACCOUNT_ALREADY_DELETED`
+
+---
+
 ## API Service — User REST  (`/api/v1`)
 
 All endpoints require `Authorization: Bearer <USER_JWT>` unless noted.
@@ -865,6 +921,37 @@ Manually close an open position (FOK sell order).
 
 ---
 
+#### POST /api/v1/orders/redeem
+
+Redeem a resolved market position.
+
+**Auth:** User JWT or API Key (requires `TRADE` scope)
+**GeoBlocked:** Returns `451` in restricted regions.
+
+**Request:**
+```json
+{ "positionId": "uuid" }
+```
+Or alternatively:
+```json
+{ "marketId": "uuid" }
+```
+
+**Response `200`:**
+```json
+{
+  "positionId": "uuid",
+  "marketId": "uuid",
+  "redemptionValue": "200.000000",
+  "txHash": "0x...",
+  "redeemedAt": "2026-03-12T10:00:00Z"
+}
+```
+
+**Errors:** `404 POSITION_NOT_FOUND` · `422 MARKET_NOT_RESOLVED` · `422 ALREADY_REDEEMED` · `451 GEO_BLOCKED`
+
+---
+
 ### Portfolio & Positions
 
 #### GET /api/v1/portfolio
@@ -1161,6 +1248,24 @@ Toggle follow. Returns current follow state.
 **Response `200`:**
 ```json
 { "message": "Password updated" }
+```
+
+---
+
+#### GET /api/v1/settings/gas
+
+Returns gas sponsorship usage for the authenticated user.
+
+**Auth:** User JWT
+
+**Response `200`:**
+```json
+{
+  "spent": 1.25,
+  "limit": 10.00,
+  "remaining": 8.75,
+  "sponsored": true
+}
 ```
 
 ---
@@ -1467,6 +1572,26 @@ Create a new platform template.
 
 ---
 
+#### PATCH /api/v1/strategies/:id/unpublish
+
+Admin unpublishes a strategy (sets visibility to `PRIVATE`).
+
+**Auth:** Admin JWT
+
+**Response `200`:**
+```json
+{
+  "id": "uuid",
+  "visibility": "PRIVATE",
+  "unpublishedAt": "2026-03-12T10:00:00Z",
+  "unpublishedBy": "admin"
+}
+```
+
+**Errors:** `404 NOT_FOUND` · `422 ALREADY_PRIVATE`
+
+---
+
 ### Orders
 
 #### GET /api/v1/orders
@@ -1542,6 +1667,21 @@ All backtest runs (all users).
 
 ---
 
+#### POST /api/v1/backtests/:id/cancel
+
+Admin cancels a stuck or running backtest. Sets status to `CANCELLED`.
+
+**Auth:** Admin JWT
+
+**Response `200`:**
+```json
+{ "id": "uuid", "status": "CANCELLED", "cancelledAt": "2026-03-12T10:00:00Z" }
+```
+
+**Errors:** `404 NOT_FOUND` · `422 BACKTEST_NOT_RUNNING`
+
+---
+
 ### Reports
 
 #### GET /api/v1/reports
@@ -1579,6 +1719,30 @@ Send a notification to all users or a subset.
 }
 ```
 `userIds: null` means all users.
+
+---
+
+#### GET /api/v1/notifications/stats
+
+Returns notification delivery statistics.
+
+**Auth:** Admin JWT
+
+**Response `200`:**
+```json
+{
+  "channels": {
+    "EMAIL": { "sent": 1240, "delivered": 1198, "failed": 42 },
+    "PUSH": { "sent": 890, "delivered": 872, "failed": 18 },
+    "WEBSOCKET": { "sent": 5600, "delivered": 5600, "failed": 0 }
+  },
+  "recentFailures": [
+    { "channel": "EMAIL", "recipient": "user@example.com", "error": "SMTP timeout", "at": "2026-03-12T09:45:00Z" }
+  ],
+  "totalSent": 7730,
+  "totalFailed": 60
+}
+```
 
 ---
 
