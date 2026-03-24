@@ -49,7 +49,8 @@ describe("SigningService", () => {
     credentials = {
       getDecryptedCredentials: vi.fn().mockResolvedValue(DECRYPTED_CREDS),
     } as any;
-    svc = new SigningService(credentials, makeConfig());
+    const gasSponsor = { sponsorGas: vi.fn().mockResolvedValue(true), isActive: vi.fn().mockReturnValue(true) } as any;
+    svc = new SigningService(credentials, makeConfig(), gasSponsor);
   });
 
   // ── Dev stub signing ──────────────────────────────────────────────────────

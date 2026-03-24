@@ -24,15 +24,41 @@ function makeUpdatePasswordDto(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function createMockRedis() {
+  return {
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue("OK"),
+    getClient: vi.fn().mockReturnValue({
+      scanStream: vi.fn().mockReturnValue({ on: vi.fn() }),
+      del: vi.fn(),
+    }),
+  };
+}
+
+function createMockConfig(overrides: Record<string, string> = {}) {
+  const defaults: Record<string, string> = {
+    GAS_DAILY_LIMIT_MATIC: "0.5",
+    GAS_SPONSOR_ENABLED: "true",
+    ...overrides,
+  };
+  return {
+    get: vi.fn((key: string) => defaults[key]),
+  };
+}
+
 // ─── Suite ───────────────────────────────────────────────────────────────────
 
 describe("SettingsService", () => {
   let service: SettingsService;
   let db: MockDb;
+  let mockRedis: ReturnType<typeof createMockRedis>;
+  let mockConfig: ReturnType<typeof createMockConfig>;
 
   beforeEach(() => {
     db = createMockDb();
-    service = new SettingsService(db as any);
+    mockRedis = createMockRedis();
+    mockConfig = createMockConfig();
+    service = new SettingsService(db as any, mockRedis as any, mockConfig as any);
   });
 
   afterEach(() => {
@@ -308,6 +334,78 @@ describe("SettingsService", () => {
       await expect(
         service.updatePassword("user-uuid-1", makeUpdatePasswordDto() as any),
       ).rejects.toThrow("Record not found");
+    });
+  });
+
+  // ── getGasUsage ─────────────────────────────────────────────────────────────
+
+  describe("getGasUsage", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-03-24T12:00:00Z"));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("returns spent, limit, and remaining when usage exists", async () => {
+      mockRedis.get.mockResolvedValue("0.2");
+
+      const result = await service.getGasUsage("user-uuid-1");
+
+      expect(result).toEqual({
+        todayUsage: 0.2,
+        dailyLimit: 0.5,
+        remaining: 0.3,
+        sponsorEnabled: true,
+      });
+    });
+
+    it("returns 0 spent when no Redis key exists", async () => {
+      mockRedis.get.mockResolvedValue(null);
+
+      const result = await service.getGasUsage("user-uuid-1");
+
+      expect(result.todayUsage).toBe(0);
+      expect(result.remaining).toBe(0.5);
+      expect(result.dailyLimit).toBe(0.5);
+    });
+
+    it("reads the correct Redis key based on today's date", async () => {
+      mockRedis.get.mockResolvedValue(null);
+
+      await service.getGasUsage("user-uuid-1");
+
+      expect(mockRedis.get).toHaveBeenCalledWith(
+        "gas:spent:user-uuid-1:2026-03-24",
+      );
+    });
+
+    it("handles Redis errors gracefully and returns 0 usage", async () => {
+      mockRedis.get.mockRejectedValue(new Error("Redis connection refused"));
+
+      const result = await service.getGasUsage("user-uuid-1");
+
+      expect(result.todayUsage).toBe(0);
+      expect(result.remaining).toBe(0.5);
+    });
+
+    it("clamps remaining to 0 when usage exceeds limit", async () => {
+      mockRedis.get.mockResolvedValue("0.8");
+
+      const result = await service.getGasUsage("user-uuid-1");
+
+      expect(result.remaining).toBe(0);
+    });
+
+    it("reflects disabled sponsor when GAS_SPONSOR_ENABLED=false", async () => {
+      mockConfig = createMockConfig({ GAS_SPONSOR_ENABLED: "false" });
+      service = new SettingsService(db as any, mockRedis as any, mockConfig as any);
+
+      const result = await service.getGasUsage("user-uuid-1");
+
+      expect(result.sponsorEnabled).toBe(false);
     });
   });
 });
