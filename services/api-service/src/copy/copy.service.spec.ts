@@ -35,6 +35,7 @@ function createMockRedis() {
       xgroup: vi.fn(),
       xreadgroup: vi.fn(),
       xack: vi.fn(),
+      incrbyfloat: vi.fn().mockResolvedValue("0.1"),
     }),
   } as any;
 }
@@ -319,6 +320,8 @@ describe("CopyEngineService", () => {
 
       // Daily PnL is -150, which exceeds -100 limit
       redis.get.mockResolvedValue("-150");
+      redis.getClient().incrbyfloat.mockResolvedValue("250");
+      prisma.copyTrade.findMany.mockResolvedValue([]);
 
       const event = {
         walletAddress: "0xwhale",

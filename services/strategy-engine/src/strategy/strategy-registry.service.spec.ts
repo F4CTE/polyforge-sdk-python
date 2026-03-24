@@ -24,6 +24,7 @@ function makePrismaMock(overrides: Record<string, unknown> = {}) {
     strategy: {
       findUnique: vi.fn().mockResolvedValue(null),
       findUniqueOrThrow: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]),
       update: vi.fn().mockResolvedValue({}),
     },
     ...overrides,
@@ -435,5 +436,124 @@ describe("StrategyRegistryService — onPriceEvent()", () => {
     const svc = new StrategyRegistryService(prisma, redis, state);
 
     await expect(svc.onPriceEvent("tok-1", 0.5)).resolves.not.toThrow();
+  });
+});
+
+describe("StrategyRegistryService — onApplicationBootstrap()", () => {
+  let redis: ReturnType<typeof makeRedisMock>;
+  let prisma: ReturnType<typeof makePrismaMock>;
+  let state: ReturnType<typeof makeStateMock>;
+  let svc: StrategyRegistryService;
+
+  beforeEach(() => {
+    redis = makeRedisMock();
+    prisma = makePrismaMock();
+    state = makeStateMock();
+    svc = new StrategyRegistryService(prisma, redis, state);
+  });
+
+  it("does nothing when no strategies are in RUNNING/PAPER state", async () => {
+    prisma.strategy.findMany.mockResolvedValue([]);
+
+    await svc.onApplicationBootstrap();
+
+    // Should not have tried to start any strategies
+    expect(svc.getStatus("anything")).toBeNull();
+  });
+
+  it("resumes RUNNING strategies on startup", async () => {
+    const strategy = makeDbStrategy({ id: "strat-1", status: StrategyStatus.RUNNING });
+    prisma.strategy.findMany.mockResolvedValue([strategy]);
+    prisma.strategy.findUnique.mockResolvedValue(strategy);
+
+    await svc.onApplicationBootstrap();
+
+    expect(svc.getStatus("strat-1")).toBe("RUNNING");
+  });
+
+  it("resumes PAPER strategies on startup", async () => {
+    const strategy = makeDbStrategy({ id: "strat-2", status: StrategyStatus.PAPER });
+    prisma.strategy.findMany.mockResolvedValue([strategy]);
+    prisma.strategy.findUnique.mockResolvedValue(strategy);
+
+    await svc.onApplicationBootstrap();
+
+    expect(svc.getStatus("strat-2")).toBe("RUNNING");
+  });
+
+  it("continues reconciliation when one strategy fails to resume", async () => {
+    const strat1 = makeDbStrategy({ id: "strat-1", status: StrategyStatus.RUNNING });
+    const strat2 = makeDbStrategy({ id: "strat-2", status: StrategyStatus.RUNNING });
+
+    prisma.strategy.findMany.mockResolvedValue([strat1, strat2]);
+    prisma.strategy.findUnique.mockResolvedValue(strat1);
+
+    // Should not throw even if individual strategies fail
+    await expect(svc.onApplicationBootstrap()).resolves.not.toThrow();
+  });
+
+  it("handles database failure during reconciliation gracefully", async () => {
+    prisma.strategy.findMany.mockRejectedValue(new Error("DB connection failed"));
+
+    // Should not throw
+    await expect(svc.onApplicationBootstrap()).resolves.not.toThrow();
+  });
+});
+
+describe("StrategyRegistryService — concurrent start protection", () => {
+  let redis: ReturnType<typeof makeRedisMock>;
+  let prisma: ReturnType<typeof makePrismaMock>;
+  let state: ReturnType<typeof makeStateMock>;
+  let svc: StrategyRegistryService;
+
+  beforeEach(() => {
+    redis = makeRedisMock();
+    prisma = makePrismaMock();
+    state = makeStateMock();
+    svc = new StrategyRegistryService(prisma, redis, state);
+  });
+
+  it("prevents starting the same strategy twice concurrently", async () => {
+    const strategy = makeDbStrategy();
+    prisma.strategy.findUnique.mockResolvedValue(strategy);
+
+    await svc.start("strat-1");
+
+    // Second attempt should throw ConflictException
+    await expect(svc.start("strat-1")).rejects.toThrow(ConflictException);
+  });
+
+  it("allows restarting after stop", async () => {
+    const strategy = makeDbStrategy();
+    prisma.strategy.findUnique.mockResolvedValue(strategy);
+
+    await svc.start("strat-1");
+    await svc.stop("strat-1");
+
+    // Should be able to start again
+    await expect(svc.start("strat-1")).resolves.not.toThrow();
+  });
+});
+
+describe("StrategyRegistryService — getChildStrategies()", () => {
+  it("returns empty array when strategy is not running", () => {
+    const redis = makeRedisMock();
+    const prisma = makePrismaMock();
+    const state = makeStateMock();
+    const svc = new StrategyRegistryService(prisma, redis, state);
+
+    expect(svc.getChildStrategies("unknown")).toEqual([]);
+  });
+});
+
+describe("StrategyRegistryService — hasCircularDependency()", () => {
+  it("detects direct circular reference", () => {
+    const redis = makeRedisMock();
+    const prisma = makePrismaMock();
+    const state = makeStateMock();
+    const svc = new StrategyRegistryService(prisma, redis, state);
+
+    // parentId === childId
+    expect(svc.hasCircularDependency("A", "A")).toBe(true);
   });
 });

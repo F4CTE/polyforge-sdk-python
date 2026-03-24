@@ -992,4 +992,230 @@ describe("CommandsService", () => {
       expect(result).toContain("/sl <market> <price>");
     });
   });
+
+  // ─── Additional Phase 8 edge cases ────────────────────────────────────────
+
+  describe("/whale — additional edge cases", () => {
+    it("returns error when API returns non-404 error", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 500 }),
+      );
+
+      const result = await svc.execute("user-1", "/whale 0xabc123");
+      expect(result).toContain("Could not fetch whale profile");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("handles fetch throwing an error", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network error")),
+      );
+
+      const result = await svc.execute("user-1", "/whale 0xabc123");
+      expect(result).toContain("Could not fetch whale profile");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("handles whale with negative P&L", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            address: "0xabc12345def67890",
+            totalVolume: 500000,
+            totalPnl: -2000,
+            tradeCount: 15,
+          }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/whale 0xabc12345def67890");
+      expect(result).toContain("-2000.00");
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  describe("/stopcopy — additional edge cases", () => {
+    it("returns error when API returns non-404 error", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 500 }),
+      );
+
+      const result = await svc.execute("user-1", "/stopcopy bad-id");
+      expect(result).toContain("Could not stop copy config");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("handles fetch throwing an error", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network error")),
+      );
+
+      const result = await svc.execute("user-1", "/stopcopy some-id");
+      expect(result).toContain("Could not stop copy config");
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  describe("/signals — additional edge cases", () => {
+    it("handles fetch throwing an error", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network error")),
+      );
+
+      const result = await svc.execute("user-1", "/signals");
+      expect(result).toContain("Could not fetch signals");
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  describe("/copy — additional edge cases", () => {
+    it("handles fetch throwing an error", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network error")),
+      );
+
+      const result = await svc.execute("user-1", "/copy 0xabc123");
+      expect(result).toContain("Could not create copy config");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("omits ID line when response has no id", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({}),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/copy 0xabc123");
+      expect(result).toContain("Copy config created");
+      expect(result).not.toContain("ID:");
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  describe("/copies — additional edge cases", () => {
+    it("handles fetch throwing an error", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network error")),
+      );
+
+      const result = await svc.execute("user-1", "/copies");
+      expect(result).toContain("Could not fetch copy configs");
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  describe("/tp and /sl — additional edge cases", () => {
+    it("/tp returns error for zero price", async () => {
+      const result = await svc.execute("user-1", "/tp ETH-YES 0");
+      expect(result).toContain("Invalid price");
+    });
+
+    it("/sl returns error for non-numeric price", async () => {
+      const result = await svc.execute("user-1", "/sl ETH-YES notanumber");
+      expect(result).toContain("Invalid price");
+    });
+
+    it("/tp handles fetch throwing an error", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network error")),
+      );
+
+      const result = await svc.execute("user-1", "/tp ETH-YES 0.85");
+      expect(result).toContain("Could not set take-profit");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("/sl handles fetch throwing an error", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network error")),
+      );
+
+      const result = await svc.execute("user-1", "/sl ETH-YES 0.30");
+      expect(result).toContain("Could not set stop-loss");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("/sl returns not found when no position exists", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 404 }),
+      );
+
+      const result = await svc.execute("user-1", "/sl NOPE 0.5");
+      expect(result).toContain('No open position found for "NOPE"');
+
+      vi.unstubAllGlobals();
+    });
+
+    it("/tp returns generic error for non-404 API failure", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 500 }),
+      );
+
+      const result = await svc.execute("user-1", "/tp ETH-YES 0.85");
+      expect(result).toContain("Could not set take-profit");
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  describe("/news — additional edge cases", () => {
+    it("handles fetch throwing an error", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network error")),
+      );
+
+      const result = await svc.execute("user-1", "/news");
+      expect(result).toContain("Could not fetch news");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("handles articles without source field", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            articles: [
+              { title: "Test article", signalCount: 2 },
+            ],
+          }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/news");
+      expect(result).toContain("Test article");
+      expect(result).toContain("2 signals");
+
+      vi.unstubAllGlobals();
+    });
+  });
 });

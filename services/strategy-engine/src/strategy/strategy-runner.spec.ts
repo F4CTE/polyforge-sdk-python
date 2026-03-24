@@ -703,3 +703,140 @@ describe("StrategyRunner — calculation variables", () => {
     expect(state.get).toHaveBeenCalled();
   });
 });
+
+describe("StrategyRunner — empty strategy (no blocks)", () => {
+  it("evaluates without error when strategy has no blocks at all", async () => {
+    const state = makeState();
+    const onIntents = vi
+      .fn<(intents: OrderIntent[]) => Promise<void>>()
+      .mockResolvedValue(undefined);
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      onIntents,
+      triggers: [],
+      conditions: [],
+      actions: [],
+      safety: [],
+    });
+
+    await runner.onPriceEvent("tok1", 0.5);
+
+    // No triggers = triggerFired=true, no conditions = pass, no actions = no intents
+    expect(onIntents).not.toHaveBeenCalled();
+    expect(runner.status).toBe("RUNNING");
+  });
+});
+
+describe("StrategyRunner — blocks that throw errors", () => {
+  it("catches errors from evaluate and remains RUNNING", async () => {
+    const state = makeState();
+    // Force evaluate to throw by making state.get fail after an initial call
+    state.get.mockRejectedValue(new Error("State retrieval failed"));
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      triggers: [{ id: "t1", type: "every_tick", params: {} }],
+    });
+
+    await expect(runner.onPriceEvent("tok1", 0.5)).resolves.not.toThrow();
+    expect(runner.status).toBe("RUNNING");
+  });
+});
+
+describe("StrategyRunner — child strategy management", () => {
+  it("addChild and removeChild track children correctly", () => {
+    const runner = makeRunner();
+    runner.addChild("child-1", "managed");
+    runner.addChild("child-2", "scoped");
+
+    expect(runner.childStrategies.size).toBe(2);
+    expect(runner.getChildMode("child-1")).toBe("managed");
+    expect(runner.getChildMode("child-2")).toBe("scoped");
+
+    runner.removeChild("child-1");
+    expect(runner.childStrategies.size).toBe(1);
+    expect(runner.getChildMode("child-1")).toBeUndefined();
+  });
+
+  it("stop() clears delayed actions", () => {
+    const runner = makeRunner({ execMode: "TICK", tickMs: 1000 });
+    runner.start();
+    runner.stop();
+    expect(runner.status).toBe("STOPPED");
+  });
+
+  it("stop() logs when there are child strategies", () => {
+    const runner = makeRunner();
+    runner.addChild("child-1", "managed");
+    runner.stop();
+    expect(runner.status).toBe("STOPPED");
+    // Children set is still populated (cascade handled by registry)
+    expect(runner.childStrategies.size).toBe(1);
+  });
+});
+
+describe("StrategyRunner — safeEvaluate edge cases", () => {
+  it("rejects expression with forbidden keywords (via variables)", async () => {
+    const state = makeState();
+    state.get.mockResolvedValue({ ...DEFAULT_STATE });
+    state.getPrice = vi.fn().mockResolvedValue(null);
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      variables: [
+        { id: "v1", name: "dangerous", expression: "while(true) 1" },
+      ],
+    });
+
+    // Should not throw — forbidden keyword expressions are caught
+    await expect(runner.onPriceEvent("tok1", 0.5)).resolves.not.toThrow();
+    expect(runner.status).toBe("RUNNING");
+  });
+
+  it("rejects expression that is too long (>200 chars)", async () => {
+    const state = makeState();
+    state.get.mockResolvedValue({ ...DEFAULT_STATE });
+    state.getPrice = vi.fn().mockResolvedValue(null);
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      variables: [
+        { id: "v1", name: "longExpr", expression: "1+" .repeat(150) + "1" },
+      ],
+    });
+
+    await expect(runner.onPriceEvent("tok1", 0.5)).resolves.not.toThrow();
+  });
+});
+
+describe("StrategyRunner — HYBRID mode", () => {
+  it("start() sets up interval for HYBRID mode", () => {
+    const runner = makeRunner({ execMode: "HYBRID", tickMs: 1000 });
+    runner.start();
+    runner.stop();
+    expect(runner.status).toBe("STOPPED");
+  });
+});
+
+describe("StrategyRunner — getPrimaryTokenId", () => {
+  it("resolves primary token from trigger params", async () => {
+    const state = makeState();
+    state.get.mockResolvedValue({ ...DEFAULT_STATE });
+    state.getPrice = vi.fn().mockResolvedValue({ price: 0.5 });
+
+    const runner = makeRunner({
+      execMode: "EVENT",
+      state,
+      variables: [{ id: "v1", name: "testVar", expression: "currentPrice * 2" }],
+      triggers: [{ id: "t1", type: "every_tick", params: { tokenId: "tok-primary" } }],
+    });
+
+    await runner.onPriceEvent("tok-primary", 0.5);
+    expect(state.getPrice).toHaveBeenCalledWith("tok-primary");
+  });
+});

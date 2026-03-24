@@ -904,4 +904,226 @@ describe("NotificationService", () => {
       expect(mail.send).toHaveBeenCalledOnce();
     });
   });
+
+  // ─── Email send failure handling ──────────────────────────────────────────
+
+  describe("dispatch — email send failure", () => {
+    it("records failure in history when mail.send throws", async () => {
+      const prefs = makePrefs({ emailEnabled: true });
+      (prisma.user.findUnique as any).mockResolvedValue({
+        email: "u@example.com",
+      });
+      mail.send.mockRejectedValueOnce(new Error("SMTP connection refused"));
+      (prisma.notificationHistory.create as any).mockResolvedValue({});
+
+      await expect(
+        service.dispatch("user-1", prefs, "ORDER_FILLED", {}, STUB_CONTENT),
+      ).resolves.toBeUndefined();
+
+      expect(prisma.notificationHistory.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            channel: "EMAIL",
+            success: false,
+            error: expect.stringContaining("SMTP connection refused"),
+          }),
+        }),
+      );
+    });
+
+    it("returns early when user lookup throws", async () => {
+      const prefs = makePrefs({ emailEnabled: true });
+      (prisma.user.findUnique as any).mockRejectedValue(new Error("DB error"));
+
+      await expect(
+        service.dispatch("user-1", prefs, "ORDER_FILLED", {}, STUB_CONTENT),
+      ).resolves.toBeUndefined();
+
+      expect(mail.send).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── Discord send failure handling ────────────────────────────────────────
+
+  describe("dispatch — discord send failure", () => {
+    it("records failure in history when discord.send throws", async () => {
+      const prefs = makePrefs({ discordEnabled: true });
+      (prisma.botConnection.findFirst as any).mockResolvedValue({
+        chatId: "dc-chan-1",
+      });
+      discord.send.mockRejectedValueOnce(new Error("Discord API error"));
+      (prisma.notificationHistory.create as any).mockResolvedValue({});
+
+      await expect(
+        service.dispatch("user-1", prefs, "ORDER_FILLED", {}, STUB_CONTENT),
+      ).resolves.toBeUndefined();
+
+      expect(prisma.notificationHistory.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            channel: "DISCORD",
+            success: false,
+          }),
+        }),
+      );
+    });
+
+    it("returns early when botConnection lookup throws for discord", async () => {
+      const prefs = makePrefs({ discordEnabled: true });
+      (prisma.botConnection.findFirst as any).mockRejectedValue(
+        new Error("DB error"),
+      );
+
+      await expect(
+        service.dispatch("user-1", prefs, "ORDER_FILLED", {}, STUB_CONTENT),
+      ).resolves.toBeUndefined();
+
+      expect(discord.send).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── Telegram send failure handling ───────────────────────────────────────
+
+  describe("dispatch — telegram lookup failure", () => {
+    it("returns early when botConnection lookup throws for telegram", async () => {
+      const prefs = makePrefs({ telegramEnabled: true });
+      (prisma.botConnection.findFirst as any).mockRejectedValue(
+        new Error("DB error"),
+      );
+
+      await expect(
+        service.dispatch("user-1", prefs, "ORDER_FILLED", {}, STUB_CONTENT),
+      ).resolves.toBeUndefined();
+
+      expect(telegram.send).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── New event types: WHALE_TRADE, NEWS_SIGNAL ────────────────────────────
+
+  describe("handle — new event types", () => {
+    it("dispatches WHALE_TRADE event (always dispatched, null pref field)", async () => {
+      const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+      const dispatchSpy = vi
+        .spyOn(service, "dispatch")
+        .mockResolvedValue(undefined);
+
+      await service.handle("WHALE_TRADE", {
+        userId: "user-1",
+        wallet: "0xabc",
+        size: "50000",
+      });
+
+      expect(dispatchSpy).toHaveBeenCalledOnce();
+    });
+
+    it("dispatches NEWS_SIGNAL event (always dispatched, null pref field)", async () => {
+      const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+      const dispatchSpy = vi
+        .spyOn(service, "dispatch")
+        .mockResolvedValue(undefined);
+
+      await service.handle("NEWS_SIGNAL", {
+        userId: "user-1",
+        signal: "BUY",
+        confidence: "0.9",
+      });
+
+      expect(dispatchSpy).toHaveBeenCalledOnce();
+    });
+
+    it("dispatches TICKET_REPLY when onTicketReply is enabled", async () => {
+      const prefs = makePrefs({ onTicketReply: true, notificationFreq: "IMMEDIATE" });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+      const dispatchSpy = vi
+        .spyOn(service, "dispatch")
+        .mockResolvedValue(undefined);
+
+      await service.handle("TICKET_REPLY", {
+        userId: "user-1",
+        ticketId: "ticket-1",
+      });
+
+      expect(dispatchSpy).toHaveBeenCalledOnce();
+    });
+
+    it("dispatches TICKET_CLOSED using onTicketReply pref", async () => {
+      const prefs = makePrefs({ onTicketReply: true, notificationFreq: "IMMEDIATE" });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+      const dispatchSpy = vi
+        .spyOn(service, "dispatch")
+        .mockResolvedValue(undefined);
+
+      await service.handle("TICKET_CLOSED", {
+        userId: "user-1",
+        ticketId: "ticket-1",
+      });
+
+      expect(dispatchSpy).toHaveBeenCalledOnce();
+    });
+
+    it("skips TICKET_REPLY when onTicketReply is false", async () => {
+      const prefs = makePrefs({ onTicketReply: false, notificationFreq: "IMMEDIATE" });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+
+      await service.handle("TICKET_REPLY", {
+        userId: "user-1",
+        ticketId: "ticket-1",
+      });
+
+      expect(templates.build).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── In-app notification failure handling ────────────────────────────────
+
+  describe("handle — in-app notification failure", () => {
+    it("continues processing when in-app notification push fails", async () => {
+      const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+      redis.xadd.mockRejectedValueOnce(new Error("Redis unavailable"));
+      const dispatchSpy = vi
+        .spyOn(service, "dispatch")
+        .mockResolvedValue(undefined);
+
+      await expect(
+        service.handle("ORDER_FILLED", {
+          userId: "user-1",
+          fillPrice: "0.80",
+          size: "100",
+        }),
+      ).resolves.toBeUndefined();
+
+      // dispatch should still be called
+      expect(dispatchSpy).toHaveBeenCalledOnce();
+    });
+  });
+
+  // ─── Cache handling edge cases ────────────────────────────────────────────
+
+  describe("loadPrefs — cache edge cases", () => {
+    it("falls through to DB when cached JSON is invalid", async () => {
+      const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
+      redis.get.mockImplementation(async (key: string) => {
+        if (key.startsWith("cache:notif-prefs:")) return "not-valid-json";
+        return null;
+      });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+      const dispatchSpy = vi
+        .spyOn(service, "dispatch")
+        .mockResolvedValue(undefined);
+
+      await service.handle("ORDER_FILLED", {
+        userId: "user-1",
+        fillPrice: "0.80",
+        size: "100",
+      });
+
+      // Should have fallen through to DB
+      expect(prisma.notificationPreference.findUnique).toHaveBeenCalled();
+      expect(dispatchSpy).toHaveBeenCalledOnce();
+    });
+  });
 });

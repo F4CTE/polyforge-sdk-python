@@ -223,4 +223,52 @@ describe("GasSponsorService", () => {
       expect(service.getSponsorAddress()).toBeNull();
     });
   });
+
+  // ── Gas sponsor with exactly-at-limit usage ────────────────────────────────
+
+  describe("sponsorGas — boundary conditions", () => {
+    it("returns false when spent exactly equals the daily limit (no room for more)", async () => {
+      redis.get.mockResolvedValue("0.5"); // exactly at the 0.5 limit
+
+      const result = await service.sponsorGas("user-1", 0.01);
+
+      expect(result).toBe(false);
+    });
+
+    it("returns true when spending exactly reaches the limit", async () => {
+      redis.get.mockResolvedValue("0.45");
+
+      const result = await service.sponsorGas("user-1", 0.05);
+      // 0.45 + 0.05 = 0.50 which equals the limit (should be allowed)
+      expect(result).toBe(true);
+    });
+
+    it("handles very small gas amounts", async () => {
+      redis.get.mockResolvedValue("0.0");
+
+      const result = await service.sponsorGas("user-1", 0.001);
+
+      expect(result).toBe(true);
+    });
+  });
+
+  // ── Redis connection failure ────────────────────────────────────────────────
+
+  describe("sponsorGas — Redis failure", () => {
+    it("propagates error when Redis get fails", async () => {
+      redis.get.mockRejectedValue(new Error("Redis connection refused"));
+
+      await expect(service.sponsorGas("user-1", 0.01)).rejects.toThrow(
+        "Redis connection refused",
+      );
+    });
+
+    it("getUsageStats propagates error when Redis get fails", async () => {
+      redis.get.mockRejectedValue(new Error("Redis connection refused"));
+
+      await expect(service.getUsageStats("user-1")).rejects.toThrow(
+        "Redis connection refused",
+      );
+    });
+  });
 });

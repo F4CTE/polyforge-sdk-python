@@ -394,4 +394,100 @@ describe("AbsRoundBlockEvaluator", () => {
     const result = AbsRoundBlockEvaluator.evaluate({}, [-5], makeCtx());
     expect(result.value).toBe(5);
   });
+
+  it("returns NaN for unknown function", () => {
+    const result = AbsRoundBlockEvaluator.evaluate(
+      { function: "unknown_fn" },
+      [5],
+      makeCtx(),
+    );
+    expect(result.value).toBeNaN();
+  });
+});
+
+// ─── Edge Cases: NaN propagation ────────────────────────────────────────────
+
+describe("Calc blocks — NaN propagation", () => {
+  it("MathBlock: NaN input propagates through add", () => {
+    const result = MathBlockEvaluator.evaluate(
+      { operation: "add" },
+      [NaN, 5],
+      makeCtx(),
+    );
+    expect(result.value).toBeNaN();
+  });
+
+  it("MathBlock: NaN input propagates through multiply", () => {
+    const result = MathBlockEvaluator.evaluate(
+      { operation: "multiply" },
+      [3, NaN],
+      makeCtx(),
+    );
+    expect(result.value).toBeNaN();
+  });
+
+  it("MathBlock: returns NaN for unknown operation", () => {
+    const result = MathBlockEvaluator.evaluate(
+      { operation: "unknown_op" },
+      [3, 5],
+      makeCtx(),
+    );
+    expect(result.value).toBeNaN();
+  });
+
+  it("ComparisonBlock: returns false for unknown operator", () => {
+    const result = ComparisonBlockEvaluator.evaluate(
+      { operator: "invalid" },
+      [3, 5],
+      makeCtx(),
+    );
+    expect(result.booleanValue).toBe(false);
+    expect(result.value).toBe(0);
+  });
+
+  it("ComparisonBlock: between reads from params.min and params.max", () => {
+    const result = ComparisonBlockEvaluator.evaluate(
+      { operator: "between", params: { min: 1, max: 10 } },
+      [5, 0],
+      makeCtx(),
+    );
+    expect(result.booleanValue).toBe(true);
+  });
+
+  it("AggregationBlock: returns NaN for unknown function", () => {
+    const result = AggregationBlockEvaluator.evaluate(
+      { function: "unknown_agg" },
+      [5],
+      makeCtx(),
+    );
+    expect(result.value).toBeNaN();
+  });
+
+  it("AggregationBlock: reads from params.function and params.windowSize", () => {
+    const result = AggregationBlockEvaluator.evaluate(
+      { params: { function: "count", windowSize: 10 } },
+      [42],
+      makeCtx(),
+    );
+    expect(result.value).toBe(1);
+  });
+
+  it("MathBlock: handles missing inputs (defaults to 0)", () => {
+    const result = MathBlockEvaluator.evaluate(
+      { operation: "add" },
+      [],
+      makeCtx(),
+    );
+    expect(result.value).toBe(0);
+  });
+
+  it("ComparisonBlock: handles missing inputs (defaults to 0)", () => {
+    const result = ComparisonBlockEvaluator.evaluate(
+      { operator: "==" },
+      [],
+      makeCtx(),
+    );
+    expect(result.booleanValue).toBe(true); // 0 === 0
+    expect(result.value).toBe(1);
+  });
 });

@@ -191,4 +191,78 @@ describe("DelayBlock", () => {
     expect(result.value).toBe(true);
     expect(result.activeOutput).toBe("delayed");
   });
+
+  it("returns no activeOutput when seconds is 0", () => {
+    const result = DelayBlock.evaluate(
+      { seconds: 0 },
+      [true],
+      makeCtx(),
+    );
+    expect(result.value).toBe(true);
+    expect(result.activeOutput).toBeUndefined();
+  });
+
+  it("defaults to false when no inputs provided", () => {
+    const result = DelayBlock.evaluate(
+      { seconds: 5 },
+      [],
+      makeCtx(),
+    );
+    expect(result.value).toBe(false);
+  });
+});
+
+// ─── Edge Cases: missing/null inputs ─────────────────────────────────────────
+
+describe("Logic blocks — edge cases", () => {
+  it("IfThenElseBlock: uses state variables for condition evaluation", () => {
+    const ctx = makeCtx({
+      state: {
+        betsToday: 10,
+        dailyPnl: -50,
+        consecutiveLoss: 3,
+        consecutiveWin: 0,
+        lastTradeAt: 0,
+        tradedTokensToday: [],
+        totalOrders: 25,
+      },
+    });
+    const result = IfThenElseBlock.evaluate(
+      { condition: "betsToday > 5" },
+      [],
+      ctx,
+    );
+    expect(result.value).toBe(true);
+    expect(result.activeOutput).toBe("true");
+  });
+
+  it("IfThenElseBlock: whitespace-only condition returns false", () => {
+    const result = IfThenElseBlock.evaluate(
+      { condition: "   " },
+      [],
+      makeCtx(),
+    );
+    expect(result.value).toBe(false);
+  });
+
+  it("AndGateBlock: single true input returns true", () => {
+    expect(AndGateBlock.evaluate({}, [true], makeCtx()).value).toBe(true);
+  });
+
+  it("AndGateBlock: single false input returns false", () => {
+    expect(AndGateBlock.evaluate({}, [false], makeCtx()).value).toBe(false);
+  });
+
+  it("OrGateBlock: single true input returns true", () => {
+    expect(OrGateBlock.evaluate({}, [true], makeCtx()).value).toBe(true);
+  });
+
+  it("OrGateBlock: single false input returns false", () => {
+    expect(OrGateBlock.evaluate({}, [false], makeCtx()).value).toBe(false);
+  });
+
+  it("NotGateBlock: multiple inputs only inverts the first", () => {
+    // First input is true, so result is false (ignores second input)
+    expect(NotGateBlock.evaluate({}, [true, false], makeCtx()).value).toBe(false);
+  });
 });

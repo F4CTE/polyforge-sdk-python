@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   UnprocessableEntityException,
+  ConflictException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { StrategyStatus } from ".prisma/client";
@@ -301,10 +302,11 @@ describe("StrategiesService", () => {
     it("returns the strategy when found and accessible", async () => {
       const strategy = makeStrategy({ userId: "user-1", visibility: "PUBLIC" });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.count.mockResolvedValue(0);
 
       const result = await service.findOne(strategy.id, "user-1");
 
-      expect(result).toEqual(strategy);
+      expect(result).toEqual({ ...strategy, childCount: 0 });
     });
 
     it("throws NotFoundException when strategy does not exist", async () => {
@@ -351,9 +353,10 @@ describe("StrategiesService", () => {
         visibility: "PRIVATE",
       });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.count.mockResolvedValue(0);
 
       await expect(service.findOne(strategy.id, "user-1")).resolves.toEqual(
-        strategy,
+        { ...strategy, childCount: 0 },
       );
     });
 
@@ -363,9 +366,10 @@ describe("StrategiesService", () => {
         visibility: "PUBLIC",
       });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.count.mockResolvedValue(0);
 
       await expect(service.findOne(strategy.id, "any-user")).resolves.toEqual(
-        strategy,
+        { ...strategy, childCount: 0 },
       );
     });
 
@@ -375,10 +379,11 @@ describe("StrategiesService", () => {
         visibility: "UNLISTED",
       });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.count.mockResolvedValue(0);
 
       await expect(
         service.findOne(strategy.id, "random-user"),
-      ).resolves.toEqual(strategy);
+      ).resolves.toEqual({ ...strategy, childCount: 0 });
     });
   });
 
@@ -531,6 +536,7 @@ describe("StrategiesService", () => {
         status: StrategyStatus.IDLE,
       });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
       db.strategy.update.mockResolvedValue({
         ...strategy,
         status: StrategyStatus.ARCHIVED,
@@ -550,6 +556,7 @@ describe("StrategiesService", () => {
         status: StrategyStatus.IDLE,
       });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
       db.strategy.update.mockResolvedValue(strategy as any);
 
       const result = await service.remove(strategy.id, "user-1");
@@ -1262,8 +1269,9 @@ describe("StrategiesService", () => {
     it("creates and returns a new comment", async () => {
       const strategy = makeStrategy({ userId: "user-1", visibility: "PUBLIC" });
       const comment = makeComment({ content: "Great strategy!" });
-      // findOne calls strategy.findUnique
+      // findOne calls strategy.findUnique + strategy.count (for childCount)
       db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.count.mockResolvedValue(0);
       db.strategyComment.create.mockResolvedValue(comment as any);
 
       const result = await service.addComment(strategy.id, "user-1", {
@@ -1276,6 +1284,7 @@ describe("StrategiesService", () => {
     it("creates comment with correct data", async () => {
       const strategy = makeStrategy({ userId: "user-1", visibility: "PUBLIC" });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.count.mockResolvedValue(0);
       db.strategyComment.create.mockResolvedValue(makeComment() as any);
 
       await service.addComment(strategy.id, "user-1", {
@@ -1397,6 +1406,7 @@ describe("StrategiesService", () => {
       const strategy = makeStrategy({ userId: "owner", visibility: "PUBLIC" });
       const report = makeReport({ id: "report-abc" });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.count.mockResolvedValue(0);
       db.report.create.mockResolvedValue(report as any);
 
       const result = await service.report(strategy.id, "user-1", {
@@ -1413,6 +1423,7 @@ describe("StrategiesService", () => {
         visibility: "PUBLIC",
       });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.count.mockResolvedValue(0);
       db.report.create.mockResolvedValue(makeReport() as any);
 
       await service.report("strat-1", "reporter-1", {
@@ -1456,6 +1467,7 @@ describe("StrategiesService", () => {
     it("allows reporting with no description (optional field)", async () => {
       const strategy = makeStrategy({ visibility: "PUBLIC" });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.count.mockResolvedValue(0);
       db.report.create.mockResolvedValue(makeReport() as any);
 
       await expect(
@@ -1591,6 +1603,7 @@ describe("StrategiesService", () => {
       // Simulate old strategy without canvas field
       delete (strategy as any).canvas;
       db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.count.mockResolvedValue(0);
 
       const result = await service.findOne(strategy.id, "user-1");
 
@@ -1840,6 +1853,260 @@ describe("StrategiesService", () => {
       const dataArg = (db.strategy.create as any).mock.calls[0][0].data;
       expect(dataArg.execMode).toBe("TICK");
       expect(dataArg.tickMs).toBe(1000);
+    });
+
+    it("rejects import with unknown block type", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "Bad Blocks",
+          blocks: {
+            triggers: [{ type: "TOTALLY_FAKE_BLOCK", config: {} }],
+          },
+        },
+      };
+      db.strategy.count.mockResolvedValue(0);
+
+      await expect(
+        service.importStrategy(importDto as any, "user-1"),
+      ).rejects.toMatchObject({
+        response: { code: "IMPORT_UNKNOWN_BLOCK_TYPE" },
+        status: 422,
+      });
+    });
+
+    it("rejects import exceeding 100 total blocks", async () => {
+      const triggers = Array.from({ length: 101 }, (_, i) => ({
+        type: "PRICE_ABOVE",
+        config: { threshold: String(i) },
+      }));
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "Too Many Blocks",
+          blocks: { triggers },
+        },
+      };
+      db.strategy.count.mockResolvedValue(0);
+
+      await expect(
+        service.importStrategy(importDto as any, "user-1"),
+      ).rejects.toMatchObject({
+        response: { code: "IMPORT_TOO_MANY_BLOCKS" },
+        status: 422,
+      });
+    });
+
+    it("rejects import with expression exceeding 200 chars", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "Long Expression",
+          variables: [{ name: "v1", expression: "x+".repeat(150) + "x" }],
+          blocks: {},
+        },
+      };
+      db.strategy.count.mockResolvedValue(0);
+
+      await expect(
+        service.importStrategy(importDto as any, "user-1"),
+      ).rejects.toMatchObject({
+        response: { code: "IMPORT_EXPRESSION_TOO_LONG" },
+        status: 422,
+      });
+    });
+
+    it("strips HTML from imported name and description", async () => {
+      const importDto = {
+        polyforge: "1.0",
+        strategy: {
+          name: "<script>alert('xss')</script>Clean Name",
+          description: "<b>Bold</b> description",
+          blocks: {},
+        },
+      };
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockResolvedValue(makeStrategy() as any);
+
+      await service.importStrategy(importDto as any, "user-1");
+
+      const dataArg = (db.strategy.create as any).mock.calls[0][0].data;
+      expect(dataArg.name).toBe("alert('xss')Clean Name");
+      expect(dataArg.description).toBe("Bold description");
+    });
+  });
+
+  // ── stop — conflict case ────────────────────────────────────────────────────
+
+  describe("stop — conflict case", () => {
+    it("throws ConflictException when strategy is owned but not in a running state", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.IDLE,
+      });
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      await expect(service.stop(strategy.id, "user-1")).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+    });
+
+    it("stops running children before stopping the parent", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.RUNNING,
+      });
+      db.strategy.updateMany.mockResolvedValue({ count: 1 } as any);
+      db.strategy.findMany.mockResolvedValue([
+        { id: "child-1" },
+        { id: "child-2" },
+      ] as any);
+      vi.mocked(client.delete).mockResolvedValue(mockEngineResponse(true, 200));
+
+      await service.stop(strategy.id, "user-1");
+
+      // Should have called delete for both children + parent
+      expect(client.delete).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  // ── pause — conflict case ───────────────────────────────────────────────────
+
+  describe("pause — conflict case", () => {
+    it("throws ConflictException when strategy is owned but not in RUNNING/PAPER state", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.IDLE,
+      });
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      await expect(service.pause(strategy.id, "user-1")).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+    });
+  });
+
+  // ── resume — conflict case ──────────────────────────────────────────────────
+
+  describe("resume — conflict case", () => {
+    it("throws ConflictException when strategy is owned but not in PAUSED state", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.RUNNING,
+      });
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      await expect(
+        service.resume(strategy.id, "user-1"),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+  });
+
+  // ── start — ARCHIVED fallback case ─────────────────────────────────────────
+
+  describe("start — ARCHIVED fallback case", () => {
+    it("throws NotFoundException when strategy is ARCHIVED", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.ARCHIVED,
+      });
+      db.strategy.updateMany.mockResolvedValue({ count: 0 } as any);
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      await expect(
+        service.start(strategy.id, "user-1", { mode: "paper" } as any),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  // ── listChildren ──────────────────────────────────────────────────────────
+
+  describe("listChildren", () => {
+    it("returns children of a strategy", async () => {
+      const strategy = makeStrategy({ userId: "user-1" });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.findMany.mockResolvedValue([
+        { id: "child-1", name: "Child 1", status: "IDLE" },
+        { id: "child-2", name: "Child 2", status: "RUNNING" },
+      ] as any);
+
+      const result = await service.listChildren(strategy.id, "user-1");
+
+      expect(result.children).toHaveLength(2);
+      expect(result.children[0].id).toBe("child-1");
+    });
+
+    it("throws NotFoundException when strategy does not exist", async () => {
+      db.strategy.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.listChildren("missing", "user-1"),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it("throws ForbiddenException when user does not own the strategy", async () => {
+      const strategy = makeStrategy({ userId: "other-user" });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+
+      await expect(
+        service.listChildren(strategy.id, "user-1"),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+  });
+
+  // ── addComment — HTML stripping ─────────────────────────────────────────────
+
+  describe("addComment — XSS stripping", () => {
+    it("strips HTML tags from comment content", async () => {
+      const strategy = makeStrategy({ userId: "user-1", visibility: "PUBLIC" });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.count.mockResolvedValue(0);
+      db.strategyComment.create.mockResolvedValue(
+        makeComment({ content: "Clean text" }) as any,
+      );
+
+      await service.addComment(strategy.id, "user-1", {
+        content: "<script>alert('xss')</script>Clean text",
+      } as CreateCommentDto);
+
+      expect(db.strategyComment.create).toHaveBeenCalledWith({
+        data: {
+          strategyId: strategy.id,
+          userId: "user-1",
+          content: "alert('xss')Clean text",
+        },
+        include: {
+          user: { select: { id: true, username: true, displayName: true } },
+        },
+      });
+    });
+  });
+
+  // ── remove — detach children ──────────────────────────────────────────────
+
+  describe("remove — child detachment", () => {
+    it("detaches children by setting parentStrategyId to null before archiving", async () => {
+      const strategy = makeStrategy({
+        userId: "user-1",
+        status: StrategyStatus.IDLE,
+      });
+      db.strategy.findUnique.mockResolvedValue(strategy as any);
+      db.strategy.updateMany.mockResolvedValue({ count: 2 } as any);
+      db.strategy.update.mockResolvedValue({
+        ...strategy,
+        status: StrategyStatus.ARCHIVED,
+      } as any);
+
+      await service.remove(strategy.id, "user-1");
+
+      // updateMany should be called to detach children
+      expect(db.strategy.updateMany).toHaveBeenCalledWith({
+        where: { parentStrategyId: strategy.id },
+        data: { parentStrategyId: null },
+      });
     });
   });
 });
