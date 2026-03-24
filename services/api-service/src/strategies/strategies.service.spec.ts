@@ -18,6 +18,7 @@ import { CreateCommentDto } from "./dto/create-comment.dto";
 import { ReportStrategyDto } from "./dto/report-strategy.dto";
 import { StrategyQueryDto } from "./dto/strategy-query.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
+import { LlmService } from "../news/llm.service";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
@@ -111,6 +112,7 @@ describe("StrategiesService", () => {
   let db: MockDb;
   let config: ConfigService;
   let client: InternalClientService;
+  let llm: LlmService;
 
   beforeEach(() => {
     db = createMockDb();
@@ -125,11 +127,16 @@ describe("StrategiesService", () => {
       get: vi.fn(),
     } as unknown as InternalClientService;
 
+    llm = {
+      analyze: vi.fn(),
+    } as unknown as LlmService;
+
     // Wire db into PrismaService shape (PrismaService extends PrismaClient)
     service = new StrategiesService(
       db as unknown as PrismaService,
       config,
       client,
+      llm,
     );
   });
 
@@ -2107,6 +2114,118 @@ describe("StrategiesService", () => {
         where: { parentStrategyId: strategy.id },
         data: { parentStrategyId: null },
       });
+    });
+  });
+
+  // ── createFromDescription ─────────────────────────────────────────────────
+
+  describe("createFromDescription", () => {
+    it("calls LLM with block types in the prompt", async () => {
+      const llmResponse = JSON.stringify({
+        name: "AI Strategy",
+        description: "Test",
+        execMode: "TICK",
+        safety: [],
+        triggers: [{ type: "PRICE_ABOVE", config: { price: 0.5 } }],
+        conditions: [],
+        actions: [{ type: "BUY_YES", config: { size: "10" } }],
+      });
+      (llm.analyze as any).mockResolvedValue(llmResponse);
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockImplementation(({ data }: any) =>
+        Promise.resolve({ id: "new-id", ...data, createdAt: new Date(), updatedAt: new Date() }),
+      );
+
+      await service.createFromDescription("user-1", {
+        description: "Buy YES when price goes above 0.5",
+      });
+
+      const prompt = (llm.analyze as any).mock.calls[0][0];
+      expect(prompt).toContain("PRICE_ABOVE");
+      expect(prompt).toContain("BUY_YES");
+      expect(prompt).toContain("DAILY_LOSS_LIMIT");
+    });
+
+    it("parses valid LLM JSON response and creates a strategy", async () => {
+      const llmResponse = JSON.stringify({
+        name: "Momentum Bot",
+        description: "Buys on dips",
+        execMode: "TICK",
+        safety: [{ type: "DAILY_LOSS_LIMIT", config: { limit: 50 } }],
+        triggers: [{ type: "PRICE_BELOW", config: { price: 0.3 } }],
+        conditions: [{ type: "MIN_LIQUIDITY", config: { min: 5000 } }],
+        actions: [{ type: "BUY_YES", config: { size: "25" } }],
+      });
+      (llm.analyze as any).mockResolvedValue(llmResponse);
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockImplementation(({ data }: any) =>
+        Promise.resolve({ id: "new-id", ...data, createdAt: new Date(), updatedAt: new Date() }),
+      );
+
+      const result = await service.createFromDescription("user-1", {
+        description: "Buy YES on any market where price drops below 0.30",
+      });
+
+      expect(result.name).toBe("Momentum Bot");
+      expect(db.strategy.create).toHaveBeenCalled();
+    });
+
+    it("rejects invalid block types from LLM", async () => {
+      const llmResponse = JSON.stringify({
+        name: "Bad Strategy",
+        triggers: [{ type: "INVALID_BLOCK_TYPE", config: {} }],
+        conditions: [],
+        actions: [],
+        safety: [],
+      });
+      (llm.analyze as any).mockResolvedValue(llmResponse);
+
+      await expect(
+        service.createFromDescription("user-1", {
+          description: "Do something invalid",
+        }),
+      ).rejects.toThrow(UnprocessableEntityException);
+    });
+
+    it("handles LLM failure gracefully", async () => {
+      (llm.analyze as any).mockRejectedValue(new Error("All LLM providers failed"));
+
+      await expect(
+        service.createFromDescription("user-1", {
+          description: "Create a basic strategy",
+        }),
+      ).rejects.toThrow();
+    });
+
+    it("handles non-JSON LLM response", async () => {
+      (llm.analyze as any).mockResolvedValue("This is not valid JSON at all");
+
+      await expect(
+        service.createFromDescription("user-1", {
+          description: "Create something",
+        }),
+      ).rejects.toThrow(UnprocessableEntityException);
+    });
+
+    it("handles markdown-wrapped JSON response from LLM", async () => {
+      const json = JSON.stringify({
+        name: "Wrapped Strategy",
+        triggers: [{ type: "TICK", config: {} }],
+        conditions: [],
+        actions: [{ type: "BUY_YES", config: { size: "10" } }],
+        safety: [],
+      });
+      (llm.analyze as any).mockResolvedValue("```json\n" + json + "\n```");
+      db.strategy.count.mockResolvedValue(0);
+      db.strategy.create.mockImplementation(({ data }: any) =>
+        Promise.resolve({ id: "new-id", ...data, createdAt: new Date(), updatedAt: new Date() }),
+      );
+
+      const result = await service.createFromDescription("user-1", {
+        description: "Simple tick strategy",
+      });
+
+      expect(result.name).toBe("Wrapped Strategy");
     });
   });
 });

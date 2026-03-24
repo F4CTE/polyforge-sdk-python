@@ -5,11 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased]
+## [5.0.0] — 2026-03-24
 
-### Added — AI-Friendly API
+### Added — AI-Friendly API (8 features)
 
-- **Webhook callbacks** — `Webhook` model in Prisma schema, CRUD endpoints (`POST/GET/DELETE /api/v1/webhooks`), test endpoint, HMAC-SHA256 signature verification via `X-Polyforge-Signature` header, fire-and-forget dispatcher with single retry in notification-service
+- **OpenAPI JSON endpoint** — `GET /api/v1/docs/openapi.json` serves the auto-generated OpenAPI 3.1 spec for programmatic discovery by AI agents and SDK generators
+- **Swagger UI** — `GET /api/v1/docs` renders interactive Swagger UI for browsing and testing all API endpoints
+- **Actions catalog** — `GET /api/v1/actions` returns a structured list of all available API actions with parameters, scopes, and categories for AI agent capability discovery
+- **Batch API** — `POST /api/v1/batch` executes up to 10 API requests in a single call with parallel execution and correlated results
+- **Webhook callbacks** — `Webhook` model in Prisma schema, CRUD endpoints (`POST/GET/DELETE /api/v1/webhooks`), test endpoint (`POST /api/v1/webhooks/:id/test`), HMAC-SHA256 signature verification via `X-Polyforge-Signature` header, fire-and-forget dispatcher with single retry in notification-service, max 10 webhooks per user
 - **Natural language query** — `POST /api/v1/ai/query` accepts plain English queries and returns structured data with intent classification, pattern-matched to 10 query types (strategies, portfolio, orders, whales, news, scores, alerts, copy trading, markets)
 - **Strategy from description** — `POST /api/v1/strategies/from-description` uses LLM service (Claude/GPT-4o) to generate strategy block configurations from natural language, validates against 50+ known block types
 - **MCP server** — `@polyforge/mcp-server` package implementing Model Context Protocol for Claude and other AI assistants, 20 tools covering markets, strategies, portfolio, orders, whales, news, scores, alerts, copy trading, and webhooks

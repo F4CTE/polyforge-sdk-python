@@ -7,7 +7,24 @@
 
 ## Next Up
 
-Phase 10 planning in progress.
+Phase 10 planning in progress. Frontend React v3 integration of AI API features.
+
+---
+
+## v5.0.0 — AI-Friendly API (8 features)
+
+- [x] `GET /api/v1/docs/openapi.json` — public OpenAPI 3.1 spec endpoint
+- [x] `GET /api/v1/docs` — interactive Swagger UI
+- [x] `GET /api/v1/actions` — structured actions catalog for AI agent discovery
+- [x] `POST /api/v1/batch` — batch API (up to 10 requests in one call)
+- [x] `POST /api/v1/webhooks` — webhook registration with HMAC-SHA256 secrets
+- [x] `GET /api/v1/webhooks` — list user webhooks
+- [x] `DELETE /api/v1/webhooks/:id` — delete webhook (ownership check)
+- [x] `POST /api/v1/webhooks/:id/test` — test webhook delivery
+- [x] Webhook dispatcher in notification-service (fire-and-forget, single retry)
+- [x] `POST /api/v1/ai/query` — natural language query with intent classification
+- [x] `POST /api/v1/strategies/from-description` — LLM-generated strategy from description
+- [x] `@polyforge/mcp-server` — MCP server package (20 tools for Claude/AI assistants)
 
 ---
 

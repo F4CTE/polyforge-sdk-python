@@ -2451,6 +2451,90 @@ The following external Polymarket APIs are consumed by Polyforge services.
 
 ## AI-Friendly API (`/api/v1`)
 
+### OpenAPI Spec & Swagger UI
+
+#### GET /api/v1/docs/openapi.json
+
+Returns the auto-generated OpenAPI 3.1 specification as JSON. No authentication required. Used by AI agents, SDK generators, and external tooling for programmatic API discovery.
+
+**Auth:** None (public)
+
+**Response `200`:** OpenAPI 3.1 JSON document.
+
+---
+
+#### GET /api/v1/docs
+
+Serves an interactive Swagger UI page for browsing and testing all API endpoints. No authentication required.
+
+**Auth:** None (public)
+
+**Response `200`:** HTML page with embedded Swagger UI.
+
+---
+
+### Actions Catalog
+
+#### GET /api/v1/actions
+
+Returns a structured list of all available API actions with method, path, scope, category, and parameter definitions. Designed for AI agents to discover platform capabilities programmatically.
+
+**Auth:** None (public)
+
+**Response `200`:**
+```json
+{
+  "version": "1.0",
+  "actions": [
+    {
+      "name": "list_markets",
+      "description": "Browse prediction markets with optional filters",
+      "method": "GET",
+      "path": "/api/v1/markets",
+      "scope": "READ",
+      "category": "markets",
+      "parameters": [...]
+    }
+  ]
+}
+```
+
+---
+
+### Batch API
+
+#### POST /api/v1/batch
+
+Execute up to 10 API requests in a single call. Each sub-request runs in parallel with the caller's auth token forwarded. Results are correlated by `id`.
+
+**Auth:** JWT or API Key (any scope — sub-requests enforce their own scopes)
+
+**Request:**
+```json
+{
+  "items": [
+    { "id": "a", "method": "GET", "path": "/api/v1/markets" },
+    { "id": "b", "method": "GET", "path": "/api/v1/portfolio" },
+    { "id": "c", "method": "POST", "path": "/api/v1/strategies", "body": { "name": "Test" } }
+  ]
+}
+```
+
+**Response `200`:**
+```json
+{
+  "results": [
+    { "id": "a", "status": 200, "body": { ... } },
+    { "id": "b", "status": 200, "body": { ... } },
+    { "id": "c", "status": 201, "body": { ... } }
+  ]
+}
+```
+
+**Limits:** Maximum 10 items per batch. 15s timeout per sub-request.
+
+---
+
 ### Webhooks
 
 Register webhook URLs to receive real-time event notifications via HTTP POST with HMAC-SHA256 signature verification.

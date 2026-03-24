@@ -182,6 +182,22 @@ stream:news_signals   api-service → notification-service (signal alerts)
 
 **LLM Dual-Provider Pattern** — the news-to-trade pipeline uses Claude as the primary LLM for news analysis and signal extraction. If the Claude API is unavailable or returns an error, the system falls back to GPT-4o. Both providers use identical structured output schemas for signal generation (direction, confidence score, reasoning). Provider selection and fallback are transparent to downstream consumers.
 
+### AI Integration Layer (v5.0.0)
+
+The AI integration layer enables external AI agents (Claude, GPT, custom assistants) to interact with the platform programmatically:
+
+**MCP Server** (`@polyforge/mcp-server`) — a standalone Model Context Protocol server that exposes 20 tools for Claude Desktop and other MCP-compatible AI assistants. It proxies authenticated API calls using a user-provided API key (`POLYFORGE_API_KEY`). Communicates over stdio transport. Tools cover markets, strategies, portfolio, orders, whales, news, scores, alerts, copy trading, and webhooks.
+
+**Batch API** (`POST /api/v1/batch`) — allows AI agents to execute up to 10 API requests in a single HTTP call. Each sub-request runs in parallel using `Promise.allSettled`, with the caller's auth token forwarded to each. Results are correlated by client-provided `id` fields. 15-second timeout per sub-request.
+
+**Webhook Dispatcher** (`notification-service`) — when platform events occur (order fills, strategy errors, whale trades, news signals), the dispatcher queries active webhooks matching the event type and user, signs each payload with HMAC-SHA256 using the webhook's secret, and delivers via HTTP POST. Fire-and-forget with a single retry on failure. 5-second delivery timeout.
+
+**Natural Language Query Engine** (`POST /api/v1/ai/query`) — accepts plain English queries and maps them to platform data using regex-based intent classification. Supports 10 intent types: strategies, portfolio, orders, whale feed, news signals, scores, alerts, copy configs, and market search. Returns structured data alongside a human-readable summary.
+
+**Actions Catalog** (`GET /api/v1/actions`) — a public endpoint returning all available API actions with method, path, scope, category, and parameter definitions. AI agents use this for capability discovery without needing static documentation.
+
+**OpenAPI Spec** (`GET /api/v1/docs/openapi.json`) — auto-generated OpenAPI 3.1 specification served as a public endpoint. Consumed by SDK generators, Postman, and AI agents for schema-aware API interaction.
+
 ### API Versioning
 
 All routes must be versioned from day one:

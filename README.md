@@ -26,7 +26,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Copy trading** — mirror trades from followed traders with risk controls (max position, daily loss limit, drawdown breaker), session management, trade attribution
 - **Advanced order types** — take-profit/stop-loss, trailing stop, limit orders, pegged orders, conditional order evaluator
 - **AI news-to-trade pipeline** — real-time news ingestion, LLM signal extraction (Claude + GPT-4o fallback), confidence-scored trade signals
-- **AI-friendly API** — webhook callbacks with HMAC-SHA256 signatures, natural language query endpoint, strategy-from-description via LLM, and MCP server (`@polyforge/mcp-server`) for Claude and other AI assistants
+- **AI-friendly API** — OpenAPI spec endpoint, Swagger UI, actions catalog, batch API, webhook callbacks with HMAC-SHA256 signatures, natural language query endpoint, strategy-from-description via LLM, and MCP server (`@polyforge/mcp-server`) for Claude and other AI assistants
 - **Operational docs** — Backup & Recovery (RDS/Redis/EBS), Incident Response (P0-P3), Performance Tuning guides
 - **AWS infrastructure** — Terraform with tfvars template (20 variables), budget alerts ($800/month)
 - **Gasless trading** — platform absorbs Polygon gas fees with per-user daily budget tracking
@@ -221,6 +221,32 @@ pnpm build
 ---
 
 See [`docs/06-api-catalog.md`](./docs/06-api-catalog.md) for the full endpoint reference.
+
+---
+
+## AI-Friendly API
+
+Polyforge exposes a full AI integration layer for Claude, GPT, and other AI assistants:
+
+- **OpenAPI spec** at `GET /api/v1/docs/openapi.json` and interactive Swagger UI at `GET /api/v1/docs`
+- **Actions catalog** at `GET /api/v1/actions` for programmatic capability discovery
+- **Batch API** at `POST /api/v1/batch` for executing up to 10 requests in one call
+- **Webhooks** with HMAC-SHA256 signed payloads for real-time event callbacks
+- **Natural language query** at `POST /api/v1/ai/query` for structured data retrieval
+- **Strategy from description** at `POST /api/v1/strategies/from-description` for LLM-generated strategies
+
+### Claude Desktop Integration (MCP Server)
+
+```bash
+# Install and run the MCP server
+npx @polyforge/mcp-server
+
+# Required environment variables
+export POLYFORGE_API_URL=http://localhost:3002   # or your production URL
+export POLYFORGE_API_KEY=pf_your_api_key_here    # API key with desired scopes
+```
+
+The MCP server provides 20 tools for Claude Desktop covering markets, strategies, portfolio, orders, whales, news, scores, alerts, copy trading, and webhooks.
 
 ---
 
