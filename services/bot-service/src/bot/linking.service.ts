@@ -8,7 +8,7 @@ const BOT_JWT_SECRET =
   process.env.BOT_JWT_SECRET ?? "dev-bot-jwt-secret-change-in-production";
 const BOT_JWT_EXPIRES = "30d";
 
-export type BotChannelType = "TELEGRAM" | "DISCORD";
+export type BotChannelType = "TELEGRAM" | "DISCORD" | "WHATSAPP";
 
 @Injectable()
 export class LinkingService {

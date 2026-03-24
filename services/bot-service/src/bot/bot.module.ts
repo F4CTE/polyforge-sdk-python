@@ -4,9 +4,18 @@ import { LinkingService } from "./linking.service";
 import { CommandsService } from "./commands.service";
 import { TelegramService } from "./telegram.service";
 import { DiscordService } from "./discord.service";
+import { WhatsAppService } from "./whatsapp.service";
+import { WhatsAppWebhookController } from "./whatsapp-webhook.controller";
 
 @Module({
   imports: [JwtModule.register({})],
-  providers: [LinkingService, CommandsService, TelegramService, DiscordService],
+  controllers: [WhatsAppWebhookController],
+  providers: [
+    LinkingService,
+    CommandsService,
+    TelegramService,
+    DiscordService,
+    WhatsAppService,
+  ],
 })
 export class BotModule {}

@@ -349,6 +349,10 @@ services:
       # for bot tokens instead of plain environment variables.
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-dev-disabled}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-dev-disabled}
+      WHATSAPP_TOKEN: ${WHATSAPP_TOKEN:-dev-disabled}
+      WHATSAPP_PHONE_ID: ${WHATSAPP_PHONE_ID:-}
+      WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN:-polyforge-verify}
+      API_SERVICE_URL: http://api-service:3002
       PORT: "3011"
       NODE_ENV: ${NODE_ENV:-development}
     ports:

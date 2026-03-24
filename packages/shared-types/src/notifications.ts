@@ -6,6 +6,7 @@ export enum NotificationChannel {
   EMAIL = "EMAIL",
   TELEGRAM = "TELEGRAM",
   DISCORD = "DISCORD",
+  WHATSAPP = "WHATSAPP",
 }
 
 export enum NotificationFrequency {
@@ -39,6 +40,7 @@ export interface NotificationPreferences {
   emailEnabled: boolean;
   telegramEnabled: boolean;
   discordEnabled: boolean;
+  whatsappEnabled: boolean;
   onStrategyError: boolean;
   onOrderFilled: boolean;
   onDailyLossLimit: boolean;

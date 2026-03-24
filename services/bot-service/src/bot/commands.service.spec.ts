@@ -498,4 +498,498 @@ describe("CommandsService", () => {
       expect(result).toContain("Unknown command");
     });
   });
+
+  // ─── Phase 8: /whales ───────────────────────────────────────────────────
+
+  describe("/whales", () => {
+    it("returns whale trades when API responds with data", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            trades: [
+              { wallet: "0xabc12345def", side: "BUY", sizeUsdc: 50000, market: "Will ETH reach 5000?" },
+              { wallet: "0xdef67890abc", side: "SELL", sizeUsdc: 30000, market: "BTC above 100k?" },
+            ],
+          }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/whales");
+      expect(result).toContain("Top whale trades");
+      expect(result).toContain("0xabc123");
+      expect(result).toContain("BUY");
+      expect(result).toContain("$50000");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns empty message when no whale trades", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ trades: [] }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/whales");
+      expect(result).toContain("No whale trades");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns error message when API fails", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 500 }),
+      );
+
+      const result = await svc.execute("user-1", "/whales");
+      expect(result).toContain("Could not fetch whale data");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns error message when fetch throws", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("ECONNREFUSED")),
+      );
+
+      const result = await svc.execute("user-1", "/whales");
+      expect(result).toContain("Could not fetch whale data");
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  // ─── Phase 8: /whale <address> ──────────────────────────────────────────
+
+  describe("/whale", () => {
+    it("returns usage when no address provided", async () => {
+      const result = await svc.execute("user-1", "/whale");
+      expect(result).toContain("Usage: /whale <wallet address>");
+    });
+
+    it("returns whale profile when API responds", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            address: "0xabc12345def67890",
+            totalVolume: 1000000,
+            totalPnl: 5000,
+            tradeCount: 42,
+          }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/whale 0xabc12345def67890");
+      expect(result).toContain("Whale: 0xabc12345");
+      expect(result).toContain("$1000000");
+      expect(result).toContain("+5000.00");
+      expect(result).toContain("42");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns not found for unknown whale", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 404 }),
+      );
+
+      const result = await svc.execute("user-1", "/whale 0xunknown");
+      expect(result).toContain("not found");
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  // ─── Phase 8: /copies ──────────────────────────────────────────────────
+
+  describe("/copies", () => {
+    it("returns copy configs when API responds with data", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            configs: [
+              { targetWallet: "0xabc12345def67890", status: "ACTIVE", mode: "PERCENTAGE", percentage: 10 },
+            ],
+          }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/copies");
+      expect(result).toContain("Copy configs (1)");
+      expect(result).toContain("0xabc12345");
+      expect(result).toContain("ACTIVE");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns empty message when no copy configs", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ configs: [] }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/copies");
+      expect(result).toContain("No active copy configs");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns error message when API fails", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 500 }),
+      );
+
+      const result = await svc.execute("user-1", "/copies");
+      expect(result).toContain("Could not fetch copy configs");
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  // ─── Phase 8: /copy <wallet> ──────────────────────────────────────────
+
+  describe("/copy", () => {
+    it("returns usage when no wallet provided", async () => {
+      const result = await svc.execute("user-1", "/copy");
+      expect(result).toContain("Usage: /copy <wallet address>");
+    });
+
+    it("creates copy config and returns success", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ id: "copy-1" }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/copy 0xabc12345def67890");
+      expect(result).toContain("Copy config created");
+      expect(result).toContain("0xabc12345");
+      expect(result).toContain("PERCENTAGE (10%)");
+      expect(result).toContain("$500 exposure");
+      expect(result).toContain("copy-1");
+
+      // Verify the POST body
+      const fetchCall = (fetch as any).mock.calls[0];
+      const body = JSON.parse(fetchCall[1].body);
+      expect(body.targetWallet).toBe("0xabc12345def67890");
+      expect(body.mode).toBe("PERCENTAGE");
+      expect(body.percentage).toBe(10);
+      expect(body.maxExposureUsdc).toBe(500);
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns error when API fails", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          text: vi.fn().mockResolvedValue("Internal error"),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/copy 0xbad");
+      expect(result).toContain("Could not create copy config");
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  // ─── Phase 8: /stopcopy <id> ──────────────────────────────────────────
+
+  describe("/stopcopy", () => {
+    it("returns usage when no id provided", async () => {
+      const result = await svc.execute("user-1", "/stopcopy");
+      expect(result).toContain("Usage: /stopcopy <config id>");
+    });
+
+    it("stops copy config and returns success", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({}) }),
+      );
+
+      const result = await svc.execute("user-1", "/stopcopy copy-1");
+      expect(result).toContain('Copy config "copy-1" stopped');
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns not found for unknown config", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 404 }),
+      );
+
+      const result = await svc.execute("user-1", "/stopcopy unknown-id");
+      expect(result).toContain('Copy config "unknown-id" not found');
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  // ─── Phase 8: /signals ────────────────────────────────────────────────
+
+  describe("/signals", () => {
+    it("returns signals when API responds with data", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            signals: [
+              { market: "Will ETH reach 5000?", direction: "BUY", confidence: 0.85 },
+              { market: "BTC above 100k?", direction: "SELL", confidence: 0.72 },
+            ],
+          }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/signals");
+      expect(result).toContain("Top AI signals");
+      expect(result).toContain("Will ETH reach 5000?");
+      expect(result).toContain("BUY");
+      expect(result).toContain("85%");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns empty message when no signals", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ signals: [] }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/signals");
+      expect(result).toContain("No high-confidence signals");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns error message when API fails", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 500 }),
+      );
+
+      const result = await svc.execute("user-1", "/signals");
+      expect(result).toContain("Could not fetch signals");
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  // ─── Phase 8: /news ──────────────────────────────────────────────────
+
+  describe("/news", () => {
+    it("returns news articles when API responds with data", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            articles: [
+              { title: "Crypto market surges", source: "Reuters", signalCount: 3 },
+              { title: "Fed holds rates", source: "Bloomberg", signalCount: 1 },
+            ],
+          }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/news");
+      expect(result).toContain("Latest news");
+      expect(result).toContain("Crypto market surges");
+      expect(result).toContain("Reuters");
+      expect(result).toContain("3 signals");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns empty message when no news", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ articles: [] }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/news");
+      expect(result).toContain("No recent news");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("uses singular 'signal' for count of 1", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            articles: [
+              { title: "Test article", signalCount: 1 },
+            ],
+          }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/news");
+      expect(result).toContain("1 signal");
+      expect(result).not.toContain("1 signals");
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  // ─── Phase 8: /tp <market> <price> ────────────────────────────────────
+
+  describe("/tp (take-profit)", () => {
+    it("returns usage when no arguments provided", async () => {
+      const result = await svc.execute("user-1", "/tp");
+      expect(result).toContain("Usage: /tp <market> <price>");
+    });
+
+    it("returns usage when only market provided", async () => {
+      const result = await svc.execute("user-1", "/tp ETH-YES");
+      expect(result).toContain("Usage: /tp <market> <price>");
+    });
+
+    it("returns error for invalid price", async () => {
+      const result = await svc.execute("user-1", "/tp ETH-YES abc");
+      expect(result).toContain("Invalid price");
+    });
+
+    it("returns error for negative price", async () => {
+      const result = await svc.execute("user-1", "/tp ETH-YES -5");
+      expect(result).toContain("Invalid price");
+    });
+
+    it("sets take-profit and returns success", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ id: "order-1" }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/tp ETH-YES 0.85");
+      expect(result).toContain("Take-profit set");
+      expect(result).toContain("ETH-YES");
+      expect(result).toContain("$0.850");
+      expect(result).toContain("order-1");
+
+      const fetchCall = (fetch as any).mock.calls[0];
+      const body = JSON.parse(fetchCall[1].body);
+      expect(body.type).toBe("TAKE_PROFIT");
+      expect(body.market).toBe("ETH-YES");
+      expect(body.triggerPrice).toBe(0.85);
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns not found when no position exists", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 404 }),
+      );
+
+      const result = await svc.execute("user-1", "/tp NOPE 0.5");
+      expect(result).toContain('No open position found for "NOPE"');
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  // ─── Phase 8: /sl <market> <price> ────────────────────────────────────
+
+  describe("/sl (stop-loss)", () => {
+    it("returns usage when no arguments provided", async () => {
+      const result = await svc.execute("user-1", "/sl");
+      expect(result).toContain("Usage: /sl <market> <price>");
+    });
+
+    it("sets stop-loss and returns success", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ id: "order-2" }),
+        }),
+      );
+
+      const result = await svc.execute("user-1", "/sl ETH-YES 0.30");
+      expect(result).toContain("Stop-loss set");
+      expect(result).toContain("ETH-YES");
+      expect(result).toContain("$0.300");
+
+      const fetchCall = (fetch as any).mock.calls[0];
+      const body = JSON.parse(fetchCall[1].body);
+      expect(body.type).toBe("STOP_LOSS");
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns error when API fails", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 500 }),
+      );
+
+      const result = await svc.execute("user-1", "/sl ETH-YES 0.30");
+      expect(result).toContain("Could not set stop-loss");
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  // ─── Help text includes Phase 8 commands ──────────────────────────────
+
+  describe("/help — Phase 8 commands", () => {
+    it("includes whale commands in help text", async () => {
+      const result = await svc.execute("user-1", "/help");
+      expect(result).toContain("/whales");
+      expect(result).toContain("/whale <address>");
+    });
+
+    it("includes copy trading commands in help text", async () => {
+      const result = await svc.execute("user-1", "/help");
+      expect(result).toContain("/copies");
+      expect(result).toContain("/copy <wallet>");
+      expect(result).toContain("/stopcopy <id>");
+    });
+
+    it("includes signals and news commands in help text", async () => {
+      const result = await svc.execute("user-1", "/help");
+      expect(result).toContain("/signals");
+      expect(result).toContain("/news");
+    });
+
+    it("includes advanced order commands in help text", async () => {
+      const result = await svc.execute("user-1", "/help");
+      expect(result).toContain("/tp <market> <price>");
+      expect(result).toContain("/sl <market> <price>");
+    });
+  });
 });
