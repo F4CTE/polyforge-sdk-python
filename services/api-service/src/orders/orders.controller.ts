@@ -10,7 +10,7 @@ import {
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
-import { IsOptional, IsString } from "class-validator";
+import { IsOptional, IsString, IsNotEmpty } from "class-validator";
 import { OrdersService } from "./orders.service";
 import { ClosePositionDto } from "./dto/close-position.dto";
 import { RedeemPositionDto } from "./dto/redeem-position.dto";
@@ -33,6 +33,26 @@ class OrderQueryDto extends PaginationDto {
   @IsOptional()
   @IsString()
   to?: string;
+}
+
+class SplitPositionDto {
+  @IsString()
+  @IsNotEmpty()
+  tokenId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  amount!: string;
+}
+
+class MergePositionDto {
+  @IsString()
+  @IsNotEmpty()
+  tokenId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  amount!: string;
 }
 
 @ApiTags("orders")
@@ -61,5 +81,23 @@ export class OrdersController {
   @RequireScopes('TRADE')
   redeemPosition(@CurrentUser() user: any, @Body() dto: RedeemPositionDto) {
     return this.orders.redeemPosition(user.sub, dto);
+  }
+
+  /** Split USDC.e into Yes + No outcome tokens */
+  @Post("split")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
+  @RequireScopes('TRADE')
+  splitPosition(@CurrentUser() user: any, @Body() dto: SplitPositionDto) {
+    return this.orders.splitPosition(user.sub, dto);
+  }
+
+  /** Merge Yes + No outcome tokens back into USDC.e */
+  @Post("merge")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
+  @RequireScopes('TRADE')
+  mergePosition(@CurrentUser() user: any, @Body() dto: MergePositionDto) {
+    return this.orders.mergePosition(user.sub, dto);
   }
 }

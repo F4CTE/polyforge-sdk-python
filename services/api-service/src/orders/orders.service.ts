@@ -185,4 +185,86 @@ export class OrdersService {
 
     return { positionId: position.id, intentId, status: "REDEEMED" };
   }
+
+  /**
+   * Split USDC.e into Yes + No outcome tokens via signer-service.
+   */
+  async splitPosition(
+    userId: string,
+    dto: { tokenId: string; amount: string },
+  ): Promise<any> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { polymarketConnected: true },
+    });
+    if (!user?.polymarketConnected) {
+      throw new UnprocessableEntityException({
+        code: "NOT_CONNECTED",
+        message: "Polymarket credentials required",
+      });
+    }
+
+    const signerUrl =
+      this.config.get<string>("SIGNER_SERVICE_URL") ?? "http://signer-service:3012";
+
+    const res = await fetch(`${signerUrl}/internal/split-position`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        tokenId: dto.tokenId,
+        amount: dto.amount,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new UnprocessableEntityException({
+        code: "SPLIT_FAILED",
+        message: `Split position failed: ${res.status}`,
+      });
+    }
+
+    return res.json();
+  }
+
+  /**
+   * Merge Yes + No outcome tokens back into USDC.e via signer-service.
+   */
+  async mergePosition(
+    userId: string,
+    dto: { tokenId: string; amount: string },
+  ): Promise<any> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { polymarketConnected: true },
+    });
+    if (!user?.polymarketConnected) {
+      throw new UnprocessableEntityException({
+        code: "NOT_CONNECTED",
+        message: "Polymarket credentials required",
+      });
+    }
+
+    const signerUrl =
+      this.config.get<string>("SIGNER_SERVICE_URL") ?? "http://signer-service:3012";
+
+    const res = await fetch(`${signerUrl}/internal/merge-position`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        tokenId: dto.tokenId,
+        amount: dto.amount,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new UnprocessableEntityException({
+        code: "MERGE_FAILED",
+        message: `Merge position failed: ${res.status}`,
+      });
+    }
+
+    return res.json();
+  }
 }

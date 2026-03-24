@@ -87,6 +87,10 @@ export class SigningService implements OnModuleInit {
       price,
       orderType,
       expiration,
+      tickSize,
+      negRisk,
+      postOnly,
+      taker,
     } = dto;
 
     // Retrieve decrypted credentials (never logs them)
@@ -106,6 +110,7 @@ export class SigningService implements OnModuleInit {
         orderType,
         expiration,
         sigType: creds.sigType,
+        taker,
       });
     } else {
       order = await this.eip712Sign(creds, {
@@ -115,6 +120,10 @@ export class SigningService implements OnModuleInit {
         price,
         orderType,
         expiration,
+        tickSize,
+        negRisk,
+        postOnly,
+        taker,
       });
     }
 
@@ -147,12 +156,13 @@ export class SigningService implements OnModuleInit {
     orderType: string;
     expiration?: number;
     sigType: number;
+    taker?: string;
   }): Record<string, unknown> {
     return {
       salt: crypto.randomBytes(16).toString("hex"),
       maker: "0x0000000000000000000000000000000000000001",
       signer: "0x0000000000000000000000000000000000000001",
-      taker: "0x0000000000000000000000000000000000000000",
+      taker: params.taker ?? "0x0000000000000000000000000000000000000000",
       tokenId: params.tokenId,
       makerAmount: String(Math.round(params.size * 1_000_000)),
       takerAmount: String(Math.round(params.size * params.price * 1_000_000)),
@@ -184,6 +194,10 @@ export class SigningService implements OnModuleInit {
       price: number;
       orderType: string;
       expiration?: number;
+      tickSize?: string;
+      negRisk?: boolean;
+      postOnly?: boolean;
+      taker?: string;
     },
   ): Promise<Record<string, unknown>> {
     // Dynamic import to avoid hard dependency in dev builds
@@ -215,7 +229,7 @@ export class SigningService implements OnModuleInit {
     // Fetch fee rate from Polymarket (cached 5min in Redis)
     const feeRateBps = await this.fetchFeeRate(params.tokenId);
 
-    const order = await client.createOrder({
+    const createOrderParams: Record<string, unknown> = {
       tokenID: params.tokenId,
       price: params.price,
       side: params.side,
@@ -223,7 +237,19 @@ export class SigningService implements OnModuleInit {
       feeRateBps,
       nonce: String(nonce),
       expiration: String(params.expiration ?? 0),
-    });
+      tickSize: params.tickSize ?? "0.01",
+      negRisk: params.negRisk ?? false,
+    };
+
+    if (params.taker) {
+      createOrderParams.taker = params.taker;
+    }
+
+    if (params.postOnly) {
+      createOrderParams.postOnly = true;
+    }
+
+    const order = await client.createOrder(createOrderParams);
 
     return order as Record<string, unknown>;
   }
@@ -307,22 +333,7 @@ export class SigningService implements OnModuleInit {
       // Stub: return a fake transaction hash
       txHash = "dev-redemption-" + crypto.randomBytes(16).toString("hex");
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { ClobClient } = require("@polymarket/clob-client");
-
-      const client = new ClobClient(
-        this.clobApiUrl,
-        this.chainId,
-        undefined,
-        {
-          key: creds.apiKey,
-          secret: creds.apiSecret,
-          passphrase: creds.apiPassphrase,
-        },
-        creds.sigType,
-        creds.privateKey,
-        creds.safeAddress ?? undefined,
-      );
+      const client = await this.buildClient(userId);
 
       const result = await client.redeemPositions([tokenId]);
       txHash = result?.transactionHash ?? "0x0";
@@ -342,6 +353,59 @@ export class SigningService implements OnModuleInit {
     );
 
     return { txHash, gasSponsored };
+  }
+
+  // ─── CTF Split / Merge ──────────────────────────────────────────────────
+
+  async splitPosition(
+    userId: string,
+    tokenId: string,
+    amount: string,
+  ): Promise<{ txHash: string }> {
+    if (this.isDev) {
+      this.logger.warn("DEV MODE: Stub split");
+      return { txHash: `dev-split-${Date.now()}` };
+    }
+    const client = await this.buildClient(userId);
+    const result = await client.splitPosition(tokenId, parseFloat(amount));
+    return { txHash: result.transactionHash ?? result };
+  }
+
+  async mergePosition(
+    userId: string,
+    tokenId: string,
+    amount: string,
+  ): Promise<{ txHash: string }> {
+    if (this.isDev) {
+      this.logger.warn("DEV MODE: Stub merge");
+      return { txHash: `dev-merge-${Date.now()}` };
+    }
+    const client = await this.buildClient(userId);
+    const result = await client.mergePositions(tokenId, parseFloat(amount));
+    return { txHash: result.transactionHash ?? result };
+  }
+
+  // ─── Build ClobClient helper ────────────────────────────────────────────
+
+  private async buildClient(userId: string): Promise<any> {
+    const creds = await this.credentials.getDecryptedCredentials(userId);
+
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { ClobClient } = require("@polymarket/clob-client");
+
+    return new ClobClient(
+      this.clobApiUrl,
+      this.chainId,
+      undefined,
+      {
+        key: creds.apiKey,
+        secret: creds.apiSecret,
+        passphrase: creds.apiPassphrase,
+      },
+      creds.sigType,
+      creds.privateKey,
+      creds.safeAddress ?? undefined,
+    );
   }
 
   // ─── Builder HMAC headers ─────────────────────────────────────────────────

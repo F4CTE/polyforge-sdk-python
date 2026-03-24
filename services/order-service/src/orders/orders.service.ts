@@ -22,8 +22,10 @@ export interface OrderIntent {
   outcome: string;
   size: string;
   price: string;
-  orderType: "GTC" | "FOK" | "GTD";
+  orderType: "GTC" | "FOK" | "GTD" | "FAK";
   expiration?: number;
+  tickSize?: string;
+  negRisk?: boolean;
 }
 
 @Injectable()
@@ -94,6 +96,8 @@ export class OrdersService {
         price: parseFloat(intent.price),
         orderType: intent.orderType,
         expiration: intent.expiration,
+        tickSize: intent.tickSize,
+        negRisk: intent.negRisk,
       });
 
       // Update to SUBMITTED
@@ -167,7 +171,7 @@ export class OrdersService {
       side: "SELL",
       outcome: "YES", // TokenId uniquely identifies outcome
       size,
-      price: "0.01", // FOK below current market — gets best fill
+      price: "0.01", // FOK below current market -- gets best fill
       orderType: "FOK",
     };
 
@@ -186,6 +190,18 @@ export class OrdersService {
         return "CONFIRMED";
       case "CANCELLED":
         return "CANCELLED";
+      case "DELAYED":
+        return "DELAYED";
+      case "MINED":
+        return "MINED";
+      case "CONFIRMED":
+        return "CONFIRMED";
+      case "RETRYING":
+        return "SUBMITTED"; // retrying = still in progress
+      case "UNMATCHED":
+        return "LIVE"; // unmatched = resting on book
+      case "FAILED":
+        return "FAILED";
       default:
         return "SUBMITTED";
     }
@@ -213,7 +229,7 @@ export class OrdersService {
     return result;
   }
 
-  /** Visible for testing — resolves when the delayed retry completes. */
+  /** Visible for testing -- resolves when the delayed retry completes. */
   scheduleRetry(
     intent: OrderIntent,
     nextAttempt: number,

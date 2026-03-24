@@ -15,20 +15,26 @@ interface BuilderTradesResponse {
   weeklyRewardUsdc: number;
 }
 
-const TIER_THRESHOLDS: Record<string, number> = {
-  BRONZE: 0,
-  SILVER: 50_000,
-  GOLD: 250_000,
-  PLATINUM: 1_000_000,
-  DIAMOND: 5_000_000,
-};
+/**
+ * Polymarket Builder tiers (matches Polymarket's actual 3-tier system):
+ *
+ *   UNVERIFIED  — default, relay limit 100
+ *   VERIFIED    — after approval, relay limit 3000
+ *   PARTNER     — special arrangement, unlimited relay
+ *
+ * The tier is determined by approval status, not by volume.
+ * Configure via BUILDER_TIER env var or fetch from Polymarket API.
+ */
+const TIERS = [
+  { name: "UNVERIFIED", relayLimit: 100 },
+  { name: "VERIFIED", relayLimit: 3000 },
+  { name: "PARTNER", relayLimit: Infinity },
+];
 
-function computeTierFromVolume(volumeUsdc: number): string {
-  let tier = "BRONZE";
-  for (const [name, threshold] of Object.entries(TIER_THRESHOLDS)) {
-    if (volumeUsdc >= threshold) tier = name;
-  }
-  return tier;
+function getTierByName(tierName: string): (typeof TIERS)[number] {
+  return (
+    TIERS.find((t) => t.name === tierName.toUpperCase()) ?? TIERS[0]
+  );
 }
 
 @Injectable()
@@ -38,6 +44,7 @@ export class BuilderService {
   private readonly builderApiKey: string;
   private readonly builderSecret: string;
   private readonly builderPassphrase: string;
+  private readonly configuredTier: string;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -52,6 +59,8 @@ export class BuilderService {
       this.config.get<string>("POLY_BUILDER_SECRET") ?? "";
     this.builderPassphrase =
       this.config.get<string>("POLY_BUILDER_PASSPHRASE") ?? "";
+    this.configuredTier =
+      this.config.get<string>("BUILDER_TIER") ?? "UNVERIFIED";
   }
 
   async getStats() {
@@ -78,19 +87,22 @@ export class BuilderService {
     // Fetch tier and weekly reward from Polymarket Builder API
     const builderData = await this.fetchBuilderData();
 
+    const tier = getTierByName(builderData.currentTier ?? this.configuredTier);
+
     return {
       attributedVolumeUsdc: result._sum.size ?? 0,
       totalOrders: result._count.id,
       activeStrategies,
       connectedUsers,
-      currentTier: builderData.currentTier,
+      currentTier: tier.name,
+      relayLimit: tier.relayLimit,
       weeklyRewardUsdc: builderData.weeklyRewardUsdc,
     };
   }
 
   /**
    * Fetch attributed trades and reward data from the Polymarket Builder API.
-   * Falls back to local data calculation on API failure.
+   * Falls back to configured tier on API failure.
    */
   async fetchBuilderData(): Promise<{
     currentTier: string | null;
@@ -113,37 +125,16 @@ export class BuilderService {
 
       const data = (await res.json()) as BuilderTradesResponse;
 
-      // Use API-provided tier/reward, or compute tier from cumulative volume
-      const currentTier = data.tier ?? computeTierFromVolume(data.totalVolume);
+      const currentTier = data.tier ?? this.configuredTier;
       const weeklyRewardUsdc = data.weeklyRewardUsdc ?? 0;
 
       return { currentTier, weeklyRewardUsdc };
     } catch (err) {
-      this.logger.warn("Failed to fetch builder data from Polymarket API, falling back to local", err);
-      return this.computeLocalBuilderData();
-    }
-  }
-
-  private async computeLocalBuilderData(): Promise<{
-    currentTier: string | null;
-    weeklyRewardUsdc: number | null;
-  }> {
-    try {
-      const result = await this.prisma.order.aggregate({
-        where: {
-          status: "CONFIRMED",
-          strategyId: { not: null },
-        },
-        _sum: { size: true },
-      });
-
-      const volume = result._sum.size ?? 0;
+      this.logger.warn("Failed to fetch builder data from Polymarket API, falling back to config", err);
       return {
-        currentTier: computeTierFromVolume(Number(volume)),
-        weeklyRewardUsdc: null, // cannot determine locally
+        currentTier: this.configuredTier,
+        weeklyRewardUsdc: null,
       };
-    } catch {
-      return { currentTier: null, weeklyRewardUsdc: null };
     }
   }
 }

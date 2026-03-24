@@ -15,6 +15,11 @@ export interface GasUsageStats {
 }
 
 /**
+ * NOTE: Polymarket's relayer handles gas for Builder API users automatically.
+ * This GasSponsorService provides ADDITIONAL gas sponsorship for operations
+ * outside the CLOB (e.g., token approvals, wallet deployment) or as a
+ * fallback when the relayer is unavailable.
+ *
  * Sponsors Polygon gas fees for user transactions using a platform-funded wallet.
  *
  * The platform absorbs gas costs to remove friction for users — critical for the
