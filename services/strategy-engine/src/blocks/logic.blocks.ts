@@ -21,7 +21,7 @@ function safeEvaluate(expression: string, scope: Record<string, number>, maxLeng
 
 export const IfThenElseBlock: LogicBlockEvaluator = {
   evaluate(block, inputs, ctx): LogicBlockResult {
-    const condition = String(block.condition ?? block.params?.condition ?? "");
+    const condition = String(block.condition ?? (block.params as Record<string, unknown>)?.condition ?? "");
     if (!condition.trim()) {
       return { value: false, activeOutput: "false" };
     }
@@ -77,7 +77,7 @@ export const NotGateBlock: LogicBlockEvaluator = {
 
 export const DelayBlock: LogicBlockEvaluator = {
   evaluate(block, inputs, ctx): LogicBlockResult {
-    const seconds = Number(block.seconds ?? block.params?.seconds ?? 0);
+    const seconds = Number(block.seconds ?? (block.params as Record<string, unknown>)?.seconds ?? 0);
     const delayMs = seconds * 1000;
     const inputValue = inputs.length > 0 ? inputs[0] : false;
 
