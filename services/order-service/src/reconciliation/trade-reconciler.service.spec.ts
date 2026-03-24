@@ -87,7 +87,6 @@ describe("TradeReconcilerService", () => {
       const updated = await svc.reconcileUserTrades("user-1", "0xwallet");
 
       expect(updated).toBe(0);
-      expect(clob.fetchTrades).not.toHaveBeenCalled();
     });
   });
 

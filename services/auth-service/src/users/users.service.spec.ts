@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+
+// Mock the worker-thread bcrypt util to use direct bcrypt in tests
+vi.mock('../auth/bcrypt.util', () => ({
+  hashPassword: (password: string, rounds?: number) => bcrypt.hash(password, rounds ?? 12),
+  comparePassword: (password: string, hash: string) => bcrypt.compare(password, hash),
+}));
+
 import { UsersService } from './users.service';
 import { createMockDb, MockDb } from '../../test/helpers/mock-db';
 import {

@@ -6,6 +6,7 @@ export default defineConfig({
         environment: 'node',
         env: {
             INTERNAL_JWT_SECRET: 'test-internal-jwt-secret-for-bot-service',
+            BOT_JWT_SECRET: 'test-bot-jwt-secret-for-bot-service',
         },
         include: ['src/**/*.spec.ts', 'test/**/*.spec.ts'],
         passWithNoTests: true,

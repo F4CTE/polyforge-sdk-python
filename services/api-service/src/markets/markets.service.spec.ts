@@ -51,6 +51,8 @@ describe("MarketsService", () => {
     db = createMockDb();
     redis = {
       get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue('OK'),
+      getClient: vi.fn().mockReturnValue({ get: vi.fn().mockResolvedValue(null), set: vi.fn() }),
     } as unknown as RedisService;
     service = new MarketsService(db as any, redis);
   });

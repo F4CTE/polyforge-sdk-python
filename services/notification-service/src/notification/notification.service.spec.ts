@@ -5,6 +5,7 @@ import { TemplatesService, NotificationContent } from "./templates.service";
 import { TelegramService } from "./telegram.service";
 import { DiscordService } from "./discord.service";
 import { MailService } from "./mail.service";
+import { WebhookDispatcherService } from "./webhook-dispatcher.service";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 
@@ -79,6 +80,7 @@ describe("NotificationService", () => {
   let telegram: MockProxy<TelegramService>;
   let discord: MockProxy<DiscordService>;
   let templates: MockProxy<TemplatesService>;
+  let webhookDispatcher: MockProxy<WebhookDispatcherService>;
   let redisClient: ReturnType<typeof buildMockRedisClient>;
 
   beforeEach(() => {
@@ -88,6 +90,8 @@ describe("NotificationService", () => {
     telegram = mockDeep<TelegramService>();
     discord = mockDeep<DiscordService>();
     templates = mockDeep<TemplatesService>();
+    webhookDispatcher = mockDeep<WebhookDispatcherService>();
+    webhookDispatcher.dispatch.mockResolvedValue(undefined);
 
     redisClient = buildMockRedisClient();
     redis.getClient.mockReturnValue(redisClient as any);
@@ -111,6 +115,7 @@ describe("NotificationService", () => {
       telegram,
       discord,
       templates,
+      webhookDispatcher,
     );
   });
 

@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// Set required env var before importing the module (top-level check)
+// Set required env vars before importing the module (top-level checks)
 process.env.INTERNAL_JWT_SECRET = "test-internal-jwt-secret-for-bot-service";
+process.env.BOT_JWT_SECRET = "test-bot-jwt-secret-for-bot-service";
 
 import { CommandsService } from "./commands.service";
 

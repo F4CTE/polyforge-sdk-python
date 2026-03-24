@@ -2,14 +2,18 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 // ─── Mock nodemailer before importing MailService ───────────────────────────
 
-const mockSendMail = vi.fn().mockResolvedValue({ messageId: "test-id" });
-vi.mock("nodemailer", () => ({
-  createTransport: vi.fn().mockReturnValue({
-    sendMail: mockSendMail,
-  }),
-}));
+vi.mock("nodemailer", () => {
+  const sendMail = vi.fn().mockResolvedValue({ messageId: "test-id" });
+  return {
+    default: { createTransport: vi.fn().mockReturnValue({ sendMail }) },
+    createTransport: vi.fn().mockReturnValue({ sendMail }),
+    __mockSendMail: sendMail,
+  };
+});
 
 import { MailService } from "./mail.service";
+import * as nodemailer from "nodemailer";
+const mockSendMail = (nodemailer as any).__mockSendMail;
 
 // ─── Suite ──────────────────────────────────────────────────────────────────
 

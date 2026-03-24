@@ -16,9 +16,10 @@ function makeConfig(overrides: Record<string, string> = {}): ConfigService {
     POLY_BUILDER_PASSPHRASE: "test-builder-pass",
     NODE_ENV: "development", // forces dev stub path
     CLOB_API_URL: "http://mock-polymarket:3099",
+    GAS_ESTIMATE_MATIC: "0.002",
     ...overrides,
   };
-  return { get: (k: string, d?: string) => map[k] ?? d ?? "" } as any;
+  return { get: (k: string, d?: string) => map[k] ?? d, getOrThrow: (k: string) => { if (!map[k]) throw new Error(`Missing ${k}`); return map[k]; } } as any;
 }
 
 function makeMockRedis() {

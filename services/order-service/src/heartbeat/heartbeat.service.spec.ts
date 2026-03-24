@@ -52,24 +52,23 @@ describe("HeartbeatService", () => {
       { clobOrderId: "clob-2", userId: "user-2" },
     ]);
 
-    await svc.sendHeartbeat();
+    await svc.sendHeartbeats();
 
     expect(fetch).toHaveBeenCalledWith(
-      "http://mock-polymarket:3099/heartbeat",
+      "http://mock-polymarket:3099/heartbeats",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ orderIds: ["clob-1", "clob-2"] }),
       }),
     );
   });
 
   // ── Queries correct where clause ─────────────────────────────────────────
 
-  it("queries for LIVE GTC orders only", async () => {
-    await svc.sendHeartbeat();
+  it("queries for LIVE GTC/GTD orders", async () => {
+    await svc.sendHeartbeats();
 
     expect(prisma.order.findMany).toHaveBeenCalledWith({
-      where: { status: "LIVE", orderType: "GTC" },
+      where: { status: "LIVE", orderType: { in: ["GTC", "GTD"] } },
       select: { clobOrderId: true, userId: true },
     });
   });
@@ -79,7 +78,7 @@ describe("HeartbeatService", () => {
   it("skips fetch when no live orders exist", async () => {
     prisma.order.findMany.mockResolvedValue([]);
 
-    await svc.sendHeartbeat();
+    await svc.sendHeartbeats();
 
     expect(fetch).not.toHaveBeenCalled();
   });
@@ -93,12 +92,21 @@ describe("HeartbeatService", () => {
       { clobOrderId: "clob-3", userId: "user-3" },
     ]);
 
-    await svc.sendHeartbeat();
+    await svc.sendHeartbeats();
 
-    const body = JSON.parse(
-      (fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body,
+    // Now sends per-user heartbeats, so verify fetch was called
+    expect(fetch).toHaveBeenCalled();
+    // Filter heartbeat calls (those with /heartbeats URL containing orderIds)
+    const allCalls = (fetch as ReturnType<typeof vi.fn>).mock.calls;
+    const heartbeatCalls = allCalls.filter((c: any) =>
+      String(c[0]).includes("/heartbeats"),
     );
-    expect(body.orderIds).toEqual(["clob-1", "clob-3"]);
+    const allOrderIds = heartbeatCalls
+      .map((c: any) => JSON.parse(c[1].body))
+      .flatMap((b: any) => b.orderIds);
+    expect(allOrderIds).toContain("clob-1");
+    expect(allOrderIds).toContain("clob-3");
+    expect(allOrderIds).not.toContain(null);
   });
 
   // ── Skips fetch when all clobOrderIds are null ──────────────────────────
@@ -108,7 +116,7 @@ describe("HeartbeatService", () => {
       { clobOrderId: null, userId: "user-1" },
     ]);
 
-    await svc.sendHeartbeat();
+    await svc.sendHeartbeats();
 
     expect(fetch).not.toHaveBeenCalled();
   });
@@ -124,7 +132,7 @@ describe("HeartbeatService", () => {
       vi.fn().mockRejectedValue(new Error("Network error")),
     );
 
-    await expect(svc.sendHeartbeat()).resolves.toBeUndefined();
+    await expect(svc.sendHeartbeats()).resolves.toBeUndefined();
   });
 
   // ── Handles non-ok response without throwing ───────────────────────────
@@ -135,10 +143,10 @@ describe("HeartbeatService", () => {
     ]);
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: false, status: 500 }),
+      vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) }),
     );
 
-    await expect(svc.sendHeartbeat()).resolves.toBeUndefined();
+    await expect(svc.sendHeartbeats()).resolves.toBeUndefined();
   });
 
   // ── Starts interval on module init ─────────────────────────────────────

@@ -10,6 +10,7 @@ function validEnv(overrides: Record<string, string | undefined> = {}) {
     ENCRYPTION_KEY: 'a'.repeat(64),
     REDIS_URL: 'redis://localhost:6379',
     MASTER_ENCRYPTION_KEY: 'b'.repeat(64),
+    CLOB_API_URL: 'https://clob.polymarket.com',
     ...overrides,
   };
 }
