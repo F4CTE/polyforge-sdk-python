@@ -60,7 +60,7 @@ export class AuthService implements OnModuleInit {
     }
 
     // Dynamic import to match user-facing auth service pattern
-    const otplib = await import("otplib"); const authenticator = otplib.authenticator ?? (otplib as any).default?.authenticator;
+    const otplib = await import("otplib"); const authenticator = (otplib as any).authenticator ?? (otplib as any).default?.authenticator ?? otplib;
     const QRCode = await import("qrcode");
 
     const secret = authenticator.generateSecret(20);
@@ -88,7 +88,7 @@ export class AuthService implements OnModuleInit {
       );
     }
 
-    const otplib = await import("otplib"); const authenticator = otplib.authenticator ?? (otplib as any).default?.authenticator;
+    const otplib = await import("otplib"); const authenticator = (otplib as any).authenticator ?? (otplib as any).default?.authenticator ?? otplib;
     let isValid = false;
     try {
       isValid = authenticator.check(code, pendingSecret);
@@ -184,7 +184,7 @@ export class AuthService implements OnModuleInit {
       }
 
       const secret = this.decrypt((admin as any).totpSecret);
-      const otplib = await import("otplib"); const authenticator = otplib.authenticator ?? (otplib as any).default?.authenticator;
+      const otplib = await import("otplib"); const authenticator = (otplib as any).authenticator ?? (otplib as any).default?.authenticator ?? otplib;
       let totpValid = false;
       try {
         totpValid = authenticator.check(dto.totpCode, secret);
