@@ -602,6 +602,10 @@ The `cancel_all_orders` strategy block evaluator emits a sentinel intent (`token
 
 Safety blocks evaluate first, before any action can fire.
 
+### WASM Tick Evaluator
+
+The CPU-intensive tick evaluation loop runs inside a Rust WASM module (`@polyforge/engine`) for zero GC pauses and deterministic latency. The module receives serialized block arrays and market context, evaluates the full pipeline (safety -> triggers -> conditions -> actions), and returns action intents. A TypeScript fallback is available when the WASM binary is not built. See `docs/20-rust-wasm-modules.md` for details.
+
 ### Execution Modes
 
 | Mode | Behaviour |
@@ -1079,6 +1083,7 @@ See `03-openapi-codegen.md` for the full OpenAPI generation pipeline.
 | Redis client | ioredis |
 | Logging | pino + nestjs-pino |
 | Testing | Vitest + Supertest |
+| Crypto (WASM) | Rust + wasm-bindgen — `@polyforge/crypto` (AES-256-GCM, SHA-256, HMAC-SHA256, CSPRNG) |
 | Frontend | Angular 17 |
 | UI library | PrimeNG |
 | Real-time | Socket.io (WebSocket) |

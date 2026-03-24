@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [5.1.0] — 2026-03-24
+
+### Added — Rust WASM Crypto Module
+
+- **`@polyforge/crypto` package** — Rust WASM module (`packages/polyforge-crypto/`) for security-critical cryptographic operations with memory safety guarantees
+- **AES-256-GCM** — authenticated encryption/decryption with random IV generation, hex-encoded output
+- **SHA-256 + HMAC-SHA256** — hashing and message authentication with constant-time verification
+- **CSPRNG random bytes** — cryptographically secure random byte generation via `OsRng`
+- **Constant-time comparison** — timing-safe string equality for token/code verification
+- **Secure password hashing** — iterated SHA-256 (100K rounds) with salt for password key derivation
+- **Node.js crypto fallback** — TypeScript wrapper automatically falls back to Node.js `crypto` module when WASM binary is not built
+- **Minimal binary** — Rust release profile uses `opt-level = "z"`, LTO, and symbol stripping
+
+---
+
 ## [5.0.0] — 2026-03-24
 
 ### Added — AI-Friendly API (8 features)

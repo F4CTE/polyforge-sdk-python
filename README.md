@@ -51,6 +51,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 | Frontend (v3.0) | React 19, Vite, shadcn/ui, Tailwind CSS v4, React Flow, Recharts |
 | Landing (v3.0) | Next.js 15 (App Router, SSR/SEO) |
 | Frontend (legacy) | Angular 21 + PrimeNG 21 |
+| Crypto (WASM) | Rust + wasm-bindgen (AES-256-GCM, SHA-256, HMAC-SHA256) |
 | Build system | Turborepo 2 + pnpm workspaces |
 | Containers | Docker + Docker Compose |
 | Runtime | Node.js 24 |
@@ -94,7 +95,8 @@ polyforge/
     ├── shared-db/                 # Prisma client NestJS module
     ├── shared-redis/              # ioredis factory + stream helpers
     ├── logger/                    # pino + nestjs-pino
-    └── mcp-server/                # MCP server for AI assistant integration
+    ├── mcp-server/                # MCP server for AI assistant integration
+    └── polyforge-crypto/          # Rust WASM crypto (AES-GCM, SHA-256, HMAC)
 ```
 
 ---

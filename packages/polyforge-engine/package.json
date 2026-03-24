@@ -1,0 +1,10 @@
+{
+  "name": "@polyforge/engine",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "build:wasm": "bash build.sh",
+    "build": "tsc -p tsconfig.json"
+  }
+}
