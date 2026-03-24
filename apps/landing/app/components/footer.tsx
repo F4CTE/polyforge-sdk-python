@@ -56,6 +56,7 @@ const footerLinks = [
     links: [
       { label: 'Features', href: '#features' },
       { label: 'How it works', href: '#how-it-works' },
+      { label: 'API Docs', href: '/api-docs' },
       { label: 'Early access', href: '/register' },
     ],
   },
