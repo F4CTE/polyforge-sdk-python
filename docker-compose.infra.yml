@@ -256,6 +256,7 @@ services:
       GEO_CLOSE_ONLY_COUNTRIES: ${GEO_CLOSE_ONLY_COUNTRIES:-PL,SG,TH,TW}
       PORT: "3002"
       NODE_ENV: ${NODE_ENV:-development}
+      NODE_OPTIONS: "--max-old-space-size=1024"
     ports:
       - "3002:3002"
     networks: [internal]

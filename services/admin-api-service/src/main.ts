@@ -6,6 +6,8 @@ import {
 import { ValidationPipe, RequestMethod } from "@nestjs/common";
 import { Logger } from "nestjs-pino";
 import fastifyCookie from "@fastify/cookie";
+import compress from "@fastify/compress";
+import etag from "@fastify/etag";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 import { PrismaAdminService } from "@polyforge/shared-db";
@@ -36,6 +38,12 @@ async function bootstrap() {
   );
 
   await app.register(fastifyCookie as any);
+
+  // Response compression (brotli preferred, gzip fallback)
+  await app.register(compress, { encodings: ['br', 'gzip'] });
+
+  // ETag support for conditional requests (304 Not Modified)
+  await app.register(etag);
 
   app.useLogger(app.get(Logger));
 

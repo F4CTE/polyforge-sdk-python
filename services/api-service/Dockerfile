@@ -82,4 +82,4 @@ EXPOSE 3002
 
 USER node
 
-CMD ["node", "dist/main"]
+CMD ["node", "--max-old-space-size=512", "--optimize-for-size", "dist/main"]

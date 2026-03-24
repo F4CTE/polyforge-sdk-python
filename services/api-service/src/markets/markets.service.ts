@@ -1,15 +1,27 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, OnModuleInit, Logger } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { paginate, PaginatedResponse } from "../common/dto/pagination.dto";
 import { MarketQueryDto, PriceHistoryQueryDto } from "./dto/market-query.dto";
 
 @Injectable()
-export class MarketsService {
+export class MarketsService implements OnModuleInit {
+  private readonly logger = new Logger(MarketsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
   ) {}
+
+  /** Pre-warm the Redis cache with the first page of markets on startup */
+  async onModuleInit() {
+    try {
+      await this.list({ page: 1, limit: 20 } as MarketQueryDto);
+      this.logger.log("Markets cache pre-warmed");
+    } catch {
+      this.logger.warn("Markets cache pre-warm failed (non-fatal)");
+    }
+  }
 
   async list(query: MarketQueryDto): Promise<PaginatedResponse<any>> {
     // Build cache key from query params
