@@ -4,7 +4,7 @@ import { CalcBlockEvaluator, CalcBlockResult, EvalContext } from "./block.types"
 
 export const MathBlockEvaluator: CalcBlockEvaluator = {
   evaluate(block, inputs, _ctx): CalcBlockResult {
-    const op = String(block.operation ?? block.params?.operation ?? "add");
+    const op = String(block.operation ?? (block.params as Record<string, unknown>)?.operation ?? "add");
     const a = inputs[0] ?? 0;
     const b = inputs[1] ?? 0;
 
@@ -50,8 +50,8 @@ export const MathBlockEvaluator: CalcBlockEvaluator = {
  */
 export const AggregationBlockEvaluator: CalcBlockEvaluator = {
   evaluate(block, inputs, ctx): CalcBlockResult {
-    const fn = String(block.function ?? block.params?.function ?? "moving_average");
-    const windowSize = Number(block.windowSize ?? block.params?.windowSize ?? 20);
+    const fn = String(block.function ?? (block.params as Record<string, unknown>)?.function ?? "moving_average");
+    const windowSize = Number(block.windowSize ?? (block.params as Record<string, unknown>)?.windowSize ?? 20);
     const input = inputs[0] ?? 0;
 
     // Use the block id to store rolling window in context
@@ -97,7 +97,7 @@ export const AggregationBlockEvaluator: CalcBlockEvaluator = {
 
 export const ComparisonBlockEvaluator: CalcBlockEvaluator = {
   evaluate(block, inputs, _ctx): CalcBlockResult {
-    const op = String(block.operator ?? block.params?.operator ?? ">");
+    const op = String(block.operator ?? (block.params as Record<string, unknown>)?.operator ?? ">");
     const a = inputs[0] ?? 0;
     const b = inputs[1] ?? 0;
 
@@ -139,8 +139,8 @@ export const ComparisonBlockEvaluator: CalcBlockEvaluator = {
 
 export const AbsRoundBlockEvaluator: CalcBlockEvaluator = {
   evaluate(block, inputs, _ctx): CalcBlockResult {
-    const fn = String(block.function ?? block.params?.function ?? "abs");
-    const decimals = Number(block.decimals ?? block.params?.decimals ?? 0);
+    const fn = String(block.function ?? (block.params as Record<string, unknown>)?.function ?? "abs");
+    const decimals = Number(block.decimals ?? (block.params as Record<string, unknown>)?.decimals ?? 0);
     const input = inputs[0] ?? 0;
 
     let value: number;
