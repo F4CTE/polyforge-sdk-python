@@ -16,8 +16,8 @@ export class StrategiesListPage {
         this.page          = page;
         // "New Strategy" is an <a> (Link) in React, not a p-button
         this.newButton     = page.locator('a', { hasText: 'New Strategy' });
-        // Each strategy card is a div with cursor-pointer inside the grid
-        this.strategyCards = page.locator('.grid > div[class*="cursor-pointer"]');
+        // Each strategy card has data-testid="strategy-card"
+        this.strategyCards = page.locator('[data-testid="strategy-card"]');
     }
 
     async goto(): Promise<void> {
@@ -32,8 +32,8 @@ export class StrategiesListPage {
 
     /** Get the status badge text for a strategy card */
     async statusOf(name: string): Promise<string> {
-        // Status badge is a span with rounded-full containing the status text
-        const badge = this.cardByName(name).locator('span.rounded-full').first();
+        // Status badge has data-testid="status-badge"
+        const badge = this.cardByName(name).locator('[data-testid="status-badge"]');
         await expect(badge).toBeVisible();
         return (await badge.textContent() ?? '').trim();
     }

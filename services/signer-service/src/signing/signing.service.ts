@@ -60,6 +60,10 @@ export class SigningService implements OnModuleInit {
   }
 
   onModuleInit() {
+    if (this.isDev && this.chainId === 137) {
+      this.logger.warn('Running in dev mode with MAINNET chain ID (137) — use 80002 for testnet');
+    }
+
     if (!this.isDev) {
       // Verify CLOB credentials are configured for production
       if (!this.clobApiUrl || this.clobApiUrl.includes("mock")) {

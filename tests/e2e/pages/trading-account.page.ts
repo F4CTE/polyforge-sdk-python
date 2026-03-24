@@ -30,8 +30,8 @@ export class TradingAccountPage {
         this.safeAddressInput   = page.locator('input[placeholder="0x..."]').last();
         this.connectButton      = page.locator('button', { hasText: 'Connect Account' });
         this.disconnectButton   = page.locator('button', { hasText: 'Disconnect Account' });
-        // Status badge is a span with rounded-full containing "Connected" or "Not Connected"
-        this.statusBadge        = page.locator('span.rounded-full').filter({ hasText: /Connected|Not Connected/ });
+        // Status badge has data-testid="trading-status"
+        this.statusBadge        = page.locator('[data-testid="trading-status"]');
     }
 
     async goto(): Promise<void> {

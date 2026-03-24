@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -272,3 +273,15 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Run security audit
         run: pnpm audit --audit-level=high || echo "::warning::Dependency audit found issues"
+
+  # ── 7. Deploy ───────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: [e2e]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to production
+        run: echo "Deploy step — configure with your deployment target"
+        # TODO: Add actual deploy commands (SSH, ECR push, etc.)

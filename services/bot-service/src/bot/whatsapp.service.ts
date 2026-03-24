@@ -167,6 +167,66 @@ export class WhatsAppService implements OnModuleInit {
     return this.commands.execute(userId, text);
   }
 
+  // ─── Template messages ──────────────────────────────────────────────────────
+
+  /**
+   * Send a pre-approved WhatsApp message template.
+   *
+   * IMPORTANT: WhatsApp Business API requires message templates to be
+   * pre-approved by Meta before they can be used for proactive (business-initiated)
+   * messages. Free-form text messages are only allowed within a 24-hour window
+   * after the user last messaged the bot.
+   *
+   * Templates must be created and approved in the Meta Business Manager at:
+   *   https://business.facebook.com/wa/manage/message-templates/
+   *
+   * @param phoneNumber - Recipient phone number in international format (e.g. "14155551234")
+   * @param templateName - The approved template name (e.g. "order_update", "price_alert")
+   * @param params - Positional parameters that fill {{1}}, {{2}}, etc. placeholders in the template
+   * @param languageCode - Template language code (default: "en_US")
+   */
+  async sendTemplate(
+    phoneNumber: string,
+    templateName: string,
+    params: string[],
+    languageCode = "en_US",
+  ): Promise<void> {
+    if (!this.enabled) return;
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: phoneNumber,
+          type: "template",
+          template: {
+            name: templateName,
+            language: { code: languageCode },
+            components: params.length > 0
+              ? [
+                  {
+                    type: "body",
+                    parameters: params.map((text) => ({ type: "text", text })),
+                  },
+                ]
+              : [],
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        this.logger.warn(`WhatsApp template send failed ${res.status}`);
+      }
+    } catch (err: any) {
+      this.logger.error(`WhatsApp template send error: ${err?.message}`);
+    }
+  }
+
   // ─── Static helpers for parsing ────────────────────────────────────────────
 
   /**

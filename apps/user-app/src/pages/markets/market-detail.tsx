@@ -552,7 +552,16 @@ export function Component() {
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-pf-text-muted text-sm">
                     <TrendingUp className="size-8 opacity-20 mb-2" />
-                    Price chart coming soon
+                    No price data available for this resolution
+                    <button
+                      onClick={() => {
+                        const yesToken = market?.tokens.find((t) => t.outcome === 'YES');
+                        if (yesToken) loadChart(yesToken.tokenId, resolution);
+                      }}
+                      className="mt-2 px-3 py-1 rounded-pf text-xs bg-pf-overlay hover:bg-pf-border transition-colors"
+                    >
+                      Retry
+                    </button>
                   </div>
                 )}
               </div>

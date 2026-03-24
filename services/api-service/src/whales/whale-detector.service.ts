@@ -196,17 +196,39 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
           new Prisma.Decimal(0),
         );
 
-        // TODO: Calculate win rate from resolved positions. This requires
-        // position resolution data (e.g., market outcomes) to determine which
-        // trades were winners vs losers. Once available, compute:
-        //   winRate = resolvedWins / totalResolved
-        // and include in the update below.
+        // Calculate win rate from resolved positions.
+        // A position is "resolved" when the market it belongs to has a known outcome.
+        // A trade is a "win" if the whale's outcome matches the market resolution.
+        const resolvedAlerts = [];
+        for (const alert of alerts) {
+          if (!alert.marketId) continue;
+          try {
+            const market = await this.prisma.market.findUnique({
+              where: { id: alert.marketId },
+              select: { resolved: true, outcome: true },
+            });
+            if (market?.resolved) {
+              resolvedAlerts.push({ alert, marketOutcome: market.outcome });
+            }
+          } catch {
+            // non-critical — skip unresolvable markets
+          }
+        }
+
+        let winRate: number | undefined;
+        if (resolvedAlerts.length > 0) {
+          const wins = resolvedAlerts.filter(
+            ({ alert, marketOutcome }) => alert.outcome === marketOutcome,
+          ).length;
+          winRate = (wins / resolvedAlerts.length) * 100;
+        }
 
         await this.prisma.whaleProfile.update({
           where: { walletAddress: profile.walletAddress },
           data: {
             totalVolume,
             tradeCount: alerts.length,
+            ...(winRate !== undefined ? { winRate: new Prisma.Decimal(winRate) } : {}),
           },
         });
       }

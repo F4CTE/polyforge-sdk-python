@@ -22,5 +22,20 @@ export function validateEnv(
         'MASTER_ENCRYPTION_KEY must not be all-zeros in production',
       );
     }
+
+    // Reject CHANGE_ME default JWT secrets in production
+    if (env.INTERNAL_JWT_SECRET?.startsWith('CHANGE_ME')) {
+      throw new Error(
+        'INTERNAL_JWT_SECRET must be changed from default in production',
+      );
+    }
+
+    // Reject mock CLOB API URL in production
+    const clobUrl = env.CLOB_API_URL;
+    if (!clobUrl || clobUrl.includes('mock')) {
+      throw new Error(
+        'CLOB_API_URL must point to real Polymarket API in production',
+      );
+    }
   }
 }

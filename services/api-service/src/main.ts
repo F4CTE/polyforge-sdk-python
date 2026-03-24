@@ -30,6 +30,22 @@ function validateEnv() {
     );
     process.exit(1);
   }
+
+  if (process.env.NODE_ENV === 'production') {
+    // Reject CHANGE_ME default JWT secrets
+    const secrets = ['USER_JWT_SECRET', 'ADMIN_JWT_SECRET', 'BOT_JWT_SECRET', 'INTERNAL_JWT_SECRET'];
+    for (const key of secrets) {
+      if (process.env[key]?.startsWith('CHANGE_ME')) {
+        throw new Error(`${key} must be changed from default in production`);
+      }
+    }
+
+    // Reject mock URLs in production
+    const clobUrl = process.env.CLOB_API_URL;
+    if (!clobUrl || clobUrl.includes('mock')) {
+      throw new Error('CLOB_API_URL must point to real Polymarket API in production');
+    }
+  }
 }
 
 async function bootstrap() {
