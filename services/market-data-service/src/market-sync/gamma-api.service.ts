@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { Interval } from "@nestjs/schedule";
 import { PrismaService } from "@polyforge/shared-db";
 import { PolymarketWsService } from "./polymarket-ws.service";
+import { GAMMA_LIMITER } from "../common/rate-limiter";
 
 interface GammaToken {
   tokenId: string;
@@ -118,6 +119,7 @@ export class GammaApiService implements OnModuleInit {
     offset: number,
     limit: number,
   ): Promise<GammaMarket[]> {
+    await GAMMA_LIMITER.acquire();
     const res = await fetch(
       `${this.gammaUrl}/markets?closed=false&limit=${limit}&offset=${offset}`,
       { signal: AbortSignal.timeout(10_000) },
