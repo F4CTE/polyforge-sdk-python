@@ -742,6 +742,59 @@ Allows strategies to invoke other strategies, enabling modular strategy design.
 
 ---
 
+## 19. Smart Score & Badges
+
+### Smart Score
+
+- Composite score computed from trading performance, activity, and social engagement
+- `GET /api/v1/scores/me` — authenticated user's score
+- `GET /api/v1/scores/top` — top trader leaderboard by Smart Score
+- `GET /api/v1/scores/:userId` — any user's public score
+
+### Badges
+
+- Achievement-based badges earned through milestones (e.g., first trade, streak, top P&L)
+- `GET /api/v1/scores/me/badges` — authenticated user's badges
+- `GET /api/v1/scores/:userId/badges` — any user's public badges
+
+---
+
+## 20. Gas Sponsorship
+
+- Platform-funded wallet absorbs Polygon gas fees for user transactions
+- Configurable per-user daily gas budget tracked in Redis (`GAS_DAILY_LIMIT_MATIC`, default 0.5 MATIC)
+- `GET /api/v1/settings/gas` — returns today's usage, daily limit, remaining allowance
+- Gas usage UI tab in settings with progress bar and usage breakdown
+- "Gasless" badge on portfolio page header
+
+---
+
+## 21. Educational Onboarding
+
+- 5 pre-built strategy templates seeded: Simple Momentum, Mean Reversion, News Reactive, Risk Manager, Whale Follower
+- Onboarding checklist widget for new users (joined within 7 days) with 6 getting-started tasks stored in localStorage
+- 5-step tooltip tour highlighting sidebar, market cards, strategy builder, theme toggle, and notification bell
+
+---
+
+## 22. WhatsApp Bot
+
+- WhatsApp Business Cloud API integration via bot-service
+- Webhook endpoint (`GET /webhook/whatsapp` for Meta verification, `POST /webhook/whatsapp` for incoming messages)
+- HMAC-SHA256 signature validation on incoming webhooks using `WHATSAPP_APP_SECRET`
+- Same command set as Telegram/Discord bots (see section 13)
+- Account linking via the same `/connect <code>` flow
+
+---
+
+## 23. Geoblocking
+
+- Nginx GeoIP2 module with MaxMind GeoLite2 database
+- Blocks access from US and restricted regions at the reverse proxy level
+- Country-based IP filtering applied before requests reach application services
+
+---
+
 ## Deferred (Future Versions)
 
 The following features are explicitly **out of scope for v1** and will be considered for future releases:
@@ -750,8 +803,6 @@ The following features are explicitly **out of scope for v1** and will be consid
 |---|---|
 | Protected strategies | Encrypted blocks, profit sharing with strategy creators |
 | Paid / subscription strategies | Strategy monetisation model |
-| WhatsApp bot | Requires Meta Business API approval |
-| Geoblocking | US + restricted regions (Nginx GeoIP2 + MaxMind) |
 | GDPR compliance | Data export, right to erasure, consent management |
 | Negative risk markets | Multi-outcome markets (beyond YES/NO) |
 | Mobile app | React Native or Capacitor |

@@ -7,11 +7,11 @@
 
 ## Next Up
 
-Phase 9 features in progress: gasless trading, educational onboarding, and future feature planning.
+Phase 10 planning in progress.
 
 ---
 
-## [Unreleased] — Gasless Trading & Educational Onboarding (Phase 9)
+## [Unreleased] — Gasless Trading, Onboarding, Admin Enhancements & New Features (Phase 9)
 
 ### Gasless Trading
 
@@ -28,6 +28,45 @@ Phase 9 features in progress: gasless trading, educational onboarding, and futur
 - [x] Onboarding checklist widget (6 tasks, localStorage, 7-day window)
 - [x] Tooltip tour (5 steps, highlighting key UI elements)
 - [x] Integration into app layout as overlays
+
+### Admin Key Rotation Endpoints
+
+- [x] `GET /api/v1/key-rotation/status` — JWT secret rotation status
+- [x] `POST /api/v1/key-rotation/start` — initiate JWT secret rotation (SUPER_ADMIN only)
+- [x] Dual secret validation with Redis grace period TTL
+- [x] `KeyRotationModule` registered in `AppModule`
+
+### Admin Create Strategy Template
+
+- [x] `POST /api/v1/strategies/templates` — mark strategy as platform template (SUPER_ADMIN only)
+- [x] Audit logging for template creation
+
+### Smart Score & Badges
+
+- [x] `GET /scores/me`, `GET /scores/top`, `GET /scores/:userId` — Smart Score endpoints
+- [x] `GET /scores/me/badges`, `GET /scores/:userId/badges` — Badge endpoints
+
+### WhatsApp Bot
+
+- [x] WhatsApp webhook controller (`GET /webhook/whatsapp`, `POST /webhook/whatsapp`)
+- [x] HMAC-SHA256 signature validation
+
+### Geoblocking
+
+- [x] Nginx GeoIP2 + MaxMind for US + restricted region blocking
+
+### Auth Waitlist
+
+- [x] `POST /auth/v1/waitlist` — public early-access waitlist join
+
+### WebSocket Enhancements
+
+- [x] `SUBSCRIBE_WHALES` / `UNSUBSCRIBE_WHALES` client messages
+- [x] `WHALE_TRADE` and `NEWS_SIGNAL` server events
+
+### Strategy Children
+
+- [x] `GET /api/v1/strategies/:id/children` — list sub-strategies
 
 ### Future Features Documentation
 

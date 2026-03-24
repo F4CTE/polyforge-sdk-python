@@ -401,6 +401,27 @@ Revoke an API key. The key becomes immediately unusable.
 
 ---
 
+### POST /auth/v1/waitlist
+
+Join the early-access waitlist.
+
+**Auth:** None
+**Rate limit:** 3 req/hour per IP
+
+**Request:**
+```json
+{ "email": "user@example.com" }
+```
+
+**Response `200`:**
+```json
+{ "joined": true }
+```
+
+**Errors:** `400 VALIDATION_ERROR` · `409 ALREADY_ON_WAITLIST`
+
+---
+
 ## API Service — User REST  (`/api/v1`)
 
 All endpoints require `Authorization: Bearer <USER_JWT>` unless noted.
@@ -640,6 +661,25 @@ Start a live strategy.
 ```json
 { "status": "RUNNING" }
 ```
+
+---
+
+#### GET /api/v1/strategies/:id/children
+
+List child (sub) strategies of a parent strategy.
+
+**Auth:** User JWT (own strategies)
+
+**Response `200`:**
+```json
+{
+  "children": [
+    { "id": "uuid", "name": "Child Strategy", "status": "RUNNING" }
+  ]
+}
+```
+
+**Errors:** `404 NOT_FOUND`
 
 ---
 
@@ -1125,6 +1165,78 @@ Toggle follow. Returns current follow state.
 
 ---
 
+## API Service — Smart Score & Badges (`/api/v1/scores`)
+
+All endpoints require `Authorization: Bearer <USER_JWT>`.
+
+### GET /api/v1/scores/me
+
+Get the authenticated user's Smart Score.
+
+**Response `200`:** Score object with composite score, breakdown by category, and rank.
+
+---
+
+### GET /api/v1/scores/top
+
+Get the top traders by Smart Score.
+
+**Response `200`:** Array of top-ranked score objects.
+
+---
+
+### GET /api/v1/scores/me/badges
+
+Get all badges earned by the authenticated user.
+
+**Response `200`:** Array of badge objects with name, description, and earned timestamp.
+
+---
+
+### GET /api/v1/scores/:userId
+
+Get Smart Score for a specific user.
+
+**Response `200`:** Score object.
+
+**Errors:** `404 NOT_FOUND`
+
+---
+
+### GET /api/v1/scores/:userId/badges
+
+Get badges for a specific user.
+
+**Response `200`:** Array of badge objects.
+
+**Errors:** `404 NOT_FOUND`
+
+---
+
+## Bot Service — WhatsApp Webhook (`/webhook/whatsapp`)
+
+### GET /webhook/whatsapp
+
+Meta verification challenge for WhatsApp Business Cloud API.
+
+**Auth:** None
+
+**Query params:** `hub.mode`, `hub.verify_token`, `hub.challenge`
+
+**Response `200`:** Returns the `hub.challenge` value if verification succeeds.
+
+---
+
+### POST /webhook/whatsapp
+
+Incoming WhatsApp message webhook. Validates `X-Hub-Signature-256` header using HMAC-SHA256 with `WHATSAPP_APP_SECRET`.
+
+**Auth:** None (signature-validated)
+
+**Response `200`:** `EVENT_RECEIVED`
+
+---
+
 ## API Service — WebSocket  (`wss://polyforge.app/ws`)
 
 ### Connection & auth
@@ -1147,6 +1259,8 @@ If the token is invalid, the server sends `AUTH_ERROR` and closes the connection
 | `UNSUBSCRIBE_PRICES` | `{ tokenIds: string[] }` | Unsubscribe |
 | `SUBSCRIBE_STRATEGY` | `{ strategyId: string }` | Subscribe to strategy events |
 | `UNSUBSCRIBE_STRATEGY` | `{ strategyId: string }` | Unsubscribe |
+| `SUBSCRIBE_WHALES` | `{}` | Subscribe to whale trade events |
+| `UNSUBSCRIBE_WHALES` | `{}` | Unsubscribe from whale trade events |
 | `PING` | `{}` | Keepalive |
 
 ### Server → Client messages
@@ -1180,6 +1294,8 @@ If the token is invalid, the server sends `AUTH_ERROR` and closes the connection
 | `NOTIFICATION` | `{ type, title, body }` | In-app notification |
 | `TICKET_REPLY` | `{ ticketId, subject, adminName }` | Admin replied to your ticket |
 | `TICKET_CLOSED` | `{ ticketId, subject }` | Your ticket was closed |
+| `WHALE_TRADE` | `{ walletAddress, tokenId, side, size, price }` | Whale trade detected (whale subscribers only) |
+| `NEWS_SIGNAL` | `{ newsId, marketId, direction, confidence, provider }` | AI-generated trade signal from news analysis |
 | `DISCONNECT` | `{ reason }` | Server is shutting down (graceful) |
 
 ---
@@ -1470,18 +1586,57 @@ Send a notification to all users or a subset.
 
 #### GET /api/v1/key-rotation/status
 
-Current or last rotation job status.
+Returns current JWT secret rotation status.
+
+**Auth:** Admin JWT
+
+**Response `200`:**
+```json
+{
+  "lastRotatedAt": "2026-03-24T10:00:00Z",
+  "nextScheduledAt": null,
+  "activeSecretsCount": 2,
+  "status": "idle"
+}
+```
 
 ---
 
 #### POST /api/v1/key-rotation/start
 
-Triggers the master key rotation job. SUPER_ADMIN only.
+Initiate JWT secret rotation. Generates a new secret, stores the old secret in Redis with a grace period TTL for dual validation, and returns the hash of the new secret.
 
-**Response `202`:**
+**Auth:** Admin JWT (SUPER_ADMIN only)
+
+**Response `200`:**
 ```json
-{ "jobId": "uuid", "status": "running", "totalUsers": 1250 }
+{
+  "secretHash": "sha256-hex-string",
+  "gracePeriodSeconds": 3600
+}
 ```
+
+---
+
+### Strategy Templates (Admin)
+
+#### POST /api/v1/strategies/templates
+
+Mark an existing strategy as a platform template. SUPER_ADMIN only.
+
+**Auth:** Admin JWT (SUPER_ADMIN only)
+
+**Request:**
+```json
+{ "strategyId": "uuid" }
+```
+
+**Response `200`:**
+```json
+{ "id": "uuid", "template": true }
+```
+
+**Errors:** `404 NOT_FOUND` · `422 ALREADY_TEMPLATE`
 
 ---
 

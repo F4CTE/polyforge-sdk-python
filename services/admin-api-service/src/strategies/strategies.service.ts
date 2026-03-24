@@ -125,6 +125,32 @@ export class StrategiesService {
     return { id, visibility: "PRIVATE" };
   }
 
+  async createTemplate(strategyId: string) {
+    const strategy = await this.prisma.strategy.findUnique({
+      where: { id: strategyId },
+    });
+    if (!strategy) {
+      throw new NotFoundException({
+        code: "NOT_FOUND",
+        message: "Strategy not found",
+      });
+    }
+
+    if (strategy.template) {
+      throw new HttpException(
+        { code: "ALREADY_TEMPLATE", message: "Strategy is already a template" },
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    const updated = await this.prisma.strategy.update({
+      where: { id: strategyId },
+      data: { template: true },
+    });
+
+    return { id: updated.id, template: true };
+  }
+
   private issueInternalToken(): string {
     return this.jwtService.sign(
       { iss: "admin-api-service", aud: "strategy-engine", jti: randomUUID() },

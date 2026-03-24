@@ -22,6 +22,7 @@ import { ConfigFlagsModule } from "./config-flags/config-flags.module";
 import { AuditModule } from "./common/audit/audit.module";
 import { AdminsModule } from "./admins/admins.module";
 import { TicketsModule } from "./tickets/tickets.module";
+import { KeyRotationModule } from "./key-rotation/key-rotation.module";
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { TicketsModule } from "./tickets/tickets.module";
     ConfigFlagsModule,
     AdminsModule,
     TicketsModule,
+    KeyRotationModule,
   ],
   controllers: [HealthController],
 })

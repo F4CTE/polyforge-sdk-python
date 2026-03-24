@@ -23,6 +23,45 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Tooltip tour** — 5-step guided tour highlighting sidebar, market cards, strategy builder, theme toggle, and notification bell
 - **App layout integration** — both onboarding components render as overlays for authenticated users
 
+### Added — Admin Key Rotation Endpoints
+
+- **JWT secret rotation API** — `GET /api/v1/key-rotation/status` returns current rotation status (last rotated, next scheduled, active secrets count)
+- **Start rotation** — `POST /api/v1/key-rotation/start` (SUPER_ADMIN only) generates a new JWT secret, stores old secret in Redis with grace period TTL for dual validation
+- **Key rotation module** — `KeyRotationModule` with service, controller, and audit logging registered in `AppModule`
+
+### Added — Admin Create Strategy Template Endpoint
+
+- **Mark strategy as template** — `POST /api/v1/strategies/templates` (SUPER_ADMIN only) accepts `{ strategyId }` and sets `template: true` on the strategy
+- **Audit logged** — all template creation actions logged with admin ID and IP
+
+### Added — Smart Score & Badges
+
+- **Smart Score system** — composite score from trading performance, activity, and social engagement
+- **Scores API** — `GET /scores/me`, `GET /scores/top`, `GET /scores/:userId` for score retrieval
+- **Badges API** — `GET /scores/me/badges`, `GET /scores/:userId/badges` for achievement badges
+
+### Added — WhatsApp Bot Integration
+
+- **WhatsApp webhook** — `GET /webhook/whatsapp` (Meta verification), `POST /webhook/whatsapp` (incoming messages)
+- **HMAC-SHA256 validation** — X-Hub-Signature-256 header verified with `WHATSAPP_APP_SECRET`
+
+### Added — Geoblocking
+
+- **GeoIP2 filtering** — Nginx GeoIP2 module with MaxMind database blocks US + restricted regions
+
+### Added — Auth Waitlist
+
+- **Public waitlist** — `POST /auth/v1/waitlist` allows users to join early-access waitlist (rate-limited)
+
+### Added — WebSocket Enhancements
+
+- **Whale trade subscriptions** — `SUBSCRIBE_WHALES` / `UNSUBSCRIBE_WHALES` client messages, `WHALE_TRADE` server events
+- **News signals** — `NEWS_SIGNAL` server events pushed to all authenticated users
+
+### Added — Strategy Children Endpoint
+
+- **Sub-strategy listing** — `GET /api/v1/strategies/:id/children` returns child strategies of a parent
+
 ### Added — Future Features Documentation
 
 - **`docs/19-future-features.md`** — documented 7 potential future features: Arbitrage Scanner, Multi-Platform Aggregation, Browser Extension, Mobile App (React Native), Fund Management, UMA Oracle Dashboard, LP / Market Making

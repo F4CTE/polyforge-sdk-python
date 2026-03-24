@@ -5,6 +5,7 @@ import {
   Patch,
   Param,
   Query,
+  Body,
   UseGuards,
   ParseIntPipe,
   DefaultValuePipe,
@@ -12,12 +13,14 @@ import {
 } from "@nestjs/common";
 import { StrategiesService } from "./strategies.service";
 import { AdminJwtGuard } from "../common/guard/admin-jwt.guard";
+import { RolesGuard } from "../common/guard/roles.guard";
+import { Roles } from "../common/decorators/roles.decorator";
 import { AuditService } from "../common/audit/audit.service";
 import {
   CurrentAdmin,
   AdminIp,
 } from "../common/decorators/current-admin.decorator";
-import { AdminJwtPayload } from "@polyforge/shared-types";
+import { AdminJwtPayload, AdminRole } from "@polyforge/shared-types";
 
 @UseGuards(AdminJwtGuard)
 @Controller("strategies")
@@ -36,6 +39,25 @@ export class StrategiesController {
     @Query("visibility") visibility?: string,
   ) {
     return this.strategies.findAll({ page, limit, userId, status, visibility });
+  }
+
+  @Post("templates")
+  @UseGuards(RolesGuard)
+  @Roles(AdminRole.SUPER_ADMIN)
+  async createTemplate(
+    @Body("strategyId", ParseUUIDPipe) strategyId: string,
+    @CurrentAdmin() admin: AdminJwtPayload,
+    @AdminIp() ip: string,
+  ) {
+    const result = await this.strategies.createTemplate(strategyId);
+    await this.audit.log({
+      adminId: admin.sub,
+      action: "CREATE_STRATEGY_TEMPLATE",
+      targetType: "strategy",
+      targetId: strategyId,
+      ip,
+    });
+    return result;
   }
 
   @Post(":id/force-stop")
