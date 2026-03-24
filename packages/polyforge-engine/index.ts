@@ -1,26 +1,9 @@
-// Thin TypeScript wrapper around the Rust WASM strategy evaluation engine.
-// SECURITY: In production, WASM is MANDATORY — no fallback allowed.
-// The TypeScript fallback is only permitted in development.
+// Rust WASM strategy evaluation engine — NO FALLBACK
+// SECURITY: If the WASM module is not built, the process crashes.
+// This ensures we never run strategy evaluation in JS with GC pauses.
+// Build with: cd packages/polyforge-engine && bash build.sh
 
-let wasmModule: any = null;
-let wasmAvailable = false;
-
-try {
-  wasmModule = require('./pkg/polyforge_engine');
-  wasmAvailable = true;
-} catch {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error(
-      'FATAL: polyforge-engine WASM module not found. ' +
-      'Rust WASM is REQUIRED in production for secure, GC-free strategy evaluation. ' +
-      'Run: cd packages/polyforge-engine && bash build.sh'
-    );
-  }
-  console.warn('[DEV] polyforge-engine WASM not available, using TypeScript fallback');
-}
-
-/** Returns true if the Rust WASM module is active (not the JS fallback) */
-export function isWasmActive(): boolean { return wasmAvailable; }
+const wasmModule = require('./pkg/polyforge_engine');
 
 export interface EvalContext {
   current_price: number;
@@ -65,26 +48,12 @@ export function evaluateTick(
   actions: Block[],
   context: EvalContext,
 ): EvalResult {
-  if (wasmModule) {
-    const result = wasmModule.evaluate_tick(
-      JSON.stringify(safety),
-      JSON.stringify(triggers),
-      JSON.stringify(conditions),
-      JSON.stringify(actions),
-      JSON.stringify(context),
-    );
-    return JSON.parse(result);
-  }
-  // TypeScript fallback — delegate to existing strategy-runner logic
-  return {
-    safety_passed: true,
-    safety_reason: null,
-    triggered: false,
-    conditions_met: false,
-    actions: [],
-  };
-}
-
-export function isWasmAvailable(): boolean {
-  return wasmModule !== null;
+  const result = wasmModule.evaluate_tick(
+    JSON.stringify(safety),
+    JSON.stringify(triggers),
+    JSON.stringify(conditions),
+    JSON.stringify(actions),
+    JSON.stringify(context),
+  );
+  return JSON.parse(result);
 }
