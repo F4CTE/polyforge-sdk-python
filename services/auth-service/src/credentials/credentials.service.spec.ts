@@ -130,6 +130,44 @@ describe('CredentialsService', () => {
       });
     });
 
+    it('stops running strategies before calling signer-service DELETE', async () => {
+      const user = connectedUser();
+      db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+      db.user.update.mockResolvedValue({
+        ...user,
+        polymarketConnected: false,
+      } as any);
+
+      // First fetch: list running strategies
+      // Second fetch: stop strategy
+      // Third fetch: delete from signer
+      fetchSpy
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue([{ id: 'strat-1' }]),
+        })
+        .mockResolvedValueOnce({ ok: true }) // stop strategy
+        .mockResolvedValueOnce({ ok: true }); // delete from signer
+
+      await service.delete(user.id);
+
+      // Verify strategy engine was called to list running strategies
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.stringContaining(`/internal/strategies?userId=${encodeURIComponent(user.id)}&status=RUNNING`),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: expect.stringContaining('Bearer'),
+          }),
+        }),
+      );
+
+      // Verify strategy was stopped
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.stringContaining('/internal/strategies/strat-1'),
+        expect.objectContaining({ method: 'DELETE' }),
+      );
+    });
+
     it('calls signer-service DELETE and disconnects user on success', async () => {
       const user = connectedUser();
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
@@ -137,14 +175,13 @@ describe('CredentialsService', () => {
         ...user,
         polymarketConnected: false,
       } as any);
-      fetchSpy.mockResolvedValue({ ok: true });
+      // Strategy engine returns empty list, signer returns OK
+      fetchSpy
+        .mockResolvedValueOnce({ ok: true, json: vi.fn().mockResolvedValue([]) })
+        .mockResolvedValueOnce({ ok: true });
 
       await service.delete(user.id);
 
-      expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining(`/internal/v1/credentials/${user.id}`),
-        expect.objectContaining({ method: 'DELETE' }),
-      );
       expect(db.user.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ polymarketConnected: false }),
@@ -152,11 +189,25 @@ describe('CredentialsService', () => {
       );
     });
 
+    it('succeeds even if strategy engine is unreachable (logs warning)', async () => {
+      const user = connectedUser();
+      db.user.findUniqueOrThrow.mockResolvedValue(user as any);
+      db.user.update.mockResolvedValue(user as any);
+      // Strategy engine fails, signer succeeds
+      fetchSpy
+        .mockRejectedValueOnce(new Error('ECONNREFUSED'))
+        .mockResolvedValueOnce({ ok: true });
+
+      await expect(service.delete(user.id)).resolves.toBeUndefined();
+    });
+
     it('succeeds even if signer returns 404 (credentials already gone)', async () => {
       const user = connectedUser();
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
       db.user.update.mockResolvedValue(user as any);
-      fetchSpy.mockResolvedValue({ ok: false, status: 404 });
+      fetchSpy
+        .mockResolvedValueOnce({ ok: true, json: vi.fn().mockResolvedValue([]) })
+        .mockResolvedValueOnce({ ok: false, status: 404 });
 
       await expect(service.delete(user.id)).resolves.toBeUndefined();
     });
@@ -164,7 +215,9 @@ describe('CredentialsService', () => {
     it('throws SIGNER_ERROR (502) when signer-service DELETE returns non-OK non-404', async () => {
       const user = connectedUser();
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
-      fetchSpy.mockResolvedValue({ ok: false, status: 500 });
+      fetchSpy
+        .mockResolvedValueOnce({ ok: true, json: vi.fn().mockResolvedValue([]) })
+        .mockResolvedValueOnce({ ok: false, status: 500 });
 
       await expect(service.delete(user.id)).rejects.toMatchObject({
         response: { code: 'SIGNER_ERROR' },
@@ -175,7 +228,9 @@ describe('CredentialsService', () => {
     it('throws SIGNER_UNAVAILABLE (503) when signer-service is unreachable on delete', async () => {
       const user = connectedUser();
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
-      fetchSpy.mockRejectedValue(new Error('ECONNREFUSED'));
+      fetchSpy
+        .mockResolvedValueOnce({ ok: true, json: vi.fn().mockResolvedValue([]) })
+        .mockRejectedValueOnce(new Error('ECONNREFUSED'));
 
       await expect(service.delete(user.id)).rejects.toMatchObject({
         response: { code: 'SIGNER_UNAVAILABLE' },

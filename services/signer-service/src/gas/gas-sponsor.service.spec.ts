@@ -22,6 +22,7 @@ function createMockConfig(overrides: Record<string, string> = {}) {
     GAS_DAILY_LIMIT_MATIC: "0.5",
     GAS_SPONSOR_PRIVATE_KEY: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
     NODE_ENV: "development",
+    GAS_ESTIMATE_MATIC: "0.002",
     ...overrides,
   };
   return {
@@ -116,6 +117,41 @@ describe("GasSponsorService", () => {
       const result = await service.sponsorGas("user-1", 0.01);
 
       expect(result).toBe(false);
+    });
+  });
+
+  // ── gasEstimateMatic from env ─────────────────────────────────────────────
+
+  describe("gasEstimateMatic", () => {
+    it("reads gas estimate from GAS_ESTIMATE_MATIC env var", () => {
+      config = createMockConfig({ GAS_ESTIMATE_MATIC: "0.005" });
+      service = new GasSponsorService(config as any, redis as any);
+
+      expect(service.gasEstimateMatic).toBe(0.005);
+    });
+
+    it("defaults to 0.002 when GAS_ESTIMATE_MATIC is not set", () => {
+      const configWithoutGas = createMockConfig();
+      // Remove the key to test default
+      configWithoutGas.get.mockImplementation((key: string) => {
+        const defaults: Record<string, string> = {
+          GAS_SPONSOR_ENABLED: "true",
+          GAS_DAILY_LIMIT_MATIC: "0.5",
+          GAS_SPONSOR_PRIVATE_KEY: "0xdeadbeef",
+          NODE_ENV: "development",
+        };
+        return defaults[key];
+      });
+      service = new GasSponsorService(configWithoutGas as any, redis as any);
+
+      expect(service.gasEstimateMatic).toBe(0.002);
+    });
+
+    it("parses string value to float", () => {
+      config = createMockConfig({ GAS_ESTIMATE_MATIC: "0.0035" });
+      service = new GasSponsorService(config as any, redis as any);
+
+      expect(service.gasEstimateMatic).toBe(0.0035);
     });
   });
 

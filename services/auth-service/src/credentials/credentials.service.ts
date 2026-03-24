@@ -15,6 +15,7 @@ import { randomUUID } from 'crypto';
 export class CredentialsService {
   private readonly logger = new Logger(CredentialsService.name);
   private readonly signerUrl: string;
+  private readonly strategyEngineUrl: string;
   private readonly internalJwtSecret: string;
 
   constructor(
@@ -25,6 +26,10 @@ export class CredentialsService {
     this.signerUrl = this.config.get<string>(
       'SIGNER_SERVICE_URL',
       'http://signer-service:3004',
+    );
+    this.strategyEngineUrl = this.config.get<string>(
+      'STRATEGY_ENGINE_URL',
+      'http://strategy-engine:3006',
     );
     this.internalJwtSecret = this.config.getOrThrow<string>('INTERNAL_JWT_SECRET');
   }
@@ -86,8 +91,10 @@ export class CredentialsService {
       );
     }
 
-    // TODO: Check for running strategies before deletion (requires strategy-service)
-    // For now, notify signer-service to remove the stored credentials
+    // Stop all running strategies before deleting credentials
+    await this.stopRunningStrategies(userId);
+
+    // Notify signer-service to remove the stored credentials
     await this.deleteFromSigner(userId);
 
     await this.prisma.user.update({
@@ -100,6 +107,48 @@ export class CredentialsService {
     });
 
     this.logger.log(`Polymarket credentials deleted for user ${userId}`);
+  }
+
+  // ─── Stop running strategies ──────────────────────────────────────────────
+
+  private async stopRunningStrategies(userId: string): Promise<void> {
+    try {
+      const token = this.issueInternalToken();
+      const listUrl = `${this.strategyEngineUrl}/internal/strategies?userId=${encodeURIComponent(userId)}&status=RUNNING`;
+
+      const listRes = await fetch(listUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(10_000),
+      });
+
+      if (!listRes.ok) {
+        this.logger.warn(
+          `Failed to fetch running strategies for user ${userId}: ${listRes.status}`,
+        );
+        return;
+      }
+
+      const strategies: any[] = await listRes.json();
+
+      for (const s of strategies) {
+        try {
+          const stopToken = this.issueInternalToken();
+          await fetch(`${this.strategyEngineUrl}/internal/strategies/${s.id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${stopToken}` },
+            signal: AbortSignal.timeout(10_000),
+          });
+          this.logger.log(`Stopped strategy ${s.id} before credential deletion for user ${userId}`);
+        } catch (err) {
+          this.logger.warn(`Failed to stop strategy ${s.id}: ${(err as Error)?.message}`);
+        }
+      }
+    } catch (err) {
+      // Strategy engine may be unavailable — log but don't block credential deletion
+      this.logger.warn(
+        `Could not reach strategy engine to stop strategies for user ${userId}: ${(err as Error)?.message}`,
+      );
+    }
   }
 
   // ─── Internal HTTP to signer-service ─────────────────────────────────────────

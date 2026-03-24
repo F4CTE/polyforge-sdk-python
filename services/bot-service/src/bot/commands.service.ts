@@ -12,6 +12,11 @@ if (!INTERNAL_SECRET) {
   throw new Error("INTERNAL_JWT_SECRET env var is required");
 }
 
+const BOT_JWT_SECRET = process.env.BOT_JWT_SECRET;
+if (!BOT_JWT_SECRET) {
+  throw new Error("BOT_JWT_SECRET env var is required");
+}
+
 const HELP_TEXT = `
 📖 Polyforge Bot Commands
 

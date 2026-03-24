@@ -15,9 +15,17 @@ function makeConfig(overrides: Record<string, string> = {}): ConfigService {
     POLY_BUILDER_SECRET: BUILDER_SECRET,
     POLY_BUILDER_PASSPHRASE: "test-builder-pass",
     NODE_ENV: "development", // forces dev stub path
+    CLOB_API_URL: "http://mock-polymarket:3099",
     ...overrides,
   };
   return { get: (k: string, d?: string) => map[k] ?? d ?? "" } as any;
+}
+
+function makeMockRedis() {
+  return {
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue("OK"),
+  };
 }
 
 const DECRYPTED_CREDS = {
@@ -44,13 +52,15 @@ const BASE_REQ = {
 describe("SigningService", () => {
   let svc: SigningService;
   let credentials: CredentialsService;
+  let redis: ReturnType<typeof makeMockRedis>;
 
   beforeEach(() => {
     credentials = {
       getDecryptedCredentials: vi.fn().mockResolvedValue(DECRYPTED_CREDS),
     } as any;
     const gasSponsor = { sponsorGas: vi.fn().mockResolvedValue(true), isActive: vi.fn().mockReturnValue(true) } as any;
-    svc = new SigningService(credentials, makeConfig(), gasSponsor);
+    redis = makeMockRedis();
+    svc = new SigningService(credentials, makeConfig(), gasSponsor, redis as any);
   });
 
   // ── Dev stub signing ──────────────────────────────────────────────────────
@@ -191,12 +201,88 @@ describe("SigningService", () => {
         ...BASE_REQ,
         requestId: "r2",
       });
-      // Signatures may differ due to different requestId or timestamp
-      // At least one of timestamp or signature will differ
       const differ =
         h1.POLY_BUILDER_TIMESTAMP !== h2.POLY_BUILDER_TIMESTAMP ||
         h1.POLY_BUILDER_SIGNATURE !== h2.POLY_BUILDER_SIGNATURE;
       expect(differ).toBe(true);
+    });
+  });
+
+  // ── Production validation ─────────────────────────────────────────────────
+
+  describe("onModuleInit — production validation", () => {
+    it("throws when CLOB_API_URL contains 'mock' in production", () => {
+      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
+      const prodSvc = new SigningService(
+        credentials,
+        makeConfig({ NODE_ENV: "production", CLOB_API_URL: "http://mock-polymarket:3099" }),
+        gasSponsor,
+        redis as any,
+      );
+
+      expect(() => prodSvc.onModuleInit()).toThrow("Production requires real CLOB_API_URL");
+    });
+
+    it("throws when builder keys are missing in production", () => {
+      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
+      const prodSvc = new SigningService(
+        credentials,
+        makeConfig({
+          NODE_ENV: "production",
+          CLOB_API_URL: "https://clob.polymarket.com",
+          POLY_BUILDER_API_KEY: "",
+        }),
+        gasSponsor,
+        redis as any,
+      );
+
+      expect(() => prodSvc.onModuleInit()).toThrow(
+        "Production requires POLY_BUILDER_API_KEY",
+      );
+    });
+
+    it("does not throw in dev mode even with mock URLs", () => {
+      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
+      const devSvc = new SigningService(
+        credentials,
+        makeConfig({ NODE_ENV: "development" }),
+        gasSponsor,
+        redis as any,
+      );
+
+      expect(() => devSvc.onModuleInit()).not.toThrow();
+    });
+  });
+
+  // ── Gas estimate from env ─────────────────────────────────────────────────
+
+  describe("gas estimate configuration", () => {
+    it("uses GAS_ESTIMATE_MATIC from env when set", async () => {
+      const gasSponsor = { sponsorGas: vi.fn().mockResolvedValue(true), isActive: vi.fn() } as any;
+      const customSvc = new SigningService(
+        credentials,
+        makeConfig({ GAS_ESTIMATE_MATIC: "0.005" }),
+        gasSponsor,
+        redis as any,
+      );
+
+      await customSvc.signOrder(BASE_REQ);
+
+      expect(gasSponsor.sponsorGas).toHaveBeenCalledWith("user-1", 0.005);
+    });
+
+    it("defaults gas estimate to 0.002 MATIC when env not set", async () => {
+      const gasSponsor = { sponsorGas: vi.fn().mockResolvedValue(true), isActive: vi.fn() } as any;
+      const defaultSvc = new SigningService(
+        credentials,
+        makeConfig(),
+        gasSponsor,
+        redis as any,
+      );
+
+      await defaultSvc.signOrder(BASE_REQ);
+
+      expect(gasSponsor.sponsorGas).toHaveBeenCalledWith("user-1", 0.002);
     });
   });
 });

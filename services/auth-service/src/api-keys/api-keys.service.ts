@@ -1,12 +1,11 @@
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '@polyforge/shared-db';
 import { createHash, randomBytes } from 'crypto';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
 
 const MAX_ACTIVE_KEYS = 10;
-
-// TODO: Implement API key rotation flow (create new key → deprecation period → revoke old).
-// This allows users to rotate keys without downtime and should be added in a future version.
+const DEPRECATION_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 @Injectable()
 export class ApiKeysService {
@@ -107,5 +106,100 @@ export class ApiKeysService {
     });
 
     return { revoked: true };
+  }
+
+  // ─── Key Rotation ──────────────────────────────────────────────────────────
+
+  /**
+   * Rotates an API key: creates a new key and marks the old one as deprecated.
+   * Both keys work during a 24-hour grace period, after which the old key is
+   * automatically revoked by the hourly cron job.
+   */
+  async rotateKey(oldKeyId: string, userId: string) {
+    const oldKey = await this.prisma.apiKey.findUnique({
+      where: { id: oldKeyId },
+    });
+
+    if (!oldKey || oldKey.userId !== userId) {
+      throw new HttpException(
+        { code: 'NOT_FOUND', message: 'API key not found' },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    if (oldKey.revoked) {
+      throw new HttpException(
+        { code: 'ALREADY_REVOKED', message: 'Cannot rotate a revoked key' },
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    // Create the new key reusing create() logic
+    const newKey = await this.create(userId, {
+      name: `${oldKey.name} (rotated)`,
+      scopes: oldKey.scopes as string[],
+      expiresAt: oldKey.expiresAt?.toISOString() ?? undefined,
+    } as CreateApiKeyDto);
+
+    // Mark the old key as deprecated with a 24-hour grace period
+    const deprecatedAt = new Date();
+    const deprecatedExpiresAt = new Date(deprecatedAt.getTime() + DEPRECATION_GRACE_PERIOD_MS);
+
+    await this.prisma.apiKey.update({
+      where: { id: oldKeyId },
+      data: {
+        deprecated: true,
+        deprecatedAt,
+        deprecatedExpiresAt,
+      } as any,
+    });
+
+    this.logger.log(
+      `API key rotated: old=${oldKeyId} new=${newKey.id} user=${userId} ` +
+        `graceExpires=${deprecatedExpiresAt.toISOString()}`,
+    );
+
+    return {
+      newKey,
+      oldKeyId,
+      graceExpiresAt: deprecatedExpiresAt,
+    };
+  }
+
+  // ─── Cron: Revoke expired deprecated keys ──────────────────────────────────
+
+  /**
+   * Runs every hour to revoke deprecated keys whose grace period has expired.
+   */
+  @Cron('0 * * * *')
+  async revokeExpiredDeprecatedKeys(): Promise<number> {
+    const now = new Date();
+
+    const expiredKeys = await this.prisma.apiKey.findMany({
+      where: {
+        deprecated: true,
+        revoked: false,
+        deprecatedExpiresAt: { lte: now },
+      } as any,
+      select: { id: true },
+    });
+
+    if (expiredKeys.length === 0) return 0;
+
+    await this.prisma.apiKey.updateMany({
+      where: {
+        id: { in: expiredKeys.map((k) => k.id) },
+      },
+      data: {
+        revoked: true,
+        revokedAt: now,
+      },
+    });
+
+    this.logger.log(
+      `Revoked ${expiredKeys.length} deprecated API key(s) past grace period`,
+    );
+
+    return expiredKeys.length;
   }
 }

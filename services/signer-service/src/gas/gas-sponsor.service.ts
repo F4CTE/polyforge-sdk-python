@@ -31,6 +31,13 @@ export class GasSponsorService {
   private readonly dailyLimitMatic: number;
   private readonly sponsorPrivateKey: string;
 
+  /**
+   * Default gas estimate in MATIC. Configurable via GAS_ESTIMATE_MATIC env var.
+   * TODO: Eventually replace with a real-time gas oracle (e.g., Polygon gas station)
+   * to dynamically estimate gas costs based on current network conditions.
+   */
+  readonly gasEstimateMatic: number;
+
   constructor(
     private readonly config: ConfigService,
     private readonly redis: RedisService,
@@ -43,6 +50,11 @@ export class GasSponsorService {
     this.sponsorPrivateKey =
       this.config.get<string>("GAS_SPONSOR_PRIVATE_KEY") ?? "";
 
+    // Configurable gas estimate — should eventually be replaced with a gas oracle
+    this.gasEstimateMatic = parseFloat(
+      this.config.get<string>("GAS_ESTIMATE_MATIC") ?? "0.002",
+    );
+
     if (this.enabled && !this.sponsorPrivateKey) {
       this.logger.warn(
         "GAS_SPONSOR_ENABLED=true but GAS_SPONSOR_PRIVATE_KEY is not set. " +
@@ -52,7 +64,7 @@ export class GasSponsorService {
 
     this.logger.log(
       `Gas sponsorship ${this.enabled ? "ENABLED" : "DISABLED"} ` +
-        `(daily limit: ${this.dailyLimitMatic} MATIC)`,
+        `(daily limit: ${this.dailyLimitMatic} MATIC, estimate: ${this.gasEstimateMatic} MATIC)`,
     );
   }
 

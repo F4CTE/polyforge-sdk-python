@@ -335,4 +335,155 @@ describe('ApiKeysService', () => {
       expect(db.apiKey.update).not.toHaveBeenCalled();
     });
   });
+
+  // ── rotateKey ─────────────────────────────────────────────────────────────
+
+  describe('rotateKey', () => {
+    const oldKey = {
+      id: 'old-key-1',
+      userId: 'user-1',
+      name: 'Production Key',
+      scopes: ['READ', 'TRADE'],
+      expiresAt: null,
+      revoked: false,
+    };
+
+    it('creates a new key and marks old key as deprecated', async () => {
+      db.apiKey.findUnique.mockResolvedValue(oldKey as any);
+      db.apiKey.count.mockResolvedValue(1);
+      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+        Promise.resolve({
+          id: 'new-key-1',
+          name: data.name,
+          prefix: data.prefix,
+          tokenHash: data.tokenHash,
+          scopes: data.scopes,
+          expiresAt: data.expiresAt,
+          createdAt: new Date(),
+        }),
+      );
+      db.apiKey.update.mockResolvedValue({} as any);
+
+      const result = await service.rotateKey('old-key-1', 'user-1');
+
+      expect(result.newKey.id).toBe('new-key-1');
+      expect(result.newKey.key).toMatch(/^pf_/);
+      expect(result.oldKeyId).toBe('old-key-1');
+      expect(result.graceExpiresAt).toBeInstanceOf(Date);
+
+      // Verify the old key was marked as deprecated
+      expect(db.apiKey.update).toHaveBeenCalledWith({
+        where: { id: 'old-key-1' },
+        data: expect.objectContaining({
+          deprecated: true,
+          deprecatedAt: expect.any(Date),
+          deprecatedExpiresAt: expect.any(Date),
+        }),
+      });
+    });
+
+    it('sets 24-hour grace period on deprecated key', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-03-24T12:00:00Z'));
+
+      db.apiKey.findUnique.mockResolvedValue(oldKey as any);
+      db.apiKey.count.mockResolvedValue(1);
+      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+        Promise.resolve({
+          id: 'new-key-1',
+          name: data.name,
+          prefix: data.prefix,
+          tokenHash: data.tokenHash,
+          scopes: data.scopes,
+          expiresAt: data.expiresAt,
+          createdAt: new Date(),
+        }),
+      );
+      db.apiKey.update.mockResolvedValue({} as any);
+
+      const result = await service.rotateKey('old-key-1', 'user-1');
+
+      expect(result.graceExpiresAt).toEqual(new Date('2026-03-25T12:00:00Z'));
+
+      vi.useRealTimers();
+    });
+
+    it('throws NOT_FOUND (404) for unknown key', async () => {
+      db.apiKey.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.rotateKey('nonexistent', 'user-1'),
+      ).rejects.toMatchObject({
+        response: { code: 'NOT_FOUND' },
+        status: HttpStatus.NOT_FOUND,
+      });
+    });
+
+    it('throws ALREADY_REVOKED (409) when key is already revoked', async () => {
+      db.apiKey.findUnique.mockResolvedValue({
+        ...oldKey,
+        revoked: true,
+      } as any);
+
+      await expect(
+        service.rotateKey('old-key-1', 'user-1'),
+      ).rejects.toMatchObject({
+        response: { code: 'ALREADY_REVOKED' },
+        status: HttpStatus.CONFLICT,
+      });
+    });
+
+    it('names the new key with (rotated) suffix', async () => {
+      db.apiKey.findUnique.mockResolvedValue(oldKey as any);
+      db.apiKey.count.mockResolvedValue(1);
+      (db.apiKey.create as any).mockImplementation(({ data }: any) =>
+        Promise.resolve({
+          id: 'new-key-1',
+          name: data.name,
+          prefix: data.prefix,
+          tokenHash: data.tokenHash,
+          scopes: data.scopes,
+          expiresAt: data.expiresAt,
+          createdAt: new Date(),
+        }),
+      );
+      db.apiKey.update.mockResolvedValue({} as any);
+
+      const result = await service.rotateKey('old-key-1', 'user-1');
+
+      expect(result.newKey.name).toBe('Production Key (rotated)');
+    });
+  });
+
+  // ── revokeExpiredDeprecatedKeys (cron) ─────────────────────────────────────
+
+  describe('revokeExpiredDeprecatedKeys', () => {
+    it('revokes deprecated keys past grace period', async () => {
+      db.apiKey.findMany.mockResolvedValue([
+        { id: 'expired-1' },
+        { id: 'expired-2' },
+      ] as any);
+      db.apiKey.updateMany.mockResolvedValue({ count: 2 } as any);
+
+      const count = await service.revokeExpiredDeprecatedKeys();
+
+      expect(count).toBe(2);
+      expect(db.apiKey.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: ['expired-1', 'expired-2'] } },
+        data: {
+          revoked: true,
+          revokedAt: expect.any(Date),
+        },
+      });
+    });
+
+    it('returns 0 when no deprecated keys have expired', async () => {
+      db.apiKey.findMany.mockResolvedValue([] as any);
+
+      const count = await service.revokeExpiredDeprecatedKeys();
+
+      expect(count).toBe(0);
+      expect(db.apiKey.updateMany).not.toHaveBeenCalled();
+    });
+  });
 });
