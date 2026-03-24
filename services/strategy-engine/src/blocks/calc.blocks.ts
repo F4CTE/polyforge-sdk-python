@@ -122,8 +122,8 @@ export const ComparisonBlockEvaluator: CalcBlockEvaluator = {
         booleanValue = a !== b;
         break;
       case "between": {
-        const min = Number(block.min ?? block.params?.min ?? 0);
-        const max = Number(block.max ?? block.params?.max ?? 0);
+        const min = Number(block.min ?? (block.params as Record<string, unknown>)?.min ?? 0);
+        const max = Number(block.max ?? (block.params as Record<string, unknown>)?.max ?? 0);
         booleanValue = a >= min && a <= max;
         break;
       }
