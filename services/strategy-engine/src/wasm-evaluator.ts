@@ -2,22 +2,21 @@ import { Logger } from "@nestjs/common";
 
 const logger = new Logger("WasmEvaluator");
 
-let wasmEngine: any = null;
-
-/**
- * Lazy-load the WASM engine. Returns null if not available (graceful fallback to JS).
- */
-function getEngine(): any {
-  if (wasmEngine !== null) return wasmEngine;
+// Load WASM engine — MANDATORY, no fallback
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const wasmEngine = (() => {
   try {
-    wasmEngine = require("@polyforge/engine");
-    logger.log("WASM strategy engine loaded successfully");
+    const engine = require("@polyforge/engine");
+    logger.log("WASM strategy engine loaded — sandboxed evaluation active");
+    return engine;
   } catch (err: any) {
-    logger.warn(`WASM engine not available, using JS fallback: ${err?.message}`);
-    wasmEngine = false; // marker: tried and failed
+    throw new Error(
+      `SECURITY: @polyforge/engine WASM module is REQUIRED but not available: ${err?.message}\n` +
+      "The strategy-engine MUST use the Rust WASM evaluator for expression sandboxing. " +
+      "Build with: cd packages/polyforge-engine && wasm-pack build --target nodejs"
+    );
   }
-  return wasmEngine || null;
-}
+})();
 
 export interface WasmEvalContext {
   current_price: number;
@@ -49,7 +48,7 @@ export interface WasmEvalResult {
 
 /**
  * Evaluate a strategy tick using the Rust WASM engine.
- * Returns null if the WASM engine is not available (caller should use JS fallback).
+ * MANDATORY — throws if WASM engine is not available.
  */
 export function wasmEvaluateTick(
   safety: any[],
@@ -57,19 +56,11 @@ export function wasmEvaluateTick(
   conditions: any[],
   actions: any[],
   context: WasmEvalContext,
-): WasmEvalResult | null {
-  const engine = getEngine();
-  if (!engine) return null;
-
-  try {
-    return engine.evaluateTick(safety, triggers, conditions, actions, context);
-  } catch (err: any) {
-    logger.error(`WASM evaluation failed: ${err?.message}`);
-    return null; // fallback to JS
-  }
+): WasmEvalResult {
+  return wasmEngine.evaluateTick(safety, triggers, conditions, actions, context);
 }
 
-/** Check if the WASM engine is available */
+/** Always true — WASM engine is mandatory */
 export function isWasmAvailable(): boolean {
-  return getEngine() !== null;
+  return true;
 }

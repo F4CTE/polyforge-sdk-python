@@ -1,3 +1,19 @@
+# ── Rust build stage: compile NAPI-RS crypto addon ────────────────────────────
+FROM node:24-alpine AS rust-builder
+
+RUN apk add --no-cache curl gcc musl-dev && \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+WORKDIR /app
+COPY packages/polyforge-crypto-native/ ./packages/polyforge-crypto-native/
+
+RUN cd packages/polyforge-crypto-native && \
+    npm init -y > /dev/null 2>&1 && \
+    npm install @napi-rs/cli@2 && \
+    npx napi build --platform --release
+
+# ── TypeScript build stage ────────────────────────────────────────────────────
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
 FROM node:24-alpine AS builder
 
@@ -13,6 +29,7 @@ COPY packages/shared-redis/package.json   ./packages/shared-redis/
 COPY packages/shared-types/package.json   ./packages/shared-types/
 COPY packages/logger/package.json         ./packages/logger/
 COPY packages/shared-auth/package.json    ./packages/shared-auth/
+COPY packages/polyforge-crypto-native/package.json ./packages/polyforge-crypto-native/
 COPY services/signer-service/package.json ./services/signer-service/
 
 RUN echo "shamefully-hoist=true" > .npmrc && \
@@ -69,6 +86,11 @@ COPY --from=builder /app/packages/shared-types/dist/     ./packages/shared-types
 COPY --from=builder /app/packages/logger/dist/           ./packages/logger/dist/
 COPY --from=builder /app/packages/shared-auth/dist/      ./packages/shared-auth/dist/
 COPY --from=builder /app/services/signer-service/dist    ./services/signer-service/dist
+
+# SECURITY: Rust NAPI-RS crypto addon — mandatory for memory-safe key handling
+COPY --from=rust-builder /app/packages/polyforge-crypto-native/*.node ./node_modules/@polyforge/crypto-native/
+COPY --from=rust-builder /app/packages/polyforge-crypto-native/index.js ./node_modules/@polyforge/crypto-native/
+COPY --from=rust-builder /app/packages/polyforge-crypto-native/package.json ./node_modules/@polyforge/crypto-native/
 
 COPY --from=builder /app/node_modules/.prisma          ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma/engines  ./node_modules/@prisma/engines

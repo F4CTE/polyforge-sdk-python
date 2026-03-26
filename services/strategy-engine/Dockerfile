@@ -1,3 +1,19 @@
+# ── Rust build stage: compile WASM strategy evaluator ─────────────────────────
+FROM node:24-alpine AS wasm-builder
+
+RUN apk add --no-cache curl gcc musl-dev && \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+RUN rustup target add wasm32-unknown-unknown && \
+    cargo install wasm-pack
+
+WORKDIR /app
+COPY packages/polyforge-engine/ ./packages/polyforge-engine/
+
+RUN cd packages/polyforge-engine && wasm-pack build --target nodejs --release
+
+# ── TypeScript build stage ────────────────────────────────────────────────────
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
 FROM node:24-alpine AS builder
 
@@ -63,6 +79,10 @@ COPY --from=builder /app/packages/shared-redis/dist/      ./packages/shared-redi
 COPY --from=builder /app/packages/logger/dist/            ./packages/logger/dist/
 COPY --from=builder /app/packages/shared-types/dist/      ./packages/shared-types/dist/
 COPY --from=builder /app/services/strategy-engine/dist    ./services/strategy-engine/dist
+
+# SECURITY: Rust WASM strategy evaluator — mandatory for sandboxed expression evaluation
+COPY --from=wasm-builder /app/packages/polyforge-engine/pkg/ ./node_modules/@polyforge/engine/
+COPY packages/polyforge-engine/index.ts ./node_modules/@polyforge/engine/index.ts
 
 COPY --from=builder /app/node_modules/.prisma          ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma/engines  ./node_modules/@prisma/engines
