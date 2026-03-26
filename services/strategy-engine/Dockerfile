@@ -1,9 +1,5 @@
 # ── Rust build stage: compile WASM strategy evaluator ─────────────────────────
-FROM node:24-alpine AS wasm-builder
-
-RUN apk add --no-cache curl gcc musl-dev && \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal
-ENV PATH="/root/.cargo/bin:${PATH}"
+FROM rust:1-slim AS wasm-builder
 
 RUN rustup target add wasm32-unknown-unknown && \
     cargo install wasm-pack

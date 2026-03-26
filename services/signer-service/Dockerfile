@@ -1,9 +1,8 @@
 # ── Rust build stage: compile NAPI-RS crypto addon ────────────────────────────
-FROM node:24-alpine AS rust-builder
+FROM rust:1-slim AS rust-builder
 
-RUN apk add --no-cache curl gcc musl-dev && \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal
-ENV PATH="/root/.cargo/bin:${PATH}"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nodejs npm && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY packages/polyforge-crypto-native/ ./packages/polyforge-crypto-native/
@@ -62,8 +61,9 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     (cd services/signer-service && /usr/local/bin/tsc -p tsconfig.build.json)
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
-# SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine
+# SECURITY: Using Debian slim (not Alpine) because the Rust NAPI addon requires glibc.
+# The signer-service is the ONLY service that uses Debian — all others use Alpine.
+FROM node:24-slim
 
 WORKDIR /app
 
