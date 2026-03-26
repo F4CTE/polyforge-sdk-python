@@ -16,20 +16,17 @@
     "migrate:dev:admin": "prisma migrate dev --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts",
     "seed": "ts-node prisma/seed.ts",
     "seed:admin": "ts-node prisma/seed.admin.ts",
-    "generate:api": "openapi-ts --config openapi-ts.config.ts && openapi-ts --config openapi-ts.admin.config.ts",
     "generate:api": "openapi-ts --config openapi-ts.react.config.ts && openapi-ts --config openapi-ts.react.admin.config.ts",
     "load-test": "k6 run tests/load/spike.js"
   },
   "dependencies": {
-    "@angular/cdk": "^21.2.0",
-    "@prisma/client": "7.5.0",
-    "bcrypt": "^6.0.0"
+    "@prisma/client": "7.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@hey-api/openapi-ts": "0.94.1",
-    "@types/bcrypt": "^6.0.0",
     "@types/node": "25.5.0",
+    "dotenv": "^17.3.1",
     "dotenv-cli": "11.0.0",
     "eslint": "9.39.4",
     "eslint-config-prettier": "^10.1.8",

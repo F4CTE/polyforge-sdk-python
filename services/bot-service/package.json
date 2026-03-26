@@ -16,7 +16,7 @@
     "@nestjs/common": "^11.1.16",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.16",
-    "@nestjs/jwt": "^10.2.0",
+    "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-fastify": "^11.1.16",
     "@nestjs/throttler": "^6.5.0",
     "@polyforge/logger": "workspace:*",
@@ -36,8 +36,8 @@
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.1.16",
     "@types/node": "^25.5.0",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.0",
     "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.0"
   }
 }
