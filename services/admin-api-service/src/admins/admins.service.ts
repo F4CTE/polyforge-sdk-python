@@ -4,7 +4,7 @@ import {
   ConflictException,
   ForbiddenException,
 } from "@nestjs/common";
-import * as bcrypt from "bcryptjs";
+import * as bcrypt from "bcrypt";
 import { PrismaAdminService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { CreateAdminDto } from "./dto/create-admin.dto";

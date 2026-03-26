@@ -1,7 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '@polyforge/shared-db';
 import { RedisService } from '@polyforge/shared-redis';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from "bcrypt";
 import { hashPassword, comparePassword } from '../auth/bcrypt.util';
 import { randomBytes, createHash } from 'crypto';
 

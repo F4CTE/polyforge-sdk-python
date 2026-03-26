@@ -11,7 +11,7 @@ import {
   createHash,
   timingSafeEqual,
 } from 'crypto';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from "bcrypt";
 
 const PENDING_TOTP_TTL = 300; // 5 minutes
 const BACKUP_CODE_COUNT = 10;

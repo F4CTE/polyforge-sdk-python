@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from "bcrypt";
 
 // Mock the worker-thread bcrypt util to use direct bcrypt in tests
 vi.mock('../auth/bcrypt.util', () => ({
@@ -127,7 +127,7 @@ describe('UsersService', () => {
 
       const callArg = db.user.create.mock.calls[0][0];
       const hash = callArg.data.passwordHash;
-      expect(hash).toMatch(/^\$2[ab]\$/); // bcryptjs uses $2a$, bcrypt uses $2b$
+      expect(hash).toMatch(/^\$2[ab]\$/); // bcrypt uses $2b$
       expect(hash).not.toContain('Passw0rd!');
     });
 
@@ -172,7 +172,7 @@ describe('UsersService', () => {
 
   describe('rehashIfNeeded', () => {
     it('rehashes and updates DB when rounds < 12', async () => {
-      // bcryptjs with cost 10 — below the MIN_ROUNDS threshold
+      // bcrypt with cost 10 — below the MIN_ROUNDS threshold
       const weakHash = await bcrypt.hash('Passw0rd!', 10);
       db.user.update.mockResolvedValue({} as any);
 

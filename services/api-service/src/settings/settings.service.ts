@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
-import * as bcrypt from "bcryptjs";
+import * as bcrypt from "bcrypt";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UpdatePasswordDto } from "./dto/update-password.dto";
 import { UpdateNotificationsDto } from "./dto/update-notifications.dto";

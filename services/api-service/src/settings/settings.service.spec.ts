@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { UnauthorizedException } from "@nestjs/common";
 import { SettingsService } from "./settings.service";
 import { createMockDb, MockDb } from "../../test/helpers/mock-db";
-import * as bcrypt from "bcryptjs";
+import * as bcrypt from "bcrypt";
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
