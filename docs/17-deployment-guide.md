@@ -318,7 +318,9 @@ This will:
 4. Tag each image with the current git SHA and `latest`
 5. Push all images to ECR
 
-Expected time: 10-20 minutes on first push (layers are not cached).
+Expected time: 15-25 minutes on first push (layers are not cached). The `signer-service` and `strategy-engine` builds take longer (~5min each) because their Dockerfiles include Rust compilation stages:
+- **signer-service:** Compiles a NAPI-RS native addon (`rust:1-slim`) for memory-safe key encryption. Runtime uses `node:24-slim` (Debian, not Alpine) for glibc compatibility.
+- **strategy-engine:** Compiles a WASM module (`rust:1-slim` + `wasm-pack`) for sandboxed strategy evaluation.
 
 > The deploy script builds the following services: gateway, auth-service, api-service, admin-auth-service, admin-api-service, market-data-service, strategy-engine, order-service, paper-order-service, backtest-service, notification-service, bot-service, signer-service.
 
