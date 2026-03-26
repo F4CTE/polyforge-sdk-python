@@ -84,10 +84,10 @@ Dev values are 32-byte hex zero strings. In production, real random values are s
 
 | Variable | Dev default | Description |
 |---|---|---|
-| `GAMMA_API_URL` | `http://mock-polymarket:3096` | Polymarket Gamma API (market metadata). Points to mock in dev. |
-| `CLOB_API_URL` | `http://mock-polymarket:3099` | Polymarket CLOB REST API (order submission). Points to mock in dev. |
-| `CLOB_WS_URL` | `ws://mock-polymarket:3098` | Polymarket CLOB WebSocket (price feed). Points to mock in dev. |
-| `DATA_API_URL` | `http://mock-polymarket:3097` | Polymarket Data API (historical prices). Points to mock in dev. |
+| `GAMMA_API_URL` | `https://gamma-api.polymarket.com` | Polymarket Gamma API (market metadata). Real data in dev (hybrid mode). |
+| `CLOB_API_URL` | `http://mock-polymarket:3099` | Polymarket CLOB REST API (order submission). Mock in dev (no real money). |
+| `CLOB_WS_URL` | `wss://ws-subscriptions-clob.polymarket.com/ws/market` | Polymarket CLOB WebSocket (live prices). Real data in dev. |
+| `DATA_API_URL` | `https://data-api.polymarket.com` | Polymarket Data API (historical prices). Real data in dev. |
 | `SCENARIO` | `normal` | Mock behaviour: `normal` \| `volatile` \| `api_down` \| `rate_limited` \| `slow` |
 
 ---

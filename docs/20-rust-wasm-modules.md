@@ -1,8 +1,14 @@
-# Rust WASM Modules
+# Rust Security Modules
 
-Polyforge uses Rust compiled to WebAssembly for security-critical and CPU-intensive operations that benefit from memory safety, zero GC pauses, deterministic performance, and near-native speed. All WASM modules live under `packages/` and follow the same conventions.
+Polyforge uses Rust for all security-critical cryptographic operations. Three Rust modules handle key management, expression evaluation, and hashing:
 
-> **SECURITY: WASM is mandatory in production.** Both modules throw a fatal error if the compiled WASM binary is not found when `NODE_ENV=production`. The Node.js/TypeScript fallback is only allowed in development mode. This prevents silent degradation to less secure JavaScript implementations in production.
+| Module | Type | Purpose |
+|--------|------|---------|
+| `polyforge-crypto-native` | **NAPI-RS native addon** | AES-256-GCM envelope encryption with `Zeroize` memory safety — private keys never enter V8 heap |
+| `polyforge-engine` | **WASM** | Sandboxed strategy rule evaluation — eliminates expression injection |
+| `polyforge-crypto` | **WASM** | AES-GCM, HMAC-SHA256, SHA256 hashing |
+
+> **SECURITY: Rust is MANDATORY — no fallback.** The signer-service and strategy-engine **refuse to start** if their Rust modules are not available. There is no JavaScript fallback. This prevents silent degradation to less secure implementations.
 
 ## Build Prerequisites
 
@@ -44,14 +50,14 @@ packages/polyforge-crypto/
 └── pkg/                    # Generated WASM output (after build)
 ```
 
-### Dual-mode operation
+### No fallback — Rust only
 
-The TypeScript wrapper (`index.ts`) attempts to load the compiled WASM module at startup. If the WASM binary is not available (e.g., Rust toolchain not installed), it falls back to Node.js `crypto` module equivalents. This ensures the package works in all environments:
+The signer-service uses `@polyforge/crypto-native` (NAPI-RS) exclusively. If the addon is not available, the service crashes on startup with:
+```
+SECURITY: @polyforge/crypto-native NAPI addon is REQUIRED but not available
+```
 
-| Environment | Backend | Performance |
-|---|---|---|
-| WASM built | Rust (aes-gcm, sha2, hmac) | Optimal — memory-safe crypto |
-| WASM not built | Node.js crypto (OpenSSL) | Good — standard Node.js performance |
+The Docker build includes a dedicated Rust build stage (`rust:1-slim`) that compiles the NAPI addon. The signer-service runtime uses `node:24-slim` (Debian, not Alpine) for glibc compatibility.
 
 ---
 
@@ -87,7 +93,12 @@ This produces the `pkg/` directory containing the compiled WASM binary and JavaS
 
 ### Without Rust toolchain
 
-If the Rust toolchain is not installed, the module automatically falls back to Node.js `crypto`. No build step is required for the fallback path.
+The Rust toolchain is **required** for building. There is no fallback. Install with:
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup target add wasm32-unknown-unknown
+cargo install wasm-pack
+```
 
 ---
 
@@ -195,7 +206,7 @@ cd packages/polyforge-engine && bash build.sh
 npx vitest run packages/polyforge-engine/engine.spec.ts
 ```
 
-**Fallback:** TypeScript no-op stub when WASM is unavailable (delegates to existing strategy-runner logic).
+**No fallback.** The strategy-engine crashes on startup if `@polyforge/engine` WASM is not available. The Docker build includes a dedicated Rust WASM build stage.
 
 ---
 
@@ -205,7 +216,7 @@ npx vitest run packages/polyforge-engine/engine.spec.ts
 |---|---|
 | Crate type | `cdylib` for WASM target |
 | Build tool | `wasm-pack build --target nodejs --release` |
-| TS wrapper | `index.ts` with `try/catch` WASM load and fallback |
+| TS wrapper | `index.ts` — loads WASM, crashes if not available (no fallback) |
 | Package name | `@polyforge/<module>` |
 | Tests | `<module>.spec.ts` using vitest |
 | Profile | `opt-level = 3` (engine) or `opt-level = "z"` (crypto) with `lto = true` |

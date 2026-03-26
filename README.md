@@ -17,7 +17,9 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **API documentation page** — Interactive API reference at `/api-docs` in user-app
 - **Design system** — Dark theme aligned with shadcn slate palette, design tokens (section colors, status colors, typography scale), loading screen with animated logo, custom scrollbars
 - **Accessibility** — `focus-visible` outlines, `aria-label` attributes, responsive mobile layouts, design token compliance (153 fixes)
-- **Security audit** — 47 findings fixed across 5 audit rounds, 2 consecutive clean audits; covers atomic state transitions, WebSocket hardening, JWT TTL reduction, Docker digest pinning, graceful shutdown, and production error filtering
+- **Security audit** — 120+ findings fixed across 13 audit rounds; covers envelope encryption, JWT validation, TOTP re-authentication, CSP headers, rate limiting, refresh token rotation, SSRF protection, CSRF, login lockout, admin role guards
+- **Rust security hardening** — Private key encryption via NAPI-RS addon with `Zeroize` memory safety (keys never enter V8 heap); strategy evaluation sandboxed in Rust WASM (no `expr-eval` fallback); homebrew KDF deleted
+- **Real Polymarket integration** — 20,000+ live markets synced from Polymarket Gamma API with real-time WebSocket price feeds; hybrid mode (real reads, mock order execution)
 - **OnPush change detection** — Key components use `ChangeDetectionStrategy.OnPush` for rendering performance
 - **Local HTTPS** — Self-signed cert generation and `docker-compose.ssl.yml` for secure local development
 - **CI/CD pipeline** — Lint, typecheck, test, build, and E2E stages with Playwright; dependency audit via `pnpm audit`
@@ -271,3 +273,5 @@ The MCP server provides 20 tools for Claude Desktop covering markets, strategies
 | [`docs/19-future-features.md`](./docs/19-future-features.md) | Future feature plans (arbitrage, mobile, etc.) |
 | [`docs/polyforge_competitor_audit.md`](./docs/polyforge_competitor_audit.md) | 199-platform competitor analysis |
 | [`CHANGELOG.md`](./CHANGELOG.md) | Release history |
+| [`SECURITY.md`](./SECURITY.md) | Security policy, architecture, production checklist |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Development guidelines and code conventions |

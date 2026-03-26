@@ -240,3 +240,36 @@ Polymarket approval takes 1–5 business days. Orders still work — they just w
 ---
 
 *Previous: [Deployment](./07-deployment.md)
+
+---
+
+## Development Mode — Hybrid Real/Mock
+
+In development, Polyforge uses **real Polymarket data for reads** and **mock-polymarket for order execution**:
+
+| API | Dev Target | Production Target |
+|-----|-----------|-------------------|
+| Gamma API (markets) | `https://gamma-api.polymarket.com` | Same |
+| WebSocket (prices) | `wss://ws-subscriptions-clob.polymarket.com/ws/market` | Same |
+| CLOB API (orders) | `http://mock-polymarket:3099` | `https://clob.polymarket.com` |
+| Data API (positions) | `https://data-api.polymarket.com` | Same |
+
+This gives you **20,000+ real markets with live prices** while keeping order execution safe (no real money in dev).
+
+### Switching to full mock (offline dev)
+
+```bash
+# In .env or docker-compose override:
+GAMMA_API_URL=http://mock-polymarket:3096
+DATA_API_URL=http://mock-polymarket:3097
+CLOB_WS_URL=ws://mock-polymarket:3098
+```
+
+### Rate Limits
+
+Polymarket per-endpoint limits (we use 50% conservative):
+- Gamma `/markets`: 300 req/10s → we use 15/s
+- CLOB `/book`: 1,500 req/10s → we use 75/s
+- Data `/trades`: 200 req/10s → we use 10/s
+- WebSocket: PING every 9s (Polymarket requires every 10s)
+
