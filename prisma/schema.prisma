@@ -743,6 +743,9 @@ model Market {
   @@index([closed])
   @@index([seriesSlug])
   @@index([volume24h(sort: Desc)])
+  @@index([endDate(sort: Asc)])
+  @@index([firstSeenAt(sort: Desc)])
+  @@index([category, volume24h(sort: Desc)])
   @@map("markets")
 }
 

@@ -29,7 +29,7 @@ export class MarketQueryDto extends PaginationDto {
   closed?: boolean;
 
   @IsOptional()
-  @IsIn(["volume", "endDate", "firstSeenAt"])
+  @IsIn(["volume", "endDate", "firstSeenAt", "newest", "closing_soon", "liquidity"])
   sort?: string = "volume";
 }
 

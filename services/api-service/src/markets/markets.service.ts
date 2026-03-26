@@ -47,22 +47,30 @@ export class MarketsService implements OnModuleInit {
     if (closed !== undefined) where.closed = closed;
 
     const orderBy: any =
-      sort === "endDate"
+      sort === "endDate" || sort === "closing_soon"
         ? { endDate: "asc" }
-        : sort === "firstSeenAt"
+        : sort === "firstSeenAt" || sort === "newest"
           ? { firstSeenAt: "desc" }
-          : { volume24h: "desc" };
+          : { volume24h: "desc" }; // liquidity falls back to volume (liquidity is on Token, not Market)
 
-    const [markets, total] = await Promise.all([
-      this.prisma.market.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy,
-        include: { tokens: true },
-      }),
-      this.prisma.market.count({ where }),
-    ]);
+    // Cache count separately with longer TTL (counts are expensive on 20K+ rows)
+    const countCacheKey = `cache:markets:count:${JSON.stringify({ search, category, closed })}`;
+    let total: number;
+    const cachedCount = await this.redis.get(countCacheKey);
+    if (cachedCount) {
+      total = parseInt(cachedCount, 10);
+    } else {
+      total = await this.prisma.market.count({ where });
+      await this.redis.set(countCacheKey, String(total), 120); // 2 min TTL
+    }
+
+    const markets = await this.prisma.market.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy,
+      include: { tokens: true },
+    });
 
     const result = paginate(markets, total, page, limit);
 
