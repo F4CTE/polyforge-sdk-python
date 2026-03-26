@@ -173,11 +173,11 @@ export function Component() {
         <div className="flex items-center gap-3">
           <Link
             to="/whales/following"
-            className="text-xs text-pf-text-secondary hover:text-pf-cyan-400 transition-colors"
+            className="text-xs font-medium text-pf-text hover:text-pf-cyan-400 transition-colors"
           >
             Following
           </Link>
-          {!loading && <span className="text-sm text-pf-text-muted">{total} trades</span>}
+          {!loading && <span className="text-sm font-medium text-pf-text-secondary">{total} trades</span>}
         </div>
       </div>
 
@@ -236,7 +236,9 @@ export function Component() {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Fish className="size-10 text-pf-text-muted mb-4" />
           <p className="text-pf-text font-medium">No whale trades detected yet</p>
-          <p className="text-sm text-pf-text-muted mt-1">Adjust filters or check back later.</p>
+          <p className="text-sm text-pf-text-muted mt-1 max-w-sm">
+            When large trades happen on Polymarket, they'll appear here. Follow wallets to track specific traders.
+          </p>
         </div>
       ) : (
         <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${loading ? 'opacity-60' : ''}`}>

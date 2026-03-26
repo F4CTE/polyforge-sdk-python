@@ -105,7 +105,7 @@ function formatPnl(value: number): string {
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString(undefined, {
+  return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -338,14 +338,26 @@ export function Component() {
 
                 {/* Meta chips */}
                 <div className="flex flex-wrap gap-1.5 mb-2">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-pf-cyan-500/10 text-pf-cyan-400 text-[11px] font-medium">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                    strategy.execMode === 'TICK'
+                      ? 'bg-violet-500/10 text-violet-400'
+                      : strategy.execMode === 'HYBRID'
+                        ? 'bg-violet-500/10 text-violet-400'
+                        : 'bg-pf-cyan-500/10 text-pf-cyan-400'
+                  }`}>
                     {execLabel(strategy)}
                   </span>
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-pf-overlay text-pf-text-muted text-[11px] font-medium">
                     {blocksCount(strategy)} blocks
                   </span>
                   {strategy.tags.length > 0 && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-pf-overlay text-pf-text-muted text-[11px] font-medium">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                      strategy.tags[0].toLowerCase() === 'momentum'
+                        ? 'bg-amber-500/10 text-amber-400'
+                        : strategy.tags[0].toLowerCase() === 'defensive'
+                          ? 'bg-blue-500/10 text-blue-400'
+                          : 'bg-pf-overlay text-pf-text-muted'
+                    }`}>
                       {strategy.tags[0]}
                     </span>
                   )}
@@ -385,7 +397,7 @@ export function Component() {
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'live' }); }}
                           disabled={busy}
                           className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 text-[11px] font-medium hover:bg-pf-cyan-500/20 disabled:opacity-40 transition-colors"
-                          title="Start Live"
+                          title="Start strategy"
                         >
                           <Zap className="size-3" /> Live
                         </button>
@@ -393,7 +405,7 @@ export function Component() {
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'paper' }); }}
                           disabled={busy}
                           className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-overlay text-pf-text-secondary text-[11px] font-medium hover:bg-pf-border-subtle disabled:opacity-40 transition-colors"
-                          title="Start Paper"
+                          title="Start strategy"
                         >
                           <FileText className="size-3" /> Paper
                         </button>
@@ -407,7 +419,7 @@ export function Component() {
                           disabled={busy}
                           className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:bg-pf-overlay disabled:opacity-40 transition-colors"
                           aria-label="Pause strategy"
-                          title="Pause"
+                          title="Pause strategy"
                         >
                           <Pause className="size-3.5" />
                         </button>
@@ -416,7 +428,7 @@ export function Component() {
                           disabled={busy}
                           className="p-1.5 rounded-pf-sm text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
                           aria-label="Stop strategy"
-                          title="Stop"
+                          title="Stop strategy"
                         >
                           <Square className="size-3.5" />
                         </button>
@@ -430,7 +442,7 @@ export function Component() {
                           disabled={busy}
                           className="p-1.5 rounded-pf-sm text-pf-cyan-400 hover:bg-pf-cyan-500/10 disabled:opacity-40 transition-colors"
                           aria-label="Resume strategy"
-                          title="Resume"
+                          title="Start strategy"
                         >
                           <Play className="size-3.5" />
                         </button>
@@ -439,7 +451,7 @@ export function Component() {
                           disabled={busy}
                           className="p-1.5 rounded-pf-sm text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
                           aria-label="Stop strategy"
-                          title="Stop"
+                          title="Stop strategy"
                         >
                           <Square className="size-3.5" />
                         </button>
@@ -451,7 +463,7 @@ export function Component() {
                       onClick={(e) => handleExport(e, strategy.id)}
                       className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
                       aria-label="Export strategy"
-                      title="Export"
+                      title="Export strategy"
                     >
                       <Download className="size-3.5" />
                     </button>
@@ -462,7 +474,7 @@ export function Component() {
                       onClick={(e) => e.stopPropagation()}
                       className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
                       aria-label="Edit strategy"
-                      title="Edit"
+                      title="Edit strategy"
                     >
                       <Pencil className="size-3.5" />
                     </Link>

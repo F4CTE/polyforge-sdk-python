@@ -106,7 +106,7 @@ function execLabel(s: Strategy): string {
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString(undefined, {
+  return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -119,7 +119,7 @@ function formatPnl(value: number): string {
 }
 
 function formatTime(d: Date): string {
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 function isActive(status: StrategyStatus) { return status === 'RUNNING' || status === 'PAPER'; }
@@ -388,7 +388,7 @@ export function Component() {
                 to={`/strategies/${strategy.id}/edit`}
                 className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
                 aria-label="Edit strategy"
-                title="Edit"
+                title="Edit strategy"
               >
                 <Pencil className="size-4" />
               </Link>
@@ -396,7 +396,7 @@ export function Component() {
                 onClick={handleExport}
                 className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
                 aria-label="Export strategy"
-                title="Export"
+                title="Export strategy"
               >
                 <Download className="size-4" />
               </button>
@@ -413,7 +413,11 @@ export function Component() {
 
           {/* Meta chips */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-1 rounded-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
+            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+              strategy.execMode === 'TICK' || strategy.execMode === 'HYBRID'
+                ? 'bg-violet-500/10 text-violet-400'
+                : 'bg-pf-cyan-500/10 text-pf-cyan-400'
+            }`}>
               {execLabel(strategy)}
             </span>
             <span className="px-2.5 py-1 rounded-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
@@ -426,7 +430,13 @@ export function Component() {
               {totalBlocks} blocks
             </span>
             {strategy.tags.map((tag) => (
-              <span key={tag} className="px-2.5 py-1 rounded-full bg-pf-cyan-500/10 text-pf-cyan-400 text-xs font-medium">
+              <span key={tag} className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                tag.toLowerCase() === 'momentum'
+                  ? 'bg-amber-500/10 text-amber-400'
+                  : tag.toLowerCase() === 'defensive'
+                    ? 'bg-blue-500/10 text-blue-400'
+                    : 'bg-pf-cyan-500/10 text-pf-cyan-400'
+              }`}>
                 {tag}
               </span>
             ))}

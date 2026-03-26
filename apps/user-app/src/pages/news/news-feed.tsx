@@ -205,7 +205,7 @@ export function Component() {
           <Newspaper className="size-6 text-pf-cyan-400" />
           <h1 className="text-2xl font-semibold text-pf-text">AI News &amp; Signals</h1>
         </div>
-        {!loading && <span className="text-sm text-pf-text-muted">{total} articles</span>}
+        <span className="text-sm text-pf-text-muted">{loading ? '...' : total} articles</span>
       </div>
 
       {/* Filters */}
@@ -239,7 +239,7 @@ export function Component() {
         </div>
 
         {/* Min confidence slider */}
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-3 ml-auto">
           <span className="text-xs text-pf-text-muted">Min Confidence:</span>
           <input
             type="range"
@@ -411,7 +411,8 @@ export function Component() {
           )}
         </div>
 
-        {/* Right column: Top Signals sidebar (1/3) */}
+        {/* Right column: Top Signals sidebar (1/3) — hidden when empty */}
+        {(loadingSignals || topSignals.length > 0) && (
         <div className="space-y-4">
           <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
             <h2 className="text-sm font-medium text-pf-text mb-4">Top Signals</h2>
@@ -419,10 +420,6 @@ export function Component() {
             {loadingSignals && topSignals.length === 0 ? (
               <div className="space-y-3">
                 {Array.from({ length: 4 }, (_, i) => <SignalSkeleton key={i} />)}
-              </div>
-            ) : topSignals.length === 0 ? (
-              <div className="py-8 text-center">
-                <p className="text-xs text-pf-text-muted">No high-confidence signals right now.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -477,6 +474,7 @@ export function Component() {
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   );

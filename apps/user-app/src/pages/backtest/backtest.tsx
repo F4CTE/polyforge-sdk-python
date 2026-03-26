@@ -67,7 +67,7 @@ function winRatePct(val: string | null): string {
 
 function dateRangeLabel(run: BacktestRun): string {
   const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  return `${fmt(run.dateRangeStart)} \u2192 ${fmt(run.dateRangeEnd)}`;
+  return `${fmt(run.dateRangeStart)} to ${fmt(run.dateRangeEnd)}`;
 }
 
 function formatShortDate(d: string): string {
@@ -177,6 +177,7 @@ export function Component() {
             <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Start Date</label>
             <input
               type="date"
+              lang="en"
               value={dateStart}
               onChange={e => setDateStart(e.target.value)}
               className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
@@ -186,6 +187,7 @@ export function Component() {
             <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">End Date</label>
             <input
               type="date"
+              lang="en"
               value={dateEnd}
               onChange={e => setDateEnd(e.target.value)}
               className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
@@ -317,7 +319,11 @@ export function Component() {
                       }`}
                     >
                       <td className="px-4 py-3">
-                        <span className="text-[13px] font-medium text-pf-text">{run.strategyName ?? '\u2014'}</span>
+                        <span className="text-[13px] font-medium text-pf-text">
+                          {run.strategyName
+                            ?? strategies.find(s => s.id === run.strategyId)?.name
+                            ?? (run.strategyId ? `${run.strategyId.slice(0, 8)}...` : '\u2014')}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
                         <span className="font-mono text-[11px] text-pf-text-muted">{dateRangeLabel(run)}</span>

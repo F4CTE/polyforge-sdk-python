@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { Search, ChevronLeft, ChevronRight, Check, X, Wifi, Shield, Users, AlertCircle } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Check, X, Wifi, Shield, Users, AlertCircle, EyeOff } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDate } from '@/lib/utils';
 
@@ -11,6 +11,18 @@ function computeUserStatus(user: any): string {
   if (user.emailVerified) return 'VERIFIED';
   return 'UNVERIFIED';
 }
+
+function isTestAccount(user: any): boolean {
+  const email = (user.email ?? '').toLowerCase();
+  const username = (user.username ?? '').toLowerCase();
+  if (email.endsWith('@e2e.dev.local') || email.includes('e2e.')) return true;
+  const testPrefixes = ['cred', 'reset', 'dup', 'verify', 'reg'];
+  if (testPrefixes.some((p) => username.startsWith(p) && /\d/.test(username))) return true;
+  return false;
+}
+
+type SortField = 'username' | 'status' | 'emailVerified' | 'createdAt';
+type SortDir = 'asc' | 'desc';
 
 export function Component() {
   const navigate = useNavigate();
@@ -22,6 +34,9 @@ export function Component() {
   const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [hideTestAccounts, setHideTestAccounts] = useState(false);
+  const [sortField, setSortField] = useState<SortField>('createdAt');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
 
   const limit = 20;
 
@@ -68,6 +83,37 @@ export function Component() {
     }, 300);
   }
 
+  function toggleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  }
+
+  function sortIndicator(field: SortField) {
+    if (sortField !== field) return <span className="text-[var(--color-pf-text-tertiary)]/40 ml-1">{'▲▼'}</span>;
+    return <span className="ml-1 text-[var(--color-pf-cyan-500)]">{sortDir === 'asc' ? '▲' : '▼'}</span>;
+  }
+
+  const displayUsers = useMemo(() => {
+    let list = hideTestAccounts ? users.filter((u) => !isTestAccount(u)) : users;
+    list = [...list].sort((a, b) => {
+      let av: any, bv: any;
+      switch (sortField) {
+        case 'username': av = (a.username ?? '').toLowerCase(); bv = (b.username ?? '').toLowerCase(); break;
+        case 'status': av = computeUserStatus(a); bv = computeUserStatus(b); break;
+        case 'emailVerified': av = a.emailVerified ? 1 : 0; bv = b.emailVerified ? 1 : 0; break;
+        case 'createdAt': av = a.createdAt ?? ''; bv = b.createdAt ?? ''; break;
+      }
+      if (av < bv) return sortDir === 'asc' ? -1 : 1;
+      if (av > bv) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return list;
+  }, [users, hideTestAccounts, sortField, sortDir]);
+
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
@@ -105,6 +151,16 @@ export function Component() {
           <option value="CONNECTED">Connected</option>
           <option value="SUSPENDED">Suspended</option>
         </select>
+        <label className="flex items-center gap-2 text-sm text-[var(--color-pf-text-secondary)] cursor-pointer select-none ml-auto">
+          <input
+            type="checkbox"
+            checked={hideTestAccounts}
+            onChange={(e) => setHideTestAccounts(e.target.checked)}
+            className="accent-[var(--color-pf-cyan-500)]"
+          />
+          <EyeOff size={14} />
+          Hide test accounts
+        </label>
       </div>
 
       {/* Error state */}
@@ -124,13 +180,13 @@ export function Component() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--color-pf-border)]">
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Username</th>
+                <th onClick={() => toggleSort('username')} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Username{sortIndicator('username')}</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Email</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Status</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Verified</th>
+                <th onClick={() => toggleSort('status')} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Status{sortIndicator('status')}</th>
+                <th onClick={() => toggleSort('emailVerified')} className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Verified{sortIndicator('emailVerified')}</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">2FA</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Connected</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Created</th>
+                <th onClick={() => toggleSort('createdAt')} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Created{sortIndicator('createdAt')}</th>
               </tr>
             </thead>
             <tbody>
@@ -144,7 +200,7 @@ export function Component() {
                     ))}
                   </tr>
                 ))
-              ) : users.length === 0 ? (
+              ) : displayUsers.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12">
                     <Users className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
@@ -153,7 +209,7 @@ export function Component() {
                   </td>
                 </tr>
               ) : (
-                users.map((user) => (
+                displayUsers.map((user) => (
                   <tr
                     key={user.id}
                     role="link"

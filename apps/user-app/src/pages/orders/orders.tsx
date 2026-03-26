@@ -22,6 +22,8 @@ interface Order {
   createdAt: string;
   placedAt?: string;
   filledAt?: string;
+  marketQuestion?: string;
+  marketId?: string;
 }
 
 interface OrdersResponse {
@@ -106,7 +108,7 @@ function fillRatio(order: Order): string {
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit',
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
   });
 }
 
@@ -262,7 +264,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
             </div>
             <div>
               <label className="block text-xs font-medium text-pf-text-secondary mb-1">Expires At</label>
-              <input type="datetime-local" value={form.expiresAt} onChange={e => updateField('expiresAt', e.target.value)}
+              <input type="datetime-local" lang="en" value={form.expiresAt} onChange={e => updateField('expiresAt', e.target.value)}
                 className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50" />
             </div>
           </div>
@@ -428,6 +430,7 @@ export function Component() {
                 <thead>
                   <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                     <th className="px-4 py-3 font-medium w-10">#</th>
+                    <th className="px-4 py-3 font-medium">Market</th>
                     <th className="px-4 py-3 font-medium">Side</th>
                     <th className="px-4 py-3 font-medium">Outcome</th>
                     <th className="px-4 py-3 font-medium text-right">Size</th>
@@ -443,14 +446,14 @@ export function Component() {
                   {loading ? (
                     Array.from({ length: 8 }, (_, i) => (
                       <tr key={i}>
-                        {Array.from({ length: 10 }, (_, j) => (
+                        {Array.from({ length: 11 }, (_, j) => (
                           <td key={j} className="px-4 py-3"><div className="h-3 bg-pf-overlay rounded animate-pulse" /></td>
                         ))}
                       </tr>
                     ))
                   ) : orders.length === 0 ? (
                     <tr>
-                      <td colSpan={10}>
+                      <td colSpan={11}>
                         <div className="flex flex-col items-center justify-center py-16 text-center">
                           <ClipboardList className="size-10 text-pf-text-muted mb-3" />
                           <p className="text-sm font-medium text-pf-text">No orders found</p>
@@ -471,6 +474,11 @@ export function Component() {
                         >
                           <td className="px-4 py-3">
                             <span className="font-mono text-[11px] text-pf-text-muted">{(page - 1) * 25 + i + 1}</span>
+                          </td>
+                          <td className="px-4 py-3 max-w-[180px]">
+                            <span className="text-pf-text text-xs line-clamp-1" title={order.marketQuestion ?? ''}>
+                              {order.marketQuestion || '—'}
+                            </span>
                           </td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${

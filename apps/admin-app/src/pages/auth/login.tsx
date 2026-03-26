@@ -134,10 +134,14 @@ export function Component() {
             {loading ? 'Signing in...' : totpRequired ? 'Verify & Sign In' : 'Sign In'}
           </button>
 
-          <p className="text-[11px] text-center text-[var(--color-pf-text-tertiary)]">
+          <p className="text-sm text-center text-amber-400">
             This endpoint is rate limited. Too many failed attempts will result in a temporary lockout.
           </p>
         </form>
+
+        <p className="text-sm text-gray-400 mt-3 text-center">
+          Forgot password? Contact your system administrator.
+        </p>
       </div>
     </div>
   );

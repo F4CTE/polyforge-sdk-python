@@ -337,12 +337,15 @@ export function Component() {
     <div className="animate-fade-in p-6 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-pf-text">Settings</h1>
-        <Link
-          to="/settings/trading-account"
-          className="text-sm text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
-        >
-          Trading Account &rarr;
-        </Link>
+        <div className="text-right">
+          <Link
+            to="/settings/trading-account"
+            className="text-sm text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
+          >
+            Manage Trading Account &rarr;
+          </Link>
+          <p className="text-xs text-pf-text-muted mt-0.5">Connect or manage your Polymarket wallet</p>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -379,8 +382,11 @@ export function Component() {
           </div>
           <div>
             <label className="text-xs text-pf-text-secondary mb-1.5 block">Avatar URL</label>
-            <input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://..."
-              className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
+            <div className="flex items-center gap-3">
+              <input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://..."
+                className="flex-1 h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
+              {avatarUrl && <img src={avatarUrl} alt="Avatar preview" className="w-12 h-12 rounded-full object-cover border border-pf-border" />}
+            </div>
           </div>
           <div className="flex justify-end">
             <button onClick={saveProfile} disabled={profileSaving}
@@ -604,7 +610,7 @@ export function Component() {
       )}
 
       {/* ─── Danger Zone ─── */}
-      <div className="bg-pf-elevated border border-pf-danger/20 rounded-pf-lg p-6 space-y-4">
+      <div className="mt-10 pt-6 border-t-2 border-red-200 bg-pf-elevated border border-pf-danger/20 rounded-pf-lg p-6 space-y-4">
         <h2 className="text-sm font-semibold text-pf-danger uppercase tracking-wider flex items-center gap-2">
           <AlertTriangle className="size-4" />
           Danger Zone
@@ -696,7 +702,7 @@ export function Component() {
             </div>
             <div>
               <label className="text-xs text-pf-text-secondary mb-1.5 block">Expiration (optional)</label>
-              <input type="date" value={newKeyExpiration} onChange={e => setNewKeyExpiration(e.target.value)}
+              <input type="date" lang="en" value={newKeyExpiration} onChange={e => setNewKeyExpiration(e.target.value)}
                 className="w-full max-w-[220px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
             <button onClick={createApiKey} disabled={apiKeysCreating || !newKeyName.trim()}

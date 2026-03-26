@@ -49,6 +49,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const user = await res.json();
         set({ user, loading: false });
       } else {
+        if (res.status === 401) {
+          sessionStorage.setItem('session_expired', 'true');
+        }
         set({ user: null, loading: false });
       }
     } catch {

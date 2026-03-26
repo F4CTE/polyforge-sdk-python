@@ -108,10 +108,11 @@ function tokenPercent(token: MarketToken): number {
   return Math.round(parseFloat(token.price || '0') * 100);
 }
 
-function yesPercent(market: Market): number {
+function yesPercent(market: Market): number | null {
   const token = market.tokens.find((t) => t.outcome === 'YES');
-  if (!token) return 50;
-  return Math.round(parseFloat(token.price || '0') * 100);
+  if (!token || !token.price) return null;
+  const val = Math.round(parseFloat(token.price) * 100);
+  return isNaN(val) ? null : val;
 }
 
 function priceCents(market: Market, outcome: 'YES' | 'NO'): string {
@@ -157,24 +158,13 @@ const MarketCard = memo(function MarketCard({ market, featured }: { market: Mark
     >
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
-        {market.image ? (
-          <img
-            src={market.image}
-            alt={market.title}
-            className="w-12 h-12 rounded-pf-md object-cover shrink-0"
-            width={48}
-            height={48}
-            loading="lazy"
-          />
-        ) : (
-          <div
-            className={`w-[52px] h-[52px] rounded-pf-md flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-pf-overlay'}`}
-          >
-            <span className={`[&_svg]:size-6 ${catColor?.text ?? 'text-pf-text-muted'}`}>
-              {CATEGORY_ICONS[market.category] ?? <LayoutGrid className="size-6" />}
-            </span>
-          </div>
-        )}
+        <div
+          className={`w-[52px] h-[52px] rounded-pf-md flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-pf-overlay'}`}
+        >
+          <span className={`text-lg font-bold ${catColor?.text ?? 'text-pf-text-muted'}`}>
+            {market.title.charAt(0).toUpperCase()}
+          </span>
+        </div>
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-medium text-pf-text leading-snug line-clamp-2 group-hover:text-pf-cyan-400 transition-colors">
             {market.title}
@@ -196,19 +186,19 @@ const MarketCard = memo(function MarketCard({ market, featured }: { market: Mark
             <div className="h-1.5 bg-pf-overlay rounded-full overflow-hidden">
               <div
                 className="h-full bg-pf-cyan-500 rounded-full transition-all"
-                style={{ width: `${yesPercent(market)}%` }}
+                style={{ width: `${yesPercent(market) ?? 50}%` }}
               />
             </div>
             <span className="text-[11px] text-pf-text-muted mt-1 block">
-              {yesPercent(market)}% chance
+              {yesPercent(market) !== null ? `${yesPercent(market)}% chance` : '\u2014'}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <span className="h-9 flex items-center justify-center rounded-pf text-sm font-medium bg-pf-success/10 text-pf-success">
-              Yes {priceCents(market, 'YES')}
+              Yes {priceCents(market, 'YES') !== '\u2014' ? priceCents(market, 'YES') : ''}
             </span>
             <span className="h-9 flex items-center justify-center rounded-pf text-sm font-medium bg-pf-danger/10 text-pf-danger">
-              No {priceCents(market, 'NO')}
+              No {priceCents(market, 'NO') !== '\u2014' ? priceCents(market, 'NO') : ''}
             </span>
           </div>
         </div>
@@ -355,8 +345,10 @@ export function Component() {
       {/* Toolbar */}
       <div className="flex items-center justify-between">
         <div>
-          {!loading && (
-            <span className="text-sm text-pf-text-muted">{filtered.length} results</span>
+          {!loading && total > 0 && (
+            <span className="text-sm text-pf-text-muted">
+              Showing {(page - 1) * 25 + 1}&ndash;{Math.min(page * 25, total)} of {total.toLocaleString()} markets
+            </span>
           )}
         </div>
         <div className="flex items-center gap-3">
@@ -400,8 +392,8 @@ export function Component() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => <CardSkeleton key={i} />)}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }, (_, i) => <CardSkeleton key={i} />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }, (_, i) => <CardSkeleton key={i} />)}
           </div>
         </>
       )}
@@ -425,7 +417,7 @@ export function Component() {
               )}
               {/* Grid */}
               {grid.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 stagger-children">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
                   {grid.map((m) => <MarketCard key={m.id} market={m} />)}
                 </div>
               )}

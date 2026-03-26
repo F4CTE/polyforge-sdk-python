@@ -179,12 +179,14 @@ export function Component() {
           <Copy className="size-6 text-pf-cyan-400" />
           <h1 className="text-2xl font-semibold text-pf-text">Copy Trading</h1>
         </div>
-        <Link
-          to="/copy/new"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
-        >
-          <Plus className="size-4" /> New Copy Config
-        </Link>
+        {!loading && configs.length > 0 && (
+          <Link
+            to="/copy/new"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
+          >
+            <Plus className="size-4" /> New Copy Config
+          </Link>
+        )}
       </div>
 
       {/* Filter tabs */}
@@ -214,7 +216,12 @@ export function Component() {
       {/* Empty state */}
       {!loading && configs.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Copy className="size-10 text-pf-text-muted mb-4" />
+          <svg className="size-10 text-pf-text-muted mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="9" cy="7" r="4" />
+            <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+            <circle cx="16" cy="4" r="3" opacity="0.6" />
+            <path d="M21 21v-2a3 3 0 0 0-3-3h-1" opacity="0.6" />
+          </svg>
           <p className="text-pf-text font-medium">No copy configs yet</p>
           <p className="text-sm text-pf-text-muted mt-1">
             Start copying a whale's trades to automate your trading.

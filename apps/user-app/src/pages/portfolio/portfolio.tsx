@@ -243,7 +243,7 @@ export function Component() {
 
   // Chart data — memoized to avoid recomputing on every render
   const chartData = useMemo(() => (pnl?.snapshots ?? []).map(s => ({
-    time: new Date(s.time).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+    time: new Date(s.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     pnl: parseFloat(s.pnl),
   })), [pnl?.snapshots]);
   const isProfitable = parseFloat(pnl?.totalPnl ?? '0') >= 0;
@@ -255,7 +255,7 @@ export function Component() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-pf-text">Portfolio</h1>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pf-success/10 text-pf-success text-xs font-medium border border-pf-success/20">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pf-success/10 text-pf-success text-xs font-medium border border-pf-success/20" title="Gas fees are sponsored — you pay zero network fees">
             <Fuel className="size-3" />
             Gasless
           </span>
@@ -304,8 +304,13 @@ export function Component() {
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 border-l-cyan-500">
                   <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Win Rate</span>
                   <span className="block mt-1 text-xl font-mono font-semibold text-pf-cyan-400">
-                    {winRatePct(pnl?.winRate ?? '0')}
+                    {parseFloat(pnl?.winRate ?? '0') === 0 && (portfolio?.positions ?? []).length > 0
+                      ? '—'
+                      : winRatePct(pnl?.winRate ?? '0')}
                   </span>
+                  {parseFloat(pnl?.winRate ?? '0') === 0 && (portfolio?.positions ?? []).length > 0 && (
+                    <span className="text-[10px] text-pf-text-muted mt-0.5 block">No resolved trades yet</span>
+                  )}
                 </div>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 border-l-pf-text">
                   <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Open Positions</span>
@@ -441,18 +446,21 @@ export function Component() {
                           {parseFloat(pos.avgEntryPrice).toFixed(3)}
                         </td>
                         <td className="px-4 py-3 text-right font-mono text-pf-cyan-400">
-                          {pos.currentPrice && pos.currentPrice !== '0' ? `$${parseFloat(pos.currentPrice).toFixed(3)}` : <span className="text-pf-text-muted">N/A</span>}
+                          {pos.currentPrice && parseFloat(pos.currentPrice) > 0 ? `$${parseFloat(pos.currentPrice).toFixed(3)}` : <span className="text-pf-text-muted">&mdash;</span>}
                         </td>
                         <td className={`px-4 py-3 text-right font-mono ${pnlColor(pos.unrealizedPnl)}`}>
                           {formatPnl(pos.unrealizedPnl)}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-                            pos.resolutionStatus === 'UNRESOLVED'
-                              ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
-                              : 'bg-pf-overlay text-pf-text-muted'
-                          }`}>
-                            {pos.resolutionStatus}
+                          <span
+                            className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                              pos.resolutionStatus === 'UNRESOLVED'
+                                ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
+                                : 'bg-pf-overlay text-pf-text-muted'
+                            }`}
+                            {...(pos.resolutionStatus === 'UNRESOLVED' ? { title: 'Market has not yet resolved — position is still active' } : {})}
+                          >
+                            {pos.resolutionStatus === 'UNRESOLVED' ? 'OPEN' : pos.resolutionStatus}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right flex items-center justify-end gap-2">

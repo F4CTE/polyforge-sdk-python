@@ -84,6 +84,7 @@ export function Component() {
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<SortOption>('popular');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const load = useCallback(async (p: number, s: SortOption) => {
     setLoading(true);
@@ -112,6 +113,18 @@ export function Component() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-pf-text">Discover</h1>
         {!loading && <span className="text-sm text-pf-text-muted">{total} strategies</span>}
+      </div>
+
+      {/* Search bar */}
+      <div className="relative">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+        <input
+          type="text"
+          placeholder="Search strategies..."
+          value={searchQuery}
+          onChange={e => { setSearchQuery(e.target.value); }}
+          className="w-full pl-10 pr-4 py-2.5 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted"
+        />
       </div>
 
       {/* Sort tabs */}
@@ -144,7 +157,14 @@ export function Component() {
         </div>
       ) : (
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children ${loading ? 'opacity-60' : ''}`}>
-          {strategies.map(s => {
+          {strategies.filter(s => {
+            if (!searchQuery.trim()) return true;
+            const q = searchQuery.toLowerCase();
+            return s.name.toLowerCase().includes(q) ||
+              (s.description ?? '').toLowerCase().includes(q) ||
+              s.tags.some(t => t.toLowerCase().includes(q)) ||
+              (s.author.displayName ?? s.author.username).toLowerCase().includes(q);
+          }).map(s => {
             return (
               <Link
                 key={s.id}
@@ -195,7 +215,15 @@ export function Component() {
                 {s.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-3">
                     {s.tags.slice(0, 4).map(tag => (
-                      <span key={tag} className="px-1.5 py-0.5 rounded-full text-[10px] bg-pf-overlay text-pf-text-muted">
+                      <span key={tag} className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                        tag === 'momentum' ? 'bg-amber-500/15 text-amber-400' :
+                        tag === 'political' ? 'bg-blue-500/15 text-blue-400' :
+                        tag === 'yes-bias' ? 'bg-emerald-500/15 text-emerald-400' :
+                        tag === 'defensive' ? 'bg-purple-500/15 text-purple-400' :
+                        tag === 'scalping' ? 'bg-red-500/15 text-red-400' :
+                        tag === 'high-freq' ? 'bg-pink-500/15 text-pink-400' :
+                        'bg-pf-overlay text-pf-text-muted'
+                      }`}>
                         {tag}
                       </span>
                     ))}

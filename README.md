@@ -17,6 +17,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **API documentation page** — Interactive API reference at `/api-docs` in user-app
 - **Design system** — Dark theme aligned with shadcn slate palette, design tokens (section colors, status colors, typography scale), loading screen with animated logo, custom scrollbars
 - **Accessibility** — `focus-visible` outlines, `aria-label` attributes, responsive mobile layouts, design token compliance (153 fixes)
+- **UI/UX polish** — 50 fixes across landing page, login, markets, strategies, portfolio, orders, copy trading, whales, leaderboard, backtest, settings, and admin app; en-US locale enforcement, session expiry banners, dark mode consistency
 - **Security audit** — 120+ findings fixed across 13 audit rounds; covers envelope encryption, JWT validation, TOTP re-authentication, CSP headers, rate limiting, refresh token rotation, SSRF protection, CSRF, login lockout, admin role guards
 - **Rust security hardening** — Private key encryption via NAPI-RS addon with `Zeroize` memory safety (keys never enter V8 heap); strategy evaluation sandboxed in Rust WASM (no `expr-eval` fallback); homebrew KDF deleted
 - **Real Polymarket integration** — 20,000+ live markets synced from Polymarket Gamma API with real-time WebSocket price feeds; hybrid mode (real reads, mock order execution)
@@ -35,7 +36,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Educational onboarding** — guided tour, checklist widget, and 5 pre-built strategy templates for new users
 - **Future features planned** — arbitrage scanner, multi-platform aggregation, browser extension, mobile app, fund management, UMA oracle dashboard, LP/market making (see [`docs/19-future-features.md`](./docs/19-future-features.md))
 
-> **All 8 development phases are complete — 72 files and 8,564 lines added in Phase 8.** Phase 9 adds gasless trading (platform-sponsored gas fees), educational onboarding (strategy templates, guided tour, checklist), and documents 7 future features. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
+> **All 8 development phases are complete — 72 files and 8,564 lines added in Phase 8.** Phase 9 adds gasless trading (platform-sponsored gas fees), educational onboarding (strategy templates, guided tour, checklist), and documents 7 future features. v6.1 adds 50 UI/UX fixes across both apps. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
 
 ---
 

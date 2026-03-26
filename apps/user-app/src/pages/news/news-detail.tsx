@@ -62,7 +62,7 @@ function confidenceBarBg(c: number): string {
 }
 
 function formatDate(ts: string): string {
-  return new Date(ts).toLocaleDateString(undefined, {
+  return new Date(ts).toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',

@@ -22,7 +22,7 @@ export function ProofStrip() {
                 />
               )}
               <div className="flex flex-col items-center gap-1 px-6 sm:px-10 py-3">
-                <span className="text-[28px] font-bold text-pf-cyan-300 font-mono">
+                <span className="text-[28px] font-bold text-pf-cyan-300 font-extrabold tracking-tight">
                   {stat.number}
                 </span>
                 <span className="text-[13px] text-pf-text-muted">{stat.label}</span>

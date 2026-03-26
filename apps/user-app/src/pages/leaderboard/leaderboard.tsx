@@ -137,7 +137,7 @@ export function Component() {
               </tr>
             </thead>
             <tbody className="divide-y divide-pf-border-subtle">
-              {loading ? (
+              {loading && entries.length === 0 ? (
                 Array.from({ length: 10 }, (_, i) => (
                   <tr key={i}>
                     {Array.from({ length: 6 }, (_, j) => (
@@ -150,8 +150,8 @@ export function Component() {
                   <td colSpan={6}>
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                       <Trophy className="size-10 text-pf-text-muted mb-3" />
-                      <p className="text-sm font-medium text-pf-text">No data yet</p>
-                      <p className="text-xs text-pf-text-muted mt-1">Start trading to appear on the leaderboard.</p>
+                      <p className="text-sm font-medium text-pf-text">No leaderboard data yet</p>
+                      <p className="text-xs text-pf-text-muted mt-1">Rankings will appear once traders have resolved positions.</p>
                     </div>
                   </td>
                 </tr>

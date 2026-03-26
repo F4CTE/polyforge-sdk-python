@@ -1,6 +1,6 @@
 export function ProductPreview() {
   return (
-    <section className="pt-15 -mt-5" aria-label="Product dashboard preview">
+    <section className="pt-8 -mt-2" aria-label="Product dashboard preview">
       <div className="max-w-[1100px] mx-auto px-6">
         <div
           className="bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden transition-transform duration-400"

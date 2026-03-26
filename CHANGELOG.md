@@ -5,6 +5,72 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.1.0] — 2026-03-26
+
+### Improved — UI/UX Design (50 fixes)
+
+**Landing Page:**
+- Reduced spacing gap between flow diagram and dashboard mockup
+- Stats section uses consistent display font instead of monospace
+- Footer social icons enlarged with better hover states
+- Improved spacing between CTA and "How it works" link
+
+**User App — Login:**
+- Added show/hide password toggle
+- Error banner now dismissable
+- Session expiry shows warning banner on redirect
+
+**User App — Markets:**
+- Replaced broken market thumbnails with colored letter avatars
+- Yes/No buttons show actual prices instead of dashes
+- Market probability reflects real API data instead of hardcoded 50%
+- Grid reduced from 4 to 3 columns for better readability
+- Pagination shows "Showing X of Y markets" format
+
+**User App — Strategies:**
+- Event/Tick badges use distinct colors (cyan/violet)
+- Strategy tags color-coded by type (momentum=amber, defensive=blue)
+- All action icons have descriptive tooltips
+
+**User App — Portfolio:**
+- Gasless badge has tooltip explanation
+- Zero prices show dash instead of "$0.000"
+- "UNRESOLVED" status renamed to "OPEN" with tooltip
+- Win rate shows dash when no trades resolved
+
+**User App — Orders:**
+- Added MARKET column to orders table
+- Shortened date format (removed seconds)
+
+**User App — Copy Trading/Discover/News:**
+- Copy Trading empty state uses relevant icon, conditional header button
+- Discover page has search bar and color-coded tag badges
+- News article count always visible, sidebar hides when empty
+
+**User App — Whales/Leaderboard/Backtest:**
+- Whale tracker improved text contrast and descriptive empty state
+- Leaderboard shows empty state instead of stuck skeleton loader
+- Backtest resolves strategy names, uses "to" instead of arrow
+
+**User App — Settings:**
+- "Trading Account" link has context subtitle
+- Avatar URL shows image preview
+- Danger Zone section has stronger visual separation
+
+**Admin App:**
+- Rate limit warning more visible (amber, larger font)
+- "Forgot password" note added
+- Sidebar toggle more prominent
+- Dashboard shows informative messages for empty sections
+- Users table has "Hide test accounts" filter and sortable columns
+
+**Cross-App:**
+- All date formatting forced to en-US locale (no more French dates)
+- Session expiry detection with warning banner
+- Dark mode consistency across legal and API docs pages
+
+---
+
 ## [6.0.0] — 2026-03-26
 
 ### Added — Rust Security Hardening

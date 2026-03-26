@@ -103,7 +103,7 @@ function formatVolume(vol: string): string {
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString(undefined, {
+  return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
@@ -226,10 +226,10 @@ export function Component() {
             h.data.map((d) => ({
               time:
                 res === '1m'
-                  ? new Date(d.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  ? new Date(d.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
                   : res === '1h'
-                    ? new Date(d.time).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-                    : new Date(d.time).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                    ? new Date(d.time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : new Date(d.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
               close: parseFloat(d.close),
             })),
           );

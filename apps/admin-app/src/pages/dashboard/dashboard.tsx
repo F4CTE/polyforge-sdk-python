@@ -318,6 +318,9 @@ export function Component() {
                 <span className="block text-lg font-bold text-[var(--color-pf-text)]">{rateLimits.topOffenders?.length ?? 0}</span>
               </div>
             </div>
+            {rateLimits.totalTrackedKeys === 0 && rateLimits.recent429Count === 0 && (rateLimits.topOffenders?.length ?? 0) === 0 && (
+              <p className="text-xs text-[var(--color-pf-text-tertiary)] italic">No rate limit events recorded</p>
+            )}
             {rateLimits.topOffenders?.length > 0 && (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
@@ -361,7 +364,10 @@ export function Component() {
             </button>
           </div>
         ) : auditLogs.length === 0 ? (
-          <p className="text-sm text-[var(--color-pf-text-tertiary)]">No recent activity</p>
+          <div className="py-2">
+            <p className="text-sm text-[var(--color-pf-text-secondary)]">No admin actions recorded yet.</p>
+            <p className="text-xs text-[var(--color-pf-text-tertiary)] mt-1">Activity will appear as admins manage users, strategies, and settings.</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {auditLogs.map((log: any) => (

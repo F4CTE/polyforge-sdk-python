@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Mail, Lock, KeyRound, AlertCircle } from 'lucide-react';
+import { Mail, Lock, KeyRound, AlertCircle, Eye, EyeOff, X } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 
 export function Component() {
@@ -13,7 +13,16 @@ export function Component() {
   const [requireTotp, setRequireTotp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem('session_expired') === 'true') {
+      setSessionExpired(true);
+      sessionStorage.removeItem('session_expired');
+    }
+  }, []);
 
   const emailError = touched.email && !email ? 'Email is required'
     : touched.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? 'Enter a valid email address'
@@ -68,10 +77,33 @@ export function Component() {
         {/* Card */}
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg">
 
+          {sessionExpired && (
+            <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 rounded-pf px-4 py-3 mb-4 text-sm">
+              <AlertCircle className="size-4 shrink-0" />
+              <span className="flex-1">Your session has expired. Please sign in again.</span>
+              <button
+                type="button"
+                onClick={() => setSessionExpired(false)}
+                className="shrink-0 text-yellow-500 hover:text-yellow-500/70 transition-colors"
+                aria-label="Dismiss warning"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          )}
+
           {error && (
             <div className="flex items-center gap-2 bg-pf-danger/10 border border-pf-danger/20 text-pf-danger rounded-pf px-4 py-3 mb-4 text-sm">
               <AlertCircle className="size-4 shrink-0" />
-              <span>{error}</span>
+              <span className="flex-1">{error}</span>
+              <button
+                type="button"
+                onClick={() => setError('')}
+                className="shrink-0 text-pf-danger hover:text-pf-danger/70 transition-colors"
+                aria-label="Dismiss error"
+              >
+                <X className="size-4" />
+              </button>
             </div>
           )}
 
@@ -102,14 +134,22 @@ export function Component() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, password: true }))}
                   placeholder="Your password"
-                  className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
+                  className="w-full pl-10 pr-10 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
               </div>
               {passwordError && <p className="mt-1 text-xs text-pf-danger">{passwordError}</p>}
             </div>
