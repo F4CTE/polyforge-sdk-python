@@ -38,6 +38,10 @@ x-common: &common
   env_file: .env.prod
   restart: unless-stopped
   logging: *awslogs
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
 
 # ─── Networks ────────────────────────────────────────────────────────────────
 
@@ -246,6 +250,7 @@ services:
 
   # ─── Strategy Engine ───────────────────────────────────────────────────────
   # Most CPU-intensive service — gets the most resources.
+  # SECURITY: Uses Rust WASM for sandboxed expression evaluation (no expr-eval fallback).
 
   strategy-engine:
     image: "${ECR_REGISTRY}/polyforge-strategy-engine:${IMAGE_TAG}"
@@ -367,8 +372,12 @@ services:
           memory: 256M
 
   # ─── Signer Service ────────────────────────────────────────────────────────
-  # Hardened: read-only filesystem, tmpfs for /tmp, signer-only network.
-  # NO published ports. Only reachable by auth-service and order-service.
+  # SECURITY: Most hardened service — handles private keys.
+  # - Rust NAPI-RS addon for memory-safe encryption (Zeroize)
+  # - Uses node:24-slim runtime (Debian, not Alpine) for glibc compatibility with NAPI
+  # - Direct RDS connection (not PgBouncer) for credential operations
+  # - read-only filesystem, tmpfs, no-new-privileges
+  # - NO published ports — only reachable on signer-only network
 
   signer-service:
     image: "${ECR_REGISTRY}/polyforge-signer-service:${IMAGE_TAG}"
@@ -379,6 +388,8 @@ services:
       - /tmp:size=64m,noexec,nosuid
     security_opt:
       - no-new-privileges:true
+    cap_drop:
+      - ALL
     depends_on:
       pgbouncer: { condition: service_healthy }
     healthcheck:
@@ -386,7 +397,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 20s
+      start_period: 30s
     deploy:
       resources:
         limits:
