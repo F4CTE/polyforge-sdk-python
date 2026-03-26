@@ -12,18 +12,30 @@ interface GammaToken {
 }
 
 interface GammaMarket {
+  // Common fields
   id: string;
   slug: string;
-  title: string;
   description?: string;
-  category?: string;
   image?: string;
-  seriesSlug?: string;
   endDate?: string;
   closed: boolean;
   negRisk?: boolean;
+
+  // Mock format
+  title?: string;
+  category?: string;
+  seriesSlug?: string;
   volume24h?: string;
-  tokens: GammaToken[];
+  tokens?: GammaToken[];
+
+  // Real Polymarket format
+  question?: string;
+  volume24hr?: number;
+  liquidity?: string | number;
+  clobTokenIds?: string; // JSON array string
+  outcomes?: string; // JSON array string
+  outcomePrices?: string; // JSON array string
+  events?: Array<{ slug?: string }>;
 }
 
 interface GammaEvent {
@@ -51,7 +63,10 @@ export class GammaApiService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    await this.syncMarkets();
+    // Run initial sync in background so the server starts immediately
+    this.syncMarkets().catch((err) =>
+      this.logger.error("Initial market sync failed", err),
+    );
   }
 
   @Interval(SYNC_INTERVAL_MS)
@@ -83,12 +98,18 @@ export class GammaApiService implements OnModuleInit {
         // Skip neg-risk markets (binary-only filter)
         if (market.negRisk) continue;
 
-        await this.upsertMarket(market);
+        try {
+          // Parse tokens — handle both mock format (tokens[]) and real format (clobTokenIds JSON string)
+          const tokens = this.parseTokens(market);
+          await this.upsertMarket(market, tokens);
 
-        // Subscribe WebSocket to all tokens in this market
-        const tokenIds = market.tokens.map((t) => t.tokenId);
-        this.ws.subscribeTokens(tokenIds);
-        totalSynced++;
+          // Subscribe WebSocket to all tokens in this market
+          const tokenIds = tokens.map((t) => t.tokenId);
+          if (tokenIds.length > 0) this.ws.subscribeTokens(tokenIds);
+          totalSynced++;
+        } catch (err) {
+          this.logger.warn(`Skipped market ${market.id}: ${(err as Error).message}`);
+        }
       }
 
       offset += limit;
@@ -114,55 +135,92 @@ export class GammaApiService implements OnModuleInit {
 
     if (!res.ok) throw new Error(`Gamma API returned ${res.status}`);
 
-    const body = (await res.json()) as { data: GammaMarket[] };
-    return body.data;
+    const body = await res.json();
+    // Real Polymarket returns a raw array; mock wraps in { data: [] }
+    return Array.isArray(body) ? body : (body.data ?? []);
   }
 
   // TODO: Enable fetchEvents + upsertEvent once Event model is added to Prisma schema
   // private async fetchEvents(): Promise<GammaEvent[]> { ... }
   // private async upsertEvent(event: GammaEvent) { ... }
 
-  private async upsertMarket(market: GammaMarket) {
+  /**
+   * Parse tokens from either mock format (tokens[]) or real Polymarket format
+   * (clobTokenIds + outcomes + outcomePrices as JSON strings).
+   */
+  private parseTokens(market: GammaMarket): GammaToken[] {
+    // Mock format — tokens array already present
+    if (market.tokens && market.tokens.length > 0) return market.tokens;
+
+    // Real Polymarket format — parse JSON string fields
+    try {
+      const tokenIds: string[] = market.clobTokenIds ? JSON.parse(market.clobTokenIds) : [];
+      const outcomes: string[] = market.outcomes ? JSON.parse(market.outcomes) : [];
+      const prices: string[] = market.outcomePrices ? JSON.parse(market.outcomePrices) : [];
+
+      return tokenIds.map((tokenId, i) => ({
+        tokenId,
+        outcome: outcomes[i] ?? `Outcome ${i + 1}`,
+        price: prices[i] ?? "0",
+        liquidity: String(market.liquidity ?? "0"),
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  private async upsertMarket(market: GammaMarket, tokens: GammaToken[]) {
+    const title = market.title ?? market.question ?? market.slug;
+    const category = market.category ?? market.events?.[0]?.slug ?? "uncategorized";
+    const volume = market.volume24h
+      ? parseFloat(market.volume24h)
+      : (typeof market.volume24hr === "number" ? market.volume24hr : 0);
+
     // Upsert the market record
     await this.prisma.market.upsert({
       where: { id: market.id },
       create: {
         id: market.id,
         slug: market.slug,
-        title: market.title,
+        title,
         description: market.description,
-        category: market.category,
+        category,
         image: market.image ?? null,
-        seriesSlug: market.seriesSlug,
+        seriesSlug: market.seriesSlug ?? market.events?.[0]?.slug,
         endDate: market.endDate ? new Date(market.endDate) : undefined,
         closed: market.closed,
         negRisk: market.negRisk ?? false,
-        volume24h: parseFloat(market.volume24h ?? "0"),
+        volume24h: volume,
       },
       update: {
+        title,
         closed: market.closed,
         image: market.image ?? undefined,
-        volume24h: parseFloat(market.volume24h ?? "0"),
+        volume24h: volume,
         lastUpdatedAt: new Date(),
       },
     });
 
-    // Upsert tokens
-    for (const token of market.tokens) {
-      await this.prisma.token.upsert({
-        where: { id: token.tokenId },
-        create: {
-          id: token.tokenId,
-          marketId: market.id,
-          outcome: token.outcome,
-          price: parseFloat(token.price),
-          liquidity: parseFloat(token.liquidity),
-        },
-        update: {
-          price: parseFloat(token.price),
-          liquidity: parseFloat(token.liquidity),
-        },
-      });
+    // Batch upsert tokens in a single transaction
+    if (tokens.length > 0) {
+      await this.prisma.$transaction(
+        tokens.map((token) =>
+          this.prisma.token.upsert({
+            where: { id: token.tokenId },
+            create: {
+              id: token.tokenId,
+              marketId: market.id,
+              outcome: token.outcome,
+              price: parseFloat(token.price),
+              liquidity: parseFloat(token.liquidity),
+            },
+            update: {
+              price: parseFloat(token.price),
+              liquidity: parseFloat(token.liquidity),
+            },
+          }),
+        ),
+      );
     }
   }
 }

@@ -10,7 +10,10 @@ import WebSocket from "ws";
 const RECONNECT_BASE_MS = 1_000;
 const RECONNECT_MAX_MS = 30_000;
 const RECONNECT_FACTOR = 2;
-const PING_INTERVAL_MS = 20_000;
+const PING_INTERVAL_MS = 9_000; // Polymarket requires PING every 10s; send at 9s for safety
+
+/** Max tokens per subscription batch — avoids oversized WebSocket frames */
+const SUBSCRIBE_BATCH_SIZE = 200;
 
 export interface PriceUpdateEvent {
   tokenId: string;
@@ -31,6 +34,10 @@ export interface BookUpdateEvent {
  * Maintains a persistent WebSocket connection to the CLOB feed
  * (mock-polymarket in dev, real Polymarket WS in prod).
  *
+ * Handles both message formats:
+ *   - Mock: { type: "PRICE_UPDATE", tokenId, price, timestamp }
+ *   - Real: { event_type: "price_change", price_changes: [...], timestamp }
+ *
  * Emits typed events via EventEmitter2:
  *   - market-data.price  → PriceUpdateEvent
  *   - market-data.book   → BookUpdateEvent
@@ -44,10 +51,16 @@ export class PolymarketWsService implements OnModuleInit, OnModuleDestroy {
   private pingTimer: NodeJS.Timeout | null = null;
   private destroyed = false;
 
+  /** Whether we're connecting to real Polymarket or mock */
+  private readonly isRealPolymarket: boolean;
+
   /** tokenIds currently subscribed to */
   private readonly subscribedTokens = new Set<string>();
 
-  constructor(private readonly emitter: EventEmitter2) {}
+  constructor(private readonly emitter: EventEmitter2) {
+    const url = process.env.CLOB_WS_URL ?? "ws://localhost:3098";
+    this.isRealPolymarket = url.includes("polymarket.com");
+  }
 
   onModuleInit() {
     this.connect();
@@ -74,7 +87,8 @@ export class PolymarketWsService implements OnModuleInit, OnModuleDestroy {
   unsubscribeTokens(tokenIds: string[]) {
     tokenIds.forEach((id) => this.subscribedTokens.delete(id));
 
-    if (this.ws?.readyState === WebSocket.OPEN) {
+    // Real Polymarket does not support unsubscribe; only send for mock
+    if (!this.isRealPolymarket && this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(
         JSON.stringify({
           action: "unsubscribe",
@@ -108,7 +122,7 @@ export class PolymarketWsService implements OnModuleInit, OnModuleDestroy {
         this.sendSubscription([...this.subscribedTokens]);
       }
 
-      // Keep-alive ping
+      // Keep-alive ping — Polymarket requires every 10s
       this.pingTimer = setInterval(() => {
         if (this.ws?.readyState === WebSocket.OPEN) {
           this.ws.ping();
@@ -117,8 +131,12 @@ export class PolymarketWsService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.ws.on("message", (data: Buffer) => {
+      const text = data.toString();
+      // Handle PONG text response (some servers send text "PONG" instead of WS pong frame)
+      if (text === "PONG") return;
+
       try {
-        const msg = JSON.parse(data.toString());
+        const msg = JSON.parse(text);
         this.handleMessage(msg);
       } catch {
         // ignore malformed frames
@@ -140,22 +158,75 @@ export class PolymarketWsService implements OnModuleInit, OnModuleDestroy {
   }
 
   private handleMessage(msg: any) {
-    switch (msg.type) {
-      case "PRICE_UPDATE":
+    // Detect format: real Polymarket uses "event_type", mock uses "type"
+    const eventType = msg.event_type ?? msg.type;
+    const ts = msg.timestamp ? (typeof msg.timestamp === "string" ? Date.parse(msg.timestamp) : msg.timestamp) : Date.now();
+
+    switch (eventType) {
+      // ─── Real Polymarket format ──────────────────────────────────────
+      case "price_change": {
+        // { event_type: "price_change", price_changes: [{ asset_id, price, ... }] }
+        if (Array.isArray(msg.price_changes)) {
+          for (const pc of msg.price_changes) {
+            this.emitter.emit("market-data.price", {
+              tokenId: pc.asset_id,
+              price: parseFloat(pc.price),
+              timestamp: ts,
+            } satisfies PriceUpdateEvent);
+          }
+        }
+        break;
+      }
+      case "last_trade_price": {
+        // { event_type: "last_trade_price", asset_id, price, ... }
+        this.emitter.emit("market-data.price", {
+          tokenId: msg.asset_id,
+          price: parseFloat(msg.price),
+          timestamp: ts,
+        } satisfies PriceUpdateEvent);
+        break;
+      }
+      case "book": {
+        // { event_type: "book", asset_id, bids, asks, ... }
+        this.emitter.emit("market-data.book", {
+          tokenId: msg.asset_id,
+          bids: msg.bids ?? [],
+          asks: msg.asks ?? [],
+          midpoint: "0",
+          spread: "0",
+          timestamp: ts,
+        } satisfies BookUpdateEvent);
+        break;
+      }
+      case "best_bid_ask": {
+        // { event_type: "best_bid_ask", asset_id, best_bid, best_ask, spread }
+        this.emitter.emit("market-data.book", {
+          tokenId: msg.asset_id,
+          bids: msg.best_bid ? [{ price: msg.best_bid, size: "0" }] : [],
+          asks: msg.best_ask ? [{ price: msg.best_ask, size: "0" }] : [],
+          midpoint: "0",
+          spread: msg.spread ?? "0",
+          timestamp: ts,
+        } satisfies BookUpdateEvent);
+        break;
+      }
+
+      // ─── Mock format (backwards compatibility) ───────────────────────
+      case "PRICE_UPDATE": {
+        this.emitter.emit("market-data.price", {
+          tokenId: msg.tokenId,
+          price: parseFloat(msg.price),
+          timestamp: ts,
+        } satisfies PriceUpdateEvent);
+        break;
+      }
       case "PRICE_SNAPSHOT": {
-        if (msg.type === "PRICE_UPDATE") {
-          this.emitter.emit("market-data.price", {
-            tokenId: msg.tokenId,
-            price: parseFloat(msg.price),
-            timestamp: msg.timestamp,
-          } satisfies PriceUpdateEvent);
-        } else if (msg.prices) {
-          // Snapshot: emit one event per token
+        if (msg.prices) {
           for (const [tokenId, price] of Object.entries(msg.prices)) {
             this.emitter.emit("market-data.price", {
               tokenId,
               price: parseFloat(price as string),
-              timestamp: msg.timestamp,
+              timestamp: ts,
             } satisfies PriceUpdateEvent);
           }
         }
@@ -169,7 +240,7 @@ export class PolymarketWsService implements OnModuleInit, OnModuleDestroy {
           asks: msg.asks ?? [],
           midpoint: msg.midpoint ?? "0",
           spread: msg.spread ?? "0",
-          timestamp: msg.timestamp,
+          timestamp: ts,
         } satisfies BookUpdateEvent);
         break;
       }
@@ -177,14 +248,34 @@ export class PolymarketWsService implements OnModuleInit, OnModuleDestroy {
   }
 
   private sendSubscription(tokenIds: string[]) {
-    if (!tokenIds.length) return;
-    this.ws!.send(
-      JSON.stringify({
-        action: "subscribe",
-        channels: ["price", "book"],
-        tokenIds,
-      }),
-    );
+    if (!tokenIds.length || !this.ws) return;
+
+    if (this.isRealPolymarket) {
+      // Real Polymarket format: { assets_ids, type: "market" }
+      // Batch to avoid oversized frames
+      for (let i = 0; i < tokenIds.length; i += SUBSCRIBE_BATCH_SIZE) {
+        const batch = tokenIds.slice(i, i + SUBSCRIBE_BATCH_SIZE);
+        this.ws.send(
+          JSON.stringify({
+            assets_ids: batch,
+            type: "market",
+            custom_feature_enabled: true,
+          }),
+        );
+      }
+      this.logger.log(
+        `Subscribed to ${tokenIds.length} tokens in ${Math.ceil(tokenIds.length / SUBSCRIBE_BATCH_SIZE)} batch(es)`,
+      );
+    } else {
+      // Mock format
+      this.ws.send(
+        JSON.stringify({
+          action: "subscribe",
+          channels: ["price", "book"],
+          tokenIds,
+        }),
+      );
+    }
   }
 
   private scheduleReconnect() {

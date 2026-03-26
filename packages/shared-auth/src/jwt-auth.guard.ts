@@ -3,17 +3,20 @@ import {
   ExecutionContext,
   UnauthorizedException,
   Logger,
+  Inject,
+  Optional,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { PrismaService } from "@polyforge/shared-db";
+import { RedisService } from "@polyforge/shared-redis";
 import { createHash } from "crypto";
 
-// ── JWT verification cache (in-memory, 30s TTL) ─────────────────────────────
+// ── JWT verification cache (in-memory, 5s TTL) ──────────────────────────────
 // Avoids re-verifying the same JWT token on every request within the TTL window.
-// The cache is bounded to prevent memory leaks — entries are evicted on access
-// if expired, and the entire cache is cleared if it exceeds MAX_CACHE_SIZE.
+// Reduced from 30s to 5s to minimize the post-password-change attack window.
+// Also checks Redis pwchange key to immediately invalidate cached tokens.
 const JWT_CACHE = new Map<string, { user: any; expiresAt: number }>();
-const JWT_CACHE_TTL = 30_000; // 30 seconds
+const JWT_CACHE_TTL = 5_000; // 5 seconds (reduced from 30s for security)
 const MAX_CACHE_SIZE = 10_000;
 
 function getCachedJwtUser(token: string): any | null {
@@ -34,11 +37,23 @@ function setCachedJwtUser(token: string, user: any): void {
   JWT_CACHE.set(token, { user, expiresAt: Date.now() + JWT_CACHE_TTL });
 }
 
+/** Invalidate all cached entries for a given userId */
+export function invalidateJwtCacheForUser(userId: string): void {
+  for (const [token, entry] of JWT_CACHE.entries()) {
+    if (entry.user?.sub === userId) {
+      JWT_CACHE.delete(token);
+    }
+  }
+}
+
 @Injectable()
 export class JwtAuthGuard extends AuthGuard("jwt") {
   private readonly logger = new Logger(JwtAuthGuard.name);
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() @Inject(RedisService) private readonly redis?: RedisService,
+  ) {
     super();
   }
 
@@ -48,10 +63,19 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     const authHeader: string | undefined = request.headers?.authorization;
 
     // ── JWT cache fast-path: skip re-verification for recently verified tokens ─
+    // Also checks Redis pwchange key to prevent post-password-change attack window
     if (authHeader?.startsWith("Bearer ") && !authHeader.startsWith("Bearer pf_")) {
       const token = authHeader.slice(7);
       const cachedUser = getCachedJwtUser(token);
       if (cachedUser) {
+        // Check if the user's password was changed (invalidates all tokens)
+        if (this.redis && cachedUser.sub) {
+          const pwChanged = await this.redis.get(`pwchange:${cachedUser.sub}`);
+          if (pwChanged) {
+            JWT_CACHE.delete(token);
+            throw new UnauthorizedException("Password was changed — please re-authenticate");
+          }
+        }
         request.user = cachedUser;
         return true;
       }

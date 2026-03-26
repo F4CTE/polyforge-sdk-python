@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
+import { RedisService } from "@polyforge/shared-redis";
 import { paginate, PaginatedResponse } from "../common/dto/pagination.dto";
 
 export interface DiscoverQueryDto {
@@ -17,7 +18,10 @@ export interface LeaderboardQueryDto {
 
 @Injectable()
 export class DiscoverService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   async discover(
     userId: string,
@@ -96,45 +100,56 @@ export class DiscoverService {
           ? new Date(Date.now() - 30 * 86400_000)
           : new Date(0); // allTime
 
+    // Check Redis cache first (60s TTL)
+    const cacheKey = `cache:leaderboard:${period}:${page}:${limit}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) return JSON.parse(cached);
+
     // Sum realized P&L from pnl_snapshots table grouped by user
     // Use Prisma ORM instead of raw SQL to avoid PgBouncer/build issues
-    const snapshots = await this.prisma.pnlSnapshot.groupBy({
-      by: ['userId'],
-      where: { time: { gte: since } },
-      _sum: { realizedPnl: true },
-      orderBy: { _sum: { realizedPnl: 'desc' } },
-      take: limit,
-      skip,
-    });
+    // Run paginated snapshot query and total count in parallel
+    const [snapshots, totalGroups] = await Promise.all([
+      this.prisma.pnlSnapshot.groupBy({
+        by: ['userId'],
+        where: { time: { gte: since } },
+        _sum: { realizedPnl: true },
+        orderBy: { _sum: { realizedPnl: 'desc' } },
+        take: limit,
+        skip,
+      }),
+      this.prisma.pnlSnapshot.groupBy({
+        by: ['userId'],
+        where: { time: { gte: since } },
+      }).then(r => r.length),
+    ]);
 
-    const total = await this.prisma.pnlSnapshot.groupBy({
-      by: ['userId'],
-      where: { time: { gte: since } },
-    }).then(r => r.length);
+    const total = totalGroups;
 
     const rows = snapshots.map(s => ({
       userId: s.userId,
       pnl: s._sum.realizedPnl?.toString() ?? '0',
-      tradeCount: 0, // Will be enriched below
+      tradeCount: 0,
     }));
 
-    // Enrich with trade counts
+    // Enrich with trade counts and user profiles in parallel
     const userIds = rows.map((r) => r.userId);
+    let userMap: Record<string, any> = {};
     if (userIds.length > 0) {
-      const tradeCounts = await this.prisma.order.groupBy({
-        by: ['userId'],
-        where: { userId: { in: userIds }, createdAt: { gte: since } },
-        _count: true,
-      });
+      const [tradeCounts, users] = await Promise.all([
+        this.prisma.order.groupBy({
+          by: ['userId'],
+          where: { userId: { in: userIds }, createdAt: { gte: since } },
+          _count: true,
+        }),
+        this.prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, username: true, displayName: true, avatarUrl: true },
+        }),
+      ]);
       const tradeMap = Object.fromEntries(tradeCounts.map(t => [t.userId, t._count]));
       rows.forEach(r => { r.tradeCount = tradeMap[r.userId] ?? 0; });
+      userMap = Object.fromEntries(users.map((u) => [u.id, u]));
     }
-
-    const users = await this.prisma.user.findMany({
-      where: { id: { in: userIds } },
-      select: { id: true, username: true, displayName: true, avatarUrl: true },
-    });
-    const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
 
     const data = rows.map((r, i) => ({
       rank: skip + i + 1,
@@ -147,6 +162,9 @@ export class DiscoverService {
       tradeCount: Number(r.tradeCount ?? 0),
     }));
 
-    return paginate(data, total, page, limit);
+    const result = paginate(data, total, page, limit);
+    // Cache for 60 seconds
+    await this.redis.set(cacheKey, JSON.stringify(result), 60);
+    return result;
   }
 }

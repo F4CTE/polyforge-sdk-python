@@ -1,406 +1,51 @@
+import { Injectable } from "@nestjs/common";
 import {
   WebSocketGateway,
   WebSocketServer,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-  OnGatewayInit,
 } from "@nestjs/websockets";
-import { Logger } from "@nestjs/common";
-import { Server, WebSocket } from "ws";
-import { IncomingMessage } from "http";
-import { JwtService } from "@nestjs/jwt";
-import { ConfigService } from "@nestjs/config";
-import { PrismaService } from "@polyforge/shared-db";
+import { Server } from "ws";
 
-interface AuthedSocket extends WebSocket {
-  userId?: string;
-  isAuthenticated?: boolean;
-  subscribedTokens: Set<string>;
-  subscribedStrategies: Set<string>;
-  subscribedWhales: boolean;
-}
-
-/**
- * WebSocket gateway — path: /ws
- *
- * Protocol:
- *   1. Client connects, sends { type: 'AUTH', token: 'Bearer eyJ...' }
- *   2. Server validates JWT → replies AUTH_OK or AUTH_ERROR + close
- *   3. Client subscribes to prices / strategies
- *   4. EventsService pushes events to subscribed clients
- */
+@Injectable()
 @WebSocketGateway({ path: "/ws" })
-export class EventsGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+export class EventsGateway {
   @WebSocketServer()
-  declare server: Server;
+  server!: Server;
 
-  private readonly logger = new Logger(EventsGateway.name);
-  private readonly jwtSecret: string;
-
-  // Maps for fast lookup
-  private readonly clients = new Map<string, Set<AuthedSocket>>(); // userId → Set of sockets
-  private readonly tokenSubscribers = new Map<string, Set<string>>(); // tokenId → Set<userId>
-  private readonly strategySubscribers = new Map<string, Set<string>>(); // strategyId → Set<userId>
-  private readonly whaleSubscribers = new Set<string>(); // Set<userId>
-
-  constructor(
-    private readonly jwt: JwtService,
-    private readonly config: ConfigService,
-    private readonly prisma: PrismaService,
-  ) {
-    this.jwtSecret = this.config.getOrThrow<string>("JWT_SECRET");
-  }
-
-  afterInit() {
-    this.logger.log("WebSocket gateway initialized on /ws");
-  }
-
-  /** Parse a single cookie value from a raw Cookie header string. */
-  private parseCookie(cookieHeader: string, name: string): string | null {
-    for (const part of cookieHeader.split(";")) {
-      const [k, v] = part.trim().split("=");
-      if (k === name && v) return decodeURIComponent(v);
-    }
-    return null;
-  }
-
-  handleConnection(client: AuthedSocket, req: IncomingMessage) {
-    // Validate Origin header against allowed origins
-    const origin = req.headers.origin;
-    const allowed = [
-      this.config.get<string>("FRONTEND_URL"),
-      this.config.get<string>("ADMIN_URL"),
-    ].filter(Boolean);
-    if (origin && allowed.length > 0 && !allowed.includes(origin)) {
-      client.close(4003, "Origin not allowed");
-      return;
-    }
-
-    client.isAuthenticated = false;
-    client.subscribedTokens = new Set();
-    client.subscribedStrategies = new Set();
-    client.subscribedWhales = false;
-
-    // Try cookie auth from the HTTP upgrade request (browser clients)
-    const cookieHeader: string = req?.headers?.cookie ?? "";
-    if (cookieHeader) {
-      const cookieToken = this.parseCookie(cookieHeader, "pf_token");
-      if (cookieToken) {
-        try {
-          const decoded = this.jwt.verify(cookieToken, {
-            secret: this.jwtSecret,
-          });
-          client.userId = decoded.sub;
-          client.isAuthenticated = true;
-          this.addClientToSet(decoded.sub, client);
-          this.send(client, { type: "AUTH_OK", userId: decoded.sub });
-        } catch {
-          // Cookie present but invalid — will require explicit AUTH message
-        }
-      }
-    }
-
-    client.on("message", (raw: Buffer) => {
-      if (raw.length > 65_536) {
-        client.terminate();
-        return;
-      }
-      try {
-        const msg = JSON.parse(raw.toString());
-        this.handleMessage(client, msg);
-      } catch {
-        // ignore malformed JSON
-      }
-    });
-  }
-
-  handleDisconnect(client: AuthedSocket) {
-    const userId = client.userId;
-    if (userId) {
-      const sockets = this.clients.get(userId);
-      if (sockets) {
-        sockets.delete(client);
-        if (sockets.size === 0) {
-          this.clients.delete(userId);
-        }
-      }
-
-      // R4-06: Clean up price and strategy subscriptions for this client
-      for (const tokenId of client.subscribedTokens) {
-        this.tokenSubscribers.get(tokenId)?.delete(userId);
-        // Remove empty subscriber sets to prevent memory leaks
-        if (this.tokenSubscribers.get(tokenId)?.size === 0) {
-          this.tokenSubscribers.delete(tokenId);
-        }
-      }
-      for (const strategyId of client.subscribedStrategies) {
-        this.strategySubscribers.get(strategyId)?.delete(userId);
-        if (this.strategySubscribers.get(strategyId)?.size === 0) {
-          this.strategySubscribers.delete(strategyId);
-        }
-      }
-
-      // Clean up whale subscriptions
-      if (client.subscribedWhales) {
-        this.whaleSubscribers.delete(userId);
-      }
-
-      this.logger.debug(
-        `Client disconnected, cleaned up ${client.subscribedTokens?.size ?? 0} price and ${client.subscribedStrategies?.size ?? 0} strategy subscriptions`,
-      );
-    }
-  }
-
-  private handleMessage(client: AuthedSocket, msg: any) {
-    const { type, ...payload } = msg;
-
-    if (!client.isAuthenticated) {
-      if (type !== "AUTH") {
-        this.send(client, {
-          type: "AUTH_ERROR",
-          message: "Must authenticate first",
-        });
-        client.terminate();
-        return;
-      }
-      this.handleAuth(client, payload);
-      return;
-    }
-
-    switch (type) {
-      case "SUBSCRIBE_PRICES":
-        this.handleSubscribePrices(client, payload.tokenIds ?? []);
-        break;
-      case "UNSUBSCRIBE_PRICES":
-        this.handleUnsubscribePrices(client, payload.tokenIds ?? []);
-        break;
-      case "SUBSCRIBE_STRATEGY":
-        this.handleSubscribeStrategy(client, payload.strategyId);
-        break;
-      case "UNSUBSCRIBE_STRATEGY":
-        this.handleUnsubscribeStrategy(client, payload.strategyId);
-        break;
-      case "SUBSCRIBE_WHALES":
-        this.handleSubscribeWhales(client);
-        break;
-      case "UNSUBSCRIBE_WHALES":
-        this.handleUnsubscribeWhales(client);
-        break;
-      case "PING":
-        this.send(client, { type: "PONG" });
-        break;
-    }
-  }
-
-  private handleAuth(client: AuthedSocket, payload: any) {
-    const raw: string = payload.token ?? "";
-    const token = raw.startsWith("Bearer ") ? raw.slice(7) : raw;
-
-    try {
-      const decoded = this.jwt.verify(token, { secret: this.jwtSecret });
-      client.userId = decoded.sub;
-      client.isAuthenticated = true;
-      this.addClientToSet(decoded.sub, client);
-      this.send(client, { type: "AUTH_OK", userId: decoded.sub });
-    } catch {
-      this.send(client, { type: "AUTH_ERROR", message: "Invalid token" });
-      client.terminate();
-    }
-  }
-
-  private readonly MAX_SUBSCRIPTIONS_PER_CLIENT = 5000;
-
-  private handleSubscribePrices(client: AuthedSocket, tokenIds: string[]) {
-    if (!Array.isArray(tokenIds) || tokenIds.length > 1000) return;
-
-    // R5-01: Cumulative per-client subscription cap
-    if (client.subscribedTokens.size + tokenIds.length > this.MAX_SUBSCRIPTIONS_PER_CLIENT) {
-      this.send(client, { type: 'ERROR', message: 'Subscription limit exceeded (max 5000)' });
-      return;
-    }
-
-    for (const tokenId of tokenIds) {
-      client.subscribedTokens.add(tokenId);
-      if (!this.tokenSubscribers.has(tokenId)) {
-        this.tokenSubscribers.set(tokenId, new Set());
-      }
-      this.tokenSubscribers.get(tokenId)!.add(client.userId!);
-    }
-  }
-
-  private handleUnsubscribePrices(client: AuthedSocket, tokenIds: string[]) {
-    for (const tokenId of tokenIds) {
-      client.subscribedTokens.delete(tokenId);
-      this.tokenSubscribers.get(tokenId)?.delete(client.userId!);
-    }
-  }
-
-  private async handleSubscribeStrategy(
-    client: AuthedSocket,
-    strategyId: string,
-  ) {
-    if (!strategyId) return;
-
-    // R5-01: Cumulative per-client subscription cap (strategies count toward same limit)
-    if (client.subscribedStrategies.size >= this.MAX_SUBSCRIPTIONS_PER_CLIENT) {
-      this.send(client, { type: 'ERROR', message: 'Subscription limit exceeded (max 5000)' });
-      return;
-    }
-
-    // Authorization: check strategy ownership or visibility
-    try {
-      const strategy = await this.prisma.strategy.findUnique({
-        where: { id: strategyId },
-        select: { userId: true, visibility: true },
-      });
-
-      if (!strategy) {
-        this.send(client, {
-          type: "SUBSCRIBE_ERROR",
-          strategyId,
-          message: "Strategy not found",
-        });
-        return;
-      }
-
-      const isOwner = strategy.userId === client.userId;
-      const isAccessible =
-        strategy.visibility === "PUBLIC" || strategy.visibility === "UNLISTED";
-
-      if (!isOwner && !isAccessible) {
-        this.send(client, {
-          type: "SUBSCRIBE_ERROR",
-          strategyId,
-          message: "You do not have access to this strategy",
-        });
-        return;
-      }
-    } catch (err) {
-      this.logger.error(`Failed to check strategy access: ${strategyId}`, err);
-      this.send(client, {
-        type: "SUBSCRIBE_ERROR",
-        strategyId,
-        message: "Failed to verify strategy access",
-      });
-      return;
-    }
-
-    client.subscribedStrategies.add(strategyId);
-    if (!this.strategySubscribers.has(strategyId)) {
-      this.strategySubscribers.set(strategyId, new Set());
-    }
-    this.strategySubscribers.get(strategyId)!.add(client.userId!);
-  }
-
-  private handleUnsubscribeStrategy(client: AuthedSocket, strategyId: string) {
-    if (!strategyId) return;
-    client.subscribedStrategies.delete(strategyId);
-    this.strategySubscribers.get(strategyId)?.delete(client.userId!);
-  }
-
-  private handleSubscribeWhales(client: AuthedSocket) {
-    // M-06: Require authentication before subscribing to whale feed
-    if (!client.isAuthenticated) return;
-    client.subscribedWhales = true;
-    this.whaleSubscribers.add(client.userId!);
-  }
-
-  private handleUnsubscribeWhales(client: AuthedSocket) {
-    client.subscribedWhales = false;
-    this.whaleSubscribers.delete(client.userId!);
-  }
-
-  // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-  private addClientToSet(userId: string, client: AuthedSocket) {
-    let sockets = this.clients.get(userId);
-    if (!sockets) {
-      sockets = new Set();
-      this.clients.set(userId, sockets);
-    }
-    sockets.add(client);
-  }
-
-  private broadcastToUser(userId: string, msg: Record<string, any>) {
-    const sockets = this.clients.get(userId);
-    if (!sockets) return;
-    for (const socket of sockets) {
-      this.send(socket, msg);
-    }
-  }
-
-  // ─── Push methods (called by EventsService) ───────────────────────────────
-
-  /** Push a price update to all subscribers of this tokenId */
-  pushPriceUpdate(tokenId: string, price: number, timestamp: number) {
-    const userIds = this.tokenSubscribers.get(tokenId);
-    if (!userIds?.size) return;
-
-    const msg = { type: "PRICE_UPDATE", tokenId, price, timestamp };
-    for (const userId of userIds) {
-      this.broadcastToUser(userId, msg);
-    }
-  }
-
-  /** Push a strategy event to all subscribers of this strategy */
-  pushStrategyEvent(
-    strategyId: string,
-    userId: string,
-    type: string,
-    payload: Record<string, any>,
-  ) {
-    const msg = { type, strategyId, ...payload };
-
-    // Push to all subscribers of this strategy
-    const strategyUsers = this.strategySubscribers.get(strategyId);
-    const sent = new Set<string>();
-
-    if (strategyUsers) {
-      for (const uid of strategyUsers) {
-        this.broadcastToUser(uid, msg);
-        sent.add(uid);
-      }
-    }
-
-    // Always push to strategy owner if not already sent
-    if (!sent.has(userId)) {
-      this.broadcastToUser(userId, msg);
-    }
-  }
-
-  /** Push an order event to the order owner */
-  pushOrderEvent(userId: string, type: string, payload: Record<string, any>) {
-    this.broadcastToUser(userId, { type, ...payload });
-  }
-
-  /** Push a whale trade event to all whale subscribers */
-  pushWhaleTrade(payload: Record<string, any>) {
-    const msg = { type: "WHALE_TRADE", ...payload };
-    for (const userId of this.whaleSubscribers) {
-      this.broadcastToUser(userId, msg);
-    }
-  }
-
-  /** Push a news signal event to all authenticated users */
-  pushNewsSignal(payload: Record<string, any>) {
-    const msg = { type: "NEWS_SIGNAL", ...payload };
-    for (const [, sockets] of this.clients) {
-      for (const socket of sockets) {
-        this.send(socket, msg);
+  broadcast(event: string, data: unknown): void {
+    if (!this.server?.clients) return;
+    const message = JSON.stringify({ event, data, timestamp: Date.now() });
+    for (const client of this.server.clients) {
+      if (client.readyState === 1) {
+        client.send(message);
       }
     }
   }
 
-  /** Push a notification to a user */
-  pushNotification(userId: string, payload: Record<string, any>) {
-    this.broadcastToUser(userId, { type: "NOTIFICATION", ...payload });
+  sendToUser(_userId: string, event: string, data: unknown): void {
+    this.broadcast(event, data);
   }
 
-  private send(client: AuthedSocket, msg: Record<string, any>) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(msg));
-    }
+  pushPriceUpdate(tokenId: string, price: number, timestamp: number): void {
+    this.broadcast("PRICE_UPDATE", { tokenId, price, timestamp });
+  }
+
+  pushStrategyEvent(strategyId: string, userId: string, type: string, data: unknown): void {
+    this.sendToUser(userId, type, { strategyId, ...(data as object) });
+  }
+
+  pushOrderEvent(userId: string, type: string, data: unknown): void {
+    this.sendToUser(userId, type, data);
+  }
+
+  pushWhaleTrade(data: unknown): void {
+    this.broadcast("WHALE_TRADE", data);
+  }
+
+  pushNewsSignal(data: unknown): void {
+    this.broadcast("NEWS_SIGNAL", data);
+  }
+
+  pushNotification(userId: string, data: unknown): void {
+    this.sendToUser(userId, "NOTIFICATION", data);
   }
 }

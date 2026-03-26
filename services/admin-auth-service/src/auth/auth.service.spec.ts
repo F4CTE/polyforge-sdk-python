@@ -302,7 +302,10 @@ describe("AdminAuthService", () => {
       const admin = await adminFactory({ totpEnabled: true, totpSecret: "encrypted" });
       adminDb.admin.findUnique.mockResolvedValue(admin);
 
-      await service.disableTotp(admin.id);
+      // Mock the private decrypt method to return a valid secret
+      vi.spyOn(service as any, "decrypt").mockReturnValue("JBSWY3DPEHPK3PXP");
+
+      await service.disableTotp(admin.id, "Passw0rd!", "123456");
 
       expect(adminDb.admin.update).toHaveBeenCalledWith({
         where: { id: admin.id },

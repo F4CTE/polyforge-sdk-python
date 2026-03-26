@@ -81,18 +81,41 @@ export class NewsIngestionService implements OnModuleInit {
     const sanitizedXml = xml.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
     const articles = this.parseRss(sanitizedXml, feedUrl);
 
-    let newCount = 0;
-    for (const article of articles) {
-      const created = await this.upsertArticle(article);
-      if (created) {
-        newCount++;
-      }
-    }
+    // Batch insert — skipDuplicates avoids N+1 findUnique+create pattern
+    const result = await this.prisma.newsArticle.createMany({
+      data: articles.map((a) => ({
+        source: a.source,
+        title: a.title,
+        summary: a.summary,
+        url: a.url,
+        imageUrl: a.imageUrl,
+        publishedAt: a.publishedAt,
+      })),
+      skipDuplicates: true,
+    });
+    const newCount = result.count;
 
     if (newCount > 0) {
       this.logger.log(
         `Ingested ${newCount} new article(s) from ${feedUrl}`,
       );
+
+      // Trigger signal generation for newly inserted articles
+      try {
+        const recentArticles = await this.prisma.newsArticle.findMany({
+          where: { source: feedUrl.includes('reuters') ? 'reuters' : feedUrl.includes('coindesk') ? 'coindesk' : 'rss' },
+          orderBy: { ingestedAt: "desc" },
+          take: newCount,
+          select: { id: true, title: true, summary: true },
+        });
+        for (const article of recentArticles) {
+          this.signalGenerator?.generateSignals?.(article)?.catch((err: any) => {
+            this.logger.error(`Signal generation failed for article ${article.id}: ${err?.message}`);
+          });
+        }
+      } catch {
+        // Signal generation is non-critical
+      }
     }
 
     return newCount;

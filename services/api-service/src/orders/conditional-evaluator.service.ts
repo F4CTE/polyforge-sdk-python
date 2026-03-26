@@ -31,12 +31,20 @@ export class ConditionalEvaluatorService {
       take: 100,
     });
 
-    for (const order of pendingOrders) {
-      // Get current price from Redis cache
-      const priceStr = await this.redis.get(`cache:price:${order.tokenId}`);
-      if (!priceStr) continue;
+    if (pendingOrders.length === 0) return;
 
-      const currentPrice = parseFloat(priceStr);
+    // Batch fetch all prices in one MGET instead of N sequential GETs
+    const tokenIds = [...new Set(pendingOrders.map((o) => o.tokenId))];
+    const priceKeys = tokenIds.map((id) => `cache:price:${id}`);
+    const priceValues = await this.redis.getClient().mget(...priceKeys);
+    const priceMap = new Map<string, number>();
+    tokenIds.forEach((id, i) => {
+      if (priceValues[i]) priceMap.set(id, parseFloat(priceValues[i]!));
+    });
+
+    for (const order of pendingOrders) {
+      const currentPrice = priceMap.get(order.tokenId);
+      if (currentPrice === undefined) continue;
       const triggerPrice = parseFloat(String(order.triggerPrice));
 
       // PEGGED orders: re-price on every tick without triggering
@@ -135,10 +143,12 @@ export class ConditionalEvaluatorService {
   }
 
   async handlePegged(order: any, currentPrice: number): Promise<void> {
-    // Re-price the limitPrice based on current market price
-    // The triggerPrice acts as the offset from the current price
     const offset = parseFloat(String(order.triggerPrice));
     const newLimitPrice = Math.max(0.01, Math.min(0.99, currentPrice + offset));
+
+    // Skip DB write if price hasn't changed materially (avoids write on every tick)
+    const existingLimit = order.limitPrice ? parseFloat(String(order.limitPrice)) : null;
+    if (existingLimit !== null && Math.abs(newLimitPrice - existingLimit) < 0.0001) return;
 
     await this.prisma.conditionalOrder.update({
       where: { id: order.id },
@@ -197,20 +207,15 @@ export class ConditionalEvaluatorService {
   @Cron("*/30 * * * * *")
   async checkExpiredOrders(): Promise<void> {
     try {
-      const expiredOrders = await this.prisma.conditionalOrder.findMany({
+      // Single updateMany instead of sequential updates per order
+      const { count } = await this.prisma.conditionalOrder.updateMany({
         where: {
           status: "PENDING",
           expiresAt: { not: null, lte: new Date() },
         },
+        data: { status: "CANCELLED" },
       });
-
-      for (const order of expiredOrders) {
-        await this.prisma.conditionalOrder.update({
-          where: { id: order.id },
-          data: { status: "CANCELLED" },
-        });
-        this.logger.log(`Conditional order ${order.id} expired`);
-      }
+      if (count > 0) this.logger.log(`Cancelled ${count} expired conditional order(s)`);
     } catch (err) {
       this.logger.error("Expiration check failed", err);
     }

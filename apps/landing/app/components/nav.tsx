@@ -141,57 +141,45 @@ export function Nav() {
         </div>
 
         <button
-          className="flex md:hidden flex-col gap-1 bg-transparent border-none cursor-pointer p-1 ml-auto"
-          aria-label="Open menu"
+          className="flex md:hidden flex-col gap-1.5 bg-transparent border-none cursor-pointer p-1 ml-auto"
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen(!mobileOpen)}
         >
-          <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" />
-          <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" />
-          <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" />
+          {mobileOpen ? (
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="text-pf-text-secondary">
+              <path d="M5 5L17 17M17 5L5 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <>
+              <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" />
+              <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" />
+              <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" />
+            </>
+          )}
         </button>
       </div>
 
       {mobileOpen && (
         <div className="flex md:hidden flex-col gap-1 px-6 pb-4 border-t border-pf-border-subtle">
-          <a
-            href="#features"
-            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text transition-colors"
-          >
-            Features
-          </a>
-          <a
-            href="#how-it-works"
-            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text transition-colors"
-          >
-            How it works
-          </a>
-          <a
-            href="/terms"
-            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text transition-colors"
-          >
-            Terms
-          </a>
-          <a
-            href="/api-docs"
-            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text transition-colors"
-          >
-            API Docs
-          </a>
-          <a
-            href="/privacy"
-            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text transition-colors"
-          >
-            Privacy
-          </a>
-          <a
-            href="/login"
-            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text transition-colors"
-          >
-            Sign in
-          </a>
+          {[
+            { href: '#features', label: 'Features' },
+            { href: '#how-it-works', label: 'How it works' },
+            { href: '/api-docs', label: 'API Docs' },
+            { href: '/login', label: 'Sign in' },
+          ].map(({ href, label }) => (
+            <a
+              key={href}
+              href={href}
+              onClick={() => setMobileOpen(false)}
+              className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text transition-colors"
+            >
+              {label}
+            </a>
+          ))}
           <a
             href="/register"
+            onClick={() => setMobileOpen(false)}
             className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5"
           >
             Start building free

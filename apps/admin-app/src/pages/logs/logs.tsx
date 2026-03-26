@@ -101,7 +101,7 @@ export function Component() {
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: tab === 'audit' ? 4 : tab === 'logins' ? 5 : 3 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 bg-pf-surface rounded animate-pulse" />
                       </td>
@@ -143,8 +143,11 @@ export function Component() {
                             {log.type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-[var(--color-pf-text-secondary)] max-w-[300px] truncate font-mono text-xs">
-                          {JSON.stringify(log.payload)}
+                        <td className="px-4 py-3 text-[var(--color-pf-text-secondary)] max-w-[300px] font-mono text-xs">
+                          <details className="cursor-pointer">
+                            <summary className="truncate">{JSON.stringify(log.payload)}</summary>
+                            <pre className="mt-2 p-2 bg-[var(--color-pf-bg)] rounded text-[10px] whitespace-pre-wrap break-all max-h-40 overflow-y-auto">{JSON.stringify(log.payload, null, 2)}</pre>
+                          </details>
                         </td>
                       </>
                     )}

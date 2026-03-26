@@ -36,6 +36,7 @@ function createMockRedis() {
       xreadgroup: vi.fn(),
       xack: vi.fn(),
       incrbyfloat: vi.fn().mockResolvedValue("0.1"),
+      expire: vi.fn().mockResolvedValue(1),
     }),
   } as any;
 }
@@ -352,14 +353,11 @@ describe("CopyEngineService", () => {
         status: "ACTIVE",
       };
 
-      // Daily PnL is fine
-      redis.get.mockResolvedValue("0");
-
-      // Current exposure is already 500 (at limit)
-      prisma.copyTrade.findMany.mockResolvedValue([
-        { copiedSize: new Prisma.Decimal(300) },
-        { copiedSize: new Prisma.Decimal(200) },
-      ]);
+      // Daily PnL cache returns "0" (fine), exposure cache returns "500" (at limit)
+      redis.get.mockImplementation(async (key: string) => {
+        if (key.includes(':exposure')) return "500";
+        return "0";
+      });
 
       const event = {
         walletAddress: "0xwhale",

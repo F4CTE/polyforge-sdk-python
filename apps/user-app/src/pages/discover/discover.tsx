@@ -52,12 +52,8 @@ function execLabel(mode: string): string {
   return map[mode] ?? mode;
 }
 
-function mockPnl(s: PublicStrategy): number {
-  const hash = s.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  if (hash % 10 < 3) return 0;
-  const seed = Math.sin(hash) * 10000;
-  return parseFloat(((seed - Math.floor(seed)) * 20 - 10).toFixed(1));
-}
+// P&L data removed — synthetic financial metrics must not be shown to users.
+// TODO: Replace with real P&L from API when available.
 
 function formatDate(d: string): string {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -149,7 +145,6 @@ export function Component() {
       ) : (
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children ${loading ? 'opacity-60' : ''}`}>
           {strategies.map(s => {
-            const pnl = mockPnl(s);
             return (
               <Link
                 key={s.id}
@@ -159,7 +154,7 @@ export function Component() {
                 {/* Author row */}
                 <div className="flex items-center gap-2 mb-3">
                   {s.author.avatarUrl ? (
-                    <img src={s.author.avatarUrl} alt={`${s.author.displayName ?? s.author.username} avatar`} className="size-7 rounded-full object-cover" />
+                    <img src={s.author.avatarUrl} alt={`${s.author.displayName ?? s.author.username} avatar`} className="size-7 rounded-full object-cover" width={28} height={28} loading="lazy" />
                   ) : (
                     <div className="size-7 rounded-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-[10px] font-bold text-pf-cyan-400">
                       {authorInitials(s)}
@@ -214,12 +209,7 @@ export function Component() {
                 <div className="flex items-center gap-3 text-sm text-pf-text-muted pt-1">
                   <span className="flex items-center gap-1"><Heart className="size-3.5" /> {s.likeCount}</span>
                   <span className="flex items-center gap-1"><GitFork className="size-3.5" /> {s.forkCount}</span>
-                  <span className={`ml-auto font-mono text-sm font-bold ${
-                    pnl > 0 ? 'text-pf-success' : pnl < 0 ? 'text-pf-danger' : 'text-pf-text-muted'
-                  }`}>
-                    <span className="text-[11px] text-pf-text-muted font-sans font-normal mr-0.5">24h</span>
-                    {pnl !== 0 ? `${pnl > 0 ? '+' : ''}${pnl.toFixed(1)}%` : '\u2014'}
-                  </span>
+                  <span className="ml-auto text-[11px] text-pf-text-muted">&bull;</span>
                   <span className="font-mono text-[11px]">{formatDate(s.createdAt)}</span>
                 </div>
               </Link>

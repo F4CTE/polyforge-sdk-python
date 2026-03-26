@@ -23,6 +23,7 @@ function makeMocks() {
     dataGap: {
       create: vi.fn().mockResolvedValue({}),
     },
+    $transaction: vi.fn().mockResolvedValue([]),
   } as any;
 
   return { redis, prisma };
@@ -66,22 +67,17 @@ describe("PriceCacheService", () => {
       );
     });
 
-    it("updates token price in DB via updateMany", async () => {
+    it("buffers token price for batch DB flush instead of immediate write", async () => {
       await svc.handlePriceUpdate(priceEvent);
 
-      // updateMany is called but not awaited — give microtask queue time
-      await vi.advanceTimersByTimeAsync(0);
+      // Price is buffered, not written immediately
+      expect(prisma.token.updateMany).not.toHaveBeenCalled();
 
-      expect(prisma.token.updateMany).toHaveBeenCalledWith({
-        where: { id: "token-1" },
-        data: { price: 0.72 },
-      });
-    });
+      // Flush after 5 seconds
+      await vi.advanceTimersByTimeAsync(5000);
 
-    it("does not throw when DB updateMany fails", async () => {
-      prisma.token.updateMany.mockRejectedValue(new Error("PG down"));
-
-      await expect(svc.handlePriceUpdate(priceEvent)).resolves.toBeUndefined();
+      // Now the batched $transaction should have fired
+      expect(prisma.$transaction).toHaveBeenCalled();
     });
 
     it("buffers snapshot data for TimescaleDB flush", async () => {

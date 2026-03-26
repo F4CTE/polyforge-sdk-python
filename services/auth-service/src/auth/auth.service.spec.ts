@@ -73,6 +73,8 @@ describe('AuthService', () => {
       del: vi.fn().mockResolvedValue(undefined),
       getClient: vi.fn().mockReturnValue({
         decr: vi.fn(),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
         eval: vi.fn().mockResolvedValue(0),
         xadd: vi.fn().mockResolvedValue('stream-id'),
         scanStream: vi.fn().mockReturnValue({

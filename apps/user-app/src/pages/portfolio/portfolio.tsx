@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -7,6 +7,7 @@ import {
   RefreshCw, Loader2, AlertTriangle, Fuel,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useThemeStore } from '@/stores/theme-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -106,12 +107,18 @@ function TableSkeleton() {
 /* ─── Component ──────────────────────────────────────────────────────── */
 
 export function Component() {
-  // Read CSS variables for Recharts (which needs raw color strings)
-  const styles = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
-  const textMuted = styles?.getPropertyValue('--color-pf-text-muted').trim() || '#445E7A';
-  const bgElevated = styles?.getPropertyValue('--color-pf-elevated').trim() || '#111D2E';
-  const borderColor = styles?.getPropertyValue('--color-pf-border').trim() || '#1E3350';
-  const textPrimary = styles?.getPropertyValue('--color-pf-text').trim() || '#E8EDF5';
+  // Memoize CSS variable reads — avoids layout-triggering getComputedStyle on every render
+  const { isDark } = useThemeStore();
+  const themeColors = useMemo(() => {
+    const s = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
+    return {
+      textMuted: s?.getPropertyValue('--color-pf-text-muted').trim() || '#445E7A',
+      bgElevated: s?.getPropertyValue('--color-pf-elevated').trim() || '#111D2E',
+      borderColor: s?.getPropertyValue('--color-pf-border').trim() || '#1E3350',
+      textPrimary: s?.getPropertyValue('--color-pf-text').trim() || '#E8EDF5',
+    };
+  }, [isDark]);
+  const { textMuted, bgElevated, borderColor, textPrimary } = themeColors;
 
   const [tab, setTab] = useState<Tab>('live');
   const [period, setPeriodState] = useState<Period>('7d');
@@ -165,7 +172,7 @@ export function Component() {
 
   function setPeriod(p: Period) {
     setPeriodState(p);
-    loadChart(p);
+    // loadChart will be called by the useEffect watching period
   }
 
   function handleTabChange(t: Tab) {
@@ -222,8 +229,10 @@ export function Component() {
     setRedeemingPosition(prev => ({ ...prev, [pos.id]: false }));
   }
 
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
   async function resetPaper() {
-    if (!confirm('This will delete all paper positions and orders. This cannot be undone.')) return;
+    setShowResetConfirm(false);
     setResettingPaper(true);
     try {
       const res = await fetch('/api/v1/paper/reset', { method: 'POST', credentials: 'include' });
@@ -232,16 +241,13 @@ export function Component() {
     setResettingPaper(false);
   }
 
-  // Chart data
-  const chartData = (pnl?.snapshots ?? []).map(s => ({
+  // Chart data — memoized to avoid recomputing on every render
+  const chartData = useMemo(() => (pnl?.snapshots ?? []).map(s => ({
     time: new Date(s.time).toLocaleDateString([], { month: 'short', day: 'numeric' }),
     pnl: parseFloat(s.pnl),
-  }));
+  })), [pnl?.snapshots]);
   const isProfitable = parseFloat(pnl?.totalPnl ?? '0') >= 0;
-  const chartColorResolved = isProfitable
-    ? (styles?.getPropertyValue('--color-pf-success').trim() || '#10B981')
-    : (styles?.getPropertyValue('--color-pf-danger').trim() || '#EF4444');
-  const chartColor = chartColorResolved;
+  const chartColor = isProfitable ? '#10B981' : '#EF4444';
 
   return (
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
@@ -509,13 +515,28 @@ export function Component() {
                 </div>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 flex items-end justify-end">
                   <button
-                    onClick={resetPaper}
+                    onClick={() => setShowResetConfirm(true)}
                     disabled={resettingPaper}
                     className="flex items-center gap-1.5 text-xs text-pf-danger hover:text-pf-danger disabled:opacity-50 transition-colors"
                   >
                     <RefreshCw className={`size-3.5 ${resettingPaper ? 'animate-spin' : ''}`} />
                     Reset Paper Account
                   </button>
+                  {showResetConfirm && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowResetConfirm(false)} onKeyDown={(e) => { if (e.key === 'Escape') setShowResetConfirm(false); }}>
+                      <div role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 max-w-sm mx-4 shadow-pf-lg" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <AlertTriangle className="size-5 text-pf-danger" />
+                          <h3 id="reset-dialog-title" className="text-sm font-semibold text-pf-text">Reset Paper Account</h3>
+                        </div>
+                        <p className="text-sm text-pf-text-secondary mb-4">This will delete all paper positions and orders. This cannot be undone.</p>
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => setShowResetConfirm(false)} className="px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface transition-colors">Cancel</button>
+                          <button onClick={resetPaper} className="px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/90 transition-colors">Reset</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -58,6 +58,19 @@ export class WebhookDispatcherService {
     secret: string,
     payload: unknown,
   ): Promise<void> {
+    // SECURITY: Re-validate URL at dispatch time to prevent DNS rebinding
+    try {
+      const parsed = new URL(url);
+      const blocked = ["localhost", "127.", "0.0.0.0", "10.", "172.16.", "172.17.", "172.18.", "192.168.", "169.254."];
+      if (blocked.some((b) => parsed.hostname.startsWith(b)) || parsed.protocol !== "https:") {
+        this.logger.warn(`Webhook ${webhookId} blocked — internal/non-HTTPS URL`);
+        return;
+      }
+    } catch {
+      this.logger.warn(`Webhook ${webhookId} blocked — invalid URL`);
+      return;
+    }
+
     const body = JSON.stringify(payload);
     const signature = createHmac("sha256", secret).update(body).digest("hex");
     const headers = {

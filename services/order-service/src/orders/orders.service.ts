@@ -58,6 +58,16 @@ export class OrdersService {
   async processIntent(intent: OrderIntent, attempt = 1): Promise<void> {
     const orderId = uuidv4();
 
+    // SECURITY: Idempotency guard — skip if this intent was already processed
+    const existingOrder = await this.prisma.order.findFirst({
+      where: { intentId: intent.intentId },
+      select: { id: true },
+    });
+    if (existingOrder) {
+      this.logger.warn(`Duplicate intent ${intent.intentId} — skipping (already processed as order ${existingOrder.id})`);
+      return;
+    }
+
     // Create DB record in PENDING state
     try {
       await this.prisma.order.create({
@@ -76,7 +86,12 @@ export class OrdersService {
           status: OrderStatus.PENDING,
         },
       });
-    } catch (err) {
+    } catch (err: any) {
+      // Handle unique constraint violation (P2002) for intentId
+      if (err?.code === "P2002") {
+        this.logger.warn(`Duplicate intent ${intent.intentId} — skipping (unique constraint)`);
+        return;
+      }
       this.logger.error(
         `Failed to create order record for intent ${intent.intentId}`,
         err,
@@ -100,25 +115,20 @@ export class OrdersService {
         negRisk: intent.negRisk,
       });
 
-      // Update to SUBMITTED
-      await this.prisma.order.update({
-        where: { id: orderId },
-        data: { status: OrderStatus.SUBMITTED, placedAt: new Date() },
-      });
-
       // Submit to CLOB
       const clobResponse = await this.clob.submitOrder({
         order,
         builderHeaders,
       });
 
-      // Update with CLOB order ID and set to LIVE
+      // Single DB update: PENDING → final status (consolidates 2 updates into 1)
       await this.prisma.order.update({
         where: { id: orderId },
         data: {
           clobOrderId: clobResponse.orderID,
           clobStatus: clobResponse.status,
           status: this.mapClobStatus(clobResponse.status) as OrderStatus,
+          placedAt: new Date(),
         },
       });
 

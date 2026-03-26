@@ -29,13 +29,23 @@ services:
   # ─── USER DATABASE ─────────────────────────────────────────────────────────
 
   postgres:
-    image: timescale/timescaledb:latest-pg16
+    image: timescale/timescaledb:2.17.2-pg16
+    command: >
+      postgres
+      -c shared_buffers=512MB
+      -c effective_cache_size=1536MB
+      -c work_mem=16MB
+      -c maintenance_work_mem=256MB
+      -c max_connections=200
+      -c checkpoint_completion_target=0.9
+      -c random_page_cost=1.1
+      -c wal_buffers=16MB
     environment:
-      POSTGRES_USER: poly
-      POSTGRES_PASSWORD: devpass
-      POSTGRES_DB: polyforge
+      POSTGRES_USER: ${POSTGRES_USER:-poly}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpass}
+      POSTGRES_DB: ${POSTGRES_DB:-polyforge}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks: [internal]
@@ -43,7 +53,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U poly -d polyforge"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 30s
 
   pgbouncer:
     image: edoburu/pgbouncer:latest
@@ -78,11 +89,11 @@ services:
   postgres-admin:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: poly_admin
-      POSTGRES_PASSWORD: devpass_admin
-      POSTGRES_DB: polyforge_admin
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER:-poly_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-devpass_admin}
+      POSTGRES_DB: ${POSTGRES_ADMIN_DB:-polyforge_admin}
     ports:
-      - "5434:5432"
+      - "127.0.0.1:5434:5432"
     volumes:
       - postgres-admin-data:/var/lib/postgresql/data
     networks: [admin-only]
@@ -90,7 +101,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U poly_admin -d polyforge_admin"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 20s
 
   pgbouncer-admin:
     image: edoburu/pgbouncer:latest
@@ -121,11 +133,18 @@ services:
 
   redis:
     image: redis:7-alpine
-    command: redis-server --requirepass devredispass --appendonly yes --appendfsync everysec
+    command: >-
+      redis-server
+      --requirepass devredispass
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --hz 10
     volumes:
       - redis-data:/data
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     networks: [internal, signer-only]
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "devredispass", "ping"]
@@ -170,6 +189,7 @@ services:
       context: .
       dockerfile: services/signer-service/Dockerfile
     environment:
+      # SECURITY: Signer uses direct DB connection (not pgbouncer) for credential operations
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       REDIS_URL: redis://:devredispass@redis:6379
@@ -446,18 +466,23 @@ services:
       context: .
       dockerfile: services/admin-auth-service/Dockerfile
     environment:
+      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       ADMIN_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
       ADMIN_DIRECT_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
       REDIS_URL: redis://:devredispass@redis:6379
       ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-dev-admin-jwt-secret-change-in-production}
+      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
       ADMIN_AUTH_SERVICE_PORT: "3003"
       NODE_ENV: ${NODE_ENV:-development}
     ports:
       - "3003:3003"
     networks: [internal, admin-only]
     depends_on:
+      postgres: { condition: service_healthy }
       postgres-admin: { condition: service_healthy }
       redis: { condition: service_healthy }
+      migrate-user: { condition: service_completed_successfully }
       migrate-admin: { condition: service_completed_successfully }
     restart: unless-stopped
 
@@ -516,8 +541,8 @@ services:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       REDIS_URL: redis://:devredispass@redis:6379
-      CLOB_WS_URL: ws://mock-polymarket:3098
-      GAMMA_API_URL: http://mock-polymarket:3096
+      CLOB_WS_URL: wss://ws-subscriptions-clob.polymarket.com/ws/market
+      GAMMA_API_URL: https://gamma-api.polymarket.com
       PORT: "3005"
     ports:
       - "3005:3005"

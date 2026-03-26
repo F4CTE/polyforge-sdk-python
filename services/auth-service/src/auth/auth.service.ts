@@ -168,11 +168,26 @@ export class AuthService {
       );
     }
 
+    // SECURITY: Per-account lockout after 10 failed attempts (15-minute window)
+    const lockKey = `login:fail:${user.id}`;
+    const failCount = parseInt(await this.redis.get(lockKey) ?? '0', 10);
+    if (failCount >= 10) {
+      throw new HttpException(
+        { code: 'ACCOUNT_LOCKED', message: 'Too many failed attempts. Try again in 15 minutes.' },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
     const isValid = await this.usersService.validatePassword(
       user,
       dto.password,
     );
     if (!isValid) {
+      // Increment per-account failure counter
+      const client = this.redis.getClient();
+      const newCount = await client.incr(lockKey);
+      if (newCount === 1) await client.expire(lockKey, 900); // 15-minute window
+
       // R5-05: Record failed login attempt
       this.prisma.userLoginHistory.create({
         data: {
@@ -225,11 +240,14 @@ export class AuthService {
     }).catch(() => {}); // Fire and forget — don't fail login if history write fails
 
     // Record login event for audit trail
+    // Clear login lockout counter on success
+    await this.redis.del(lockKey).catch(() => {});
+
+    // SECURITY: Do not log email (PII) — userId is sufficient for audit correlation
     this.logger.log(
       JSON.stringify({
         event: 'LOGIN_SUCCESS',
         userId: user.id,
-        email: user.email,
         ip,
         timestamp: new Date().toISOString(),
       }),
@@ -374,9 +392,14 @@ export class AuthService {
       );
     }
 
-    // Issue a new access token (refresh token stays the same until expiry)
+    // SECURITY: Rotate refresh token — revoke old one, issue new one
+    // Prevents compromised refresh tokens from being reused for the full TTL
+    await this.redis.del(key);
+    await this.redis.del(`refresh_lookup:${tokenHash}`);
+
     const accessToken = this.generateAccessToken(user);
-    return { token: accessToken };
+    const newRefreshToken = await this.createRefreshToken(userId);
+    return { token: accessToken, refreshToken: newRefreshToken };
   }
 
   /** Revoke a single refresh token (used on logout) */
@@ -452,32 +475,31 @@ export class AuthService {
       );
     }
 
-    // Soft-delete the user
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { deleted: true, deletedAt: new Date() },
+    // SECURITY: Stop all financial operations BEFORE soft-deleting the account.
+    // These must be synchronous to prevent strategies from trading after deletion.
+
+    // 1. Stop all running strategies
+    await this.prisma.strategy.updateMany({
+      where: { userId, status: 'RUNNING' as any },
+      data: { status: 'STOPPED' as any },
     });
 
-    // Stop all running strategies — fire and forget
-    this.prisma.strategy
-      .updateMany({
-        where: { userId, status: 'RUNNING' as any },
-        data: { status: 'STOPPED' as any },
-      })
-      .catch((err) => this.logger.error('Failed to stop strategies on account deletion', err));
+    // 2. Revoke all API keys
+    await this.prisma.apiKey.updateMany({
+      where: { userId, revoked: false },
+      data: { revoked: true },
+    });
 
-    // Revoke all refresh tokens
+    // 3. Revoke all refresh tokens
     await this.revokeAllRefreshTokens(userId).catch((err) =>
       this.logger.error('Failed to revoke refresh tokens on account deletion', err),
     );
 
-    // Revoke all API keys — fire and forget
-    this.prisma.apiKey
-      .updateMany({
-        where: { userId, revoked: false },
-        data: { revoked: true },
-      })
-      .catch((err) => this.logger.error('Failed to revoke API keys on account deletion', err));
+    // 4. FINALLY soft-delete the user (after all cleanup is done)
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { deleted: true, deletedAt: new Date() },
+    });
 
     this.logger.log(`Account soft-deleted: userId=${userId}`);
   }
@@ -497,37 +519,37 @@ export class AuthService {
     return this.jwtService.sign(payload, { expiresIn: ACCESS_TOKEN_EXPIRY });
   }
 
-  /** Create a refresh token (random UUID), store its hash in Redis with TTL */
+  /** Create a refresh token (random UUID), store its hash in Redis with TTL.
+   *  Also stores a reverse lookup key for O(1) token resolution (avoids SCAN). */
   private async createRefreshToken(userId: string): Promise<string> {
     const token = randomUUID();
     const tokenHash = hashToken(token);
     const key = REFRESH_KEY(userId, tokenHash);
     await this.redis.set(key, userId, REFRESH_TTL_SECONDS);
+    // Reverse lookup: tokenHash -> userId (O(1) instead of SCAN)
+    await this.redis.set(`refresh_lookup:${tokenHash}`, userId, REFRESH_TTL_SECONDS);
     return token;
   }
 
-  /** Find the Redis key and userId for a given raw refresh token */
+  /** Find the Redis key and userId for a given raw refresh token.
+   *  Uses O(1) reverse lookup instead of SCAN to avoid timing side channels. */
   private async scanRefreshKeys(
     refreshToken: string,
   ): Promise<{ userId: string; key: string } | null> {
     const tokenHash = hashToken(refreshToken);
-    // Try all possible userId prefixes — but since we store userId as the value,
-    // we can use a wildcard scan for the hash suffix
-    const client = this.redis.getClient();
-    const pattern = `refresh:*:${tokenHash}`;
-    const keys = await new Promise<string[]>((resolve, reject) => {
-      const found: string[] = [];
-      const stream = client.scanStream({ match: pattern, count: 100 });
-      stream.on('data', (batch: string[]) => found.push(...batch));
-      stream.on('end', () => resolve(found));
-      stream.on('error', (err) => reject(err));
-    });
 
-    if (keys.length === 0) return null;
-
-    const key = keys[0];
-    const userId = await this.redis.get(key);
+    // O(1) reverse lookup — no SCAN needed
+    const userId = await this.redis.get(`refresh_lookup:${tokenHash}`);
     if (!userId) return null;
+
+    const key = REFRESH_KEY(userId, tokenHash);
+    // Verify the primary key still exists (not revoked)
+    const stored = await this.redis.get(key);
+    if (!stored) {
+      // Clean up orphaned reverse lookup
+      await this.redis.del(`refresh_lookup:${tokenHash}`);
+      return null;
+    }
 
     return { userId, key };
   }

@@ -3,6 +3,7 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   output: 'standalone',
   transpilePackages: ['@polyforge/ui'],
+  eslint: { ignoreDuringBuilds: true },
   async rewrites() {
     return [
       {

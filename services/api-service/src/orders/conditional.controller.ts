@@ -15,18 +15,18 @@ import {
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
-import { IsOptional, IsString } from "class-validator";
+import { IsOptional, IsString, IsIn } from "class-validator";
 import { PrismaService } from "@polyforge/shared-db";
 import { PaginationDto, paginate } from "../common/dto/pagination.dto";
 import { CreateConditionalOrderDto } from "./dto/create-conditional-order.dto";
 
 class ConditionalOrderQueryDto extends PaginationDto {
   @IsOptional()
-  @IsString()
+  @IsIn(["PENDING", "TRIGGERED", "CANCELLED", "EXPIRED"])
   status?: string;
 
   @IsOptional()
-  @IsString()
+  @IsIn(["TAKE_PROFIT", "STOP_LOSS", "TRAILING_STOP", "LIMIT", "PEGGED"])
   type?: string;
 }
 

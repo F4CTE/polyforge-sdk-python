@@ -1,5 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ScheduleModule } from "@nestjs/schedule";
+import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
+import { APP_GUARD } from "@nestjs/core";
 import { SharedDbModule } from "@polyforge/shared-db";
 import { RedisModule } from "@polyforge/shared-redis";
 import { LoggerModule } from "@polyforge/logger";
@@ -27,6 +29,7 @@ import { KeyRotationModule } from "./key-rotation/key-rotation.module";
 @Module({
   imports: [
     ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     LoggerModule,
     SharedDbModule,
     RedisModule,
@@ -51,5 +54,8 @@ import { KeyRotationModule } from "./key-rotation/key-rotation.module";
     KeyRotationModule,
   ],
   controllers: [HealthController],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}

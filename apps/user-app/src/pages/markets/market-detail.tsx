@@ -235,7 +235,7 @@ export function Component() {
           );
           setLoadingChart(false);
         })
-        .catch(() => { toast.error('Failed to load chart data'); setLoadingChart(false); });
+        .catch(() => { toast.error('Failed to load chart data'); setChartData([]); setLoadingChart(false); });
     },
     [],
   );

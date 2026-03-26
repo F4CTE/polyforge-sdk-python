@@ -93,29 +93,24 @@ export class GasSponsorService {
     }
 
     const key = this.redisKey(userId);
-    const currentStr = await this.redis.get(key);
-    const current = parseFloat(currentStr ?? "0");
+    const client = this.redis.getClient();
 
-    if (current + gasCostMatic > this.dailyLimitMatic) {
+    // Atomic INCRBYFLOAT — prevents TOCTOU race between concurrent requests
+    const newTotal = await client.incrbyfloat(key, gasCostMatic);
+    await client.expire(key, 48 * 60 * 60);
+
+    if (parseFloat(String(newTotal)) > this.dailyLimitMatic) {
+      // Rollback the increment atomically
+      await client.incrbyfloat(key, -gasCostMatic);
       this.logger.warn(
-        `User ${userId} exceeded daily gas limit: ` +
-          `${current.toFixed(6)} + ${gasCostMatic.toFixed(6)} > ${this.dailyLimitMatic}`,
+        `User ${userId} exceeded daily gas limit: ${parseFloat(String(newTotal)).toFixed(6)} > ${this.dailyLimitMatic}`,
       );
       return false;
     }
 
-    const newTotal = current + gasCostMatic;
-
-    // Atomic increment with 48h TTL (covers timezone edge cases)
-    const client = this.redis.getClient();
-    const pipeline = client.pipeline();
-    pipeline.set(key, newTotal.toString());
-    pipeline.expire(key, 48 * 60 * 60);
-    await pipeline.exec();
-
     this.logger.log(
       `Sponsored ${gasCostMatic.toFixed(6)} MATIC for user ${userId} ` +
-        `(daily total: ${newTotal.toFixed(6)} / ${this.dailyLimitMatic})`,
+        `(daily total: ${parseFloat(String(newTotal)).toFixed(6)} / ${this.dailyLimitMatic})`,
     );
 
     return true;

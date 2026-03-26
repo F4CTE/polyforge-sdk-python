@@ -48,7 +48,10 @@ export function Component() {
     }
   }
 
+  const [confirmRevokeCode, setConfirmRevokeCode] = useState<string | null>(null);
+
   async function handleDelete(code: string) {
+    setConfirmRevokeCode(null);
     try {
       await adminApi.revokeInvite(code);
       setInvites((inv) => inv.filter((i) => i.code !== code));
@@ -199,14 +202,21 @@ export function Component() {
                       {inv.ttl > 0 ? `${Math.ceil(inv.ttl / 86400)}d` : 'No expiry'}
                     </td>
                     <td className="px-3 py-2.5 text-right">
-                      <button
-                        onClick={() => handleDelete(inv.code)}
-                        className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
-                        aria-label="Revoke invite"
-                        title="Revoke invite"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      {confirmRevokeCode === inv.code ? (
+                        <div className="flex items-center justify-end gap-1.5 text-xs">
+                          <button onClick={() => handleDelete(inv.code)} className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors">Revoke</button>
+                          <button onClick={() => setConfirmRevokeCode(null)} className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors">Cancel</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmRevokeCode(inv.code)}
+                          className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
+                          aria-label="Revoke invite"
+                          title="Revoke invite"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

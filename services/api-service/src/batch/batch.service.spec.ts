@@ -161,7 +161,7 @@ describe("BatchService", () => {
     const results = await service.executeBatch(
       [
         makeItem({ id: "ok" }),
-        makeItem({ id: "fail", path: "/api/v1/slow" }),
+        makeItem({ id: "fail", path: "/api/v1/markets/slow" }),
       ],
       AUTH_TOKEN,
       PORT,

@@ -50,8 +50,21 @@ export function Component() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-sm text-[var(--color-pf-text-secondary)]">Loading cache stats...</div>
+      <div className="animate-fade-in space-y-6">
+        <div className="grid grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5 space-y-3">
+              <div className="h-3 bg-[var(--color-pf-bg)] rounded w-20 animate-pulse" />
+              <div className="h-6 bg-[var(--color-pf-bg)] rounded w-16 animate-pulse" />
+            </div>
+          ))}
+        </div>
+        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+          <div className="h-4 bg-[var(--color-pf-bg)] rounded w-32 animate-pulse mb-4" />
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-8 bg-[var(--color-pf-bg)] rounded animate-pulse mb-2" />
+          ))}
+        </div>
       </div>
     );
   }

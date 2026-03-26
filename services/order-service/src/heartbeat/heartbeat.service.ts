@@ -61,35 +61,30 @@ export class HeartbeatService implements OnModuleInit, OnModuleDestroy {
     const signerUrl =
       this.config.get<string>("SIGNER_SERVICE_URL") ?? "http://signer-service:3012";
 
-    for (const [userId, orderIds] of ordersByUser.entries()) {
-      try {
-        // Fetch user's L2 CLOB credentials from signer-service
-        const l2Headers = await this.fetchUserL2Headers(signerUrl, userId);
-
-        const res = await fetch(`${clobUrl}/heartbeats`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...l2Headers,
-          },
-          body: JSON.stringify({ orderIds }),
-          signal: AbortSignal.timeout(10_000),
-        });
-
-        if (res.ok) {
-          this.logger.debug(
-            `Heartbeat sent for user=${userId} orders=${orderIds.length}`,
-          );
-        } else {
-          this.logger.warn(
-            `Heartbeat failed for user=${userId}: ${res.status}`,
-          );
-        }
-      } catch (err: unknown) {
-        this.logger.error(
-          `Heartbeat error for user=${userId}: ${(err as Error).message}`,
-        );
-      }
+    // Parallel with concurrency limit of 5
+    const entries = [...ordersByUser.entries()];
+    const CONCURRENCY = 5;
+    for (let i = 0; i < entries.length; i += CONCURRENCY) {
+      await Promise.allSettled(
+        entries.slice(i, i + CONCURRENCY).map(async ([userId, orderIds]) => {
+          try {
+            const l2Headers = await this.fetchUserL2Headers(signerUrl, userId);
+            const res = await fetch(`${clobUrl}/heartbeats`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", ...l2Headers },
+              body: JSON.stringify({ orderIds }),
+              signal: AbortSignal.timeout(10_000),
+            });
+            if (res.ok) {
+              this.logger.debug(`Heartbeat sent for user=${userId} orders=${orderIds.length}`);
+            } else {
+              this.logger.warn(`Heartbeat failed for user=${userId}: ${res.status}`);
+            }
+          } catch (err: unknown) {
+            this.logger.error(`Heartbeat error for user=${userId}: ${(err as Error).message}`);
+          }
+        }),
+      );
     }
   }
 

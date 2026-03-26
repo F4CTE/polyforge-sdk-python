@@ -31,6 +31,9 @@ describe("PortfolioService", () => {
     db = createMockDb();
     redis = {
       get: vi.fn().mockResolvedValue(null),
+      getClient: vi.fn().mockReturnValue({
+        mget: vi.fn().mockResolvedValue([]),
+      }),
     } as unknown as RedisService;
     service = new PortfolioService(db as any, redis);
     // Default: no markets found (positions will have empty marketTitle)
@@ -72,9 +75,9 @@ describe("PortfolioService", () => {
         size: "100.00",
       });
       db.position.findMany.mockResolvedValue([position] as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue(
+      redis.getClient().mget.mockResolvedValue([
         JSON.stringify({ price: "0.70" }),
-      );
+      ]);
 
       const result = await service.getPortfolio("user-uuid-1");
 
@@ -93,13 +96,13 @@ describe("PortfolioService", () => {
       expect(parseFloat(result.positions[0].unrealizedPnl)).toBeLessThan(0);
     });
 
-    it("reads price from the correct Redis key per token", async () => {
+    it("reads prices from Redis via batch MGET", async () => {
       const position = makePosition({ tokenId: "token-abc" });
       db.position.findMany.mockResolvedValue([position] as any);
 
       await service.getPortfolio("user-uuid-1");
 
-      expect(redis.get).toHaveBeenCalledWith("cache:price:token-abc");
+      expect(redis.getClient().mget).toHaveBeenCalledWith("cache:price:token-abc");
     });
 
     it("calculates unrealizedPnl as (currentPrice - avgEntry) * size", async () => {
@@ -109,9 +112,9 @@ describe("PortfolioService", () => {
         tokenId: "token-uuid-1",
       });
       db.position.findMany.mockResolvedValue([position] as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue(
+      redis.getClient().mget.mockResolvedValue([
         JSON.stringify({ price: "0.80" }),
-      );
+      ]);
 
       const result = await service.getPortfolio("user-uuid-1");
 
@@ -137,15 +140,11 @@ describe("PortfolioService", () => {
         }),
       ];
       db.position.findMany.mockResolvedValue(positions as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockImplementation(
-        (key: string) => {
-          if (key === "cache:price:token-1")
-            return Promise.resolve(JSON.stringify({ price: "0.70" }));
-          if (key === "cache:price:token-2")
-            return Promise.resolve(JSON.stringify({ price: "0.60" }));
-          return Promise.resolve(null);
-        },
-      );
+      // MGET returns values in the same order as keys
+      redis.getClient().mget.mockResolvedValue([
+        JSON.stringify({ price: "0.70" }), // token-1
+        JSON.stringify({ price: "0.60" }), // token-2
+      ]);
 
       const result = await service.getPortfolio("user-uuid-1");
 

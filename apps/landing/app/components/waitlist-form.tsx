@@ -33,7 +33,10 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
         body: JSON.stringify({ email: trimmed }),
       });
 
-      if (res.ok || res.status === 409) {
+      if (res.status === 409) {
+        setStatus('success');
+        setErrorMsg('already');
+      } else if (res.ok) {
         setStatus('success');
       } else {
         throw new Error('server error');
@@ -57,7 +60,9 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
               strokeLinejoin="round"
             />
           </svg>
-          You&apos;re on the list! We&apos;ll be in touch soon.
+          {errorMsg === 'already'
+            ? "You\u2019re already on the list \u2014 check your inbox!"
+            : "You\u2019re on the list! We\u2019ll be in touch soon."}
         </p>
       </div>
     );
@@ -75,6 +80,8 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           autoComplete="email"
           required
           aria-label="Email address"
+          aria-invalid={status === 'error'}
+          aria-describedby={status === 'error' ? 'waitlist-error' : undefined}
           className="flex-1 min-w-[200px] bg-pf-elevated border border-pf-border-subtle rounded-pf-md text-pf-text font-sans text-[15px] px-4 py-3 outline-none transition-colors focus:border-pf-cyan-400 placeholder:text-pf-text-muted"
         />
         <button
@@ -109,7 +116,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
         Join the early-access list &mdash; no spam, ever.
       </p>
       {status === 'error' && errorMsg && (
-        <p className="text-[13px] text-pf-danger mt-2 text-center">{errorMsg}</p>
+        <p id="waitlist-error" role="alert" className="text-[13px] text-pf-danger mt-2 text-center">{errorMsg}</p>
       )}
     </form>
   );

@@ -7,6 +7,7 @@ import WebSocket from "ws";
 export class PolymarketUserWsService implements OnModuleDestroy {
   private readonly logger = new Logger(PolymarketUserWsService.name);
   private connections = new Map<string, WebSocket>();
+  private readonly MAX_CONNECTIONS = 500;
 
   constructor(
     private readonly redis: RedisService,
@@ -15,6 +16,10 @@ export class PolymarketUserWsService implements OnModuleDestroy {
 
   subscribeUser(userId: string, walletAddress: string): void {
     if (this.connections.has(userId)) return;
+    if (this.connections.size >= this.MAX_CONNECTIONS) {
+      this.logger.warn(`Max user WS connections (${this.MAX_CONNECTIONS}) reached, skipping ${userId}`);
+      return;
+    }
 
     const wsUrl =
       this.config.get<string>("CLOB_WS_URL") ??
@@ -54,11 +59,7 @@ export class PolymarketUserWsService implements OnModuleDestroy {
 
     ws.on("close", () => {
       this.connections.delete(userId);
-      setTimeout(() => {
-        if (!this.connections.has(userId)) {
-          this.subscribeUser(userId, walletAddress);
-        }
-      }, 5000);
+      // Don't auto-reconnect — let the caller re-subscribe when needed
     });
 
     ws.on("error", (err) => {

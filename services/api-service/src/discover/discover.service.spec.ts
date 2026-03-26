@@ -52,7 +52,11 @@ describe("DiscoverService", () => {
 
   beforeEach(() => {
     db = createMockDb();
-    service = new DiscoverService(db as any);
+    const redis = {
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue("OK"),
+    } as any;
+    service = new DiscoverService(db as any, redis);
   });
 
   afterEach(() => {

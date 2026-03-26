@@ -14,7 +14,7 @@ interface AdminAuthState {
   isAuthenticated: boolean;
   isSuperAdmin: boolean;
   init: () => void;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, totpCode?: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -38,8 +38,8 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
     }
   },
 
-  login: async (email: string, password: string) => {
-    const admin = await authApi.login({ email, password });
+  login: async (email: string, password: string, totpCode?: string) => {
+    const admin = await authApi.login({ email, password, ...(totpCode ? { totpCode } : {}) });
     set({
       admin,
       isAuthenticated: true,

@@ -97,13 +97,20 @@ export function Component() {
   const [followingSet, setFollowingSet] = useState<Set<string>>(new Set());
   const refreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const abortRef = useRef<AbortController | null>(null);
+
   const load = useCallback(async (p: number, min: MinSize, cat: string, wallet: string) => {
+    // Abort any in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(p), minSize: min });
       if (cat) params.set('category', cat);
       if (wallet) params.set('wallet', wallet);
-      const res = await fetch(`/api/v1/whales/feed?${params}`, { credentials: 'include' });
+      const res = await fetch(`/api/v1/whales/feed?${params}`, { credentials: 'include', signal: controller.signal });
       if (res.ok) {
         const data: WhaleFeedResponse = await res.json();
         setTrades(data.data);
@@ -117,19 +124,22 @@ export function Component() {
           return merged;
         });
       }
-    } catch { toast.error('Failed to load whale trades'); }
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') return;
+      toast.error('Failed to load whale trades');
+    }
     setLoading(false);
   }, []);
 
   useEffect(() => { load(page, minSize, category, walletSearch); }, [page, minSize, category, walletSearch, load]);
 
-  // Auto-refresh every 10 seconds
+  // Auto-refresh every 10 seconds — guarded against concurrent fetches
   useEffect(() => {
     refreshRef.current = setInterval(() => {
-      load(page, minSize, category, walletSearch);
+      if (!loading) load(page, minSize, category, walletSearch);
     }, 10_000);
     return () => { if (refreshRef.current) clearInterval(refreshRef.current); };
-  }, [page, minSize, category, walletSearch, load]);
+  }, [page, minSize, category, walletSearch, load, loading]);
 
   function changeMinSize(s: MinSize) { setMinSize(s); setPage(1); }
   function changeCategory(c: string) { setCategory(c); setPage(1); }
@@ -308,7 +318,7 @@ export function Component() {
                   )}
                 </button>
                 <Link
-                  to={`/whales/${trade.walletAddress}`}
+                  to={`/copy/new?wallet=${trade.walletAddress}`}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border border-pf-success/30 text-pf-success hover:bg-pf-success/10 transition-colors"
                 >
                   <Copy className="size-3.5" /> Copy

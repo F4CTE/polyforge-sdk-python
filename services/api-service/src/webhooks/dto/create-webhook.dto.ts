@@ -20,7 +20,7 @@ const VALID_EVENTS = [
 ] as const;
 
 export class CreateWebhookDto {
-  @IsUrl({ require_tld: true }, { message: "Webhook URL must use HTTPS" })
+  @IsUrl({ require_tld: true, require_protocol: true, protocols: ["https"] }, { message: "Webhook URL must use HTTPS" })
   @MaxLength(1000)
   declare url: string;
 

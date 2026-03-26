@@ -40,7 +40,13 @@ export class WhatsAppWebhookController {
   @Post()
   async incoming(@Req() request: FastifyRequest, @Res() reply: FastifyReply) {
     // SECURITY: Validate X-Hub-Signature-256 from Meta
-    if (this.appSecret) {
+    if (!this.appSecret) {
+      // Reject webhooks when secret is not configured in production
+      if (process.env.NODE_ENV === "production") {
+        this.logger.error("WHATSAPP_APP_SECRET is not configured — rejecting webhook");
+        return reply.status(500).send("Webhook not configured");
+      }
+    } else {
       const signature = request.headers["x-hub-signature-256"] as string;
       if (!signature) {
         this.logger.warn("WhatsApp webhook missing X-Hub-Signature-256 header");
@@ -58,12 +64,10 @@ export class WhatsAppWebhookController {
           .update(rawBody)
           .digest("hex");
 
-      if (
-        !crypto.timingSafeEqual(
-          Buffer.from(signature),
-          Buffer.from(expectedSignature),
-        )
-      ) {
+      // SECURITY: Check buffer lengths before timingSafeEqual to avoid RangeError
+      const sigBuf = Buffer.from(signature);
+      const expectedBuf = Buffer.from(expectedSignature);
+      if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
         this.logger.warn("WhatsApp webhook signature mismatch — rejecting");
         return reply.status(403).send("Invalid signature");
       }

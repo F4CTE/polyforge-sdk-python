@@ -45,7 +45,8 @@ describe("ProfileService", () => {
 
       const result = await service.getProfile("alice");
 
-      expect(result.id).toBe("user-uuid-1");
+      // SECURITY: Internal UUID removed from public profile response
+      expect(result.id).toBeUndefined();
       expect(result.username).toBe("alice");
       expect(result.displayName).toBe("Alice Smith");
       expect(result.followersCount).toBe(42);

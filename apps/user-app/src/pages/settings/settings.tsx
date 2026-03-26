@@ -85,12 +85,21 @@ export function Component() {
   const [totpSaving, setTotpSaving] = useState(false);
   const [totpLoading, setTotpLoading] = useState(false);
 
-  // Notifications
+  // Notifications — fetch from API on mount, fallback to defaults
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({
     orderFilled: true, strategyError: true, backtestComplete: true, priceAlert: false,
     dailyLossLimit: true, marketResolved: false, follow: true,
   });
   const [notifSaving, setNotifSaving] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/v1/settings/notifications', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setNotifPrefs(prev => ({ ...prev, ...data })); })
+      .catch(() => {})
+      .finally(() => setNotifLoading(false));
+  }, []);
 
   // API Keys
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);

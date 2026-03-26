@@ -120,29 +120,21 @@ export class ScoreCalculatorService {
     }
 
     // ── Consistency (% of profitable 30-day periods) ─────────────────────────
-    const pnlSnapshots = await this.prisma.pnlSnapshot.findMany({
-      where: { userId },
-      orderBy: { time: "asc" },
-    });
+    // Use TimescaleDB time_bucket aggregation instead of loading all snapshots
+    const buckets = await this.prisma.$queryRawUnsafe<Array<{ bucket: Date; total_pnl: string }>>(
+      `SELECT time_bucket('30 days', time) AS bucket, SUM(pnl) AS total_pnl
+       FROM pnl_snapshots WHERE "userId" = $1
+       GROUP BY 1 ORDER BY 1`,
+      userId,
+    );
 
     let consistency = 0;
-    if (pnlSnapshots.length > 0) {
-      // Group into 30-day buckets
-      const buckets = new Map<number, number>();
-      for (const snap of pnlSnapshots) {
-        const bucketKey = Math.floor(
-          new Date(snap.time).getTime() / (30 * 24 * 60 * 60 * 1000),
-        );
-        buckets.set(
-          bucketKey,
-          (buckets.get(bucketKey) ?? 0) + Number(snap.pnl),
-        );
-      }
-      const profitableBuckets = Array.from(buckets.values()).filter(
-        (v) => v > 0,
+    if (buckets.length > 0) {
+      const profitableBuckets = buckets.filter(
+        (b) => Number(b.total_pnl) > 0,
       ).length;
       consistency =
-        buckets.size > 0 ? (profitableBuckets / buckets.size) * 100 : 0;
+        buckets.length > 0 ? (profitableBuckets / buckets.length) * 100 : 0;
     }
 
     // ── Total trades ─────────────────────────────────────────────────────────

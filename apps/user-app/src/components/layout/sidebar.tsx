@@ -154,7 +154,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {/* Edge Rating */}
         {myScore !== null && (
           <Link
-            to="/profile"
+            to="/profile/me"
             className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text"
             title={collapsed ? `Edge Rating: ${myScore}` : undefined}
           >

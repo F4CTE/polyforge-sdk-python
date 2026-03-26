@@ -228,7 +228,9 @@ export class AiService {
             intent,
             filters: {},
             data: null,
-            summary: `Sorry, I encountered an error processing your request: ${err?.message}`,
+            summary: process.env.NODE_ENV === 'production'
+              ? 'Sorry, I encountered an error processing your request. Please try again.'
+              : `Sorry, I encountered an error processing your request: ${err?.message}`,
           };
         }
       }

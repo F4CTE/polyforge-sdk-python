@@ -34,12 +34,15 @@ describe("ConditionalEvaluatorService", () => {
   let service: ConditionalEvaluatorService;
   let db: MockDb;
   let redis: RedisService;
+  let mgetMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     db = createMockDb();
+    mgetMock = vi.fn().mockResolvedValue([]);
     redis = {
       get: vi.fn().mockResolvedValue(null),
       xadd: vi.fn().mockResolvedValue("stream-entry-id"),
+      getClient: vi.fn().mockReturnValue({ mget: mgetMock }),
     } as unknown as RedisService;
     service = new ConditionalEvaluatorService(db as any, redis);
   });
@@ -55,7 +58,7 @@ describe("ConditionalEvaluatorService", () => {
       const order = makeConditionalOrder({ type: "TAKE_PROFIT", side: "BUY", triggerPrice: "0.75" });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.80");
+      mgetMock.mockResolvedValue(["0.80"]);
 
       await service.processOrders();
 
@@ -70,7 +73,7 @@ describe("ConditionalEvaluatorService", () => {
     it("does NOT trigger when price < triggerPrice for BUY YES", async () => {
       const order = makeConditionalOrder({ type: "TAKE_PROFIT", side: "BUY", triggerPrice: "0.75" });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.70");
+      mgetMock.mockResolvedValue(["0.70"]);
 
       await service.processOrders();
 
@@ -81,7 +84,7 @@ describe("ConditionalEvaluatorService", () => {
       const order = makeConditionalOrder({ type: "TAKE_PROFIT", side: "SELL", triggerPrice: "0.30" });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.25");
+      mgetMock.mockResolvedValue(["0.25"]);
 
       await service.processOrders();
 
@@ -100,7 +103,7 @@ describe("ConditionalEvaluatorService", () => {
       const order = makeConditionalOrder({ type: "STOP_LOSS", side: "BUY", triggerPrice: "0.40" });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.35");
+      mgetMock.mockResolvedValue(["0.35"]);
 
       await service.processOrders();
 
@@ -114,7 +117,7 @@ describe("ConditionalEvaluatorService", () => {
     it("does NOT trigger when price > triggerPrice for BUY YES", async () => {
       const order = makeConditionalOrder({ type: "STOP_LOSS", side: "BUY", triggerPrice: "0.40" });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.50");
+      mgetMock.mockResolvedValue(["0.50"]);
 
       await service.processOrders();
 
@@ -125,7 +128,7 @@ describe("ConditionalEvaluatorService", () => {
       const order = makeConditionalOrder({ type: "STOP_LOSS", side: "SELL", triggerPrice: "0.60" });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.65");
+      mgetMock.mockResolvedValue(["0.65"]);
 
       await service.processOrders();
 
@@ -149,7 +152,7 @@ describe("ConditionalEvaluatorService", () => {
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue(order as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.85");
+      mgetMock.mockResolvedValue(["0.85"]);
 
       await service.processOrders();
 
@@ -169,7 +172,7 @@ describe("ConditionalEvaluatorService", () => {
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.89"); // 11% drop from 1.00
+      mgetMock.mockResolvedValue(["0.89"]); // 11% drop from 1.00
 
       await service.processOrders();
 
@@ -190,7 +193,7 @@ describe("ConditionalEvaluatorService", () => {
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue(order as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.95"); // only 5% drop
+      mgetMock.mockResolvedValue(["0.95"]); // only 5% drop
 
       await service.processOrders();
 
@@ -210,7 +213,7 @@ describe("ConditionalEvaluatorService", () => {
       const order = makeConditionalOrder({ type: "LIMIT", side: "BUY", triggerPrice: "0.50" });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.45");
+      mgetMock.mockResolvedValue(["0.45"]);
 
       await service.processOrders();
 
@@ -225,7 +228,7 @@ describe("ConditionalEvaluatorService", () => {
       const order = makeConditionalOrder({ type: "LIMIT", side: "SELL", triggerPrice: "0.70" });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.75");
+      mgetMock.mockResolvedValue(["0.75"]);
 
       await service.processOrders();
 
@@ -248,7 +251,7 @@ describe("ConditionalEvaluatorService", () => {
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue(order as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.60");
+      mgetMock.mockResolvedValue(["0.60"]);
 
       await service.processOrders();
 
@@ -275,7 +278,7 @@ describe("ConditionalEvaluatorService", () => {
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue(order as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.98");
+      mgetMock.mockResolvedValue(["0.98"]);
 
       await service.processOrders();
 
@@ -316,7 +319,7 @@ describe("ConditionalEvaluatorService", () => {
         expiresAt: new Date(Date.now() + 86400000), // tomorrow
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.50"); // below trigger, should not trigger TP
+      mgetMock.mockResolvedValue(["0.50"]); // below trigger 0.90, should not trigger TP
 
       await service.processOrders();
 
@@ -337,7 +340,7 @@ describe("ConditionalEvaluatorService", () => {
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.75");
+      mgetMock.mockResolvedValue(["0.75"]);
 
       await service.processOrders();
 
@@ -361,7 +364,7 @@ describe("ConditionalEvaluatorService", () => {
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.35");
+      mgetMock.mockResolvedValue(["0.35"]);
 
       await service.processOrders();
 
@@ -383,7 +386,7 @@ describe("ConditionalEvaluatorService", () => {
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
-      (redis.get as ReturnType<typeof vi.fn>).mockResolvedValue("0.45");
+      mgetMock.mockResolvedValue(["0.45"]);
 
       await service.processOrders();
 

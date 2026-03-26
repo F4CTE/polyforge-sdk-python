@@ -57,7 +57,8 @@ export function Component() {
     try {
       const res = await fetch('/api/v1/whales/following', { credentials: 'include' });
       if (res.ok) {
-        const data: FollowedWallet[] = await res.json();
+        const json = await res.json();
+        const data: FollowedWallet[] = Array.isArray(json) ? json : (json.data ?? []);
         setWallets(data);
       }
     } catch { toast.error('Failed to load followed wallets'); }

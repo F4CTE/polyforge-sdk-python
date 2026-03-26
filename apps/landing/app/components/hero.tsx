@@ -72,8 +72,6 @@ export function Hero() {
         <div className="max-w-[620px] mx-auto mt-10 bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden p-4 shadow-[0_24px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(6,182,212,0.06),0_0_60px_rgba(6,182,212,0.15)]">
           <svg
             viewBox="0 0 560 300"
-            width="560"
-            height="300"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             className="w-full h-auto"

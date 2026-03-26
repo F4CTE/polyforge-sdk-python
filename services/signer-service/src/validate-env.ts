@@ -23,10 +23,21 @@ export function validateEnv(
       );
     }
 
-    // Reject CHANGE_ME default JWT secrets in production
-    if (env.INTERNAL_JWT_SECRET?.startsWith('CHANGE_ME')) {
+    // Reject default JWT secrets in production
+    if (
+      env.INTERNAL_JWT_SECRET?.startsWith('CHANGE_ME') ||
+      env.INTERNAL_JWT_SECRET?.startsWith('dev-')
+    ) {
       throw new Error(
         'INTERNAL_JWT_SECRET must be changed from default in production',
+      );
+    }
+
+    // Reject all-zero ENCRYPTION_KEY alias
+    const encKey = env.ENCRYPTION_KEY;
+    if (encKey === '0'.repeat(64)) {
+      throw new Error(
+        'ENCRYPTION_KEY must not be all-zeros in production',
       );
     }
 

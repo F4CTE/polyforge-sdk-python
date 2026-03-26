@@ -12,6 +12,7 @@ export function Component() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
 
   const limit = 20;
 
@@ -20,7 +21,7 @@ export function Component() {
     setError(false);
     try {
       const [ordersRes, dlqRes] = await Promise.all([
-        adminApi.orders({ page, limit }),
+        adminApi.orders({ page, limit, status: statusFilter || undefined }),
         adminApi.dlq(),
       ]);
       setOrders(ordersRes.data ?? []);
@@ -33,14 +34,16 @@ export function Component() {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, statusFilter]);
 
   useEffect(() => {
     load();
   }, [load]);
 
+  const [confirmAction, setConfirmAction] = useState<{ type: 'replay' | 'discard'; intentId: string } | null>(null);
+
   async function handleReplay(intentId: string) {
-    if (!window.confirm('Are you sure you want to replay this DLQ entry?')) return;
+    setConfirmAction(null);
     try {
       await adminApi.dlqReplay(intentId);
       setDlqEntries((e) => e.filter((d) => d.intentId !== intentId));
@@ -51,7 +54,7 @@ export function Component() {
   }
 
   async function handleDiscard(intentId: string) {
-    if (!window.confirm('Are you sure you want to discard this DLQ entry? This cannot be undone.')) return;
+    setConfirmAction(null);
     try {
       await adminApi.dlqDiscard(intentId);
       setDlqEntries((e) => e.filter((d) => d.intentId !== intentId));
@@ -63,9 +66,24 @@ export function Component() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">
-        Orders <span className="text-sm font-normal text-[var(--color-pf-text-tertiary)]">({total})</span>
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">
+          Orders <span className="text-sm font-normal text-[var(--color-pf-text-tertiary)]">({total})</span>
+        </h2>
+        <select
+          value={statusFilter}
+          onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+          className="h-8 px-2 rounded-pf-sm bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] text-xs text-[var(--color-pf-text)] focus:outline-none focus:border-[var(--color-pf-cyan-500)]"
+        >
+          <option value="">All statuses</option>
+          <option value="PENDING">Pending</option>
+          <option value="SUBMITTED">Submitted</option>
+          <option value="LIVE">Live</option>
+          <option value="CONFIRMED">Confirmed</option>
+          <option value="CANCELLED">Cancelled</option>
+          <option value="FAILED">Failed</option>
+        </select>
+      </div>
 
       {error && (
         <div className="text-center py-12">
@@ -103,20 +121,42 @@ export function Component() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4 shrink-0">
-                  <button
-                    onClick={() => handleReplay(entry.intentId)}
-                    className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
-                  >
-                    <RotateCcw size={12} />
-                    Replay
-                  </button>
-                  <button
-                    onClick={() => handleDiscard(entry.intentId)}
-                    className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
-                  >
-                    <Trash2 size={12} />
-                    Discard
-                  </button>
+                  {confirmAction?.intentId === entry.intentId ? (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-[var(--color-pf-text-secondary)]">
+                        {confirmAction?.type === 'discard' ? 'Discard?' : 'Replay?'}
+                      </span>
+                      <button
+                        onClick={() => confirmAction?.type === 'replay' ? handleReplay(entry.intentId) : handleDiscard(entry.intentId)}
+                        className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        onClick={() => setConfirmAction(null)}
+                        className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setConfirmAction({ type: 'replay', intentId: entry.intentId })}
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
+                      >
+                        <RotateCcw size={12} />
+                        Replay
+                      </button>
+                      <button
+                        onClick={() => setConfirmAction({ type: 'discard', intentId: entry.intentId })}
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
+                      >
+                        <Trash2 size={12} />
+                        Discard
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}

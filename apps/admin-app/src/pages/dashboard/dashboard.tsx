@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, timeAgo } from '@/lib/utils';
+import { useAdminAuthStore } from '@/stores/admin-auth-store';
 
 interface HealthData {
   status: string;
@@ -25,6 +26,7 @@ interface HealthData {
 }
 
 export function Component() {
+  const { isSuperAdmin } = useAdminAuthStore();
   const [health, setHealth] = useState<HealthData | null>(null);
   const [config, setConfig] = useState<{ inviteOnly: boolean } | null>(null);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
@@ -48,51 +50,42 @@ export function Component() {
     setLogsError(false);
     setRateLimitsError(false);
 
-    // Fetch each API call independently so one failure doesn't block others
-    try {
-      const healthRes = await adminApi.health();
-      setHealth(healthRes ?? null);
-    } catch {
-      setHealthError(true);
-    }
-
-    try {
-      const configRes = await adminApi.config();
-      setConfig(configRes ?? null);
-    } catch {
-      // config failure is non-critical, toggle just won't show current state
-    }
-
-    try {
-      const [usersRes, strategiesRes, ordersRes, ticketsRes] = await Promise.all([
-        adminApi.users({ limit: 1 }),
-        adminApi.strategies({ limit: 1, status: 'RUNNING' }),
-        adminApi.orders({ limit: 1 }),
-        adminApi.tickets({ limit: 1, status: 'OPEN' }),
+    // Fetch all independent API calls in parallel
+    const [healthResult, configResult, statsResult, logsResult, rlResult] =
+      await Promise.allSettled([
+        adminApi.health(),
+        adminApi.config(),
+        Promise.all([
+          adminApi.users({ limit: 1 }),
+          adminApi.strategies({ limit: 1, status: 'RUNNING' }),
+          adminApi.orders({ limit: 1 }),
+          adminApi.tickets({ limit: 1, status: 'OPEN' }),
+        ]),
+        adminApi.auditLogs({ limit: 5 }),
+        adminApi.rateLimits(),
       ]);
+
+    if (healthResult.status === 'fulfilled') setHealth(healthResult.value ?? null);
+    else setHealthError(true);
+
+    if (configResult.status === 'fulfilled') setConfig(configResult.value ?? null);
+
+    if (statsResult.status === 'fulfilled') {
+      const [usersRes, strategiesRes, ordersRes, ticketsRes] = statsResult.value;
       setStats({
         totalUsers: usersRes?.total ?? 0,
         activeStrategies: strategiesRes?.total ?? 0,
         totalOrders: ordersRes?.total ?? 0,
         openTickets: ticketsRes?.total ?? 0,
       });
-    } catch {
-      setStatsError(true);
-    }
+    } else { setStatsError(true); }
 
-    try {
-      const logsRes = await adminApi.auditLogs({ limit: 5 });
-      setAuditLogs(Array.isArray(logsRes?.data) ? logsRes.data : []);
-    } catch {
-      setLogsError(true);
-    }
+    if (logsResult.status === 'fulfilled') {
+      setAuditLogs(Array.isArray(logsResult.value?.data) ? logsResult.value.data : []);
+    } else { setLogsError(true); }
 
-    try {
-      const rlRes = await adminApi.rateLimits();
-      setRateLimits(rlRes);
-    } catch {
-      setRateLimitsError(true);
-    }
+    if (rlResult.status === 'fulfilled') setRateLimits(rlResult.value);
+    else setRateLimitsError(true);
 
     setLoading(false);
   }
@@ -278,8 +271,10 @@ export function Component() {
               </div>
               <button
                 onClick={toggleInviteOnly}
-                className="text-[var(--color-pf-cyan-500)] hover:text-[var(--color-pf-cyan-400)] transition-colors"
+                disabled={!isSuperAdmin}
+                className={`transition-colors ${isSuperAdmin ? 'text-[var(--color-pf-cyan-500)] hover:text-[var(--color-pf-cyan-400)]' : 'text-[var(--color-pf-text-tertiary)] opacity-50 cursor-not-allowed'}`}
                 aria-label="Toggle invite-only"
+                title={!isSuperAdmin ? 'Super Admin only' : undefined}
               >
                 {config?.inviteOnly ? (
                   <ToggleRight size={32} />

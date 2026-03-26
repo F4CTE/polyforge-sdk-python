@@ -64,7 +64,10 @@ export class GeoBlockGuard implements CanActivate {
       request.headers["x-region-code"] as string
     )?.toUpperCase();
 
-    if (!country) return true;
+    // SECURITY: In production, deny requests without geo headers (may be bypassing gateway)
+    if (!country) {
+      return process.env.NODE_ENV !== 'production';
+    }
 
     // 1. Fully blocked countries — HTTP 451
     if (this.blockedCountries.includes(country)) {

@@ -23,6 +23,8 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
   private readonly runners = new Map<string, StrategyRunner>();
   /** Maps child strategy ID -> parent strategy ID */
   private readonly parentChildMap = new Map<string, string>();
+  /** Maps tokenId -> Set of strategyIds subscribed to that token's price events */
+  private readonly tokenSubscribers = new Map<string, Set<string>>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -248,6 +250,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
         // R4-02: Ensure runner is always cleaned up even if an error occurs
         this.runners.delete(strategyId);
         this.parentChildMap.delete(strategyId);
+        this.unregisterTokenSubscriptions(strategyId);
       }
     }
     await this.prisma.strategy.update({
@@ -262,10 +265,33 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
     );
   }
 
-  /** Forward price events to all running EVENT/HYBRID strategies watching this token */
+  /** Forward price events only to strategies subscribed to this token */
   async onPriceEvent(tokenId: string, price: number) {
-    for (const [, runner] of this.runners) {
-      runner.onPriceEvent(tokenId, price).catch(() => {});
+    const subscribers = this.tokenSubscribers.get(tokenId);
+    if (!subscribers || subscribers.size === 0) return;
+    for (const strategyId of subscribers) {
+      const runner = this.runners.get(strategyId);
+      if (runner) runner.onPriceEvent(tokenId, price).catch(() => {});
+    }
+  }
+
+  /** Register a strategy's interest in specific tokens */
+  registerTokenSubscriptions(strategyId: string, tokenIds: string[]) {
+    for (const tokenId of tokenIds) {
+      let subs = this.tokenSubscribers.get(tokenId);
+      if (!subs) {
+        subs = new Set();
+        this.tokenSubscribers.set(tokenId, subs);
+      }
+      subs.add(strategyId);
+    }
+  }
+
+  /** Remove a strategy's token subscriptions */
+  unregisterTokenSubscriptions(strategyId: string) {
+    for (const [tokenId, subs] of this.tokenSubscribers) {
+      subs.delete(strategyId);
+      if (subs.size === 0) this.tokenSubscribers.delete(tokenId);
     }
   }
 

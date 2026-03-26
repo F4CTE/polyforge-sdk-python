@@ -169,19 +169,15 @@ describe("PolymarketUserWsService", () => {
 
   // ── Reconnects on close ────────────────────────────────────────────────
 
-  it("reconnects after 5 seconds on close", () => {
+  it("cleans up connection on close without auto-reconnecting", () => {
     svc.subscribeUser("user-1", "0xWallet");
     const firstWs = mockWsInstances[0];
 
     firstWs.triggerClose(1006, "abnormal");
 
-    // Before reconnect timeout
-    expect(mockWsInstances).toHaveLength(1);
-
-    // Advance past 5s reconnect delay
-    vi.advanceTimersByTime(5_500);
-
-    expect(mockWsInstances).toHaveLength(2);
+    // No auto-reconnect — connection is removed, caller must re-subscribe
+    vi.advanceTimersByTime(10_000);
+    expect(mockWsInstances).toHaveLength(1); // no new WS created
   });
 
   // ── Does not reconnect if already resubscribed ─────────────────────────

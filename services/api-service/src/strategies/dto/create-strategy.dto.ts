@@ -44,6 +44,10 @@ export class BlockDto {
   @IsOptional()
   @IsObject()
   config?: Record<string, unknown>;
+
+  // SECURITY: Validated at runtime in strategy-engine before generating OrderIntents.
+  // Action blocks enforce: size > 0 && size <= 10000, price between 0.001-0.999,
+  // tokenId must be a non-empty string. See strategy-runner.ts validateBlockConfig().
 }
 
 export class CreateStrategyDto {

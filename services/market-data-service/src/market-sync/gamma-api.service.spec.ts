@@ -45,6 +45,7 @@ function makeMocks() {
     event: {
       upsert: vi.fn().mockResolvedValue({}),
     },
+    $transaction: vi.fn().mockResolvedValue([]),
   } as any;
 
   const ws = {

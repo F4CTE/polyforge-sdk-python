@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import {
@@ -121,10 +121,8 @@ function priceCents(market: Market, outcome: 'YES' | 'NO'): string {
   return Math.round(val * 100) + '\u00A2';
 }
 
-function strategyCount(market: Market): number {
-  const hash = market.id?.charCodeAt(0) || 0;
-  return hash % 15;
-}
+// strategyCount removed — synthetic data must not be shown to users.
+// TODO: Replace with real strategy count from API when available.
 
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
@@ -149,9 +147,8 @@ function CardSkeleton() {
 
 /* ─── Market Card ────────────────────────────────────────────────────── */
 
-function MarketCard({ market, featured }: { market: Market; featured?: boolean }) {
+const MarketCard = memo(function MarketCard({ market, featured }: { market: Market; featured?: boolean }) {
   const catColor = CATEGORY_COLORS[market.category];
-  const sCount = strategyCount(market);
 
   return (
     <Link
@@ -165,6 +162,8 @@ function MarketCard({ market, featured }: { market: Market; featured?: boolean }
             src={market.image}
             alt={market.title}
             className="w-12 h-12 rounded-pf-md object-cover shrink-0"
+            width={48}
+            height={48}
             loading="lazy"
           />
         ) : (
@@ -205,20 +204,12 @@ function MarketCard({ market, featured }: { market: Market; featured?: boolean }
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              className="h-9 rounded-pf text-sm font-medium bg-pf-success/10 text-pf-success hover:bg-pf-success/20 transition-colors"
-            >
+            <span className="h-9 flex items-center justify-center rounded-pf text-sm font-medium bg-pf-success/10 text-pf-success">
               Yes {priceCents(market, 'YES')}
-            </button>
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              className="h-9 rounded-pf text-sm font-medium bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
-            >
+            </span>
+            <span className="h-9 flex items-center justify-center rounded-pf text-sm font-medium bg-pf-danger/10 text-pf-danger">
               No {priceCents(market, 'NO')}
-            </button>
+            </span>
           </div>
         </div>
       ) : (
@@ -243,15 +234,15 @@ function MarketCard({ market, featured }: { market: Market; featured?: boolean }
       )}
 
       {/* Footer */}
-      {sCount > 0 && (
+      {market.tokens.length > 0 && (
         <div className="flex items-center gap-1 mt-3 text-[11px] text-pf-text-muted">
           <Zap className="size-3" />
-          {sCount} strategies
+          {market.tokens.length} outcomes
         </div>
       )}
     </Link>
   );
-}
+});
 
 /* ─── Component ──────────────────────────────────────────────────────── */
 
@@ -337,7 +328,7 @@ export function Component() {
         <input
           type="text"
           placeholder="Search markets..."
-          defaultValue={search}
+          defaultValue=""
           onChange={(e) => onSearchInput(e.target.value)}
           className="w-full h-11 pl-11 pr-4 rounded-full bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors"
         />

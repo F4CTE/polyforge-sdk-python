@@ -247,7 +247,8 @@ export function Component() {
             max={100}
             step={5}
             value={minConfidence}
-            onChange={e => { setMinConfidence(Number(e.target.value)); setPage(1); }}
+            onMouseUp={e => { setMinConfidence(Number((e.target as HTMLInputElement).value)); setPage(1); }}
+            onChange={e => { /* visual update only — commit on mouseUp */ }}
             className="w-24 accent-pf-cyan-500"
           />
           <span className="text-xs font-mono text-pf-text-secondary w-8 text-right">{minConfidence}%</span>

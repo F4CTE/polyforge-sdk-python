@@ -116,6 +116,11 @@ describe("StrategiesService", () => {
 
   beforeEach(() => {
     db = createMockDb();
+    // Make $transaction execute its callback with the mock db (for like/unlike)
+    (db.$transaction as any).mockImplementation(async (fn: any) => {
+      if (typeof fn === 'function') return fn(db);
+      return Promise.all(fn); // array of promises
+    });
 
     config = {
       get: vi.fn().mockReturnValue("http://strategy-engine:3006"),
@@ -1110,15 +1115,11 @@ describe("StrategiesService", () => {
   describe("like", () => {
     it("likes a strategy and returns liked=true with incremented count", async () => {
       const strategy = makeStrategy({ visibility: "PUBLIC", likeCount: 5 });
-      db.strategy.findUnique
-        .mockResolvedValueOnce(strategy as any) // first call: check exists
-        .mockResolvedValueOnce({ likeCount: 6 } as any); // second call: get updated count
+      db.strategy.findUnique.mockResolvedValueOnce(strategy as any);
       db.strategyLike.findUnique.mockResolvedValue(null); // not yet liked
       db.strategyLike.create.mockResolvedValue({} as any);
-      db.strategy.update.mockResolvedValue({
-        ...strategy,
-        likeCount: 6,
-      } as any);
+      // $transaction callback calls tx.strategy.update which returns the select
+      db.strategy.update.mockResolvedValue({ likeCount: 6 } as any);
 
       const result = await service.like(strategy.id, "user-1");
 
@@ -1128,18 +1129,13 @@ describe("StrategiesService", () => {
 
     it("unlikes a strategy and returns liked=false with decremented count", async () => {
       const strategy = makeStrategy({ visibility: "PUBLIC", likeCount: 5 });
-      db.strategy.findUnique
-        .mockResolvedValueOnce(strategy as any)
-        .mockResolvedValueOnce({ likeCount: 4 } as any);
+      db.strategy.findUnique.mockResolvedValueOnce(strategy as any);
       db.strategyLike.findUnique.mockResolvedValue({
         userId: "user-1",
         strategyId: strategy.id,
       } as any);
       db.strategyLike.delete.mockResolvedValue({} as any);
-      db.strategy.update.mockResolvedValue({
-        ...strategy,
-        likeCount: 4,
-      } as any);
+      db.strategy.update.mockResolvedValue({ likeCount: 4 } as any);
 
       const result = await service.like(strategy.id, "user-1");
 
@@ -1149,9 +1145,7 @@ describe("StrategiesService", () => {
 
     it("calls strategyLike.delete when toggling off", async () => {
       const strategy = makeStrategy({ visibility: "PUBLIC" });
-      db.strategy.findUnique
-        .mockResolvedValueOnce(strategy as any)
-        .mockResolvedValueOnce({ likeCount: 0 } as any);
+      db.strategy.findUnique.mockResolvedValueOnce(strategy as any);
       db.strategyLike.findUnique.mockResolvedValue({
         userId: "user-1",
         strategyId: strategy.id,
@@ -1170,9 +1164,7 @@ describe("StrategiesService", () => {
 
     it("calls strategyLike.create when liking", async () => {
       const strategy = makeStrategy({ visibility: "PUBLIC" });
-      db.strategy.findUnique
-        .mockResolvedValueOnce(strategy as any)
-        .mockResolvedValueOnce({ likeCount: 1 } as any);
+      db.strategy.findUnique.mockResolvedValueOnce(strategy as any);
       db.strategyLike.findUnique.mockResolvedValue(null);
       db.strategyLike.create.mockResolvedValue({} as any);
       db.strategy.update.mockResolvedValue(strategy as any);
@@ -1203,18 +1195,16 @@ describe("StrategiesService", () => {
       });
     });
 
-    it("returns likeCount=0 when updated strategy is null", async () => {
-      const strategy = makeStrategy({ visibility: "PUBLIC" });
-      db.strategy.findUnique
-        .mockResolvedValueOnce(strategy as any)
-        .mockResolvedValueOnce(null); // updated count query returns null
+    it("returns the likeCount from the update result", async () => {
+      const strategy = makeStrategy({ visibility: "PUBLIC", likeCount: 10 });
+      db.strategy.findUnique.mockResolvedValueOnce(strategy as any);
       db.strategyLike.findUnique.mockResolvedValue(null);
       db.strategyLike.create.mockResolvedValue({} as any);
-      db.strategy.update.mockResolvedValue(strategy as any);
+      db.strategy.update.mockResolvedValue({ likeCount: 11 } as any);
 
       const result = await service.like(strategy.id, "user-1");
 
-      expect(result.likeCount).toBe(0);
+      expect(result.likeCount).toBe(11);
     });
   });
 

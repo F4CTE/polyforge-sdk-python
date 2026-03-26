@@ -31,6 +31,19 @@ function makeIntent(
   price: string,
   orderType: "GTC" | "FOK" | "GTD" | "FAK",
 ): OrderIntent {
+  // SECURITY: Validate financial parameters before generating order intents
+  const sizeNum = parseFloat(size);
+  const priceNum = parseFloat(price);
+  if (isNaN(sizeNum) || sizeNum <= 0 || sizeNum > 10000) {
+    throw new Error(`Invalid order size: ${size} (must be 0 < size <= 10000)`);
+  }
+  if (isNaN(priceNum) || priceNum < 0.001 || priceNum > 0.999) {
+    throw new Error(`Invalid order price: ${price} (must be 0.001-0.999)`);
+  }
+  if (!tokenId || typeof tokenId !== "string") {
+    throw new Error("Invalid tokenId");
+  }
+
   return {
     intentId: uuidv4(),
     userId: ctx.userId,

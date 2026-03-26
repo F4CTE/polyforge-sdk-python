@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
-use aes_gcm::{Aes256Gcm, Key, Nonce};
-use aes_gcm::aead::{Aead, KeyInit, OsRng};
+use aes_gcm::{Aes256Gcm, Key, Nonce, KeyInit};
+use aes_gcm::aead::{Aead, OsRng};
 use sha2::{Sha256, Digest};
 use hmac::{Hmac, Mac};
 use rand::RngCore;
@@ -64,7 +64,7 @@ pub fn sha256(input: &str) -> String {
 /// HMAC-SHA256 signing
 #[wasm_bindgen]
 pub fn hmac_sha256(message: &str, secret: &str) -> Result<String, JsValue> {
-    let mut mac = HmacSha256::new_from_slice(secret.as_bytes())
+    let mut mac = <HmacSha256 as Mac>::new_from_slice(secret.as_bytes())
         .map_err(|e| JsValue::from_str(&e.to_string()))?;
     mac.update(message.as_bytes());
     Ok(hex::encode(mac.finalize().into_bytes()))
@@ -73,7 +73,7 @@ pub fn hmac_sha256(message: &str, secret: &str) -> Result<String, JsValue> {
 /// HMAC-SHA256 verification (constant-time)
 #[wasm_bindgen]
 pub fn hmac_verify(message: &str, secret: &str, expected_hex: &str) -> Result<bool, JsValue> {
-    let mut mac = HmacSha256::new_from_slice(secret.as_bytes())
+    let mut mac = <HmacSha256 as Mac>::new_from_slice(secret.as_bytes())
         .map_err(|e| JsValue::from_str(&e.to_string()))?;
     mac.update(message.as_bytes());
     let expected = hex::decode(expected_hex).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -97,19 +97,5 @@ pub fn constant_time_eq(a: &str, b: &str) -> bool {
     a.as_bytes().iter().zip(b.as_bytes()).fold(0u8, |acc, (x, y)| acc | (x ^ y)) == 0
 }
 
-/// Secure password hashing using iterated SHA-256 (PBKDF2-like)
-#[wasm_bindgen]
-pub fn secure_hash_password(password: &str, salt_hex: &str) -> Result<String, JsValue> {
-    let salt = hex::decode(salt_hex).map_err(|e| JsValue::from_str(&e.to_string()))?;
-    let mut key = password.as_bytes().to_vec();
-    key.extend_from_slice(&salt);
-
-    // 100,000 iterations of SHA-256
-    for _ in 0..100_000 {
-        let mut hasher = Sha256::new();
-        hasher.update(&key);
-        key = hasher.finalize().to_vec();
-    }
-
-    Ok(hex::encode(key))
-}
+// REMOVED: secure_hash_password (homebrew KDF using iterated SHA-256)
+// Use bcrypt or argon2 instead. This function was a security risk.

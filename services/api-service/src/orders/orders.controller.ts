@@ -9,8 +9,9 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
-import { IsOptional, IsString, IsNotEmpty } from "class-validator";
+import { IsOptional, IsString, IsNotEmpty, IsNumberString, MaxLength } from "class-validator";
 import { OrdersService } from "./orders.service";
 import { ClosePositionDto } from "./dto/close-position.dto";
 import { RedeemPositionDto } from "./dto/redeem-position.dto";
@@ -38,9 +39,10 @@ class OrderQueryDto extends PaginationDto {
 class SplitPositionDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   tokenId!: string;
 
-  @IsString()
+  @IsNumberString({}, { message: "amount must be a valid positive number" })
   @IsNotEmpty()
   amount!: string;
 }
@@ -48,9 +50,10 @@ class SplitPositionDto {
 class MergePositionDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   tokenId!: string;
 
-  @IsString()
+  @IsNumberString({}, { message: "amount must be a valid positive number" })
   @IsNotEmpty()
   amount!: string;
 }
@@ -68,6 +71,7 @@ export class OrdersController {
   }
 
   @Post("close-position")
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes('TRADE')
@@ -85,6 +89,7 @@ export class OrdersController {
 
   /** Split USDC.e into Yes + No outcome tokens */
   @Post("split")
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes('TRADE')
@@ -94,6 +99,7 @@ export class OrdersController {
 
   /** Merge Yes + No outcome tokens back into USDC.e */
   @Post("merge")
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes('TRADE')

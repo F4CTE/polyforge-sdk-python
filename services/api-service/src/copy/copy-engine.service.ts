@@ -144,10 +144,14 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     // 1. Check daily loss limit (H-02: use Redis atomic operations to prevent race condition)
     const notional = sourceSize * sourcePrice;
     const maxDailyLoss = parseFloat(config.maxDailyLoss.toString());
-    const newLoss = await this.redis.getClient().incrbyfloat(`copy:${config.id}:daily_loss`, notional);
+    const dailyKey = `copy:${config.id}:daily_loss`;
+    const client = this.redis.getClient();
+    const newLoss = await client.incrbyfloat(dailyKey, notional);
+    // Set TTL to expire at end of day (24h) — ensures counter resets daily
+    await client.expire(dailyKey, 86400);
     if (parseFloat(String(newLoss)) > maxDailyLoss) {
       // Rollback the increment
-      await this.redis.getClient().incrbyfloat(`copy:${config.id}:daily_loss`, -notional);
+      await client.incrbyfloat(dailyKey, -notional);
       this.logger.warn(
         `Config ${config.id} exceeded daily loss limit`,
       );
@@ -294,6 +298,11 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async getCurrentExposure(configId: string): Promise<number> {
+    // Check Redis cache first (updated atomically on trade events)
+    const cached = await this.redis.get(`copy:${configId}:exposure`);
+    if (cached) return parseFloat(cached);
+
+    // Fallback: compute from DB and cache
     const pendingTrades = await this.prisma.copyTrade.findMany({
       where: {
         configId,
@@ -302,9 +311,12 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
       select: { copiedSize: true },
     });
 
-    return pendingTrades.reduce(
+    const total = pendingTrades.reduce(
       (acc, t) => acc + parseFloat(t.copiedSize.toString()),
       0,
     );
+
+    await this.redis.set(`copy:${configId}:exposure`, total.toString(), 30);
+    return total;
   }
 }

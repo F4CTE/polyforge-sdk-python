@@ -64,8 +64,11 @@ export function Component() {
     }
   }
 
+  const [confirmRevokeKeyId, setConfirmRevokeKeyId] = useState<string | null>(null);
+
   async function revokeKey(keyId: string) {
     if (!id) return;
+    setConfirmRevokeKeyId(null);
     try {
       await adminApi.revokeUserApiKey(id, keyId);
       setApiKeys((keys) => keys.map((k) => (k.id === keyId ? { ...k, revoked: true } : k)));
@@ -275,14 +278,21 @@ export function Component() {
                     </td>
                     <td className="px-3 py-2.5 text-right">
                       {!key.revoked && (
-                        <button
-                          onClick={() => revokeKey(key.id)}
-                          className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
-                          aria-label="Revoke key"
-                          title="Revoke key"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        confirmRevokeKeyId === key.id ? (
+                          <div className="flex items-center justify-end gap-1.5 text-xs">
+                            <button onClick={() => revokeKey(key.id)} className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors">Revoke</button>
+                            <button onClick={() => setConfirmRevokeKeyId(null)} className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors">Cancel</button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmRevokeKeyId(key.id)}
+                            className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
+                            aria-label="Revoke key"
+                            title="Revoke key"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )
                       )}
                     </td>
                   </tr>

@@ -8,8 +8,10 @@ import { useNotificationStore } from '@/stores/notification-store';
 export function Topbar() {
   const { user, logout } = useAuthStore();
   const { isDark, toggle: toggleTheme } = useThemeStore();
-  const { items: notifications, unreadCount, markAllRead, markRead } =
-    useNotificationStore();
+  const notifications = useNotificationStore((s) => s.items);
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
+  const markAllRead = useNotificationStore((s) => s.markAllRead);
+  const markRead = useNotificationStore((s) => s.markRead);
   const navigate = useNavigate();
 
   const [notifOpen, setNotifOpen] = useState(false);
@@ -127,7 +129,7 @@ export function Topbar() {
               }}
               className="block w-full text-center text-xs text-pf-cyan-400 py-3 border-t border-pf-border hover:bg-pf-surface transition-colors"
             >
-              See all notifications
+              Manage notification preferences
             </button>
           </div>
         )}

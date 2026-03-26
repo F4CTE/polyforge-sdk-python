@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router';
-import { Sun, Moon, LogOut } from 'lucide-react';
+import { Sun, Moon, LogOut, Menu } from 'lucide-react';
 import { useThemeStore } from '@/stores/theme-store';
 import { useAdminAuthStore } from '@/stores/admin-auth-store';
 
@@ -18,7 +18,11 @@ const routeNames: Record<string, string> = {
   admins: 'Admins',
 };
 
-export function AdminTopbar() {
+interface TopbarProps {
+  onMenuClick?: () => void;
+}
+
+export function AdminTopbar({ onMenuClick }: TopbarProps) {
   const location = useLocation();
   const { isDark, toggle } = useThemeStore();
   const { admin, logout } = useAdminAuthStore();
@@ -41,10 +45,21 @@ export function AdminTopbar() {
         : 'Viewer';
 
   return (
-    <header className="flex items-center justify-between h-14 px-6 border-b border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] shrink-0">
-      <h1 className="text-base font-semibold text-[var(--color-pf-text)]">
-        {currentPage}
-      </h1>
+    <header className="flex items-center justify-between h-14 px-4 md:px-6 border-b border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] shrink-0">
+      <div className="flex items-center gap-2">
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="p-2 rounded-pf-sm text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors md:hidden"
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
+          </button>
+        )}
+        <h1 className="text-base font-semibold text-[var(--color-pf-text)]">
+          {currentPage}
+        </h1>
+      </div>
 
       <div className="flex items-center gap-3">
         <button

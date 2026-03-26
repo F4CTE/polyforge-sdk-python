@@ -103,9 +103,11 @@ export function Component() {
     setSending(false);
   }
 
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+
   async function closeTicket() {
     if (closing || !ticket) return;
-    if (!confirm('Close this ticket? You can still view it afterward.')) return;
+    setShowCloseConfirm(false);
     setClosing(true);
     try {
       const res = await fetch(`/api/v1/tickets/${id}/close`, {
@@ -168,14 +170,26 @@ export function Component() {
           </div>
         </div>
         {canClose && (
-          <button
-            onClick={closeTicket}
-            disabled={closing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs text-pf-text-muted border border-pf-border hover:border-pf-border-strong hover:text-pf-text transition-colors"
-          >
-            {closing ? <Loader2 className="size-3 animate-spin" /> : <Lock className="size-3" />}
-            Close Ticket
-          </button>
+          showCloseConfirm ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-pf-text-muted">Close this ticket?</span>
+              <button onClick={closeTicket} disabled={closing} className="px-2 py-1 text-xs rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors">
+                {closing ? 'Closing...' : 'Confirm'}
+              </button>
+              <button onClick={() => setShowCloseConfirm(false)} className="px-2 py-1 text-xs rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface transition-colors">
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowCloseConfirm(true)}
+              disabled={closing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs text-pf-text-muted border border-pf-border hover:border-pf-border-strong hover:text-pf-text transition-colors"
+            >
+              {closing ? <Loader2 className="size-3 animate-spin" /> : <Lock className="size-3" />}
+              Close Ticket
+            </button>
+          )
         )}
       </div>
 

@@ -189,12 +189,12 @@ export function Component() {
                 />
               </div>
               {fieldError('password') && <p className="mt-1 text-xs text-pf-danger">{fieldError('password')}</p>}
-              {touched.password && !fieldError('password') && password && (
-                <ul className="mt-1.5 text-xs text-pf-text-muted space-y-0.5 list-disc list-inside">
-                  <li>Minimum 8 characters</li>
-                  <li>One uppercase letter</li>
-                  <li>One lowercase letter</li>
-                  <li>One number</li>
+              {touched.password && password && (
+                <ul className="mt-1.5 text-xs space-y-0.5 list-disc list-inside">
+                  <li className={password.length >= 8 ? 'text-pf-success' : 'text-pf-text-muted'}>Minimum 8 characters</li>
+                  <li className={/[A-Z]/.test(password) ? 'text-pf-success' : 'text-pf-text-muted'}>One uppercase letter</li>
+                  <li className={/[a-z]/.test(password) ? 'text-pf-success' : 'text-pf-text-muted'}>One lowercase letter</li>
+                  <li className={/\d/.test(password) ? 'text-pf-success' : 'text-pf-text-muted'}>One number</li>
                 </ul>
               )}
             </div>

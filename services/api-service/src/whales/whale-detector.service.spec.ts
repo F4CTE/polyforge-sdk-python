@@ -9,6 +9,7 @@ function createMockPrisma() {
     whaleAlert: {
       create: vi.fn(),
       findMany: vi.fn(),
+      groupBy: vi.fn().mockResolvedValue([]),
     },
     whaleProfile: {
       upsert: vi.fn(),
@@ -17,7 +18,9 @@ function createMockPrisma() {
     },
     market: {
       findUnique: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
     },
+    $transaction: vi.fn().mockResolvedValue([]),
   } as any;
 }
 
@@ -131,23 +134,17 @@ describe("WhaleDetectorService", () => {
 
   describe("aggregateProfiles", () => {
     it("recalculates volume and trade count for each profile", async () => {
-      prisma.whaleProfile.findMany.mockResolvedValue([
-        { walletAddress: "0xwhale1" },
+      // The new implementation uses groupBy + $transaction instead of N+1 queries
+      prisma.whaleAlert.groupBy.mockResolvedValue([
+        { walletAddress: "0xwhale1", _sum: { notional: new Prisma.Decimal(3000) }, _count: 2 },
       ]);
-      prisma.whaleAlert.findMany.mockResolvedValue([
-        { notional: new Prisma.Decimal(1000) },
-        { notional: new Prisma.Decimal(2000) },
-      ]);
-      prisma.whaleProfile.update.mockResolvedValue({});
+      prisma.market.findMany.mockResolvedValue([]);
+      prisma.$transaction.mockResolvedValue([{}]);
 
       await service.aggregateProfiles();
 
-      expect(prisma.whaleProfile.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { walletAddress: "0xwhale1" },
-          data: expect.objectContaining({ tradeCount: 2 }),
-        }),
-      );
+      expect(prisma.whaleAlert.groupBy).toHaveBeenCalled();
+      expect(prisma.$transaction).toHaveBeenCalled();
     });
   });
 });

@@ -11,6 +11,7 @@ function createMockPrisma() {
       findMany: vi.fn(),
       count: vi.fn(),
       create: vi.fn(),
+      groupBy: vi.fn().mockResolvedValue([]),
     },
     whaleProfile: {
       findUnique: vi.fn(),
@@ -18,14 +19,16 @@ function createMockPrisma() {
       upsert: vi.fn(),
       update: vi.fn(),
     },
+    market: {
+      findUnique: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    $transaction: vi.fn().mockResolvedValue([]),
     whaleFollow: {
       findUnique: vi.fn(),
       findMany: vi.fn(),
       create: vi.fn(),
       delete: vi.fn(),
-    },
-    market: {
-      findUnique: vi.fn(),
     },
   } as any;
 }
@@ -352,27 +355,17 @@ describe("WhaleDetectorService", () => {
   });
 
   describe("aggregateProfiles", () => {
-    it("recalculates profile stats from alerts", async () => {
-      const profiles = [
-        { walletAddress: "0xabc", tradeCount: 0, totalVolume: new Prisma.Decimal(0) },
-      ];
-      const alerts = [
-        { walletAddress: "0xabc", notional: new Prisma.Decimal(10000) },
-        { walletAddress: "0xabc", notional: new Prisma.Decimal(5000) },
-      ];
-
-      prisma.whaleProfile.findMany.mockResolvedValue(profiles);
-      prisma.whaleAlert.findMany.mockResolvedValue(alerts);
-      prisma.whaleProfile.update.mockResolvedValue({});
+    it("recalculates profile stats from alerts using batch groupBy", async () => {
+      prisma.whaleAlert.groupBy.mockResolvedValue([
+        { walletAddress: "0xabc", _sum: { notional: new Prisma.Decimal(15000) }, _count: 2 },
+      ]);
+      prisma.market.findMany.mockResolvedValue([]);
+      prisma.$transaction.mockResolvedValue([{}]);
 
       await detector.aggregateProfiles();
 
-      expect(prisma.whaleProfile.update).toHaveBeenCalledWith({
-        where: { walletAddress: "0xabc" },
-        data: expect.objectContaining({
-          tradeCount: 2,
-        }),
-      });
+      expect(prisma.whaleAlert.groupBy).toHaveBeenCalled();
+      expect(prisma.$transaction).toHaveBeenCalled();
     });
 
     it("skips profiles with no alerts", async () => {

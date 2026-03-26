@@ -28,12 +28,19 @@ export class PortfolioService {
       : [];
     const marketTitleMap = new Map(markets.map((m) => [m.id, m.title]));
 
-    const enriched = await Promise.all(
-      positions.map(async (pos) => {
-        const priceRaw = await this.redis.get(`cache:price:${pos.tokenId}`);
-        const currentPrice = priceRaw
-          ? parseFloat(JSON.parse(priceRaw).price ?? "0")
-          : 0;
+    // Batch fetch all prices in one Redis MGET instead of sequential GETs
+    const priceKeys = positions.map((p) => `cache:price:${p.tokenId}`);
+    const priceValues = priceKeys.length > 0
+      ? await this.redis.getClient().mget(...priceKeys)
+      : [];
+    const priceMap = new Map<string, number>();
+    positions.forEach((pos, i) => {
+      const raw = priceValues[i];
+      priceMap.set(pos.tokenId, raw ? parseFloat(JSON.parse(raw).price ?? "0") : 0);
+    });
+
+    const enriched = positions.map((pos) => {
+        const currentPrice = priceMap.get(pos.tokenId) ?? 0;
         const avgEntry = parseFloat(String(pos.avgPrice ?? "0"));
         const size = parseFloat(String(pos.size ?? "0"));
         const unrealizedPnl = (currentPrice - avgEntry) * size;
@@ -52,8 +59,7 @@ export class PortfolioService {
           unrealizedPnl: unrealizedPnl.toFixed(6),
           resolutionStatus: pos.resolutionStatus,
         };
-      }),
-    );
+      });
 
     return {
       positions: enriched,

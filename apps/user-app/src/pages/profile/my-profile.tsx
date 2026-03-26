@@ -77,7 +77,19 @@ export function Component() {
     })();
   }, []);
 
-  if (!user) return null;
+  if (!user) return (
+    <div className="animate-fade-in p-6 max-w-4xl mx-auto space-y-6">
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="size-20 rounded-full bg-pf-surface animate-pulse" />
+          <div className="space-y-2 flex-1">
+            <div className="h-5 bg-pf-surface rounded w-32 animate-pulse" />
+            <div className="h-3 bg-pf-surface rounded w-24 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   const initials = (user.displayName ?? user.username).slice(0, 2).toUpperCase();
   const memberSince = new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -103,7 +115,7 @@ export function Component() {
           {user.avatarUrl ? (
             <img src={user.avatarUrl} alt={`${user.displayName ?? user.username} avatar`} className="size-20 rounded-full object-cover" />
           ) : (
-            <div className="size-20 rounded-full bg-pf-surface flex items-center justify-center text-2xl font-bold text-cyan-400">
+            <div className="size-20 rounded-full bg-pf-surface flex items-center justify-center text-2xl font-bold text-pf-cyan-400">
               {initials}
             </div>
           )}

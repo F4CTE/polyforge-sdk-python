@@ -1,6 +1,9 @@
 import { Logger } from "@nestjs/common";
 import { v4 as uuidv4 } from "uuid";
 import { Parser } from "expr-eval";
+
+/** Singleton parser instance — avoids creating a new Parser per evaluation */
+const exprParser = new Parser();
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
@@ -25,12 +28,16 @@ function safeEvaluate(expression: string, scope: Record<string, number>, maxLeng
   if (expression.length > maxLength) {
     throw new Error(`Expression too long: ${expression.length} > ${maxLength}`);
   }
-  // Reject potentially dangerous patterns
+  // Reject potentially dangerous patterns and CPU-exhausting exponentiation
   if (/while|for|function|eval|require|import/.test(expression)) {
     throw new Error('Expression contains forbidden keywords');
   }
+  // Block nested exponentiation (e.g., 9^9^9) which causes CPU exhaustion
+  if ((expression.match(/\^/g) || []).length > 2) {
+    throw new Error('Expression contains too many exponentiation operators');
+  }
   try {
-    return new Parser().evaluate(expression, scope);
+    return exprParser.evaluate(expression, scope);
   } catch {
     return 0; // Safe fallback
   }
@@ -534,29 +541,42 @@ export class StrategyRunner {
     this.delayedActions.set(blockId, timer);
   }
 
+  /** Precomputed: all tokenIds referenced in triggers + actions */
+  private _cachedTokenIds: string[] | null = null;
+
+  private getReferencedTokenIds(): string[] {
+    if (this._cachedTokenIds) return this._cachedTokenIds;
+    const ids = new Set<string>();
+    for (const block of [...this.triggers, ...this.actions]) {
+      const params = (block as any).params;
+      if (params?.tokenId && typeof params.tokenId === "string") ids.add(params.tokenId);
+    }
+    this._cachedTokenIds = [...ids];
+    return this._cachedTokenIds;
+  }
+
   /** Returns the first tokenId found in triggers or actions (for variable scope). */
   private getPrimaryTokenId(): string | null {
-    for (const block of [...this.triggers, ...this.actions]) {
-      const params = block.params;
-      if (params?.tokenId && typeof params.tokenId === "string") {
-        return params.tokenId;
-      }
-    }
-    return null;
+    return this.getReferencedTokenIds()[0] ?? null;
   }
 
   private async detectStaleData(): Promise<string | null> {
-    // Check all tokenIds referenced in triggers + actions
-    const tokenIds = new Set<string>();
+    const tokenIds = this.getReferencedTokenIds();
+    if (tokenIds.length === 0) return null;
 
-    for (const block of [...this.triggers, ...this.actions]) {
-      const params = (block as any).params;
-      if (params?.tokenId) tokenIds.add(params.tokenId);
-    }
+    // Batch fetch all price ages in one MGET
+    const keys = tokenIds.map((id) => `cache:price:${id}`);
+    const values = await this.redis.getClient().mget(...keys);
+    const now = Date.now();
 
-    for (const tokenId of tokenIds) {
-      const age = await this.state.getPriceAge(tokenId);
-      if (age > STALE_PRICE_MS) return tokenId;
+    for (let i = 0; i < tokenIds.length; i++) {
+      if (!values[i]) return tokenIds[i];
+      try {
+        const { timestamp } = JSON.parse(values[i]!);
+        if (now - timestamp > STALE_PRICE_MS) return tokenIds[i];
+      } catch {
+        return tokenIds[i];
+      }
     }
     return null;
   }

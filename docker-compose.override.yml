@@ -27,12 +27,12 @@ services:
 
   user-app:
     volumes:
-      - ./apps/user-app/dist/user-app/browser:/usr/share/nginx/html:ro
+      - ./apps/user-app/dist:/usr/share/nginx/html:ro
       - ./apps/user-app/nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
   admin-app:
     volumes:
-      - ./apps/admin-app/dist/admin-app/browser:/usr/share/nginx/html:ro
+      - ./apps/admin-app/dist:/usr/share/nginx/html:ro
       - ./apps/admin-app/nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
   landing:

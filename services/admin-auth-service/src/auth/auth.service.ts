@@ -121,7 +121,21 @@ export class AuthService implements OnModuleInit {
 
   // ─── TOTP Disable ────────────────────────────────────────────────────────────
 
-  async disableTotp(adminId: string): Promise<void> {
+  /** Cryptographically verify an admin JWT and return the payload */
+  verifyToken(token: string): { sub: string; [key: string]: any } {
+    try {
+      return this.jwtService.verify(token, {
+        secret: this.config.getOrThrow<string>("ADMIN_JWT_SECRET"),
+      });
+    } catch {
+      throw new HttpException(
+        { code: "INVALID_TOKEN", message: "Invalid or expired token" },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+  }
+
+  async disableTotp(adminId: string, password: string, totpCode: string): Promise<void> {
     const admin = await this.adminDb.admin.findUnique({
       where: { id: adminId },
     });
@@ -143,6 +157,31 @@ export class AuthService implements OnModuleInit {
       );
     }
 
+    // Re-authenticate: verify password
+    const passwordValid = await bcrypt.compare(password, admin.passwordHash);
+    if (!passwordValid) {
+      throw new HttpException(
+        { code: "RE_AUTH_FAILED", message: "Invalid password" },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    // Re-authenticate: verify current TOTP code
+    const secret = this.decrypt((admin as any).totpSecret);
+    const otplib = await import("otplib"); const authenticator = (otplib as any).authenticator ?? (otplib as any).default?.authenticator ?? otplib;
+    let totpValid = false;
+    try {
+      totpValid = authenticator.check(totpCode, secret);
+    } catch {
+      // malformed code
+    }
+    if (!totpValid) {
+      throw new HttpException(
+        { code: "RE_AUTH_FAILED", message: "Invalid TOTP code" },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
     await this.adminDb.admin.update({
       where: { id: adminId },
       data: {
@@ -150,6 +189,8 @@ export class AuthService implements OnModuleInit {
         totpEnabled: false,
       } as any,
     });
+
+    this.logger.log(`Admin ${adminId} disabled 2FA (re-authenticated)`);
   }
 
   // ─── Login ───────────────────────────────────────────────────────────────────
@@ -183,6 +224,16 @@ export class AuthService implements OnModuleInit {
         );
       }
 
+      // SECURITY: Per-account TOTP lockout after 5 failures (15-minute window)
+      const totpLockKey = `admin:totp:fail:${admin.id}`;
+      const totpFailCount = parseInt(await this.redis.get(totpLockKey) ?? "0", 10);
+      if (totpFailCount >= 5) {
+        throw new HttpException(
+          { code: "TOTP_LOCKED", message: "Too many failed 2FA attempts. Try again in 15 minutes." },
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+
       const secret = this.decrypt((admin as any).totpSecret);
       const otplib = await import("otplib"); const authenticator = (otplib as any).authenticator ?? (otplib as any).default?.authenticator ?? otplib;
       let totpValid = false;
@@ -193,11 +244,19 @@ export class AuthService implements OnModuleInit {
       }
 
       if (!totpValid) {
+        // Increment failure counter
+        const client = this.redis.getClient();
+        const newCount = await client.incr(totpLockKey);
+        if (newCount === 1) await client.expire(totpLockKey, 900);
+
         throw new HttpException(
           { code: "TOTP_INVALID", message: "Invalid 2FA code" },
           HttpStatus.BAD_REQUEST,
         );
       }
+
+      // Clear TOTP failure counter on success
+      await this.redis.del(totpLockKey).catch(() => {});
     }
 
     const sessionId = randomUUID();
@@ -212,7 +271,10 @@ export class AuthService implements OnModuleInit {
       sessionId,
     };
 
-    const token = this.jwtService.sign(payload, { expiresIn: "1h" });
+    const token = this.jwtService.sign(payload, {
+      secret: this.config.getOrThrow<string>("ADMIN_JWT_SECRET"),
+      expiresIn: "1h",
+    });
 
     return {
       token,

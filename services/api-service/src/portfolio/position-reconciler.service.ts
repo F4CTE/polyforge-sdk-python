@@ -16,20 +16,41 @@ export class PositionReconcilerService {
 
   @Cron("*/5 * * * *")
   async reconcile(): Promise<void> {
+    // Only reconcile users who actually have unresolved positions
+    const usersWithPositions = await this.prisma.position.findMany({
+      where: { resolutionStatus: "UNRESOLVED" as any },
+      select: { userId: true },
+      distinct: ["userId"],
+    });
+
+    if (usersWithPositions.length === 0) return;
+
+    const userIds = usersWithPositions.map((u) => u.userId);
     const connectedUsers = await this.prisma.user.findMany({
-      where: { polymarketConnected: true, suspended: false, deleted: false },
+      where: {
+        id: { in: userIds },
+        polymarketConnected: true,
+        suspended: false,
+        deleted: false,
+      },
       select: { id: true, polymarketAddress: true },
     });
 
-    for (const user of connectedUsers) {
-      if (!user.polymarketAddress) continue;
-      try {
-        await this.reconcileUser(user.id, user.polymarketAddress);
-      } catch (err: unknown) {
-        this.logger.warn(
-          `Reconciliation failed for ${user.id}: ${(err as Error).message}`,
-        );
-      }
+    // Parallel with concurrency limit of 10
+    const CONCURRENCY = 10;
+    for (let i = 0; i < connectedUsers.length; i += CONCURRENCY) {
+      const batch = connectedUsers.slice(i, i + CONCURRENCY);
+      await Promise.allSettled(
+        batch
+          .filter((u) => u.polymarketAddress)
+          .map((u) =>
+            this.reconcileUser(u.id, u.polymarketAddress!).catch((err: unknown) =>
+              this.logger.warn(
+                `Reconciliation failed for ${u.id}: ${(err as Error).message}`,
+              ),
+            ),
+          ),
+      );
     }
   }
 

@@ -157,7 +157,7 @@ export function Component() {
 
             {/* External link */}
             <a
-              href={article.url}
+              href={article.url?.startsWith('https://') ? article.url : '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors"

@@ -81,13 +81,18 @@ export class SettingsService {
       this.logger.error(`Failed to set pwchange key for user ${userId}`, err);
     }
 
-    // Revoke all refresh tokens for this user
+    // Revoke all refresh tokens + their reverse-lookup keys for this user
     try {
       const client = this.redis.getClient();
       const stream = client.scanStream({ match: `refresh:${userId}:*`, count: 100 });
       stream.on("data", (keys: string[]) => {
         if (keys.length > 0) {
-          void client.del(...keys);
+          // Also delete the corresponding refresh_lookup: keys
+          const lookupKeys = keys.map((k) => {
+            const tokenHash = k.split(":").pop();
+            return `refresh_lookup:${tokenHash}`;
+          });
+          void client.del(...keys, ...lookupKeys);
         }
       });
     } catch (err) {

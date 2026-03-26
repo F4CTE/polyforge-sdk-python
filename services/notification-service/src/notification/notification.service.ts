@@ -118,21 +118,12 @@ export class NotificationService {
   ): Promise<void> {
     const html = this.templates.toHtml(content);
 
-    if (prefs.emailEnabled) {
-      await this.sendEmail(
-        userId,
-        content.title,
-        content.body,
-        html,
-        eventType,
-      );
-    }
-    if (prefs.telegramEnabled) {
-      await this.sendTelegram(userId, content.title, content.body, eventType);
-    }
-    if (prefs.discordEnabled) {
-      await this.sendDiscord(userId, content.title, content.body, eventType);
-    }
+    // Dispatch to all enabled channels in parallel
+    await Promise.allSettled([
+      prefs.emailEnabled ? this.sendEmail(userId, content.title, content.body, html, eventType) : null,
+      prefs.telegramEnabled ? this.sendTelegram(userId, content.title, content.body, eventType) : null,
+      prefs.discordEnabled ? this.sendDiscord(userId, content.title, content.body, eventType) : null,
+    ].filter(Boolean) as Promise<void>[]);
   }
 
   // ─── Digest (HOURLY / DAILY) ──────────────────────────────────────────────

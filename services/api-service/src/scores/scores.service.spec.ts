@@ -18,6 +18,7 @@ function createMockPrisma() {
     pnlSnapshot: {
       findMany: vi.fn(),
     },
+    $queryRawUnsafe: vi.fn().mockResolvedValue([]),
     traderScore: {
       upsert: vi.fn(),
       findUnique: vi.fn(),

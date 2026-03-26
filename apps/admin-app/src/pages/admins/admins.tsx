@@ -18,7 +18,7 @@ interface AdminView {
 type DialogMode = 'add' | 'edit' | null;
 
 export function Component() {
-  const { isSuperAdmin } = useAdminAuthStore();
+  const { isSuperAdmin, admin: currentAdmin } = useAdminAuthStore();
   const [admins, setAdmins] = useState<AdminView[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogMode, setDialogMode] = useState<DialogMode>(null);
@@ -202,17 +202,19 @@ export function Component() {
                         >
                           <Pencil size={14} />
                         </button>
-                        <button
-                          onClick={() => {
-                            setDeleteConfirmId(a.id);
-                            setDeletePassword('');
-                          }}
-                          className="p-1.5 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
-                          aria-label="Deactivate admin"
-                          title="Deactivate admin"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {a.id !== currentAdmin?.id && (
+                          <button
+                            onClick={() => {
+                              setDeleteConfirmId(a.id);
+                              setDeletePassword('');
+                            }}
+                            className="p-1.5 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
+                            aria-label="Deactivate admin"
+                            title="Deactivate admin"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

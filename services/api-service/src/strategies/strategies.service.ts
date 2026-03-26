@@ -420,32 +420,30 @@ export class StrategiesService {
       where: { userId_strategyId: { userId, strategyId: id } },
     });
 
-    let liked: boolean;
-    if (existing) {
-      await this.prisma.strategyLike.delete({
-        where: { userId_strategyId: { userId, strategyId: id } },
-      });
-      await this.prisma.strategy.update({
-        where: { id },
-        data: { likeCount: { decrement: 1 } },
-      });
-      liked = false;
-    } else {
-      await this.prisma.strategyLike.create({
-        data: { userId, strategyId: id },
-      });
-      await this.prisma.strategy.update({
-        where: { id },
-        data: { likeCount: { increment: 1 } },
-      });
-      liked = true;
-    }
-
-    const updated = await this.prisma.strategy.findUnique({
-      where: { id },
-      select: { likeCount: true },
+    // Use transaction to consolidate 4-5 DB calls into 2
+    return this.prisma.$transaction(async (tx) => {
+      if (existing) {
+        await tx.strategyLike.delete({
+          where: { userId_strategyId: { userId, strategyId: id } },
+        });
+        const updated = await tx.strategy.update({
+          where: { id },
+          data: { likeCount: { decrement: 1 } },
+          select: { likeCount: true },
+        });
+        return { liked: false, likeCount: updated.likeCount };
+      } else {
+        await tx.strategyLike.create({
+          data: { userId, strategyId: id },
+        });
+        const updated = await tx.strategy.update({
+          where: { id },
+          data: { likeCount: { increment: 1 } },
+          select: { likeCount: true },
+        });
+        return { liked: true, likeCount: updated.likeCount };
+      }
     });
-    return { liked, likeCount: updated?.likeCount ?? 0 };
   }
 
   async listComments(

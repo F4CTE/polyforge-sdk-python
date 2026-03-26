@@ -56,7 +56,6 @@ export class ProfileService {
     }
 
     return {
-      id: user.id,
       username: user.username,
       displayName: user.displayName,
       bio: user.bio ?? null,

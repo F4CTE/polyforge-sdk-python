@@ -24,6 +24,7 @@ function createMockRedis() {
     getClient: vi.fn().mockReturnValue({
       xgroup: vi.fn().mockResolvedValue("OK"),
       incrbyfloat: vi.fn().mockResolvedValue("100"),
+      expire: vi.fn().mockResolvedValue(1),
     }),
   } as any;
 }

@@ -20,6 +20,23 @@ function validateEnv() {
     );
     process.exit(1);
   }
+
+  if (process.env.NODE_ENV === "production") {
+    const totpKey = process.env.TOTP_ENCRYPTION_KEY;
+    if (!totpKey || totpKey === "0".repeat(64)) {
+      process.stderr.write(
+        "[admin-auth-service] TOTP_ENCRYPTION_KEY must not be all-zeros in production\n",
+      );
+      process.exit(1);
+    }
+    const jwtSecret = process.env.ADMIN_JWT_SECRET;
+    if (jwtSecret?.startsWith("dev-") || jwtSecret?.startsWith("CHANGE_ME")) {
+      process.stderr.write(
+        "[admin-auth-service] ADMIN_JWT_SECRET must be changed from default in production\n",
+      );
+      process.exit(1);
+    }
+  }
 }
 
 async function bootstrap() {

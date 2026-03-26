@@ -31,10 +31,8 @@ function cookieOpts() {
 function extractAdminId(req: FastifyRequest, authService: AuthService): string {
   const token = (req as any).cookies?.[ADMIN_COOKIE];
   if (!token) throw new UnauthorizedException("Not authenticated");
-  // Decode the JWT to get admin ID (verification happens in the service)
-  const parts = token.split(".");
-  if (parts.length !== 3) throw new UnauthorizedException("Invalid token");
-  const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString());
+  // Cryptographically verify the JWT and extract admin ID
+  const payload = authService.verifyToken(token);
   return payload.sub;
 }
 
@@ -121,11 +119,15 @@ export class AuthController {
 
   @Delete("totp")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: "Disable TOTP 2FA" })
+  @ApiOperation({ summary: "Disable TOTP 2FA — requires password + current TOTP code for re-authentication" })
   @ApiResponse({ status: 204, description: "2FA disabled." })
   @ApiResponse({ status: 400, description: "TOTP_NOT_ENABLED" })
-  async disableTotp(@Req() req: FastifyRequest) {
+  @ApiResponse({ status: 401, description: "RE_AUTH_FAILED — invalid password or TOTP code" })
+  async disableTotp(
+    @Req() req: FastifyRequest,
+    @Body() body: { password: string; totpCode: string },
+  ) {
     const adminId = extractAdminId(req, this.authService);
-    await this.authService.disableTotp(adminId);
+    await this.authService.disableTotp(adminId, body.password, body.totpCode);
   }
 }

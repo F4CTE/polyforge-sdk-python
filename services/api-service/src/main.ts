@@ -96,7 +96,7 @@ async function bootstrap() {
       }
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     credentials: true,
   });
 
@@ -158,12 +158,14 @@ async function bootstrap() {
 
   const fastify = app.getHttpAdapter().getInstance();
 
-  fastify.get("/api/v1/docs/openapi.json", (_req: any, reply: any) => {
-    reply.type("application/json").send(document);
-  });
+  // Gate all Swagger/OpenAPI docs behind non-production environment
+  if (process.env.NODE_ENV !== "production") {
+    fastify.get("/api/v1/docs/openapi.json", (_req: any, reply: any) => {
+      reply.type("application/json").send(document);
+    });
 
-  fastify.get("/api/v1/docs", (_req: any, reply: any) => {
-    reply.type("text/html").send(`<!DOCTYPE html>
+    fastify.get("/api/v1/docs", (_req: any, reply: any) => {
+      reply.type("text/html").send(`<!DOCTYPE html>
 <html><head><title>Polyforge API</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui.css">
 </head><body>
@@ -171,10 +173,8 @@ async function bootstrap() {
 <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui-bundle.js"></script>
 <script>SwaggerUIBundle({url:'/api/v1/docs/openapi.json',dom_id:'#swagger-ui'})</script>
 </body></html>`);
-  });
+    });
 
-  // Also keep NestJS Swagger UI in non-production for backwards compat
-  if (process.env.NODE_ENV !== "production") {
     SwaggerModule.setup("api/v1/swagger", app, document, {
       swaggerOptions: { persistAuthorization: false },
     });

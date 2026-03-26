@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
 import {
   Plus,
@@ -118,25 +118,29 @@ export function Component() {
   const [totalPages, setTotalPages] = useState(0);
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
 
-  function load(status?: FilterStatus, p?: number) {
+  const load = useCallback((status?: FilterStatus, p?: number) => {
     setLoading(true);
     const params = new URLSearchParams({ limit: '20', page: String(p ?? page) });
     const s = status ?? filter;
     if (s !== 'ALL') params.set('status', s);
     fetch(`/api/v1/copy?${params}`, { credentials: 'include' })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((res: CopyListResponse) => {
-        setConfigs(res.data);
-        setTotalPages(res.totalPages);
+        setConfigs(res.data ?? []);
+        setTotalPages(res.totalPages ?? 0);
         setLoading(false);
       })
       .catch(() => {
         toast.error('Failed to load copy configs');
+        setConfigs([]);
         setLoading(false);
       });
-  }
+  }, [page, filter]);
 
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [load]);
 
   function onFilterChange(f: FilterStatus) {
     setFilter(f);
@@ -356,17 +360,8 @@ export function Component() {
                     to={`/copy/${config.id}`}
                     onClick={(e) => e.stopPropagation()}
                     className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
-                    aria-label="Edit config"
-                    title="Edit"
-                  >
-                    <Pencil className="size-3.5" />
-                  </Link>
-                  <Link
-                    to={`/copy/${config.id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
-                    aria-label="View trades"
-                    title="View trades"
+                    aria-label="View config details"
+                    title="View details"
                   >
                     <Eye className="size-3.5" />
                   </Link>

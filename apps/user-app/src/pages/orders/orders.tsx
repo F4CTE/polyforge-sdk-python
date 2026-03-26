@@ -126,6 +126,14 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
     expiresAt: '',
   });
   const [submitting, setSubmitting] = useState(false);
+  const [positions, setPositions] = useState<Array<{ id: string; marketId: string; tokenId: string; marketTitle: string; outcome: string; size: string }>>([]);
+
+  useEffect(() => {
+    fetch('/api/v1/portfolio', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.positions) setPositions(data.positions); })
+      .catch(() => {});
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -177,16 +185,27 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Market ID</label>
-              <input value={form.marketId} onChange={e => updateField('marketId', e.target.value)} required
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50" />
+              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Market</label>
+              <select value={form.marketId} onChange={e => {
+                const mkt = positions.find(p => p.marketId === e.target.value);
+                updateField('marketId', e.target.value);
+                if (mkt) updateField('tokenId', mkt.tokenId);
+              }} required className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50">
+                <option value="">Select from your positions...</option>
+                {positions.map(p => (
+                  <option key={p.id} value={p.marketId}>
+                    {p.marketTitle || p.marketId.slice(0, 12)} — {p.outcome} ({p.size})
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Token ID</label>
-              <input value={form.tokenId} onChange={e => updateField('tokenId', e.target.value)} required
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50" />
+              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Token</label>
+              <input value={form.tokenId} readOnly
+                className="w-full h-9 px-3 rounded-pf bg-pf-overlay border border-pf-border text-sm text-pf-text-secondary cursor-not-allowed font-mono text-xs" />
+              <p className="text-[10px] text-pf-text-muted mt-0.5">Auto-filled from selected position</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">

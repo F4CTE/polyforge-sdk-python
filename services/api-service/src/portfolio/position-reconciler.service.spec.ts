@@ -138,6 +138,11 @@ describe("PositionReconcilerService", () => {
   // ── Skips non-connected users ──────────────────────────────────────────
 
   it("skips users without polymarketAddress", async () => {
+    // New: reconcile() first queries positions with distinct userId
+    prisma.position.findMany.mockResolvedValueOnce([
+      { userId: "user-1" },
+      { userId: "user-2" },
+    ]);
     prisma.user.findMany.mockResolvedValue([
       { id: "user-1", polymarketAddress: null },
       { id: "user-2", polymarketAddress: "0xAddr" },
@@ -163,20 +168,33 @@ describe("PositionReconcilerService", () => {
 
   // ── Queries only connected, non-suspended, non-deleted users ───────────
 
-  it("queries only connected, non-suspended, non-deleted users", async () => {
+  it("queries only connected, non-suspended, non-deleted users with open positions", async () => {
+    // New: reconcile() first queries positions to find users with unresolved positions
+    prisma.position.findMany.mockResolvedValueOnce([{ userId: "user-1" }]);
     prisma.user.findMany.mockResolvedValue([]);
 
     await svc.reconcile();
 
-    expect(prisma.user.findMany).toHaveBeenCalledWith({
-      where: { polymarketConnected: true, suspended: false, deleted: false },
-      select: { id: true, polymarketAddress: true },
-    });
+    expect(prisma.position.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { resolutionStatus: "UNRESOLVED" } }),
+    );
+    expect(prisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: { in: ["user-1"] },
+          polymarketConnected: true,
+          suspended: false,
+          deleted: false,
+        }),
+      }),
+    );
   });
 
-  // ── Handles API failure per-user without blocking others ───────────────
-
   it("handles API failure per-user without blocking others", async () => {
+    prisma.position.findMany.mockResolvedValueOnce([
+      { userId: "user-1" },
+      { userId: "user-2" },
+    ]);
     prisma.user.findMany.mockResolvedValue([
       { id: "user-1", polymarketAddress: "0xAddr1" },
       { id: "user-2", polymarketAddress: "0xAddr2" },

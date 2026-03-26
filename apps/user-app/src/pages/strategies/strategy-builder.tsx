@@ -50,6 +50,17 @@ export function Component() {
     };
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Warn on unsaved changes when navigating away
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (useBuilderStore.getState().dirty) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
   const onSave = useCallback(async () => {
     try {
       const result = await save();
@@ -132,10 +143,17 @@ export function Component() {
         return;
       }
 
-      const confirmed = window.confirm(
-        `Load strategy "${data.strategy.name}"? This will replace the current blocks.`,
-      );
-      if (!confirmed) return;
+      const userAccepted = await new Promise<boolean>((resolve) => {
+        const msg = `Load strategy "${data.strategy.name}"? This will replace the current blocks.`;
+        // Use toast with action for non-blocking confirm
+        toast(msg, {
+          action: { label: 'Load', onClick: () => resolve(true) },
+          cancel: { label: 'Cancel', onClick: () => resolve(false) },
+          onDismiss: () => resolve(false),
+          duration: 15000,
+        });
+      });
+      if (!userAccepted) return;
 
       const res = await fetch('/api/v1/strategies/import', {
         method: 'POST',
@@ -260,7 +278,7 @@ export function Component() {
         <div className="flex-1 flex overflow-hidden">
           {/* Canvas */}
           <div
-            className="flex-1 relative min-w-0"
+            className="flex-1 relative min-w-0 isolate"
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}

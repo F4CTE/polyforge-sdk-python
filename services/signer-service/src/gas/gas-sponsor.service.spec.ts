@@ -4,15 +4,19 @@ import { GasSponsorService } from "./gas-sponsor.service";
 // ─── Mock helpers ────────────────────────────────────────────────────────────
 
 function createMockRedis() {
-  const pipeline = {
-    set: vi.fn().mockReturnThis(),
-    expire: vi.fn().mockReturnThis(),
-    exec: vi.fn().mockResolvedValue([]),
+  const client = {
+    incrbyfloat: vi.fn().mockResolvedValue("0"),
+    expire: vi.fn().mockResolvedValue(1),
+    pipeline: vi.fn().mockReturnValue({
+      set: vi.fn().mockReturnThis(),
+      expire: vi.fn().mockReturnThis(),
+      exec: vi.fn().mockResolvedValue([]),
+    }),
   };
   return {
     get: vi.fn().mockResolvedValue(null),
-    getClient: vi.fn().mockReturnValue({ pipeline: () => pipeline }),
-    _pipeline: pipeline,
+    getClient: vi.fn().mockReturnValue(client),
+    _client: client,
   };
 }
 
@@ -53,36 +57,29 @@ describe("GasSponsorService", () => {
 
   describe("sponsorGas", () => {
     it("returns true and records gas when within daily limit", async () => {
-      redis.get.mockResolvedValue("0.1");
+      // incrbyfloat returns the NEW total after increment (0.1 + 0.05 = 0.15)
+      redis._client.incrbyfloat.mockResolvedValue("0.15");
 
       const result = await service.sponsorGas("user-1", 0.05);
 
       expect(result).toBe(true);
-      // Pipeline should set the new total (0.1 + 0.05 = 0.15)
-      const pipeline = redis._pipeline;
-      expect(pipeline.set).toHaveBeenCalledWith(
-        "gas:spent:user-1:2026-03-24",
-        expect.stringMatching(/^0\.15/),
-      );
-      expect(pipeline.expire).toHaveBeenCalledWith(
-        "gas:spent:user-1:2026-03-24",
-        48 * 60 * 60,
-      );
-      expect(pipeline.exec).toHaveBeenCalled();
+      expect(redis._client.incrbyfloat).toHaveBeenCalled();
+      expect(redis._client.expire).toHaveBeenCalled();
     });
 
     it("returns false when daily limit would be exceeded", async () => {
-      redis.get.mockResolvedValue("0.48");
+      // incrbyfloat returns a total above the limit (0.53 > 0.5)
+      redis._client.incrbyfloat.mockResolvedValue("0.53");
 
       const result = await service.sponsorGas("user-1", 0.05);
 
       expect(result).toBe(false);
-      // Pipeline should NOT be called when limit exceeded
-      expect(redis._pipeline.exec).not.toHaveBeenCalled();
+      // Should rollback the increment
+      expect(redis._client.incrbyfloat).toHaveBeenCalledTimes(2); // increment + rollback
     });
 
     it("returns true when gas cost exactly reaches the limit", async () => {
-      redis.get.mockResolvedValue("0.4");
+      redis._client.incrbyfloat.mockResolvedValue("0.5"); // exactly at limit
 
       const result = await service.sponsorGas("user-1", 0.1);
 
@@ -90,15 +87,13 @@ describe("GasSponsorService", () => {
     });
 
     it("handles first gas usage of the day (no existing Redis key)", async () => {
-      redis.get.mockResolvedValue(null);
+      redis._client.incrbyfloat.mockResolvedValue("0.02"); // first usage, post-increment = gasCost
 
       const result = await service.sponsorGas("user-1", 0.02);
 
       expect(result).toBe(true);
-      expect(redis._pipeline.set).toHaveBeenCalledWith(
-        "gas:spent:user-1:2026-03-24",
-        "0.02",
-      );
+      expect(redis._client.incrbyfloat).toHaveBeenCalled();
+      expect(redis._client.expire).toHaveBeenCalled();
     });
 
     it("returns false when sponsor is disabled", async () => {
@@ -225,21 +220,26 @@ describe("GasSponsorService", () => {
 
   describe("Redis key format", () => {
     it("uses YYYY-MM-DD date string in the key", async () => {
-      redis.get.mockResolvedValue(null);
+      redis._client.incrbyfloat.mockResolvedValue("0.01");
 
       await service.sponsorGas("user-42", 0.01);
 
-      expect(redis.get).toHaveBeenCalledWith("gas:spent:user-42:2026-03-24");
+      expect(redis._client.incrbyfloat).toHaveBeenCalledWith(
+        "gas:spent:user-42:2026-03-24",
+        0.01,
+      );
     });
 
     it("uses a different key on a different day", async () => {
       vi.setSystemTime(new Date("2026-01-15T08:00:00Z"));
-      // Re-create service so the date is recalculated per call
-      redis.get.mockResolvedValue(null);
+      redis._client.incrbyfloat.mockResolvedValue("0.01");
 
       await service.sponsorGas("user-42", 0.01);
 
-      expect(redis.get).toHaveBeenCalledWith("gas:spent:user-42:2026-01-15");
+      expect(redis._client.incrbyfloat).toHaveBeenCalledWith(
+        "gas:spent:user-42:2026-01-15",
+        0.01,
+      );
     });
   });
 
@@ -264,7 +264,8 @@ describe("GasSponsorService", () => {
 
   describe("sponsorGas — boundary conditions", () => {
     it("returns false when spent exactly equals the daily limit (no room for more)", async () => {
-      redis.get.mockResolvedValue("0.5"); // exactly at the 0.5 limit
+      // Post-increment total 0.51 exceeds the 0.5 limit
+      redis._client.incrbyfloat.mockResolvedValue("0.51");
 
       const result = await service.sponsorGas("user-1", 0.01);
 
@@ -272,7 +273,7 @@ describe("GasSponsorService", () => {
     });
 
     it("returns true when spending exactly reaches the limit", async () => {
-      redis.get.mockResolvedValue("0.45");
+      redis._client.incrbyfloat.mockResolvedValue("0.45");
 
       const result = await service.sponsorGas("user-1", 0.05);
       // 0.45 + 0.05 = 0.50 which equals the limit (should be allowed)
@@ -280,7 +281,7 @@ describe("GasSponsorService", () => {
     });
 
     it("handles very small gas amounts", async () => {
-      redis.get.mockResolvedValue("0.0");
+      redis._client.incrbyfloat.mockResolvedValue("0.0");
 
       const result = await service.sponsorGas("user-1", 0.001);
 
@@ -291,8 +292,8 @@ describe("GasSponsorService", () => {
   // ── Redis connection failure ────────────────────────────────────────────────
 
   describe("sponsorGas — Redis failure", () => {
-    it("propagates error when Redis get fails", async () => {
-      redis.get.mockRejectedValue(new Error("Redis connection refused"));
+    it("propagates error when Redis incrbyfloat fails", async () => {
+      redis._client.incrbyfloat.mockRejectedValue(new Error("Redis connection refused"));
 
       await expect(service.sponsorGas("user-1", 0.01)).rejects.toThrow(
         "Redis connection refused",

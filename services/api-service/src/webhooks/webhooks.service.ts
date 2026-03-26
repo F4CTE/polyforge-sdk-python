@@ -128,6 +128,21 @@ export class WebhooksService {
     secret: string,
     payload: unknown,
   ): Promise<{ success: boolean; statusCode?: number; error?: string }> {
+    // SECURITY: Block internal/private network URLs to prevent SSRF
+    try {
+      const parsed = new URL(url);
+      const blockedPrefixes = ["localhost", "127.", "0.0.0.0", "10.", "172.16.", "172.17.", "172.18.", "172.19.", "172.20.", "192.168.", "169.254.", "[::1]"];
+      if (
+        blockedPrefixes.some((p) => parsed.hostname.startsWith(p)) ||
+        parsed.hostname.endsWith(".internal") ||
+        parsed.protocol !== "https:"
+      ) {
+        return { success: false, statusCode: 0, error: "Internal or non-HTTPS URLs are not allowed" };
+      }
+    } catch {
+      return { success: false, statusCode: 0, error: "Invalid URL" };
+    }
+
     const body = JSON.stringify(payload);
     const signature = createHmac("sha256", secret).update(body).digest("hex");
 

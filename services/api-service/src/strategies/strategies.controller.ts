@@ -13,7 +13,9 @@ import {
   ParseUUIDPipe,
   Res,
 } from "@nestjs/common";
-import { Response } from "express";
+// Using FastifyReply type — the NestJS Fastify adapter supports express-like res.set()/res.json()
+import type { FastifyReply } from "fastify";
+type Response = FastifyReply;
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
 import { StrategiesService } from "./strategies.service";
@@ -94,11 +96,9 @@ export class StrategiesController {
       id,
       user.sub,
     );
-    res.set({
-      "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="${filename}"`,
-    });
-    res.json(payload);
+    res.header("Content-Type", "application/json");
+    res.header("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(payload);
   }
 
   @Post("import")

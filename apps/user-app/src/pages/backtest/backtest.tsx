@@ -106,14 +106,14 @@ export function Component() {
   }, []);
 
   useEffect(() => {
-    loadHistory(page);
-    // Load strategies for the form
+    // Load strategies for the form (only once on mount)
     fetch('/api/v1/strategies?limit=100', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.data) setStrategies(data.data); })
       .catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Load history when page changes (handles initial mount too)
   useEffect(() => { loadHistory(page); }, [page, loadHistory]);
 
   const canSubmit = selectedStratId && dateStart && dateEnd && !submitting;
@@ -133,10 +133,13 @@ export function Component() {
         }),
       });
       if (res.ok) {
+        toast.success('Backtest queued');
         setPage(1);
         loadHistory(1);
+      } else {
+        toast.error('Failed to submit backtest');
       }
-    } catch { toast.error('Failed to load data'); }
+    } catch { toast.error('Failed to submit backtest'); }
     setSubmitting(false);
   }
 

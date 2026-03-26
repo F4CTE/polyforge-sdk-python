@@ -35,7 +35,7 @@ function validateEnv() {
     // Reject CHANGE_ME default JWT secrets in production
     const secrets = ['USER_JWT_SECRET', 'ADMIN_JWT_SECRET', 'BOT_JWT_SECRET', 'INTERNAL_JWT_SECRET'];
     for (const key of secrets) {
-      if (process.env[key]?.startsWith('CHANGE_ME')) {
+      if (process.env[key]?.startsWith('CHANGE_ME') || process.env[key]?.startsWith('dev-')) {
         process.stderr.write(
           `[auth-service] ${key} must be changed from default in production\n`,
         );

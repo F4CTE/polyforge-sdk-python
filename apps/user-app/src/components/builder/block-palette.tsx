@@ -53,7 +53,18 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
   const tickMs = useBuilderStore((s) => s.tickMs);
   const visibility = useBuilderStore((s) => s.visibility);
   const tags = useBuilderStore((s) => s.tags);
-  const nodes = useBuilderStore((s) => s.nodes);
+  // Derive only node count per section to avoid re-renders on every node drag
+  const nodeCountBySection = useBuilderStore((s) => {
+    const counts: Record<string, number> = {};
+    for (const n of s.nodes) {
+      const section = n.type === 'variableNode' ? 'variables'
+        : n.type === 'logicNode' ? 'logic'
+        : n.type === 'calcNode' ? 'calc'
+        : (n.data as Record<string, string>)?.section ?? 'unknown';
+      counts[section] = (counts[section] ?? 0) + 1;
+    }
+    return counts;
+  });
   const setName = useBuilderStore((s) => s.setName);
   const setDescription = useBuilderStore((s) => s.setDescription);
   const setExecMode = useBuilderStore((s) => s.setExecMode);
@@ -64,19 +75,8 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
   const addVariable = useBuilderStore((s) => s.addVariable);
 
   const sectionCount = useCallback(
-    (section: PaletteTab) => {
-      if (section === 'variables') {
-        return nodes.filter((n) => n.type === 'variableNode').length;
-      }
-      if (section === 'logic') {
-        return nodes.filter((n) => n.type === 'logicNode').length;
-      }
-      if (section === 'calc') {
-        return nodes.filter((n) => n.type === 'calcNode').length;
-      }
-      return nodes.filter((n) => (n.data as Record<string, unknown>).section === section).length;
-    },
-    [nodes],
+    (section: PaletteTab) => nodeCountBySection[section] ?? 0,
+    [nodeCountBySection],
   );
 
   const onDragStart = useCallback(

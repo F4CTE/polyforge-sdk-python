@@ -12,7 +12,10 @@ function makeRedis(overrides: Record<string, unknown> = {}) {
     getJson: vi.fn().mockResolvedValue(null),
     getClient: vi
       .fn()
-      .mockReturnValue({ lrange: vi.fn().mockResolvedValue([]) }),
+      .mockReturnValue({
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi.fn().mockResolvedValue([JSON.stringify({ price: 0.5, timestamp: Date.now() })]),
+      }),
     xadd: vi.fn().mockResolvedValue("1-0"),
     ...overrides,
   } as any;
@@ -151,7 +154,13 @@ describe("StrategyRunner — stale data detection", () => {
   it("pauses and emits STRATEGY_PAUSED when price data is stale", async () => {
     const state = makeState();
     state.getPriceAge.mockResolvedValue(6_000); // 6s > 5s threshold
-    const redis = makeRedis();
+    // Override mget to return null (no cached price = stale data)
+    const redis = makeRedis({
+      getClient: vi.fn().mockReturnValue({
+        lrange: vi.fn().mockResolvedValue([]),
+        mget: vi.fn().mockResolvedValue([null]),
+      }),
+    });
     const onStatusChange = vi.fn().mockResolvedValue(undefined);
 
     const runner = makeRunner({

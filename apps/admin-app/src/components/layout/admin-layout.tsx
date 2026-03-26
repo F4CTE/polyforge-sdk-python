@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router';
-import { Menu } from 'lucide-react';
 import { AdminSidebar } from './admin-sidebar';
 import { AdminTopbar } from './admin-topbar';
 import { usePollingStore } from '@/stores/polling-store';
@@ -33,18 +32,7 @@ export function Component() {
       )}
 
       <div className="flex flex-col flex-1 min-w-0">
-        <div className="flex items-center">
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="p-2 ml-2 rounded-pf-sm text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors md:hidden"
-            aria-label="Open menu"
-          >
-            <Menu size={20} />
-          </button>
-          <div className="flex-1">
-            <AdminTopbar />
-          </div>
-        </div>
+        <AdminTopbar onMenuClick={() => setMobileOpen(true)} />
         <main className="flex-1 overflow-y-auto p-6">
           <div className="animate-fade-in">
             <Outlet />

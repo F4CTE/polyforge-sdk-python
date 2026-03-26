@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Flag, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { adminApi } from '@/lib/api';
@@ -15,11 +15,7 @@ export function Component() {
   const limit = 20;
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
-  useEffect(() => {
-    loadReports();
-  }, [statusFilter, page]);
-
-  async function loadReports() {
+  const loadReports = useCallback(async () => {
     setLoading(true);
     try {
       const res = await adminApi.reports({
@@ -34,7 +30,9 @@ export function Component() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [statusFilter, page, limit]);
+
+  useEffect(() => { loadReports(); }, [loadReports]);
 
   async function handleResolve(id: string, status: 'REVIEWED' | 'DISMISSED') {
     try {

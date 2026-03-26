@@ -207,7 +207,13 @@ export function Component() {
       if (res.ok) {
         const data = await res.json();
         setStrategy((prev) => prev ? { ...prev, status: data.status } : prev);
+        toast.success(`Strategy ${action}${action.endsWith('e') ? 'd' : 'ed'}`);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message ?? `Failed to ${action} strategy`);
       }
+    } catch {
+      toast.error(`Failed to ${action} strategy`);
     } finally {
       setActionLoading(false);
     }
@@ -543,8 +549,9 @@ export function Component() {
 
               <div className="p-4 max-h-80 overflow-y-auto">
                 {liveLog.length === 0 ? (
-                  <div className="py-8 text-center text-sm text-pf-text-muted">
-                    {isActive(status) ? 'Waiting for events\u2026' : 'Start the strategy to see live events.'}
+                  <div className="py-8 text-center text-sm text-pf-text-muted space-y-2">
+                    <p>{isActive(status) ? 'Strategy is running.' : 'Start the strategy to generate events.'}</p>
+                    <p className="text-xs">Check the <a href={`/orders?strategy=${strategy?.id}`} className="text-pf-cyan-400 hover:underline">Orders</a> page for trade activity.</p>
                   </div>
                 ) : (
                   <div className="space-y-1.5">

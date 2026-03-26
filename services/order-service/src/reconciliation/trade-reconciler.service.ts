@@ -32,10 +32,16 @@ export class TradeReconcilerService {
   async reconcile(): Promise<void> {
     try {
       const users = await this.getConnectedUsersWithLiveOrders();
+      const eligible = users.filter((u) => u.polymarketAddress);
 
-      for (const user of users) {
-        if (!user.walletAddress) continue;
-        await this.reconcileUserTrades(user.id, user.walletAddress);
+      // Parallel with concurrency limit of 5
+      const CONCURRENCY = 5;
+      for (let i = 0; i < eligible.length; i += CONCURRENCY) {
+        await Promise.allSettled(
+          eligible
+            .slice(i, i + CONCURRENCY)
+            .map((u) => this.reconcileUserTrades(u.id, u.polymarketAddress!)),
+        );
       }
     } catch (err) {
       this.logger.error("Trade reconciliation failed", err);
@@ -49,7 +55,8 @@ export class TradeReconcilerService {
     let updatedCount = 0;
 
     try {
-      const trades = await this.clob.fetchTrades(walletAddress);
+      const rawTrades = await this.clob.fetchTrades(walletAddress);
+      const trades = rawTrades as unknown as ClobTrade[];
 
       // Get all LIVE orders for this user
       const liveOrders = await this.prisma.order.findMany({
@@ -112,7 +119,7 @@ export class TradeReconcilerService {
         suspended: false,
         deleted: false,
       },
-      select: { id: true, walletAddress: true },
+      select: { id: true, polymarketAddress: true },
     });
   }
 }

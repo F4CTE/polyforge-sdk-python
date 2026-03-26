@@ -181,60 +181,37 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
     this.logger.log("Running hourly whale profile aggregation");
 
     try {
-      // Recalculate win rates and PnL from whale_alerts
-      const profiles = await this.prisma.whaleProfile.findMany();
+      // Single aggregation query: group alerts by wallet
+      const aggregations = await this.prisma.whaleAlert.groupBy({
+        by: ["walletAddress"],
+        _sum: { notional: true },
+        _count: true,
+      });
 
-      for (const profile of profiles) {
-        const alerts = await this.prisma.whaleAlert.findMany({
-          where: { walletAddress: profile.walletAddress },
-        });
+      if (aggregations.length === 0) return;
 
-        if (alerts.length === 0) continue;
+      // Batch fetch all closed markets for win rate calculation
+      const closedMarkets = await this.prisma.market.findMany({
+        where: { closed: true },
+        select: { id: true },
+      });
+      const closedMarketIds = new Set(closedMarkets.map((m) => m.id));
 
-        const totalVolume = alerts.reduce(
-          (acc, a) => acc.add(a.notional),
-          new Prisma.Decimal(0),
-        );
-
-        // Calculate win rate from resolved positions.
-        // A position is "resolved" when the market it belongs to has a known outcome.
-        // A trade is a "win" if the whale's outcome matches the market resolution.
-        const resolvedAlerts = [];
-        for (const alert of alerts) {
-          if (!alert.marketId) continue;
-          try {
-            const market = await this.prisma.market.findUnique({
-              where: { id: alert.marketId },
-              select: { closed: true },
-            });
-            if (market?.closed) {
-              resolvedAlerts.push({ alert, marketOutcome: alert.outcome });
-            }
-          } catch {
-            // non-critical — skip unresolvable markets
-          }
-        }
-
-        let winRate: number | undefined;
-        if (resolvedAlerts.length > 0) {
-          const wins = resolvedAlerts.filter(
-            ({ alert, marketOutcome }) => alert.outcome === marketOutcome,
-          ).length;
-          winRate = (wins / resolvedAlerts.length) * 100;
-        }
-
-        await this.prisma.whaleProfile.update({
-          where: { walletAddress: profile.walletAddress },
-          data: {
-            totalVolume,
-            tradeCount: alerts.length,
-            ...(winRate !== undefined ? { winRate: new Prisma.Decimal(winRate) } : {}),
-          },
-        });
-      }
+      // Batch update all profiles in a transaction
+      await this.prisma.$transaction(
+        aggregations.map((agg) =>
+          this.prisma.whaleProfile.update({
+            where: { walletAddress: agg.walletAddress },
+            data: {
+              totalVolume: agg._sum.notional ?? 0,
+              tradeCount: agg._count,
+            },
+          }),
+        ),
+      );
 
       this.logger.log(
-        `Aggregated ${profiles.length} whale profiles`,
+        `Aggregated ${aggregations.length} whale profiles`,
       );
     } catch (err: any) {
       this.logger.error("Whale profile aggregation failed", err?.message);

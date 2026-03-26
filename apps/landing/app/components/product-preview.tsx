@@ -27,7 +27,8 @@ export function ProductPreview() {
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
               className="block w-full h-auto"
-              aria-hidden="true"
+              role="img"
+              aria-label="Polyforge dashboard showing portfolio P&amp;L, active strategies, market data, and recent trades"
             >
               {/* Sidebar */}
               <rect x="0" y="0" width="180" height="440" fill="#12121a" />

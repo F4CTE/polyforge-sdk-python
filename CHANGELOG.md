@@ -5,6 +5,88 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.0.0] — 2026-03-26
+
+### Added — Rust Security Hardening
+
+**NAPI-RS Native Addon (`@polyforge/crypto-native`):**
+- AES-256-GCM envelope encryption with `Zeroizing<Vec<u8>>` — private keys never enter V8 heap
+- DEK/KEK wrapping/unwrapping with deterministic memory zeroing
+- SHA256, HMAC-SHA256, cryptographic random generation — all in Rust
+- Drop-in `NativeEncryptionService` for signer-service with Node.js fallback
+
+**WASM Modules:**
+- `polyforge-engine` (297 LOC Rust) compiled to WASM — sandboxed strategy rule evaluator
+- `polyforge-crypto` (116 LOC Rust) compiled to WASM — AES-GCM, HMAC, SHA256
+- Homebrew `secure_hash_password` (iterated SHA-256 KDF) deleted — security risk
+
+### Added — Real Polymarket Integration
+- Market-data-service now syncs from real Polymarket Gamma API (20K+ markets)
+- Live WebSocket prices from `wss://ws-subscriptions-clob.polymarket.com`
+- Dual-format support: handles both mock and real Polymarket response formats
+- Subscription batching (200 tokens per batch), 9s PING interval
+- Rate limiters updated to match official Polymarket per-endpoint limits
+
+### Fixed — Security (41 findings across 3 audit rounds)
+- **CRIT**: Batch SSRF (path allow-list), split/merge internal auth, account deletion race condition
+- **CRIT**: Order idempotency guard (prevents duplicate orders on stream redelivery)
+- **CRIT**: Strategy block config validation (size/price limits on financial actions)
+- **HIGH**: JWT secret validation, admin JWT explicit secret, webhook SSRF blocklist
+- **HIGH**: Admin role guards on cache/notifications/logs (VIEWER blocked)
+- **HIGH**: Rate limiting on financial mutation endpoints
+- **HIGH**: Per-account login lockout (10 failures, 15min)
+- **MED**: Refresh token rotation, GeoBlock enforcement, TOTP lockout, CSRF headers
+
+### Fixed — Performance (72 findings across 3 scan rounds)
+- Whale aggregation N+1 → batch groupBy (101K queries/hr → 3)
+- Price cache buffered writes (per-tick → 5s batch flush)
+- Strategy engine token subscription index (broadcast → targeted)
+- Position reconciler parallel + filtered
+- Vite vendor splitting (main bundle 367KB → 264KB, Recharts separated)
+- 9 database indexes added, leaderboard Redis cache, portfolio MGET
+- PostgreSQL tuning (shared_buffers=512MB, work_mem=16MB)
+
+### Fixed — UX/Design (150+ findings across 2 audit passes)
+- Landing page CSP fix, mobile menu, hero SVG overflow
+- Copy trading page crash fix, fake P&L/strategy counts removed
+- Admin sidebar collapsed badge, TOTP login UI, orders filters
+- All `window.confirm` replaced with in-app modals
+- Image lazy loading, MarketCard memoization, getComputedStyle caching
+
+## [5.2.0] — 2026-03-25
+
+### Fixed — Security Audit Round 10 (13 findings)
+
+**HIGH:**
+- Admin TOTP disable endpoint now requires password + TOTP code re-authentication (`admin-auth-service`)
+- `extractAdminId()` now uses `jwtService.verify()` instead of manual base64 JWT decode
+- Added `ThrottlerModule` + `ThrottlerGuard` to `admin-api-service` (was missing rate limiting entirely)
+- JWT verification cache TTL reduced from 30s to 5s; now checks Redis `pwchange:{userId}` key to prevent post-password-change token reuse
+
+**MEDIUM:**
+- Production startup validation now rejects JWT secrets starting with `dev-` (previously only caught `CHANGE_ME`)
+- Added `@Matches(/^\d{6}$/)` regex validation to admin login TOTP code field
+- Added `Content-Security-Policy` header to gateway nginx dev config
+- Swagger/OpenAPI docs (`/api/v1/docs`) now gated behind `NODE_ENV !== "production"`
+- Replaced O(n) Redis SCAN-based refresh token lookup with O(1) reverse lookup key (`refresh_lookup:{tokenHash}`)
+
+**LOW:**
+- Added `ThrottlerModule` to `bot-service` (was missing rate limiting)
+- Removed `userId` leak from WebSocket `AUTH_OK` responses
+
+### Added
+- `SECURITY.md` — security policy, architecture overview, production checklist
+- `CONTRIBUTING.md` — development guidelines, code conventions, git workflow
+
+### Fixed — Docker Build Errors
+- Removed stale `undici` import from `api-service/internal-client.service.ts`
+- Fixed `walletAddress` → `polymarketAddress` in `order-service/trade-reconciler.service.ts`
+- Added `"FAK"` to `SignOrderRequest.orderType` union type
+- Added `@nestjs/throttler` dependency to `order-service`
+- Added missing `DATABASE_URL` env var to `admin-auth-service` in docker-compose
+
+---
+
 ## [5.1.0] — 2026-03-24
 
 ### Added — Rust WASM Crypto Module

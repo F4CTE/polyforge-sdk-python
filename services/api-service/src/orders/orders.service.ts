@@ -4,6 +4,7 @@ import {
   UnprocessableEntityException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import {
@@ -28,6 +29,7 @@ export class OrdersService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly config: ConfigService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async list(
@@ -207,9 +209,17 @@ export class OrdersService {
     const signerUrl =
       this.config.get<string>("SIGNER_SERVICE_URL") ?? "http://signer-service:3012";
 
+    // SECURITY: Use internal JWT auth for signer-service calls
+    const internalToken = this.jwtService.sign(
+      { sub: "api-service", jti: require("crypto").randomUUID() },
+      { secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"), audience: "signer-service", expiresIn: "30s" },
+    );
     const res = await fetch(`${signerUrl}/internal/split-position`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${internalToken}`,
+      },
       body: JSON.stringify({
         userId,
         tokenId: dto.tokenId,
@@ -248,9 +258,16 @@ export class OrdersService {
     const signerUrl =
       this.config.get<string>("SIGNER_SERVICE_URL") ?? "http://signer-service:3012";
 
+    const mergeToken = this.jwtService.sign(
+      { sub: "api-service", jti: require("crypto").randomUUID() },
+      { secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"), audience: "signer-service", expiresIn: "30s" },
+    );
     const res = await fetch(`${signerUrl}/internal/merge-position`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${mergeToken}`,
+      },
       body: JSON.stringify({
         userId,
         tokenId: dto.tokenId,

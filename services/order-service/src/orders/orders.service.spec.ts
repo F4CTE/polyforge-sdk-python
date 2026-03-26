@@ -36,6 +36,7 @@ const CLOB_FILLED = { orderID: "clob-789", status: "FILLED" };
 function makeMocks() {
   const prisma = {
     order: {
+      findFirst: vi.fn().mockResolvedValue(null), // idempotency check — no existing order
       create: vi.fn().mockResolvedValue({}),
       update: vi.fn().mockResolvedValue({}),
     },
@@ -108,21 +109,15 @@ describe("OrdersService", () => {
       expect(data.outcome).toBe("YES");
     });
 
-    it("updates to SUBMITTED after signing but before CLOB call", async () => {
-      let submittedBeforeClob = false;
-      clob.submitOrder.mockImplementation(async () => {
-        const hasSubmitted = prisma.order.update.mock.calls.some(
-          ([args]: any[]) => args.data?.status === "SUBMITTED",
-        );
-        submittedBeforeClob = hasSubmitted;
-        return CLOB_LIVE;
-      });
-
+    it("updates directly to final status with placedAt in a single consolidated DB call", async () => {
       const p = svc.processIntent(makeIntent());
       await vi.runAllTimersAsync();
       await p;
 
-      expect(submittedBeforeClob).toBe(true);
+      // Consolidated update: PENDING -> final status (no intermediate SUBMITTED step)
+      const updateCall = prisma.order.update.mock.calls[0]?.[0];
+      expect(updateCall?.data?.placedAt).toBeDefined();
+      expect(updateCall?.data?.clobOrderId).toBeDefined();
     });
 
     it("updates to LIVE when CLOB returns status LIVE", async () => {

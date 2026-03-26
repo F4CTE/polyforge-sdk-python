@@ -41,9 +41,7 @@ export function AppLayout() {
           </div>
         </div>
         <main className="flex-1 overflow-y-auto">
-          <div className="animate-fade-in">
-            <Outlet />
-          </div>
+          <Outlet />
         </main>
       </div>
 

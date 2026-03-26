@@ -32,6 +32,10 @@ export class PriceCacheService {
   private readonly snapshotBuffer = new Map<string, PendingSnapshot>();
   private flushTimer: NodeJS.Timeout | null = null;
 
+  // Buffer for batching token price DB updates (instead of one write per tick)
+  private readonly priceUpdateBuffer = new Map<string, number>();
+  private priceFlushTimer: NodeJS.Timeout | null = null;
+
   // Data gap detection: tracks last update per tokenId
   private readonly lastUpdateMs = new Map<string, number>();
   private readonly GAP_THRESHOLD_MS = 30_000; // 30s without update = gap
@@ -41,6 +45,7 @@ export class PriceCacheService {
     private readonly prisma: PrismaService,
   ) {
     this.startFlushTimer();
+    this.startPriceFlushTimer();
     this.startGapDetection();
   }
 
@@ -57,15 +62,8 @@ export class PriceCacheService {
       PRICE_TTL,
     );
 
-    // Update token price in DB (non-blocking)
-    this.prisma.token
-      .updateMany({
-        where: { id: tokenId },
-        data: { price },
-      })
-      .catch((err) =>
-        this.logger.error(`Failed to update token price for ${tokenId}`, err),
-      );
+    // Buffer token price for batched DB write (every 5s instead of per-tick)
+    this.priceUpdateBuffer.set(tokenId, price);
 
     // Buffer for TimescaleDB snapshot
     this.bufferSnapshot(tokenId, price, timestamp);
@@ -114,14 +112,41 @@ export class PriceCacheService {
     );
   }
 
+  private startPriceFlushTimer() {
+    this.priceFlushTimer = setInterval(
+      () => void this.flushPriceUpdates(),
+      SNAPSHOT_FLUSH_MS,
+    );
+  }
+
+  /** Batch-flush buffered token prices to DB every 5s instead of per-tick */
+  private async flushPriceUpdates() {
+    if (this.priceUpdateBuffer.size === 0) return;
+    const entries = [...this.priceUpdateBuffer.entries()];
+    this.priceUpdateBuffer.clear();
+    try {
+      await this.prisma.$transaction(
+        entries.map(([id, price]) =>
+          this.prisma.token.updateMany({ where: { id }, data: { price } }),
+        ),
+      );
+    } catch (err) {
+      this.logger.error(`Failed to flush ${entries.length} token price updates`, err);
+    }
+  }
+
   private async flushSnapshots() {
     if (this.snapshotBuffer.size === 0) return;
 
-    const snapshots = [...this.snapshotBuffer.values()].slice(
+    // Fix: only delete flushed entries, not the entire buffer
+    const entries = [...this.snapshotBuffer.entries()].slice(
       0,
       SNAPSHOT_BATCH_SIZE,
     );
-    this.snapshotBuffer.clear();
+    const snapshots = entries.map(([, v]) => v);
+    for (const [key] of entries) {
+      this.snapshotBuffer.delete(key);
+    }
 
     try {
       await this.prisma.priceSnapshot.createMany({
