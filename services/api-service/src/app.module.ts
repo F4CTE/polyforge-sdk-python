@@ -29,6 +29,7 @@ import { BatchModule } from "./batch/batch.module";
 import { ActionsModule } from "./actions/actions.module";
 import { WebhooksModule } from "./webhooks/webhooks.module";
 import { AiModule } from "./ai/ai.module";
+import { ApiKeysModule } from "./api-keys/api-keys.module";
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { AiModule } from "./ai/ai.module";
     ActionsModule,
     WebhooksModule,
     AiModule,
+    ApiKeysModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ApiKeyThrottlerGuard }],
