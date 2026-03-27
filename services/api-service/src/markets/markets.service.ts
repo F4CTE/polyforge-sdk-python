@@ -77,27 +77,57 @@ export class MarketsService implements OnModuleInit {
       await this.redis.set(countCacheKey, String(total), 600); // 10 min TTL
     }
 
-    // Two-step query: fetch market IDs with index-only scan, then batch-load with tokens
-    const marketRows = await this.prisma.market.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy,
-      select: { id: true },
-    });
+    // Single raw SQL query — Prisma ORM adds ~5-15s overhead on resource-limited hosts
+    const orderCol =
+      sort === "endDate" || sort === "closing_soon" ? "m.\"endDate\" ASC NULLS LAST"
+      : sort === "firstSeenAt" || sort === "newest" ? "m.\"firstSeenAt\" DESC"
+      : "m.volume24h DESC";
 
-    // Batch-load full market data with tokens for the small page of IDs
-    const markets = marketRows.length > 0
-      ? await this.prisma.market.findMany({
-          where: { id: { in: marketRows.map((m) => m.id) } },
-          orderBy,
-          include: { tokens: true },
-        })
-      : [];
+    let whereClause = "WHERE 1=1";
+    const params: any[] = [];
+    let paramIdx = 1;
 
-    const result = paginate(markets, total, page, limit);
+    if (search) {
+      whereClause += ` AND (m.title ILIKE $${paramIdx} OR m.\"seriesSlug\" ILIKE $${paramIdx})`;
+      params.push(`%${search}%`);
+      paramIdx++;
+    }
+    if (category) {
+      whereClause += ` AND m.category = $${paramIdx}`;
+      params.push(category);
+      paramIdx++;
+    }
+    if (closed !== undefined) {
+      whereClause += ` AND m.closed = $${paramIdx}`;
+      params.push(closed);
+      paramIdx++;
+    }
 
-    // Cache for 120 seconds (market data changes slowly)
+    const rows: any[] = await this.prisma.$queryRawUnsafe(`
+      SELECT
+        m.id, m.slug, m.title, m.description, m.category, m.image,
+        m."seriesSlug", m."endDate", m.closed, m."negRisk",
+        m.volume24h, m."firstSeenAt", m."lastUpdatedAt",
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', t.id, 'marketId', t."marketId",
+              'outcome', t.outcome, 'price', t.price, 'liquidity', t.liquidity
+            )
+          ) FILTER (WHERE t.id IS NOT NULL),
+          '[]'::json
+        ) AS tokens
+      FROM markets m
+      LEFT JOIN tokens t ON t."marketId" = m.id
+      ${whereClause}
+      GROUP BY m.id
+      ORDER BY ${orderCol}
+      LIMIT $${paramIdx} OFFSET $${paramIdx + 1}
+    `, ...params, limit, skip);
+
+    const result = paginate(rows, total, page, limit);
+
+    // Cache for 120 seconds
     await this.redis.set(cacheKey, JSON.stringify(result), 120);
 
     return result;
