@@ -23,6 +23,7 @@ from polyforge.models import (
     NewsSignal,
     Order,
     PaginatedResponse,
+    PlaceOrderResponse,
     Portfolio,
     Position,
     Strategy,
@@ -170,6 +171,11 @@ class PolyforgeClient:
         _raise_for_status(resp)
         return resp.json()
 
+    def _delete(self, path: str) -> Any:
+        resp = self._client.delete(path)
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Markets --
 
     def list_markets(
@@ -241,6 +247,36 @@ class PolyforgeClient:
 
     def get_score(self) -> TraderScore:
         return _parse(TraderScore, self._get("/api/score"))
+
+    # -- Direct Trading --
+
+    def place_order(
+        self,
+        token_id: str,
+        side: str,
+        outcome: str,
+        size: float,
+        price: float,
+        order_type: str = "GTC",
+    ) -> PlaceOrderResponse:
+        """Place a direct buy or sell order on a prediction market."""
+        data = self._post("/api/v1/orders/place", json={
+            "tokenId": token_id,
+            "side": side,
+            "outcome": outcome,
+            "size": size,
+            "price": price,
+            "orderType": order_type,
+        })
+        return PlaceOrderResponse(
+            order_id=data["orderId"],
+            intent_id=data["intentId"],
+            status=data["status"],
+        )
+
+    def cancel_order(self, order_id: str) -> dict:
+        """Cancel a pending or live order."""
+        return self._delete(f"/api/v1/orders/{order_id}")
 
     # -- Social & Signals --
 
@@ -335,6 +371,11 @@ class AsyncPolyforgeClient:
         _raise_for_status(resp)
         return resp.json()
 
+    async def _delete(self, path: str) -> Any:
+        resp = await self._client.delete(path)
+        _raise_for_status(resp)
+        return resp.json()
+
     # -- Markets --
 
     async def list_markets(
@@ -406,6 +447,36 @@ class AsyncPolyforgeClient:
 
     async def get_score(self) -> TraderScore:
         return _parse(TraderScore, await self._get("/api/score"))
+
+    # -- Direct Trading --
+
+    async def place_order(
+        self,
+        token_id: str,
+        side: str,
+        outcome: str,
+        size: float,
+        price: float,
+        order_type: str = "GTC",
+    ) -> PlaceOrderResponse:
+        """Place a direct buy or sell order on a prediction market."""
+        data = await self._post("/api/v1/orders/place", json={
+            "tokenId": token_id,
+            "side": side,
+            "outcome": outcome,
+            "size": size,
+            "price": price,
+            "orderType": order_type,
+        })
+        return PlaceOrderResponse(
+            order_id=data["orderId"],
+            intent_id=data["intentId"],
+            status=data["status"],
+        )
+
+    async def cancel_order(self, order_id: str) -> dict:
+        """Cancel a pending or live order."""
+        return await self._delete(f"/api/v1/orders/{order_id}")
 
     # -- Social & Signals --
 

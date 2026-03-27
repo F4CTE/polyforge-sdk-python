@@ -247,3 +247,16 @@ class AiQueryResponse:
     confidence: float = 0.0
     sources: list[str] = field(default_factory=list)
     suggested_actions: list[dict[str, Any]] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Direct Trading
+# ---------------------------------------------------------------------------
+
+@dataclass
+class PlaceOrderResponse:
+    """Response from placing a direct order."""
+
+    order_id: str = ""
+    intent_id: str = ""
+    status: str = ""
