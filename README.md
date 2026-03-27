@@ -11,7 +11,8 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Market detail page** — Stats bar and "Run Strategy" dialog with strategy selector
 - **Support ticket system** — User-to-admin tickets with assignment, priority, reminders, and email notifications
 - **Real-time updates** — WebSocket-driven order fills, strategy events, notification bell, and ticket polling
-- **API key management** — Generate scoped API keys (READ / WRITE / TRADE) for external tool integration, AI agents, and programmatic access
+- **Dual registration flow** — Invite-gated and approval-gated registration coexist: users can join with an invite code or register for admin approval (PENDING status), with email notifications at each step
+- **API key management** — Full CRUD lifecycle for scoped API keys (READ / WRITE / TRADE) for external tool integration, AI agents, and programmatic access
 - **Interactive UI** — Tooltips, drag-and-drop reordering, sparkline charts, hover effects, page animations
 - **Dark/light theme toggle** — Sun/moon switcher with localStorage persistence on both user-app and admin-app
 - **API documentation page** — Interactive API reference at `/api-docs` in user-app

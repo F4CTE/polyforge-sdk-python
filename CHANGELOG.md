@@ -5,6 +5,35 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.2.0] — 2026-03-27
+
+### Added
+- Approval-gated registration for beta access — users can register without invite code, account is created as PENDING, admin approves via dashboard, user receives email notification
+- Both invite-gated and approval-gated flows coexist when INVITE_ONLY=true
+- Pending approval page (/pending-approval) in user app
+- Admin approve/reject buttons on Users page with PENDING status filter
+- Email templates: "pending approval" and "account approved" notifications
+- API Keys CRUD module (GET/POST/DELETE /api/v1/api-keys)
+- Profile update endpoints (PATCH /profile/me, POST /profile/password, PATCH /profile/notifications)
+- Global 401 interceptor — auto-redirect to login with "session expired" banner instead of raw errors
+- Strategy builder minimap glassmorphism styling
+
+### Fixed
+- Email verification: token sent in POST body instead of query string (was broken)
+- Portfolio PnL 500 error: replaced TimescaleDB time_bucket with DATE_TRUNC fallback
+- Admin audit logs 500: BigInt JSON serialization
+- Strategy builder crash: downgraded user-app to React 18 for xyflow compatibility
+- Markets endpoint performance: raw SQL + pg_class estimated count + gzip compression (25s → 5ms cached)
+- Session expiry: global fetch interceptor redirects to login with notification
+- INVITE_ONLY was set to false in .env despite intent
+
+### Changed
+- Markets query uses raw SQL instead of Prisma ORM for 5x cold performance improvement
+- API service compression switched from brotli to gzip (4-5s CPU savings per response)
+- Cache TTL increased to 120s for market list, 600s for count queries
+
+---
+
 ## [6.1.0] — 2026-03-26
 
 ### Improved — UI/UX Design (50 fixes)
