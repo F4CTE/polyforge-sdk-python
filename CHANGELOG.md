@@ -1,0 +1,18 @@
+# Changelog
+
+## [1.1.0] — 2026-03-27
+
+### Added
+- `place_order()` — place direct buy/sell orders
+- `cancel_order()` — cancel pending or live orders
+- `PlaceOrderResponse` model
+- Both sync and async clients updated
+
+## [1.0.0] — 2026-03-27
+
+### Added
+- Initial release — typed REST client for Polyforge API
+- `PolyforgeClient` (sync) and `AsyncPolyforgeClient` (async) via httpx
+- 20 methods covering all API endpoints
+- PEP 561 type stubs (py.typed)
+- Error hierarchy: `PolyforgeError`, `AuthenticationError`, `NotFoundError`, `RateLimitError`
