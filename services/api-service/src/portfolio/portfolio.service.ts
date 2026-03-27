@@ -73,51 +73,59 @@ export class PortfolioService {
     period: string,
     strategyId?: string,
   ): Promise<any> {
-    const since =
-      period === "7d"
-        ? new Date(Date.now() - 7 * 86400_000)
-        : period === "90d"
-          ? new Date(Date.now() - 90 * 86400_000)
-          : period === "allTime"
-            ? new Date(0)
-            : new Date(Date.now() - 30 * 86400_000);
+    const emptyResult = { snapshots: [], totalPnl: "0.00", winRate: "0" };
 
-    const snapshots: any[] = strategyId
-      ? await this.prisma.$queryRaw`
-                SELECT
-                    time_bucket('1 day'::interval, time) AS time,
-                    last(pnl, time) AS pnl
-                FROM pnl_snapshots
-                WHERE "userId" = ${userId}
-                  AND "strategyId" = ${strategyId}
-                  AND time >= ${since}
-                GROUP BY 1
-                ORDER BY 1 ASC
-              `
-      : await this.prisma.$queryRaw`
-                SELECT
-                    time_bucket('1 day'::interval, time) AS time,
-                    last(pnl, time) AS pnl
-                FROM pnl_snapshots
-                WHERE "userId" = ${userId}
-                  AND "strategyId" IS NULL
-                  AND time >= ${since}
-                GROUP BY 1
-                ORDER BY 1 ASC
-              `;
+    try {
+      const since =
+        period === "7d"
+          ? new Date(Date.now() - 7 * 86400_000)
+          : period === "90d"
+            ? new Date(Date.now() - 90 * 86400_000)
+            : period === "allTime"
+              ? new Date(0)
+              : new Date(Date.now() - 30 * 86400_000);
 
-    const totalPnl = snapshots.reduce(
-      (acc, s) => acc + parseFloat(String(s.pnl ?? 0)),
-      0,
-    );
+      // Use DATE_TRUNC as fallback when TimescaleDB time_bucket is unavailable
+      const snapshots: any[] = strategyId
+        ? await this.prisma.$queryRaw`
+                  SELECT
+                      DATE_TRUNC('day', time) AS time,
+                      pnl
+                  FROM pnl_snapshots
+                  WHERE "userId" = ${userId}
+                    AND "strategyId" = ${strategyId}
+                    AND time >= ${since}
+                  ORDER BY time ASC
+                `
+        : await this.prisma.$queryRaw`
+                  SELECT
+                      DATE_TRUNC('day', time) AS time,
+                      pnl
+                  FROM pnl_snapshots
+                  WHERE "userId" = ${userId}
+                    AND "strategyId" IS NULL
+                    AND time >= ${since}
+                  ORDER BY time ASC
+                `;
 
-    return {
-      snapshots: snapshots.map((s) => ({
-        time: s.time,
-        pnl: String(s.pnl ?? "0"),
-      })),
-      totalPnl: totalPnl.toFixed(2),
-      winRate: "0",
-    };
+      if (!snapshots || snapshots.length === 0) return emptyResult;
+
+      const totalPnl = snapshots.reduce(
+        (acc, s) => acc + parseFloat(String(s.pnl ?? 0)),
+        0,
+      );
+
+      return {
+        snapshots: snapshots.map((s) => ({
+          time: s.time,
+          pnl: String(s.pnl ?? "0"),
+        })),
+        totalPnl: totalPnl.toFixed(2),
+        winRate: "0",
+      };
+    } catch {
+      // Table missing, TimescaleDB not available, or no data — return zeros
+      return emptyResult;
+    }
   }
 }

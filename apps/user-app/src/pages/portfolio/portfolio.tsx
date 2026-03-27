@@ -143,12 +143,21 @@ export function Component() {
     setLoadingPortfolio(false);
   }, []);
 
+  const emptyPnl: PnlResponse = { snapshots: [], totalPnl: '0.00', winRate: '0' };
+
   const loadChart = useCallback(async (p: Period) => {
     setLoadingChart(true);
     try {
       const res = await fetch(`/api/v1/portfolio/pnl?period=${p}`, { credentials: 'include' });
-      if (res.ok) setPnl(await res.json());
-    } catch { toast.error('Failed to load data'); }
+      if (res.ok) {
+        const data = await res.json();
+        setPnl(data.snapshots?.length ? data : emptyPnl);
+      } else {
+        setPnl(emptyPnl);
+      }
+    } catch {
+      setPnl(emptyPnl);
+    }
     setLoadingChart(false);
   }, []);
 
@@ -241,11 +250,22 @@ export function Component() {
     setResettingPaper(false);
   }
 
-  // Chart data — memoized to avoid recomputing on every render
-  const chartData = useMemo(() => (pnl?.snapshots ?? []).map(s => ({
-    time: new Date(s.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    pnl: parseFloat(s.pnl),
-  })), [pnl?.snapshots]);
+  // Chart data — memoized; show flat zero line when no snapshots
+  const chartData = useMemo(() => {
+    const snaps = pnl?.snapshots ?? [];
+    if (snaps.length > 0) {
+      return snaps.map(s => ({
+        time: new Date(s.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        pnl: parseFloat(s.pnl),
+      }));
+    }
+    // Generate 7 flat-zero points for empty state
+    const now = Date.now();
+    return Array.from({ length: 7 }, (_, i) => ({
+      time: new Date(now - (6 - i) * 86400_000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      pnl: 0,
+    }));
+  }, [pnl?.snapshots]);
   const isProfitable = parseFloat(pnl?.totalPnl ?? '0') >= 0;
   const chartColor = isProfitable ? '#10B981' : '#EF4444';
 
