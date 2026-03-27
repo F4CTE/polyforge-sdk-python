@@ -20,7 +20,7 @@ import {
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
 interface MarketToken {
-  tokenId: string;
+  id: string;
   outcome: string;
   price: string;
   liquidity: string;
@@ -206,7 +206,7 @@ const MarketCard = memo(function MarketCard({ market, featured }: { market: Mark
         /* Multi-outcome */
         <div className="space-y-1.5">
           {market.tokens.slice(0, 4).map((token) => (
-            <div key={token.tokenId} className="flex items-center gap-2 text-xs">
+            <div key={token.id} className="flex items-center gap-2 text-xs">
               <span className="w-20 truncate text-pf-text-secondary">{token.outcome}</span>
               <div className="flex-1 h-1.5 bg-pf-overlay rounded-full overflow-hidden">
                 <div

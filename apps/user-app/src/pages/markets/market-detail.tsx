@@ -27,7 +27,7 @@ import {
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
 interface MarketToken {
-  tokenId: string;
+  id: string;
   outcome: string;
   price: string;
   liquidity: string;
@@ -114,7 +114,8 @@ function daysUntil(dateStr: string): number {
   return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86_400_000);
 }
 
-function totalLiquidity(tokens: MarketToken[]): string {
+function totalLiquidity(tokens: MarketToken[] | undefined): string {
+  if (!tokens) return '$0';
   const v = tokens.reduce((sum, t) => sum + parseFloat(t.liquidity || '0'), 0);
   if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1_000) return `$${(v / 1_000).toFixed(1)}K`;
@@ -256,10 +257,10 @@ export function Component() {
   useEffect(() => {
     if (!market) return;
     let cancelled = false;
-    const yesToken = market.tokens.find((t) => t.outcome === 'YES');
+    const yesToken = (market.tokens ?? []).find((t) => t.outcome === 'YES');
     if (yesToken) {
-      loadChart(yesToken.tokenId, resolution);
-      loadBook(yesToken.tokenId);
+      loadChart(yesToken.id, resolution);
+      loadBook(yesToken.id);
     }
     return () => { cancelled = true; };
   }, [market, resolution, loadChart, loadBook]);
@@ -272,7 +273,7 @@ export function Component() {
     fetch(`/api/v1/news/signals?market=${id}&limit=3`, { credentials: 'include' })
       .then(r => r.json())
       .then((data: { data: RelatedNewsSignal[] }) => {
-        if (!cancelled) { setRelatedNews(data.data); setLoadingNews(false); }
+        if (!cancelled) { setRelatedNews(data?.data ?? []); setLoadingNews(false); }
       })
       .catch(() => { if (!cancelled) setLoadingNews(false); });
     return () => { cancelled = true; };
@@ -281,8 +282,8 @@ export function Component() {
   // When resolution changes
   function onResolutionChange(res: Resolution) {
     setResolution(res);
-    const yesToken = market?.tokens.find((t) => t.outcome === 'YES');
-    if (yesToken) loadChart(yesToken.tokenId, res);
+    const yesToken = (market?.tokens ?? []).find((t) => t.outcome === 'YES');
+    if (yesToken) loadChart(yesToken.id, res);
   }
 
   // Load strategy options when dialog opens
@@ -320,7 +321,7 @@ export function Component() {
   async function submitConditional() {
     if (!market || !condSize || !condTriggerPrice) return;
     setCondSubmitting(true);
-    const token = market.tokens.find((t) => t.outcome === condOutcome);
+    const token = (market.tokens ?? []).find((t) => t.outcome === condOutcome);
     if (!token) { setCondSubmitting(false); return; }
     try {
       const res = await fetch('/api/v1/orders/conditional', {
@@ -329,7 +330,7 @@ export function Component() {
         credentials: 'include',
         body: JSON.stringify({
           marketId: market.id,
-          tokenId: token.tokenId,
+          tokenId: token.id,
           type: condType,
           side: 'BUY',
           outcome: condOutcome,
@@ -349,8 +350,8 @@ export function Component() {
     setCondSubmitting(false);
   }
 
-  const yesPrice = market?.tokens.find((t) => t.outcome === 'YES')?.price ?? null;
-  const noPrice = market?.tokens.find((t) => t.outcome === 'NO')?.price ?? null;
+  const yesPrice = (market?.tokens ?? []).find((t) => t.outcome === 'YES')?.price ?? null;
+  const noPrice = (market?.tokens ?? []).find((t) => t.outcome === 'NO')?.price ?? null;
   const days = market ? daysUntil(market.endDate) : 0;
 
   return (
@@ -555,8 +556,8 @@ export function Component() {
                     No price data available for this resolution
                     <button
                       onClick={() => {
-                        const yesToken = market?.tokens.find((t) => t.outcome === 'YES');
-                        if (yesToken) loadChart(yesToken.tokenId, resolution);
+                        const yesToken = (market?.tokens ?? []).find((t) => t.outcome === 'YES');
+                        if (yesToken) loadChart(yesToken.id, resolution);
                       }}
                       className="mt-2 px-3 py-1 rounded-pf text-xs bg-pf-overlay hover:bg-pf-border transition-colors"
                     >
