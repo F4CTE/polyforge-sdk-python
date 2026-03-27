@@ -23,9 +23,11 @@ export function Component() {
 
     async function verify() {
       try {
-        const res = await fetch(`/auth/v1/verify-email?token=${encodeURIComponent(token!)}`, {
+        const res = await fetch('/auth/v1/verify-email', {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
+          body: JSON.stringify({ token }),
         });
         if (cancelled) return;
         if (res.ok) {
