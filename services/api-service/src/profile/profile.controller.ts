@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Patch, Param, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { ProfileService } from "./profile.service";
@@ -9,6 +9,30 @@ import { ProfileService } from "./profile.service";
 @UseGuards(JwtAuthGuard)
 export class ProfileController {
   constructor(private readonly profile: ProfileService) {}
+
+  @Patch("me")
+  updateMyProfile(
+    @CurrentUser() user: any,
+    @Body() dto: { displayName?: string; bio?: string; avatarUrl?: string },
+  ) {
+    return this.profile.updateProfile(user.sub, dto);
+  }
+
+  @Post("password")
+  changePassword(
+    @CurrentUser() user: any,
+    @Body() dto: { currentPassword: string; newPassword: string },
+  ) {
+    return this.profile.changePassword(user.sub, dto);
+  }
+
+  @Patch("notifications")
+  updateNotifications(
+    @CurrentUser() user: any,
+    @Body() dto: Record<string, boolean>,
+  ) {
+    return this.profile.updateNotifications(user.sub, dto);
+  }
 
   @Get(":username")
   getProfile(@Param("username") username: string, @CurrentUser() user: any) {
