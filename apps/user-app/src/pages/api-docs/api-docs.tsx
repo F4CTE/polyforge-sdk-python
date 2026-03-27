@@ -90,12 +90,40 @@ const CATEGORIES: EndpointCategory[] = [
     ],
   },
   {
+    title: 'Trading',
+    endpoints: [
+      { method: 'POST', path: '/api/v1/orders/place', scope: 'TRADE', description: 'Place a direct buy or sell order on a market. Supports limit (GTC) and market (FOK) orders.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/orders/place \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"tokenId": "tok_abc", "side": "BUY", "outcome": "YES", "size": 10, "price": 0.65, "orderType": "GTC"}\'' },
+      { method: 'DELETE', path: '/api/v1/orders/:id', scope: 'TRADE', description: 'Cancel a pending or live order.',
+        curl: 'curl -X DELETE https://api.polyforge.app/api/v1/orders/ord_abc123 \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'POST', path: '/api/v1/orders/close-position', scope: 'TRADE', description: 'Close an open position by selling at market price.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/orders/close-position \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"tokenId": "tok_abc123"}\'' },
+      { method: 'POST', path: '/api/v1/orders/redeem', scope: 'TRADE', description: 'Redeem a resolved position to claim winnings.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/orders/redeem \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"positionId": "pos_abc123"}\'' },
+      { method: 'POST', path: '/api/v1/orders/split', scope: 'TRADE', description: 'Split USDC.e into YES + NO tokens for a market.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/orders/split \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"marketId": "mkt_abc", "amount": 100}\'' },
+      { method: 'POST', path: '/api/v1/orders/merge', scope: 'TRADE', description: 'Merge YES + NO tokens back into USDC.e.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/orders/merge \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"marketId": "mkt_abc", "amount": 100}\'' },
+    ],
+  },
+  {
     title: 'Orders',
     endpoints: [
-      { method: 'GET', path: '/api/v1/orders', scope: 'READ', description: 'List your orders with optional filtering.', queryParams: 'status, page, limit',
+      { method: 'GET', path: '/api/v1/orders', scope: 'READ', description: 'List your orders with optional filtering.', queryParams: 'status, strategyId, page, limit',
         curl: 'curl -X GET "https://api.polyforge.app/api/v1/orders?status=filled&limit=50" \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
-      { method: 'POST', path: '/api/v1/orders/close-position', scope: 'TRADE', description: 'Close an open position by selling at market.',
-        curl: 'curl -X POST https://api.polyforge.app/api/v1/orders/close-position \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"positionId": "pos_abc123"}\'' },
+    ],
+  },
+  {
+    title: 'Conditional Orders',
+    endpoints: [
+      { method: 'POST', path: '/api/v1/orders/conditional', scope: 'TRADE', description: 'Create a conditional order (take profit, stop loss, trailing stop, limit, or pegged).',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/orders/conditional \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"tokenId": "tok_abc", "type": "STOP_LOSS", "side": "SELL", "outcome": "YES", "size": 10, "triggerPrice": 0.40}\'' },
+      { method: 'GET', path: '/api/v1/orders/conditional', scope: 'READ', description: 'List your conditional orders.', queryParams: 'status, type, page, limit',
+        curl: 'curl -X GET "https://api.polyforge.app/api/v1/orders/conditional?status=ACTIVE" \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'GET', path: '/api/v1/orders/conditional/:id', scope: 'READ', description: 'Get details of a conditional order.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/orders/conditional/co_abc123 \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'DELETE', path: '/api/v1/orders/conditional/:id', scope: 'TRADE', description: 'Cancel an active conditional order.',
+        curl: 'curl -X DELETE https://api.polyforge.app/api/v1/orders/conditional/co_abc123 \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
     ],
   },
   {
@@ -134,6 +162,69 @@ const CATEGORIES: EndpointCategory[] = [
     endpoints: [
       { method: 'GET', path: '/api/v1/profile/:username', scope: 'READ', description: 'Get a user profile including public strategies and stats.',
         curl: 'curl -X GET https://api.polyforge.app/api/v1/profile/alphatrader \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+    ],
+  },
+  {
+    title: 'Copy Trading',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/copy', scope: 'READ', description: 'List your copy trading configurations.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/copy \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'POST', path: '/api/v1/copy', scope: 'TRADE', description: 'Create a new copy trading configuration to follow a wallet.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/copy \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"walletAddress": "0x...", "maxSize": 100, "scaling": 0.5}\'' },
+      { method: 'DELETE', path: '/api/v1/copy/:id', scope: 'TRADE', description: 'Stop and delete a copy trading configuration.',
+        curl: 'curl -X DELETE https://api.polyforge.app/api/v1/copy/copy_abc123 \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+    ],
+  },
+  {
+    title: 'Webhooks',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/webhooks', scope: 'READ', description: 'List your registered webhook endpoints.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/webhooks \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'POST', path: '/api/v1/webhooks', scope: 'WRITE', description: 'Register a webhook for event notifications. Events: ORDER_FILLED, STRATEGY_ERROR, WHALE_TRADE, NEWS_SIGNAL, PRICE_ALERT, MARKET_RESOLVED.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/webhooks \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"url": "https://example.com/hook", "events": ["ORDER_FILLED", "PRICE_ALERT"]}\'' },
+      { method: 'DELETE', path: '/api/v1/webhooks/:id', scope: 'WRITE', description: 'Unregister a webhook endpoint.',
+        curl: 'curl -X DELETE https://api.polyforge.app/api/v1/webhooks/wh_abc123 \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+    ],
+  },
+  {
+    title: 'Whale Feed',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/whales/feed', scope: 'READ', description: 'Get recent whale trades (large trades on Polymarket).', queryParams: 'minSize',
+        curl: 'curl -X GET "https://api.polyforge.app/api/v1/whales/feed?minSize=50000" \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+    ],
+  },
+  {
+    title: 'News & Signals',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/news/signals', scope: 'READ', description: 'Get AI-generated trading signals from news analysis.', queryParams: 'minConfidence',
+        curl: 'curl -X GET "https://api.polyforge.app/api/v1/news/signals?minConfidence=80" \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+    ],
+  },
+  {
+    title: 'Scores & Leaderboard',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/scores/me', scope: 'READ', description: 'Get your trader edge score, rank, and earned badges.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/scores/me \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+    ],
+  },
+  {
+    title: 'Profile',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/profile/:username', scope: 'READ', description: 'Get a public user profile including stats and public strategies.',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/profile/alphatrader \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'PATCH', path: '/api/v1/auth/me', scope: 'WRITE', description: 'Update your profile (username, avatar, bio).',
+        curl: 'curl -X PATCH https://api.polyforge.app/api/v1/auth/me \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"username": "newname", "bio": "Prediction market trader"}\'' },
+    ],
+  },
+  {
+    title: 'API Keys',
+    endpoints: [
+      { method: 'GET', path: '/api/v1/api-keys', scope: 'READ', description: 'List your API keys (key value is masked after creation).',
+        curl: 'curl -X GET https://api.polyforge.app/api/v1/api-keys \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
+      { method: 'POST', path: '/api/v1/api-keys', scope: 'WRITE', description: 'Create a new API key with specified scopes. The full key is only returned once.',
+        curl: 'curl -X POST https://api.polyforge.app/api/v1/api-keys \\\n  -H "Authorization: Bearer pf_live_abc123..." \\\n  -H "Content-Type: application/json" \\\n  -d \'{"name": "My Bot", "scopes": ["READ", "TRADE"]}\'' },
+      { method: 'DELETE', path: '/api/v1/api-keys/:id', scope: 'WRITE', description: 'Revoke an API key permanently.',
+        curl: 'curl -X DELETE https://api.polyforge.app/api/v1/api-keys/key_abc123 \\\n  -H "Authorization: Bearer pf_live_abc123..."' },
     ],
   },
   {
@@ -190,7 +281,7 @@ export function Component() {
           {[
             { scope: 'READ', desc: 'View data: markets, portfolio, strategies, orders, alerts, backtests, profiles' },
             { scope: 'WRITE', desc: 'Modify strategies, settings, alerts, and start backtests' },
-            { scope: 'TRADE', desc: 'Place orders, start/stop/pause/resume strategies, close positions' },
+            { scope: 'TRADE', desc: 'Place and cancel orders, start/stop strategies, close positions, manage copy trading' },
           ].map(s => {
             const ss = SCOPE_STYLES[s.scope];
             return (
@@ -293,38 +384,110 @@ export function Component() {
         <h2 className="text-lg font-semibold text-pf-text">Code Examples</h2>
 
         <div>
-          <h3 className="text-sm font-semibold text-pf-text mb-2">1. List your strategies</h3>
+          <h3 className="text-sm font-semibold text-pf-text mb-2">1. Place a direct order</h3>
           <p className="text-[11px] text-pf-text-muted mb-1">curl</p>
           <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap mb-3">
-{`curl -X GET https://api.polyforge.app/api/v1/strategies \\
-  -H "Authorization: Bearer pf_live_abc123..."`}
+{`curl -X POST https://api.polyforge.app/api/v1/orders/place \\
+  -H "Authorization: Bearer pf_live_abc123..." \\
+  -H "Content-Type: application/json" \\
+  -d '{"tokenId":"tok_yes_abc","side":"BUY","outcome":"YES","size":10,"price":0.65}'`}
           </pre>
-          <p className="text-[11px] text-pf-text-muted mb-1">JavaScript (fetch)</p>
-          <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap">
-{`const res = await fetch('https://api.polyforge.app/api/v1/strategies', {
-  headers: { 'Authorization': 'Bearer pf_live_abc123...' }
+          <p className="text-[11px] text-pf-text-muted mb-1">TypeScript (@polyforge/sdk)</p>
+          <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap mb-3">
+{`import { PolyforgeClient } from '@polyforge/sdk';
+
+const pf = new PolyforgeClient({ apiKey: 'pf_live_abc123...' });
+const order = await pf.placeOrder({
+  tokenId: 'tok_yes_abc',
+  side: 'BUY',
+  outcome: 'YES',
+  size: 10,
+  price: 0.65,
 });
-const strategies = await res.json();`}
+console.log('Order placed:', order.orderId);`}
+          </pre>
+          <p className="text-[11px] text-pf-text-muted mb-1">Python (polyforge)</p>
+          <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap">
+{`from polyforge import PolyforgeClient
+
+pf = PolyforgeClient(api_key="pf_live_abc123...")
+order = pf.place_order(
+    token_id="tok_yes_abc",
+    side="BUY",
+    outcome="YES",
+    size=10,
+    price=0.65,
+)
+print(f"Order placed: {order.order_id}")`}
           </pre>
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold text-pf-text mb-2">2. Start a strategy</h3>
+          <h3 className="text-sm font-semibold text-pf-text mb-2">2. List markets and browse</h3>
+          <p className="text-[11px] text-pf-text-muted mb-1">TypeScript</p>
+          <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap">
+{`const markets = await pf.listMarkets({ search: 'election', limit: 5 });
+for (const m of markets.data) {
+  console.log(m.title, m.tokens[0]?.price);
+}`}
+          </pre>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-pf-text mb-2">3. Start a strategy in paper mode</h3>
           <p className="text-[11px] text-pf-text-muted mb-1">curl</p>
           <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap">
 {`curl -X POST https://api.polyforge.app/api/v1/strategies/strat_123/start \\
-  -H "Authorization: Bearer pf_live_abc123..."`}
+  -H "Authorization: Bearer pf_live_abc123..." \\
+  -H "Content-Type: application/json" \\
+  -d '{"mode":"paper"}'`}
           </pre>
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold text-pf-text mb-2">3. Get portfolio P&L</h3>
-          <p className="text-[11px] text-pf-text-muted mb-1">curl</p>
+          <h3 className="text-sm font-semibold text-pf-text mb-2">4. Get portfolio P&L</h3>
+          <p className="text-[11px] text-pf-text-muted mb-1">Python</p>
           <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap">
-{`curl -X GET https://api.polyforge.app/api/v1/portfolio/pnl \\
-  -H "Authorization: Bearer pf_live_abc123..."`}
+{`portfolio = pf.get_portfolio()
+for pos in portfolio.positions:
+    print(f"{pos.outcome}: {pos.size} shares @ {pos.avg_price}")`}
           </pre>
         </div>
+      </section>
+
+      {/* SDKs */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-pf-text">Official SDKs</h2>
+        <p className="text-sm text-pf-text-secondary leading-relaxed">
+          Use our typed SDKs for a better developer experience:
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { lang: 'TypeScript', pkg: 'npm install @polyforge/sdk', color: 'text-blue-400' },
+            { lang: 'Python', pkg: 'pip install polyforge', color: 'text-yellow-400' },
+            { lang: 'Rust', pkg: 'cargo add polyforge', color: 'text-orange-400' },
+          ].map(sdk => (
+            <div key={sdk.lang} className="bg-pf-elevated border border-pf-border rounded-pf p-3">
+              <p className={`text-sm font-semibold ${sdk.color} mb-1`}>{sdk.lang}</p>
+              <code className="text-[11px] font-mono text-pf-text-secondary">{sdk.pkg}</code>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* MCP */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-pf-text">AI Integration (MCP)</h2>
+        <p className="text-sm text-pf-text-secondary leading-relaxed">
+          Connect AI assistants like Claude to Polyforge using the{' '}
+          <span className="text-pf-text font-medium">Model Context Protocol</span> server:
+        </p>
+        <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap">
+{`npx @polyforge/mcp-server`}
+        </pre>
+        <p className="text-xs text-pf-text-muted">
+          22 tools available: browse markets, place orders, manage strategies, view portfolio, and more.
+        </p>
       </section>
     </div>
   );
