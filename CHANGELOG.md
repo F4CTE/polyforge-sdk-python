@@ -5,6 +5,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.3.0] — 2026-03-27
+
+### Added
+- **Direct trading** — place buy/sell orders directly from the market detail page
+  - `POST /api/v1/orders/place` — limit (GTC) and market (FOK) orders
+  - `DELETE /api/v1/orders/:id` — cancel pending/live orders
+  - Trade panel on market detail page with YES/NO + BUY/SELL toggles, price/amount inputs, market order option
+  - My Open Orders section with real-time status and cancel buttons
+- **Standalone MCP server** — extracted to separate repo (`polyforge-mcp`) for independent versioning
+  - 22 tools including new `place_order` and `cancel_order`
+- **Official SDKs** — typed REST clients in 3 languages
+  - TypeScript: `@polyforge/sdk` (npm)
+  - Python: `polyforge` (PyPI)
+  - Rust: `polyforge` (crates.io)
+- **Comprehensive API docs** — added all missing endpoint categories
+  - Trading, conditional orders, copy trading, webhooks, whale feed, news signals, scores, API keys
+  - SDK install cards and MCP server section
+  - Code examples in curl, TypeScript, and Python
+
+### Changed
+- MCP server moved from `packages/mcp-server` to standalone repo `polyforge-mcp`
+
+---
+
 ## [6.2.0] — 2026-03-27
 
 ### Added

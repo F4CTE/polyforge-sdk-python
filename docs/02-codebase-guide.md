@@ -940,20 +940,19 @@ export class IfThenElseEvaluator implements LogicBlockEvaluator<IfThenElseBlock>
 
 ---
 
-## 13. MCP Server (`packages/mcp-server`)
+## 13. MCP Server (standalone repo `polyforge-mcp`)
 
-The `@polyforge/mcp-server` package implements the [Model Context Protocol](https://modelcontextprotocol.io) so that AI assistants like Claude can interact with Polyforge directly via tools.
+> **Note:** The MCP server has been extracted from `packages/mcp-server` to its own repository [`polyforge-mcp`](https://github.com/polyforge/polyforge-mcp) for independent versioning. The in-monorepo package is deprecated.
+
+The MCP server implements the [Model Context Protocol](https://modelcontextprotocol.io) so that AI assistants like Claude can interact with Polyforge directly via 22 tools.
 
 ### Setup
 
 ```bash
-# Install
-pnpm install
+# Install and run (from the standalone repo or via npx)
+npx @polyforge/mcp-server
 
-# Build
-cd packages/mcp-server && pnpm build
-
-# Run (requires env vars)
+# Required env vars
 POLYFORGE_API_URL=http://localhost:3001 POLYFORGE_API_KEY=pf_xxx npx @polyforge/mcp-server
 ```
 

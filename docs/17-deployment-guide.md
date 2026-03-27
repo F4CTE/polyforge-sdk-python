@@ -476,17 +476,14 @@ curl "https://api.telegram.org/bot<token>/setWebhook?url=https://polyforge.app/a
 
 ### 9.11 MCP server verification
 
-The MCP server package (`packages/mcp-server`) lets AI assistants interact with the platform. To verify:
+The MCP server has moved to a standalone repo ([`polyforge-mcp`](https://github.com/polyforge/polyforge-mcp)). To verify the integration:
 
 ```bash
-# Build the MCP server
-pnpm --filter @polyforge/mcp-server build
-
-# Test connectivity (requires a running API service)
-node packages/mcp-server/dist/index.js --help
+# Install and test connectivity (requires a running API service)
+npx @polyforge/mcp-server --help
 ```
 
-Configure your AI assistant (e.g., Claude Desktop) with the MCP server endpoint. See `packages/mcp-server/README.md` for configuration details.
+Configure your AI assistant (e.g., Claude Desktop) with the MCP server endpoint. See the [`polyforge-mcp` README](https://github.com/polyforge/polyforge-mcp) for configuration details.
 
 ### 9.12 Full checklist
 

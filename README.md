@@ -8,14 +8,13 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 
 - **Advanced strategy builder** — 2D drag-and-drop canvas with pan/zoom, bezier connection lines, color-coded blocks, auto-layout, logic blocks (IF/THEN/ELSE, AND/OR/NOT, Delay), calculation blocks (Math, Aggregation, Comparison), visual variable nodes, sub-strategy composition (fire-and-forget/managed/scoped), and `.polyforge` JSON import/export
 - **Market cards** — Polymarket-style card grid with images, probability bars, multi-outcome support, and card/table toggle
-- **Market detail page** — Stats bar and "Run Strategy" dialog with strategy selector
+- **Market detail page** — Stats bar, "Run Strategy" dialog with strategy selector, and direct trading panel (buy/sell without a strategy)
 - **Support ticket system** — User-to-admin tickets with assignment, priority, reminders, and email notifications
 - **Real-time updates** — WebSocket-driven order fills, strategy events, notification bell, and ticket polling
 - **Dual registration flow** — Invite-gated and approval-gated registration coexist: users can join with an invite code or register for admin approval (PENDING status), with email notifications at each step
 - **API key management** — Full CRUD lifecycle for scoped API keys (READ / WRITE / TRADE) for external tool integration, AI agents, and programmatic access
 - **Interactive UI** — Tooltips, drag-and-drop reordering, sparkline charts, hover effects, page animations
 - **Dark/light theme toggle** — Sun/moon switcher with localStorage persistence on both user-app and admin-app
-- **API documentation page** — Interactive API reference at `/api-docs` in user-app
 - **Design system** — Dark theme aligned with shadcn slate palette, design tokens (section colors, status colors, typography scale), loading screen with animated logo, custom scrollbars
 - **Accessibility** — `focus-visible` outlines, `aria-label` attributes, responsive mobile layouts, design token compliance (153 fixes)
 - **UI/UX polish** — 50 fixes across landing page, login, markets, strategies, portfolio, orders, copy trading, whales, leaderboard, backtest, settings, and admin app; en-US locale enforcement, session expiry banners, dark mode consistency
@@ -30,7 +29,9 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Copy trading** — mirror trades from followed traders with risk controls (max position, daily loss limit, drawdown breaker), session management, trade attribution
 - **Advanced order types** — take-profit/stop-loss, trailing stop, limit orders, pegged orders, conditional order evaluator
 - **AI news-to-trade pipeline** — real-time news ingestion, LLM signal extraction (Claude + GPT-4o fallback), confidence-scored trade signals
-- **AI-friendly API** — OpenAPI spec endpoint, Swagger UI, actions catalog, batch API, webhook callbacks with HMAC-SHA256 signatures, natural language query endpoint, strategy-from-description via LLM, and MCP server (`@polyforge/mcp-server`) for Claude and other AI assistants
+- **AI-friendly API** — OpenAPI spec endpoint, Swagger UI, actions catalog, batch API, webhook callbacks with HMAC-SHA256 signatures, natural language query endpoint, strategy-from-description via LLM, and standalone MCP server (`polyforge-mcp`, 22 tools) for Claude and other AI assistants
+- **Official SDKs** — typed REST clients for TypeScript (`@polyforge/sdk`), Python (`polyforge`), and Rust (`polyforge`) with full API coverage
+- **Comprehensive API documentation** — interactive reference at `/api-docs` covering trading, conditional orders, copy trading, webhooks, whale feed, news signals, scores, and API keys with examples in curl, TypeScript, and Python
 - **Operational docs** — Backup & Recovery (RDS/Redis/EBS), Incident Response (P0-P3), Performance Tuning guides
 - **AWS infrastructure** — Terraform with tfvars template (20 variables), budget alerts ($800/month)
 - **Gasless trading** — platform absorbs Polygon gas fees with per-user daily budget tracking
@@ -99,7 +100,7 @@ polyforge/
     ├── shared-db/                 # Prisma client NestJS module
     ├── shared-redis/              # ioredis factory + stream helpers
     ├── logger/                    # pino + nestjs-pino
-    ├── mcp-server/                # MCP server for AI assistant integration
+    ├── mcp-server/                # (deprecated — moved to standalone repo polyforge-mcp)
     └── polyforge-crypto/          # Rust WASM crypto (AES-GCM, SHA-256, HMAC)
 ```
 
@@ -243,6 +244,8 @@ Polyforge exposes a full AI integration layer for Claude, GPT, and other AI assi
 
 ### Claude Desktop Integration (MCP Server)
 
+The MCP server has moved to a standalone repo: [`polyforge-mcp`](https://github.com/polyforge/polyforge-mcp).
+
 ```bash
 # Install and run the MCP server
 npx @polyforge/mcp-server
@@ -252,7 +255,7 @@ export POLYFORGE_API_URL=http://localhost:3002   # or your production URL
 export POLYFORGE_API_KEY=pf_your_api_key_here    # API key with desired scopes
 ```
 
-The MCP server provides 20 tools for Claude Desktop covering markets, strategies, portfolio, orders, whales, news, scores, alerts, copy trading, and webhooks.
+The MCP server provides 22 tools for Claude Desktop covering markets, strategies, portfolio, orders (including `place_order` and `cancel_order`), whales, news, scores, alerts, copy trading, and webhooks.
 
 ---
 
