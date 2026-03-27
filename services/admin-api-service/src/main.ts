@@ -1,3 +1,8 @@
+// BigInt JSON serialization (Prisma returns BigInt for @id @default(autoincrement()))
+(BigInt.prototype as any).toJSON = function () {
+  return Number(this);
+};
+
 import { NestFactory } from "@nestjs/core";
 import {
   FastifyAdapter,

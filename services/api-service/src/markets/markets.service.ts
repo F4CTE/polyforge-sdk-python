@@ -61,22 +61,44 @@ export class MarketsService implements OnModuleInit {
     if (cachedCount) {
       total = parseInt(cachedCount, 10);
     } else {
-      total = await this.prisma.market.count({ where });
-      await this.redis.set(countCacheKey, String(total), 300); // 5 min TTL
+      // Use estimated count for unfiltered queries (pg_class is instant vs 25s COUNT(*))
+      const hasFilters = search || category || closed !== undefined;
+      if (!hasFilters) {
+        const estimate: { reltuples: number }[] = await this.prisma.$queryRaw`
+          SELECT reltuples::int FROM pg_class WHERE relname = 'markets'`;
+        total = estimate[0]?.reltuples ?? 0;
+        // Fall back to exact count if estimate is stale (0 or negative)
+        if (total <= 0) {
+          total = await this.prisma.market.count({ where });
+        }
+      } else {
+        total = await this.prisma.market.count({ where });
+      }
+      await this.redis.set(countCacheKey, String(total), 600); // 10 min TTL
     }
 
-    const markets = await this.prisma.market.findMany({
+    // Two-step query: fetch market IDs with index-only scan, then batch-load with tokens
+    const marketRows = await this.prisma.market.findMany({
       where,
       skip,
       take: limit,
       orderBy,
-      include: { tokens: true },
+      select: { id: true },
     });
+
+    // Batch-load full market data with tokens for the small page of IDs
+    const markets = marketRows.length > 0
+      ? await this.prisma.market.findMany({
+          where: { id: { in: marketRows.map((m) => m.id) } },
+          orderBy,
+          include: { tokens: true },
+        })
+      : [];
 
     const result = paginate(markets, total, page, limit);
 
-    // Cache for 60 seconds (market data changes slowly)
-    await this.redis.set(cacheKey, JSON.stringify(result), 60);
+    // Cache for 120 seconds (market data changes slowly)
+    await this.redis.set(cacheKey, JSON.stringify(result), 120);
 
     return result;
   }

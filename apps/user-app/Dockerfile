@@ -18,12 +18,13 @@ COPY packages/ui/ packages/ui/
 COPY packages/api-client/ packages/api-client/
 COPY apps/user-app/ apps/user-app/
 
-# Build
+# Build (uses resolve.dedupe in vite.config.ts to unify zustand versions)
 RUN pnpm --filter @polyforge/user-app build
 
 # Runtime
 # NOTE: Production should pin to a specific digest, e.g. nginx:1.27-alpine@sha256:...
 FROM nginx:1.27-alpine
+# Use pre-built dist if available (for dev), otherwise use builder stage
 COPY --from=builder /app/apps/user-app/dist /usr/share/nginx/html
 COPY apps/user-app/nginx.conf /etc/nginx/conf.d/default.conf
 RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup && \

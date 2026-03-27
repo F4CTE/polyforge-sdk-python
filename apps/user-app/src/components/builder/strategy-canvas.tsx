@@ -129,13 +129,32 @@ export function StrategyCanvas() {
         />
         <MiniMap
           position="bottom-right"
+          style={{
+            width: 180,
+            height: 120,
+            borderRadius: 12,
+            border: '1px solid var(--color-pf-border)',
+            backgroundColor: isDark
+              ? 'rgba(15, 23, 42, 0.85)'
+              : 'rgba(241, 245, 249, 0.9)',
+            backdropFilter: 'blur(8px)',
+            boxShadow: isDark
+              ? '0 4px 24px rgba(0, 0, 0, 0.4)'
+              : '0 4px 24px rgba(0, 0, 0, 0.08)',
+            overflow: 'hidden',
+          }}
+          maskColor={isDark
+            ? 'rgba(15, 23, 42, 0.6)'
+            : 'rgba(241, 245, 249, 0.6)'}
           nodeColor={(node) => {
             if (node.type === 'variableNode') return 'var(--color-pf-purple-500)';
             if (node.type === 'logicNode') return 'var(--color-pf-info)';
             if (node.type === 'calcNode') return 'var(--color-pf-success)';
             const data = node.data as BlockNodeData;
-            return data?.color ?? 'var(--color-pf-text-muted)';
+            return data?.color ?? 'var(--color-pf-cyan-400)';
           }}
+          nodeStrokeWidth={2}
+          nodeStrokeColor="transparent"
           pannable
           zoomable
         />
