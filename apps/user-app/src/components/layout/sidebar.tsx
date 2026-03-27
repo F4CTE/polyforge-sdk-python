@@ -84,6 +84,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   return (
     <aside
+      data-tour="sidebar"
       className="flex flex-col h-full bg-pf-elevated border-r border-pf-border transition-all duration-200"
       style={{ width: collapsed ? 64 : 240, minWidth: collapsed ? 64 : 240 }}
     >
@@ -155,6 +156,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {myScore !== null && (
           <Link
             to="/profile/me"
+            data-tour="edge-rating"
             className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text"
             title={collapsed ? `Edge Rating: ${myScore}` : undefined}
           >

@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import { ArrowLeft, Zap } from 'lucide-react';
 
-const LAST_UPDATED = 'January 15, 2025';
+const LAST_UPDATED = 'March 27, 2026';
 
 export function Component() {
   return (
@@ -35,7 +35,9 @@ export function Component() {
             <p>We automatically collect information about how you interact with the Platform, including pages visited, features used, API calls made, and error events. This data is collected via server-side logs and does not include third-party analytics trackers.</p>
             <h3 className="text-base font-medium text-pf-text mt-4 mb-2">2.3 Trading Activity</h3>
             <p>We store the orders, positions, strategy configurations, and backtest results associated with your account in order to provide the service.</p>
-            <h3 className="text-base font-medium text-pf-text mt-4 mb-2">2.4 Communications</h3>
+            <h3 className="text-base font-medium text-pf-text mt-4 mb-2">2.4 Wallet and Key Material</h3>
+            <p>If you connect a Polymarket wallet, we store an encrypted copy of your signing key. Keys are encrypted using AES-256-GCM with envelope encryption (a data encryption key wrapped by a key-encryption key). Key material is handled exclusively by a dedicated signer service with memory-locked buffers and automatic zeroization. We never store plaintext private keys at rest.</p>
+            <h3 className="text-base font-medium text-pf-text mt-4 mb-2">2.5 Communications</h3>
             <p>When you contact us by email or through support channels, we retain those communications to assist you and improve our service.</p>
           </section>
 
@@ -70,11 +72,12 @@ export function Component() {
               <li><strong className="text-pf-text">Legal authorities</strong> -- when required by law, court order, or to protect the rights and safety of users or the public.</li>
             </ul>
             <p className="mt-3">Publicly shared strategies display your username and display name. Strategy content is visible to all logged-in users when you set visibility to "public".</p>
+            <p className="mt-2">If you enable copy trading, your strategy name, performance history, and win rate are displayed to other users. Copiers' individual allocations and trade activity are visible only to the copier and to administrators for fraud prevention purposes.</p>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold text-pf-text mb-3">7. Security</h2>
-            <p>We use industry-standard security measures including TLS encryption in transit, bcrypt password hashing, JWT-based authentication with short-lived tokens, and role-based access controls. No security measure is perfect; please enable two-factor authentication on your account.</p>
+            <p>We use industry-standard security measures including TLS encryption in transit, bcrypt password hashing, JWT-based authentication with short-lived tokens, role-based access controls, CSRF protection, and rate limiting on all endpoints. Wallet signing keys are encrypted with AES-256-GCM using hardware-grade envelope encryption with memory-locked key buffers. No security measure is perfect; please enable two-factor authentication on your account.</p>
           </section>
 
           <section>

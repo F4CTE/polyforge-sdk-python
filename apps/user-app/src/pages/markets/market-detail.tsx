@@ -190,6 +190,18 @@ export function Component() {
   const [relatedNews, setRelatedNews] = useState<RelatedNewsSignal[]>([]);
   const [loadingNews, setLoadingNews] = useState(true);
 
+  // Trade panel state
+  const [tradeOutcome, setTradeOutcome] = useState<'YES' | 'NO'>('YES');
+  const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
+  const [tradeAmount, setTradeAmount] = useState('');
+  const [tradePrice, setTradePrice] = useState('');
+  const [isMarketOrder, setIsMarketOrder] = useState(false);
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [tradeSuccess, setTradeSuccess] = useState('');
+  const [tradeError, setTradeError] = useState('');
+  const [myOrders, setMyOrders] = useState<any[]>([]);
+  const [loadingMyOrders, setLoadingMyOrders] = useState(false);
+
   // Load market
   useEffect(() => {
     if (!id) return;
@@ -349,6 +361,85 @@ export function Component() {
     }
     setCondSubmitting(false);
   }
+
+  // Trade panel: load my orders
+  const loadMyOrders = useCallback(async () => {
+    if (!id) return;
+    setLoadingMyOrders(true);
+    try {
+      const res = await fetch(`/api/v1/orders?marketId=${id}&status=PENDING,LIVE,SUBMITTED&limit=20`, {
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMyOrders(data.data || data || []);
+      }
+    } catch {} finally {
+      setLoadingMyOrders(false);
+    }
+  }, [id]);
+
+  useEffect(() => { loadMyOrders(); }, [loadMyOrders]);
+
+  // Trade panel: pre-fill price when market loads
+  useEffect(() => {
+    if (!market) return;
+    const token = (market.tokens ?? []).find((t) => t.outcome?.toUpperCase() === tradeOutcome);
+    if (token?.price && !tradePrice) {
+      setTradePrice(token.price);
+    }
+  }, [market, tradeOutcome]);
+
+  const placeOrder = async () => {
+    if (!tradeAmount || (!isMarketOrder && !tradePrice)) return;
+    setPlacingOrder(true);
+    setTradeError('');
+    setTradeSuccess('');
+    try {
+      const token = market?.tokens?.find((t) =>
+        t.outcome?.toUpperCase() === tradeOutcome
+      );
+      if (!token) throw new Error('Token not found for ' + tradeOutcome);
+
+      const res = await fetch('/api/v1/orders/place', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          tokenId: token.id,
+          side: tradeSide,
+          outcome: tradeOutcome,
+          size: parseFloat(tradeAmount),
+          price: isMarketOrder ? (tradeSide === 'BUY' ? 0.999 : 0.001) : parseFloat(tradePrice),
+          orderType: isMarketOrder ? 'FOK' : 'GTC',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Order failed');
+      setTradeSuccess(`Order placed (${data.orderId.slice(0, 8)}...)`);
+      setTradeAmount('');
+      loadMyOrders();
+    } catch (err: any) {
+      setTradeError(err.message);
+    } finally {
+      setPlacingOrder(false);
+    }
+  };
+
+  const cancelMyOrder = async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/v1/orders/${orderId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) loadMyOrders();
+    } catch {}
+  };
+
+  const estPrice = isMarketOrder ? (tradeSide === 'BUY' ? 0.999 : 0.001) : parseFloat(tradePrice) || 0;
+  const estShares = estPrice > 0 ? parseFloat(tradeAmount || '0') / estPrice : 0;
+  const estCost = parseFloat(tradeAmount || '0');
+  const estPayout = estShares * 1.0;
 
   const yesPrice = (market?.tokens ?? []).find((t) => t.outcome === 'YES')?.price ?? null;
   const noPrice = (market?.tokens ?? []).find((t) => t.outcome === 'NO')?.price ?? null;
@@ -568,6 +659,8 @@ export function Component() {
               </div>
             </div>
 
+            {/* Right column: Order Book + Trade Panel */}
+            <div className="space-y-4">
             {/* Order Book */}
             <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
               <div className="flex items-center justify-between mb-3">
@@ -628,6 +721,179 @@ export function Component() {
                 <div className="py-8 text-center text-sm text-pf-text-muted">No book data</div>
               )}
             </div>
+
+            {/* Trade Panel */}
+            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <span className="text-sm font-medium text-pf-text">Trade</span>
+
+              {/* Outcome toggle */}
+              <div className="flex gap-1 mt-3">
+                {(['YES', 'NO'] as const).map((o) => (
+                  <button
+                    key={o}
+                    onClick={() => {
+                      setTradeOutcome(o);
+                      const token = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === o);
+                      if (token?.price) setTradePrice(token.price);
+                    }}
+                    className={`flex-1 py-1.5 rounded-pf-sm text-xs font-semibold transition-colors ${
+                      tradeOutcome === o
+                        ? o === 'YES'
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                          : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                        : 'bg-pf-surface text-pf-text-muted border border-pf-border hover:border-pf-border-strong'
+                    }`}
+                  >
+                    {o}
+                  </button>
+                ))}
+              </div>
+
+              {/* Side toggle */}
+              <div className="flex gap-1 mt-2">
+                {(['BUY', 'SELL'] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setTradeSide(s)}
+                    className={`flex-1 py-1.5 rounded-pf-sm text-xs font-semibold transition-colors ${
+                      tradeSide === s
+                        ? s === 'BUY'
+                          ? 'bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/30'
+                          : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                        : 'bg-pf-surface text-pf-text-muted border border-pf-border hover:border-pf-border-strong'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+
+              {/* Price input */}
+              <div className="mt-3">
+                <label className="block text-xs font-medium text-pf-text-secondary mb-1">Price</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max="0.99"
+                  value={tradePrice}
+                  onChange={(e) => setTradePrice(e.target.value)}
+                  disabled={isMarketOrder}
+                  placeholder="0.65"
+                  className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 disabled:opacity-40"
+                />
+              </div>
+
+              {/* Market order checkbox */}
+              <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isMarketOrder}
+                  onChange={(e) => setIsMarketOrder(e.target.checked)}
+                  className="rounded border-pf-border bg-pf-surface text-pf-cyan-500 focus:ring-pf-cyan-500/30"
+                />
+                <span className="text-xs text-pf-text-secondary">Market Order</span>
+              </label>
+
+              {/* Amount input */}
+              <div className="mt-3">
+                <label className="block text-xs font-medium text-pf-text-secondary mb-1">Amount</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="1"
+                    min="1"
+                    value={tradeAmount}
+                    onChange={(e) => setTradeAmount(e.target.value)}
+                    placeholder="10"
+                    className="w-full h-9 px-3 pr-14 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-pf-text-muted">USDC</span>
+                </div>
+              </div>
+
+              {/* Estimated values */}
+              {parseFloat(tradeAmount || '0') > 0 && estPrice > 0 && (
+                <div className="mt-3 space-y-1 bg-pf-surface rounded-pf-sm p-2.5 border border-pf-border-subtle">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-pf-text-muted">Est. Shares</span>
+                    <span className="font-mono text-pf-text">{estShares.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-pf-text-muted">Cost</span>
+                    <span className="font-mono text-pf-text">${estCost.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-pf-text-muted">Potential Payout</span>
+                    <span className="font-mono text-pf-success">${estPayout.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Place order button */}
+              <button
+                onClick={placeOrder}
+                disabled={placingOrder || !tradeAmount || parseFloat(tradeAmount || '0') <= 0 || (!isMarketOrder && (!tradePrice || parseFloat(tradePrice || '0') <= 0))}
+                className={`w-full mt-3 py-2.5 rounded-pf text-sm font-semibold text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed ${
+                  tradeSide === 'BUY'
+                    ? 'bg-pf-cyan-500 hover:bg-pf-cyan-600'
+                    : 'bg-red-500 hover:bg-red-600'
+                }`}
+              >
+                {placingOrder ? 'Placing...' : `Place ${tradeSide} ${tradeOutcome} Order`}
+              </button>
+
+              {/* Success / Error messages */}
+              {tradeSuccess && (
+                <p className="mt-2 text-xs text-pf-success">{tradeSuccess}</p>
+              )}
+              {tradeError && (
+                <p className="mt-2 text-xs text-pf-danger">{tradeError}</p>
+              )}
+
+              {/* My Open Orders */}
+              <div className="mt-4 pt-3 border-t border-pf-border-subtle">
+                <span className="text-xs font-medium text-pf-text-secondary">My Open Orders</span>
+                {loadingMyOrders ? (
+                  <div className="mt-2 space-y-1">
+                    {Array.from({ length: 2 }, (_, i) => (
+                      <div key={i} className="h-6 bg-pf-overlay rounded animate-pulse" />
+                    ))}
+                  </div>
+                ) : myOrders.length === 0 ? (
+                  <p className="mt-2 text-xs text-pf-text-muted">No open orders</p>
+                ) : (
+                  <div className="mt-2 space-y-1">
+                    {myOrders.map((order: any) => (
+                      <div
+                        key={order.id}
+                        className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-pf-sm bg-pf-surface border border-pf-border-subtle text-xs"
+                      >
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className={`font-semibold ${order.side === 'BUY' ? 'text-pf-cyan-400' : 'text-red-400'}`}>
+                            {order.side}
+                          </span>
+                          <span className={`font-medium ${order.outcome === 'YES' ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {order.outcome}
+                          </span>
+                          <span className="font-mono text-pf-text-muted truncate">
+                            {order.size}@{order.price}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => cancelMyOrder(order.id)}
+                          className="shrink-0 p-0.5 rounded text-pf-text-muted hover:text-pf-danger transition-colors"
+                          title="Cancel order"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            </div>{/* end right column wrapper */}
           </div>
 
           {/* Strategies on this market */}

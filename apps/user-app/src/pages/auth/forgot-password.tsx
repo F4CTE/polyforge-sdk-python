@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { Mail, ArrowLeft, Check } from 'lucide-react';
+import { AuthBackground } from '@/components/auth-background';
 
 export function Component() {
   const [email, setEmail] = useState('');
@@ -35,10 +36,11 @@ export function Component() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(6,182,212,0.08) 0%, transparent 60%), var(--color-pf-base)' }}
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{ background: 'var(--color-pf-base)' }}
     >
-      <div className="w-full max-w-md">
+      <AuthBackground />
+      <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="text-pf-cyan-500 inline-block">

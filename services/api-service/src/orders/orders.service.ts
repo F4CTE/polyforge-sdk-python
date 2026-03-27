@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
+  ForbiddenException,
+  BadRequestException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
@@ -13,6 +15,7 @@ import {
   PaginationDto,
 } from "../common/dto/pagination.dto";
 import { ClosePositionDto } from "./dto/close-position.dto";
+import { PlaceOrderDto } from "./dto/place-order.dto";
 import { RedeemPositionDto } from "./dto/redeem-position.dto";
 import { randomUUID } from "crypto";
 
@@ -283,5 +286,87 @@ export class OrdersService {
     }
 
     return res.json();
+  }
+
+  async placeOrder(userId: string, dto: PlaceOrderDto) {
+    // 1. Find user and verify polymarketConnected
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    if (!user.polymarketConnected) {
+      throw new ForbiddenException({ code: 'WALLET_NOT_CONNECTED', message: 'Connect your Polymarket wallet first' });
+    }
+
+    // 2. Find the token and its market
+    const token = await this.prisma.token.findUniqueOrThrow({
+      where: { id: dto.tokenId },
+      include: { market: true },
+    });
+
+    // 3. Create intent
+    const intentId = randomUUID();
+    const intent = {
+      intentId,
+      userId,
+      strategyId: '',
+      marketId: token.marketId,
+      tokenId: dto.tokenId,
+      side: dto.side,
+      outcome: dto.outcome,
+      size: String(dto.size),
+      price: String(dto.price),
+      orderType: dto.orderType || 'GTC',
+    };
+
+    // 4. Publish to Redis stream
+    await this.redis.xadd('stream:orders', intent);
+
+    // 5. Create order record
+    const order = await this.prisma.order.create({
+      data: {
+        intentId,
+        userId,
+        strategyId: null,
+        marketId: token.marketId,
+        tokenId: dto.tokenId,
+        side: dto.side as any,
+        outcome: dto.outcome,
+        size: String(dto.size),
+        price: String(dto.price),
+        orderType: (dto.orderType || 'GTC') as any,
+        status: 'PENDING' as any,
+      },
+    });
+
+    return { orderId: order.id, intentId, status: 'PENDING' };
+  }
+
+  async cancelOrder(userId: string, orderId: string) {
+    const order = await this.prisma.order.findUniqueOrThrow({
+      where: { id: orderId },
+    });
+
+    if (order.userId !== userId) {
+      throw new ForbiddenException('Not your order');
+    }
+
+    if (!['PENDING', 'SUBMITTED', 'LIVE'].includes(order.status)) {
+      throw new BadRequestException(`Cannot cancel order in ${order.status} status`);
+    }
+
+    // Update status to CANCELLED
+    await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'CANCELLED' as any },
+    });
+
+    // If order has a CLOB ID, publish cancel to stream
+    if (order.clobOrderId) {
+      await this.redis.xadd('stream:cancellations', {
+        orderId,
+        clobOrderId: order.clobOrderId,
+        userId,
+      });
+    }
+
+    return { orderId, status: 'CANCELLED' };
   }
 }

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { Mail, Lock, User, KeyRound, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
+import { AuthBackground } from '@/components/auth-background';
 
 function validatePassword(v: string): string {
   if (!v) return '';
@@ -109,10 +110,11 @@ export function Component() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 py-8"
-      style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(6,182,212,0.08) 0%, transparent 60%), var(--color-pf-base)' }}
+      className="min-h-screen flex items-center justify-center p-4 py-8 relative"
+      style={{ background: 'var(--color-pf-base)' }}
     >
-      <div className="w-full max-w-md">
+      <AuthBackground />
+      <div className="w-full max-w-md relative z-10">
         {/* Logo centered above card */}
         <div className="text-center mb-8">
           <div className="text-pf-cyan-500 inline-block">

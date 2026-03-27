@@ -2,8 +2,11 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Query,
   Body,
+  Param,
+  Req,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -14,6 +17,7 @@ import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@pol
 import { IsOptional, IsString, IsNotEmpty, IsNumberString, MaxLength } from "class-validator";
 import { OrdersService } from "./orders.service";
 import { ClosePositionDto } from "./dto/close-position.dto";
+import { PlaceOrderDto } from "./dto/place-order.dto";
 import { RedeemPositionDto } from "./dto/redeem-position.dto";
 import { GeoBlockGuard } from "../common/guards/geo.guard";
 import { PaginationDto } from "../common/dto/pagination.dto";
@@ -105,5 +109,18 @@ export class OrdersController {
   @RequireScopes('TRADE')
   mergePosition(@CurrentUser() user: any, @Body() dto: MergePositionDto) {
     return this.orders.mergePosition(user.sub, dto);
+  }
+
+  @Post('place')
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async placeOrder(@Req() req, @Body() dto: PlaceOrderDto) {
+    return this.orders.placeOrder(req.user.sub, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  async cancelOrder(@Req() req, @Param('id') id: string) {
+    return this.orders.cancelOrder(req.user.sub, id);
   }
 }

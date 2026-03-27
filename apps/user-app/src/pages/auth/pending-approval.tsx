@@ -1,13 +1,15 @@
 import { Link } from 'react-router';
 import { Clock, Mail } from 'lucide-react';
+import { AuthBackground } from '@/components/auth-background';
 
 export function Component() {
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(6,182,212,0.08) 0%, transparent 60%), var(--color-pf-base)' }}
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{ background: 'var(--color-pf-base)' }}
     >
-      <div className="w-full max-w-md">
+      <AuthBackground />
+      <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <div className="text-pf-cyan-500 inline-block">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true">

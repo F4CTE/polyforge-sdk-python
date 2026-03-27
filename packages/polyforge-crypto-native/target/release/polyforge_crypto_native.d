@@ -1,0 +1,1 @@
+C:\Users\User\Documents\polyForge\packages\polyforge-crypto-native\target\release\polyforge_crypto_native.dll: C:\Users\User\Documents\polyForge\packages\polyforge-crypto-native\build.rs C:\Users\User\Documents\polyForge\packages\polyforge-crypto-native\src\lib.rs

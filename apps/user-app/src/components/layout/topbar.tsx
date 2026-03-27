@@ -46,6 +46,7 @@ export function Topbar() {
 
       {/* Theme toggle */}
       <button
+        data-tour="theme-toggle"
         onClick={toggleTheme}
         className="p-2 rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text transition-colors"
         aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -54,7 +55,7 @@ export function Topbar() {
       </button>
 
       {/* Notification bell */}
-      <div className="relative" ref={notifRef}>
+      <div className="relative" ref={notifRef} data-tour="notification-bell">
         <button
           onClick={() => setNotifOpen((v) => !v)}
           className="relative p-2 rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text transition-colors"

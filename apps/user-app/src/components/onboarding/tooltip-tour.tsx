@@ -17,32 +17,50 @@ interface TourStep {
 const TOUR_STEPS: TourStep[] = [
   {
     target: '[data-tour="sidebar"]',
-    title: 'Sidebar Navigation',
-    content: 'Access all sections of the platform from here: markets, strategies, portfolio, and more.',
+    title: 'Navigation',
+    content: 'Your home base. Jump to markets, strategies, portfolio, copy trading, whale tracking, and more from here.',
     placement: 'right',
   },
   {
     target: '[data-tour="market-card"]',
-    title: 'Market Cards',
-    content: 'Each card shows a prediction market. Click to see details, price charts, and run strategies.',
+    title: 'Prediction Markets',
+    content: 'Real Polymarket events updated in real time. Click any card to see live prices, order books, and charts.',
     placement: 'bottom',
   },
   {
     target: '[data-tour="strategy-builder"]',
-    title: 'Strategy Builder',
-    content: 'Design automated trading strategies with our visual drag-and-drop builder. Combine triggers, conditions, and actions.',
+    title: 'Visual Strategy Builder',
+    content: 'Drag-and-drop blocks to build automated trading strategies — triggers, conditions, safety stops, and more. No code required.',
+    placement: 'bottom',
+  },
+  {
+    target: '[data-tour="edge-rating"]',
+    title: 'Your Edge Rating',
+    content: 'This score reflects your overall trading edge based on win rate, returns, and strategy diversity. Higher is better.',
+    placement: 'right',
+  },
+  {
+    target: '[data-tour="portfolio-summary"]',
+    title: 'Portfolio Overview',
+    content: 'Track your open positions, P&L, and win rate at a glance. Click any position to see details or close it.',
+    placement: 'bottom',
+  },
+  {
+    target: '[data-tour="copy-trading"]',
+    title: 'Copy Trading',
+    content: 'Follow top-performing strategies and automatically replicate their trades. Set your own allocation limits.',
     placement: 'bottom',
   },
   {
     target: '[data-tour="theme-toggle"]',
-    title: 'Theme Toggle',
-    content: 'Switch between dark and light themes to suit your preference.',
+    title: 'Theme & Settings',
+    content: 'Switch between dark and light mode, manage your account, connect your wallet, and configure notifications.',
     placement: 'bottom',
   },
   {
     target: '[data-tour="notification-bell"]',
-    title: 'Notifications',
-    content: 'Stay informed about order fills, strategy events, and price alerts in real time.',
+    title: 'Live Notifications',
+    content: 'Real-time alerts when orders fill, strategies trigger, prices hit your targets, or whales make big moves.',
     placement: 'bottom',
   },
 ];
@@ -153,6 +171,16 @@ export function TooltipTour() {
     });
   }
 
+  /** Find the next step index that has a visible target element on the page */
+  function findNextVisible(from: number, direction: 1 | -1): number | null {
+    let i = from;
+    while (i >= 0 && i < TOUR_STEPS.length) {
+      if (document.querySelector(TOUR_STEPS[i].target)) return i;
+      i += direction;
+    }
+    return null;
+  }
+
   function nextStep() {
     // Remove highlight from current
     const currentStep = TOUR_STEPS[stepIndex];
@@ -161,8 +189,9 @@ export function TooltipTour() {
       if (target) target.classList.remove('tour-highlight');
     }
 
-    if (stepIndex < TOUR_STEPS.length - 1) {
-      setStepIndex(stepIndex + 1);
+    const next = findNextVisible(stepIndex + 1, 1);
+    if (next !== null) {
+      setStepIndex(next);
     } else {
       closeTour();
     }
@@ -175,16 +204,19 @@ export function TooltipTour() {
       if (target) target.classList.remove('tour-highlight');
     }
 
-    if (stepIndex > 0) {
-      setStepIndex(stepIndex - 1);
+    const prev = findNextVisible(stepIndex - 1, -1);
+    if (prev !== null) {
+      setStepIndex(prev);
     }
   }
 
   if (!active) return null;
 
   const step = TOUR_STEPS[stepIndex];
-  const isLast = stepIndex === TOUR_STEPS.length - 1;
-  const isFirst = stepIndex === 0;
+  const visibleSteps = TOUR_STEPS.filter(s => document.querySelector(s.target));
+  const visibleIndex = visibleSteps.indexOf(step);
+  const isLast = findNextVisible(stepIndex + 1, 1) === null;
+  const isFirst = findNextVisible(stepIndex - 1, -1) === null;
 
   return (
     <>
@@ -222,7 +254,7 @@ export function TooltipTour() {
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-pf-border-subtle">
           <span className="text-xs text-pf-text-muted">
-            {stepIndex + 1} of {TOUR_STEPS.length}
+            {visibleIndex + 1} of {visibleSteps.length}
           </span>
           <div className="flex items-center gap-2">
             {!isFirst && (
