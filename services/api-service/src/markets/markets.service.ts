@@ -16,8 +16,9 @@ export class MarketsService implements OnModuleInit {
   /** Pre-warm the Redis cache with the first page of markets on startup */
   async onModuleInit() {
     try {
-      await this.list({ page: 1, limit: 20 } as MarketQueryDto);
-      this.logger.log("Markets cache pre-warmed");
+      // Pre-warm Prisma connection pool + cache the default query
+      await this.list({ page: 1, limit: 25, sort: 'volume' } as MarketQueryDto);
+      this.logger.log("Markets cache pre-warmed (page 1, 25 items)");
     } catch {
       this.logger.warn("Markets cache pre-warm failed (non-fatal)");
     }
@@ -61,7 +62,7 @@ export class MarketsService implements OnModuleInit {
       total = parseInt(cachedCount, 10);
     } else {
       total = await this.prisma.market.count({ where });
-      await this.redis.set(countCacheKey, String(total), 120); // 2 min TTL
+      await this.redis.set(countCacheKey, String(total), 300); // 5 min TTL
     }
 
     const markets = await this.prisma.market.findMany({
@@ -74,8 +75,8 @@ export class MarketsService implements OnModuleInit {
 
     const result = paginate(markets, total, page, limit);
 
-    // Cache for 30 seconds
-    await this.redis.set(cacheKey, JSON.stringify(result), 30);
+    // Cache for 60 seconds (market data changes slowly)
+    await this.redis.set(cacheKey, JSON.stringify(result), 60);
 
     return result;
   }
