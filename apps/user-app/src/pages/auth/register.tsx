@@ -94,6 +94,10 @@ export function Component() {
     } catch (err: unknown) {
       setLoading(false);
       const apiErr = err as { code?: string; message?: string };
+      if (apiErr?.code === 'ACCOUNT_PENDING') {
+        navigate('/pending-approval');
+        return;
+      }
       if (apiErr?.code === 'INVITE_REQUIRED' || apiErr?.code === 'INVITE_INVALID') {
         setShowInvite(true);
       }

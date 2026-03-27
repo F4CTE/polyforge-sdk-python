@@ -100,6 +100,42 @@ export class UsersController {
     return result;
   }
 
+  @Patch(":id/approve")
+  async approve(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentAdmin() admin: AdminJwtPayload,
+    @AdminIp() ip: string,
+  ) {
+    const result = await this.users.approve(id, admin.sub);
+    await this.audit.log({
+      adminId: admin.sub,
+      action: "APPROVE_USER",
+      targetType: "user",
+      targetId: id,
+      ip,
+    });
+    return result;
+  }
+
+  @Patch(":id/reject")
+  async reject(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() dto: { reason?: string },
+    @CurrentAdmin() admin: AdminJwtPayload,
+    @AdminIp() ip: string,
+  ) {
+    const result = await this.users.reject(id, dto.reason);
+    await this.audit.log({
+      adminId: admin.sub,
+      action: "REJECT_USER",
+      targetType: "user",
+      targetId: id,
+      ip,
+      payload: dto.reason ? { reason: dto.reason } : undefined,
+    });
+    return result;
+  }
+
   @Patch(":id/limits")
   async updateLimits(
     @Param("id", ParseUUIDPipe) id: string,

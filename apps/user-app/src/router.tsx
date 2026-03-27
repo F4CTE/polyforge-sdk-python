@@ -8,6 +8,7 @@ export const router = createBrowserRouter([
   { path: '/login', lazy: () => import('./pages/auth/login') },
   { path: '/register', lazy: () => import('./pages/auth/register') },
   { path: '/verify-email', lazy: () => import('./pages/auth/verify-email') },
+  { path: '/pending-approval', lazy: () => import('./pages/auth/pending-approval') },
   { path: '/forgot-password', lazy: () => import('./pages/auth/forgot-password') },
   { path: '/reset-password', lazy: () => import('./pages/auth/reset-password') },
   { path: '/terms', lazy: () => import('./pages/legal/terms') },

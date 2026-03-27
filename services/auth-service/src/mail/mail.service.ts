@@ -121,6 +121,89 @@ export class MailService {
     this.logger.log(`Waitlist confirmation email sent to ${to}`);
   }
 
+  async sendPendingApprovalEmail(to: string, username: string): Promise<void> {
+    const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
+
+    const html = emailLayout({
+      preheader: 'Your Polyforge account is pending approval — we\'ll notify you once approved.',
+      body: `
+                <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827">
+                  Welcome to the beta waitlist, ${username}!
+                </h2>
+                <p style="margin:0 0 16px;color:#4b5563">
+                  Your Polyforge account has been created and is pending approval.
+                  We're reviewing applications for beta access and will notify you
+                  by email as soon as your account is approved.
+                </p>
+                <p style="margin:0 0 16px;color:#4b5563">
+                  In the meantime, you can verify your email address to speed up
+                  the approval process.
+                </p>
+                <p style="text-align:center;margin:0 0 28px">
+                  <a href="${base}"
+                     style="background:#06b6d4;border-radius:8px;color:#000;display:inline-block;
+                            font-size:15px;font-weight:600;padding:12px 28px;text-decoration:none">
+                    Visit Polyforge
+                  </a>
+                </p>
+                <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
+                <p style="margin:0;font-size:13px;color:#9ca3af">
+                  You'll receive another email once your account is approved.
+                </p>
+            `,
+      footerNote: 'You received this because you registered for a Polyforge beta account.',
+    });
+
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject: 'Your Polyforge account is pending approval',
+      text: `Welcome ${username}! Your Polyforge account is pending approval. We'll email you once your beta access is approved.\n\nVisit ${base} to learn more.`,
+      html,
+    });
+    this.logger.log(`Pending approval email sent to ${to}`);
+  }
+
+  async sendAccountApprovedEmail(to: string, username: string): Promise<void> {
+    const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
+    const loginUrl = `${base}/login`;
+
+    const html = emailLayout({
+      preheader: 'Your Polyforge beta access has been approved — you can now sign in!',
+      body: `
+                <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827">
+                  You're in, ${username}! 🎉
+                </h2>
+                <p style="margin:0 0 16px;color:#4b5563">
+                  Your Polyforge account has been approved for beta access!
+                  You can now sign in and start building automated trading strategies
+                  on prediction markets.
+                </p>
+                <p style="text-align:center;margin:0 0 28px">
+                  <a href="${loginUrl}"
+                     style="background:#06b6d4;border-radius:8px;color:#000;display:inline-block;
+                            font-size:15px;font-weight:600;padding:12px 28px;text-decoration:none">
+                    Sign in to Polyforge
+                  </a>
+                </p>
+                <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
+                <p style="margin:0;font-size:13px;color:#9ca3af">
+                  Welcome to the Polyforge beta. Happy trading!
+                </p>
+            `,
+      footerNote: 'You received this because your Polyforge beta application was approved.',
+    });
+
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject: "You're approved! Welcome to Polyforge beta 🎉",
+      text: `Welcome ${username}! Your Polyforge beta access has been approved. Sign in at ${loginUrl} to get started.`,
+      html,
+    });
+    this.logger.log(`Account approved email sent to ${to}`);
+  }
+
   async sendPasswordResetEmail(to: string, token: string): Promise<void> {
     const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
     const url = `${base}/reset-password?token=${token}`;

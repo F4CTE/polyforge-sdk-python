@@ -7,6 +7,7 @@ import { statusColor, formatDate } from '@/lib/utils';
 
 function computeUserStatus(user: any): string {
   if (user.suspended) return 'SUSPENDED';
+  if (user.approved === false) return 'PENDING';
   if (user.polymarketConnected) return 'CONNECTED';
   if (user.emailVerified) return 'VERIFIED';
   return 'UNVERIFIED';
@@ -39,6 +40,23 @@ export function Component() {
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
   const limit = 20;
+
+  async function handleApprove(userId: string, username: string) {
+    try {
+      await adminApi.approveUser(userId);
+      toast.success(`${username} approved for beta access`);
+      load();
+    } catch { toast.error('Failed to approve user'); }
+  }
+
+  async function handleReject(userId: string, username: string) {
+    if (!window.confirm(`Are you sure you want to reject ${username}?`)) return;
+    try {
+      await adminApi.rejectUser(userId);
+      toast.success(`${username} rejected`);
+      load();
+    } catch { toast.error('Failed to reject user'); }
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -146,6 +164,7 @@ export function Component() {
           className="px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
         >
           <option value="">All statuses</option>
+          <option value="PENDING">Pending approval</option>
           <option value="UNVERIFIED">Unverified</option>
           <option value="VERIFIED">Verified</option>
           <option value="CONNECTED">Connected</option>
@@ -187,6 +206,7 @@ export function Component() {
                 <th className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">2FA</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Connected</th>
                 <th onClick={() => toggleSort('createdAt')} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Created{sortIndicator('createdAt')}</th>
+                <th className="text-right px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -255,6 +275,24 @@ export function Component() {
                     </td>
                     <td className="px-4 py-3 text-[var(--color-pf-text-tertiary)]">
                       {formatDate(user.createdAt)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {computeUserStatus(user) === 'PENDING' && (
+                        <div className="flex items-center gap-2 justify-end">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleApprove(user.id, user.username); }}
+                            className="px-2 py-1 text-xs font-medium rounded bg-pf-success/10 text-pf-success hover:bg-pf-success/20 transition-colors"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleReject(user.id, user.username); }}
+                            className="px-2 py-1 text-xs font-medium rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))

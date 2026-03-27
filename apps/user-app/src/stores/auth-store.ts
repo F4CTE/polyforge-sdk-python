@@ -85,8 +85,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const err = await res.json();
       throw err;
     }
-    const user = await res.json();
-    set({ user });
+    const data = await res.json();
+    if (data.pending) {
+      // Don't set user — they can't access anything yet
+      throw { code: 'ACCOUNT_PENDING', message: 'pending' };
+    }
+    set({ user: data.user ?? data });
   },
 
   logout: async () => {

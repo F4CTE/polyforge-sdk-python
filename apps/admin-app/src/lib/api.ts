@@ -95,6 +95,16 @@ export const adminApi = {
       method: 'PATCH',
       body: JSON.stringify({}),
     }),
+  approveUser: (id: string) =>
+    request<any>(buildUrl(API_BASE, `/users/${id}/approve`), {
+      method: 'PATCH',
+      body: JSON.stringify({}),
+    }),
+  rejectUser: (id: string, reason?: string) =>
+    request<any>(buildUrl(API_BASE, `/users/${id}/reject`), {
+      method: 'PATCH',
+      body: JSON.stringify({ reason }),
+    }),
   updateLimits: (id: string, limits: Record<string, number>) =>
     request<any>(buildUrl(API_BASE, `/users/${id}/limits`), {
       method: 'PATCH',

@@ -186,6 +186,9 @@ model User {
   tosAcceptedAt       DateTime?
   emailVerified       Boolean   @default(false)
   emailVerifiedAt     DateTime?
+  approved            Boolean   @default(false)
+  approvedAt          DateTime?
+  approvedBy          String?   @db.VarChar(255)  // admin ID who approved
   suspended           Boolean   @default(false)
   suspendedReason     String?
   deleted             Boolean   @default(false)

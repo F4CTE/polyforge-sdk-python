@@ -28,7 +28,7 @@ export class UsersService {
 
   // ─── Create ───────────────────────────────────────────────────────────────────
 
-  async create(data: { email: string; password: string; username: string }) {
+  async create(data: { email: string; password: string; username: string; approved?: boolean }) {
     const existingEmail = await this.findByEmail(data.email);
     if (existingEmail) {
       throw new HttpException(
@@ -53,6 +53,8 @@ export class UsersService {
         passwordHash,
         username: data.username,
         tosAcceptedAt: new Date(),
+        approved: data.approved ?? true,
+        approvedAt: (data.approved ?? true) ? new Date() : undefined,
       },
     });
   }

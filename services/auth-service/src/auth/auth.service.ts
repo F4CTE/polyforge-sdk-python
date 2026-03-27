@@ -36,8 +36,10 @@ function deriveUserStatus(user: {
   emailVerified: boolean;
   polymarketConnected: boolean;
   suspended: boolean;
+  approved?: boolean;
 }): string {
   if (user.suspended) return 'SUSPENDED';
+  if (user.approved === false) return 'PENDING';
   if (user.polymarketConnected) return 'CONNECTED';
   if (user.emailVerified) return 'VERIFIED';
   return 'UNVERIFIED';
@@ -66,22 +68,13 @@ export class AuthService {
       redisFlagRaw !== null
         ? redisFlagRaw === 'true'
         : this.config.get<string>('INVITE_ONLY') === 'true';
-    if (inviteOnly) {
-      if (!dto.inviteCode) {
-        throw new HttpException(
-          {
-            code: 'INVITE_REQUIRED',
-            message: 'An invite code is required to register',
-          },
-          HttpStatus.FORBIDDEN,
-        );
-      }
+    // Determine if this registration has a valid invite code
+    let hasValidInvite = false;
+    if (inviteOnly && dto.inviteCode) {
       const key = INVITE_KEY(dto.inviteCode);
       const client = this.redis.getClient();
 
       // Atomic invite code redemption via Lua script.
-      // For single-use codes (value "1"): atomically fetches and deletes.
-      // For multi-use codes: atomically decrements and rejects if exhausted.
       const redeemScript = `
         local val = redis.call('GET', KEYS[1])
         if val == false then return -1 end
@@ -105,20 +98,47 @@ export class AuthService {
       }
       if (result === -2) {
         throw new HttpException(
-          {
-            code: 'INVITE_INVALID',
-            message: 'Invite code has been fully redeemed',
-          },
+          { code: 'INVITE_INVALID', message: 'Invite code has been fully redeemed' },
           HttpStatus.FORBIDDEN,
         );
       }
+      hasValidInvite = true;
     }
 
+    // Create user — approved immediately if they have a valid invite code,
+    // otherwise pending approval (beta waitlist)
     const user = await this.usersService.create({
       email: dto.email,
       password: dto.password,
       username: dto.username,
+      approved: !inviteOnly || hasValidInvite,
     });
+
+    if (!user.approved) {
+      // Pending user — send waitlist email, do NOT issue JWT
+      this.mailService
+        .sendPendingApprovalEmail(user.email, user.username)
+        .catch((err) => this.logger.error('Failed to send pending email', err));
+
+      // Also send verification email so they can verify while waiting
+      this.usersService
+        .createEmailVerificationToken(user.id)
+        .then((verifyToken) =>
+          this.mailService.sendVerificationEmail(user.email, verifyToken),
+        )
+        .catch((err) => this.logger.error('Failed to send verification email', err));
+
+      return {
+        pending: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          status: 'PENDING',
+          createdAt: user.createdAt,
+        },
+      };
+    }
 
     const accessToken = this.generateAccessToken(user);
     const refreshToken = await this.createRefreshToken(user.id);
@@ -160,9 +180,16 @@ export class AuthService {
 
     if (user.suspended) {
       throw new HttpException(
+        { code: 'ACCOUNT_SUSPENDED', message: 'This account has been suspended' },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    if (user.approved === false) {
+      throw new HttpException(
         {
-          code: 'ACCOUNT_SUSPENDED',
-          message: 'This account has been suspended',
+          code: 'ACCOUNT_PENDING',
+          message: 'Your account is pending approval. You will receive an email once approved.',
         },
         HttpStatus.FORBIDDEN,
       );

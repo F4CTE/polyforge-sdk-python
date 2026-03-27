@@ -70,14 +70,18 @@ export class AuthController {
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
     const result = await this.authService.register(dto);
+    if (result.pending) {
+      // Pending approval — don't issue JWT cookies
+      return { pending: true, user: result.user };
+    }
     reply.setCookie(
       USER_COOKIE,
-      result.token,
+      result.token!,
       cookieOpts(ACCESS_COOKIE_MAX_AGE),
     );
     reply.setCookie(
       REFRESH_COOKIE,
-      result.refreshToken,
+      result.refreshToken!,
       cookieOpts(REFRESH_COOKIE_MAX_AGE),
     );
     return result.user;

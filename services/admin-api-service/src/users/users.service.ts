@@ -3,15 +3,22 @@ import {
   NotFoundException,
   HttpException,
   HttpStatus,
+  Logger,
 } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { SuspendUserDto } from "./dto/suspend.dto";
 import { UpdateLimitsDto } from "./dto/update-limits.dto";
 import { Prisma } from "@prisma/client";
+import { AdminMailService } from "../mail/mail.service";
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(UsersService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: AdminMailService,
+  ) {}
 
   async findAll(params: {
     page: number;
@@ -161,6 +168,41 @@ export class UsersService {
     });
 
     return { suspended: false };
+  }
+
+  async approve(id: string, adminId: string) {
+    const user = await this.findUserOrFail(id);
+
+    if (user.approved) {
+      throw new HttpException(
+        { code: "ALREADY_APPROVED", message: "User is already approved" },
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    await this.prisma.user.update({
+      where: { id },
+      data: { approved: true, approvedAt: new Date(), approvedBy: adminId },
+    });
+
+    // Send approval email — fire-and-forget
+    this.mailService
+      .sendAccountApprovedEmail(user.email, user.username)
+      .catch((err) => this.logger.error('Failed to send approval email', err));
+
+    return { approved: true, email: user.email, username: user.username };
+  }
+
+  async reject(id: string, reason?: string) {
+    const user = await this.findUserOrFail(id);
+
+    // Soft-delete the rejected user
+    await this.prisma.user.update({
+      where: { id },
+      data: { deleted: true, deletedAt: new Date(), suspendedReason: reason ?? 'Registration rejected' },
+    });
+
+    return { rejected: true, email: user.email };
   }
 
   async updateLimits(id: string, dto: UpdateLimitsDto) {

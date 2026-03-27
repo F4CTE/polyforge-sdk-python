@@ -48,6 +48,8 @@ export function Component() {
         setError('');
       } else if (apiErr?.code === 'ACCOUNT_SUSPENDED') {
         setError('Your account has been suspended. Please contact support.');
+      } else if (apiErr?.code === 'ACCOUNT_PENDING') {
+        setError('Your account is pending approval. You\'ll receive an email once approved.');
       } else {
         setError(apiErr?.message ?? 'Login failed. Please try again.');
       }
