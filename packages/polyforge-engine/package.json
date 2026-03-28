@@ -2,9 +2,17 @@
   "name": "@polyforge/engine",
   "version": "0.1.0",
   "private": true,
-  "main": "index.ts",
+  "main": "./pkg/polyforge_engine.js",
+  "types": "./pkg/polyforge_engine.d.ts",
+  "exports": {
+    ".": {
+      "import": "./pkg/polyforge_engine.js",
+      "require": "./pkg/polyforge_engine.js",
+      "types": "./pkg/polyforge_engine.d.ts"
+    }
+  },
   "scripts": {
     "build:wasm": "bash build.sh",
-    "build": "tsc -p tsconfig.json"
+    "build": "bash build.sh"
   }
 }

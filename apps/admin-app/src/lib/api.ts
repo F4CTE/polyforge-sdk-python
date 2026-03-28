@@ -3,6 +3,11 @@ const AUTH_BASE = '/auth/v1';
 
 type QueryParams = Record<string, string | number | boolean | undefined>;
 
+interface ApiError extends Error {
+  status: number;
+  body: unknown;
+}
+
 function buildUrl(base: string, path: string, params?: QueryParams): string {
   const url = new URL(`${base}${path}`, window.location.origin);
   if (params) {
@@ -34,7 +39,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
           // Retry the original request
           return request<T>(url, options);
         }
-      } catch {
+      } catch (error: unknown) {
         // refresh failed, fall through to redirect
       }
       // Import dynamically to avoid circular deps; show toast before redirect
@@ -45,10 +50,11 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
       return Promise.reject(new Error('Session expired - redirecting to login'));
     }
     const body = await res.json().catch(() => ({}));
-    throw Object.assign(new Error(body.message || res.statusText), {
+    const error: ApiError = Object.assign(new Error(typeof body === 'object' && body !== null && 'message' in body ? String(body.message) : res.statusText), {
       status: res.status,
       body,
-    });
+    }) as ApiError;
+    throw error;
   }
   if (res.status === 204) return undefined as T;
   return res.json();
@@ -69,12 +75,126 @@ export const authApi = {
   logout: () => request<void>(`${AUTH_BASE}/logout`, { method: 'POST' }),
 };
 
+// ─── API Response Types ────────────────────────────────────────────────────────
+
+interface HealthData {
+  status: string;
+  services: Record<string, { status: string; latencyMs: number }>;
+  db: { status: string; connections: number };
+  redis: { status: string; memoryUsageMb: number };
+}
+
+interface RateLimitsData {
+  totalTrackedKeys: number;
+  recent429Count: number;
+  topOffenders: Array<{ key: string; hits: number; ttl: number }>;
+}
+
+interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+interface UserData {
+  id: string;
+  email: string;
+  displayName: string;
+  role: string;
+  [key: string]: unknown;
+}
+
+interface StrategyData {
+  id: string;
+  status: string;
+  [key: string]: unknown;
+}
+
+interface OrderData {
+  id: string;
+  status: string;
+  [key: string]: unknown;
+}
+
+interface BacktestData {
+  id: string;
+  status: string;
+  [key: string]: unknown;
+}
+
+interface CacheStatsData {
+  keysCount: number;
+  memoryUsageMb: number;
+  [key: string]: unknown;
+}
+
+interface ReportData {
+  id: string;
+  status: string;
+  [key: string]: unknown;
+}
+
+interface BuilderStatsData {
+  activeBuilders: number;
+  totalStrategies: number;
+  [key: string]: unknown;
+}
+
+interface AuditLogData {
+  id: string;
+  action: string;
+  timestamp: string;
+  [key: string]: unknown;
+}
+
+interface EventLogData {
+  id: string;
+  event: string;
+  timestamp: string;
+  [key: string]: unknown;
+}
+
+interface LoginLogData {
+  id: string;
+  userId: string;
+  timestamp: string;
+  [key: string]: unknown;
+}
+
+interface InviteData {
+  code: string;
+  remainingUses: number;
+  ttl: number;
+}
+
+interface TicketData {
+  id: string;
+  subject: string;
+  status: string;
+  [key: string]: unknown;
+}
+
+interface AdminData {
+  id: string;
+  email: string;
+  displayName: string;
+  role: string;
+  [key: string]: unknown;
+}
+
+interface ApiKeyData {
+  id: string;
+  name: string;
+  [key: string]: unknown;
+}
+
 // ─── Admin API ─────────────────────────────────────────────────────────────────
 
 export const adminApi = {
   // Dashboard
-  health: () => request<any>(buildUrl(API_BASE, '/dashboard')),
-  rateLimits: () => request<any>(buildUrl(API_BASE, '/dashboard/rate-limits')),
+  health: () => request<HealthData>(buildUrl(API_BASE, '/dashboard')),
+  rateLimits: () => request<RateLimitsData>(buildUrl(API_BASE, '/dashboard/rate-limits')),
   config: () => request<{ inviteOnly: boolean }>(buildUrl(API_BASE, '/config')),
   setInviteOnly: (enabled: boolean) =>
     request<{ inviteOnly: boolean }>(buildUrl(API_BASE, '/config/invite-only'), {
@@ -84,35 +204,35 @@ export const adminApi = {
 
   // Users
   users: (params?: QueryParams) =>
-    request<any>(buildUrl(API_BASE, '/users', params)),
-  user: (id: string) => request<any>(buildUrl(API_BASE, `/users/${id}`)),
+    request<PaginatedResponse<UserData>>(buildUrl(API_BASE, '/users', params)),
+  user: (id: string) => request<UserData>(buildUrl(API_BASE, `/users/${id}`)),
   suspendUser: (id: string, reason: string) =>
-    request<any>(buildUrl(API_BASE, `/users/${id}/suspend`), {
+    request<UserData>(buildUrl(API_BASE, `/users/${id}/suspend`), {
       method: 'PATCH',
       body: JSON.stringify({ reason }),
     }),
   unsuspendUser: (id: string) =>
-    request<any>(buildUrl(API_BASE, `/users/${id}/unsuspend`), {
+    request<UserData>(buildUrl(API_BASE, `/users/${id}/unsuspend`), {
       method: 'PATCH',
       body: JSON.stringify({}),
     }),
   approveUser: (id: string) =>
-    request<any>(buildUrl(API_BASE, `/users/${id}/approve`), {
+    request<UserData>(buildUrl(API_BASE, `/users/${id}/approve`), {
       method: 'PATCH',
       body: JSON.stringify({}),
     }),
   rejectUser: (id: string, reason?: string) =>
-    request<any>(buildUrl(API_BASE, `/users/${id}/reject`), {
+    request<UserData>(buildUrl(API_BASE, `/users/${id}/reject`), {
       method: 'PATCH',
       body: JSON.stringify({ reason }),
     }),
   updateLimits: (id: string, limits: Record<string, number>) =>
-    request<any>(buildUrl(API_BASE, `/users/${id}/limits`), {
+    request<UserData>(buildUrl(API_BASE, `/users/${id}/limits`), {
       method: 'PATCH',
       body: JSON.stringify(limits),
     }),
   userApiKeys: (userId: string) =>
-    request<any[]>(buildUrl(API_BASE, `/users/${userId}/api-keys`)),
+    request<PaginatedResponse<ApiKeyData>>(buildUrl(API_BASE, `/users/${userId}/api-keys`)),
   revokeUserApiKey: (userId: string, keyId: string) =>
     request<void>(buildUrl(API_BASE, `/users/${userId}/api-keys/${keyId}`), {
       method: 'DELETE',
@@ -120,39 +240,39 @@ export const adminApi = {
 
   // Strategies
   strategies: (params?: QueryParams) =>
-    request<any>(buildUrl(API_BASE, '/strategies', params)),
+    request<PaginatedResponse<StrategyData>>(buildUrl(API_BASE, '/strategies', params)),
   forceStop: (id: string) =>
-    request<any>(buildUrl(API_BASE, `/strategies/${id}/force-stop`), {
+    request<StrategyData>(buildUrl(API_BASE, `/strategies/${id}/force-stop`), {
       method: 'POST',
       body: JSON.stringify({}),
     }),
 
   // Orders
   orders: (params?: QueryParams) =>
-    request<any>(buildUrl(API_BASE, '/orders', params)),
-  dlq: () => request<any[]>(buildUrl(API_BASE, '/orders/dlq')),
+    request<PaginatedResponse<OrderData>>(buildUrl(API_BASE, '/orders', params)),
+  dlq: () => request<PaginatedResponse<OrderData>>(buildUrl(API_BASE, '/orders/dlq')),
   dlqReplay: (intentId: string) =>
-    request<any>(buildUrl(API_BASE, `/orders/dlq/${intentId}/replay`), {
+    request<OrderData>(buildUrl(API_BASE, `/orders/dlq/${intentId}/replay`), {
       method: 'POST',
       body: JSON.stringify({}),
     }),
   dlqDiscard: (intentId: string) =>
-    request<any>(buildUrl(API_BASE, `/orders/dlq/${intentId}/discard`), {
+    request<OrderData>(buildUrl(API_BASE, `/orders/dlq/${intentId}/discard`), {
       method: 'POST',
       body: JSON.stringify({}),
     }),
 
   // Backtests
   backtests: (params?: QueryParams) =>
-    request<any>(buildUrl(API_BASE, '/backtests', params)),
+    request<PaginatedResponse<BacktestData>>(buildUrl(API_BASE, '/backtests', params)),
   cancelBacktest: (id: string) =>
-    request<any>(buildUrl(API_BASE, `/backtests/${id}/cancel`), {
+    request<BacktestData>(buildUrl(API_BASE, `/backtests/${id}/cancel`), {
       method: 'POST',
       body: JSON.stringify({}),
     }),
 
   // Cache
-  cacheStats: () => request<any>(buildUrl(API_BASE, '/cache/stats')),
+  cacheStats: () => request<CacheStatsData>(buildUrl(API_BASE, '/cache/stats')),
   cacheFlush: (pattern: string) =>
     request<{ keysDeleted: number }>(
       buildUrl(API_BASE, `/cache/${encodeURIComponent(pattern)}`),
@@ -161,23 +281,23 @@ export const adminApi = {
 
   // Reports
   reports: (params?: QueryParams) =>
-    request<any>(buildUrl(API_BASE, '/reports', params)),
+    request<PaginatedResponse<ReportData>>(buildUrl(API_BASE, '/reports', params)),
   resolveReport: (id: string, status: string, adminNote?: string) =>
-    request<any>(buildUrl(API_BASE, `/reports/${id}`), {
+    request<ReportData>(buildUrl(API_BASE, `/reports/${id}`), {
       method: 'PATCH',
       body: JSON.stringify({ status, adminNote }),
     }),
 
   // Builder
-  builderStats: () => request<any>(buildUrl(API_BASE, '/builder/stats')),
+  builderStats: () => request<BuilderStatsData>(buildUrl(API_BASE, '/builder/stats')),
 
   // Logs
   auditLogs: (params?: QueryParams) =>
-    request<any>(buildUrl(API_BASE, '/logs/audit', params)),
+    request<PaginatedResponse<AuditLogData>>(buildUrl(API_BASE, '/logs/audit', params)),
   eventLogs: (params?: QueryParams) =>
-    request<any>(buildUrl(API_BASE, '/logs/events', params)),
+    request<PaginatedResponse<EventLogData>>(buildUrl(API_BASE, '/logs/events', params)),
   loginLogs: (params?: QueryParams) =>
-    request<any>(buildUrl(API_BASE, '/logs/logins', params)),
+    request<PaginatedResponse<LoginLogData>>(buildUrl(API_BASE, '/logs/logins', params)),
 
   // Invites
   generateInvites: (count: number, uses: number, ttlDays?: number) =>
@@ -186,7 +306,7 @@ export const adminApi = {
       body: JSON.stringify({ count, uses, ...(ttlDays ? { ttlDays } : {}) }),
     }),
   listInvites: () =>
-    request<{ code: string; remainingUses: number; ttl: number }[]>(
+    request<InviteData[]>(
       buildUrl(API_BASE, '/invites'),
     ),
   revokeInvite: (code: string) =>
@@ -197,38 +317,38 @@ export const adminApi = {
 
   // Tickets
   tickets: (params?: QueryParams) =>
-    request<any>(buildUrl(API_BASE, '/tickets', params)),
-  ticket: (id: string) => request<any>(buildUrl(API_BASE, `/tickets/${id}`)),
+    request<PaginatedResponse<TicketData>>(buildUrl(API_BASE, '/tickets', params)),
+  ticket: (id: string) => request<TicketData>(buildUrl(API_BASE, `/tickets/${id}`)),
   replyTicket: (id: string, body: string) =>
-    request<any>(buildUrl(API_BASE, `/tickets/${id}/messages`), {
+    request<TicketData>(buildUrl(API_BASE, `/tickets/${id}/messages`), {
       method: 'POST',
       body: JSON.stringify({ body }),
     }),
   updateTicket: (id: string, data: Record<string, string>) =>
-    request<any>(buildUrl(API_BASE, `/tickets/${id}`), {
+    request<TicketData>(buildUrl(API_BASE, `/tickets/${id}`), {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
 
   // Admins
-  listAdmins: () => request<any[]>(buildUrl(API_BASE, '/admins')),
+  listAdmins: () => request<AdminData[]>(buildUrl(API_BASE, '/admins')),
   createAdmin: (data: {
     email: string;
     displayName: string;
     password: string;
     role: string;
   }) =>
-    request<any>(buildUrl(API_BASE, '/admins'), {
+    request<AdminData>(buildUrl(API_BASE, '/admins'), {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  updateAdmin: (id: string, data: Record<string, any>) =>
-    request<any>(buildUrl(API_BASE, `/admins/${id}`), {
+  updateAdmin: (id: string, data: Record<string, string | number | boolean>) =>
+    request<AdminData>(buildUrl(API_BASE, `/admins/${id}`), {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
   deactivateAdmin: (id: string, password?: string) =>
-    request<any>(buildUrl(API_BASE, `/admins/${id}`), {
+    request<AdminData>(buildUrl(API_BASE, `/admins/${id}`), {
       method: 'DELETE',
       ...(password ? { body: JSON.stringify({ password }) } : {}),
     }),

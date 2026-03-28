@@ -16,7 +16,19 @@ export class InternalJwtGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly redisService: RedisService,
-  ) {}
+  ) {
+    this.validateInternalJwtSecret();
+  }
+
+  private validateInternalJwtSecret(): void {
+    const secret = process.env.INTERNAL_JWT_SECRET;
+    if (!secret) {
+      throw new Error('INTERNAL_JWT_SECRET environment variable is required');
+    }
+    if (secret.length < 32) {
+      throw new Error(`INTERNAL_JWT_SECRET must be at least 32 characters long (current length: ${secret.length})`);
+    }
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context

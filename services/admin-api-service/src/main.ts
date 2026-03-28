@@ -32,6 +32,18 @@ function validateEnv() {
     );
     process.exit(1);
   }
+
+  // Validate JWT secret minimum length (32 characters)
+  const secrets = ["ADMIN_JWT_SECRET", "INTERNAL_JWT_SECRET"];
+  for (const key of secrets) {
+    const secret = process.env[key];
+    if (secret && secret.length < 32) {
+      process.stderr.write(
+        `[admin-api-service] ${key} must be at least 32 characters long (current length: ${secret.length})\n`,
+      );
+      process.exit(1);
+    }
+  }
 }
 
 async function bootstrap() {

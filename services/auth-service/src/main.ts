@@ -22,6 +22,22 @@ function validateEnv() {
     process.exit(1);
   }
 
+  // Validate JWT secret minimum length (32 characters)
+  const secrets = ['USER_JWT_SECRET', 'INTERNAL_JWT_SECRET'];
+  if (process.env.NODE_ENV === 'production') {
+    secrets.push('ADMIN_JWT_SECRET', 'BOT_JWT_SECRET');
+  }
+
+  for (const key of secrets) {
+    const secret = process.env[key];
+    if (secret && secret.length < 32) {
+      process.stderr.write(
+        `[auth-service] ${key} must be at least 32 characters long (current length: ${secret.length})\n`,
+      );
+      process.exit(1);
+    }
+  }
+
   // Reject an all-zero TOTP encryption key in production — it's the insecure default
   if (process.env.NODE_ENV === 'production') {
     const totpKey = process.env.TOTP_ENCRYPTION_KEY ?? '';
@@ -33,8 +49,8 @@ function validateEnv() {
     }
 
     // Reject CHANGE_ME default JWT secrets in production
-    const secrets = ['USER_JWT_SECRET', 'ADMIN_JWT_SECRET', 'BOT_JWT_SECRET', 'INTERNAL_JWT_SECRET'];
-    for (const key of secrets) {
+    const secretsForDefaultCheck = ['USER_JWT_SECRET', 'ADMIN_JWT_SECRET', 'BOT_JWT_SECRET', 'INTERNAL_JWT_SECRET'];
+    for (const key of secretsForDefaultCheck) {
       if (process.env[key]?.startsWith('CHANGE_ME') || process.env[key]?.startsWith('dev-')) {
         process.stderr.write(
           `[auth-service] ${key} must be changed from default in production\n`,

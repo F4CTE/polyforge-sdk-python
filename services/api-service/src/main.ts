@@ -33,10 +33,22 @@ function validateEnv() {
     process.exit(1);
   }
 
+  // Validate JWT secret minimum length (32 characters)
+  const secrets = ['INTERNAL_JWT_SECRET'];
+  for (const key of secrets) {
+    const secret = process.env[key];
+    if (secret && secret.length < 32) {
+      process.stderr.write(
+        `[api-service] ${key} must be at least 32 characters long (current length: ${secret.length})\n`,
+      );
+      process.exit(1);
+    }
+  }
+
   if (process.env.NODE_ENV === 'production') {
     // Reject CHANGE_ME default JWT secrets
-    const secrets = ['USER_JWT_SECRET', 'ADMIN_JWT_SECRET', 'BOT_JWT_SECRET', 'INTERNAL_JWT_SECRET'];
-    for (const key of secrets) {
+    const secretsForDefaultCheck = ['USER_JWT_SECRET', 'ADMIN_JWT_SECRET', 'BOT_JWT_SECRET', 'INTERNAL_JWT_SECRET'];
+    for (const key of secretsForDefaultCheck) {
       if (process.env[key]?.startsWith('CHANGE_ME')) {
         throw new Error(`${key} must be changed from default in production`);
       }

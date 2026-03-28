@@ -21,6 +21,15 @@ function validateEnv() {
     process.exit(1);
   }
 
+  // Validate JWT secret minimum length (32 characters)
+  const jwtSecret = process.env.ADMIN_JWT_SECRET;
+  if (jwtSecret && jwtSecret.length < 32) {
+    process.stderr.write(
+      `[admin-auth-service] ADMIN_JWT_SECRET must be at least 32 characters long (current length: ${jwtSecret.length})\n`,
+    );
+    process.exit(1);
+  }
+
   if (process.env.NODE_ENV === "production") {
     const totpKey = process.env.TOTP_ENCRYPTION_KEY;
     if (!totpKey || totpKey === "0".repeat(64)) {
@@ -29,7 +38,6 @@ function validateEnv() {
       );
       process.exit(1);
     }
-    const jwtSecret = process.env.ADMIN_JWT_SECRET;
     if (jwtSecret?.startsWith("dev-") || jwtSecret?.startsWith("CHANGE_ME")) {
       process.stderr.write(
         "[admin-auth-service] ADMIN_JWT_SECRET must be changed from default in production\n",

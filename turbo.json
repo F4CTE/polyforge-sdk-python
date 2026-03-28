@@ -1,6 +1,7 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
+  "globalDependencies": ["wasm-pack", "cargo"],
   "tasks": {
     "generate": {
       "cache": false,
@@ -9,7 +10,12 @@
     "build": {
       "dependsOn": ["^build", "generate"],
       "inputs": ["$TURBO_DEFAULT$"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**"],
+      "excludePaths": ["packages/polyforge-crypto/**", "packages/polyforge-engine/**", "packages/polyforge-crypto-native/**"]
+    },
+    "build:wasm": {
+      "outputs": ["pkg/**", "*.node"],
+      "cache": false
     },
     "build:swagger": {
       "dependsOn": ["^build"],
