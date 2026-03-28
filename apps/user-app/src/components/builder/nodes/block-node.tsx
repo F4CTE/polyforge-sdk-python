@@ -184,4 +184,10 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         type="source"
         position={Position.Right}
         className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
-        style={{ borderColor: d.c
+        style={{ borderColor: d.color }}
+      />
+    </>
+  );
+}
+
+export const BlockNode = memo(BlockNodeInner);

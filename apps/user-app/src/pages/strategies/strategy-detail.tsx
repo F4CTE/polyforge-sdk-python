@@ -565,4 +565,22 @@ export function Component() {
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    {liveLog.map((e
+                    {liveLog.map((entry, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs">
+                        <span className="font-mono text-pf-text-muted shrink-0 w-16">
+                          {formatTime(entry.time)}
+                        </span>
+                        <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${LOG_DOT_COLORS[entry.severity]}`} />
+                        <span className={LOG_COLORS[entry.severity]}>{entry.message}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

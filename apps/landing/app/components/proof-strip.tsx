@@ -28,4 +28,9 @@ export function ProofStrip() {
                 <span className="text-xs sm:text-[13px] text-pf-text-muted">{stat.label}</span>
               </div>
             </div>
-          ))
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

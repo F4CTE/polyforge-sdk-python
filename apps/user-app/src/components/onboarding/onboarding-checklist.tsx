@@ -200,4 +200,23 @@ export function OnboardingChecklist() {
       {!collapsed && (
         <div className="px-4 py-2.5 border-t border-pf-border-subtle">
           <button
-  
+            onClick={() => {
+              const event = new CustomEvent('polyforge:start-tour');
+              window.dispatchEvent(event);
+            }}
+            className="text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors font-medium"
+          >
+            Take a tour of the platform
+          </button>
+        </div>
+      )}
+
+      {/* All done message */}
+      {allDone && (
+        <div className="px-4 py-3 text-center">
+          <p className="text-sm text-pf-success font-medium">All done! You're ready to trade.</p>
+        </div>
+      )}
+    </div>
+  );
+}

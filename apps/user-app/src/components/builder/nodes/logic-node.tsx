@@ -216,4 +216,12 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           type="source"
           position={Position.Right}
           id="output"
-          className="!w-2.5 !h-2.5 !bg-pf-elevated !
+          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+          style={{ borderColor: color }}
+        />
+      )}
+    </>
+  );
+}
+
+export const LogicNode = memo(LogicNodeInner);

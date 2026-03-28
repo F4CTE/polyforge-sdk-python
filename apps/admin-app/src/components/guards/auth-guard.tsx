@@ -35,3 +35,10 @@ export function AuthGuard() {
       </div>
     );
   }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Outlet />;
+}

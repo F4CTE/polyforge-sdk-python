@@ -68,4 +68,13 @@ export function statusColor(status: string | undefined | null): string {
     REVIEWED: 'text-emerald-400 bg-emerald-400/10',
     DISMISSED: 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]',
   };
-  return colors[s] ?? 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevat
+  return colors[s] ?? 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]';
+}
+
+/** Priority badge color helpers */
+export const priorityColor: Record<string, string> = {
+  LOW: 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]',
+  MEDIUM: 'text-amber-400 bg-amber-400/10',
+  HIGH: 'text-orange-400 bg-orange-400/10',
+  URGENT: 'text-red-400 bg-red-400/10',
+};

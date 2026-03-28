@@ -117,4 +117,13 @@ export function Component() {
 
         {/* Footer */}
         <nav aria-label="Legal pages" className="flex items-center gap-3 mt-12 pt-6 border-t border-pf-border-subtle text-sm text-pf-text-muted">
-          <Link to="/terms" className="hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan
+          <Link to="/terms" className="hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 rounded-pf-sm">Terms of Service</Link>
+          <span aria-hidden="true">&middot;</span>
+          <Link to="/login" className="hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 rounded-pf-sm">Sign in</Link>
+          <span aria-hidden="true">&middot;</span>
+          <Link to="/register" className="hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 rounded-pf-sm">Register</Link>
+        </nav>
+      </main>
+    </div>
+  );
+}

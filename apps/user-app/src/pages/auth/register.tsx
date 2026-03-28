@@ -273,4 +273,12 @@ export function Component() {
 
         {/* Links below card */}
         <p className="text-center text-sm text-pf-text-muted mt-6">
-          Already have an acc
+          Already have an account?{' '}
+          <Link to="/login" className="text-pf-cyan-400 hover:text-pf-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
+            Sign in
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}

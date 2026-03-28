@@ -470,4 +470,14 @@ export function Component() {
                     >
                       Trade
                     </Link>
-               
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        )}
+      </div>
+    </div>
+  );
+}

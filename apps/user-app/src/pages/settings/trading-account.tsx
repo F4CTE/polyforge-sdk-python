@@ -208,4 +208,9 @@ export function Component() {
         <button onClick={generateBotCode} disabled={botCodeLoading}
           className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm font-medium text-pf-text hover:border-pf-border-strong disabled:opacity-50 transition-colors">
           {botCodeLoading ? <Loader2 className="size-4 animate-spin" /> : <QrCode className="size-4" />}
-          {botCode ? 'R
+          {botCode ? 'Regenerate Code' : 'Generate Code'}
+        </button>
+      </div>
+    </div>
+  );
+}

@@ -178,4 +178,14 @@ export function StrategyCanvas() {
               </svg>
             </div>
             <p className="text-sm text-pf-text-secondary font-medium">
-              Drag a 
+              Drag a block from the panel to get started
+            </p>
+            <p className="text-xs text-pf-text-muted">
+              Or click a block in the panel to add it
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

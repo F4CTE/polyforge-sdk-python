@@ -99,4 +99,13 @@ export function Component() {
           )}
 
           <div className="border-t border-pf-border mt-6 pt-4 text-center text-sm">
-            <Link to="/logi
+            <Link to="/login" className="inline-flex items-center gap-1.5 text-pf-cyan-500 hover:text-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 rounded-pf-sm">
+              <ArrowLeft className="size-4" />
+              Back to login
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

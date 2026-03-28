@@ -129,4 +129,20 @@ export function Component() {
           <button
             type="submit"
             disabled={loading || (totpRequired && totpCode.length < 6)}
-            className="w-full py-2 px-4 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] dis
+            className="w-full py-2 px-4 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-pf-elevated)]"
+          >
+            {loading ? 'Signing in...' : totpRequired ? 'Verify & Sign In' : 'Sign In'}
+          </button>
+
+          <p className="text-sm text-center text-pf-warning">
+            This endpoint is rate limited. Too many failed attempts will result in a temporary lockout.
+          </p>
+        </form>
+
+        <p className="text-sm text-[var(--color-pf-text-muted)] mt-3 text-center">
+          Forgot password? Contact your system administrator.
+        </p>
+      </div>
+    </div>
+  );
+}

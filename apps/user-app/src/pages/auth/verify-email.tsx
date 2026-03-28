@@ -154,4 +154,20 @@ export function Component() {
               <button
                 onClick={handleResend}
                 disabled={resending}
-                className="w-full py-2.5 border border-pf-border text-pf-text font-medium rounded-pf hover:bg-pf-border/30 disabled:opacity-50 transition-colors focus-visible
+                className="w-full py-2.5 border border-pf-border text-pf-text font-medium rounded-pf hover:bg-pf-border/30 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+              >
+                {resending ? 'Sending...' : 'Resend email'}
+              </button>
+
+              <div className="mt-4 text-sm">
+                <Link to="/login" className="text-pf-cyan-500 hover:text-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 rounded-pf-sm">
+                  Back to login
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

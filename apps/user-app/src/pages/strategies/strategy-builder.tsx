@@ -321,4 +321,16 @@ export function Component() {
                   <span className="text-pf-text-secondary block">Filled</span>
                   <span className="font-mono font-semibold text-pf-text">{String(quickResult.filledOrders)}</span>
                 </div>
-         
+              </div>
+            </div>
+          )}
+
+          {/* Side panel — always mounted, collapsed via width to prevent React Flow reflow issues */}
+          <div className={`transition-all duration-200 overflow-hidden ${panelOpen ? 'w-80' : 'w-0'}`}>
+            <BlockPalette open={panelOpen} onClose={() => setPanelOpen(false)} />
+          </div>
+        </div>
+      </ReactFlowProvider>
+    </div>
+  );
+}

@@ -168,4 +168,25 @@ export function Nav() {
             { href: '#how-it-works', label: 'How it works' },
             { href: '/api-docs', label: 'API Docs' },
             { href: '/login', label: 'Sign in' },
-          ].map(({ hre
+          ].map(({ href, label }) => (
+            <a
+              key={href}
+              href={href}
+              onClick={() => setMobileOpen(false)}
+              className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
+            >
+              {label}
+            </a>
+          ))}
+          <a
+            href="/register"
+            onClick={() => setMobileOpen(false)}
+            className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+          >
+            Start building free
+          </a>
+        </div>
+      )}
+    </nav>
+  );
+}

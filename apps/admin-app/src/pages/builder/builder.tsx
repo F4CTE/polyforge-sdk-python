@@ -95,4 +95,19 @@ export function Component() {
                 {stats.weekly.map((w) => (
                   <tr key={w.week} className="border-b border-[var(--color-pf-border)] last:border-0">
                     <td className="px-3 py-2.5 text-[var(--color-pf-text)]">{w.week}</td>
-                    <td className="px-3 py-2.5 text-ri
+                    <td className="px-3 py-2.5 text-right text-[var(--color-pf-text-secondary)]">
+                      ${Number(w.volume).toLocaleString()}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-pf-success font-medium">
+                      ${w.reward}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

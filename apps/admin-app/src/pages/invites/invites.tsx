@@ -215,4 +215,21 @@ export function Component() {
                       ) : (
                         <button
                           onClick={() => setConfirmRevokeCode(inv.code)}
-                          className="p-1 rounded hover:bg-pf-danger/10 text-[var
+                          className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
+                          aria-label="Revoke invite"
+                          title="Revoke invite"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

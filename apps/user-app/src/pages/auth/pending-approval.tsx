@@ -40,4 +40,12 @@ export function Component() {
 
           <Link
             to="/login"
-            className="text-pf-cyan-400 text-sm hover:text-pf-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-vi
+            className="text-pf-cyan-400 text-sm hover:text-pf-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
+          >
+            Back to login
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -290,4 +290,17 @@ export function Component() {
                 className="flex items-center gap-2.5 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border-subtle"
               >
                 <span className="text-lg">{BADGE_ICONS[badge.type] ?? '\u{2B50}'}</span>
-                <div className="
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-pf-text truncate">{badge.name}</div>
+                  <div className="text-[10px] text-pf-text-muted">
+                    {new Date(badge.earnedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

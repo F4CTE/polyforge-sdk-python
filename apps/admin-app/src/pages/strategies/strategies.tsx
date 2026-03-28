@@ -141,4 +141,7 @@ export function Component() {
             </div>
           </div>
         )}
-    
+      </div>
+    </div>
+  );
+}

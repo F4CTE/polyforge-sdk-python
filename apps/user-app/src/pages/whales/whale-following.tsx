@@ -135,4 +135,14 @@ export function Component() {
               </div>
 
               <div className="flex items-center gap-4 text-xs text-pf-text-secondary">
-                <span>Volume: <span className="font-mono t
+                <span>Volume: <span className="font-mono text-pf-text">{wallet.totalVolume}</span></span>
+                <span>P&L: <span className={`font-mono ${pnlColor(wallet.totalPnl)}`}>{pnlSign(wallet.totalPnl)}</span></span>
+                <span>Trades: <span className="font-mono text-pf-text">{wallet.tradeCount}</span></span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

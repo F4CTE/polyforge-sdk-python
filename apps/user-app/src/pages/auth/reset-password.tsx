@@ -140,4 +140,14 @@ export function Component() {
               <p className="text-sm text-pf-text-muted mb-6">You can now sign in with your new password.</p>
               <Link
                 to="/login"
-   
+                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+              >
+                Sign in
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
