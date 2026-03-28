@@ -597,7 +597,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       const url = state.strategyId
         ? `/api/v1/strategies/${state.strategyId}`
         : '/api/v1/strategies';
-      const method = state.strategyId ? 'PUT' : 'POST';
+      const method = state.strategyId ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {
         method,
@@ -607,6 +607,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       });
 
       if (!res.ok) {
+        if (res.status === 401) throw new Error('SESSION_EXPIRED');
         const err = await res.json().catch(() => ({})) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
         throw new Error(err.message ?? 'Save failed');
       }

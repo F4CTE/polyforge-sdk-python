@@ -1483,6 +1483,268 @@ async function main() {
   console.log('  ✓ 5 strategy templates (Simple Momentum, Mean Reversion, News Reactive, Risk Manager, Whale Follower)');
 
   // ───────────────────────────────────────────────
+  // APPROVE ALL USERS (fix INVITE_ONLY login block)
+  // ───────────────────────────────────────────────
+
+  console.log('🔓 Approving all seed users...');
+  await prisma.user.updateMany({
+    where: { approved: false },
+    data: { approved: true, approvedAt: new Date() },
+  });
+  console.log('  ✓ All users approved');
+
+  // ───────────────────────────────────────────────
+  // NEWS ARTICLES & SIGNALS
+  // ───────────────────────────────────────────────
+
+  console.log('📰 Seeding news articles & signals...');
+
+  // Grab real market IDs from synced Polymarket data
+  const realMarkets = await prisma.market.findMany({
+    where: { closedAt: null },
+    orderBy: { volume24h: 'desc' },
+    take: 8,
+    select: { id: true, title: true },
+  });
+
+  // Also grab tokens for those markets
+  const realTokens = realMarkets.length > 0
+    ? await prisma.token.findMany({
+        where: { marketId: { in: realMarkets.map((m) => m.id) } },
+        select: { id: true, marketId: true, outcome: true },
+      })
+    : [];
+
+  const tokenForMarket = (mktId: string, outcome = 'YES') =>
+    realTokens.find((t) => t.marketId === mktId && t.outcome === outcome)?.id ?? 'token_placeholder';
+
+  const newsArticles = [
+    {
+      id: 'news-seed-001',
+      source: 'Reuters',
+      title: 'Netanyahu faces mounting pressure as ceasefire deadline looms',
+      summary:
+        'Israeli PM Netanyahu is under increasing domestic and international pressure to finalize a ceasefire agreement before the March 31 deadline. Analysts say the outcome could shift prediction market odds significantly, with current YES prices hovering around 65 cents.',
+      url: 'https://reuters.com/seed/netanyahu-ceasefire-2026',
+      sentiment: 'NEGATIVE' as const,
+      publishedAt: hoursAgo(2),
+    },
+    {
+      id: 'news-seed-002',
+      source: 'CoinDesk',
+      title: 'Bitcoin surges past $92K as institutional inflows hit record',
+      summary:
+        'Bitcoin climbed above $92,000 for the first time in three weeks, driven by record-breaking institutional ETF inflows of $1.2 billion in a single day. Polymarket traders are repricing crypto-related contracts as momentum builds toward the $100K barrier.',
+      url: 'https://coindesk.com/seed/bitcoin-92k-surge-2026',
+      sentiment: 'POSITIVE' as const,
+      publishedAt: hoursAgo(4),
+    },
+    {
+      id: 'news-seed-003',
+      source: 'ESPN',
+      title: 'March Madness upsets reshape bracket odds heading into Elite Eight',
+      summary:
+        'A string of upsets in the Sweet Sixteen has dramatically shifted the NCAA tournament landscape. No. 11 seed VCU stunned top-seeded Duke, while No. 7 Clemson knocked off No. 2 Arizona. Prediction markets are repricing championship futures across the board.',
+      url: 'https://espn.com/seed/march-madness-elite-eight-2026',
+      sentiment: 'NEUTRAL' as const,
+      publishedAt: hoursAgo(6),
+    },
+    {
+      id: 'news-seed-004',
+      source: 'Bloomberg',
+      title: 'Fed signals potential rate cut as PCE inflation undershoots forecast',
+      summary:
+        'The Federal Reserve\'s preferred inflation gauge, core PCE, came in at 2.1% year-over-year — below the 2.3% consensus. Multiple Fed governors have signaled openness to a June rate cut. Bond markets rallied immediately on the news.',
+      url: 'https://bloomberg.com/seed/fed-pce-rate-cut-2026',
+      sentiment: 'POSITIVE' as const,
+      publishedAt: hoursAgo(8),
+    },
+    {
+      id: 'news-seed-005',
+      source: 'TechCrunch',
+      title: 'OpenAI launches GPT-5 with real-time reasoning capabilities',
+      summary:
+        'OpenAI unveiled GPT-5 today, featuring what the company calls "continuous reasoning." The launch sent prediction market contracts on AI milestones surging, with "AGI by 2027" jumping 12 percentage points.',
+      url: 'https://techcrunch.com/seed/openai-gpt-5-launch-2026',
+      sentiment: 'POSITIVE' as const,
+      publishedAt: hoursAgo(10),
+    },
+    {
+      id: 'news-seed-006',
+      source: 'AP News',
+      title: 'US forces positioning near Iranian border raises tension',
+      summary:
+        'US military assets have been repositioned in the Persian Gulf region amid heightened tensions with Iran. The Pentagon described the move as "routine readiness adjustments" but prediction market odds on military action have ticked upward by 8 points.',
+      url: 'https://apnews.com/seed/us-forces-iran-2026',
+      sentiment: 'NEGATIVE' as const,
+      publishedAt: hoursAgo(12),
+    },
+    {
+      id: 'news-seed-007',
+      source: 'CNBC',
+      title: 'S&P 500 hits all-time high as tech earnings beat expectations',
+      summary:
+        'The S&P 500 closed at a record 5,847, boosted by better-than-expected earnings from Nvidia, Microsoft, and Amazon. Prediction market contracts on "S&P above 6000 by June" moved to 72 cents.',
+      url: 'https://cnbc.com/seed/sp500-record-2026',
+      sentiment: 'POSITIVE' as const,
+      publishedAt: hoursAgo(14),
+    },
+    {
+      id: 'news-seed-008',
+      source: 'The Block',
+      title: 'Ethereum layer-2 transactions surpass mainnet for the first time',
+      summary:
+        'Combined transaction volume across Ethereum L2 networks (Arbitrum, Optimism, Base, zkSync) has officially exceeded Ethereum mainnet daily throughput. This milestone reignites the debate around ETH value accrual.',
+      url: 'https://theblock.co/seed/eth-l2-surpass-mainnet-2026',
+      sentiment: 'NEUTRAL' as const,
+      publishedAt: hoursAgo(18),
+    },
+    {
+      id: 'news-seed-009',
+      source: 'ESPN',
+      title: 'Clippers acquire key piece at trade deadline, championship odds shift',
+      summary:
+        'The LA Clippers completed a blockbuster deal acquiring a top defensive wing. Sportsbooks and prediction markets alike have adjusted — Clippers championship futures moved from +2200 to +1400 overnight.',
+      url: 'https://espn.com/seed/clippers-trade-deadline-2026',
+      sentiment: 'POSITIVE' as const,
+      publishedAt: hoursAgo(22),
+    },
+    {
+      id: 'news-seed-010',
+      source: 'CNN',
+      title: 'Senate passes bipartisan crypto regulation bill in landmark vote',
+      summary:
+        'The US Senate voted 68-32 to pass the Digital Asset Market Structure Act, providing the first comprehensive regulatory framework for cryptocurrencies. The bill now heads to the House. Crypto markets rallied on the news.',
+      url: 'https://cnn.com/seed/senate-crypto-regulation-2026',
+      sentiment: 'POSITIVE' as const,
+      publishedAt: hoursAgo(26),
+    },
+  ];
+
+  for (const article of newsArticles) {
+    await prisma.newsArticle.upsert({
+      where: { url: article.url },
+      update: {},
+      create: {
+        id: article.id,
+        source: article.source,
+        title: article.title,
+        summary: article.summary,
+        url: article.url,
+        sentiment: article.sentiment,
+        publishedAt: article.publishedAt,
+      },
+    });
+  }
+
+  // Create signals referencing real markets (if any synced markets exist)
+  if (realMarkets.length >= 2) {
+    const signalData = [
+      { articleId: 'news-seed-001', marketId: realMarkets[0].id, direction: 'BUY', outcome: 'YES', confidence: 82, reasoning: 'Ceasefire deadline pressure increases probability of resolution. Market underpricing based on diplomatic sources.' },
+      { articleId: 'news-seed-001', marketId: realMarkets[1].id, direction: 'SELL', outcome: 'NO', confidence: 65, reasoning: 'Geopolitical uncertainty causes correlated moves across political markets. Hedging recommended.' },
+      { articleId: 'news-seed-002', marketId: realMarkets[Math.min(2, realMarkets.length - 1)].id, direction: 'BUY', outcome: 'YES', confidence: 88, reasoning: 'Record ETF inflows are a strong leading indicator. Institutional momentum typically sustains for 2-3 weeks.' },
+      { articleId: 'news-seed-003', marketId: realMarkets[Math.min(3, realMarkets.length - 1)].id, direction: 'SELL', outcome: 'YES', confidence: 71, reasoning: 'Bracket chaos creates mispricing opportunities. Historical upset patterns suggest further volatility.' },
+      { articleId: 'news-seed-004', marketId: realMarkets[0].id, direction: 'BUY', outcome: 'YES', confidence: 91, reasoning: 'PCE undershoot + Fed commentary strongly suggest June cut. Market is lagging behind the signal.' },
+      { articleId: 'news-seed-005', marketId: realMarkets[Math.min(5, realMarkets.length - 1)].id, direction: 'BUY', outcome: 'YES', confidence: 78, reasoning: 'GPT-5 capabilities exceed expectations. AI milestone contracts are repricing but still behind the curve.' },
+      { articleId: 'news-seed-006', marketId: realMarkets[1].id, direction: 'SELL', outcome: 'YES', confidence: 73, reasoning: 'Military positioning increases tail risk. Geopolitical markets should price in higher uncertainty.' },
+      { articleId: 'news-seed-007', marketId: realMarkets[Math.min(6, realMarkets.length - 1)].id, direction: 'BUY', outcome: 'YES', confidence: 85, reasoning: 'Tech earnings momentum and rate cut expectations create strong bullish confluence for equity index targets.' },
+      { articleId: 'news-seed-009', marketId: realMarkets[Math.min(7, realMarkets.length - 1)].id, direction: 'BUY', outcome: 'YES', confidence: 69, reasoning: 'Roster upgrade shifts championship probability. Market odds haven\'t fully adjusted to the new lineup strength.' },
+      { articleId: 'news-seed-010', marketId: realMarkets[Math.min(2, realMarkets.length - 1)].id, direction: 'BUY', outcome: 'YES', confidence: 93, reasoning: 'Regulatory clarity is the biggest catalyst for institutional crypto adoption. Landmark event.' },
+    ];
+
+    for (const sig of signalData) {
+      try {
+        await prisma.newsSignal.create({
+          data: {
+            articleId: sig.articleId,
+            marketId: sig.marketId,
+            direction: sig.direction,
+            outcome: sig.outcome,
+            confidence: sig.confidence,
+            reasoning: sig.reasoning,
+          },
+        });
+      } catch { /* skip duplicates or FK errors */ }
+    }
+  }
+
+  console.log(`  ✓ ${newsArticles.length} news articles + signals (linked to ${realMarkets.length} real markets)`);
+
+  // ───────────────────────────────────────────────
+  // WHALE PROFILES & ALERTS
+  // ───────────────────────────────────────────────
+
+  console.log('🐋 Seeding whale profiles & alerts...');
+
+  const whaleProfiles = [
+    { walletAddress: '0x1234567890abcdef1234567890abcdef12345678', totalVolume: 2850000, totalPnl: 342000, tradeCount: 847, winRate: 67.3, lastTradeAt: hoursAgo(0.5) },
+    { walletAddress: '0xdeadbeef00000000000000000000000000000001', totalVolume: 1420000, totalPnl: -89000, tradeCount: 523, winRate: 48.2, lastTradeAt: hoursAgo(2) },
+    { walletAddress: '0xWhaleAlpha000000000000000000000000000001', totalVolume: 980000, totalPnl: 215000, tradeCount: 312, winRate: 72.1, lastTradeAt: hoursAgo(1) },
+    { walletAddress: '0xBigFish00000000000000000000000000000001', totalVolume: 750000, totalPnl: 167000, tradeCount: 198, winRate: 63.5, lastTradeAt: hoursAgo(4) },
+    { walletAddress: '0xMobyDick0000000000000000000000000000001', totalVolume: 3200000, totalPnl: 890000, tradeCount: 1204, winRate: 71.8, lastTradeAt: hoursAgo(0.25) },
+    { walletAddress: '0xKrakenWallet000000000000000000000000001', totalVolume: 560000, totalPnl: 45000, tradeCount: 156, winRate: 55.8, lastTradeAt: hoursAgo(6) },
+    { walletAddress: '0xDeepBlue0000000000000000000000000000001', totalVolume: 1100000, totalPnl: 298000, tradeCount: 445, winRate: 68.9, lastTradeAt: hoursAgo(3) },
+    { walletAddress: '0xLeviathan000000000000000000000000000001', totalVolume: 480000, totalPnl: -23000, tradeCount: 134, winRate: 44.7, lastTradeAt: hoursAgo(8) },
+  ];
+
+  for (const wp of whaleProfiles) {
+    await prisma.whaleProfile.upsert({
+      where: { walletAddress: wp.walletAddress },
+      update: {},
+      create: {
+        walletAddress: wp.walletAddress,
+        totalVolume: wp.totalVolume,
+        totalPnl: wp.totalPnl,
+        tradeCount: wp.tradeCount,
+        winRate: wp.winRate,
+        lastTradeAt: wp.lastTradeAt,
+      },
+    });
+  }
+
+  // Create whale alerts linked to real markets
+  if (realMarkets.length >= 4) {
+    const whaleAlerts = [
+      { walletAddress: '0x1234567890abcdef1234567890abcdef12345678', marketId: realMarkets[0].id, tokenId: tokenForMarket(realMarkets[0].id, 'YES'), side: 'BUY' as const, outcome: 'YES' as const, size: 85000, price: 0.65, notional: 55250, detectedAt: hoursAgo(0.5) },
+      { walletAddress: '0x1234567890abcdef1234567890abcdef12345678', marketId: realMarkets[1].id, tokenId: tokenForMarket(realMarkets[1].id, 'YES'), side: 'BUY' as const, outcome: 'YES' as const, size: 120000, price: 0.42, notional: 50400, detectedAt: hoursAgo(2) },
+      { walletAddress: '0xdeadbeef00000000000000000000000000000001', marketId: realMarkets[2].id, tokenId: tokenForMarket(realMarkets[2].id, 'NO'), side: 'SELL' as const, outcome: 'NO' as const, size: 200000, price: 0.35, notional: 70000, detectedAt: hoursAgo(1) },
+      { walletAddress: '0xdeadbeef00000000000000000000000000000001', marketId: realMarkets[0].id, tokenId: tokenForMarket(realMarkets[0].id, 'YES'), side: 'BUY' as const, outcome: 'YES' as const, size: 50000, price: 0.67, notional: 33500, detectedAt: hoursAgo(4) },
+      { walletAddress: '0xWhaleAlpha000000000000000000000000000001', marketId: realMarkets[3].id, tokenId: tokenForMarket(realMarkets[3].id, 'YES'), side: 'BUY' as const, outcome: 'YES' as const, size: 75000, price: 0.55, notional: 41250, detectedAt: hoursAgo(0.75) },
+      { walletAddress: '0xWhaleAlpha000000000000000000000000000001', marketId: realMarkets[Math.min(4, realMarkets.length - 1)].id, tokenId: tokenForMarket(realMarkets[Math.min(4, realMarkets.length - 1)].id, 'YES'), side: 'BUY' as const, outcome: 'YES' as const, size: 60000, price: 0.72, notional: 43200, detectedAt: hoursAgo(3) },
+      { walletAddress: '0xMobyDick0000000000000000000000000000001', marketId: realMarkets[0].id, tokenId: tokenForMarket(realMarkets[0].id, 'YES'), side: 'BUY' as const, outcome: 'YES' as const, size: 300000, price: 0.65, notional: 195000, detectedAt: hoursAgo(0.25) },
+      { walletAddress: '0xMobyDick0000000000000000000000000000001', marketId: realMarkets[1].id, tokenId: tokenForMarket(realMarkets[1].id, 'YES'), side: 'SELL' as const, outcome: 'YES' as const, size: 150000, price: 0.78, notional: 117000, detectedAt: hoursAgo(1) },
+      { walletAddress: '0xMobyDick0000000000000000000000000000001', marketId: realMarkets[2].id, tokenId: tokenForMarket(realMarkets[2].id, 'NO'), side: 'BUY' as const, outcome: 'NO' as const, size: 180000, price: 0.31, notional: 55800, detectedAt: hoursAgo(5) },
+      { walletAddress: '0xBigFish00000000000000000000000000000001', marketId: realMarkets[3].id, tokenId: tokenForMarket(realMarkets[3].id, 'YES'), side: 'BUY' as const, outcome: 'YES' as const, size: 45000, price: 0.60, notional: 27000, detectedAt: hoursAgo(4) },
+      { walletAddress: '0xDeepBlue0000000000000000000000000000001', marketId: realMarkets[Math.min(4, realMarkets.length - 1)].id, tokenId: tokenForMarket(realMarkets[Math.min(4, realMarkets.length - 1)].id, 'YES'), side: 'SELL' as const, outcome: 'YES' as const, size: 95000, price: 0.48, notional: 45600, detectedAt: hoursAgo(3) },
+      { walletAddress: '0xDeepBlue0000000000000000000000000000001', marketId: realMarkets[0].id, tokenId: tokenForMarket(realMarkets[0].id, 'YES'), side: 'BUY' as const, outcome: 'YES' as const, size: 110000, price: 0.66, notional: 72600, detectedAt: hoursAgo(6) },
+      { walletAddress: '0xKrakenWallet000000000000000000000000001', marketId: realMarkets[1].id, tokenId: tokenForMarket(realMarkets[1].id, 'YES'), side: 'BUY' as const, outcome: 'YES' as const, size: 38000, price: 0.43, notional: 16340, detectedAt: hoursAgo(6) },
+      { walletAddress: '0xLeviathan000000000000000000000000000001', marketId: realMarkets[2].id, tokenId: tokenForMarket(realMarkets[2].id, 'NO'), side: 'BUY' as const, outcome: 'NO' as const, size: 65000, price: 0.28, notional: 18200, detectedAt: hoursAgo(8) },
+      { walletAddress: '0xLeviathan000000000000000000000000000001', marketId: realMarkets[3].id, tokenId: tokenForMarket(realMarkets[3].id, 'YES'), side: 'SELL' as const, outcome: 'YES' as const, size: 42000, price: 0.71, notional: 29820, detectedAt: hoursAgo(10) },
+    ];
+
+    for (const wa of whaleAlerts) {
+      try {
+        await prisma.whaleAlert.create({
+          data: {
+            walletAddress: wa.walletAddress,
+            marketId: wa.marketId,
+            tokenId: wa.tokenId,
+            side: wa.side,
+            outcome: wa.outcome,
+            size: wa.size,
+            price: wa.price,
+            notional: wa.notional,
+            txHash: '0xseed' + Math.random().toString(16).slice(2, 14),
+            detectedAt: wa.detectedAt,
+          },
+        });
+      } catch { /* skip FK errors */ }
+    }
+  }
+
+  console.log(`  ✓ ${whaleProfiles.length} whale profiles + ${realMarkets.length >= 4 ? 15 : 0} whale alerts`);
+
+  // ───────────────────────────────────────────────
   // DONE
   // ───────────────────────────────────────────────
 

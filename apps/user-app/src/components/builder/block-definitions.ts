@@ -5,7 +5,7 @@ export type BlockSection = 'safety' | 'triggers' | 'conditions' | 'actions' | 'l
 export interface BlockField {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'select';
+  type: 'text' | 'number' | 'select' | 'market_slot';
   placeholder: string;
   /** Options for 'select' type fields */
   options?: string[];
@@ -92,7 +92,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Price Crosses Up',
       description: 'Fires when price crosses above threshold.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'threshold', label: 'Price Threshold', type: 'number', placeholder: '0.60' },
       ],
     },
@@ -101,7 +101,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Price Crosses Down',
       description: 'Fires when price crosses below threshold.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'threshold', label: 'Price Threshold', type: 'number', placeholder: '0.40' },
       ],
     },
@@ -110,7 +110,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Price Change %',
       description: 'Fires on price change over time window.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'pct', label: 'Change %', type: 'number', placeholder: '5' },
         { key: 'windowMs', label: 'Window (ms)', type: 'number', placeholder: '60000' },
       ],
@@ -120,7 +120,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Volume Spike',
       description: 'Fires when volume multiplier exceeds threshold.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'multiplier', label: 'Multiplier', type: 'number', placeholder: '3' },
       ],
     },
@@ -141,7 +141,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Price Above',
       description: 'True each tick when price is above threshold.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'threshold', label: 'Threshold', type: 'number', placeholder: '0.60' },
       ],
     },
@@ -150,7 +150,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Price Below',
       description: 'True each tick when price is below threshold.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'threshold', label: 'Threshold', type: 'number', placeholder: '0.40' },
       ],
     },
@@ -159,7 +159,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Spread Below',
       description: 'True when spread is tight enough.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'maxSpread', label: 'Max Spread', type: 'number', placeholder: '0.05' },
       ],
     },
@@ -168,7 +168,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Liquidity Above',
       description: 'True when liquidity meets minimum.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'minLiquidity', label: 'Min Liquidity (USDC)', type: 'number', placeholder: '1000' },
       ],
     },
@@ -176,13 +176,13 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       type: 'position_open',
       label: 'Position Open',
       description: 'True when an open position exists.',
-      fields: [{ key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' }],
+      fields: [{ key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' }],
     },
     {
       type: 'no_position',
       label: 'No Position',
       description: 'True when no position is open.',
-      fields: [{ key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' }],
+      fields: [{ key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' }],
     },
     {
       type: 'time_between',
@@ -214,7 +214,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Min Price',
       description: 'Token price must be above minimum.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'minPrice', label: 'Min Price', type: 'number', placeholder: '0.10' },
       ],
     },
@@ -223,7 +223,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Max Price',
       description: 'Token price must be below maximum.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'maxPrice', label: 'Max Price', type: 'number', placeholder: '0.90' },
       ],
     },
@@ -344,7 +344,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Buy YES',
       description: 'Buy YES tokens for the specified amount.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
       ],
     },
@@ -353,7 +353,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Buy NO',
       description: 'Buy NO tokens for the specified amount.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
       ],
     },
@@ -362,7 +362,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Sell YES',
       description: 'Sell YES tokens for the specified amount.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
       ],
     },
@@ -371,7 +371,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       label: 'Sell NO',
       description: 'Sell NO tokens for the specified amount.',
       fields: [
-        { key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' },
+        { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
         { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
       ],
     },
@@ -379,7 +379,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       type: 'close_position',
       label: 'Close Position',
       description: 'Fully close the position (FOK SELL).',
-      fields: [{ key: 'tokenId', label: 'Token ID', type: 'text', placeholder: 'token-uuid' }],
+      fields: [{ key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' }],
     },
     {
       type: 'set_stop_loss',
@@ -410,6 +410,8 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
     },
   ],
 };
+
+export const DEFAULT_MARKET_SLOTS = ['$MARKET_A', '$MARKET_B', '$MARKET_C', '$MARKET_D', '$MARKET_E'];
 
 /** Find a block definition by type across all sections */
 export function findBlockDef(type: string): (BlockDef & { section: BlockSection }) | undefined {

@@ -26,4 +26,8 @@ export class CreateBacktestDto {
   @IsOptional()
   @IsObject()
   strategyBlocks?: Record<string, unknown>;
+
+  @IsOptional()
+  @IsObject()
+  marketBindings?: Record<string, string>;
 }

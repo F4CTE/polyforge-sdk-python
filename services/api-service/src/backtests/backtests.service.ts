@@ -75,6 +75,7 @@ export class BacktestsService {
       runId: run.id,
       userId,
       strategyId: dto.strategyId ?? "",
+      marketBindings: dto.marketBindings ? JSON.stringify(dto.marketBindings) : "",
       ts: String(Date.now()),
     });
 

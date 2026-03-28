@@ -101,7 +101,19 @@ export function Component() {
         if (!r.ok) throw new Error('Not found');
         return r.json();
       })
-      .then((data: NewsArticle) => { if (!cancelled) { setArticle(data); setLoading(false); } })
+      .then((data: any) => {
+        if (cancelled) return;
+        // Normalise: flatten nested market into marketName on signals
+        const article: NewsArticle = {
+          ...data,
+          signals: (data.signals ?? []).map((s: any) => ({
+            ...s,
+            marketName: s.marketName ?? s.market?.title ?? 'Unknown market',
+          })),
+        };
+        setArticle(article);
+        setLoading(false);
+      })
       .catch(() => { if (!cancelled) { toast.error('Failed to load article'); setLoading(false); } });
     return () => { cancelled = true; };
   }, [id]);

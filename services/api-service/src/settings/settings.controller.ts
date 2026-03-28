@@ -20,6 +20,11 @@ export class SettingsController {
     return this.settings.updateProfile(user.sub, dto);
   }
 
+  @Get("notifications")
+  getNotifications(@CurrentUser() user: any) {
+    return this.settings.getNotifications(user.sub);
+  }
+
   @Patch("notifications")
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes('WRITE')

@@ -91,6 +91,12 @@ export function Component() {
   const [dateEnd, setDateEnd] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Market bindings state
+  const [marketSlots, setMarketSlots] = useState<{slot: string; label?: string; defaultMarketId?: string}[]>([]);
+  const [marketBindings, setMarketBindings] = useState<Record<string, string>>({});
+  const [marketSearch, setMarketSearch] = useState<Record<string, string>>({});
+  const [marketResults, setMarketResults] = useState<Record<string, any[]>>({});
+
   const loadHistory = useCallback(async (p: number) => {
     setLoading(true);
     try {
@@ -116,6 +122,68 @@ export function Component() {
   // Load history when page changes (handles initial mount too)
   useEffect(() => { loadHistory(page); }, [page, loadHistory]);
 
+  // Load market slots when strategy is selected
+  useEffect(() => {
+    if (!selectedStratId) {
+      setMarketSlots([]);
+      setMarketBindings({});
+      setMarketSearch({});
+      setMarketResults({});
+      return;
+    }
+
+    fetch(`/api/v1/strategies/${selectedStratId}`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data) return;
+        const strategy = data.data ?? data;
+        const slots = new Set<string>();
+
+        // Scan block configs for marketSlot values (strategy stores blocks as {id, type, config})
+        const scanBlocks = (blocks: any[]) => {
+          if (!Array.isArray(blocks)) return;
+          blocks.forEach(block => {
+            const cfg = block.config ?? block;
+            // Check for marketSlot key in config
+            if (cfg.marketSlot && typeof cfg.marketSlot === 'string' && cfg.marketSlot.startsWith('$MARKET_')) {
+              slots.add(cfg.marketSlot);
+            }
+            // Also scan all config values for $MARKET_ references
+            Object.values(cfg).forEach((v: any) => {
+              if (typeof v === 'string' && v.startsWith('$MARKET_')) slots.add(v);
+            });
+          });
+        };
+
+        // Strategy stores blocks in separate arrays: triggers, conditions, actions, safety
+        scanBlocks(strategy.triggers ?? []);
+        scanBlocks(strategy.conditions ?? []);
+        scanBlocks(strategy.actions ?? []);
+        scanBlocks(strategy.safety ?? []);
+
+        // If no slots found in blocks, offer default $MARKET_A so user can still bind a market
+        if (slots.size === 0) slots.add('$MARKET_A');
+
+        const uniqueSlots = Array.from(slots).sort().map(slot => ({ slot, label: slot.replace('$', '').replace(/_/g, ' ') }));
+        setMarketSlots(uniqueSlots);
+        const newBindings: Record<string, string> = {};
+        uniqueSlots.forEach(s => { newBindings[s.slot] = ''; });
+        setMarketBindings(newBindings);
+      })
+      .catch(() => {});
+  }, [selectedStratId]);
+
+  async function searchMarkets(slot: string, query: string) {
+    if (query.length < 2) { setMarketResults(prev => ({ ...prev, [slot]: [] })); return; }
+    try {
+      const res = await fetch(`/api/v1/markets?search=${encodeURIComponent(query)}&limit=8`, { credentials: 'include' });
+      if (res.ok) {
+        const json = await res.json();
+        setMarketResults(prev => ({ ...prev, [slot]: json.data ?? json ?? [] }));
+      }
+    } catch {}
+  }
+
   const canSubmit = selectedStratId && dateStart && dateEnd && !submitting;
 
   async function submit() {
@@ -130,6 +198,7 @@ export function Component() {
           strategyId: selectedStratId,
           dateRangeStart: new Date(dateStart).toISOString(),
           dateRangeEnd: new Date(dateEnd).toISOString(),
+          marketBindings,
         }),
       });
       if (res.ok) {
@@ -161,51 +230,96 @@ export function Component() {
           <Play className="size-4 text-pf-cyan-400" />
           <span className="text-sm font-medium text-pf-text">New Backtest</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label htmlFor="backtest-strategy" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Strategy</label>
-            <select
-              id="backtest-strategy"
-              value={selectedStratId}
-              onChange={e => setSelectedStratId(e.target.value)}
-              className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
-            >
-              <option value="">Select strategy</option>
-              {strategies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label htmlFor="backtest-strategy" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Strategy</label>
+              <select
+                id="backtest-strategy"
+                value={selectedStratId}
+                onChange={e => setSelectedStratId(e.target.value)}
+                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+              >
+                <option value="">Select strategy</option>
+                {strategies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="backtest-start" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Start Date</label>
+              <input
+                id="backtest-start"
+                type="date"
+                lang="en"
+                value={dateStart}
+                onChange={e => setDateStart(e.target.value)}
+                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+              />
+            </div>
+            <div>
+              <label htmlFor="backtest-end" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">End Date</label>
+              <input
+                id="backtest-end"
+                type="date"
+                lang="en"
+                value={dateEnd}
+                onChange={e => setDateEnd(e.target.value)}
+                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={submit}
+                disabled={!canSubmit}
+                className="w-full h-9 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                {submitting ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+                Run Backtest
+              </button>
+            </div>
           </div>
-          <div>
-            <label htmlFor="backtest-start" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Start Date</label>
-            <input
-              id="backtest-start"
-              type="date"
-              lang="en"
-              value={dateStart}
-              onChange={e => setDateStart(e.target.value)}
-              className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
-            />
-          </div>
-          <div>
-            <label htmlFor="backtest-end" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">End Date</label>
-            <input
-              id="backtest-end"
-              type="date"
-              lang="en"
-              value={dateEnd}
-              onChange={e => setDateEnd(e.target.value)}
-              className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
-            />
-          </div>
-          <div className="flex items-end">
-            <button
-              onClick={submit}
-              disabled={!canSubmit}
-              className="w-full h-9 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-            >
-              {submitting ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
-              Run Backtest
-            </button>
-          </div>
+
+          {marketSlots.length > 0 && (
+            <div className="space-y-3">
+              <label className="text-xs text-pf-text-secondary font-medium uppercase tracking-wider">Market Bindings</label>
+              {marketSlots.map(slot => (
+                <div key={slot.slot} className="space-y-1">
+                  <label className="text-xs text-pf-text-muted">{slot.label || slot.slot}</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={marketSearch[slot.slot] ?? marketBindings[slot.slot] ?? ''}
+                      onChange={e => {
+                        setMarketSearch(prev => ({ ...prev, [slot.slot]: e.target.value }));
+                        searchMarkets(slot.slot, e.target.value);
+                      }}
+                      placeholder="Search markets..."
+                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                    />
+                    {marketBindings[slot.slot] && (
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-pf-cyan-400 font-mono">bound</span>
+                    )}
+                  </div>
+                  {(marketResults[slot.slot] ?? []).length > 0 && (
+                    <div className="bg-pf-elevated border border-pf-border rounded-pf max-h-40 overflow-y-auto">
+                      {marketResults[slot.slot].map((m: any) => (
+                        <button
+                          key={m.id}
+                          onClick={() => {
+                            setMarketBindings(prev => ({ ...prev, [slot.slot]: m.id }));
+                            setMarketSearch(prev => ({ ...prev, [slot.slot]: m.title ?? m.question }));
+                            setMarketResults(prev => ({ ...prev, [slot.slot]: [] }));
+                          }}
+                          className="w-full text-left px-3 py-2 text-xs text-pf-text hover:bg-pf-surface transition-colors border-b border-pf-border-subtle last:border-b-0"
+                        >
+                          {m.title ?? m.question}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

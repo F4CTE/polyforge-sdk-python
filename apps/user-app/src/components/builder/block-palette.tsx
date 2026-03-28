@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   Shield,
   Zap,
@@ -46,6 +46,17 @@ interface BlockPaletteProps {
 
 export function BlockPalette({ open, onClose }: BlockPaletteProps) {
   const [activeSection, setActiveSection] = useState<PaletteTab>('safety');
+  const tabBarRef = useRef<HTMLDivElement>(null);
+  const [tabsOverflow, setTabsOverflow] = useState(false);
+  useEffect(() => {
+    const el = tabBarRef.current;
+    if (!el) return;
+    const check = () => setTabsOverflow(el.scrollWidth > el.clientWidth + 4);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const name = useBuilderStore((s) => s.name);
   const description = useBuilderStore((s) => s.description);
@@ -128,6 +139,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              onBlur={(e) => setName(e.target.value)}
               placeholder="My Strategy"
               className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
             />
@@ -141,6 +153,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              onBlur={(e) => setDescription(e.target.value)}
               placeholder="What does this strategy do?"
               className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors resize-none"
             />
@@ -170,6 +183,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 type="number"
                 value={tickMs}
                 onChange={(e) => setTickMs(Number(e.target.value))}
+                onBlur={(e) => setTickMs(Number(e.target.value))}
                 placeholder="1000"
                 min={200}
                 className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
@@ -200,6 +214,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               type="text"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
+              onBlur={(e) => setTags(e.target.value)}
               placeholder="momentum, politics"
               className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
             />
@@ -213,7 +228,8 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           </h3>
 
           {/* Section tabs */}
-          <div className="flex gap-1 mb-3 overflow-x-auto scrollbar-none">
+          <div className="relative mb-3">
+            <div ref={tabBarRef} className="flex gap-1 overflow-x-auto scrollbar-none">
             {SECTIONS.map(({ key, icon }) => {
               const meta = key === 'variables' ? VARIABLE_TAB_META : SECTION_META[key as BlockSection];
               const count = sectionCount(key);
@@ -246,6 +262,10 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 </button>
               );
             })}
+            </div>
+            {tabsOverflow && (
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-pf-elevated to-transparent" />
+            )}
           </div>
 
           {/* Block list or Variables panel */}

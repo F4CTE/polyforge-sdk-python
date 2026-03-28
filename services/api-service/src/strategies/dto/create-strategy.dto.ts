@@ -15,6 +15,19 @@ import {
 } from "class-validator";
 import { Type } from "class-transformer";
 
+export class MarketSlotDto {
+  @IsString()
+  slot!: string;
+
+  @IsOptional()
+  @IsString()
+  label?: string;
+
+  @IsOptional()
+  @IsString()
+  defaultMarketId?: string;
+}
+
 export class StrategyVariableDto {
   @IsString()
   id!: string;
@@ -133,4 +146,10 @@ export class CreateStrategyDto {
   @IsOptional()
   @IsObject()
   canvas?: Record<string, unknown>;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => MarketSlotDto)
+  marketSlots?: MarketSlotDto[];
 }

@@ -25,10 +25,12 @@ interface WhaleTrade {
 
 interface WhaleFeedResponse {
   data: WhaleTrade[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
@@ -55,6 +57,20 @@ function timeAgo(ts: string): string {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   return `${days}d ago`;
+}
+
+function fmtUsd(val: string | number): string {
+  const n = typeof val === 'string' ? parseFloat(val) : val;
+  if (isNaN(n)) return '$0';
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
+  return `$${n.toFixed(0)}`;
+}
+
+function fmtPrice(val: string | number): string {
+  const n = typeof val === 'string' ? parseFloat(val) : val;
+  if (isNaN(n)) return '—';
+  return `${Math.round(n * 100)}¢`;
 }
 
 function copyToClipboard(text: string) {
@@ -112,12 +128,22 @@ export function Component() {
       if (wallet) params.set('wallet', wallet);
       const res = await fetch(`/api/v1/whales/feed?${params}`, { credentials: 'include', signal: controller.signal });
       if (res.ok) {
-        const data: WhaleFeedResponse = await res.json();
-        setTrades(data.data);
-        setTotal(data.total);
-        setTotalPages(data.totalPages);
+        const json: WhaleFeedResponse = await res.json();
+        // Normalise: API returns nested market object + detectedAt; flatten for UI
+        const trades: WhaleTrade[] = (json.data ?? []).map((t: any) => ({
+          ...t,
+          marketName: t.marketName ?? t.market?.title ?? 'Unknown market',
+          marketCategory: t.marketCategory ?? t.market?.category ?? '',
+          timestamp: t.timestamp ?? t.detectedAt ?? t.createdAt ?? new Date().toISOString(),
+          size: typeof t.size === 'number' || typeof t.size === 'string' ? String(t.size) : '0',
+          price: typeof t.price === 'number' || typeof t.price === 'string' ? String(t.price) : '0',
+          notional: typeof t.notional === 'number' || typeof t.notional === 'string' ? String(t.notional) : '0',
+        }));
+        setTrades(trades);
+        setTotal(json.meta?.total ?? 0);
+        setTotalPages(json.meta?.totalPages ?? 0);
         const following = new Set<string>();
-        data.data.forEach(t => { if (t.isFollowing) following.add(t.walletAddress); });
+        trades.forEach(t => { if (t.isFollowing) following.add(t.walletAddress); });
         setFollowingSet(prev => {
           const merged = new Set(prev);
           following.forEach(a => merged.add(a));
@@ -296,9 +322,9 @@ export function Component() {
 
               {/* Size / Price / Notional */}
               <div className="flex items-center gap-4 text-xs text-pf-text-secondary mb-3">
-                <span>Size: <span className="font-mono text-pf-text">{trade.size}</span></span>
-                <span>Price: <span className="font-mono text-pf-text">{trade.price}</span></span>
-                <span>Notional: <span className="font-mono text-pf-text">{trade.notional}</span></span>
+                <span>Size: <span className="font-mono text-pf-text">{fmtUsd(trade.size)}</span></span>
+                <span>Price: <span className="font-mono text-pf-text">{fmtPrice(trade.price)}</span></span>
+                <span>Notional: <span className="font-mono text-pf-text font-semibold">{fmtUsd(trade.notional)}</span></span>
               </div>
 
               {/* Separator */}

@@ -43,6 +43,27 @@ export class SettingsService {
     });
   }
 
+  async getNotifications(userId: string): Promise<any> {
+    const prefs = await this.prisma.notificationPreference.findUnique({
+      where: { userId },
+    });
+    // Return defaults if no row exists yet
+    return prefs ?? {
+      emailEnabled: true,
+      telegramEnabled: false,
+      discordEnabled: false,
+      onOrderFilled: true,
+      onStrategyError: true,
+      onBacktestComplete: true,
+      onDailyLossLimit: true,
+      onMarketResolved: true,
+      onSomeoneFelked: false,
+      onSomeoneFollowed: false,
+      onSomeoneLiked: false,
+      onSomeoneCommented: false,
+    };
+  }
+
   async updateNotifications(
     userId: string,
     dto: UpdateNotificationsDto,

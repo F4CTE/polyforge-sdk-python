@@ -17,6 +17,37 @@ import { OrderIntent } from "../blocks/block.types";
 const ORDER_STREAM = "stream:orders";
 const PAPER_ORDER_STREAM = "stream:paper_orders";
 
+/**
+ * Filter blocks based on graph connectivity before passing to the runner.
+ * Safety blocks always pass through — they are global guards on every tick.
+ *
+ * Wiring semantics per block type:
+ *   - safety    : always active regardless of wiring (global interceptor)
+ *   - trigger   : must have ≥1 outgoing edge to participate in any path
+ *   - condition : always included — unwired = global gate (AND'd against all paths),
+ *                 wired = scoped inline filter (same engine behaviour, visual only differs)
+ *   - action    : must have ≥1 incoming edge (needs upstream context to fire)
+ *
+ * Legacy strategies with no connections return all blocks unchanged.
+ */
+function filterByConnections(
+  triggers: any[],
+  conditions: any[],
+  actions: any[],
+  connections: any[],
+): { triggers: any[]; conditions: any[]; actions: any[] } {
+  if (!connections || connections.length === 0) {
+    return { triggers, conditions, actions };
+  }
+  const sources = new Set<string>(connections.map((c: any) => c.source));
+  const targets = new Set<string>(connections.map((c: any) => c.target));
+  return {
+    triggers:   triggers.filter((b: any) => sources.has(b.id)),
+    conditions, // unwired = global gate, wired = same; always include all conditions
+    actions:    actions.filter((b: any) => targets.has(b.id)),
+  };
+}
+
 @Injectable()
 export class StrategyRegistryService implements OnApplicationBootstrap {
   private readonly logger = new Logger(StrategyRegistryService.name);
@@ -73,14 +104,20 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
             ? (canvas as any).calcBlocks
             : (strategy as any).calcBlocks ?? [];
 
+          const wired = filterByConnections(
+            (strategy.triggers as any[]) ?? [],
+            (strategy.conditions as any[]) ?? [],
+            (strategy.actions as any[]) ?? [],
+            logicConnections,
+          );
           const runner = new StrategyRunner(
             strategy.id,
             strategy.userId,
             strategy.execMode,
             strategy.tickMs ?? 1000,
-            (strategy.triggers as any[]) ?? [],
-            (strategy.conditions as any[]) ?? [],
-            (strategy.actions as any[]) ?? [],
+            wired.triggers,
+            wired.conditions,
+            wired.actions,
             (strategy.safety as any[]) ?? [],
             variables,
             this.redis,
@@ -150,14 +187,20 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       ? (canvas as any).calcBlocks
       : (strategy as any).calcBlocks ?? [];
 
+    const wired = filterByConnections(
+      (strategy.triggers as any[]) ?? [],
+      (strategy.conditions as any[]) ?? [],
+      (strategy.actions as any[]) ?? [],
+      logicConnections,
+    );
     const runner = new StrategyRunner(
       strategyId,
       strategy.userId,
       strategy.execMode,
       strategy.tickMs ?? 1000,
-      (strategy.triggers as any[]) ?? [],
-      (strategy.conditions as any[]) ?? [],
-      (strategy.actions as any[]) ?? [],
+      wired.triggers,
+      wired.conditions,
+      wired.actions,
       (strategy.safety as any[]) ?? [],
       variables,
       this.redis,
@@ -385,14 +428,20 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       ? (canvas as any).calcBlocks
       : (child as any).calcBlocks ?? [];
 
+    const wiredChild = filterByConnections(
+      (child.triggers as any[]) ?? [],
+      (child.conditions as any[]) ?? [],
+      (child.actions as any[]) ?? [],
+      logicConnections,
+    );
     const runner = new StrategyRunner(
       childStrategyId,
       child.userId,
       child.execMode,
       child.tickMs ?? 1000,
-      (child.triggers as any[]) ?? [],
-      (child.conditions as any[]) ?? [],
-      (child.actions as any[]) ?? [],
+      wiredChild.triggers,
+      wiredChild.conditions,
+      wiredChild.actions,
       (child.safety as any[]) ?? [],
       variables,
       this.redis,

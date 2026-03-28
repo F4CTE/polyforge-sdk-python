@@ -32,12 +32,16 @@ interface NewsArticle {
   signals: NewsSignal[];
 }
 
-interface NewsFeedResponse {
-  data: NewsArticle[];
+interface PaginatedMeta {
   total: number;
   page: number;
   limit: number;
   totalPages: number;
+}
+
+interface NewsFeedResponse {
+  data: NewsArticle[];
+  meta: PaginatedMeta;
 }
 
 interface TopSignal {
@@ -163,10 +167,18 @@ export function Component() {
       if (marketFilter) params.set('market', marketFilter);
       const res = await fetch(`/api/v1/news?${params}`, { credentials: 'include' });
       if (res.ok) {
-        const data: NewsFeedResponse = await res.json();
-        setArticles(data.data);
-        setTotal(data.total);
-        setTotalPages(data.totalPages);
+        const json: NewsFeedResponse = await res.json();
+        // Normalise: signals may include nested market object — flatten marketName
+        const articles = (json.data ?? []).map(a => ({
+          ...a,
+          signals: (a.signals ?? []).map((s: any) => ({
+            ...s,
+            marketName: s.marketName ?? s.market?.title ?? 'Unknown market',
+          })),
+        }));
+        setArticles(articles);
+        setTotal(json.meta?.total ?? 0);
+        setTotalPages(json.meta?.totalPages ?? 0);
       }
     } catch { toast.error('Failed to load news articles'); }
     setLoading(false);
@@ -176,10 +188,14 @@ export function Component() {
   const loadTopSignals = useCallback(async () => {
     setLoadingSignals(true);
     try {
-      const res = await fetch('/api/v1/news/signals/top?minConfidence=70&limit=10', { credentials: 'include' });
+      const res = await fetch('/api/v1/news/signals?minConfidence=70&limit=10', { credentials: 'include' });
       if (res.ok) {
-        const data: { data: TopSignal[] } = await res.json();
-        setTopSignals(data.data);
+        const json = await res.json();
+        const signals: TopSignal[] = ((json.data ?? json) as any[]).map((s: any) => ({
+          ...s,
+          marketName: s.marketName ?? s.market?.title ?? 'Unknown market',
+        }));
+        setTopSignals(signals);
       }
     } catch { toast.error('Failed to load signals') }
     setLoadingSignals(false);
@@ -273,6 +289,7 @@ export function Component() {
             <div className={`space-y-4 ${loading ? 'opacity-60' : ''}`}>
               {articles.map(article => {
                 const expanded = expandedId === article.id;
+                const signals = article.signals ?? [];
                 return (
                   <div
                     key={article.id}
@@ -286,9 +303,9 @@ export function Component() {
                       <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${sentimentColor(article.sentiment)}`}>
                         {article.sentiment}
                       </span>
-                      {article.signals.length > 0 && (
+                      {signals.length > 0 && (
                         <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-pf-cyan-500/15 text-pf-cyan-400">
-                          {article.signals.length} signal{article.signals.length !== 1 ? 's' : ''}
+                          {signals.length} signal{signals.length !== 1 ? 's' : ''}
                         </span>
                       )}
                       <span className="ml-auto text-[11px] text-pf-text-muted">{timeAgo(article.publishedAt)}</span>
@@ -311,19 +328,19 @@ export function Component() {
                     </p>
 
                     {/* Expand/collapse signals */}
-                    {article.signals.length > 0 && (
+                    {signals.length > 0 && (
                       <>
                         <button
                           onClick={() => setExpandedId(expanded ? null : article.id)}
                           className="flex items-center gap-1 mt-3 text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
                         >
                           {expanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
-                          {expanded ? 'Hide signals' : `Show ${article.signals.length} signal${article.signals.length !== 1 ? 's' : ''}`}
+                          {expanded ? 'Hide signals' : `Show ${signals.length} signal${signals.length !== 1 ? 's' : ''}`}
                         </button>
 
                         {expanded && (
                           <div className="mt-3 space-y-2 border-t border-pf-border-subtle pt-3">
-                            {article.signals.map(signal => (
+                            {signals.map(signal => (
                               <div
                                 key={signal.id}
                                 className="flex items-center gap-3 px-3 py-2 rounded-pf-sm bg-pf-surface border border-pf-border-subtle"

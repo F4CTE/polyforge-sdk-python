@@ -1,8 +1,9 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
-import { X, GripVertical, Shield, Zap, Filter, Play } from 'lucide-react';
+import { X, GripVertical, Shield, Zap, Filter, Play, Unlink, Globe } from 'lucide-react';
 import type { BlockNodeData } from '../../../stores/builder-store';
 import { useBuilderStore } from '../../../stores/builder-store';
+import { useExecutionStore } from '../../../stores/execution-store';
 
 type BlockNode = Node<BlockNodeData, 'blockNode'>;
 
@@ -23,6 +24,28 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   const removeNode = useBuilderStore((s) => s.removeNode);
   const updateNodeConfig = useBuilderStore((s) => s.updateNodeConfig);
   const currentStrategyId = useBuilderStore((s) => s.strategyId);
+  const isLive = useExecutionStore((s) => s.liveRunning);
+  const isBtRunning = useExecutionStore((s) => s.backtestRunning);
+  const isExecuting = isLive || isBtRunning;
+
+  const edges = useBuilderStore((s) => s.edges);
+  const isSafety = d.section === 'safety';
+  const isCondition = d.section === 'conditions';
+  const isTrigger = d.section === 'triggers';
+  const isAction = d.section === 'actions';
+  const hasEdge = edges.some((e) => e.source === id || e.target === id);
+
+  // Wiring semantics:
+  //   safety     → always active (global guard, no handles)
+  //   conditions → always active; unwired = global gate, wired = scoped inline
+  //   triggers   → only active when wired (needs an outgoing path)
+  //   actions    → only active when wired (needs upstream context)
+  const isGlobal = (isSafety || isCondition) && !hasEdge; // full-opacity "Global" state
+  const isInactive = (isTrigger || isAction) && !hasEdge;  // dimmed "Not wired" state
+
+  // Whether to show target/source handles per section
+  const showTargetHandle = isCondition || isAction;        // triggers & safety have no target
+  const showSourceHandle = isTrigger || isCondition;       // actions & safety have no source
 
   // Fetch user strategies for RUN_STRATEGY block's strategyId selector
   const [strategies, setStrategies] = useState<StrategyOption[]>([]);
@@ -95,21 +118,50 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
 
   return (
     <>
-      {/* Target handle (left) */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
-        style={{ borderColor: d.color }}
-      />
+      {/* Target handle (left) — triggers and safety have no incoming connections */}
+      {showTargetHandle && (
+        <Handle
+          type="target"
+          position={Position.Left}
+          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+          style={{ borderColor: d.color }}
+        />
+      )}
+
+      <div className="relative">
+        {/* "Global" badge — safety/conditions when unwired: active globally */}
+        {isGlobal && (
+          <div
+            className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap z-10 pointer-events-none"
+            style={{ backgroundColor: '#06b6d422', border: '1px solid #06b6d455', color: '#06b6d4' }}
+            title={isSafety ? 'Safety block — always enforced globally on every tick' : 'Condition block — no connections, acts as a global gate for all execution paths. Wire it to scope it to a specific path.'}
+          >
+            <Globe className="size-2.5" />
+            Global
+          </div>
+        )}
+
+        {/* "Not wired" badge — triggers/actions with no edges: inactive */}
+        {isInactive && (
+          <div
+            className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap z-10 pointer-events-none"
+            style={{ backgroundColor: '#f59e0b22', border: '1px solid #f59e0b55', color: '#f59e0b' }}
+            title={isTrigger ? 'Trigger has no outgoing connection — wire it to a condition or action to activate it' : 'Action has no incoming connection — wire a trigger or condition to it to activate it'}
+          >
+            <Unlink className="size-2.5" />
+            Not wired
+          </div>
+        )}
 
       <div
-        className="w-[260px] rounded-pf-md shadow-pf-md overflow-hidden"
+        className={`w-[260px] rounded-pf-md shadow-pf-md overflow-hidden transition-all duration-300 ${
+          isExecuting ? 'ring-1 ring-pf-cyan-500/40 shadow-[0_0_8px_rgba(0,200,255,0.15)]' : ''
+        } ${isInactive ? 'opacity-45' : ''}`}
         style={{
           backgroundColor: 'var(--color-pf-elevated)',
-          borderWidth: '1px',
-          borderStyle: 'solid',
-          borderColor: 'var(--color-pf-border)',
+          borderWidth: isExecuting ? '1.5px' : '1px',
+          borderStyle: isInactive ? 'dashed' : 'solid',
+          borderColor: isExecuting ? d.color + '60' : isInactive ? '#f59e0b44' : 'var(--color-pf-border)',
           color: 'var(--color-pf-text)',
         }}
       >
@@ -141,7 +193,20 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                 <label className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                   {field.label}
                 </label>
-                {field.type === 'select' ? (
+                {field.type === 'market_slot' ? (
+                  <select
+                    value={d.config[field.key] ?? ''}
+                    onChange={(e) => onFieldChange(field.key, e.target.value)}
+                    className="w-full h-7 px-2 rounded bg-[var(--block-color)]/10 border border-[var(--block-color)]/20 text-xs text-pf-text focus:outline-none focus:border-[var(--block-color)]/50"
+                  >
+                    <option value="">Select market slot...</option>
+                    <option value="$MARKET_A">$MARKET_A</option>
+                    <option value="$MARKET_B">$MARKET_B</option>
+                    <option value="$MARKET_C">$MARKET_C</option>
+                    <option value="$MARKET_D">$MARKET_D</option>
+                    <option value="$MARKET_E">$MARKET_E</option>
+                  </select>
+                ) : field.type === 'select' ? (
                   renderSelectField(field)
                 ) : (
                   <div className="relative">
@@ -178,14 +243,17 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
           </div>
         )}
       </div>
+      </div>
 
-      {/* Source handle (right) */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
-        style={{ borderColor: d.color }}
-      />
+      {/* Source handle (right) — actions and safety have no outgoing connections */}
+      {showSourceHandle && (
+        <Handle
+          type="source"
+          position={Position.Right}
+          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+          style={{ borderColor: d.color }}
+        />
+      )}
     </>
   );
 }

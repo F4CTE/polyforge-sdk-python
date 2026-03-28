@@ -31,6 +31,16 @@ export class NewsService {
         orderBy: { publishedAt: "desc" },
         skip,
         take: limit,
+        include: {
+          signals: {
+            include: {
+              market: {
+                select: { id: true, title: true, slug: true },
+              },
+            },
+            orderBy: { confidence: "desc" },
+          },
+        },
       }),
       this.prisma.newsArticle.count({ where }),
     ]);

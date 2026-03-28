@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -182,10 +183,21 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'INVALID_REFRESH_TOKEN' })
   async refresh(
-    @Body() body: { refreshToken: string },
+    @Body() body: { refreshToken?: string },
+    @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
-    const result = await this.authService.refresh(body.refreshToken);
+    // Accept refresh token from body (API clients) or cookie (browser clients)
+    const token =
+      body?.refreshToken ??
+      (request.cookies as Record<string, string>)?.[REFRESH_COOKIE];
+    if (!token) {
+      throw new UnauthorizedException({
+        code: 'INVALID_REFRESH_TOKEN',
+        message: 'No refresh token provided',
+      });
+    }
+    const result = await this.authService.refresh(token);
     reply.setCookie(
       USER_COOKIE,
       result.token,

@@ -1,11 +1,13 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ReactFlowProvider } from '@xyflow/react';
-import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { StrategyCanvas } from '../../components/builder/strategy-canvas';
 import { BlockPalette } from '../../components/builder/block-palette';
+import { BuilderTutorial } from '../../components/builder/builder-tutorial';
+import { ExecutionPanel } from '../../components/builder/execution-panel';
 import { useBuilderStore } from '../../stores/builder-store';
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -18,6 +20,10 @@ export function Component() {
   const [editingName, setEditingName] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const dragCounterRef = useRef(0);
+
+  // Execution panel state
+  const [execPanelExpanded, setExecPanelExpanded] = useState(false);
+  const [execTab, setExecTab] = useState<'backtest' | 'live'>('backtest');
 
   const name = useBuilderStore((s) => s.name);
   const setName = useBuilderStore((s) => s.setName);
@@ -32,6 +38,20 @@ export function Component() {
   const [quickResult, setQuickResult] = useState<Record<string, unknown> | null>(null);
 
   const isEdit = !!id;
+
+  // Count unwired trigger/action blocks — these are inactive and won't execute.
+  // Safety and condition blocks are excluded: they apply globally when unwired.
+  const orphanedCount = useBuilderStore((s) => {
+    const connectedIds = new Set<string>([
+      ...s.edges.map((e) => e.source),
+      ...s.edges.map((e) => e.target),
+    ]);
+    return s.nodes.filter((n) => {
+      if (n.type !== 'blockNode') return false;
+      const section = (n.data as import('../../stores/builder-store').BlockNodeData).section;
+      return (section === 'triggers' || section === 'actions') && !connectedIds.has(n.id);
+    }).length;
+  });
 
   // Load or reset on mount
   useEffect(() => {
@@ -73,7 +93,15 @@ export function Component() {
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Save failed';
-      toast.error(message);
+      if (message === 'SESSION_EXPIRED') {
+        toast.error('Session expired — your work is preserved', {
+          description: 'Log in again to save your strategy.',
+          duration: Infinity,
+          action: { label: 'Log in', onClick: () => { window.location.href = '/login'; } },
+        });
+      } else {
+        toast.error(message, { duration: 6000 });
+      }
     }
   }, [save, isEdit, strategyId, navigate]);
 
@@ -237,6 +265,20 @@ export function Component() {
             <Blocks className="size-4" />
           </button>
 
+          {/* Execution panel toggle */}
+          <button
+            onClick={() => { setExecPanelExpanded((v) => !v); }}
+            className={`p-1.5 rounded-pf-sm transition-colors ${
+              execPanelExpanded
+                ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
+                : 'text-pf-text-muted hover:text-pf-text-secondary hover:bg-pf-overlay'
+            }`}
+            aria-label={execPanelExpanded ? 'Collapse execution panel' : 'Expand execution panel'}
+            title={execPanelExpanded ? 'Collapse execution panel' : 'Backtest & Live'}
+          >
+            <FlaskConical className="size-4" />
+          </button>
+
           <button
             onClick={onQuickTest}
             disabled={quickTesting || !strategyId}
@@ -275,60 +317,79 @@ export function Component() {
 
       {/* ─── Canvas + Panel ─────────────────────────────────────────────── */}
       <ReactFlowProvider>
-        <div className="flex-1 flex overflow-hidden">
-          {/* Canvas */}
-          <div
-            className="flex-1 relative min-w-0 isolate"
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          >
-            <StrategyCanvas />
-            {dragOver && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center bg-pf-surface/80 backdrop-blur-sm border-2 border-dashed border-pf-cyan-500 rounded-pf-lg pointer-events-none">
-                <div className="flex flex-col items-center gap-2 text-pf-cyan-400">
-                  <Upload className="size-8" />
-                  <span className="text-sm font-medium">Drop .polyforge file to import</span>
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex overflow-hidden min-h-0">
+            {/* Canvas */}
+            <div
+              className="flex-1 relative min-w-0 isolate"
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              {/* Orphaned-block warning banner */}
+              {orphanedCount > 0 && (
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium pointer-events-none"
+                  style={{ backgroundColor: '#f59e0b18', border: '1px solid #f59e0b44', color: '#f59e0b' }}>
+                  <span>{orphanedCount} block{orphanedCount !== 1 ? 's' : ''} not wired — {orphanedCount !== 1 ? 'they' : 'it'} won't execute</span>
+                </div>
+              )}
+              <StrategyCanvas />
+              <BuilderTutorial />
+              {dragOver && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-pf-surface/80 backdrop-blur-sm border-2 border-dashed border-pf-cyan-500 rounded-pf-lg pointer-events-none">
+                  <div className="flex flex-col items-center gap-2 text-pf-cyan-400">
+                    <Upload className="size-8" />
+                    <span className="text-sm font-medium">Drop .polyforge file to import</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Quick test results overlay */}
+            {quickResult && (
+              <div className="absolute bottom-4 left-4 z-40 bg-pf-elevated border border-pf-border rounded-pf-lg p-4 shadow-pf-lg max-w-xs">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-pf-text uppercase tracking-wider">Quick Test Results</span>
+                  <button onClick={() => setQuickResult(null)} className="text-pf-text-muted hover:text-pf-text text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Close quick test results">&times;</button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-pf-surface rounded-pf p-2">
+                    <span className="text-pf-text-secondary block">P&L</span>
+                    <span className={`font-mono font-semibold ${parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                      {parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? '+' : ''}{String(quickResult.totalPnl)}
+                    </span>
+                  </div>
+                  <div className="bg-pf-surface rounded-pf p-2">
+                    <span className="text-pf-text-secondary block">Win Rate</span>
+                    <span className="font-mono font-semibold text-pf-text">{String(quickResult.winRate)}%</span>
+                  </div>
+                  <div className="bg-pf-surface rounded-pf p-2">
+                    <span className="text-pf-text-secondary block">Orders</span>
+                    <span className="font-mono font-semibold text-pf-text">{String(quickResult.totalOrders)}</span>
+                  </div>
+                  <div className="bg-pf-surface rounded-pf p-2">
+                    <span className="text-pf-text-secondary block">Filled</span>
+                    <span className="font-mono font-semibold text-pf-text">{String(quickResult.filledOrders)}</span>
+                  </div>
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Quick test results overlay */}
-          {quickResult && (
-            <div className="absolute bottom-4 left-4 z-40 bg-pf-elevated border border-pf-border rounded-pf-lg p-4 shadow-pf-lg max-w-xs">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold text-pf-text uppercase tracking-wider">Quick Test Results</span>
-                <button onClick={() => setQuickResult(null)} className="text-pf-text-muted hover:text-pf-text text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Close quick test results">&times;</button>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="bg-pf-surface rounded-pf p-2">
-                  <span className="text-pf-text-secondary block">P&L</span>
-                  <span className={`font-mono font-semibold ${parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
-                    {parseFloat(String(quickResult.totalPnl ?? '0')) >= 0 ? '+' : ''}{String(quickResult.totalPnl)}
-                  </span>
-                </div>
-                <div className="bg-pf-surface rounded-pf p-2">
-                  <span className="text-pf-text-secondary block">Win Rate</span>
-                  <span className="font-mono font-semibold text-pf-text">{String(quickResult.winRate)}%</span>
-                </div>
-                <div className="bg-pf-surface rounded-pf p-2">
-                  <span className="text-pf-text-secondary block">Orders</span>
-                  <span className="font-mono font-semibold text-pf-text">{String(quickResult.totalOrders)}</span>
-                </div>
-                <div className="bg-pf-surface rounded-pf p-2">
-                  <span className="text-pf-text-secondary block">Filled</span>
-                  <span className="font-mono font-semibold text-pf-text">{String(quickResult.filledOrders)}</span>
-                </div>
-              </div>
+            {/* Side panel — always mounted, collapsed via width to prevent React Flow reflow issues */}
+            <div className={`transition-all duration-200 overflow-hidden ${panelOpen ? 'w-80' : 'w-0'}`}>
+              <BlockPalette open={panelOpen} onClose={() => setPanelOpen(false)} />
             </div>
-          )}
-
-          {/* Side panel — always mounted, collapsed via width to prevent React Flow reflow issues */}
-          <div className={`transition-all duration-200 overflow-hidden ${panelOpen ? 'w-80' : 'w-0'}`}>
-            <BlockPalette open={panelOpen} onClose={() => setPanelOpen(false)} />
           </div>
+
+          {/* ─── Execution Panel (bottom) ─────────────────────────────────── */}
+          <ExecutionPanel
+            strategyId={strategyId}
+            expanded={execPanelExpanded}
+            onToggle={() => setExecPanelExpanded((v) => !v)}
+            activeTab={execTab}
+            onTabChange={setExecTab}
+          />
         </div>
       </ReactFlowProvider>
     </div>

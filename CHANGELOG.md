@@ -5,6 +5,42 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.5.0] — 2026-03-28
+
+### Added
+- **Strategy builder guided tutorial** (`builder-tutorial.tsx`) — 6-step skippable overlay covering wiring semantics, block sections, market slots, and variables; shown automatically on first visit, persisted via `localStorage`
+- **Execution panel** (`execution-panel.tsx`) — collapsible bottom panel for backtest configuration and live trading controls, toggled from the builder toolbar
+- **Execution store** (`execution-store.ts`) — Zustand store tracking `liveRunning`, `backtestRunning`, and execution state for block-node visual feedback
+- **Orphaned-block warning banner** — amber pill above the canvas when trigger/action blocks are unwired and will not execute
+
+### Changed
+- **Wiring semantics** — blocks now have meaningful connection rules enforced in both UI and the strategy engine:
+  - Safety blocks: always globally active, no handles
+  - Trigger blocks: source handle only; inactive (dimmed, dashed border) when unwired
+  - Condition blocks: both handles; global gate when unwired, scoped to path when wired
+  - Action blocks: target handle only; inactive when unwired
+- **`filterByConnections()`** added to `strategy-registry.service.ts` — triggers and actions are filtered by graph edge connectivity at runtime; conditions always pass through as global gates
+- Block nodes display contextual badges: cyan "Global" badge for unwired safety/conditions, amber "Not wired" badge for unwired triggers/actions
+- Builder store `save()` uses `PATCH` (not `PUT`) for strategy updates
+- Block palette tab bar gets a gradient fade indicator when tabs overflow the container
+- All settings-form inputs in the block palette now have `onBlur` fallbacks to prevent autofill/programmatic desync
+
+### Fixed
+- Session expiry during save now shows a persistent toast with a "Log in" action button instead of silently failing
+- Block definitions, backtest page, news feed, whale feed, and settings pages — various data-shape and UX fixes applied during session
+
+### Database
+- Added `prisma/seed-news-whales.sql` — seeds news signals and whale alert records
+- Added `prisma/seed-whale-alerts.sql` — seeds whale alert configuration
+
+### Documented
+- `docs/architecture/wiring-semantics.md` — deep-dive on the execution model and wiring contract per block section
+- `docs/architecture/execution-panel.md` — execution panel feature documentation
+- `docs/seeds.md` — seed reference with run commands and record counts
+- `docs/session-2026-03-28.md` — full session changelog
+
+---
+
 ## [6.4.0] — 2026-03-28
 
 ### Security

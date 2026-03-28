@@ -30,8 +30,9 @@ interface GasUsageData {
 
 interface TotpSetupData {
   secret: string;
-  qrCodeUri: string;
-  backupCodes: string[];
+  qrCode: string;       // data URL from API (was incorrectly named qrCodeUri)
+  uri: string;
+  backupCodes?: string[]; // only returned by /confirm, not /setup
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
@@ -89,6 +90,7 @@ export function Component() {
   // 2FA
   const [totpSetupData, setTotpSetupData] = useState<TotpSetupData | null>(null);
   const [totpCode, setTotpCode] = useState('');
+  const [totpDisablePassword, setTotpDisablePassword] = useState('');
   const [totpSaving, setTotpSaving] = useState(false);
   const [totpLoading, setTotpLoading] = useState(false);
 
@@ -205,33 +207,37 @@ export function Component() {
         body: JSON.stringify({ code: totpCode }),
       });
       if (res.ok) {
+        const data = await res.json();
         patchUser({ totpEnabled: true });
-        setTotpSetupData(null);
+        // Keep setupData so we can show the backup codes returned by confirm
+        setTotpSetupData(prev => prev ? { ...prev, backupCodes: data.backupCodes ?? [] } : null);
         setTotpCode('');
-        toast.success('Two-factor authentication enabled');
+        toast.success('Two-factor authentication enabled! Save your backup codes.');
       } else {
-        toast.error('Failed to confirm 2FA');
+        const err = await res.json().catch(() => null);
+        toast.error(err?.message ?? 'Invalid code. Please try again.');
       }
     } catch { toast.error('Failed to confirm 2FA'); }
     setTotpSaving(false);
   }
 
   async function disableTotp() {
-    if (totpSaving || !totpCode) return;
+    if (totpSaving || !totpDisablePassword) return;
     setTotpSaving(true);
     try {
-      const res = await fetch('/auth/v1/totp/disable', {
-        method: 'POST',
+      const res = await fetch('/auth/v1/totp', {
+        method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ code: totpCode }),
+        body: JSON.stringify({ password: totpDisablePassword }),
       });
       if (res.ok) {
         patchUser({ totpEnabled: false });
-        setTotpCode('');
+        setTotpDisablePassword('');
         toast.success('Two-factor authentication disabled');
       } else {
-        toast.error('Failed to disable 2FA');
+        const err = await res.json().catch(() => null);
+        toast.error(err?.message ?? 'Failed to disable 2FA');
       }
     } catch { toast.error('Failed to disable 2FA'); }
     setTotpSaving(false);
@@ -550,17 +556,35 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
           <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Two-Factor Authentication (TOTP)</h2>
 
-          {user?.totpEnabled ? (
+          {user?.totpEnabled && totpSetupData && (totpSetupData.backupCodes ?? []).length > 0 ? (
+            /* Just confirmed — show backup codes before clearing */
+            <>
+              <p className="text-sm text-pf-success font-medium">2FA is now enabled!</p>
+              <div className="bg-pf-surface rounded-pf p-4 border border-pf-warning/30">
+                <div className="text-xs text-pf-warning mb-2 font-semibold uppercase tracking-wider">Save your backup codes — you won't see these again</div>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  {(totpSetupData.backupCodes ?? []).map(code => (
+                    <span key={code} className="font-mono text-xs text-pf-text bg-pf-overlay px-2 py-1.5 rounded text-center border border-pf-border">{code}</span>
+                  ))}
+                </div>
+              </div>
+              <button onClick={() => setTotpSetupData(null)}
+                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors">
+                <Check className="size-4" />
+                I've saved my backup codes
+              </button>
+            </>
+          ) : user?.totpEnabled ? (
             <>
               <p className="text-sm text-pf-text-secondary">
                 2FA is currently <strong className="text-pf-success">enabled</strong>.
               </p>
               <div>
-                <label className="text-xs text-pf-text-secondary mb-1.5 block">Enter your TOTP code to disable</label>
-                <input value={totpCode} onChange={e => setTotpCode(e.target.value)} placeholder="6-digit code" maxLength={6}
-                  className="w-full max-w-[200px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
+                <label className="text-xs text-pf-text-secondary mb-1.5 block">Enter your password to disable 2FA</label>
+                <input type="password" value={totpDisablePassword} onChange={e => setTotpDisablePassword(e.target.value)} placeholder="Your password"
+                  className="w-full max-w-[280px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
               </div>
-              <button onClick={disableTotp} disabled={totpSaving || !totpCode}
+              <button onClick={disableTotp} disabled={totpSaving || !totpDisablePassword}
                 className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger/10 text-pf-danger border border-pf-danger/20 text-sm font-medium hover:bg-pf-danger/20 disabled:opacity-50 transition-colors">
                 {totpSaving ? <Loader2 className="size-4 animate-spin" /> : <Shield className="size-4" />}
                 Disable 2FA
@@ -570,18 +594,18 @@ export function Component() {
             <>
               <p className="text-sm text-pf-text-secondary">Scan this QR code with your authenticator app, then enter the 6-digit code to confirm.</p>
               <div className="flex justify-center py-4">
-                <img src={totpSetupData.qrCodeUri} alt="TOTP QR Code" className="w-48 h-48 rounded-pf-lg bg-white p-2" />
+                <img src={totpSetupData.qrCode} alt="TOTP QR Code" className="w-48 h-48 rounded-pf-lg bg-white p-2" />
               </div>
               <div>
                 <label className="text-xs text-pf-text-secondary mb-1.5 block">Verification Code</label>
                 <input value={totpCode} onChange={e => setTotpCode(e.target.value)} placeholder="6-digit code" maxLength={6}
                   className="w-full max-w-[200px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
               </div>
-              {totpSetupData.backupCodes.length > 0 && (
+              {(totpSetupData.backupCodes ?? []).length > 0 && (
                 <div className="bg-pf-surface rounded-pf p-4">
                   <div className="text-xs text-pf-text-secondary mb-2 font-medium">Backup Codes (save these!)</div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {totpSetupData.backupCodes.map(code => (
+                    {(totpSetupData.backupCodes ?? []).map(code => (
                       <span key={code} className="font-mono text-xs text-pf-text bg-pf-overlay px-2 py-1 rounded text-center">{code}</span>
                     ))}
                   </div>
