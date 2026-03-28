@@ -38,7 +38,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Educational onboarding** — guided tour, checklist widget, and 5 pre-built strategy templates for new users
 - **Future features planned** — arbitrage scanner, multi-platform aggregation, browser extension, mobile app, fund management, UMA oracle dashboard, LP/market making (see [`docs/19-future-features.md`](./docs/19-future-features.md))
 
-> **All 8 development phases are complete — 72 files and 8,564 lines added in Phase 8.** Phase 9 adds gasless trading (platform-sponsored gas fees), educational onboarding (strategy templates, guided tour, checklist), and documents 7 future features. v6.1 adds 50 UI/UX fixes across both apps. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
+> **All development phases complete through v6.4.0.** Full security audit with 40 issues resolved. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
 
 ---
 
@@ -47,15 +47,14 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 | Layer | Technology |
 |---|---|
 | Backend framework | NestJS 11.1.16 + Fastify adapter |
-| Language | TypeScript 5 (strict mode everywhere) |
+| Language | TypeScript 5.9 |
 | ORM | Prisma 7.5.0 (two databases: `polyforge` + `polyforge_admin`) |
 | Validation | Zod (streams/internal) + class-validator (HTTP controllers) |
 | Redis client | ioredis |
 | Logging | pino + nestjs-pino |
 | Testing | Vitest + Supertest |
-| Frontend (v3.0) | React 19, Vite, shadcn/ui, Tailwind CSS v4, React Flow, Recharts |
-| Landing (v3.0) | Next.js 15 (App Router, SSR/SEO) |
-| Frontend (legacy) | Angular 21 + PrimeNG 21 |
+| Frontend | React 19, Vite, shadcn/ui, Tailwind CSS v4, React Flow, Recharts |
+| Landing | Next.js 15 (App Router, SSR/SEO) |
 | Crypto (WASM) | Rust + wasm-bindgen (AES-256-GCM, SHA-256, HMAC-SHA256) |
 | Build system | Turborepo 2 + pnpm workspaces |
 | Containers | Docker + Docker Compose |
@@ -68,12 +67,10 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 ```
 polyforge/
 ├── apps/
-│   ├── user-app-react/            # 🆕 React 19 + Vite user SPA (v3.0)
-│   ├── admin-app-react/           # 🆕 React 19 + Vite admin SPA (v3.0)
-│   ├── landing-next/              # 🆕 Next.js 15 landing page (v3.0)
-│   ├── user-app/                  # Angular 21 user SPA (legacy)
-│   ├── admin-app/                 # Angular 21 admin console (legacy)
-│   └── landing/                   # Static landing page (legacy)
+│   ├── user-app/                  # React 19 + Vite user SPA
+│   ├── admin-app/                 # React 19 + Vite admin SPA
+│   ├── landing/                   # Next.js 15 landing page
+│   └── gateway/                   # nginx reverse proxy
 │
 ├── services/
 │   ├── gateway/                   # ✅ nginx dev gateway (ports 80 + 8080)
@@ -92,15 +89,16 @@ polyforge/
 │   └── mock-polymarket/           # ✅ Dev-only fake Polymarket APIs
 │
 └── packages/
-    ├── ui/                        # 🆕 Shared shadcn/ui components + Tailwind theme (v3.0)
-    ├── api-client/                # 🆕 Shared @hey-api/client-fetch generated client (v3.0)
+    ├── ui/                        # Shared shadcn/ui components + Tailwind theme
+    ├── api-client/                # Shared @hey-api/client-fetch generated client
     ├── shared-types/              # All TypeScript interfaces and enums
     ├── shared-schemas/            # Zod schemas (streams, WebSocket, orders)
     ├── shared-auth/               # JWT guards + internal service client
     ├── shared-db/                 # Prisma client NestJS module
     ├── shared-redis/              # ioredis factory + stream helpers
     ├── logger/                    # pino + nestjs-pino
-    ├── mcp-server/                # (deprecated — moved to standalone repo polyforge-mcp)
+    ├── polyforge-engine/          # Rust WASM strategy engine
+    ├── polyforge-crypto-native/   # NAPI-RS native crypto addon
     └── polyforge-crypto/          # Rust WASM crypto (AES-GCM, SHA-256, HMAC)
 ```
 

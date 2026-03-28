@@ -7,7 +7,8 @@
 
 ## Next Up
 
-Phase 10 planning in progress. Frontend React v3 integration of AI API features.
+v6.4.0 security and quality audit complete (2026-03-28). 40 issues resolved across 5 severity levels.
+Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant application.
 
 ---
 

@@ -5,6 +5,57 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.4.0] — 2026-03-28
+
+### Security
+- Fix SQL injection in markets service — replace `$queryRawUnsafe` ORDER BY with whitelist-validated sort columns
+- Add Content-Security-Policy headers to nginx gateway
+- Add JWT secret minimum length validation (32 chars) at startup in all auth services
+- Add `.tfvars` to `.gitignore` to prevent Terraform secret leaks
+- Fix raw error.message exposure in user-app error boundary
+- Whitelist-validate admin cache flush patterns (7 safe patterns)
+
+### Fixed
+- Delete 86 duplicate .js files from incomplete TypeScript migration
+- Align SDK/MCP API paths to canonical `/api/v1/*` pattern across all 4 repos
+- Add 47 `onDelete: Cascade/SetNull` directives to Prisma schema (was 1)
+- Add ErrorBoundary to admin-app (was missing, user-app already had one)
+- Fix never-resolving Promise on 401 in admin API client
+- Replace thundering-herd JWT cache eviction with LRU (oldest 10%)
+- Add error logging to fire-and-forget API key usage tracking
+- Fix missing/index-based React keys in admin dashboard lists
+- Standardize Python SDK response parsing to match backend PaginatedResponse format
+- Add URL encoding to Rust SDK query parameters
+- Fix WASM package configs (exports, build scripts, turbo exclusion)
+
+### Changed
+- Upgrade user-app from React 18 to React 19 (aligned with admin-app and landing)
+- Standardize TypeScript to ^5.9.2 across all 40+ packages
+- Fix ESLint sourceType from commonjs to module (codebase is ESM)
+- Enable ESLint during landing app production builds
+- Replace hardcoded localhost URLs in Vite proxy configs with environment variables
+- Add Prisma generate as explicit build dependency in turbo.json
+- Bump Rust SDK to 1.0.0 (was 0.1.0, aligning with TS/Python SDKs)
+- Fix MCP README tool count (20 → 22)
+
+### Added
+- Comprehensive codebase audit report (`docs/AUDIT-2026-03-28.md`)
+- Smoke tests for user-app and admin-app (vitest)
+- Smoke tests for all 3 SDKs (vitest, pytest, cargo test)
+- Proper TypeScript interfaces replacing ~30 `any` types in admin API client
+- Null checks and try-catch for tooltip-tour DOM operations
+- WASM build guide documentation
+- README files for polyforge-crypto, polyforge-engine, polyforge-crypto-native packages
+
+### Documented
+- Redis single-node production risk and migration plan
+- Encryption key rotation requirements in signer-service
+- Gas estimate assumptions and env var configuration
+- Market-data-service event sync TODOs with Q2 2026 targets
+- Python SDK sync/async duplication pattern
+
+---
+
 ## [6.3.0] — 2026-03-27
 
 ### Added

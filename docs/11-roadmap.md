@@ -729,4 +729,29 @@ Guide new users through the platform to reduce time-to-first-trade and improve r
 
 ---
 
+## Phase 10 — Security Audit & Deployment Readiness (2026-03-28)
+
+**Pre-deployment · Completed**
+
+Comprehensive security and quality assurance audit to ensure deployment-ready status. All critical, high, and medium severity findings resolved.
+
+- [x] Full codebase audit (5 critical, 12 high, 15 medium, 8 low findings)
+- [x] SQL injection fix in markets service
+- [x] 86 duplicate .js file cleanup from TypeScript migration
+- [x] SDK/MCP API path alignment to `/api/v1/*`
+- [x] 47 cascading delete directives added to Prisma schema
+- [x] Error boundaries in all frontend apps
+- [x] React 19 unification across all frontends
+- [x] TypeScript 5.9.2 standardization
+- [x] JWT secret length validation at startup
+- [x] CSP headers and static asset caching in nginx
+- [x] Turbo pipeline: Prisma generate as build dependency
+- [x] WASM package configuration fixes
+- [x] Smoke tests for all 3 SDKs and both frontend apps
+- [x] Admin app type safety improvements (~30 `any` types replaced)
+- [ ] Deploy to AWS eu-west-2
+- [ ] Submit Polymarket Builders Program grant application
+
+---
+
 *Documents de référence : [Architecture](./01-architecture.md) · [Fonctionnalités](./00-features-and-functionalities.md) · [API Catalog](./06-api-catalog.md) · [Dev Setup](./09-dev-setup.md) · [Competitor Audit](./polyforge_competitor_audit.md) · [Future Features](./19-future-features.md)*

@@ -234,7 +234,7 @@ Every internal HTTP call must carry a short-lived service JWT:
 
 ## 4. Frontend Applications
 
-### user-app (Angular 17 + PrimeNG)
+### user-app (React 19 + Shadcn UI)
 
 Served at `polyforge.app`
 
@@ -259,7 +259,7 @@ Served at `polyforge.app`
 | `/terms` | Terms of Service | Public |
 | `/privacy` | Privacy Policy | Public |
 
-### admin-app (Angular 17 + PrimeNG)
+### admin-app (React 19 + Shadcn UI)
 
 Served at `admin.polyforge.app` — IP allowlisted at the Nginx level.
 
@@ -283,27 +283,13 @@ Served at `admin.polyforge.app` — IP allowlisted at the Nginx level.
 | `/tickets` | Ticket management (list, detail, reply, assign) |
 | `/logs/notifications` | Notification delivery history |
 
-### Angular HTTP clients
+### React HTTP Clients
 
-**Angular apps use `@hey-api/openapi-ts` generated clients.** All API communication goes through services generated from the OpenAPI spec (`swagger.json` / `swagger-admin.json`). See `03-openapi-codegen.md` for the full pipeline.
+**React apps use `@hey-api/openapi-ts` generated clients.** All API communication goes through services generated from the OpenAPI spec (`swagger.json` / `swagger-admin.json`). See `03-openapi-codegen.md` for the full pipeline.
 
-> During initial development (before the OpenAPI pipeline is wired up), hand-written `HttpClient` services are acceptable as a temporary measure and must be replaced with generated clients before the feature is considered complete.
+### Shadcn UI Components
 
-### PrimeNG Components
-
-Use the following PrimeNG components for the specified UI patterns:
-
-- `p-table` — sortable, filterable data tables
-- `p-chart` — P&L charts, latency charts (Chart.js wrapper)
-- `p-meterGroup` — rate limit budget visualization
-- `p-knob` — service health indicators
-- `p-badge`, `p-tag` — status indicators
-- `p-virtualScroller` — infinite scroll lists (order flow)
-- `p-timeline` — order history timeline
-- `p-dialog`, `p-confirmDialog` — modals
-- `p-skeleton` — loading placeholders
-- `p-toast` — toast notifications
-- `p-progressBar` — backtest progress
+The design system uses Shadcn UI components for consistent styling and accessibility across user-app and admin-app. All interactive components follow Shadcn patterns with Tailwind CSS customization.
 
 ---
 
@@ -430,7 +416,7 @@ CORS:          polyforge.app, admin.polyforge.app, localhost, 127.0.0.1, localho
 Rate limiting: Redis sliding window per userId per endpoint
 Validation:    Zod (runtime) + class-validator (NestJS controllers)
 SQL injection: Prisma parameterized queries — no raw SQL
-XSS:           Angular escapes output by default; React escapes by default
+XSS:           React escapes output by default; Shadcn UI follows React escaping
 CSRF:          JWT bearer tokens (not cookies)
 ```
 
@@ -677,7 +663,7 @@ Polymarket WS ──► market-data-service ──► Redis Streams
                                     ┌─────────┴──────────┐
                                     ▼                    ▼
                               user-app              admin-app
-                           Angular WS            Angular WS
+                            React WS              React WS
 ```
 
 **Rule:** Only `market-data-service` connects to Polymarket's WebSocket. The frontend connects to our WebSocket only.
@@ -902,13 +888,13 @@ certbot certonly --nginx -d admin.polyforge.app
 HTTP (port 80)   → redirect all to HTTPS
 
 polyforge.app:
-  /              → user-app static files (Angular)
+  /              → user-app static files (React 19)
   /api/v1/*      → api-service
   /auth/v1/*     → auth-service
   /ws            → api-service WebSocket (Upgrade headers)
 
 admin.polyforge.app:
-  /              → admin-app static files [IP allowlist]
+  /              → admin-app static files (React 19) [IP allowlist]
   /api/v1/*      → admin-api-service
   /auth/v1/*     → admin-auth-service
   /ws            → admin-api-service WebSocket
@@ -1019,8 +1005,9 @@ Retention jobs run nightly at 3am UTC via `@Cron` decorator in `admin-api-servic
 ```
 polyforge/
 ├── apps/
-│   ├── user-app/          Angular 17 + PrimeNG
-│   └── admin-app/         Angular 17 + PrimeNG
+│   ├── user-app/          React 19 + Shadcn UI
+│   ├── admin-app/         React 19 + Shadcn UI
+│   └── landing/           Next.js 15
 ├── services/
 │   ├── gateway/           Nginx config
 │   ├── auth-service/      NestJS
@@ -1061,9 +1048,9 @@ api-service build:swagger     admin-api-service build:swagger
                ▼
      swagger.json  swagger-admin.json
                ↓
-     @hey-api/openapi-ts + @hey-api/client-angular
+     @hey-api/openapi-ts + @hey-api/client-fetch
                ↓
-both Angular apps (parallel — import generated src/app/api/ clients)
+both React apps (parallel — import generated src/api/ clients)
 ```
 
 See `03-openapi-codegen.md` for the full OpenAPI generation pipeline.
@@ -1079,13 +1066,14 @@ See `03-openapi-codegen.md` for the full OpenAPI generation pipeline.
 | ORM | Prisma 7.5.0 (schema-first, type-safe) |
 | Validation | Zod (streams/internal) + class-validator (HTTP controllers) |
 | API documentation | @nestjs/swagger — OpenAPI 3.1 spec generated at build time |
-| API client generation | @hey-api/openapi-ts (typescript-angular generator) |
+| API client generation | @hey-api/openapi-ts (typescript-fetch generator) |
 | Redis client | ioredis |
 | Logging | pino + nestjs-pino |
 | Testing | Vitest + Supertest |
 | Crypto (WASM) | Rust + wasm-bindgen — `@polyforge/crypto` (AES-256-GCM, SHA-256, HMAC-SHA256, CSPRNG) |
-| Frontend | Angular 17 |
-| UI library | PrimeNG |
+| Frontend (User & Admin) | React 19 |
+| Frontend (Landing) | Next.js 15 |
+| UI library | Shadcn UI + Tailwind CSS |
 | Real-time | Socket.io (WebSocket) |
 | Build system | Turborepo 2 + pnpm workspaces |
 | Containers | Docker + Docker Compose |

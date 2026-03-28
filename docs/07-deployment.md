@@ -1,6 +1,8 @@
 # Polyforge — Production Deployment Guide
 
-> Deploy Polyforge to AWS from scratch.  
+> Pre-deployment audit completed 2026-03-28. All critical, high, and medium issues resolved. See `docs/AUDIT-2026-03-28.md` for the full audit report.
+
+> Deploy Polyforge to AWS from scratch.
 > Estimated time: **2–3 hours** (first deployment)
 
 ---
