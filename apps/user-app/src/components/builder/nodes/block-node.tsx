@@ -27,6 +27,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   const isLive = useExecutionStore((s) => s.liveRunning);
   const isBtRunning = useExecutionStore((s) => s.backtestRunning);
   const isExecuting = isLive || isBtRunning;
+  const hasFired = useExecutionStore((s) => s.firedBlockIds.has(id));
 
   const edges = useBuilderStore((s) => s.edges);
   const isSafety = d.section === 'safety';
@@ -91,9 +92,11 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
     [id, updateNodeConfig],
   );
 
-  // ── Border & shadow logic ─────────────────────────────────────────────────
-  // Priority: executing > inactive > setup-needed > normal
-  const borderColor = isExecuting
+  // ── Border & animation logic ──────────────────────────────────────────────
+  // Priority: fired > executing > inactive > setup-needed > normal
+  const borderColor = hasFired
+    ? 'rgba(6,182,212,0.9)'
+    : isExecuting
     ? d.color + '60'
     : isInactive
     ? '#f59e0b44'
@@ -101,7 +104,26 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
     ? '#ef444455'
     : 'var(--color-pf-border)';
 
-  const boxShadow = !isExecuting && showSetupBadge
+  // Pulse animation speed varies by section to convey different "rhythms":
+  // triggers scan rapidly, safety beats slowly like a heartbeat
+  const PULSE_DURATION: Record<string, string> = {
+    triggers:   '1.4s',
+    actions:    '1.8s',
+    conditions: '2.4s',
+    logic:      '2.0s',
+    calc:       '2.0s',
+    safety:     '3.6s',
+  };
+  const pulseKeyframe = d.section === 'safety' ? 'safetyPulse' : 'blockPulse';
+  const pulseDuration = PULSE_DURATION[d.section] ?? '2.0s';
+
+  const cardAnimation = hasFired
+    ? 'blockFired 0.9s ease-out forwards'
+    : isExecuting && !isInactive
+    ? `${pulseKeyframe} ${pulseDuration} ease-in-out infinite`
+    : undefined;
+
+  const boxShadow = !isExecuting && !hasFired && showSetupBadge
     ? '0 0 0 1px rgba(239,68,68,0.18), 0 0 14px rgba(239,68,68,0.12)'
     : undefined;
 
@@ -195,15 +217,14 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         )}
 
         <div
-          className={`w-[260px] rounded-pf-md shadow-pf-md overflow-hidden transition-all duration-300 ${
-            isExecuting ? 'ring-1 ring-pf-cyan-500/40 shadow-[0_0_8px_rgba(0,200,255,0.15)]' : ''
-          } ${isInactive ? 'opacity-45' : ''}`}
+          className={`w-[260px] rounded-pf-md shadow-pf-md overflow-hidden ${isInactive ? 'opacity-45' : ''}`}
           style={{
             backgroundColor: 'var(--color-pf-elevated)',
-            borderWidth: isExecuting ? '1.5px' : '1px',
+            borderWidth: (isExecuting || hasFired) ? '1.5px' : '1px',
             borderStyle: isInactive ? 'dashed' : 'solid',
             borderColor,
             boxShadow,
+            animation: cardAnimation,
             color: 'var(--color-pf-text)',
           }}
         >

@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
@@ -14,6 +14,7 @@ import { VariableNode } from './nodes/variable-node';
 import { LogicNode } from './nodes/logic-node';
 import { CalcNode } from './nodes/calc-node';
 import { useBuilderStore, type BlockNodeData, type LogicNodeData, type CalcNodeData } from '../../stores/builder-store';
+import { useExecutionStore } from '../../stores/execution-store';
 import { useThemeStore } from '../../stores/theme-store';
 import {
   BLOCK_DEFS,
@@ -41,6 +42,24 @@ export function StrategyCanvas() {
   const onEdgesChange = useBuilderStore((s) => s.onEdgesChange);
   const onConnect = useBuilderStore((s) => s.onConnect);
   const addNode = useBuilderStore((s) => s.addNode);
+
+  const isLive = useExecutionStore((s) => s.liveRunning);
+  const isBtRunning = useExecutionStore((s) => s.backtestRunning);
+  const isExecuting = isLive || isBtRunning;
+
+  // Brighten edges to vivid cyan while a strategy is executing
+  const displayEdges = useMemo(() => {
+    if (!isExecuting) return edges;
+    return edges.map((e) => ({
+      ...e,
+      style: {
+        ...e.style,
+        stroke: 'rgba(6,182,212,0.75)',
+        strokeWidth: 2,
+        filter: 'drop-shadow(0 0 4px rgba(6,182,212,0.45))',
+      },
+    }));
+  }, [edges, isExecuting]);
 
   // ─── Drag-and-drop from palette ───────────────────────────────────────
 
@@ -94,10 +113,42 @@ export function StrategyCanvas() {
 
   return (
     <div ref={reactFlowWrapper} className="w-full h-full relative">
+      <style>{`
+        @keyframes blockPulse {
+          0%, 100% {
+            box-shadow: 0 0 0 1px rgba(6,182,212,0.18), 0 0 8px rgba(6,182,212,0.10);
+          }
+          50% {
+            box-shadow: 0 0 0 2px rgba(6,182,212,0.42), 0 0 22px rgba(6,182,212,0.22);
+          }
+        }
+        @keyframes blockFired {
+          0% {
+            box-shadow: 0 0 0 3px rgba(6,182,212,0.9), 0 0 40px rgba(6,182,212,0.55);
+            transform: scale(1.025);
+          }
+          55% {
+            box-shadow: 0 0 0 2px rgba(6,182,212,0.5), 0 0 18px rgba(6,182,212,0.28);
+            transform: scale(1.005);
+          }
+          100% {
+            box-shadow: 0 0 0 1px rgba(6,182,212,0.18), 0 0 8px rgba(6,182,212,0.10);
+            transform: scale(1);
+          }
+        }
+        @keyframes safetyPulse {
+          0%, 100% {
+            box-shadow: 0 0 0 1px rgba(239,68,68,0.15), 0 0 6px rgba(239,68,68,0.08);
+          }
+          50% {
+            box-shadow: 0 0 0 2px rgba(239,68,68,0.35), 0 0 16px rgba(239,68,68,0.18);
+          }
+        }
+      `}</style>
       <ReactFlow
         colorMode={isDark ? 'dark' : 'light'}
         nodes={nodes}
-        edges={edges}
+        edges={displayEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}

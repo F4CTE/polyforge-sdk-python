@@ -101,6 +101,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
   // ─── Sync execution state to global store (for block highlights) ───
   const setExecBtRunning = useExecutionStore((s) => s.setBacktestRunning);
   const setExecLiveRunning = useExecutionStore((s) => s.setLiveRunning);
+  const fireBlock = useExecutionStore((s) => s.fireBlock);
 
   useEffect(() => {
     setExecBtRunning(bt.status === 'RUNNING' || bt.status === 'QUEUED');
@@ -167,6 +168,10 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
             progress: parseFloat(data.progress ?? prev.progress),
           };
         });
+        // Flash trigger blocks to visualise the strategy evaluating each tick
+        nodes
+          .filter((n) => n.type === 'blockNode' && (n.data as any).section === 'triggers')
+          .forEach((n) => fireBlock(n.id));
       }
       if (msg.type === 'BACKTEST_COMPLETED') {
         const data = (msg.data ?? msg) as any;
@@ -240,9 +245,17 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
           ].slice(0, 50),
           totalPnl: data.totalPnl ?? prev.totalPnl,
         }));
+        // Flash action blocks when an order fills — confirms execution reached the action
+        nodes
+          .filter((n) => n.type === 'blockNode' && (n.data as any).section === 'actions')
+          .forEach((n) => fireBlock(n.id));
       }
       if (msg.type === 'ORDER_PLACED') {
         setLive(prev => ({ ...prev, ordersPlaced: prev.ordersPlaced + 1 }));
+        // Flash action blocks on placement too (shows action dispatched)
+        nodes
+          .filter((n) => n.type === 'blockNode' && (n.data as any).section === 'actions')
+          .forEach((n) => fireBlock(n.id));
       }
     }
 
@@ -257,7 +270,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
         wsManager.unsubscribeStrategy(strategyId);
       }
     };
-  }, [strategyId]);
+  }, [strategyId, nodes, fireBlock]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Poll backtest status (fallback for missed WS events) ──────────
   useEffect(() => {
