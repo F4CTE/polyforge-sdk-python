@@ -39,18 +39,24 @@ export function Component() {
 
   const isEdit = !!id;
 
-  // Count unwired trigger/action blocks — these are inactive and won't execute.
-  // Safety and condition blocks are excluded: they apply globally when unwired.
-  const orphanedCount = useBuilderStore((s) => {
+  // Count canvas issues: unwired trigger/action blocks + active blocks with empty required fields.
+  const canvasIssues = useBuilderStore((s) => {
     const connectedIds = new Set<string>([
       ...s.edges.map((e) => e.source),
       ...s.edges.map((e) => e.target),
     ]);
-    return s.nodes.filter((n) => {
-      if (n.type !== 'blockNode') return false;
-      const section = (n.data as import('../../stores/builder-store').BlockNodeData).section;
-      return (section === 'triggers' || section === 'actions') && !connectedIds.has(n.id);
-    }).length;
+    let orphaned = 0;
+    let misconfigured = 0;
+    for (const n of s.nodes) {
+      if (n.type !== 'blockNode') continue;
+      const nd = n.data as import('../../stores/builder-store').BlockNodeData;
+      const isOrphaned = (nd.section === 'triggers' || nd.section === 'actions') && !connectedIds.has(n.id);
+      if (isOrphaned) { orphaned++; continue; }
+      // For active (non-orphaned) blocks, check for empty required fields
+      const hasEmpty = nd.fields.some((f) => !(nd.config[f.key] ?? ''));
+      if (hasEmpty) misconfigured++;
+    }
+    return { orphaned, misconfigured };
   });
 
   // Load or reset on mount
@@ -327,11 +333,29 @@ export function Component() {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
-              {/* Orphaned-block warning banner */}
-              {orphanedCount > 0 && (
-                <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium pointer-events-none"
-                  style={{ backgroundColor: '#f59e0b18', border: '1px solid #f59e0b44', color: '#f59e0b' }}>
-                  <span>{orphanedCount} block{orphanedCount !== 1 ? 's' : ''} not wired — {orphanedCount !== 1 ? 'they' : 'it'} won't execute</span>
+              {/* Canvas issue banner — unwired blocks and/or misconfigured fields */}
+              {(canvasIssues.orphaned > 0 || canvasIssues.misconfigured > 0) && (
+                <div
+                  className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-3 py-1.5 rounded-full text-xs font-medium pointer-events-none"
+                  style={
+                    canvasIssues.misconfigured > 0
+                      ? { backgroundColor: '#ef444418', border: '1px solid #ef444444', color: '#ef4444' }
+                      : { backgroundColor: '#f59e0b18', border: '1px solid #f59e0b44', color: '#f59e0b' }
+                  }
+                >
+                  {canvasIssues.orphaned > 0 && (
+                    <span>
+                      {canvasIssues.orphaned} block{canvasIssues.orphaned !== 1 ? 's' : ''} not wired
+                    </span>
+                  )}
+                  {canvasIssues.orphaned > 0 && canvasIssues.misconfigured > 0 && (
+                    <span className="opacity-40">·</span>
+                  )}
+                  {canvasIssues.misconfigured > 0 && (
+                    <span>
+                      {canvasIssues.misconfigured} block{canvasIssues.misconfigured !== 1 ? 's' : ''} need{canvasIssues.misconfigured === 1 ? 's' : ''} setup
+                    </span>
+                  )}
                 </div>
               )}
               <StrategyCanvas />

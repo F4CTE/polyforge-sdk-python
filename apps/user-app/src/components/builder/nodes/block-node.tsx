@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
-import { X, GripVertical, Shield, Zap, Filter, Play, Unlink, Globe } from 'lucide-react';
+import { X, GripVertical, Shield, Zap, Filter, Play, Unlink, Globe, AlertTriangle } from 'lucide-react';
 import type { BlockNodeData } from '../../../stores/builder-store';
 import { useBuilderStore } from '../../../stores/builder-store';
 import { useExecutionStore } from '../../../stores/execution-store';
@@ -40,12 +40,24 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   //   conditions → always active; unwired = global gate, wired = scoped inline
   //   triggers   → only active when wired (needs an outgoing path)
   //   actions    → only active when wired (needs upstream context)
-  const isGlobal = (isSafety || isCondition) && !hasEdge; // full-opacity "Global" state
-  const isInactive = (isTrigger || isAction) && !hasEdge;  // dimmed "Not wired" state
+  const isGlobal = (isSafety || isCondition) && !hasEdge;
+  const isInactive = (isTrigger || isAction) && !hasEdge;
 
   // Whether to show target/source handles per section
-  const showTargetHandle = isCondition || isAction;        // triggers & safety have no target
-  const showSourceHandle = isTrigger || isCondition;       // actions & safety have no source
+  const showTargetHandle = isCondition || isAction;
+  const showSourceHandle = isTrigger || isCondition;
+
+  // ── Validation ────────────────────────────────────────────────────────────
+  // Collect keys of fields that have no value set yet
+  const emptyFieldKeys = new Set(
+    d.fields.filter((f) => !(d.config[f.key] ?? '')).map((f) => f.key),
+  );
+  const isMisconfigured = emptyFieldKeys.size > 0;
+
+  // Show the "Setup needed" badge only for active (non-inactive, non-global) blocks
+  // with empty fields — avoids stacking with "Not wired" / "Global" badges.
+  // Field-level highlights still appear in all states.
+  const showSetupBadge = isMisconfigured && !isInactive && !isGlobal;
 
   // Fetch user strategies for RUN_STRATEGY block's strategyId selector
   const [strategies, setStrategies] = useState<StrategyOption[]>([]);
@@ -57,7 +69,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
       .then((r) => (r.ok ? r.json() : { data: [] }))
       .then((res) => {
         const list: StrategyOption[] = (res.data ?? [])
-          .filter((s: any) => s.id !== currentStrategyId) // exclude self
+          .filter((s: any) => s.id !== currentStrategyId)
           .map((s: any) => ({ id: s.id, name: s.name }));
         setStrategies(list);
       })
@@ -79,15 +91,33 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
     [id, updateNodeConfig],
   );
 
+  // ── Border & shadow logic ─────────────────────────────────────────────────
+  // Priority: executing > inactive > setup-needed > normal
+  const borderColor = isExecuting
+    ? d.color + '60'
+    : isInactive
+    ? '#f59e0b44'
+    : showSetupBadge
+    ? '#ef444455'
+    : 'var(--color-pf-border)';
+
+  const boxShadow = !isExecuting && showSetupBadge
+    ? '0 0 0 1px rgba(239,68,68,0.18), 0 0 14px rgba(239,68,68,0.12)'
+    : undefined;
+
   /** Render a select field for strategy picker or mode picker */
   function renderSelectField(field: { key: string; label: string; placeholder: string; options?: string[] }) {
-    // Strategy selector: fetch from API
+    const isEmpty = emptyFieldKeys.has(field.key);
+    const selectClass = `w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors ${
+      isEmpty ? 'border-red-500/40 bg-red-500/5' : 'border-pf-border-subtle'
+    }`;
+
     if (field.key === 'strategyId' && isRunStrategy) {
       return (
         <select
           value={d.config[field.key] ?? ''}
           onChange={(e) => onFieldChange(field.key, e.target.value)}
-          className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+          className={selectClass}
         >
           <option value="">{field.placeholder}</option>
           {strategies.map((s) => (
@@ -99,12 +129,11 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
       );
     }
 
-    // Generic select with static options
     return (
       <select
         value={d.config[field.key] ?? ''}
         onChange={(e) => onFieldChange(field.key, e.target.value)}
-        className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+        className={selectClass}
       >
         <option value="">{field.placeholder}</option>
         {(field.options ?? []).map((opt) => (
@@ -153,96 +182,129 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
           </div>
         )}
 
-      <div
-        className={`w-[260px] rounded-pf-md shadow-pf-md overflow-hidden transition-all duration-300 ${
-          isExecuting ? 'ring-1 ring-pf-cyan-500/40 shadow-[0_0_8px_rgba(0,200,255,0.15)]' : ''
-        } ${isInactive ? 'opacity-45' : ''}`}
-        style={{
-          backgroundColor: 'var(--color-pf-elevated)',
-          borderWidth: isExecuting ? '1.5px' : '1px',
-          borderStyle: isInactive ? 'dashed' : 'solid',
-          borderColor: isExecuting ? d.color + '60' : isInactive ? '#f59e0b44' : 'var(--color-pf-border)',
-          color: 'var(--color-pf-text)',
-        }}
-      >
-        {/* Header bar */}
-        <div
-          className="flex items-center gap-2 px-3 py-2"
-          style={{ backgroundColor: d.color + '18', borderBottom: `2px solid ${d.color}` }}
-        >
-          <GripVertical className="size-3 text-pf-text-muted cursor-grab" />
-          <span className="text-pf-text-secondary">{SECTION_ICONS[d.section]}</span>
-          <span className="text-xs font-medium text-pf-text flex-1 truncate">
-            {d.label}
-          </span>
-          <button
-            onClick={onDelete}
-            className="p-0.5 rounded hover:bg-pf-danger/20 text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
-            aria-label="Remove block"
-            title="Remove block"
+        {/* "Setup needed" badge — active block with one or more empty required fields */}
+        {showSetupBadge && (
+          <div
+            className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap z-10 pointer-events-none"
+            style={{ backgroundColor: '#ef444422', border: '1px solid #ef444455', color: '#ef4444' }}
+            title={`${emptyFieldKeys.size} required field${emptyFieldKeys.size !== 1 ? 's' : ''} not filled in`}
           >
-            <X className="size-3" />
-          </button>
-        </div>
+            <AlertTriangle className="size-2.5" />
+            Setup needed
+          </div>
+        )}
 
-        {/* Config fields */}
-        {d.fields.length > 0 && (
-          <div className="px-3 py-2 space-y-2">
-            {d.fields.map((field) => (
-              <div key={field.key}>
-                <label className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
-                  {field.label}
-                </label>
-                {field.type === 'market_slot' ? (
-                  <select
-                    value={d.config[field.key] ?? ''}
-                    onChange={(e) => onFieldChange(field.key, e.target.value)}
-                    className="w-full h-7 px-2 rounded bg-[var(--block-color)]/10 border border-[var(--block-color)]/20 text-xs text-pf-text focus:outline-none focus:border-[var(--block-color)]/50"
-                  >
-                    <option value="">Select market slot...</option>
-                    <option value="$MARKET_A">$MARKET_A</option>
-                    <option value="$MARKET_B">$MARKET_B</option>
-                    <option value="$MARKET_C">$MARKET_C</option>
-                    <option value="$MARKET_D">$MARKET_D</option>
-                    <option value="$MARKET_E">$MARKET_E</option>
-                  </select>
-                ) : field.type === 'select' ? (
-                  renderSelectField(field)
-                ) : (
-                  <div className="relative">
-                    <input
-                      type={field.type}
-                      placeholder={field.placeholder}
-                      value={d.config[field.key] ?? ''}
-                      onChange={(e) => onFieldChange(field.key, e.target.value)}
-                      className={`w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors ${
-                        (d.config[field.key] ?? '').startsWith('$')
-                          ? 'text-pf-purple-500 font-mono'
-                          : 'text-pf-text'
-                      }`}
-                    />
-                    {(d.config[field.key] ?? '').startsWith('$') && (
-                      <span
-                        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-pf-purple-500/70 pointer-events-none"
-                        title={`Variable: ${d.config[field.key]}`}
+        <div
+          className={`w-[260px] rounded-pf-md shadow-pf-md overflow-hidden transition-all duration-300 ${
+            isExecuting ? 'ring-1 ring-pf-cyan-500/40 shadow-[0_0_8px_rgba(0,200,255,0.15)]' : ''
+          } ${isInactive ? 'opacity-45' : ''}`}
+          style={{
+            backgroundColor: 'var(--color-pf-elevated)',
+            borderWidth: isExecuting ? '1.5px' : '1px',
+            borderStyle: isInactive ? 'dashed' : 'solid',
+            borderColor,
+            boxShadow,
+            color: 'var(--color-pf-text)',
+          }}
+        >
+          {/* Header bar */}
+          <div
+            className="flex items-center gap-2 px-3 py-2"
+            style={{ backgroundColor: d.color + '18', borderBottom: `2px solid ${d.color}` }}
+          >
+            <GripVertical className="size-3 text-pf-text-muted cursor-grab" />
+            <span className="text-pf-text-secondary">{SECTION_ICONS[d.section]}</span>
+            <span className="text-xs font-medium text-pf-text flex-1 truncate">
+              {d.label}
+            </span>
+            {/* Misconfiguration indicator in header — visible even when badge is suppressed */}
+            {isMisconfigured && !showSetupBadge && (
+              <AlertTriangle
+                className="size-3 shrink-0"
+                style={{ color: '#ef4444', opacity: 0.6 }}
+                title={`${emptyFieldKeys.size} field${emptyFieldKeys.size !== 1 ? 's' : ''} need configuration`}
+              />
+            )}
+            <button
+              onClick={onDelete}
+              className="p-0.5 rounded hover:bg-pf-danger/20 text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+              aria-label="Remove block"
+              title="Remove block"
+            >
+              <X className="size-3" />
+            </button>
+          </div>
+
+          {/* Config fields */}
+          {d.fields.length > 0 && (
+            <div className="px-3 py-2 space-y-2">
+              {d.fields.map((field) => {
+                const isEmpty = emptyFieldKeys.has(field.key);
+                return (
+                  <div key={field.key}>
+                    <label className={`flex items-center gap-1 text-[10px] font-medium mb-0.5 uppercase tracking-wider ${isEmpty ? 'text-red-400/80' : 'text-pf-text-muted'}`}>
+                      {field.label}
+                      {isEmpty && <span className="text-red-400/80 normal-case tracking-normal font-normal">— required</span>}
+                    </label>
+                    {field.type === 'market_slot' ? (
+                      <select
+                        value={d.config[field.key] ?? ''}
+                        onChange={(e) => onFieldChange(field.key, e.target.value)}
+                        className={`w-full h-7 px-2 rounded text-xs text-pf-text focus:outline-none transition-colors ${
+                          isEmpty
+                            ? 'bg-red-500/8 border border-red-500/40 focus:border-red-500/60'
+                            : 'bg-[var(--block-color)]/10 border border-[var(--block-color)]/20 focus:border-[var(--block-color)]/50'
+                        }`}
                       >
-                        var
-                      </span>
+                        <option value="">Select market slot...</option>
+                        <option value="$MARKET_A">$MARKET_A</option>
+                        <option value="$MARKET_B">$MARKET_B</option>
+                        <option value="$MARKET_C">$MARKET_C</option>
+                        <option value="$MARKET_D">$MARKET_D</option>
+                        <option value="$MARKET_E">$MARKET_E</option>
+                      </select>
+                    ) : field.type === 'select' ? (
+                      renderSelectField(field)
+                    ) : (
+                      <div className="relative">
+                        <input
+                          type={field.type}
+                          placeholder={field.placeholder}
+                          value={d.config[field.key] ?? ''}
+                          onChange={(e) => onFieldChange(field.key, e.target.value)}
+                          className={`w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm placeholder:text-pf-text-muted/50 focus:outline-none transition-colors ${
+                            isEmpty
+                              ? 'border-red-500/40 bg-red-500/5 focus:border-red-500/60'
+                              : 'border-pf-border-subtle focus:border-pf-cyan-500/50'
+                          } ${
+                            (d.config[field.key] ?? '').startsWith('$')
+                              ? 'text-pf-purple-500 font-mono'
+                              : 'text-pf-text'
+                          }`}
+                        />
+                        {(d.config[field.key] ?? '').startsWith('$') && (
+                          <span
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-pf-purple-500/70 pointer-events-none"
+                            title={`Variable: ${d.config[field.key]}`}
+                          >
+                            var
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
 
-        {/* No fields message */}
-        {d.fields.length === 0 && (
-          <div className="px-3 py-2">
-            <span className="text-[10px] text-pf-text-muted italic">No configuration needed</span>
-          </div>
-        )}
-      </div>
+          {/* No fields message */}
+          {d.fields.length === 0 && (
+            <div className="px-3 py-2">
+              <span className="text-[10px] text-pf-text-muted italic">No configuration needed</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Source handle (right) — actions and safety have no outgoing connections */}
