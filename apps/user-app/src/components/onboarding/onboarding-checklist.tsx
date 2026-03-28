@@ -120,7 +120,7 @@ export function OnboardingChecklist() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-80 bg-pf-elevated border border-pf-border rounded-pf-lg shadow-2xl animate-fade-in">
+    <div role="region" aria-label="Getting started checklist" className="fixed bottom-4 right-4 z-50 w-80 bg-pf-elevated border border-pf-border rounded-pf-lg shadow-2xl animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
         <div className="flex items-center gap-2">
@@ -132,14 +132,14 @@ export function OnboardingChecklist() {
         <div className="flex items-center gap-1">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text"
+            className="p-1 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
             aria-label={collapsed ? 'Expand checklist' : 'Collapse checklist'}
           >
             {collapsed ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
           </button>
           <button
             onClick={handleDismiss}
-            className="p-1 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text"
+            className="p-1 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
             aria-label="Dismiss checklist"
           >
             <X className="size-4" />
@@ -149,7 +149,7 @@ export function OnboardingChecklist() {
 
       {/* Progress bar */}
       <div className="px-4 pt-2">
-        <div className="w-full h-1.5 bg-pf-overlay rounded-full overflow-hidden">
+        <div className="w-full h-1.5 bg-pf-overlay rounded-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed`}>
           <div
             className="h-full bg-pf-cyan-500 rounded-full transition-all duration-500"
             style={{ width: `${(completedCount / CHECKLIST_ITEMS.length) * 100}%` }}

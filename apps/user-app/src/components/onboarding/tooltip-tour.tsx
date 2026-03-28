@@ -224,10 +224,13 @@ export function TooltipTour() {
       <div
         className="fixed inset-0 z-[9998] bg-black/40 transition-opacity"
         onClick={closeTour}
+        aria-hidden="true"
       />
 
       {/* Tooltip */}
       <div
+        role="dialog"
+        aria-label={`Tour step: ${step.title}`}
         className="fixed z-[9999] w-80 bg-pf-elevated border border-pf-border rounded-pf-lg shadow-2xl animate-fade-in"
         style={{
           top: `${Math.max(8, position.top)}px`,
@@ -239,7 +242,7 @@ export function TooltipTour() {
           <span className="text-sm font-semibold text-pf-text">{step.title}</span>
           <button
             onClick={closeTour}
-            className="p-1 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text"
+            className="p-1 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
             aria-label="Close tour"
           >
             <X className="size-4" />
@@ -260,7 +263,7 @@ export function TooltipTour() {
             {!isFirst && (
               <button
                 onClick={prevStep}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium text-pf-text-secondary hover:text-pf-text bg-pf-surface border border-pf-border hover:border-pf-border-strong transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium text-pf-text-secondary hover:text-pf-text bg-pf-surface border border-pf-border hover:border-pf-border-strong transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
               >
                 <ChevronLeft className="size-3" />
                 Back
@@ -268,7 +271,7 @@ export function TooltipTour() {
             )}
             <button
               onClick={nextStep}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
             >
               {isLast ? 'Finish' : 'Next'}
               {!isLast && <ChevronRight className="size-3" />}
@@ -282,7 +285,7 @@ export function TooltipTour() {
         .tour-highlight {
           position: relative;
           z-index: 9999 !important;
-          box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.3), 0 0 20px rgba(6, 182, 212, 0.1) !important;
+          box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-pf-cyan-500) 30%, transparent), 0 0 20px color-mix(in srgb, var(--color-pf-cyan-500) 10%, transparent) !important;
           border-radius: 8px;
         }
       `}</style>

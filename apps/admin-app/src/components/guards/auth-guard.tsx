@@ -14,6 +14,7 @@ export function AuthGuard() {
             height="48"
             viewBox="0 0 24 24"
             fill="none"
+            aria-hidden="true"
           >
             <path
               d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
@@ -27,7 +28,7 @@ export function AuthGuard() {
               fill="var(--color-pf-cyan-500)"
             />
           </svg>
-          <p className="mt-4 text-sm text-[var(--color-pf-text-secondary)]">
+          <p className="mt-4 text-sm text-[var(--color-pf-text-secondary)]" role="status">
             Verifying admin session...
           </p>
         </div>

@@ -163,8 +163,9 @@ export function Component() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Strategy</label>
+            <label htmlFor="backtest-strategy" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Strategy</label>
             <select
+              id="backtest-strategy"
               value={selectedStratId}
               onChange={e => setSelectedStratId(e.target.value)}
               className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
@@ -174,8 +175,9 @@ export function Component() {
             </select>
           </div>
           <div>
-            <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Start Date</label>
+            <label htmlFor="backtest-start" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Start Date</label>
             <input
+              id="backtest-start"
               type="date"
               lang="en"
               value={dateStart}
@@ -184,8 +186,9 @@ export function Component() {
             />
           </div>
           <div>
-            <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">End Date</label>
+            <label htmlFor="backtest-end" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">End Date</label>
             <input
+              id="backtest-end"
               type="date"
               lang="en"
               value={dateEnd}
@@ -214,7 +217,7 @@ export function Component() {
               <div className="text-sm font-medium text-pf-text">{selectedRun.strategyName ?? 'Unnamed Strategy'}</div>
               <div className="text-xs font-mono text-pf-text-muted mt-1">{dateRangeLabel(selectedRun)}</div>
             </div>
-            <button onClick={() => setSelectedRun(null)} className="text-pf-text-muted hover:text-pf-text transition-colors">
+            <button onClick={() => setSelectedRun(null)} aria-label="Close run details" className="text-pf-text-muted hover:text-pf-text transition-colors">
               <X className="size-4" />
             </button>
           </div>
@@ -371,14 +374,16 @@ export function Component() {
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
+            aria-label="Previous page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
           </button>
-          <span className="text-sm font-mono text-pf-text-secondary">{page} / {totalPages}</span>
+          <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
+            aria-label="Next page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />

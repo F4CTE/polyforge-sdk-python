@@ -62,11 +62,11 @@ export function HowItWorks() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-[1000px] mx-auto stagger-children">
+        <ol className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-[1000px] mx-auto stagger-children list-none p-0 m-0">
           {steps.map((step) => (
-            <div key={step.number} className="flex flex-col items-center animate-fade-in">
+            <li key={step.number} className="flex flex-col items-center animate-fade-in">
               <div className="flex flex-col items-center gap-3 mb-5">
-                <div className="w-14 h-14 bg-gradient-to-br from-pf-cyan-500/20 to-pf-elevated border border-pf-cyan-500/35 rounded-full flex items-center justify-center text-[15px] font-bold font-mono text-pf-cyan-400 shadow-[0_0_24px_rgba(6,182,212,0.15),0_0_48px_rgba(6,182,212,0.06)]">
+                <div className="w-14 h-14 bg-gradient-to-br from-pf-cyan-500/20 to-pf-elevated border border-pf-cyan-500/35 rounded-full flex items-center justify-center text-[15px] font-bold font-mono text-pf-cyan-400 shadow-pf-md" aria-hidden="true">
                   {step.number}
                 </div>
                 {step.visual}
@@ -75,9 +75,9 @@ export function HowItWorks() {
                 <h3 className="text-lg font-semibold text-pf-text mb-2.5">{step.title}</h3>
                 <p className="text-sm text-pf-text-secondary leading-7">{step.description}</p>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ol>
       </div>
     </section>
   );

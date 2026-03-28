@@ -80,7 +80,7 @@ export function Component() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
                 >
                   {loading ? 'Sending...' : 'Send reset link'}
                 </button>
@@ -99,7 +99,7 @@ export function Component() {
           )}
 
           <div className="border-t border-pf-border mt-6 pt-4 text-center text-sm">
-            <Link to="/login" className="inline-flex items-center gap-1.5 text-pf-cyan-500 hover:text-pf-cyan-400 transition-colors">
+            <Link to="/login" className="inline-flex items-center gap-1.5 text-pf-cyan-500 hover:text-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 rounded-pf-sm">
               <ArrowLeft className="size-4" />
               Back to login
             </Link>

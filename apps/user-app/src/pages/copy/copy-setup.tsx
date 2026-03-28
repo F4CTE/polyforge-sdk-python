@@ -173,7 +173,7 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/copy"
-        className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
       >
         <ArrowLeft className="size-4" /> Back to Copy Trading
       </Link>
@@ -218,8 +218,10 @@ export function Component() {
           <>
             <h2 className="text-sm font-medium text-pf-text">Target Wallet Address</h2>
             <input
+              id="target-wallet"
               type="text"
               placeholder="0x... paste wallet address"
+              aria-label="Target wallet address"
               value={targetWallet}
               onChange={(e) => setTargetWallet(e.target.value)}
               className="w-full px-4 py-3 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted font-mono"
@@ -459,7 +461,7 @@ export function Component() {
         <button
           onClick={prevStep}
           disabled={step === 0}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-pf text-sm text-pf-text-secondary hover:text-pf-text disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-pf text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft className="size-4" /> Back
         </button>
@@ -467,7 +469,7 @@ export function Component() {
           <button
             onClick={nextStep}
             disabled={!canAdvance()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Next <ChevronRight className="size-4" />
           </button>
@@ -475,7 +477,7 @@ export function Component() {
           <button
             onClick={handleSubmit}
             disabled={submitting || !isFormValid}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-40 transition-colors"
           >
             <Rocket className="size-4" />
             {submitting ? 'Starting...' : 'Start Copying'}

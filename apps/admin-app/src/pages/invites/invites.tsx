@@ -78,8 +78,9 @@ export function Component() {
         </div>
         <form onSubmit={handleGenerate} className="flex flex-wrap items-end gap-4">
           <div>
-            <label className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Count</label>
+            <label htmlFor="invite-count" className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Count</label>
             <input
+              id="invite-count"
               type="number"
               min={1}
               max={50}
@@ -89,8 +90,9 @@ export function Component() {
             />
           </div>
           <div>
-            <label className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Max Uses</label>
+            <label htmlFor="invite-max-uses" className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Max Uses</label>
             <input
+              id="invite-max-uses"
               type="number"
               min={1}
               max={100}
@@ -100,8 +102,9 @@ export function Component() {
             />
           </div>
           <div>
-            <label className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">TTL (days)</label>
+            <label htmlFor="invite-ttl" className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">TTL (days)</label>
             <input
+              id="invite-ttl"
               type="number"
               min={1}
               max={365}
@@ -130,6 +133,7 @@ export function Component() {
                   <button
                     onClick={() => copyCode(code)}
                     className="p-1 rounded hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text)] transition-colors"
+                    aria-label={`Copy code ${code}`}
                   >
                     <Copy size={12} />
                   </button>
@@ -190,6 +194,7 @@ export function Component() {
                         <button
                           onClick={() => copyCode(inv.code)}
                           className="p-1 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text)] transition-colors"
+                          aria-label={`Copy code ${inv.code}`}
                         >
                           <Copy size={12} />
                         </button>

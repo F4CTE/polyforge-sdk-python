@@ -15,7 +15,7 @@ export default function LandingPage() {
   return (
     <>
       <Nav />
-      <main>
+      <main id="main-content">
         <Hero />
         <ProductPreview />
         <ProofStrip />

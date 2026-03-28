@@ -150,6 +150,7 @@ export function Component() {
           <input
             type="text"
             placeholder="Search users..."
+            aria-label="Search users"
             defaultValue={search}
             onChange={(e) => handleSearch(e.target.value)}
             className="w-full pl-9 pr-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
@@ -161,6 +162,7 @@ export function Component() {
             setStatusFilter(e.target.value);
             setPage(1);
           }}
+          aria-label="Filter by status"
           className="px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
         >
           <option value="">All statuses</option>
@@ -199,13 +201,13 @@ export function Component() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--color-pf-border)]">
-                <th onClick={() => toggleSort('username')} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Username{sortIndicator('username')}</th>
+                <th onClick={() => toggleSort('username')} role="columnheader" aria-sort={sortField === 'username' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Username{sortIndicator('username')}</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Email</th>
-                <th onClick={() => toggleSort('status')} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Status{sortIndicator('status')}</th>
-                <th onClick={() => toggleSort('emailVerified')} className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Verified{sortIndicator('emailVerified')}</th>
+                <th onClick={() => toggleSort('status')} role="columnheader" aria-sort={sortField === 'status' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Status{sortIndicator('status')}</th>
+                <th onClick={() => toggleSort('emailVerified')} role="columnheader" aria-sort={sortField === 'emailVerified' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Verified{sortIndicator('emailVerified')}</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">2FA</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Connected</th>
-                <th onClick={() => toggleSort('createdAt')} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Created{sortIndicator('createdAt')}</th>
+                <th onClick={() => toggleSort('createdAt')} role="columnheader" aria-sort={sortField === 'createdAt' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Created{sortIndicator('createdAt')}</th>
                 <th className="text-right px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -222,7 +224,7 @@ export function Component() {
                 ))
               ) : displayUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12">
+                  <td colSpan={8} className="text-center py-12">
                     <Users className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
                     <p className="text-[var(--color-pf-text-secondary)] font-medium">No users found</p>
                     <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Try adjusting your search or filters</p>
@@ -254,23 +256,23 @@ export function Component() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       {user.emailVerified ? (
-                        <Check size={14} className="inline text-pf-success" />
+                        <><Check size={14} className="inline text-pf-success" aria-hidden="true" /><span className="sr-only">Yes</span></>
                       ) : (
-                        <X size={14} className="inline text-[var(--color-pf-text-tertiary)]" />
+                        <><X size={14} className="inline text-[var(--color-pf-text-tertiary)]" aria-hidden="true" /><span className="sr-only">No</span></>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       {user.totpEnabled ? (
-                        <Shield size={14} className="inline text-pf-success" />
+                        <><Shield size={14} className="inline text-pf-success" aria-hidden="true" /><span className="sr-only">Enabled</span></>
                       ) : (
-                        <X size={14} className="inline text-[var(--color-pf-text-tertiary)]" />
+                        <><X size={14} className="inline text-[var(--color-pf-text-tertiary)]" aria-hidden="true" /><span className="sr-only">Disabled</span></>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       {user.polymarketConnected ? (
-                        <Wifi size={14} className="inline text-pf-success" />
+                        <><Wifi size={14} className="inline text-pf-success" aria-hidden="true" /><span className="sr-only">Connected</span></>
                       ) : (
-                        <X size={14} className="inline text-[var(--color-pf-text-tertiary)]" />
+                        <><X size={14} className="inline text-[var(--color-pf-text-tertiary)]" aria-hidden="true" /><span className="sr-only">Not connected</span></>
                       )}
                     </td>
                     <td className="px-4 py-3 text-[var(--color-pf-text-tertiary)]">

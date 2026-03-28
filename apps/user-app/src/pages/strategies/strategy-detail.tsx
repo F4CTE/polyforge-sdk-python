@@ -76,9 +76,9 @@ const STATUS_STYLES: Record<StrategyStatus, { dot: string; bg: string; text: str
   RUNNING:  { dot: 'bg-pf-success', bg: 'bg-pf-success/10', text: 'text-pf-success' },
   PAPER:    { dot: 'bg-pf-cyan-400',    bg: 'bg-pf-cyan-500/10',    text: 'text-pf-cyan-400' },
   PAUSED:   { dot: 'bg-pf-warning',   bg: 'bg-pf-warning/10',   text: 'text-pf-warning' },
-  IDLE:     { dot: 'bg-gray-400',    bg: 'bg-gray-500/10',    text: 'text-gray-400' },
+  IDLE:     { dot: 'bg-pf-text-muted',    bg: 'bg-pf-overlay',    text: 'text-pf-text-muted' },
   ERROR:    { dot: 'bg-pf-danger',     bg: 'bg-pf-danger/10',     text: 'text-pf-danger' },
-  ARCHIVED: { dot: 'bg-gray-500',    bg: 'bg-gray-500/10',    text: 'text-gray-500' },
+  ARCHIVED: { dot: 'bg-pf-text-muted',    bg: 'bg-pf-overlay',    text: 'text-pf-text-muted' },
 };
 
 const LOG_COLORS: Record<LiveLogEntry['severity'], string> = {
@@ -138,7 +138,7 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
 const SECTION_STYLES: Record<string, string> = {
   safety: 'bg-pf-warning/10 text-pf-warning border-pf-warning/20',
   trigger: 'bg-pf-cyan-500/10 text-pf-cyan-400 border-pf-cyan-500/20',
-  condition: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  condition: 'bg-pf-purple-500/10 text-pf-purple-500 border-pf-purple-500/20',
   action: 'bg-pf-success/10 text-pf-success border-pf-success/20',
 };
 
@@ -270,9 +270,9 @@ export function Component() {
       {/* Back */}
       <Link
         to="/strategies"
-        className="inline-flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
       >
-        <ArrowLeft className="size-3.5" /> Strategies
+        <ArrowLeft className="size-3.5" aria-hidden="true" /> Strategies
       </Link>
 
       {/* Loading */}
@@ -415,7 +415,7 @@ export function Component() {
           <div className="flex flex-wrap items-center gap-2">
             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
               strategy.execMode === 'TICK' || strategy.execMode === 'HYBRID'
-                ? 'bg-violet-500/10 text-violet-400'
+                ? 'bg-pf-purple-500/10 text-pf-purple-500'
                 : 'bg-pf-cyan-500/10 text-pf-cyan-400'
             }`}>
               {execLabel(strategy)}
@@ -432,9 +432,9 @@ export function Component() {
             {strategy.tags.map((tag) => (
               <span key={tag} className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                 tag.toLowerCase() === 'momentum'
-                  ? 'bg-amber-500/10 text-amber-400'
+                  ? 'bg-pf-gold-500/10 text-pf-gold-500'
                   : tag.toLowerCase() === 'defensive'
-                    ? 'bg-blue-500/10 text-blue-400'
+                    ? 'bg-pf-info/10 text-pf-info'
                     : 'bg-pf-cyan-500/10 text-pf-cyan-400'
               }`}>
                 {tag}

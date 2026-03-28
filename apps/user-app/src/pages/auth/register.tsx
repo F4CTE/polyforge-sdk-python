@@ -133,7 +133,7 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg">
 
           {error && (
-            <div className="flex items-center gap-2 bg-pf-danger/10 border border-pf-danger/20 text-pf-danger rounded-pf px-4 py-3 mb-4 text-sm">
+            <div role="alert" className="flex items-center gap-2 bg-pf-danger/10 border border-pf-danger/20 text-pf-danger rounded-pf px-4 py-3 mb-4 text-sm">
               <AlertCircle className="size-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -253,7 +253,7 @@ export function Component() {
               />
               <label htmlFor="tos" className="text-sm text-pf-text leading-relaxed cursor-pointer">
                 I agree to the{' '}
-                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-pf-cyan-500 hover:text-pf-cyan-400 transition-colors">
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-pf-cyan-500 hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
                   Terms of Service
                 </a>
               </label>
@@ -263,7 +263,7 @@ export function Component() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Creating account...' : 'Create account'}
             </button>
@@ -274,7 +274,7 @@ export function Component() {
         {/* Links below card */}
         <p className="text-center text-sm text-pf-text-muted mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors">
+          <Link to="/login" className="text-pf-cyan-400 hover:text-pf-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
             Sign in
           </Link>
         </p>

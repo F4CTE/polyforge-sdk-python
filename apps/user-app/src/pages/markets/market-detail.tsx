@@ -509,13 +509,15 @@ export function Component() {
                   <div className="flex gap-1 mt-1">
                     <button
                       onClick={() => openConditional('TAKE_PROFIT', 'YES')}
-                      className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-success/20 text-pf-success hover:bg-pf-success/30 transition-colors"
+                      aria-label="Set take profit for YES"
+                      className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-success/20 text-pf-success hover:bg-pf-success/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                     >
                       TP
                     </button>
                     <button
                       onClick={() => openConditional('STOP_LOSS', 'YES')}
-                      className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-danger/20 text-pf-danger hover:bg-pf-danger/30 transition-colors"
+                      aria-label="Set stop loss for YES"
+                      className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-danger/20 text-pf-danger hover:bg-pf-danger/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                     >
                       SL
                     </button>
@@ -529,13 +531,15 @@ export function Component() {
                   <div className="flex gap-1 mt-1">
                     <button
                       onClick={() => openConditional('TAKE_PROFIT', 'NO')}
-                      className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-success/20 text-pf-success hover:bg-pf-success/30 transition-colors"
+                      aria-label="Set take profit for NO"
+                      className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-success/20 text-pf-success hover:bg-pf-success/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                     >
                       TP
                     </button>
                     <button
                       onClick={() => openConditional('STOP_LOSS', 'NO')}
-                      className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-danger/20 text-pf-danger hover:bg-pf-danger/30 transition-colors"
+                      aria-label="Set stop loss for NO"
+                      className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-danger/20 text-pf-danger hover:bg-pf-danger/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                     >
                       SL
                     </button>
@@ -544,7 +548,7 @@ export function Component() {
               </div>
               <button
                 onClick={() => setShowRunStrategy(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-success text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-success text-white text-sm font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base"
               >
                 <Play className="size-4" /> Run Strategy
               </button>
@@ -579,7 +583,8 @@ export function Component() {
                     <button
                       key={r}
                       onClick={() => onResolutionChange(r)}
-                      className={`px-2.5 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
+                      aria-pressed={resolution === r}
+                      className={`px-2.5 py-1 rounded-pf-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
                         resolution === r
                           ? 'bg-pf-cyan-500/15 text-pf-cyan-400'
                           : 'text-pf-text-muted hover:text-pf-text-secondary'
@@ -739,8 +744,8 @@ export function Component() {
                     className={`flex-1 py-1.5 rounded-pf-sm text-xs font-semibold transition-colors ${
                       tradeOutcome === o
                         ? o === 'YES'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                          ? 'bg-pf-success/10 text-pf-success border border-pf-success/30'
+                          : 'bg-pf-danger/10 text-pf-danger border border-pf-danger/30'
                         : 'bg-pf-surface text-pf-text-muted border border-pf-border hover:border-pf-border-strong'
                     }`}
                   >
@@ -759,7 +764,7 @@ export function Component() {
                       tradeSide === s
                         ? s === 'BUY'
                           ? 'bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/30'
-                          : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                          : 'bg-pf-danger/10 text-pf-danger border border-pf-danger/30'
                         : 'bg-pf-surface text-pf-text-muted border border-pf-border hover:border-pf-border-strong'
                     }`}
                   >
@@ -834,10 +839,10 @@ export function Component() {
               <button
                 onClick={placeOrder}
                 disabled={placingOrder || !tradeAmount || parseFloat(tradeAmount || '0') <= 0 || (!isMarketOrder && (!tradePrice || parseFloat(tradePrice || '0') <= 0))}
-                className={`w-full mt-3 py-2.5 rounded-pf text-sm font-semibold text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed ${
+                className={`w-full mt-3 py-2.5 rounded-pf text-sm font-semibold text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
                   tradeSide === 'BUY'
                     ? 'bg-pf-cyan-500 hover:bg-pf-cyan-600'
-                    : 'bg-red-500 hover:bg-red-600'
+                    : 'bg-pf-danger hover:bg-pf-danger/90'
                 }`}
               >
                 {placingOrder ? 'Placing...' : `Place ${tradeSide} ${tradeOutcome} Order`}
@@ -870,10 +875,10 @@ export function Component() {
                         className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-pf-sm bg-pf-surface border border-pf-border-subtle text-xs"
                       >
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <span className={`font-semibold ${order.side === 'BUY' ? 'text-pf-cyan-400' : 'text-red-400'}`}>
+                          <span className={`font-semibold ${order.side === 'BUY' ? 'text-pf-cyan-400' : 'text-pf-danger'}`}>
                             {order.side}
                           </span>
-                          <span className={`font-medium ${order.outcome === 'YES' ? 'text-emerald-400' : 'text-red-400'}`}>
+                          <span className={`font-medium ${order.outcome === 'YES' ? 'text-pf-success' : 'text-pf-danger'}`}>
                             {order.outcome}
                           </span>
                           <span className="font-mono text-pf-text-muted truncate">
@@ -882,8 +887,9 @@ export function Component() {
                         </div>
                         <button
                           onClick={() => cancelMyOrder(order.id)}
-                          className="shrink-0 p-0.5 rounded text-pf-text-muted hover:text-pf-danger transition-colors"
+                          className="shrink-0 p-0.5 rounded text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                           title="Cancel order"
+                          aria-label="Cancel order"
                         >
                           <X className="size-3" />
                         </button>

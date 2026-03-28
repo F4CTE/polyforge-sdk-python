@@ -179,11 +179,11 @@ function EditDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="edit-config-title">
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 w-full max-w-md space-y-5 animate-fade-in">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-pf-text">Edit Config</h2>
-          <button onClick={onClose} className="text-pf-text-muted hover:text-pf-text transition-colors">
+          <h2 id="edit-config-title" className="text-sm font-medium text-pf-text">Edit Config</h2>
+          <button onClick={onClose} aria-label="Close edit config" className="text-pf-text-muted hover:text-pf-text transition-colors">
             <X className="size-4" />
           </button>
         </div>
@@ -573,16 +573,18 @@ export function Component() {
           <button
             onClick={() => setTradePage((p) => Math.max(1, p - 1))}
             disabled={tradePage === 1}
+            aria-label="Previous page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
           </button>
-          <span className="text-sm font-mono text-pf-text-secondary">
-            {tradePage} / {tradeTotalPages}
+          <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">
+            Page {tradePage} of {tradeTotalPages}
           </span>
           <button
             onClick={() => setTradePage((p) => Math.min(tradeTotalPages, p + 1))}
             disabled={tradePage === tradeTotalPages}
+            aria-label="Next page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />

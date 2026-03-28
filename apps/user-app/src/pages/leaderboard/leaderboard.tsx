@@ -222,14 +222,16 @@ export function Component() {
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
+            aria-label="Previous page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
           </button>
-          <span className="text-sm font-mono text-pf-text-secondary">{page} / {totalPages}</span>
+          <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
+            aria-label="Next page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />

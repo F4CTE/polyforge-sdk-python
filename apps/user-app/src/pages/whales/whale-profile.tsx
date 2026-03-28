@@ -68,7 +68,7 @@ function Sparkline({ data }: { data: number[] }) {
   const points = data.map((v, i) => `${i * step},${h - (v / max) * h}`).join(' ');
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-10" preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-10" preserveAspectRatio="none" role="img" aria-label="Activity sparkline chart showing trades per day over the last 30 days">
       <polyline
         fill="none"
         stroke="currentColor"
@@ -190,7 +190,7 @@ export function Component() {
   return (
     <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">
       {/* Back link */}
-      <Link to="/whales" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 transition-colors">
+      <Link to="/whales" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
         <ArrowLeft className="size-4" /> Back to feed
       </Link>
 
@@ -205,7 +205,8 @@ export function Component() {
               <span className="font-mono text-sm text-pf-text break-all">{address}</span>
               <button
                 onClick={() => copyToClipboard(address ?? '')}
-                className="text-pf-text-muted hover:text-pf-text transition-colors shrink-0"
+                className="text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors shrink-0"
+                aria-label="Copy wallet address"
                 title="Copy address"
               >
                 <Copy className="size-3.5" />
@@ -216,10 +217,10 @@ export function Component() {
         <div className="flex items-center gap-2">
           <button
             onClick={toggleFollow}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border transition-colors ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors ${
               following
-                ? 'bg-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                : 'text-pf-cyan-400 border-pf-cyan-500/30 hover:bg-cyan-500/10'
+                ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
+                : 'text-pf-cyan-400 border-pf-cyan-500/30 hover:bg-pf-cyan-500/10'
             }`}
           >
             {following ? <><UserCheck className="size-4" /> Following</> : <><UserPlus className="size-4" /> Follow</>}

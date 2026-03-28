@@ -104,7 +104,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
       {/* Brand */}
       <div className="flex items-center gap-2 h-14 px-3 border-b border-[var(--color-pf-border)] shrink-0">
         <Link to="/dashboard" className="flex items-center gap-2 min-w-0">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="shrink-0">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="shrink-0" aria-hidden="true">
             <path
               d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
               stroke="var(--color-pf-cyan-500)"
@@ -134,7 +134,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-1">
+      <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-1" aria-label="Admin navigation">
         {navSections.map((section) => {
           if (section.superAdminOnly && !isSuperAdmin) return null;
           return (
@@ -151,7 +151,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                   title={collapsed ? item.label : undefined}
                   onClick={onNavigate}
                   className={({ isActive }) =>
-                    `flex items-center gap-2.5 px-2.5 py-2 rounded-pf-sm text-sm transition-colors duration-150 ${
+                    `flex items-center gap-2.5 px-2.5 py-2 rounded-pf-sm text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] ${
                       isActive
                         ? 'bg-[var(--color-pf-cyan-500)]/10 text-[var(--color-pf-cyan-500)] font-medium'
                         : 'text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] hover:text-[var(--color-pf-text)]'

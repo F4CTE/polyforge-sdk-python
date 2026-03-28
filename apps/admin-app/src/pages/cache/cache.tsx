@@ -51,7 +51,7 @@ export function Component() {
   if (loading) {
     return (
       <div className="animate-fade-in space-y-6">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5 space-y-3">
               <div className="h-3 bg-[var(--color-pf-bg)] rounded w-20 animate-pulse" />
@@ -114,7 +114,9 @@ export function Component() {
           <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">Flush by Pattern</h3>
         </div>
         <div className="flex gap-3">
+          <label htmlFor="cache-pattern" className="sr-only">Cache key pattern</label>
           <input
+            id="cache-pattern"
             type="text"
             value={pattern}
             onChange={(e) => setPattern(e.target.value)}

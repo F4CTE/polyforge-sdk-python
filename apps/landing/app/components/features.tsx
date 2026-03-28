@@ -254,7 +254,7 @@ export function Features() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5 stagger-children">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
           {features.map((feature) => (
             <article
               key={feature.title}
@@ -265,7 +265,7 @@ export function Features() {
                 <div className="w-full h-auto">{feature.visual}</div>
               </div>
 
-              <div className="p-7">
+              <div className="p-5 sm:p-7">
                 {/* Icon */}
                 <div className="w-14 h-14 bg-pf-cyan-500/8 border border-pf-cyan-500/20 rounded-pf-md flex items-center justify-center text-pf-cyan-400 mb-5">
                   {feature.icon}

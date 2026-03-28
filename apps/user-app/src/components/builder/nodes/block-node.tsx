@@ -125,7 +125,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
           </span>
           <button
             onClick={onDelete}
-            className="p-0.5 rounded hover:bg-pf-danger/20 text-pf-text-muted hover:text-pf-danger transition-colors"
+            className="p-0.5 rounded hover:bg-pf-danger/20 text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
             aria-label="Remove block"
             title="Remove block"
           >
@@ -152,13 +152,13 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                       onChange={(e) => onFieldChange(field.key, e.target.value)}
                       className={`w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors ${
                         (d.config[field.key] ?? '').startsWith('$')
-                          ? 'text-purple-400 font-mono'
+                          ? 'text-pf-purple-500 font-mono'
                           : 'text-pf-text'
                       }`}
                     />
                     {(d.config[field.key] ?? '').startsWith('$') && (
                       <span
-                        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-purple-400/70 pointer-events-none"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-pf-purple-500/70 pointer-events-none"
                         title={`Variable: ${d.config[field.key]}`}
                       >
                         var

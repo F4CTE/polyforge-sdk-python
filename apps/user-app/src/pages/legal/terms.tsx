@@ -6,10 +6,10 @@ const LAST_UPDATED = 'March 27, 2026';
 export function Component() {
   return (
     <div className="min-h-screen bg-pf-base text-pf-text">
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <Link to="/" className="flex items-center gap-2 text-sm text-pf-text-muted hover:text-pf-text transition-colors">
+          <Link to="/" className="flex items-center gap-2 text-sm text-pf-text-muted hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 rounded-pf-sm">
             <ArrowLeft className="size-4" /> Back
           </Link>
           <div className="flex items-center gap-2 text-pf-text">
@@ -116,14 +116,14 @@ export function Component() {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-3 mt-12 pt-6 border-t border-pf-border-subtle text-sm text-pf-text-muted">
-          <Link to="/privacy" className="hover:text-pf-text transition-colors">Privacy Policy</Link>
-          <span>&middot;</span>
-          <Link to="/login" className="hover:text-pf-text transition-colors">Sign in</Link>
-          <span>&middot;</span>
-          <Link to="/register" className="hover:text-pf-text transition-colors">Register</Link>
-        </div>
-      </div>
+        <nav aria-label="Legal pages" className="flex items-center gap-3 mt-12 pt-6 border-t border-pf-border-subtle text-sm text-pf-text-muted">
+          <Link to="/privacy" className="hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 rounded-pf-sm">Privacy Policy</Link>
+          <span aria-hidden="true">&middot;</span>
+          <Link to="/login" className="hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 rounded-pf-sm">Sign in</Link>
+          <span aria-hidden="true">&middot;</span>
+          <Link to="/register" className="hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 rounded-pf-sm">Register</Link>
+        </nav>
+      </main>
     </div>
   );
 }

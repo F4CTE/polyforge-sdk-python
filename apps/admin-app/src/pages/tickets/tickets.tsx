@@ -50,6 +50,7 @@ export function Component() {
             setStatusFilter(e.target.value);
             setPage(1);
           }}
+          aria-label="Filter by ticket status"
           className="px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
         >
           <option value="">All statuses</option>

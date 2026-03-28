@@ -38,11 +38,11 @@ export function Testimonials() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6 stagger-children">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
           {testimonials.map((t) => (
-            <div
+            <figure
               key={t.name}
-              className="animate-fade-in bg-pf-base border border-pf-border-subtle rounded-pf-lg p-8 transition-all duration-200 hover:border-pf-cyan-500/20 hover:-translate-y-0.5"
+              className="animate-fade-in bg-pf-base border border-pf-border-subtle rounded-pf-lg p-6 sm:p-8 transition-all duration-200 hover:border-pf-cyan-500/20 hover:-translate-y-0.5"
             >
               <div
                 className="text-5xl font-extrabold leading-none text-pf-cyan-500/15 -mb-2 font-serif"
@@ -50,19 +50,21 @@ export function Testimonials() {
               >
                 &ldquo;
               </div>
-              <p className="text-sm text-pf-text-secondary leading-7 italic mb-6">
-                {t.text}
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pf-cyan-500/20 to-pf-cyan-500/5 border border-pf-cyan-500/25 flex items-center justify-center text-[13px] font-semibold text-pf-cyan-400 font-mono shrink-0">
+              <blockquote>
+                <p className="text-sm text-pf-text-secondary leading-7 italic mb-6">
+                  {t.text}
+                </p>
+              </blockquote>
+              <figcaption className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pf-cyan-500/20 to-pf-cyan-500/5 border border-pf-cyan-500/25 flex items-center justify-center text-[13px] font-semibold text-pf-cyan-400 font-mono shrink-0" aria-hidden="true">
                   {t.initials}
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-pf-text">{t.name}</div>
                   <div className="text-xs text-pf-text-muted mt-0.5">{t.role}</div>
                 </div>
-              </div>
-            </div>
+              </figcaption>
+            </figure>
           ))}
         </div>
       </div>

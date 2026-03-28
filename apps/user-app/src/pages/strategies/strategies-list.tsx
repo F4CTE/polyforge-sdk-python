@@ -75,9 +75,9 @@ const STATUS_STYLES: Record<StrategyStatus, { dot: string; bg: string; text: str
   RUNNING:  { dot: 'bg-pf-success', bg: 'bg-pf-success/10', text: 'text-pf-success' },
   PAPER:    { dot: 'bg-pf-cyan-400',    bg: 'bg-pf-cyan-500/10',    text: 'text-pf-cyan-400' },
   PAUSED:   { dot: 'bg-pf-warning',   bg: 'bg-pf-warning/10',   text: 'text-pf-warning' },
-  IDLE:     { dot: 'bg-gray-400',    bg: 'bg-gray-500/10',    text: 'text-gray-400' },
+  IDLE:     { dot: 'bg-pf-text-muted',    bg: 'bg-pf-overlay',    text: 'text-pf-text-muted' },
   ERROR:    { dot: 'bg-pf-danger',     bg: 'bg-pf-danger/10',     text: 'text-pf-danger' },
-  ARCHIVED: { dot: 'bg-gray-500',    bg: 'bg-gray-500/10',    text: 'text-gray-500' },
+  ARCHIVED: { dot: 'bg-pf-text-muted',    bg: 'bg-pf-overlay',    text: 'text-pf-text-muted' },
 };
 
 const FILTERS: { label: string; value: FilterStatus }[] = [
@@ -250,15 +250,15 @@ export function Component() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleImport}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary font-medium hover:border-pf-border-strong transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary font-medium hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
           >
-            <Upload className="size-4" /> Import Strategy
+            <Upload className="size-4" aria-hidden="true" /> Import Strategy
           </button>
           <Link
             to="/strategies/new"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
           >
-            <Plus className="size-4" /> New Strategy
+            <Plus className="size-4" aria-hidden="true" /> New Strategy
           </Link>
         </div>
       </div>
@@ -340,9 +340,9 @@ export function Component() {
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${
                     strategy.execMode === 'TICK'
-                      ? 'bg-violet-500/10 text-violet-400'
+                      ? 'bg-pf-purple-500/10 text-pf-purple-500'
                       : strategy.execMode === 'HYBRID'
-                        ? 'bg-violet-500/10 text-violet-400'
+                        ? 'bg-pf-purple-500/10 text-pf-purple-500'
                         : 'bg-pf-cyan-500/10 text-pf-cyan-400'
                   }`}>
                     {execLabel(strategy)}
@@ -353,15 +353,15 @@ export function Component() {
                   {strategy.tags.length > 0 && (
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${
                       strategy.tags[0].toLowerCase() === 'momentum'
-                        ? 'bg-amber-500/10 text-amber-400'
+                        ? 'bg-pf-gold-500/10 text-pf-gold-500'
                         : strategy.tags[0].toLowerCase() === 'defensive'
-                          ? 'bg-blue-500/10 text-blue-400'
+                          ? 'bg-pf-info/10 text-pf-info'
                           : 'bg-pf-overlay text-pf-text-muted'
                     }`}>
                       {strategy.tags[0]}
                     </span>
                   )}
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 text-[11px] font-medium ml-auto">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-pf-purple-500/10 text-pf-purple-500 text-[11px] font-medium ml-auto">
                     v{strategy.version}
                   </span>
                 </div>

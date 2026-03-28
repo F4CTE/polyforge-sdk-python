@@ -11,7 +11,7 @@ export function AuthBackground() {
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse at 50% 0%, rgba(6,182,212,0.10) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(6,182,212,0.05) 0%, transparent 40%)',
+            'radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-pf-cyan-500) 10%, transparent) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, color-mix(in srgb, var(--color-pf-cyan-500) 5%, transparent) 0%, transparent 40%)',
         }}
       />
 

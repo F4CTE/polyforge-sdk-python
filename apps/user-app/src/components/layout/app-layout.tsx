@@ -20,7 +20,7 @@ export function AppLayout() {
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} role="button" tabIndex={-1} aria-label="Close menu" onKeyDown={(e) => { if (e.key === 'Escape') setMobileOpen(false); }} />
           <div className="relative z-50 h-full">
             <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
           </div>
@@ -40,7 +40,7 @@ export function AppLayout() {
             <Topbar />
           </div>
         </div>
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto" id="main-content">
           <Outlet />
         </main>
       </div>

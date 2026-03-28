@@ -135,17 +135,15 @@ export function StrategyCanvas() {
             borderRadius: 12,
             border: '1px solid var(--color-pf-border)',
             backgroundColor: isDark
-              ? 'rgba(15, 23, 42, 0.85)'
-              : 'rgba(241, 245, 249, 0.9)',
+              ? 'color-mix(in srgb, var(--color-pf-base) 85%, transparent)'
+              : 'color-mix(in srgb, var(--color-pf-surface) 90%, transparent)',
             backdropFilter: 'blur(8px)',
-            boxShadow: isDark
-              ? '0 4px 24px rgba(0, 0, 0, 0.4)'
-              : '0 4px 24px rgba(0, 0, 0, 0.08)',
+            boxShadow: 'var(--shadow-pf-lg)',
             overflow: 'hidden',
           }}
           maskColor={isDark
-            ? 'rgba(15, 23, 42, 0.6)'
-            : 'rgba(241, 245, 249, 0.6)'}
+            ? 'color-mix(in srgb, var(--color-pf-base) 60%, transparent)'
+            : 'color-mix(in srgb, var(--color-pf-base) 60%, transparent)'}
           nodeColor={(node) => {
             if (node.type === 'variableNode') return 'var(--color-pf-purple-500)';
             if (node.type === 'logicNode') return 'var(--color-pf-info)';

@@ -37,7 +37,7 @@ interface TicketDetail {
 const STATUS_STYLES: Record<TicketStatus, { text: string; bg: string }> = {
   OPEN:           { text: 'text-pf-cyan-400', bg: 'bg-pf-cyan-500/10' },
   AWAITING_USER:  { text: 'text-pf-warning', bg: 'bg-pf-warning/10' },
-  AWAITING_ADMIN: { text: 'text-blue-400', bg: 'bg-blue-500/10' },
+  AWAITING_ADMIN: { text: 'text-pf-info', bg: 'bg-pf-info/10' },
   CLOSED:         { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
 };
 
@@ -153,9 +153,10 @@ export function Component() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/support')}
-            className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated transition-colors"
+            className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+            aria-label="Back to support"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-4" aria-hidden="true" />
           </button>
           <div>
             <h1 className="text-2xl font-semibold text-pf-text">{ticket.subject}</h1>
@@ -203,7 +204,7 @@ export function Component() {
             <div
               className={`max-w-[80%] rounded-pf-lg p-4 ${
                 msg.isAdmin
-                  ? 'bg-pf-cyan-500/10 border border-cyan-500/20'
+                  ? 'bg-pf-cyan-500/10 border border-pf-cyan-500/20'
                   : 'bg-pf-elevated border border-pf-border'
               }`}
             >
@@ -212,7 +213,7 @@ export function Component() {
                   {msg.senderName}
                 </span>
                 {msg.isAdmin && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-pf-cyan-400 font-medium">Staff</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-pf-cyan-500/15 text-pf-cyan-400 font-medium">Staff</span>
                 )}
                 <span className="text-[11px] text-pf-text-muted ml-auto font-mono">
                   {formatDateTime(msg.createdAt)}
@@ -248,7 +249,7 @@ export function Component() {
             <button
               onClick={sendReply}
               disabled={!reply.trim() || sending}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
               Send Reply

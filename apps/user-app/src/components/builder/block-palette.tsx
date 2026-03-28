@@ -222,7 +222,8 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 <button
                   key={key}
                   onClick={() => setActiveSection(key)}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-pf-sm text-[11px] font-medium transition-all shrink-0 whitespace-nowrap ${
+                  aria-pressed={isActive}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-pf-sm text-[11px] font-medium transition-all shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
                     isActive
                       ? 'text-white shadow-pf-xs'
                       : 'text-pf-text-muted hover:text-pf-text-secondary bg-transparent hover:bg-pf-overlay'
@@ -252,7 +253,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
             <div className="space-y-3">
               <p className="text-[10px] text-pf-text-muted leading-snug">
                 Variables let you define reusable expressions. Reference them
-                in block fields with <code className="text-purple-400 font-mono">$varName</code>.
+                in block fields with <code className="text-pf-purple-500 font-mono">$varName</code>.
               </p>
               <button
                 onClick={addVariable}
@@ -274,9 +275,13 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 <div
                   key={def.type}
                   draggable
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Add ${def.label} block`}
                   onDragStart={(e) => onDragStart(e, def, activeSection as BlockSection)}
                   onClick={() => onBlockClick(def)}
-                  className="group flex items-start gap-2 px-2.5 py-2 rounded-pf-sm cursor-pointer hover:bg-pf-overlay/60 transition-colors border border-transparent hover:border-pf-border-subtle"
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onBlockClick(def); } }}
+                  className="group flex items-start gap-2 px-2.5 py-2 rounded-pf-sm cursor-pointer hover:bg-pf-overlay/60 transition-colors border border-transparent hover:border-pf-border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                 >
                   <GripVertical className="size-3 text-pf-text-muted/40 mt-0.5 shrink-0 cursor-grab group-hover:text-pf-text-muted" />
                   <div className="flex-1 min-w-0">

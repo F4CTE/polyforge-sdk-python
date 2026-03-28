@@ -22,14 +22,14 @@ interface EndpointCategory {
 
 const METHOD_STYLES: Record<string, { bg: string; text: string }> = {
   GET:    { bg: 'bg-pf-success/10', text: 'text-pf-success' },
-  POST:   { bg: 'bg-blue-500/10', text: 'text-blue-400' },
+  POST:   { bg: 'bg-pf-info/10', text: 'text-pf-info' },
   PATCH:  { bg: 'bg-pf-warning/10', text: 'text-pf-warning' },
   DELETE: { bg: 'bg-pf-danger/10', text: 'text-pf-danger' },
 };
 
 const SCOPE_STYLES: Record<string, { bg: string; text: string }> = {
   READ:  { bg: 'bg-pf-success/10', text: 'text-pf-success' },
-  WRITE: { bg: 'bg-blue-500/10', text: 'text-blue-400' },
+  WRITE: { bg: 'bg-pf-info/10', text: 'text-pf-info' },
   TRADE: { bg: 'bg-pf-warning/10', text: 'text-pf-warning' },
 };
 
@@ -309,7 +309,7 @@ export function Component() {
                 <div key={key}>
                   <button
                     onClick={() => toggleEndpoint(key)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 bg-pf-elevated border border-pf-border rounded-pf hover:border-pf-border-strong transition-colors text-left"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 bg-pf-elevated border border-pf-border rounded-pf hover:border-pf-border-strong transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                     aria-expanded={isOpen}
                   >
                     <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${ms.bg} ${ms.text}`}>{ep.method}</span>
@@ -463,9 +463,9 @@ for pos in portfolio.positions:
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
-            { lang: 'TypeScript', pkg: 'npm install @polyforge/sdk', color: 'text-blue-400' },
-            { lang: 'Python', pkg: 'pip install polyforge', color: 'text-yellow-400' },
-            { lang: 'Rust', pkg: 'cargo add polyforge', color: 'text-orange-400' },
+            { lang: 'TypeScript', pkg: 'npm install @polyforge/sdk', color: 'text-pf-info' },
+            { lang: 'Python', pkg: 'pip install polyforge', color: 'text-pf-gold-500' },
+            { lang: 'Rust', pkg: 'cargo add polyforge', color: 'text-pf-warning' },
           ].map(sdk => (
             <div key={sdk.lang} className="bg-pf-elevated border border-pf-border rounded-pf p-3">
               <p className={`text-sm font-semibold ${sdk.color} mb-1`}>{sdk.lang}</p>

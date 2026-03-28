@@ -411,8 +411,9 @@ export function Component() {
               <button
                 role="switch"
                 aria-checked={notifPrefs[item.key]}
+                aria-label={`${item.label} notifications`}
                 onClick={() => setNotifPrefs(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
-                className={`relative w-10 h-5 rounded-full transition-colors ${notifPrefs[item.key] ? 'bg-pf-cyan-500' : 'bg-pf-overlay'}`}
+                className={`relative w-10 h-5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated transition-colors ${notifPrefs[item.key] ? 'bg-pf-cyan-500' : 'bg-pf-overlay'}`}
               >
                 <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${notifPrefs[item.key] ? 'translate-x-5' : 'translate-x-0.5'}`} />
               </button>
@@ -437,7 +438,7 @@ export function Component() {
             <div className="relative">
               <input type={showCurrentPw ? 'text' : 'password'} autoComplete="current-password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
                 className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
-              <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text">
+              <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Toggle password visibility">
                 {showCurrentPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
@@ -447,7 +448,7 @@ export function Component() {
             <div className="relative">
               <input type={showNewPw ? 'text' : 'password'} autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
                 className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
-              <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text">
+              <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Toggle password visibility">
                 {showNewPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
@@ -610,7 +611,7 @@ export function Component() {
       )}
 
       {/* ─── Danger Zone ─── */}
-      <div className="mt-10 pt-6 border-t-2 border-red-200 bg-pf-elevated border border-pf-danger/20 rounded-pf-lg p-6 space-y-4">
+      <div className="mt-10 pt-6 border-t-2 border-pf-danger/20 bg-pf-elevated border border-pf-danger/20 rounded-pf-lg p-6 space-y-4">
         <h2 className="text-sm font-semibold text-pf-danger uppercase tracking-wider flex items-center gap-2">
           <AlertTriangle className="size-4" />
           Danger Zone
@@ -627,14 +628,14 @@ export function Component() {
         </button>
 
         {deleteDialogOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title">
             <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 max-w-md w-full mx-4 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="size-10 rounded-full bg-pf-danger/10 flex items-center justify-center">
                   <AlertTriangle className="size-5 text-pf-danger" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-pf-text">Delete Account</h3>
+                  <h3 id="delete-dialog-title" className="text-base font-semibold text-pf-text">Delete Account</h3>
                   <p className="text-xs text-pf-text-muted">This cannot be undone</p>
                 </div>
               </div>
@@ -721,7 +722,7 @@ export function Component() {
               </div>
               <div className="flex items-center gap-2 bg-pf-surface rounded-pf p-3 border border-pf-border">
                 <code className="flex-1 text-xs font-mono text-pf-text break-all">{createdKey.key}</code>
-                <button onClick={() => copyKey(createdKey.key!)} className="p-1.5 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text">
+                <button onClick={() => copyKey(createdKey.key!)} aria-label="Copy API key" className="p-1.5 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text">
                   <Copy className="size-3.5" />
                 </button>
               </div>
@@ -768,7 +769,7 @@ export function Component() {
                             {key.scopes.map(scope => (
                               <span key={scope} className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
                                 scope === 'READ' ? 'bg-pf-success/10 text-pf-success' :
-                                scope === 'WRITE' ? 'bg-blue-500/10 text-blue-400' :
+                                scope === 'WRITE' ? 'bg-pf-info/10 text-pf-info' :
                                 'bg-pf-warning/10 text-pf-warning'
                               }`}>{scope}</span>
                             ))}

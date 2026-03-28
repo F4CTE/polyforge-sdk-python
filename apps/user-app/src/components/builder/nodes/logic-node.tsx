@@ -29,7 +29,7 @@ const LOGIC_COLORS: Record<string, string> = {
   AND_GATE: 'var(--color-pf-info)',     // blue
   OR_GATE: 'var(--color-pf-info)',      // blue
   NOT_GATE: 'var(--color-pf-info)',     // blue
-  DELAY: '#6B7280',        // gray
+  DELAY: 'var(--color-pf-text-muted)', // gray
 };
 
 /** Number of input handles per logic type */

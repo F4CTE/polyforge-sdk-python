@@ -1,19 +1,19 @@
 export function ProductPreview() {
   return (
-    <section className="pt-8 -mt-2" aria-label="Product dashboard preview">
+    <section className="pt-8 -mt-2 overflow-hidden" aria-label="Product dashboard preview">
       <div className="max-w-[1100px] mx-auto px-6">
         <div
           className="bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden transition-transform duration-400"
           style={{
-            boxShadow: '0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(6,182,212,0.05)',
+            boxShadow: 'var(--shadow-pf-lg, 0 40px 100px rgba(0,0,0,0.6)), 0 0 0 1px rgba(6,182,212,0.05)',
             transform: 'perspective(1200px) rotateX(2deg)',
           }}
         >
           {/* Browser chrome */}
           <div className="flex items-center gap-1.5 px-4 py-3 border-b border-pf-border-subtle bg-pf-elevated">
-            <span className="w-[11px] h-[11px] rounded-full bg-[#ff5f57]" />
-            <span className="w-[11px] h-[11px] rounded-full bg-[#febc2e]" />
-            <span className="w-[11px] h-[11px] rounded-full bg-[#28c840]" />
+            <span className="w-[11px] h-[11px] rounded-full bg-[#ff5f57]" aria-hidden="true" />
+            <span className="w-[11px] h-[11px] rounded-full bg-[#febc2e]" aria-hidden="true" />
+            <span className="w-[11px] h-[11px] rounded-full bg-[#28c840]" aria-hidden="true" />
             <span className="flex-1 text-center text-[11px] font-mono text-pf-text-muted bg-white/4 rounded px-3 py-1 ml-2">
               app.polyforge.app/dashboard
             </span>

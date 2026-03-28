@@ -34,11 +34,11 @@ interface NewsArticle {
 
 function sourceColor(source: string): string {
   const map: Record<string, string> = {
-    Reuters: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+    Reuters: 'bg-pf-info/15 text-pf-info border-pf-info/30',
     CNN: 'bg-pf-danger/15 text-pf-danger border-pf-danger/30',
     CoinGecko: 'bg-pf-warning/15 text-pf-warning border-pf-warning/30',
-    Bloomberg: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-    'AP News': 'bg-teal-500/15 text-teal-400 border-teal-500/30',
+    Bloomberg: 'bg-pf-purple-500/15 text-pf-purple-500 border-pf-purple-500/30',
+    'AP News': 'bg-pf-success/15 text-pf-success border-pf-success/30',
   };
   return map[source] ?? 'bg-pf-overlay text-pf-text-muted border-pf-border';
 }
@@ -111,9 +111,9 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/news"
-        className="inline-flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
       >
-        <ArrowLeft className="size-3.5" /> News
+        <ArrowLeft className="size-3.5" aria-hidden="true" /> News
       </Link>
 
       {loading && <DetailSkeleton />}
@@ -160,9 +160,9 @@ export function Component() {
               href={article.url?.startsWith('https://') ? article.url : '#'}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
             >
-              <ExternalLink className="size-3.5" /> Read full article
+              <ExternalLink className="size-3.5" aria-hidden="true" /> Read full article
             </a>
           </div>
 
@@ -178,7 +178,7 @@ export function Component() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full text-xs" role="table" aria-label="Trading signals">
                   <thead>
                     <tr className="border-b border-pf-border-subtle">
                       <th className="text-left py-2 px-3 text-pf-text-muted font-medium">Market</th>
@@ -226,7 +226,7 @@ export function Component() {
                         <td className="py-2.5 px-3 text-right">
                           <Link
                             to={`/markets/${signal.marketId}`}
-                            className="px-2.5 py-1 rounded-pf-sm text-[11px] font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors"
+                            className="px-2.5 py-1 rounded-pf-sm text-[11px] font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
                           >
                             Trade
                           </Link>

@@ -20,11 +20,11 @@ export function Component() {
         </div>
 
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg text-center">
-          <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
-            <Clock className="size-8 text-amber-400" />
+          <div className="w-16 h-16 rounded-full bg-pf-warning/10 flex items-center justify-center mx-auto mb-4">
+            <Clock className="size-8 text-pf-warning" />
           </div>
 
-          <h1 className="text-xl font-semibold text-pf-text mb-2">
+          <h1 className="text-xl font-semibold text-pf-text mb-2" id="pending-heading">
             Account pending approval
           </h1>
 
@@ -40,7 +40,7 @@ export function Component() {
 
           <Link
             to="/login"
-            className="text-pf-cyan-400 text-sm hover:text-pf-cyan-300 transition-colors"
+            className="text-pf-cyan-400 text-sm hover:text-pf-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
           >
             Back to login
           </Link>

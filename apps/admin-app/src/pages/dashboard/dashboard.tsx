@@ -121,9 +121,9 @@ export function Component() {
   }
 
   const statCards = [
-    { label: 'Total Users', value: stats.totalUsers, icon: <Users size={20} />, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    { label: 'Total Users', value: stats.totalUsers, icon: <Users size={20} />, color: 'text-pf-info', bg: 'bg-pf-info/10' },
     { label: 'Active Strategies', value: stats.activeStrategies, icon: <Blocks size={20} />, color: 'text-pf-success', bg: 'bg-pf-success/10' },
-    { label: 'Total Orders', value: stats.totalOrders, icon: <ShoppingCart size={20} />, color: 'text-violet-400', bg: 'bg-violet-400/10' },
+    { label: 'Total Orders', value: stats.totalOrders, icon: <ShoppingCart size={20} />, color: 'text-[var(--color-pf-purple-500)]', bg: 'bg-[var(--color-pf-purple-500)]/10' },
     { label: 'Open Tickets', value: stats.openTickets, icon: <TicketCheck size={20} />, color: 'text-pf-warning', bg: 'bg-pf-warning/10' },
   ];
 
@@ -171,7 +171,7 @@ export function Component() {
             <div className="text-center py-6">
               <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={24} />
               <p className="text-sm text-[var(--color-pf-text-secondary)]">Health unavailable</p>
-              <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2">
+              <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded">
                 Retry
               </button>
             </div>
@@ -211,6 +211,8 @@ export function Component() {
                           ? 'bg-pf-warning'
                           : 'bg-pf-danger'
                     }`}
+                    role="img"
+                    aria-label={`Status: ${svc?.status ?? 'unknown'}`}
                   />
                 </div>
               ))}

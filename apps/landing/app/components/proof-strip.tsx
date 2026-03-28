@@ -21,11 +21,11 @@ export function ProofStrip() {
                   aria-hidden="true"
                 />
               )}
-              <div className="flex flex-col items-center gap-1 px-6 sm:px-10 py-3">
-                <span className="text-[28px] font-bold text-pf-cyan-300 font-extrabold tracking-tight">
+              <div className="flex flex-col items-center gap-1 px-4 sm:px-10 py-3">
+                <span className="text-xl sm:text-[28px] font-extrabold text-pf-cyan-300 tracking-tight">
                   {stat.number}
                 </span>
-                <span className="text-[13px] text-pf-text-muted">{stat.label}</span>
+                <span className="text-xs sm:text-[13px] text-pf-text-muted">{stat.label}</span>
               </div>
             </div>
           ))}
