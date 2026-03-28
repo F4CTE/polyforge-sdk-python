@@ -31,6 +31,29 @@ function toBytes(buf: Buffer | Uint8Array): PrismaBytes {
  *
  * Format: AES-256-GCM, 12-byte IV, 16-byte auth tag stored separately.
  * Key material MUST NEVER be logged.
+ *
+ * TODO: MASTER_ENCRYPTION_KEY ROTATION NOT IMPLEMENTED
+ * ─────────────────────────────────────────────────────
+ * Currently, MASTER_ENCRYPTION_KEY (KEK) is static. To rotate it safely:
+ *
+ * 1. Add a "key_version" field to encrypted_deks table (tracks which KEK version encrypted each DEK)
+ * 2. Implement a key_rotation service with dual-key support:
+ *    - Keep 2 KEKs in rotation (current + previous)
+ *    - Previous KEK only for decryption (grace period ~24-48 hours)
+ *    - All new encryption uses current KEK
+ * 3. Add background job to re-encrypt DEKs from previous → current KEK
+ *    - Runs during low-traffic windows (e.g., 2-4 AM UTC)
+ *    - Must be idempotent (check key_version before re-encrypting)
+ * 4. Update AWS Secrets Manager with new KEK
+ * 5. Drain previous KEK from memory after grace period (restart signer-service)
+ *
+ * Implementation notes:
+ *   - See docs/14-backup-recovery.md for disaster recovery context
+ *   - DEK format: ciphertext + tag (concatenated); add key_version to stored format
+ *   - Consider automated rotation via AWS Lambda triggered by SNS from Secrets Manager
+ *   - Non-compliance with key rotation may be flagged in SOC 2 audits
+ *
+ * Reference: JWT secret rotation in admin-api-service/src/key-rotation/ shows grace-period pattern
  */
 @Injectable()
 export class EncryptionService {

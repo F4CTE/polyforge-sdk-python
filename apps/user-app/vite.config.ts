@@ -25,9 +25,9 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/auth': 'http://localhost:3001',
-      '/api': 'http://localhost:3002',
-      '/ws': { target: 'ws://localhost:3002', ws: true },
+      '/auth': process.env.AUTH_API_URL || 'http://localhost:3001',
+      '/api': process.env.API_URL || 'http://localhost:3002',
+      '/ws': { target: process.env.WS_URL || 'ws://localhost:3002', ws: true },
     },
   },
 });

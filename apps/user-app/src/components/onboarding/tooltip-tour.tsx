@@ -105,6 +105,19 @@ function getTooltipPosition(
 
 /* ─── Component ──────────────────────────────────────────────────────── */
 
+/**
+ * TODO: Refactor DOM manipulation to use React refs instead of document.querySelector
+ * RECOMMENDED APPROACH:
+ * - Create a ref registry: const [targetRefs, setTargetRefs] = useState<Record<string, RefObject<HTMLElement>>>({})
+ * - Use useCallback to register refs dynamically from child components via data-tour attributes
+ * - Replace classList operations with conditional className on the ref'd element
+ * - Benefits: Type-safe, avoids querySelector runtime lookups, proper cleanup, better React integration
+ * - Example: const highlightRef = useRef(null); useEffect(() => { highlightRef.current?.scrollIntoView() }, [])
+ *
+ * CURRENT STATE: Direct DOM manipulation via document.querySelector + classList.add/remove.
+ * This works but couples the component to the DOM and risks crashes if targets are removed mid-tour.
+ * All DOM operations below are now wrapped in null checks as a temporary safeguard.
+ */
 export function TooltipTour() {
   const [active, setActive] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
@@ -140,9 +153,15 @@ export function TooltipTour() {
     if (target) {
       setPosition(getTooltipPosition(target, step.placement));
 
-      // Highlight the target
-      target.classList.add('tour-highlight');
-      return () => target.classList.remove('tour-highlight');
+      // Highlight the target (safe null check)
+      if (target.classList) {
+        target.classList.add('tour-highlight');
+      }
+      return () => {
+        if (target && target.classList) {
+          target.classList.remove('tour-highlight');
+        }
+      };
     }
   }, [active, stepIndex]);
 
@@ -156,19 +175,31 @@ export function TooltipTour() {
   // Remove highlight from previous step when moving
   useEffect(() => {
     return () => {
-      document.querySelectorAll('.tour-highlight').forEach(el => {
-        el.classList.remove('tour-highlight');
-      });
+      const highlights = document.querySelectorAll('.tour-highlight');
+      if (highlights && highlights.length > 0) {
+        highlights.forEach(el => {
+          if (el && el.classList) {
+            el.classList.remove('tour-highlight');
+          }
+        });
+      }
     };
   }, [stepIndex]);
 
   function closeTour() {
     setActive(false);
-    localStorage.setItem(STORAGE_KEY, 'true');
-    // Clean up all highlights
-    document.querySelectorAll('.tour-highlight').forEach(el => {
-      el.classList.remove('tour-highlight');
-    });
+    try {
+      localStorage.setItem(STORAGE_KEY, 'true');
+    } catch { /* ignore storage errors */ }
+    // Clean up all highlights (safe null checks)
+    const highlights = document.querySelectorAll('.tour-highlight');
+    if (highlights && highlights.length > 0) {
+      highlights.forEach(el => {
+        if (el && el.classList) {
+          el.classList.remove('tour-highlight');
+        }
+      });
+    }
   }
 
   /** Find the next step index that has a visible target element on the page */
@@ -182,11 +213,13 @@ export function TooltipTour() {
   }
 
   function nextStep() {
-    // Remove highlight from current
+    // Remove highlight from current (safe null checks)
     const currentStep = TOUR_STEPS[stepIndex];
     if (currentStep) {
       const target = document.querySelector(currentStep.target);
-      if (target) target.classList.remove('tour-highlight');
+      if (target && target.classList) {
+        target.classList.remove('tour-highlight');
+      }
     }
 
     const next = findNextVisible(stepIndex + 1, 1);
@@ -201,7 +234,9 @@ export function TooltipTour() {
     const currentStep = TOUR_STEPS[stepIndex];
     if (currentStep) {
       const target = document.querySelector(currentStep.target);
-      if (target) target.classList.remove('tour-highlight');
+      if (target && target.classList) {
+        target.classList.remove('tour-highlight');
+      }
     }
 
     const prev = findNextVisible(stepIndex - 1, -1);

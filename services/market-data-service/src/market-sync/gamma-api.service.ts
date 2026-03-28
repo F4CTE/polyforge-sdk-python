@@ -73,7 +73,7 @@ export class GammaApiService implements OnModuleInit {
   async syncMarkets() {
     try {
       await this.syncAllMarkets();
-      // TODO: Enable once Event model is added to Prisma schema
+      // TODO(2026-Q2): Enable once Event model is added to Prisma schema
       // await this.syncEvents();
     } catch (err) {
       this.logger.error("Failed to sync markets from Gamma API", err);
@@ -118,7 +118,8 @@ export class GammaApiService implements OnModuleInit {
     this.logger.log(`Synced ${totalSynced} markets from Gamma API`);
   }
 
-  // TODO: Enable syncEvents once Event model is added to Prisma schema
+  // TODO(2026-Q2): Enable syncEvents once Event model is added to Prisma schema
+  // Placeholder for syncing events grouped by category/series
   // async syncEvents(): Promise<void> { ... }
 
   // ─── Private ─────────────────────────────────────────────────────────────
@@ -140,7 +141,8 @@ export class GammaApiService implements OnModuleInit {
     return Array.isArray(body) ? body : (body.data ?? []);
   }
 
-  // TODO: Enable fetchEvents + upsertEvent once Event model is added to Prisma schema
+  // TODO(2026-Q2): Enable fetchEvents + upsertEvent once Event model is added to Prisma schema
+  // These methods will fetch events from Gamma API and upsert them into the database
   // private async fetchEvents(): Promise<GammaEvent[]> { ... }
   // private async upsertEvent(event: GammaEvent) { ... }
 

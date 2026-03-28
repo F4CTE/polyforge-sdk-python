@@ -37,9 +37,16 @@ export class GasSponsorService {
   private readonly sponsorPrivateKey: string;
 
   /**
-   * Default gas estimate in MATIC. Configurable via GAS_ESTIMATE_MATIC env var.
-   * TODO: Eventually replace with a real-time gas oracle (e.g., Polygon gas station)
-   * to dynamically estimate gas costs based on current network conditions.
+   * Gas estimate in MATIC used for sponsorship cost pre-approval checks.
+   *
+   * CURRENT IMPLEMENTATION: Static estimate based on GAS_ESTIMATE_MATIC env var (default: 0.002 MATIC).
+   * This is a conservative estimate that covers typical token approval and wallet deployment operations
+   * on Polygon mainnet as of 2026-03-28.
+   *
+   * FUTURE WORK: Replace with dynamic gas oracle (e.g., Polygon gas station API) to adjust estimates
+   * based on real-time network congestion. This becomes critical if gas prices spike significantly.
+   *
+   * TODO(2026-Q3): Implement gas oracle integration when network volatility requires adaptive pricing.
    */
   readonly gasEstimateMatic: number;
 

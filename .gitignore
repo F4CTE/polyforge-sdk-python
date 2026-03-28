@@ -69,6 +69,11 @@ Thumbs.db
 # Claude Code internal files
 .claude/
 
+# Terraform secrets — NEVER commit .tfvars files containing actual values
+*.tfvars
+infra/terraform/*.tfvars
+!infra/terraform/*.tfvars.example
+
 # Compiled TS artifacts in packages/*/src (should be in dist/)
 packages/*/src/*.js
 packages/*/src/*.js.map

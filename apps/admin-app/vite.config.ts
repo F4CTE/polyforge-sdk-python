@@ -22,8 +22,8 @@ export default defineConfig({
   server: {
     port: 5174,
     proxy: {
-      '/auth': 'http://localhost:3001',
-      '/api': 'http://localhost:3002',
+      '/auth': process.env.AUTH_API_URL || 'http://localhost:3001',
+      '/api': process.env.API_URL || 'http://localhost:3002',
     },
   },
 });

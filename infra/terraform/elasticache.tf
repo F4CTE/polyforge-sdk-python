@@ -1,7 +1,20 @@
 # ─── Polyforge — ElastiCache Redis 7 ─────────────────────────────────────────
 #
-# Single-node cluster (no replication group) for v1.
-# Upgrade to a replication group with 1 replica when budget allows.
+# PRODUCTION LIMITATION: Currently using aws_elasticache_cluster (single-node).
+# This means:
+#   - No automatic failover if the node fails → downtime for rate limiting, sessions, etc.
+#   - No read replicas → all queries hit the primary
+#   - Data loss risk during maintenance windows (AWS patches require a reboot)
+#
+# TODO: Migrate to aws_elasticache_replication_group with automatic failover when budget allows.
+# This would add:
+#   - 1-2 replica nodes in other AZs for HA
+#   - Automatic failover (RTO < 2 min)
+#   - Read replicas to distribute load
+# Estimated cost increase: ~3x for multi-AZ (but unavoidable for production HA)
+#
+# Cost tradeoff: v1.0 accepts this risk as a bootstrapped startup to reduce AWS spend.
+# Estimated cost for 1+2 cluster: $450-550/month vs. current $150-200/month.
 #
 # In-transit encryption + AUTH token enabled.
 # Connection string format (used in .env.prod):
