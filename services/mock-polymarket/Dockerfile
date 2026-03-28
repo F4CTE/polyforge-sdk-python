@@ -23,6 +23,7 @@ RUN echo "shamefully-hoist=true" >> .npmrc && \
     pnpm install --filter @polyforge/mock-polymarket --frozen-lockfile
 
 # Copy source
+COPY tsconfig.json ./
 COPY services/mock-polymarket/ ./services/mock-polymarket/
 
 # Build using globally-installed tsc

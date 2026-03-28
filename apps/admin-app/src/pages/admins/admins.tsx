@@ -10,9 +10,10 @@ interface AdminView {
   email: string;
   displayName: string;
   role: string;
-  active: boolean;
-  createdAt: string;
-  lastSeen: string;
+  active?: boolean;
+  createdAt?: string;
+  lastSeen?: string;
+  [key: string]: unknown;
 }
 
 type DialogMode = 'add' | 'edit' | null;
@@ -191,7 +192,7 @@ export function Component() {
                         {roleLabel(a.role)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[var(--color-pf-text-tertiary)]">{formatDate(a.createdAt)}</td>
+                    <td className="px-4 py-3 text-[var(--color-pf-text-tertiary)]">{formatDate(a.createdAt ?? "")}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button

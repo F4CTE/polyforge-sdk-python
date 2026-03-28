@@ -26,7 +26,7 @@ export function Component() {
         ]);
         setTicket(ticketRes);
         setStatusValue(ticketRes.status);
-        setAssignedTo(ticketRes.assignedTo ?? '');
+        setAssignedTo((ticketRes.assignedTo as string | null) ?? '');
         setAdmins(adminsRes);
       } catch {
         toast.error('Failed to load ticket');

@@ -79,7 +79,7 @@ export function Component() {
       }
       setUsers(data);
       setTotal(statusFilter && statusFilter !== 'SUSPENDED' ? data.length : (res.total ?? 0));
-      setTotalPages(statusFilter && statusFilter !== 'SUSPENDED' ? 1 : (res.pages ?? 1));
+      setTotalPages(statusFilter && statusFilter !== 'SUSPENDED' ? 1 : (res.totalPages ?? 1));
     } catch {
       setError(true);
       toast.error('Failed to load users');
@@ -176,7 +176,7 @@ export function Component() {
           <input
             type="checkbox"
             checked={hideTestAccounts}
-            onChange={(e) => setHideTestAccounts(e.target.checked)}
+            onChange={(e) => setHideTestAccounts((e.target as HTMLInputElement).checked)}
             className="accent-[var(--color-pf-cyan-500)]"
           />
           <EyeOff size={14} />

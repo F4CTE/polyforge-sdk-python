@@ -128,7 +128,7 @@ export class CredentialsService {
         return;
       }
 
-      const strategies: any[] = await listRes.json();
+      const strategies = await listRes.json() as any[];
 
       for (const s of strategies) {
         try {

@@ -114,13 +114,13 @@ export class OrdersController {
   @Post('place')
   @UseGuards(JwtAuthGuard)
   @Throttle({ default: { limit: 30, ttl: 60000 } })
-  async placeOrder(@Req() req, @Body() dto: PlaceOrderDto) {
+  async placeOrder(@Req() req: { user: { sub: string } }, @Body() dto: PlaceOrderDto) {
     return this.orders.placeOrder(req.user.sub, dto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  async cancelOrder(@Req() req, @Param('id') id: string) {
+  async cancelOrder(@Req() req: { user: { sub: string } }, @Param('id') id: string) {
     return this.orders.cancelOrder(req.user.sub, id);
   }
 }

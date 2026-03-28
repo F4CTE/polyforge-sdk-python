@@ -18,7 +18,7 @@ export function Component() {
     async function load() {
       try {
         const res = await adminApi.builderStats();
-        setStats(res);
+        setStats(res as unknown as BuilderStats);
       } catch {
         toast.error('Failed to load builder stats');
       } finally {

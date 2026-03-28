@@ -16,6 +16,7 @@ RUN pnpm install --frozen-lockfile
 # Copy source
 COPY packages/ui/ packages/ui/
 COPY packages/api-client/ packages/api-client/
+COPY tsconfig.json ./
 COPY apps/admin-app/ apps/admin-app/
 
 # Build

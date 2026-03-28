@@ -17,7 +17,7 @@ interface User {
   lastSeen: string;
 }
 
-interface AuthState {
+export interface AuthState {
   user: User | null;
   loading: boolean;
   isAuthenticated: () => boolean;

@@ -95,6 +95,7 @@ interface PaginatedResponse<T> {
   total: number;
   page: number;
   limit: number;
+  totalPages?: number;
 }
 
 interface UserData {
@@ -180,6 +181,9 @@ interface AdminData {
   email: string;
   displayName: string;
   role: string;
+  active?: boolean;
+  lastSeen?: string;
+  createdAt?: string;
   [key: string]: unknown;
 }
 

@@ -20,7 +20,7 @@ export function Component() {
     setLoading(true);
     try {
       const res = await adminApi.cacheStats();
-      setStats(res);
+      setStats(res as unknown as CacheStats);
     } catch {
       toast.error('Failed to load cache stats');
     } finally {

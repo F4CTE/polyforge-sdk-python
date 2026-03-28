@@ -177,9 +177,10 @@ export class GammaApiService implements OnModuleInit {
 
     if (!res.ok) throw new Error(`Gamma API returned ${res.status}`);
 
-    const body = await res.json();
+    const body = await res.json() as { data?: unknown[] } | unknown[];
     // Real Polymarket returns a raw array; mock wraps in { data: [] }
-    return Array.isArray(body) ? body : (body.data ?? []);
+    const arr = Array.isArray(body) ? body : ((body as { data?: unknown[] }).data ?? []);
+    return arr as GammaMarket[];
   }
 
   // TODO(2026-Q2): Enable fetchEvents + upsertEvent once Event model is added to Prisma schema

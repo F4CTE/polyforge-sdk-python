@@ -27,7 +27,7 @@ export function Component() {
       setOrders(ordersRes.data ?? []);
       setTotal(ordersRes.total ?? 0);
       setTotalPages(ordersRes.totalPages ?? 1);
-      setDlqEntries(dlqRes ?? []);
+      setDlqEntries(dlqRes?.data ?? []);
     } catch {
       setError(true);
       toast.error('Failed to load orders');

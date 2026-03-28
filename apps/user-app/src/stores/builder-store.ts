@@ -349,7 +349,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to load');
-      const s = await res.json();
+      const s = await res.json() as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const nodes: Node<BlockNodeData>[] = [];
       const canvasLayout = s.canvas as Record<string, unknown> | undefined;
@@ -607,14 +607,14 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
+        const err = await res.json().catch(() => ({})) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
         throw new Error(err.message ?? 'Save failed');
       }
 
-      const saved = await res.json();
+      const saved = await res.json() as any; // eslint-disable-line @typescript-eslint/no-explicit-any
       set({ strategyId: saved.id, saving: false, dirty: false });
       return saved;
-    } catch (err) {
+    } catch (err: unknown) {
       set({ saving: false });
       throw err;
     }

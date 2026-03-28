@@ -89,7 +89,7 @@ export class MarketsService implements OnModuleInit {
 
     // Single raw SQL query — Prisma ORM adds ~5-15s overhead on resource-limited hosts
     // Validate sort parameter against whitelist to prevent SQL injection
-    const orderCol = this.allowedSortColumns.get(sort) || this.allowedSortColumns.get('volume');
+    const orderCol = (this.allowedSortColumns.get(sort ?? 'volume') || this.allowedSortColumns.get('volume'))!;
 
     let whereClause = "WHERE 1=1";
     const params: any[] = [];

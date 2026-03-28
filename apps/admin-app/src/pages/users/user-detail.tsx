@@ -24,7 +24,7 @@ export function Component() {
           adminApi.userApiKeys(id!),
         ]);
         setUser(userRes);
-        setApiKeys(keysRes);
+        setApiKeys(keysRes?.data ?? []);
       } catch {
         toast.error('Failed to load user');
       } finally {

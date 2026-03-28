@@ -16,6 +16,7 @@ RUN pnpm install --frozen-lockfile
 # Copy source
 COPY packages/ui/ packages/ui/
 COPY packages/api-client/ packages/api-client/
+COPY tsconfig.json ./
 COPY apps/user-app/ apps/user-app/
 
 # Build (uses resolve.dedupe in vite.config.ts to unify zustand versions)

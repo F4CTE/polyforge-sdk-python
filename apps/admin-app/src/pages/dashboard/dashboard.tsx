@@ -25,39 +25,18 @@ interface HealthData {
   redis: { status: string; memoryUsageMb: number };
 }
 
-interface AuditLogEntry {
-  id: string;
-  action: string;
-  timestamp: string;
-  adminId: string;
-  [key: string]: unknown;
-}
-
-interface RateLimitsData {
-  totalTrackedKeys: number;
-  recent429Count: number;
-  topOffenders: Array<{ key: string; hits: number; ttl: number }>;
-}
-
-interface DashboardStats {
-  totalUsers: number;
-  activeStrategies: number;
-  totalOrders: number;
-  openTickets: number;
-}
-
 export function Component() {
   const { isSuperAdmin } = useAdminAuthStore();
   const [health, setHealth] = useState<HealthData | null>(null);
   const [config, setConfig] = useState<{ inviteOnly: boolean } | null>(null);
-  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
-  const [stats, setStats] = useState<DashboardStats>({
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [stats, setStats] = useState({
     totalUsers: 0,
     activeStrategies: 0,
     totalOrders: 0,
     openTickets: 0,
   });
-  const [rateLimits, setRateLimits] = useState<RateLimitsData | null>(null);
+  const [rateLimits, setRateLimits] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [healthError, setHealthError] = useState(false);
   const [statsError, setStatsError] = useState(false);
@@ -355,8 +334,8 @@ export function Component() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--color-pf-border)]">
-                    {rateLimits.topOffenders.slice(0, 10).map((entry: { key: string; hits: number; ttl: number }) => (
-                      <tr key={entry.key}>
+                    {rateLimits.topOffenders.slice(0, 10).map((entry: any, i: number) => (
+                      <tr key={i}>
                         <td className="py-1.5 font-mono text-[var(--color-pf-text-secondary)] truncate max-w-[200px]">{entry.key}</td>
                         <td className={`py-1.5 text-right font-mono ${entry.hits > 50 ? 'text-pf-danger' : 'text-[var(--color-pf-text)]'}`}>{entry.hits}</td>
                         <td className="py-1.5 text-right font-mono text-[var(--color-pf-text-secondary)]">{entry.ttl}</td>
@@ -382,4 +361,39 @@ export function Component() {
             <Clock className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={20} />
             <p className="text-sm text-[var(--color-pf-text-secondary)]">No recent activity</p>
             <p className="text-xs text-[var(--color-pf-text-tertiary)] mt-1">Activity will appear here as admins take actions.</p>
-            <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:te
+            <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2">
+              Refresh
+            </button>
+          </div>
+        ) : auditLogs.length === 0 ? (
+          <div className="py-2">
+            <p className="text-sm text-[var(--color-pf-text-secondary)]">No admin actions recorded yet.</p>
+            <p className="text-xs text-[var(--color-pf-text-tertiary)] mt-1">Activity will appear as admins manage users, strategies, and settings.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {auditLogs.map((log: any) => (
+              <div
+                key={log.id}
+                className="flex items-center justify-between py-2 border-b border-[var(--color-pf-border)] last:border-0"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--color-pf-bg)] text-[var(--color-pf-cyan-500)] border border-[var(--color-pf-border)]">
+                    {log.action}
+                  </span>
+                  <span className="text-sm text-[var(--color-pf-text-secondary)]">
+                    {log.target ? `${log.target}` : ''}
+                    {log.targetId ? ` #${log.targetId.slice(0, 8)}` : ''}
+                  </span>
+                </div>
+                <span className="text-xs text-[var(--color-pf-text-tertiary)] whitespace-nowrap">
+                  {timeAgo(log.createdAt)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
