@@ -5,6 +5,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.6.0] — 2026-03-28
+
+### Added
+- **Block validation UX** — active blocks with empty required fields receive a red outer glow, red border, and a "Setup needed" badge (red `AlertTriangle`); for blocks in inactive/global states the badge is suppressed to avoid stacking but a small `AlertTriangle` icon appears in the header instead
+- **Field-level hints** — each empty required field gets a red border, red-tinted background, and a `— required` suffix on its label so users can see exactly which inputs to fill in
+- **Canvas issue banner** now shows two independent counts: unwired blocks (amber) and misconfigured blocks (red); banner color escalates to red when any setup issue is present
+- **Execution animations** — while a strategy is live or a backtest is running:
+  - Each block breathes with a continuous pulse glow; speed varies by section to convey different roles: triggers (1.4 s), actions (1.8 s), conditions (2.4 s), logic/calc (2.0 s), safety (3.6 s heartbeat in red)
+  - When a block fires, a `blockFired` keyframe delivers a 0.9 s bright cyan burst + subtle scale, then fades back to the resting pulse
+  - All canvas edges brighten to vivid cyan with a `drop-shadow` filter during execution, making the data-flow path visually clear
+- **Fired block wiring** — `fireBlock` now called from real execution events: trigger blocks flash on every `BACKTEST_PROGRESS` tick; action blocks flash on `ORDER_PLACED` and `ORDER_FILLED`
+
+### Changed
+- `strategy-canvas.tsx` — edges computed via `useMemo`; execution-aware `displayEdges` injected into React Flow; CSS keyframes (`blockPulse`, `blockFired`, `safetyPulse`) injected once via an inline `<style>` in the canvas root
+- `block-node.tsx` — replaced static `ring`/`shadow` classes with CSS `animation` property; `hasFired` selector from `firedBlockIds`; removed `transition-all duration-300` to avoid fighting the CSS animation
+
+---
+
 ## [6.5.0] — 2026-03-28
 
 ### Added

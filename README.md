@@ -6,7 +6,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 
 ### Key Features
 
-- **Advanced strategy builder** — 2D drag-and-drop canvas with pan/zoom, bezier connection lines, color-coded blocks, auto-layout, logic blocks (IF/THEN/ELSE, AND/OR/NOT, Delay), calculation blocks (Math, Aggregation, Comparison), visual variable nodes, sub-strategy composition (fire-and-forget/managed/scoped), and `.polyforge` JSON import/export
+- **Advanced strategy builder** — 2D drag-and-drop canvas with pan/zoom, bezier connection lines, color-coded blocks, auto-layout, logic blocks (IF/THEN/ELSE, AND/OR/NOT, Delay), calculation blocks (Math, Aggregation, Comparison), visual variable nodes, sub-strategy composition (fire-and-forget/managed/scoped), and `.polyforge` JSON import/export; meaningful wiring semantics (safety=global, triggers/actions require wires, conditions act as global gate when unwired); real-time block validation with field-level hints; execution animations (section-pulsed glow, fired-block flash, edge brightening)
 - **Market cards** — Polymarket-style card grid with images, probability bars, multi-outcome support, and card/table toggle
 - **Market detail page** — Stats bar, "Run Strategy" dialog with strategy selector, and direct trading panel (buy/sell without a strategy)
 - **Support ticket system** — User-to-admin tickets with assignment, priority, reminders, and email notifications
@@ -38,7 +38,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Educational onboarding** — guided tour, checklist widget, and 5 pre-built strategy templates for new users
 - **Future features planned** — arbitrage scanner, multi-platform aggregation, browser extension, mobile app, fund management, UMA oracle dashboard, LP/market making (see [`docs/19-future-features.md`](./docs/19-future-features.md))
 
-> **All development phases complete through v6.4.0.** Full security audit with 40 issues resolved. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
+> **Current version: v6.6.0.** Full security audit with 40 issues resolved. Strategy builder UX complete: wiring semantics, guided tutorial, block validation, execution animations. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
 
 ---
 
