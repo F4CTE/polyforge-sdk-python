@@ -61,7 +61,21 @@ export class OrdersService {
       this.prisma.order.count({ where }),
     ]);
 
-    return paginate(orders, total, page, limit);
+    // Resolve market titles for display
+    const marketIds = [...new Set(orders.map((o) => o.marketId))];
+    const markets = marketIds.length > 0
+      ? await this.prisma.market.findMany({
+          where: { id: { in: marketIds } },
+          select: { id: true, title: true },
+        })
+      : [];
+    const titleMap = new Map(markets.map((m) => [m.id, m.title]));
+    const enriched = orders.map((o) => ({
+      ...o,
+      marketQuestion: titleMap.get(o.marketId) ?? null,
+    }));
+
+    return paginate(enriched, total, page, limit);
   }
 
   async closePosition(userId: string, dto: ClosePositionDto): Promise<any> {

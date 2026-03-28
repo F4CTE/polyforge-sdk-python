@@ -13,7 +13,7 @@ export function AppLayout() {
   return (
     <div className="flex h-screen bg-pf-base text-pf-text overflow-hidden">
       {/* Desktop sidebar */}
-      <div className="hidden md:block">
+      <div className="hidden md:block" style={{ width: collapsed ? 64 : 240, minWidth: collapsed ? 64 : 240, transition: 'width 200ms' }}>
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
       </div>
 

@@ -476,8 +476,8 @@ export function Component() {
                             <span className="font-mono text-[11px] text-pf-text-muted">{(page - 1) * 25 + i + 1}</span>
                           </td>
                           <td className="px-4 py-3 max-w-[180px]">
-                            <span className="text-pf-text text-xs line-clamp-1" title={order.marketQuestion ?? ''}>
-                              {order.marketQuestion || '—'}
+                            <span className="text-pf-text text-xs line-clamp-1" title={order.marketQuestion ?? order.marketId ?? ''}>
+                              {order.marketQuestion || (order.marketId?.slice(0, 12)) || '—'}
                             </span>
                           </td>
                           <td className="px-4 py-3">

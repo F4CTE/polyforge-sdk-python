@@ -297,44 +297,48 @@ export function Component() {
       {/* Endpoints */}
       <section className="space-y-4">
         <h2 className="text-lg font-semibold text-pf-text">Endpoints</h2>
-        {CATEGORIES.map((category, catIdx) => (
-          <div key={category.title} className="space-y-2">
-            <h3 className="text-sm font-semibold text-pf-text">{category.title}</h3>
-            {category.endpoints.map((ep, epIdx) => {
-              const key = `${catIdx}-${epIdx}`;
-              const isOpen = openEndpoints.has(key);
-              const ms = METHOD_STYLES[ep.method];
-              const ss = SCOPE_STYLES[ep.scope];
-              return (
-                <div key={key}>
-                  <button
-                    onClick={() => toggleEndpoint(key)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 bg-pf-elevated border border-pf-border rounded-pf hover:border-pf-border-strong transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
-                    aria-expanded={isOpen}
-                  >
-                    <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${ms.bg} ${ms.text}`}>{ep.method}</span>
-                    <code className="flex-1 text-xs font-mono text-pf-text">{ep.path}</code>
-                    <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${ss.bg} ${ss.text}`}>{ep.scope}</span>
-                    {isOpen ? <ChevronUp className="size-3 text-pf-text-muted" /> : <ChevronDown className="size-3 text-pf-text-muted" />}
-                  </button>
-                  {isOpen && (
-                    <div className="px-3 pb-3 border border-t-0 border-pf-border rounded-b-pf-lg -mt-px bg-pf-elevated">
-                      <p className="text-xs text-pf-text-secondary mt-3 mb-2">{ep.description}</p>
-                      {ep.queryParams && (
-                        <p className="text-[11px] text-pf-text-muted mb-2">
-                          Query params: <code className="font-mono">{ep.queryParams}</code>
-                        </p>
+        {CATEGORIES && CATEGORIES.length > 0 ? (
+          CATEGORIES.map((category, catIdx) => (
+            <div key={category.title} className="space-y-2">
+              <h3 className="text-sm font-semibold text-pf-text">{category.title}</h3>
+              {category.endpoints && category.endpoints.length > 0 ? (
+                category.endpoints.map((ep, epIdx) => {
+                  const key = `${catIdx}-${epIdx}`;
+                  const isOpen = openEndpoints.has(key);
+                  const ms = METHOD_STYLES[ep.method];
+                  const ss = SCOPE_STYLES[ep.scope];
+                  return ms && ss ? (
+                    <div key={key}>
+                      <button
+                        onClick={() => toggleEndpoint(key)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 bg-pf-elevated border border-pf-border rounded-pf hover:border-pf-border-strong transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                        aria-expanded={isOpen}
+                      >
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${ms.bg} ${ms.text}`}>{ep.method}</span>
+                        <code className="flex-1 text-xs font-mono text-pf-text">{ep.path}</code>
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${ss.bg} ${ss.text}`}>{ep.scope}</span>
+                        {isOpen ? <ChevronUp className="size-3 text-pf-text-muted" /> : <ChevronDown className="size-3 text-pf-text-muted" />}
+                      </button>
+                      {isOpen && (
+                        <div className="px-3 pb-3 border border-t-0 border-pf-border rounded-b-pf-lg -mt-px bg-pf-elevated">
+                          <p className="text-xs text-pf-text-secondary mt-3 mb-2">{ep.description}</p>
+                          {ep.queryParams && (
+                            <p className="text-[11px] text-pf-text-muted mb-2">
+                              Query params: <code className="font-mono">{ep.queryParams}</code>
+                            </p>
+                          )}
+                          <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap">
+                            {ep.curl}
+                          </pre>
+                        </div>
                       )}
-                      <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap">
-                        {ep.curl}
-                      </pre>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                  ) : null;
+                })
+              ) : null}
+            </div>
+          ))
+        ) : null}
       </section>
 
       {/* Rate Limits */}

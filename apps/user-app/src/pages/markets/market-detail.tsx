@@ -472,7 +472,7 @@ export function Component() {
         </div>
       )}
 
-      {!loadingMarket && market && (
+      {!loadingMarket && market ? (
         <>
           {/* Market header */}
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
@@ -1114,7 +1114,7 @@ export function Component() {
             </div>
           )}
         </>
-      )}
+      ) : null}
     </div>
   );
 }

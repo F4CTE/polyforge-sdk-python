@@ -84,9 +84,15 @@ export function Component() {
         const data: LeaderboardResponse = await res.json();
         setEntries(data.data);
         setTotal(data.total);
-        setTotalPages(data.totalPages);
+        setTotalPages(data.totalPages ?? 1);
+      } else {
+        setEntries([]);
+        toast.error('Failed to load leaderboard');
       }
-    } catch { toast.error('Failed to load data'); }
+    } catch {
+      setEntries([]);
+      toast.error('Failed to load data');
+    }
     setLoading(false);
   }, []);
 

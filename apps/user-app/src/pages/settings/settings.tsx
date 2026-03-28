@@ -71,6 +71,13 @@ export function Component() {
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '');
   const [profileSaving, setProfileSaving] = useState(false);
 
+  // Update profile form when user changes
+  useEffect(() => {
+    setDisplayName(user?.displayName ?? '');
+    setBio(user?.bio ?? '');
+    setAvatarUrl(user?.avatarUrl ?? '');
+  }, [user]);
+
   // Password
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -395,6 +402,73 @@ export function Component() {
               Save Profile
             </button>
           </div>
+
+          {/* ─── Danger Zone ─── */}
+          <div className="mt-10 pt-6 border-t-2 border-pf-danger/20 bg-pf-elevated border border-pf-danger/20 rounded-pf-lg p-6 space-y-4">
+            <h2 className="text-sm font-semibold text-pf-danger uppercase tracking-wider flex items-center gap-2">
+              <AlertTriangle className="size-4" />
+              Danger Zone
+            </h2>
+            <p className="text-sm text-pf-text-secondary">
+              Permanently delete your account and all associated data. This action cannot be undone.
+            </p>
+            <button
+              onClick={() => setDeleteDialogOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger/10 text-pf-danger border border-pf-danger/20 text-sm font-medium hover:bg-pf-danger/20 transition-colors"
+            >
+              <Trash2 className="size-4" />
+              Delete Account
+            </button>
+
+            {deleteDialogOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title">
+                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 max-w-md w-full mx-4 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="size-10 rounded-full bg-pf-danger/10 flex items-center justify-center">
+                      <AlertTriangle className="size-5 text-pf-danger" />
+                    </div>
+                    <div>
+                      <h3 id="delete-dialog-title" className="text-base font-semibold text-pf-text">Delete Account</h3>
+                      <p className="text-xs text-pf-text-muted">This cannot be undone</p>
+                    </div>
+                  </div>
+                  <div className="bg-pf-danger/5 border border-pf-danger/10 rounded-pf p-3">
+                    <p className="text-sm text-pf-danger">
+                      This will permanently delete your account. All strategies will be stopped.
+                      All API keys will be revoked. All data will be lost.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-pf-text-secondary mb-1.5 block">Enter your password to confirm</label>
+                    <input
+                      type="password"
+                      autoComplete="current-password"
+                      value={deletePassword}
+                      onChange={e => setDeletePassword(e.target.value)}
+                      placeholder="Your password"
+                      className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-danger/50 transition-colors"
+                    />
+                  </div>
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => { setDeleteDialogOpen(false); setDeletePassword(''); }}
+                      className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text rounded-pf hover:bg-pf-overlay transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteAccount}
+                      disabled={deleting || !deletePassword}
+                      className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger text-white text-sm font-medium hover:bg-pf-danger/80 disabled:opacity-50 transition-colors"
+                    >
+                      {deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                      Delete My Account
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -609,73 +683,6 @@ export function Component() {
           )}
         </div>
       )}
-
-      {/* ─── Danger Zone ─── */}
-      <div className="mt-10 pt-6 border-t-2 border-pf-danger/20 bg-pf-elevated border border-pf-danger/20 rounded-pf-lg p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-pf-danger uppercase tracking-wider flex items-center gap-2">
-          <AlertTriangle className="size-4" />
-          Danger Zone
-        </h2>
-        <p className="text-sm text-pf-text-secondary">
-          Permanently delete your account and all associated data. This action cannot be undone.
-        </p>
-        <button
-          onClick={() => setDeleteDialogOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger/10 text-pf-danger border border-pf-danger/20 text-sm font-medium hover:bg-pf-danger/20 transition-colors"
-        >
-          <Trash2 className="size-4" />
-          Delete Account
-        </button>
-
-        {deleteDialogOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title">
-            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 max-w-md w-full mx-4 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="size-10 rounded-full bg-pf-danger/10 flex items-center justify-center">
-                  <AlertTriangle className="size-5 text-pf-danger" />
-                </div>
-                <div>
-                  <h3 id="delete-dialog-title" className="text-base font-semibold text-pf-text">Delete Account</h3>
-                  <p className="text-xs text-pf-text-muted">This cannot be undone</p>
-                </div>
-              </div>
-              <div className="bg-pf-danger/5 border border-pf-danger/10 rounded-pf p-3">
-                <p className="text-sm text-pf-danger">
-                  This will permanently delete your account. All strategies will be stopped.
-                  All API keys will be revoked. All data will be lost.
-                </p>
-              </div>
-              <div>
-                <label className="text-xs text-pf-text-secondary mb-1.5 block">Enter your password to confirm</label>
-                <input
-                  type="password"
-                  autoComplete="current-password"
-                  value={deletePassword}
-                  onChange={e => setDeletePassword(e.target.value)}
-                  placeholder="Your password"
-                  className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-danger/50 transition-colors"
-                />
-              </div>
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => { setDeleteDialogOpen(false); setDeletePassword(''); }}
-                  className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text rounded-pf hover:bg-pf-overlay transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteAccount}
-                  disabled={deleting || !deletePassword}
-                  className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger text-white text-sm font-medium hover:bg-pf-danger/80 disabled:opacity-50 transition-colors"
-                >
-                  {deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-                  Delete My Account
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* ─── API Keys Tab ─── */}
       {activeTab === 'apikeys' && (

@@ -15,6 +15,7 @@ export class MarketsService implements OnModuleInit {
     ['firstSeenAt', 'm."firstSeenAt" DESC'],
     ['newest', 'm."firstSeenAt" DESC'],
     ['volume', 'm.volume24h DESC'],
+    ['liquidity', 'm.volume24h DESC'], // Token-level liquidity not available on Market; use volume as proxy
   ]);
 
   constructor(
@@ -53,7 +54,7 @@ export class MarketsService implements OnModuleInit {
         { seriesSlug: { contains: search, mode: "insensitive" } },
       ];
     }
-    if (category) where.category = category;
+    if (category) where.category = { equals: category, mode: 'insensitive' };
     if (closed !== undefined) where.closed = closed;
 
     const orderBy: any =
@@ -100,7 +101,7 @@ export class MarketsService implements OnModuleInit {
       paramIdx++;
     }
     if (category) {
-      whereClause += ` AND m.category = $${paramIdx}`;
+      whereClause += ` AND LOWER(m.category) = LOWER($${paramIdx})`;
       params.push(category);
       paramIdx++;
     }

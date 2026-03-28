@@ -61,7 +61,7 @@ const SORT_OPTIONS: { label: string; value: SortOption }[] = [
   { label: 'Liquidity', value: 'liquidity' },
 ];
 
-const CATEGORIES = ['all', 'Sports', 'Crypto', 'Politics', 'Economics', 'Finance', 'Technology'] as const;
+const CATEGORIES = ['all', 'Sports', 'Crypto', 'Politics', 'Economics', 'Finance', 'Technology', 'Other'] as const;
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   all: <LayoutGrid className="size-4" />,
@@ -110,15 +110,16 @@ function tokenPercent(token: MarketToken): number {
 
 function yesPercent(market: Market): number | null {
   const token = market.tokens.find((t) => t.outcome === 'YES');
-  if (!token || !token.price) return null;
-  const val = Math.round(parseFloat(token.price) * 100);
-  return isNaN(val) ? null : val;
+  if (!token) return null;
+  const val = Math.round(parseFloat(String(token.price)) * 100);
+  return isNaN(val) || val === 0 ? null : val;
 }
 
 function priceCents(market: Market, outcome: 'YES' | 'NO'): string {
   const token = market.tokens.find((t) => t.outcome === outcome);
   if (!token) return '\u2014';
-  const val = parseFloat(token.price);
+  const val = parseFloat(String(token.price));
+  if (isNaN(val) || val === 0) return '\u2014';
   return Math.round(val * 100) + '\u00A2';
 }
 

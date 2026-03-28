@@ -28,6 +28,70 @@ interface AuthState {
   register: (body: { email: string; password: string; username: string; tosAccepted: boolean; inviteCode?: string }) => Promise<void>;
   logout: () => Promise<void>;
   patchUser: (partial: Partial<User>) => void;
+  refreshToken: () => Promise<boolean>;
+}
+
+// Mutex to prevent concurrent refresh calls
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
+/**
+ * Refresh the JWT access token using the refresh token cookie
+ */
+async function refreshToken(): Promise<boolean> {
+  // If already refreshing, wait for the existing refresh to complete
+  if (isRefreshing) {
+    return refreshPromise || Promise.resolve(false);
+  }
+
+  isRefreshing = true;
+  try {
+    refreshPromise = (async () => {
+      const res = await fetch('/auth/v1/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      return res.ok;
+    })();
+
+    return await refreshPromise;
+  } finally {
+    isRefreshing = false;
+    refreshPromise = null;
+  }
+}
+
+/**
+ * Fetch wrapper that handles 401 responses by attempting token refresh
+ * Redirects to login if both the original request and refresh fail
+ */
+export async function authedFetch(
+  url: string,
+  options: RequestInit = {},
+): Promise<Response> {
+  const response = await fetch(url, {
+    ...options,
+    credentials: options.credentials ?? 'include',
+  });
+
+  // If request succeeded or is not a 401, return as-is
+  if (response.ok || response.status !== 401) {
+    return response;
+  }
+
+  // Token expired: attempt refresh once
+  const refreshed = await refreshToken();
+  if (!refreshed) {
+    // Refresh failed, redirect to login
+    window.location.href = '/login';
+    return response;
+  }
+
+  // Retry the original request with refreshed token
+  return fetch(url, {
+    ...options,
+    credentials: options.credentials ?? 'include',
+  });
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -41,10 +105,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const controller = new AbortController();
       setTimeout(() => controller.abort(), 3000);
-      const res = await fetch('/auth/v1/me', {
+      let res = await fetch('/auth/v1/me', {
         credentials: 'include',
         signal: controller.signal,
       });
+
+      // If token expired, attempt refresh and retry
+      if (res.status === 401) {
+        const refreshed = await refreshToken();
+        if (refreshed) {
+          res = await fetch('/auth/v1/me', {
+            credentials: 'include',
+            signal: controller.signal,
+          });
+        }
+      }
+
       if (res.ok) {
         const user = await res.json();
         set({ user, loading: false });
@@ -102,5 +178,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   patchUser: (partial) => {
     const current = get().user;
     if (current) set({ user: { ...current, ...partial } });
+  },
+
+  refreshToken: async () => {
+    return refreshToken();
   },
 }));

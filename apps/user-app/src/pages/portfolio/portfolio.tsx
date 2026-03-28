@@ -88,6 +88,17 @@ function winRatePct(val: string): string {
   return `${(parseFloat(val) * 100).toFixed(1)}%`;
 }
 
+function formatTokenId(tokenId: string): string {
+  // Format token_superbowl_chiefs_no → Super Bowl Chiefs (NO)
+  const parts = tokenId.replace('token_', '').split('_');
+  return parts
+    .map((part, i) => {
+      if (part.length <= 2) return part.toUpperCase();
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    })
+    .join(' ');
+}
+
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
 function CardSkeleton() {
@@ -598,7 +609,7 @@ export function Component() {
                         {paper.positions.map(pos => (
                           <tr key={pos.tokenId} className="hover:bg-pf-surface/50 transition-colors">
                             <td className="px-4 py-3">
-                              <span className="font-mono text-xs text-pf-text-secondary">{pos.tokenId}</span>
+                              <span className="text-pf-text" title={pos.tokenId}>{formatTokenId(pos.tokenId)}</span>
                             </td>
                             <td className="px-4 py-3">
                               <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${

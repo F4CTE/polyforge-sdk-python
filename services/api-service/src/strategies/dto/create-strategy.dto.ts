@@ -117,6 +117,20 @@ export class CreateStrategyDto {
   variables?: StrategyVariableDto[] = [];
 
   @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(50)
+  @ValidateNested({ each: true })
+  @Type(() => BlockDto)
+  logicBlocks?: BlockDto[] = [];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(50)
+  @ValidateNested({ each: true })
+  @Type(() => BlockDto)
+  calcBlocks?: BlockDto[] = [];
+
+  @IsOptional()
   @IsObject()
   canvas?: Record<string, unknown>;
 }
