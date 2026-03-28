@@ -187,7 +187,7 @@ class PolyforgeClient:
         page: int = 1,
     ) -> PaginatedResponse[Market]:
         data = self._get(
-            "/api/markets",
+            "/api/v1/markets",
             params={"search": search, "category": category, "limit": limit, "page": page},
         )
         items = [_parse(Market, m) for m in data.get("items", data.get("markets", []))]
@@ -200,53 +200,53 @@ class PolyforgeClient:
         )
 
     def get_market(self, market_id: str) -> Market:
-        return _parse(Market, self._get(f"/api/markets/{market_id}"))
+        return _parse(Market, self._get(f"/api/v1/markets/{market_id}"))
 
     # -- Strategies --
 
     def list_strategies(self, *, status: str | None = None) -> list[Strategy]:
-        data = self._get("/api/strategies", params={"status": status})
+        data = self._get("/api/v1/strategies", params={"status": status})
         items = data if isinstance(data, list) else data.get("strategies", data.get("items", []))
         return [_parse(Strategy, s) for s in items]
 
     def get_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, self._get(f"/api/strategies/{strategy_id}"))
+        return _parse(Strategy, self._get(f"/api/v1/strategies/{strategy_id}"))
 
     def create_strategy(self, name: str, description: str | None = None) -> Strategy:
-        return _parse(Strategy, self._post("/api/strategies", json={"name": name, "description": description or ""}))
+        return _parse(Strategy, self._post("/api/v1/strategies", json={"name": name, "description": description or ""}))
 
     def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
         body: dict[str, Any] = {"description": description}
         if market_id is not None:
             body["market_id"] = market_id
-        return _parse(Strategy, self._post("/api/strategies/generate", json=body))
+        return _parse(Strategy, self._post("/api/v1/strategies/from-description", json=body))
 
     def start_strategy(self, strategy_id: str, mode: str = "paper") -> Strategy:
-        return _parse(Strategy, self._post(f"/api/strategies/{strategy_id}/start", json={"mode": mode}))
+        return _parse(Strategy, self._post(f"/api/v1/strategies/{strategy_id}/start", json={"mode": mode}))
 
     def stop_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, self._post(f"/api/strategies/{strategy_id}/stop"))
+        return _parse(Strategy, self._post(f"/api/v1/strategies/{strategy_id}/stop"))
 
     def get_strategy_templates(self) -> list[StrategyTemplate]:
-        data = self._get("/api/strategies/templates")
+        data = self._get("/api/v1/strategies/templates")
         items = data if isinstance(data, list) else data.get("templates", [])
         return [_parse(StrategyTemplate, t) for t in items]
 
     def export_strategy(self, strategy_id: str) -> dict:
-        return self._get(f"/api/strategies/{strategy_id}/export")
+        return self._get(f"/api/v1/strategies/{strategy_id}/export")
 
     # -- Portfolio & Orders --
 
     def get_portfolio(self) -> Portfolio:
-        return _parse(Portfolio, self._get("/api/portfolio"))
+        return _parse(Portfolio, self._get("/api/v1/portfolio"))
 
     def get_orders(self, *, limit: int = 20, status: str | None = None) -> list[Order]:
-        data = self._get("/api/orders", params={"limit": limit, "status": status})
+        data = self._get("/api/v1/orders", params={"limit": limit, "status": status})
         items = data if isinstance(data, list) else data.get("orders", data.get("items", []))
         return [_parse(Order, o) for o in items]
 
     def get_score(self) -> TraderScore:
-        return _parse(TraderScore, self._get("/api/score"))
+        return _parse(TraderScore, self._get("/api/v1/score"))
 
     # -- Direct Trading --
 
@@ -281,39 +281,39 @@ class PolyforgeClient:
     # -- Social & Signals --
 
     def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
-        data = self._get("/api/whale-feed", params={"min_size": min_size})
+        data = self._get("/api/v1/whale-feed", params={"min_size": min_size})
         items = data if isinstance(data, list) else data.get("trades", [])
         return [_parse(WhaleTrade, w) for w in items]
 
     def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
-        data = self._get("/api/news-signals", params={"min_confidence": min_confidence})
+        data = self._get("/api/v1/news-signals", params={"min_confidence": min_confidence})
         items = data if isinstance(data, list) else data.get("signals", [])
         return [_parse(NewsSignal, s) for s in items]
 
     # -- Configuration --
 
     def list_alerts(self) -> list[Alert]:
-        data = self._get("/api/alerts")
+        data = self._get("/api/v1/alerts")
         items = data if isinstance(data, list) else data.get("alerts", [])
         return [_parse(Alert, a) for a in items]
 
     def list_copy_configs(self) -> list[CopyConfig]:
-        data = self._get("/api/copy-configs")
+        data = self._get("/api/v1/copy-configs")
         items = data if isinstance(data, list) else data.get("configs", [])
         return [_parse(CopyConfig, c) for c in items]
 
     def list_webhooks(self) -> list[Webhook]:
-        data = self._get("/api/webhooks")
+        data = self._get("/api/v1/webhooks")
         items = data if isinstance(data, list) else data.get("webhooks", [])
         return [_parse(Webhook, w) for w in items]
 
     def create_webhook(self, url: str, events: list[str]) -> Webhook:
-        return _parse(Webhook, self._post("/api/webhooks", json={"url": url, "events": events}))
+        return _parse(Webhook, self._post("/api/v1/webhooks", json={"url": url, "events": events}))
 
     # -- AI --
 
     def ai_query(self, query: str) -> AiQueryResponse:
-        return _parse(AiQueryResponse, self._post("/api/ai/query", json={"query": query}))
+        return _parse(AiQueryResponse, self._post("/api/v1/ai/query", json={"query": query}))
 
     # -- Lifecycle --
 
@@ -387,7 +387,7 @@ class AsyncPolyforgeClient:
         page: int = 1,
     ) -> PaginatedResponse[Market]:
         data = await self._get(
-            "/api/markets",
+            "/api/v1/markets",
             params={"search": search, "category": category, "limit": limit, "page": page},
         )
         items = [_parse(Market, m) for m in data.get("items", data.get("markets", []))]
@@ -400,53 +400,53 @@ class AsyncPolyforgeClient:
         )
 
     async def get_market(self, market_id: str) -> Market:
-        return _parse(Market, await self._get(f"/api/markets/{market_id}"))
+        return _parse(Market, await self._get(f"/api/v1/markets/{market_id}"))
 
     # -- Strategies --
 
     async def list_strategies(self, *, status: str | None = None) -> list[Strategy]:
-        data = await self._get("/api/strategies", params={"status": status})
+        data = await self._get("/api/v1/strategies", params={"status": status})
         items = data if isinstance(data, list) else data.get("strategies", data.get("items", []))
         return [_parse(Strategy, s) for s in items]
 
     async def get_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, await self._get(f"/api/strategies/{strategy_id}"))
+        return _parse(Strategy, await self._get(f"/api/v1/strategies/{strategy_id}"))
 
     async def create_strategy(self, name: str, description: str | None = None) -> Strategy:
-        return _parse(Strategy, await self._post("/api/strategies", json={"name": name, "description": description or ""}))
+        return _parse(Strategy, await self._post("/api/v1/strategies", json={"name": name, "description": description or ""}))
 
     async def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
         body: dict[str, Any] = {"description": description}
         if market_id is not None:
             body["market_id"] = market_id
-        return _parse(Strategy, await self._post("/api/strategies/generate", json=body))
+        return _parse(Strategy, await self._post("/api/v1/strategies/from-description", json=body))
 
     async def start_strategy(self, strategy_id: str, mode: str = "paper") -> Strategy:
-        return _parse(Strategy, await self._post(f"/api/strategies/{strategy_id}/start", json={"mode": mode}))
+        return _parse(Strategy, await self._post(f"/api/v1/strategies/{strategy_id}/start", json={"mode": mode}))
 
     async def stop_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, await self._post(f"/api/strategies/{strategy_id}/stop"))
+        return _parse(Strategy, await self._post(f"/api/v1/strategies/{strategy_id}/stop"))
 
     async def get_strategy_templates(self) -> list[StrategyTemplate]:
-        data = await self._get("/api/strategies/templates")
+        data = await self._get("/api/v1/strategies/templates")
         items = data if isinstance(data, list) else data.get("templates", [])
         return [_parse(StrategyTemplate, t) for t in items]
 
     async def export_strategy(self, strategy_id: str) -> dict:
-        return await self._get(f"/api/strategies/{strategy_id}/export")
+        return await self._get(f"/api/v1/strategies/{strategy_id}/export")
 
     # -- Portfolio & Orders --
 
     async def get_portfolio(self) -> Portfolio:
-        return _parse(Portfolio, await self._get("/api/portfolio"))
+        return _parse(Portfolio, await self._get("/api/v1/portfolio"))
 
     async def get_orders(self, *, limit: int = 20, status: str | None = None) -> list[Order]:
-        data = await self._get("/api/orders", params={"limit": limit, "status": status})
+        data = await self._get("/api/v1/orders", params={"limit": limit, "status": status})
         items = data if isinstance(data, list) else data.get("orders", data.get("items", []))
         return [_parse(Order, o) for o in items]
 
     async def get_score(self) -> TraderScore:
-        return _parse(TraderScore, await self._get("/api/score"))
+        return _parse(TraderScore, await self._get("/api/v1/score"))
 
     # -- Direct Trading --
 
@@ -481,39 +481,39 @@ class AsyncPolyforgeClient:
     # -- Social & Signals --
 
     async def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
-        data = await self._get("/api/whale-feed", params={"min_size": min_size})
+        data = await self._get("/api/v1/whale-feed", params={"min_size": min_size})
         items = data if isinstance(data, list) else data.get("trades", [])
         return [_parse(WhaleTrade, w) for w in items]
 
     async def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
-        data = await self._get("/api/news-signals", params={"min_confidence": min_confidence})
+        data = await self._get("/api/v1/news-signals", params={"min_confidence": min_confidence})
         items = data if isinstance(data, list) else data.get("signals", [])
         return [_parse(NewsSignal, s) for s in items]
 
     # -- Configuration --
 
     async def list_alerts(self) -> list[Alert]:
-        data = await self._get("/api/alerts")
+        data = await self._get("/api/v1/alerts")
         items = data if isinstance(data, list) else data.get("alerts", [])
         return [_parse(Alert, a) for a in items]
 
     async def list_copy_configs(self) -> list[CopyConfig]:
-        data = await self._get("/api/copy-configs")
+        data = await self._get("/api/v1/copy-configs")
         items = data if isinstance(data, list) else data.get("configs", [])
         return [_parse(CopyConfig, c) for c in items]
 
     async def list_webhooks(self) -> list[Webhook]:
-        data = await self._get("/api/webhooks")
+        data = await self._get("/api/v1/webhooks")
         items = data if isinstance(data, list) else data.get("webhooks", [])
         return [_parse(Webhook, w) for w in items]
 
     async def create_webhook(self, url: str, events: list[str]) -> Webhook:
-        return _parse(Webhook, await self._post("/api/webhooks", json={"url": url, "events": events}))
+        return _parse(Webhook, await self._post("/api/v1/webhooks", json={"url": url, "events": events}))
 
     # -- AI --
 
     async def ai_query(self, query: str) -> AiQueryResponse:
-        return _parse(AiQueryResponse, await self._post("/api/ai/query", json={"query": query}))
+        return _parse(AiQueryResponse, await self._post("/api/v1/ai/query", json={"query": query}))
 
     # -- Lifecycle --
 
