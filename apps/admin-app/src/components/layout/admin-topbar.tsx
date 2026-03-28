@@ -50,7 +50,7 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
         {onMenuClick && (
           <button
             onClick={onMenuClick}
-            className="p-2 rounded-pf-sm text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors md:hidden"
+            className="p-2 rounded-pf-sm text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
             aria-label="Open menu"
           >
             <Menu size={20} />
@@ -64,7 +64,7 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
       <div className="flex items-center gap-3">
         <button
           onClick={toggle}
-          className="p-2 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] transition-colors"
+          className="p-2 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
           aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
@@ -86,7 +86,7 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
 
         <button
           onClick={logout}
-          className="p-2 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:text-pf-danger transition-colors"
+          className="p-2 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-danger)]"
           aria-label="Logout"
         >
           <LogOut size={16} />

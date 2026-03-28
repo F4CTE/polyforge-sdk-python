@@ -66,7 +66,7 @@ export function Component() {
         </div>
         <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp size={16} className="text-blue-400" />
+            <TrendingUp size={16} className="text-pf-info" />
             <span className="text-xs text-[var(--color-pf-text-tertiary)]">Attributed Volume</span>
           </div>
           <div className="text-2xl font-bold text-[var(--color-pf-text)]">${Number(stats.attributedVolume ?? 0).toLocaleString()}</div>

@@ -69,9 +69,10 @@ export function Component() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate('/support')}
-          className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated transition-colors"
+          className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+          aria-label="Back to support"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-4" aria-hidden="true" />
         </button>
         <h1 className="text-2xl font-semibold text-pf-text">New Support Ticket</h1>
       </div>
@@ -135,7 +136,7 @@ export function Component() {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             Submit Ticket

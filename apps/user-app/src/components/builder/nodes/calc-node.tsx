@@ -223,7 +223,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           <span className="text-[9px] opacity-70">{d.label}</span>
           <button
             onClick={onDelete}
-            className="p-0.5 rounded hover:bg-white/20 transition-colors"
+            className="p-0.5 rounded hover:bg-white/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             aria-label="Remove block"
             title="Remove block"
           >
@@ -241,7 +241,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
               <select
                 value={d.config[dropdownOptions.key] ?? dropdownOptions.options[0]?.value ?? ''}
                 onChange={(e) => onFieldChange(dropdownOptions.key, e.target.value)}
-                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-emerald-500/50 transition-colors"
+                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-success/50 transition-colors"
               >
                 {dropdownOptions.options.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -263,7 +263,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 placeholder="20"
                 value={d.config.windowSize ?? ''}
                 onChange={(e) => onFieldChange('windowSize', e.target.value)}
-                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-success/50 transition-colors"
               />
             </div>
           )}
@@ -280,7 +280,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                   placeholder="0"
                   value={d.config.min ?? ''}
                   onChange={(e) => onFieldChange('min', e.target.value)}
-                  className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                  className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-success/50 transition-colors"
                 />
               </div>
               <div>
@@ -292,7 +292,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                   placeholder="100"
                   value={d.config.max ?? ''}
                   onChange={(e) => onFieldChange('max', e.target.value)}
-                  className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                  className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-success/50 transition-colors"
                 />
               </div>
             </>
@@ -309,7 +309,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 placeholder="0"
                 value={d.config.decimals ?? ''}
                 onChange={(e) => onFieldChange('decimals', e.target.value)}
-                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-success/50 transition-colors"
               />
             </div>
           )}

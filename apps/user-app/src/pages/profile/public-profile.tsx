@@ -158,8 +158,8 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated transition-colors">
-            <ArrowLeft className="size-4" />
+          <button onClick={() => navigate(-1)} className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors" aria-label="Go back">
+            <ArrowLeft className="size-4" aria-hidden="true" />
           </button>
           <h1 className="text-2xl font-semibold text-pf-text">{profile.displayName ?? profile.username}</h1>
           {/* Inline score badge */}
@@ -172,15 +172,15 @@ export function Component() {
         </div>
         {isOwn ? (
           <Link to="/settings"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text-secondary hover:border-pf-border-strong transition-colors">
-            <Settings className="size-3.5" />
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text-secondary hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors">
+            <Settings className="size-3.5" aria-hidden="true" />
             Edit Profile
           </Link>
         ) : (
           <button
             onClick={toggleFollow}
             disabled={followLoading}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors ${
               profile.isFollowing
                 ? 'bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong'
                 : 'bg-pf-cyan-500 text-black hover:bg-pf-cyan-400'
@@ -205,7 +205,7 @@ export function Component() {
           {profile.avatarUrl ? (
             <img src={profile.avatarUrl} alt={`${profile.displayName ?? profile.username} avatar`} className="size-20 rounded-full object-cover" />
           ) : (
-            <div className="size-20 rounded-full bg-pf-surface flex items-center justify-center text-2xl font-bold text-cyan-400">
+            <div className="size-20 rounded-full bg-pf-surface flex items-center justify-center text-2xl font-bold text-pf-cyan-400">
               {initials}
             </div>
           )}

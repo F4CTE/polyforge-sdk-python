@@ -4,7 +4,7 @@ export function CtaBanner() {
   return (
     <section className="py-24" aria-labelledby="cta-heading">
       <div className="max-w-[1100px] mx-auto px-6">
-        <div className="relative overflow-hidden bg-pf-surface border border-pf-cyan-500/20 rounded-[20px] px-6 sm:px-12 py-12 sm:py-16 text-center">
+        <div className="relative overflow-hidden bg-pf-surface border border-pf-cyan-500/20 rounded-pf-lg px-6 sm:px-12 py-12 sm:py-16 text-center">
           {/* Glow */}
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] pointer-events-none"
@@ -45,7 +45,7 @@ export function CtaBanner() {
             Or{' '}
             <a
               href="/login"
-              className="text-pf-cyan-400 underline underline-offset-[3px] hover:text-pf-cyan-300 transition-colors"
+              className="text-pf-cyan-400 underline underline-offset-[3px] hover:text-pf-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
             >
               sign in to your existing account
             </a>

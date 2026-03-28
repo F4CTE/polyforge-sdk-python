@@ -136,7 +136,7 @@ export function Component() {
         <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Admin Accounts</h2>
         <button
           onClick={openAdd}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-pf-base)]"
         >
           <Plus size={14} />
           Add Admin
@@ -185,7 +185,7 @@ export function Component() {
                         a.role === 'SUPER_ADMIN'
                           ? 'text-pf-warning bg-pf-warning/10'
                           : a.role === 'ADMIN'
-                            ? 'text-blue-400 bg-blue-400/10'
+                            ? 'text-pf-info bg-pf-info/10'
                             : 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]'
                       }`}>
                         {roleLabel(a.role)}
@@ -196,7 +196,7 @@ export function Component() {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEdit(a)}
-                          className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text)] transition-colors"
+                          className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
                           aria-label="Edit admin"
                           title="Edit admin"
                         >
@@ -208,7 +208,7 @@ export function Component() {
                               setDeleteConfirmId(a.id);
                               setDeletePassword('');
                             }}
-                            className="p-1.5 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
+                            className="p-1.5 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-danger)]"
                             aria-label="Deactivate admin"
                             title="Deactivate admin"
                           >
@@ -235,7 +235,8 @@ export function Component() {
               </h3>
               <button
                 onClick={closeDialog}
-                className="p-1 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)]"
+                className="p-1 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
+                aria-label="Close dialog"
               >
                 <X size={18} />
               </button>
@@ -243,8 +244,9 @@ export function Component() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {dialogMode === 'add' && (
                 <div>
-                  <label className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1">Email</label>
+                  <label htmlFor="admin-email" className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1">Email</label>
                   <input
+                    id="admin-email"
                     type="email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -254,8 +256,9 @@ export function Component() {
                 </div>
               )}
               <div>
-                <label className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1">Display Name</label>
+                <label htmlFor="admin-display-name" className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1">Display Name</label>
                 <input
+                  id="admin-display-name"
                   type="text"
                   value={form.displayName}
                   onChange={(e) => setForm({ ...form, displayName: e.target.value })}
@@ -264,10 +267,11 @@ export function Component() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1">
+                <label htmlFor="admin-password" className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1">
                   Password{dialogMode === 'edit' ? ' (leave blank to keep)' : ''}
                 </label>
                 <input
+                  id="admin-password"
                   type="password"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -276,8 +280,9 @@ export function Component() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1">Role</label>
+                <label htmlFor="admin-role" className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1">Role</label>
                 <select
+                  id="admin-role"
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
                   className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
@@ -291,14 +296,14 @@ export function Component() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 py-2 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 transition-colors"
+                  className="flex-1 py-2 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-pf-elevated)]"
                 >
                   {submitting ? 'Saving...' : dialogMode === 'add' ? 'Create Admin' : 'Save Changes'}
                 </button>
                 <button
                   type="button"
                   onClick={closeDialog}
-                  className="px-4 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors"
+                  className="px-4 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
                 >
                   Cancel
                 </button>
@@ -318,24 +323,26 @@ export function Component() {
             <p className="text-sm text-[var(--color-pf-text-secondary)] mb-4">
               Enter your password to confirm this action.
             </p>
+            <label htmlFor="deactivate-password" className="sr-only">Your password</label>
             <input
+              id="deactivate-password"
               type="password"
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}
               placeholder="Your password"
-              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-red-500 mb-4"
+              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-danger)] mb-4"
             />
             <div className="flex gap-3">
               <button
                 onClick={handleDeactivate}
                 disabled={submitting || !deletePassword}
-                className="flex-1 py-2 text-sm font-medium rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/80 disabled:opacity-50 transition-colors"
+                className="flex-1 py-2 text-sm font-medium rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/80 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-danger)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-pf-elevated)]"
               >
                 {submitting ? 'Deactivating...' : 'Deactivate'}
               </button>
               <button
                 onClick={() => setDeleteConfirmId(null)}
-                className="px-4 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors"
+                className="px-4 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
               >
                 Cancel
               </button>

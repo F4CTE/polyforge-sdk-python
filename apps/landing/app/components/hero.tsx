@@ -2,7 +2,7 @@ import { WaitlistForm } from './waitlist-form';
 
 export function Hero() {
   return (
-    <header className="relative overflow-hidden py-[100px] pb-20 text-center">
+    <header className="relative overflow-hidden pt-16 sm:pt-[100px] pb-12 sm:pb-20 text-center">
       {/* Glow */}
       <div
         className="absolute -top-[200px] left-1/2 -translate-x-1/2 w-[900px] h-[900px] pointer-events-none"
@@ -63,13 +63,13 @@ export function Hero() {
         <WaitlistForm className="max-w-[480px] mx-auto mb-4" />
 
         <p className="mt-6">
-          <a href="#how-it-works" className="text-[13px] text-pf-text-muted hover:text-pf-text-secondary transition-colors">
-            See how it works &darr;
+          <a href="#how-it-works" className="text-[13px] text-pf-text-muted hover:text-pf-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors">
+            See how it works <span aria-hidden="true">&darr;</span>
           </a>
         </p>
 
         {/* Hero strategy builder canvas */}
-        <div className="max-w-[620px] mx-auto mt-6 bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden p-4 shadow-[0_24px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(6,182,212,0.06),0_0_60px_rgba(6,182,212,0.15)]">
+        <div className="max-w-[620px] mx-auto mt-6 bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden p-2 sm:p-4 shadow-pf-lg">
           <svg
             viewBox="0 0 560 300"
             fill="none"

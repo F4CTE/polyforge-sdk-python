@@ -114,9 +114,9 @@ export function Component() {
       {/* Back */}
       <button
         onClick={() => navigate('/tickets')}
-        className="flex items-center gap-1.5 text-sm text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)] transition-colors"
+        className="flex items-center gap-1.5 text-sm text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded-pf-sm"
       >
-        <ArrowLeft size={16} />
+        <ArrowLeft size={16} aria-hidden="true" />
         Back to tickets
       </button>
 
@@ -149,8 +149,9 @@ export function Component() {
         {/* Controls */}
         <div className="flex flex-wrap gap-4 pt-4 border-t border-[var(--color-pf-border)]">
           <div>
-            <label className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Status</label>
+            <label htmlFor="ticket-status" className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Status</label>
             <select
+              id="ticket-status"
               value={statusValue}
               onChange={(e) => handleStatusChange(e.target.value)}
               className="px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
@@ -162,8 +163,9 @@ export function Component() {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Assign To</label>
+            <label htmlFor="ticket-assign" className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Assign To</label>
             <select
+              id="ticket-assign"
               value={assignedTo}
               onChange={(e) => handleAssign(e.target.value)}
               className="px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
@@ -211,7 +213,9 @@ export function Component() {
         onSubmit={handleReply}
         className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4"
       >
+        <label htmlFor="ticket-reply" className="sr-only">Reply message</label>
         <textarea
+          id="ticket-reply"
           value={reply}
           onChange={(e) => setReply(e.target.value)}
           placeholder="Type your reply..."

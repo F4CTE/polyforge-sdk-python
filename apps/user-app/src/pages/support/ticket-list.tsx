@@ -31,13 +31,13 @@ interface TicketsResponse {
 const STATUS_STYLES: Record<TicketStatus, { text: string; bg: string }> = {
   OPEN:           { text: 'text-pf-cyan-400', bg: 'bg-pf-cyan-500/10' },
   AWAITING_USER:  { text: 'text-pf-warning', bg: 'bg-pf-warning/10' },
-  AWAITING_ADMIN: { text: 'text-blue-400', bg: 'bg-blue-500/10' },
+  AWAITING_ADMIN: { text: 'text-pf-info', bg: 'bg-pf-info/10' },
   CLOSED:         { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
 };
 
 const PRIORITY_STYLES: Record<TicketPriority, { text: string; bg: string }> = {
   LOW:    { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
-  MEDIUM: { text: 'text-blue-400', bg: 'bg-blue-500/10' },
+  MEDIUM: { text: 'text-pf-info', bg: 'bg-pf-info/10' },
   HIGH:   { text: 'text-pf-warning', bg: 'bg-pf-warning/10' },
   URGENT: { text: 'text-pf-danger', bg: 'bg-pf-danger/10' },
 };
@@ -82,7 +82,7 @@ export function Component() {
         <h1 className="text-2xl font-semibold text-pf-text">Support</h1>
         <Link
           to="/support/new"
-          className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
         >
           <Plus className="size-4" />
           New Ticket
@@ -166,7 +166,7 @@ export function Component() {
             <div key={idx} className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
               <button
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-pf-surface/50 transition-colors"
+                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-pf-surface/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40 transition-colors"
                 aria-expanded={openFaq === idx}
               >
                 <span className="text-sm font-medium text-pf-text">{item.q}</span>

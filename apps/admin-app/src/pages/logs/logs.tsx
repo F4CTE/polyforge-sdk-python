@@ -51,12 +51,14 @@ export function Component() {
       <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Logs</h2>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-1 w-fit">
+      <div className="flex gap-1 bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-1 w-fit" role="tablist" aria-label="Log type">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => changeTab(t.key)}
-            className={`px-4 py-1.5 text-sm rounded-pf-sm transition-colors ${
+            role="tab"
+            aria-selected={tab === t.key}
+            className={`px-4 py-1.5 text-sm rounded-pf-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] ${
               tab === t.key
                 ? 'bg-[var(--color-pf-cyan-500)]/10 text-[var(--color-pf-cyan-500)] font-medium'
                 : 'text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)]'
@@ -139,7 +141,7 @@ export function Component() {
                     {tab === 'events' && (
                       <>
                         <td className="px-4 py-3">
-                          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-violet-400/10 text-violet-400">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--color-pf-purple-500)]/10 text-[var(--color-pf-purple-500)]">
                             {log.type}
                           </span>
                         </td>

@@ -85,6 +85,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <aside
       data-tour="sidebar"
+      aria-label="Main navigation"
       className="flex flex-col h-full bg-pf-elevated border-r border-pf-border transition-all duration-200"
       style={{ width: collapsed ? 64 : 240, minWidth: collapsed ? 64 : 240 }}
     >
@@ -119,7 +120,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </div>
 
       {/* Nav sections */}
-      <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-4">
+      <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-4" aria-label="Primary">
         {navSections.map((section) => (
           <div key={section.title}>
             {!collapsed && (

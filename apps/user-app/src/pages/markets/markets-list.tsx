@@ -318,6 +318,7 @@ export function Component() {
         <input
           type="text"
           placeholder="Search markets..."
+          aria-label="Search markets"
           defaultValue=""
           onChange={(e) => onSearchInput(e.target.value)}
           className="w-full h-11 pl-11 pr-4 rounded-full bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors"
@@ -494,16 +495,18 @@ export function Component() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
+            aria-label="Previous page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
           </button>
-          <span className="text-sm font-mono text-pf-text-secondary">
-            {page} / {totalPages}
+          <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">
+            Page {page} of {totalPages}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
+            aria-label="Next page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />

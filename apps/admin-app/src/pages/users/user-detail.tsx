@@ -112,9 +112,9 @@ export function Component() {
       {/* Back */}
       <button
         onClick={() => navigate('/users')}
-        className="flex items-center gap-1.5 text-sm text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)] transition-colors"
+        className="flex items-center gap-1.5 text-sm text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded-pf-sm"
       >
-        <ArrowLeft size={16} />
+        <ArrowLeft size={16} aria-hidden="true" />
         Back to users
       </button>
 
@@ -209,12 +209,14 @@ export function Component() {
         {showSuspendDialog && (
           <div className="mt-4 p-4 rounded-pf-sm border border-pf-danger/20 bg-pf-danger/5">
             <h4 className="text-sm font-medium text-pf-danger mb-2">Suspend User</h4>
+            <label htmlFor="suspend-reason" className="sr-only">Reason for suspension</label>
             <textarea
+              id="suspend-reason"
               value={suspendReason}
               onChange={(e) => setSuspendReason(e.target.value)}
               placeholder="Reason for suspension..."
               rows={3}
-              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-red-500 mb-3"
+              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-danger)] mb-3"
             />
             <div className="flex gap-2">
               <button

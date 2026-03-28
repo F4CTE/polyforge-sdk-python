@@ -267,7 +267,9 @@ export function Component() {
     }));
   }, [pnl?.snapshots]);
   const isProfitable = parseFloat(pnl?.totalPnl ?? '0') >= 0;
-  const chartColor = isProfitable ? '#10B981' : '#EF4444';
+  const chartColor = isProfitable
+    ? (getComputedStyle(document.documentElement).getPropertyValue('--color-pf-success').trim() || '#10B981')
+    : (getComputedStyle(document.documentElement).getPropertyValue('--color-pf-danger').trim() || '#EF4444');
 
   return (
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">

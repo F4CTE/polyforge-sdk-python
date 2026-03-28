@@ -195,9 +195,9 @@ export function Component() {
       <div className="flex items-center gap-3 px-4 py-2.5 border-b border-pf-border-subtle bg-pf-elevated/50 shrink-0">
         <Link
           to="/strategies"
-          className="flex items-center gap-1.5 text-xs text-pf-text-secondary hover:text-pf-text transition-colors"
+          className="flex items-center gap-1.5 text-xs text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
         >
-          <ArrowLeft className="size-3" />
+          <ArrowLeft className="size-3" aria-hidden="true" />
           Strategies
         </Link>
 
@@ -261,7 +261,7 @@ export function Component() {
           <button
             onClick={onSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm bg-pf-cyan-500 text-black text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm bg-pf-cyan-500 text-black text-xs font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 transition-colors"
           >
             {saving ? (
               <Loader2 className="size-3 animate-spin" />
@@ -300,7 +300,7 @@ export function Component() {
             <div className="absolute bottom-4 left-4 z-40 bg-pf-elevated border border-pf-border rounded-pf-lg p-4 shadow-pf-lg max-w-xs">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold text-pf-text uppercase tracking-wider">Quick Test Results</span>
-                <button onClick={() => setQuickResult(null)} className="text-pf-text-muted hover:text-pf-text text-xs">&times;</button>
+                <button onClick={() => setQuickResult(null)} className="text-pf-text-muted hover:text-pf-text text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Close quick test results">&times;</button>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-pf-surface rounded-pf p-2">

@@ -53,6 +53,7 @@ export function Component() {
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          aria-label="Filter by report status"
           className="px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
         >
           <option value="">All statuses</option>
@@ -151,7 +152,9 @@ export function Component() {
       {reviewingId && (
         <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
           <h3 className="text-sm font-semibold text-[var(--color-pf-text)] mb-3">Review Report</h3>
+          <label htmlFor="admin-note" className="sr-only">Admin note</label>
           <textarea
+            id="admin-note"
             value={adminNote}
             onChange={(e) => setAdminNote(e.target.value)}
             placeholder="Admin note (optional)..."

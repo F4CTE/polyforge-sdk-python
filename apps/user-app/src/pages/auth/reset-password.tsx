@@ -77,7 +77,7 @@ export function Component() {
               <p className="text-sm text-pf-text-muted mb-6">Choose a strong password.</p>
 
               {error && (
-                <div className="flex items-center gap-2 bg-pf-danger/10 border border-pf-danger/20 text-pf-danger rounded-pf px-4 py-3 mb-4 text-sm">
+                <div role="alert" className="flex items-center gap-2 bg-pf-danger/10 border border-pf-danger/20 text-pf-danger rounded-pf px-4 py-3 mb-4 text-sm">
                   <AlertCircle className="size-4 shrink-0" />
                   <span>{error}</span>
                 </div>
@@ -125,7 +125,7 @@ export function Component() {
                 <button
                   type="submit"
                   disabled={loading || !token}
-                  className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
                 >
                   {loading ? 'Resetting...' : 'Reset password'}
                 </button>
@@ -140,7 +140,7 @@ export function Component() {
               <p className="text-sm text-pf-text-muted mb-6">You can now sign in with your new password.</p>
               <Link
                 to="/login"
-                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors"
+                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
               >
                 Sign in
               </Link>

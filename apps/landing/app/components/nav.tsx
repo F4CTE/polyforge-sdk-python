@@ -49,7 +49,7 @@ function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label={isLight ? 'Switch to dark mode' : 'Switch to light mode'}
-      className="inline-flex items-center justify-center w-9 h-9 rounded-pf-sm border border-pf-border-subtle text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors"
+      className="inline-flex items-center justify-center w-9 h-9 rounded-pf-sm border border-pf-border-subtle text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 transition-colors"
     >
       {isLight ? (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -84,7 +84,7 @@ export function Nav() {
       <div className="flex items-center gap-8 h-16 max-w-[1100px] mx-auto px-6">
         <a
           href="/"
-          className="flex items-center gap-2 text-[17px] font-bold text-pf-text shrink-0"
+          className="flex items-center gap-2 text-[17px] font-bold text-pf-text shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
           aria-label="Polyforge home"
         >
           <PolyforgeIcon className="text-pf-cyan-400" />
@@ -94,31 +94,31 @@ export function Nav() {
         <div className="hidden md:flex gap-6 mr-auto">
           <a
             href="#features"
-            className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors duration-150"
+            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-150"
           >
             Features
           </a>
           <a
             href="#how-it-works"
-            className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors duration-150"
+            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-150"
           >
             How it works
           </a>
           <a
             href="/terms"
-            className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors duration-150"
+            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-150"
           >
             Terms
           </a>
           <a
             href="/api-docs"
-            className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors duration-150"
+            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-150"
           >
             API Docs
           </a>
           <a
             href="/privacy"
-            className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors duration-150"
+            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-150"
           >
             Privacy
           </a>
@@ -128,22 +128,23 @@ export function Nav() {
           <ThemeToggle />
           <a
             href="/login"
-            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-transparent text-pf-text-secondary border border-pf-border-subtle hover:text-pf-text hover:bg-pf-elevated transition-colors"
+            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-transparent text-pf-text-secondary border border-pf-border-subtle hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 transition-colors"
           >
             Sign in
           </a>
           <a
             href="/register"
-            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5"
+            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
           >
             Start building free
           </a>
         </div>
 
         <button
-          className="flex md:hidden flex-col gap-1.5 bg-transparent border-none cursor-pointer p-1 ml-auto"
+          className="flex md:hidden flex-col gap-1.5 bg-transparent border-none cursor-pointer p-1 ml-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={mobileOpen}
+          aria-controls="mobile-nav-menu"
           onClick={() => setMobileOpen(!mobileOpen)}
         >
           {mobileOpen ? (
@@ -161,7 +162,7 @@ export function Nav() {
       </div>
 
       {mobileOpen && (
-        <div className="flex md:hidden flex-col gap-1 px-6 pb-4 border-t border-pf-border-subtle">
+        <div id="mobile-nav-menu" className="flex md:hidden flex-col gap-1 px-6 pb-4 border-t border-pf-border-subtle">
           {[
             { href: '#features', label: 'Features' },
             { href: '#how-it-works', label: 'How it works' },
@@ -172,7 +173,7 @@ export function Nav() {
               key={href}
               href={href}
               onClick={() => setMobileOpen(false)}
-              className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text transition-colors"
+              className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
             >
               {label}
             </a>
@@ -180,7 +181,7 @@ export function Nav() {
           <a
             href="/register"
             onClick={() => setMobileOpen(false)}
-            className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5"
+            className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
           >
             Start building free
           </a>

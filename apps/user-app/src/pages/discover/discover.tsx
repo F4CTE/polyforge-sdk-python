@@ -121,6 +121,7 @@ export function Component() {
         <input
           type="text"
           placeholder="Search strategies..."
+          aria-label="Search strategies"
           value={searchQuery}
           onChange={e => { setSearchQuery(e.target.value); }}
           className="w-full pl-10 pr-4 py-2.5 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted"
@@ -252,14 +253,16 @@ export function Component() {
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
+            aria-label="Previous page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
           </button>
-          <span className="text-sm font-mono text-pf-text-secondary">{page} / {totalPages}</span>
+          <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
+            aria-label="Next page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />

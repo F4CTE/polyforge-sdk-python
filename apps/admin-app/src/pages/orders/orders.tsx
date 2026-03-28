@@ -73,6 +73,7 @@ export function Component() {
         <select
           value={statusFilter}
           onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+          aria-label="Filter by order status"
           className="h-8 px-2 rounded-pf-sm bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] text-xs text-[var(--color-pf-text)] focus:outline-none focus:border-[var(--color-pf-cyan-500)]"
         >
           <option value="">All statuses</option>
@@ -143,7 +144,7 @@ export function Component() {
                     <>
                       <button
                         onClick={() => setConfirmAction({ type: 'replay', intentId: entry.intentId })}
-                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-info/10 text-pf-info hover:bg-pf-info/20 transition-colors"
                       >
                         <RotateCcw size={12} />
                         Replay

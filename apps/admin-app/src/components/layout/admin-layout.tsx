@@ -24,7 +24,7 @@ export function Component() {
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div className="absolute inset-0 bg-black/50" role="presentation" onClick={() => setMobileOpen(false)} />
           <div className="relative z-50 h-full">
             <AdminSidebar collapsed={false} onToggle={() => setMobileOpen(false)} onNavigate={() => setMobileOpen(false)} />
           </div>
@@ -33,7 +33,7 @@ export function Component() {
 
       <div className="flex flex-col flex-1 min-w-0">
         <AdminTopbar onMenuClick={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="animate-fade-in">
             <Outlet />
           </div>
