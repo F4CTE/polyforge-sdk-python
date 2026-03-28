@@ -19,6 +19,7 @@ type Response = FastifyReply;
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
 import { StrategiesService } from "./strategies.service";
+import { StrategyEventsService } from "../gateway/strategy-events.service";
 import { CreateStrategyDto } from "./dto/create-strategy.dto";
 import { UpdateStrategyDto } from "./dto/update-strategy.dto";
 import { StartStrategyDto } from "./dto/start-strategy.dto";
@@ -34,7 +35,10 @@ import { PaginationDto } from "../common/dto/pagination.dto";
 @Controller("strategies")
 @UseGuards(JwtAuthGuard)
 export class StrategiesController {
-  constructor(private readonly strategies: StrategiesService) {}
+  constructor(
+    private readonly strategies: StrategiesService,
+    private readonly strategyEvents: StrategyEventsService,
+  ) {}
 
   @Get("templates")
   listTemplates(@Query() query: PaginationDto) {
@@ -84,6 +88,53 @@ export class StrategiesController {
   @RequireScopes('WRITE')
   remove(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.strategies.remove(id, user.sub);
+  }
+
+  /**
+   * SSE stream of execution events for a running strategy.
+   *
+   * Authenticated via API key (Bearer token) with READ scope.
+   * Sends `data: <JSON>\n\n` frames; heartbeat comment every 15 s.
+   * Subscribes to in-process StrategyEventsService which is fed from stream:events.
+   */
+  @Get(":id/events")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes("READ")
+  async streamEvents(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: any,
+    @Res() res: Response,
+  ): Promise<void> {
+    // Verify the strategy exists and belongs to this user (throws 404/403 otherwise)
+    await this.strategies.findOne(id, user.sub);
+
+    const raw = (res as any).raw as import("http").ServerResponse;
+
+    raw.statusCode = 200;
+    raw.setHeader("Content-Type", "text/event-stream");
+    raw.setHeader("Cache-Control", "no-cache, no-transform");
+    raw.setHeader("X-Accel-Buffering", "no");
+    raw.setHeader("Connection", "keep-alive");
+    raw.flushHeaders();
+
+    const send = (payload: unknown): void => {
+      raw.write(`data: ${JSON.stringify(payload)}\n\n`);
+    };
+
+    // Initial connected event so clients know the stream is live
+    send({ type: "CONNECTED", strategyId: id, timestamp: Date.now() });
+
+    const unsub = this.strategyEvents.subscribe(id, (event) => send(event));
+
+    // Keepalive comment every 15 s (prevents proxy timeouts)
+    const heartbeat = setInterval(() => {
+      raw.write(": heartbeat\n\n");
+    }, 15000);
+
+    (raw as any).on("close", () => {
+      clearInterval(heartbeat);
+      unsub();
+    });
   }
 
   @Get(":id/export")

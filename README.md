@@ -38,7 +38,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Educational onboarding** — guided tour, checklist widget, and 5 pre-built strategy templates for new users
 - **Future features planned** — arbitrage scanner, multi-platform aggregation, browser extension, mobile app, fund management, UMA oracle dashboard, LP/market making (see [`docs/19-future-features.md`](./docs/19-future-features.md))
 
-> **Current version: v6.6.0.** Full security audit with 40 issues resolved. Strategy builder UX complete: wiring semantics, guided tutorial, block validation, execution animations. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
+> **Current version: v6.7.0.** Strategy execution watching: `GET /api/v1/strategies/:id/events` SSE endpoint + `watchStrategy()` in TypeScript, Python, and Rust SDKs; MCP `get_strategy_events` polling tool. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
 
 ---
 
@@ -239,6 +239,7 @@ Polyforge exposes a full AI integration layer for Claude, GPT, and other AI assi
 - **Webhooks** with HMAC-SHA256 signed payloads for real-time event callbacks
 - **Natural language query** at `POST /api/v1/ai/query` for structured data retrieval
 - **Strategy from description** at `POST /api/v1/strategies/from-description` for LLM-generated strategies
+- **Strategy execution SSE** at `GET /api/v1/strategies/:id/events` for live execution watching (TypeScript/Python/Rust SDKs expose `watchStrategy`/`watch_strategy`)
 
 ### Claude Desktop Integration (MCP Server)
 
@@ -253,7 +254,7 @@ export POLYFORGE_API_URL=http://localhost:3002   # or your production URL
 export POLYFORGE_API_KEY=pf_your_api_key_here    # API key with desired scopes
 ```
 
-The MCP server provides 22 tools for Claude Desktop covering markets, strategies, portfolio, orders (including `place_order` and `cancel_order`), whales, news, scores, alerts, copy trading, and webhooks.
+The MCP server provides 23 tools for Claude Desktop covering markets, strategies, portfolio, orders (including `place_order` and `cancel_order`), whales, news, scores, alerts, copy trading, webhooks, and `get_strategy_events` for polling live execution events.
 
 ---
 

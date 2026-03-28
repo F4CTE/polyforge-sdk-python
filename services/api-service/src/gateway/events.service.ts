@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { RedisService } from "@polyforge/shared-redis";
 import { EventsGateway } from "./events.gateway";
+import { StrategyEventsService } from "./strategy-events.service";
 
 const STREAM = "stream:events";
 const GROUP = "api-service";
@@ -28,6 +29,7 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly redis: RedisService,
     private readonly gateway: EventsGateway,
+    private readonly strategyEvents: StrategyEventsService,
   ) {}
 
   async onModuleInit() {
@@ -101,6 +103,13 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
     const { type, strategyId, userId, orderId, tokenId, reason, ...rest } =
       event;
     if (!type) return;
+
+    // Fan-out to SSE strategy-event subscribers for any event that carries a strategyId
+    if (strategyId) {
+      this.strategyEvents.emit(strategyId, type, {
+        userId, orderId, tokenId, reason, ...rest,
+      });
+    }
 
     switch (type) {
       case "PRICE_UPDATE":

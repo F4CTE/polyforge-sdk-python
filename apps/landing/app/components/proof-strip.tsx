@@ -2,7 +2,7 @@ const stats = [
   { number: '50+', label: 'Strategy blocks' },
   { number: '24/7', label: 'Execution' },
   { number: '< 50 ms', label: 'Latency' },
-  { number: 'AI', label: 'Powered signals' },
+  { number: '3', label: 'Official SDKs' },
 ];
 
 export function ProofStrip() {

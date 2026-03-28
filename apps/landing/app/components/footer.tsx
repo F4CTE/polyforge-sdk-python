@@ -61,6 +61,15 @@ const footerLinks = [
     ],
   },
   {
+    title: 'Developers',
+    links: [
+      { label: 'API Reference', href: '/api-docs' },
+      { label: 'TypeScript SDK', href: 'https://www.npmjs.com/package/@polyforge/sdk' },
+      { label: 'Python SDK', href: 'https://pypi.org/project/polyforge' },
+      { label: 'MCP Server', href: 'https://www.npmjs.com/package/@polyforge/mcp-server' },
+    ],
+  },
+  {
     title: 'Legal',
     links: [
       { label: 'Terms of Service', href: '/terms' },

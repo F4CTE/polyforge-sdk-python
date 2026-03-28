@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.7.0] — 2026-03-29
+
+### Added
+- **Strategy execution SSE endpoint** (`GET /api/v1/strategies/:id/events`) — streams live execution events to external clients over Server-Sent Events; authenticated via API key Bearer token with READ scope; sends a `CONNECTED` event on connection, then `STRATEGY_*`, `ORDER_*`, and `BACKTEST_*` events as they arrive; heartbeat comment every 15 s to prevent proxy timeouts
+- **`StrategyEventsService`** — in-process Node.js `EventEmitter` that fans out Redis stream events (keyed by `strategyId`) to all active SSE subscribers; max-listeners set to 500 for high-concurrency deployments
+- **TypeScript SDK `watchStrategy(id, signal?)`** — `AsyncGenerator<StrategyEvent>` that opens the SSE stream using `fetch`; parses `data:` frames; handles abort signals and connection close cleanly
+- **Python SDK `watch_strategy(strategy_id)`** — sync and async generators (both `PolyforgeClient` and `AsyncPolyforgeClient`) using `httpx` streaming; yields `StrategyEvent` dataclass instances
+- **Rust SDK `watch_strategy(strategy_id)`** — returns `StrategyEventStream`, a poll-style async reader (`.next().await`) backed by `reqwest::Response::chunk()`; no extra crate dependencies required
+- **MCP tool `get_strategy_events`** — polling approximation for MCP's request-response model; opens the SSE stream, collects up to `limit` events newer than `after_timestamp`, closes the connection, and returns the batch with a `nextAfterTimestamp` cursor for follow-up calls
+- **`StrategyEvent` type** added to all three SDKs: TypeScript (`types.ts`), Python (`models.py`), Rust (`types.rs`)
+
+### Changed
+- `EventsService.dispatch()` — now also emits to `StrategyEventsService` for every event that carries a `strategyId`; zero change in WebSocket behaviour
+- `StrategiesModule` — imports `EventsModule` to access `StrategyEventsService`
+
+---
+
 ## [6.6.0] — 2026-03-28
 
 ### Added

@@ -141,3 +141,56 @@ interface ExecutionState {
 ```
 
 `execution-panel.tsx` drives the store; `block-node.tsx` and `strategy-canvas.tsx` read from it.
+
+---
+
+## External Execution Watching (SSE)
+
+### Goal
+
+Allow external SDK clients (TypeScript, Python, Rust) and the MCP server to observe live strategy execution events without requiring WebSocket auth, which uses JWT and is not suited for API-key-authenticated tooling.
+
+### Architecture
+
+```
+Redis stream:events
+       │
+       ▼
+  EventsService.dispatch()
+       │  (if strategyId present)
+       ▼
+  StrategyEventsService          ← in-process Node.js EventEmitter
+       │  emitter keyed by `s:<strategyId>`
+       ├──▶  SSE subscriber A  (SDK client 1)
+       ├──▶  SSE subscriber B  (SDK client 2)
+       └──▶  SSE subscriber C  (MCP poll)
+```
+
+### Endpoint
+
+`GET /api/v1/strategies/:id/events`
+
+- **Auth:** API key Bearer token, `READ` scope
+- **Protocol:** `text/event-stream`, `data: <JSON>\n\n` frames
+- **Heartbeat:** `: heartbeat\n\n` comment every 15 s
+- **First event:** always `{ type: "CONNECTED", strategyId, timestamp }`
+
+### Event schema
+
+```json
+{
+  "type": "ORDER_FILLED",
+  "strategyId": "uuid",
+  "data": { "orderId": "...", "price": 0.62 },
+  "timestamp": 1711720000000
+}
+```
+
+### SDK interfaces
+
+| SDK | Interface |
+|-----|-----------|
+| TypeScript | `client.watchStrategy(id, signal?): AsyncGenerator<StrategyEvent>` |
+| Python | `client.watch_strategy(id): Iterator/AsyncIterator[StrategyEvent]` |
+| Rust | `client.watch_strategy(id).await? → StrategyEventStream` (poll `.next().await`) |
+| MCP | `get_strategy_events` tool — cursor-based batch polling |

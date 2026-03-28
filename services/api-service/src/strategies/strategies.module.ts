@@ -4,9 +4,10 @@ import { StrategiesController } from "./strategies.controller";
 import { StrategiesService } from "./strategies.service";
 import { InternalClientService } from "../common/services/internal-client.service";
 import { LlmService } from "../news/llm.service";
+import { EventsModule } from "../gateway/events.module";
 
 @Module({
-  imports: [JwtModule.register({})],
+  imports: [JwtModule.register({}), EventsModule],
   controllers: [StrategiesController],
   providers: [StrategiesService, InternalClientService, LlmService],
   exports: [StrategiesService],

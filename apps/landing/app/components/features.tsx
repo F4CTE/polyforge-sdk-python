@@ -212,9 +212,9 @@ const features = [
     ),
   },
   {
-    title: 'Developer API',
+    title: 'Developer API & SDKs',
     description:
-      'Scoped API keys with READ, WRITE, and TRADE permissions for external tools, AI agents, and custom bots. Build on top of Polyforge.',
+      'TypeScript, Python, and Rust SDKs with full API coverage. MCP server for Claude Desktop (23 tools). Live execution watching via SSE, webhooks, and natural language queries.',
     gradientClass: 'from-pf-purple-400/[0.04]',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -224,15 +224,16 @@ const features = [
     ),
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="20" y="12" width="160" height="76" rx="6" fill="rgba(6,182,212,0.04)" stroke="rgba(6,182,212,0.2)" strokeWidth="1" />
-        <circle cx="32" cy="22" r="3" fill="rgba(239,68,68,0.5)" />
-        <circle cx="42" cy="22" r="3" fill="rgba(245,158,11,0.5)" />
-        <circle cx="52" cy="22" r="3" fill="rgba(34,197,94,0.5)" />
-        <line x1="20" y1="30" x2="180" y2="30" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-        <text x="30" y="45" fill="#22d3ee" fontSize="7" fontFamily="JetBrains Mono, monospace">$ curl -H &quot;X-API-Key:&quot;</text>
-        <text x="30" y="58" fill="#4ade80" fontSize="7" fontFamily="JetBrains Mono, monospace">{'{ "scopes": ["TRADE"] }'}</text>
-        <text x="30" y="71" fill="#9898b0" fontSize="7" fontFamily="JetBrains Mono, monospace">{`200 OK  \u00b7  14ms`}</text>
-        <text x="30" y="82" fill="#5a5a72" fontSize="7" fontFamily="JetBrains Mono, monospace">READ / WRITE / TRADE</text>
+        <rect x="10" y="8" width="180" height="84" rx="6" fill="rgba(6,182,212,0.04)" stroke="rgba(6,182,212,0.2)" strokeWidth="1" />
+        <circle cx="22" cy="18" r="3" fill="rgba(239,68,68,0.5)" />
+        <circle cx="32" cy="18" r="3" fill="rgba(245,158,11,0.5)" />
+        <circle cx="42" cy="18" r="3" fill="rgba(34,197,94,0.5)" />
+        <line x1="10" y1="26" x2="190" y2="26" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+        <text x="20" y="39" fill="#5a5a72" fontSize="6.5" fontFamily="JetBrains Mono, monospace">import {'{'} PolyforgeClient {'}'} from</text>
+        <text x="20" y="50" fill="#c084fc" fontSize="6.5" fontFamily="JetBrains Mono, monospace">&apos;@polyforge/sdk&apos;;</text>
+        <text x="20" y="63" fill="#22d3ee" fontSize="6.5" fontFamily="JetBrains Mono, monospace">for await (const event of</text>
+        <text x="20" y="74" fill="#22d3ee" fontSize="6.5" fontFamily="JetBrains Mono, monospace">  client.watchStrategy(id)) {'{'}</text>
+        <text x="20" y="85" fill="#4ade80" fontSize="6.5" fontFamily="JetBrains Mono, monospace">  console.log(event.type); {'}'}</text>
       </svg>
     ),
   },

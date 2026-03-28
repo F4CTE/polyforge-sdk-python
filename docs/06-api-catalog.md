@@ -720,6 +720,47 @@ Start a live strategy.
 
 ---
 
+#### GET /api/v1/strategies/:id/events _(SSE)_
+
+Stream live execution events for a strategy over **Server-Sent Events**.
+
+**Auth:** API key Bearer token · Scope: `READ`
+
+**Response `200` — `Content-Type: text/event-stream`**
+
+Each frame is a `data: <JSON>\n\n` line. A heartbeat comment (`: heartbeat`) is sent every 15 s.
+
+Event schema:
+```json
+{
+  "type": "ORDER_FILLED",
+  "strategyId": "uuid",
+  "data": { "orderId": "...", "price": 0.62 },
+  "timestamp": 1711720000000
+}
+```
+
+First event after connection is always `{ "type": "CONNECTED", ... }`.
+
+Common event types: `CONNECTED` · `STRATEGY_STARTED` · `STRATEGY_STOPPED` · `STRATEGY_ERROR` · `ORDER_PLACED` · `ORDER_FILLED` · `ORDER_CANCELLED` · `BACKTEST_PROGRESS` · `BACKTEST_COMPLETED` · `BACKTEST_FAILED`
+
+**Errors:** `403 FORBIDDEN` (wrong scope) · `404 NOT_FOUND` (strategy not found or not yours)
+
+**SDK usage:**
+```ts
+// TypeScript
+for await (const event of client.watchStrategy(id, abortController.signal)) { ... }
+
+// Python async
+async for event in client.watch_strategy(id): ...
+
+// Rust
+let mut stream = client.watch_strategy(id).await?;
+while let Some(event) = stream.next().await { ... }
+```
+
+---
+
 #### GET /api/v1/strategies/:id/children
 
 List child (sub) strategies of a parent strategy.
