@@ -480,15 +480,4 @@ for pos in portfolio.positions:
         <h2 className="text-lg font-semibold text-pf-text">AI Integration (MCP)</h2>
         <p className="text-sm text-pf-text-secondary leading-relaxed">
           Connect AI assistants like Claude to Polyforge using the{' '}
-          <span className="text-pf-text font-medium">Model Context Protocol</span> server:
-        </p>
-        <pre className="bg-pf-surface border border-pf-border rounded-pf p-3 text-[11px] font-mono text-pf-text overflow-x-auto whitespace-pre-wrap">
-{`npx @polyforge/mcp-server`}
-        </pre>
-        <p className="text-xs text-pf-text-muted">
-          22 tools available: browse markets, place orders, manage strategies, view portfolio, and more.
-        </p>
-      </section>
-    </div>
-  );
-}
+    

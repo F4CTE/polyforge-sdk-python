@@ -213,26 +213,4 @@ export function Component() {
         onSubmit={handleReply}
         className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4"
       >
-        <label htmlFor="ticket-reply" className="sr-only">Reply message</label>
-        <textarea
-          id="ticket-reply"
-          value={reply}
-          onChange={(e) => setReply(e.target.value)}
-          placeholder="Type your reply..."
-          rows={4}
-          className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] mb-3 resize-y"
-        />
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={sending || !reply.trim()}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <Send size={14} />
-            {sending ? 'Sending...' : 'Reply'}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-}
+        <label htmlFor="ticket-reply" className="sr-only">R

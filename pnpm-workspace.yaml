@@ -1,5 +1,7 @@
 packages:
   - "apps/*"
+  - "!apps/gateway"
   - "packages/*"
   - "services/*"
+  - "!services/gateway"
   - "tests/e2e"

@@ -24,7 +24,4 @@ export default function LandingPage() {
         <HowItWorks />
         <CtaBanner />
       </main>
-      <Footer />
-    </>
-  );
-}
+      

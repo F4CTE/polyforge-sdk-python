@@ -273,15 +273,4 @@ export function Features() {
 
                 <h3 className="text-[17px] font-semibold text-pf-text mb-2.5">
                   {feature.title}
-                </h3>
-                <p className="text-sm text-pf-text-secondary leading-7">
-                  {feature.description}
-                </p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+                </h3

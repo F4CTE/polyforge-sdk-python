@@ -112,17 +112,4 @@ export function Hero() {
             <text x="300" y="213" textAnchor="middle" fill="#9898b0" fontSize="9" fontFamily="Inter, sans-serif">Kelly criterion</text>
 
             {/* Block 5: Execute */}
-            <rect x="420" y="120" width="120" height="60" rx="10" fill="rgba(74,222,128,0.06)" stroke="rgba(74,222,128,0.3)" strokeWidth="1.5" />
-            <text x="480" y="143" textAnchor="middle" fill="#4ade80" fontSize="10" fontFamily="Inter, sans-serif" fontWeight="600">EXECUTE</text>
-            <text x="480" y="163" textAnchor="middle" fill="#9898b0" fontSize="9" fontFamily="Inter, sans-serif">Buy YES @ market</text>
-
-            {/* Live pulse */}
-            <circle cx="530" cy="128" r="4" fill="#4ade80">
-              <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" />
-            </circle>
-          </svg>
-        </div>
-      </div>
-    </header>
-  );
-}
+            <rect x="420" y="120" width="120" height

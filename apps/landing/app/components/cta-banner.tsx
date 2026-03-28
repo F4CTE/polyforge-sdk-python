@@ -45,13 +45,4 @@ export function CtaBanner() {
             Or{' '}
             <a
               href="/login"
-              className="text-pf-cyan-400 underline underline-offset-[3px] hover:text-pf-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
-            >
-              sign in to your existing account
-            </a>
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
+              className="text-pf-cyan-400 underline underline-offset-[3px] hover:text-pf-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-color

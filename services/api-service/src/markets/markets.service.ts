@@ -8,6 +8,15 @@ import { MarketQueryDto, PriceHistoryQueryDto } from "./dto/market-query.dto";
 export class MarketsService implements OnModuleInit {
   private readonly logger = new Logger(MarketsService.name);
 
+  // Whitelist of allowed ORDER BY expressions - SQL injection protection
+  private readonly allowedSortColumns = new Map<string, string>([
+    ['endDate', 'm."endDate" ASC NULLS LAST'],
+    ['closing_soon', 'm."endDate" ASC NULLS LAST'],
+    ['firstSeenAt', 'm."firstSeenAt" DESC'],
+    ['newest', 'm."firstSeenAt" DESC'],
+    ['volume', 'm.volume24h DESC'],
+  ]);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
@@ -78,10 +87,8 @@ export class MarketsService implements OnModuleInit {
     }
 
     // Single raw SQL query — Prisma ORM adds ~5-15s overhead on resource-limited hosts
-    const orderCol =
-      sort === "endDate" || sort === "closing_soon" ? "m.\"endDate\" ASC NULLS LAST"
-      : sort === "firstSeenAt" || sort === "newest" ? "m.\"firstSeenAt\" DESC"
-      : "m.volume24h DESC";
+    // Validate sort parameter against whitelist to prevent SQL injection
+    const orderCol = this.allowedSortColumns.get(sort) || this.allowedSortColumns.get('volume');
 
     let whereClause = "WHERE 1=1";
     const params: any[] = [];

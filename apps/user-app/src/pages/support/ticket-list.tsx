@@ -177,14 +177,4 @@ export function Component() {
                 )}
               </button>
               {openFaq === idx && (
-                <div className="px-4 pb-3 text-sm text-pf-text-secondary leading-relaxed border-l-2 border-pf-cyan-500/40 ml-4 mr-4">
-                  {item.a}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+                <div className="px-4 pb-3

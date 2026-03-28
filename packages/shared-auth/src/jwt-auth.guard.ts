@@ -11,10 +11,11 @@ import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { createHash } from "crypto";
 
-// ── JWT verification cache (in-memory, 5s TTL) ──────────────────────────────
+// ── JWT verification cache (in-memory, 5s TTL with LRU eviction) ────────────
 // Avoids re-verifying the same JWT token on every request within the TTL window.
 // Reduced from 30s to 5s to minimize the post-password-change attack window.
 // Also checks Redis pwchange key to immediately invalidate cached tokens.
+// Uses LRU eviction: when cache exceeds max size, deletes oldest entries first.
 const JWT_CACHE = new Map<string, { user: any; expiresAt: number }>();
 const JWT_CACHE_TTL = 5_000; // 5 seconds (reduced from 30s for security)
 const MAX_CACHE_SIZE = 10_000;
@@ -30,9 +31,16 @@ function getCachedJwtUser(token: string): any | null {
 }
 
 function setCachedJwtUser(token: string, user: any): void {
-  // Evict all entries if cache is too large (simple bounded cache)
+  // LRU eviction: delete oldest entries when cache is at max capacity
   if (JWT_CACHE.size >= MAX_CACHE_SIZE) {
-    JWT_CACHE.clear();
+    // Map preserves insertion order; delete the oldest 10% of entries
+    const entriesToDelete = Math.ceil(MAX_CACHE_SIZE * 0.1);
+    let deleted = 0;
+    for (const key of JWT_CACHE.keys()) {
+      if (deleted >= entriesToDelete) break;
+      JWT_CACHE.delete(key);
+      deleted++;
+    }
   }
   JWT_CACHE.set(token, { user, expiresAt: Date.now() + JWT_CACHE_TTL });
 }
@@ -138,9 +146,12 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
           where: { id: apiKey.id },
           data: { lastUsedAt: new Date(), lastUsedIp: ip },
         })
-        .catch((err: unknown) =>
-          this.logger.warn("Failed to update API key usage", err),
-        );
+        .catch((err: unknown) => {
+          this.logger.error("Failed to update API key usage", {
+            error: err instanceof Error ? err.message : String(err),
+            keyId: apiKey.id,
+          });
+        });
 
       return true;
     }

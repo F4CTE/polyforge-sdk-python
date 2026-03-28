@@ -1,5 +1,6 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, BadRequestException } from "@nestjs/common";
 import { RedisService } from "@polyforge/shared-redis";
+import { FlushCacheDto } from "./flush-cache.dto";
 
 @Injectable()
 export class CacheAdminService {
@@ -53,9 +54,12 @@ export class CacheAdminService {
   }
 
   async flushPattern(pattern: string): Promise<{ keysDeleted: number }> {
-    // Sanitize — only allow cache:* patterns, not dangerous patterns
-    if (!pattern.startsWith("cache:")) {
-      return { keysDeleted: 0 };
+    // Validate pattern is in whitelist to prevent dangerous flushes
+    if (!FlushCacheDto.isAllowed(pattern)) {
+      throw new BadRequestException(
+        `Pattern "${pattern}" is not allowed. ` +
+        `Allowed patterns: ${FlushCacheDto.ALLOWED_PATTERNS.join(", ")}`,
+      );
     }
 
     const client = this.redis.getClient();

@@ -116,14 +116,4 @@ export function ProductPreview() {
 
               <rect x="560" y="340" width="264" height="70" rx="10" fill="#12121a" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
               <text x="580" y="364" fill="#f0f0f5" fontSize="11" fontFamily="Inter, sans-serif" fontWeight="500">Fed Rate Cut Jul</text>
-              <text x="580" y="382" fill="#5a5a72" fontSize="9" fontFamily="Inter, sans-serif">{'YES 0.73  \u00b7  NO 0.27'}</text>
-              <text x="780" y="364" fill="#22d3ee" fontSize="10" fontFamily="JetBrains Mono, monospace" textAnchor="end">$620K vol</text>
-              <rect x="580" y="394" width="100" height="4" rx="2" fill="rgba(255,255,255,0.06)" />
-              <rect x="580" y="394" width="73" height="4" rx="2" fill="rgba(6,182,212,0.5)" />
-            </svg>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
+              <text x="580" y="382" fill="#5a5a72" fontSize="9" fontFamily="Inter, san

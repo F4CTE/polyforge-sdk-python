@@ -271,24 +271,4 @@ export function TooltipTour() {
             )}
             <button
               onClick={nextStep}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
-            >
-              {isLast ? 'Finish' : 'Next'}
-              {!isLast && <ChevronRight className="size-3" />}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Inline styles for tour highlight */}
-      <style>{`
-        .tour-highlight {
-          position: relative;
-          z-index: 9999 !important;
-          box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-pf-cyan-500) 30%, transparent), 0 0 20px color-mix(in srgb, var(--color-pf-cyan-500) 10%, transparent) !important;
-          border-radius: 8px;
-        }
-      `}</style>
-    </>
-  );
-}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-c

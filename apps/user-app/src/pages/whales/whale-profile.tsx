@@ -307,17 +307,4 @@ export function Component() {
                       }`}>
                         {trade.outcome}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono text-pf-text-secondary">{trade.size}</td>
-                    <td className="px-4 py-3 text-right font-mono text-pf-text-secondary">{trade.price}</td>
-                    <td className="px-4 py-3 text-right font-mono text-pf-text-secondary text-xs">{formatDate(trade.timestamp)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-}
+                 

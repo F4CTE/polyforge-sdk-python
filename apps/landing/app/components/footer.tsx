@@ -124,21 +124,3 @@ export function Footer() {
                         href={link.href}
                         className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
                       >
-                        {link.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </nav>
-        </div>
-
-        {/* Copyright */}
-        <div className="pt-6 border-t border-pf-border-subtle text-[13px] text-pf-text-muted">
-          &copy; 2026 Polyforge. All rights reserved.
-        </div>
-      </div>
-    </footer>
-  );
-}

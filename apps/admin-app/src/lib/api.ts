@@ -41,7 +41,8 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
       const { toast } = await import('sonner');
       toast.error('Session expired. Redirecting to login...');
       setTimeout(() => { window.location.href = '/login'; }, 1500);
-      return new Promise<T>(() => {}); // never resolves; page is navigating
+      // Reject the promise instead of never resolving to prevent hanging requests
+      return Promise.reject(new Error('Session expired - redirecting to login'));
     }
     const body = await res.json().catch(() => ({}));
     throw Object.assign(new Error(body.message || res.statusText), {

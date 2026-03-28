@@ -325,31 +325,4 @@ export function Component() {
             </p>
             <label htmlFor="deactivate-password" className="sr-only">Your password</label>
             <input
-              id="deactivate-password"
-              type="password"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              placeholder="Your password"
-              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-danger)] mb-4"
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={handleDeactivate}
-                disabled={submitting || !deletePassword}
-                className="flex-1 py-2 text-sm font-medium rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/80 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-danger)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-pf-elevated)]"
-              >
-                {submitting ? 'Deactivating...' : 'Deactivate'}
-              </button>
-              <button
-                onClick={() => setDeleteConfirmId(null)}
-                className="px-4 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+              id="deactivate-password"

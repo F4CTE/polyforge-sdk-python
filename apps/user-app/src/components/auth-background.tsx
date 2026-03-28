@@ -64,5 +64,4 @@ export function AuthBackground() {
         }
       `}</style>
     </div>
-  );
-}
+ 

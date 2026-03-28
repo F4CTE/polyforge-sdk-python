@@ -73,12 +73,4 @@ export function HowItWorks() {
               </div>
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-pf-text mb-2.5">{step.title}</h3>
-                <p className="text-sm text-pf-text-secondary leading-7">{step.description}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
-}
+            

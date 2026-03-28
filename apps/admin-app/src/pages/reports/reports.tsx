@@ -171,20 +171,4 @@ export function Component() {
             </button>
             <button
               onClick={() => handleResolve(reviewingId, 'DISMISSED')}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] transition-colors"
-            >
-              <XCircle size={14} />
-              Dismiss
-            </button>
-            <button
-              onClick={() => setReviewingId(null)}
-              className="px-3 py-1.5 text-sm rounded-pf-sm text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text-secondary)] transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-[var(--color-pf-elevated)] text-[var(--color-p

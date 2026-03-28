@@ -12,9 +12,4 @@ export function Component() {
           to="/markets"
           className="inline-block mt-6 px-4 py-2 bg-pf-cyan-500 text-black rounded-pf hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
         >
-          Go to Markets
-        </Link>
-      </div>
-    </div>
-  );
-}
+          Go t

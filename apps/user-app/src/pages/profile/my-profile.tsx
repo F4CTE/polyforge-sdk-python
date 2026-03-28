@@ -255,14 +255,4 @@ export function Component() {
           <Link
             key={link.to}
             to={link.to}
-            className="flex items-center gap-3 px-4 py-3 bg-pf-elevated border border-pf-border rounded-pf-lg hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
-          >
-            <span className="text-pf-text-muted">{link.icon}</span>
-            <span className="text-sm font-medium text-pf-text flex-1">{link.label}</span>
-            <ChevronRight className="size-4 text-pf-text-muted" />
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
+            className="flex items-center gap-3 px-4 py-3 bg-pf-elevated border border-pf-border rounded-pf-lg hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring

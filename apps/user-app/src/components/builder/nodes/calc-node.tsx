@@ -342,3 +342,4 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
 }
 
 export const CalcNode = memo(CalcNodeInner);
+                                                                                                 

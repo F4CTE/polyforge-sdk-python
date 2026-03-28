@@ -1,0 +1,164 @@
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router';
+import { Search, X, BarChart3, Zap } from 'lucide-react';
+
+interface SearchResult {
+  type: 'market' | 'strategy';
+  id: string;
+  title: string;
+  sub?: string;
+  href: string;
+}
+
+interface CommandPaletteProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function CommandPalette({ open, onClose }: CommandPaletteProps) {
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      setQuery('');
+      setResults([]);
+      setActiveIndex(0);
+      const t = setTimeout(() => inputRef.current?.focus(), 30);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
+
+  const search = useCallback(async (q: string) => {
+    if (!q.trim()) { setResults([]); return; }
+    setLoading(true);
+    try {
+      const [mktRes, stratRes] = await Promise.all([
+        fetch(`/api/v1/markets?search=${encodeURIComponent(q)}&limit=5`, { credentials: 'include' }),
+        fetch(`/api/v1/strategies?search=${encodeURIComponent(q)}&limit=5`, { credentials: 'include' }),
+      ]);
+      const items: SearchResult[] = [];
+      if (mktRes.ok) {
+        const mkt = await mktRes.json();
+        (mkt.data ?? []).forEach((m: { id: string; question: string; category?: string }) => {
+          items.push({ type: 'market', id: m.id, title: m.question, sub: m.category ?? 'Market', href: `/markets/${m.id}` });
+        });
+      }
+      if (stratRes.ok) {
+        const strat = await stratRes.json();
+        (strat.data ?? []).forEach((s: { id: string; name: string; status?: string }) => {
+          items.push({ type: 'strategy', id: s.id, title: s.name, sub: s.status, href: `/strategies/${s.id}` });
+        });
+      }
+      setResults(items);
+      setActiveIndex(0);
+    } catch { /* ignore */ }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => search(query), 200);
+    return () => clearTimeout(timer);
+  }, [query, search]);
+
+  function select(result: SearchResult) {
+    navigate(result.href);
+    onClose();
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIndex(i => Math.min(i + 1, results.length - 1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIndex(i => Math.max(i - 1, 0)); }
+    else if (e.key === 'Enter' && results[activeIndex]) select(results[activeIndex]);
+    else if (e.key === 'Escape') onClose();
+  }
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-start justify-center pt-[10vh] bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Command palette"
+    >
+      <div
+        className="motion-safe:animate-scale-in w-full max-w-xl mx-4 bg-pf-elevated border border-pf-border rounded-pf-lg shadow-pf-lg overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Search input */}
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-pf-border">
+          <Search className="size-4 text-pf-text-muted shrink-0" />
+          <input
+            ref={inputRef}
+            type="search"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            aria-label="Search markets and strategies"
+            placeholder="Search markets, strategies..."
+            className="flex-1 bg-transparent text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:ring-1 focus:ring-pf-cyan-500/30 rounded"
+          />
+          <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[11px] text-pf-text-muted border border-pf-border font-mono">
+            Esc
+          </kbd>
+          <button onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-pf-text-muted hover:text-pf-text transition-colors" aria-label="Close command palette">
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {/* Results */}
+        <div role="listbox" aria-label="Search results" className="max-h-72 overflow-y-auto">
+          {loading && (
+            <div className="px-4 py-3 text-sm text-pf-text-muted motion-safe:animate-pulse">Searching...</div>
+          )}
+          {!loading && !query && (
+            <div className="px-4 py-8 text-center">
+              <p className="text-xs text-pf-text-muted">Type to search markets and strategies</p>
+              <p className="text-[11px] text-pf-text-muted mt-1 opacity-60">
+                <kbd className="px-1 py-0.5 rounded border border-pf-border font-mono text-[10px]">↑↓</kbd> navigate ·{' '}
+                <kbd className="px-1 py-0.5 rounded border border-pf-border font-mono text-[10px]">Enter</kbd> open
+              </p>
+            </div>
+          )}
+          {!loading && query && results.length === 0 && (
+            <div className="px-4 py-8 text-center text-sm text-pf-text-muted">
+              No results for &ldquo;{query}&rdquo;
+            </div>
+          )}
+          {results.map((r, i) => (
+            <button
+              key={`${r.type}-${r.id}`}
+              role="option"
+              aria-selected={i === activeIndex}
+              onClick={() => select(r)}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                i === activeIndex ? 'bg-pf-cyan-500/10' : 'hover:bg-pf-surface'
+              }`}
+            >
+              <span className={`p-1.5 rounded-pf-sm shrink-0 ${
+                r.type === 'market' ? 'bg-pf-cyan-500/10 text-pf-cyan-400' : 'bg-purple-500/10 text-purple-400'
+              }`}>
+                {r.type === 'market' ? <BarChart3 className="size-3.5" /> : <Zap className="size-3.5" />}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm text-pf-text truncate">{r.title}</div>
+                {r.sub && <div className="text-[11px] text-pf-text-muted capitalize">{r.sub}</div>}
+              </div>
+              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 ${
+                r.type === 'market' ? 'bg-pf-cyan-500/10 text-pf-cyan-400' : 'bg-purple-500/10 text-purple-400'
+              }`}>
+                {r.type === 'market' ? 'Market' : 'Strategy'}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

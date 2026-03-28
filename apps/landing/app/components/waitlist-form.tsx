@@ -112,12 +112,4 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           )}
         </button>
       </div>
-      <p className="text-[13px] text-pf-text-muted mt-2.5 text-center">
-        Join the early-access list &mdash; no spam, ever.
-      </p>
-      {status === 'error' && errorMsg && (
-        <p id="waitlist-error" role="alert" className="text-[13px] text-pf-danger mt-2 text-center">{errorMsg}</p>
-      )}
-    </form>
-  );
-}
+      <p className="text-

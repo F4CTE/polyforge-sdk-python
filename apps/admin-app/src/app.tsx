@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import { router } from './router';
 import { useAdminAuthStore } from './stores/admin-auth-store';
 import { useThemeStore } from './stores/theme-store';
+import { ErrorBoundary } from './components/error-boundary';
 
 export function App() {
   const init = useAdminAuthStore((s) => s.init);
@@ -15,7 +16,9 @@ export function App() {
 
   return (
     <>
-      <RouterProvider router={router} />
+      <ErrorBoundary>
+        <RouterProvider router={router} />
+      </ErrorBoundary>
       <Toaster
         theme={isDark ? 'dark' : 'light'}
         position="top-right"

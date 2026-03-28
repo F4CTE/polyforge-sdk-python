@@ -289,16 +289,4 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                       <span className="text-xs font-medium text-pf-text">{def.label}</span>
                       <ChevronRight className="size-3 text-pf-text-muted/0 group-hover:text-pf-text-muted/60 transition-all" />
                     </div>
-                    <p className="text-[10px] text-pf-text-muted leading-snug mt-0.5">
-                      {def.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+                    <p className

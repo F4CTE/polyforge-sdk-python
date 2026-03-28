@@ -45,23 +45,9 @@ export class ErrorBoundary extends Component<Props, State> {
                 An unexpected error occurred. Please try refreshing the page.
               </p>
             </div>
-            {this.state.error && (
-              <pre className="text-xs text-left text-pf-danger bg-pf-danger/5 border border-pf-danger/10 rounded-pf p-3 overflow-auto max-h-32">
-                {this.state.error.message}
-              </pre>
-            )}
             <button
               onClick={this.handleReset}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
             >
               <RefreshCw className="size-4" />
-              Reload Application
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
+  

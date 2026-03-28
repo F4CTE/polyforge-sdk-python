@@ -168,4 +168,4 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
   );
 }
 
-export const VariableNode = memo(VariableNodeInner);
+export const VariableNode = memo(

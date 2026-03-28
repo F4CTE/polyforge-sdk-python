@@ -194,15 +194,4 @@ export function Component() {
               </Link>
           </div>
         </div>
-
-        {/* Links below card */}
-        <p className="text-center text-sm text-pf-text-muted mt-6">
-          Don&apos;t have an account?{' '}
-          <Link to="/register" className="text-pf-cyan-400 hover:text-pf-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
-            Create one
-          </Link>
-        </p>
-      </div>
-    </div>
-  );
-}
+

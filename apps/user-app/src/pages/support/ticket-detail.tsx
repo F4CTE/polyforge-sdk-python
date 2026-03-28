@@ -255,12 +255,4 @@ export function Component() {
               Send Reply
             </button>
           </div>
-        </div>
-      ) : (
-        <div className="text-center py-4 text-sm text-pf-text-muted bg-pf-elevated border border-pf-border rounded-pf-lg">
-          This ticket has been closed.
-        </div>
-      )}
-    </div>
-  );
-}
+      
