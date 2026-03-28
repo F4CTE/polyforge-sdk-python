@@ -75,6 +75,44 @@ asyncio.run(main())
 | `stop_strategy(strategy_id)` | Stop a running strategy |
 | `get_strategy_templates()` | List pre-built strategy templates |
 | `export_strategy(strategy_id)` | Export strategy configuration as a dict |
+| `watch_strategy(strategy_id)` | Stream live execution events via SSE |
+
+### Live Execution Watching
+
+Both `PolyforgeClient` and `AsyncPolyforgeClient` expose `watch_strategy()` which yields `StrategyEvent` objects as they arrive over a persistent SSE connection.
+
+```python
+# Synchronous — blocks the calling thread while the stream is open
+from polyforge import PolyforgeClient
+
+with PolyforgeClient(api_key="pk_live_...") as client:
+    client.start_strategy("strat-uuid", mode="live")
+
+    for event in client.watch_strategy("strat-uuid"):
+        print(f"[{event.type}] {event.data}")
+        if event.type in ("STRATEGY_STOPPED", "BACKTEST_COMPLETED"):
+            break
+```
+
+```python
+# Asynchronous — non-blocking, works inside async frameworks
+import asyncio
+from polyforge import AsyncPolyforgeClient
+
+async def main():
+    async with AsyncPolyforgeClient(api_key="pk_live_...") as client:
+        async for event in client.watch_strategy("strat-uuid"):
+            if event.type == "ORDER_FILLED":
+                print("Filled:", event.data)
+            elif event.type == "STRATEGY_STOPPED":
+                break
+
+asyncio.run(main())
+```
+
+**`StrategyEvent` fields:** `type: str` · `strategy_id: str` · `data: dict | None` · `timestamp: int` (Unix ms)
+
+**Common event types:** `CONNECTED` · `STRATEGY_STARTED` · `STRATEGY_STOPPED` · `STRATEGY_ERROR` · `ORDER_PLACED` · `ORDER_FILLED` · `ORDER_CANCELLED` · `BACKTEST_PROGRESS` · `BACKTEST_COMPLETED` · `BACKTEST_FAILED`
 
 ### Portfolio & Orders
 
@@ -83,6 +121,8 @@ asyncio.run(main())
 | `get_portfolio()` | Get portfolio summary with open positions |
 | `get_orders(limit, status)` | List trade orders |
 | `get_score()` | Get your trader performance score |
+| `place_order(token_id, side, outcome, size, price, order_type)` | Place a direct buy/sell order |
+| `cancel_order(order_id)` | Cancel a pending or live order |
 
 ### Social & Signals
 

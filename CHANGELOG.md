@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0] — 2026-03-29
+
+### Added
+- `watch_strategy(strategy_id)` on both `PolyforgeClient` and `AsyncPolyforgeClient` — generator / async generator that streams live execution events over SSE; yields `StrategyEvent` instances
+- `StrategyEvent` dataclass — `type`, `strategy_id`, `data`, `timestamp` fields
+- `StrategyEvent` exported from package root (`__init__.py`)
+
 ## [1.1.0] — 2026-03-28
 
 ### Fixed

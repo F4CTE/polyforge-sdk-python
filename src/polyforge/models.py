@@ -260,3 +260,26 @@ class PlaceOrderResponse:
     order_id: str = ""
     intent_id: str = ""
     status: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Strategy Execution Events (SSE)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class StrategyEvent:
+    """A single event from the strategy execution SSE stream.
+
+    Events are emitted while a strategy is running (or backtesting).
+    The first event on a new stream always has ``type == "CONNECTED"``.
+
+    Common event types:
+        CONNECTED, STRATEGY_STARTED, STRATEGY_STOPPED, STRATEGY_ERROR,
+        ORDER_PLACED, ORDER_FILLED, ORDER_CANCELLED,
+        BACKTEST_PROGRESS, BACKTEST_COMPLETED, BACKTEST_FAILED
+    """
+
+    type: str = ""
+    strategy_id: str = ""
+    data: dict[str, Any] | None = None
+    timestamp: int = 0

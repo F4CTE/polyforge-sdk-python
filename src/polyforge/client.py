@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import json as _json
 from dataclasses import fields
-from typing import Any, TypeVar, get_type_hints
+from typing import Any, AsyncIterator, Iterator, TypeVar, get_type_hints
 
 import httpx
 
@@ -27,6 +28,7 @@ from polyforge.models import (
     Portfolio,
     Position,
     Strategy,
+    StrategyEvent,
     StrategyTemplate,
     Token,
     TraderScore,
@@ -282,6 +284,45 @@ class PolyforgeClient:
         """Cancel a pending or live order."""
         return self._delete(f"/api/v1/orders/{order_id}")
 
+    def watch_strategy(self, strategy_id: str) -> Iterator[StrategyEvent]:
+        """Stream live execution events for a strategy via SSE.
+
+        Yields :class:`~polyforge.models.StrategyEvent` objects as they arrive.
+        The first event always has ``type == "CONNECTED"``.
+
+        This method blocks the calling thread while the stream is open.
+        Use :meth:`AsyncPolyforgeClient.watch_strategy` for non-blocking usage.
+
+        Example::
+
+            for event in client.watch_strategy("strat-uuid"):
+                print(event.type, event.data)
+                if event.type == "STRATEGY_STOPPED":
+                    break
+        """
+        with self._client.stream(
+            "GET",
+            f"/api/v1/strategies/{strategy_id}/events",
+            headers={"Accept": "text/event-stream"},
+        ) as response:
+            _raise_for_status(response)
+            for line in response.iter_lines():
+                if not line.startswith("data: "):
+                    continue
+                raw = line[6:].strip()
+                if not raw:
+                    continue
+                try:
+                    payload = _json.loads(raw)
+                    yield StrategyEvent(
+                        type=payload.get("type", ""),
+                        strategy_id=payload.get("strategyId", ""),
+                        data=payload.get("data"),
+                        timestamp=payload.get("timestamp", 0),
+                    )
+                except _json.JSONDecodeError:
+                    pass  # skip malformed frame
+
     # -- Social & Signals --
 
     def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
@@ -500,6 +541,42 @@ class AsyncPolyforgeClient:
     async def cancel_order(self, order_id: str) -> dict:
         """Cancel a pending or live order."""
         return await self._delete(f"/api/v1/orders/{order_id}")
+
+    async def watch_strategy(self, strategy_id: str) -> AsyncIterator[StrategyEvent]:  # type: ignore[override]
+        """Stream live execution events for a strategy via SSE.
+
+        Yields :class:`~polyforge.models.StrategyEvent` objects as they arrive.
+        The first event always has ``type == "CONNECTED"``.
+
+        Example::
+
+            async for event in client.watch_strategy("strat-uuid"):
+                print(event.type, event.data)
+                if event.type == "STRATEGY_STOPPED":
+                    break
+        """
+        async with self._client.stream(
+            "GET",
+            f"/api/v1/strategies/{strategy_id}/events",
+            headers={"Accept": "text/event-stream"},
+        ) as response:
+            _raise_for_status(response)
+            async for line in response.aiter_lines():
+                if not line.startswith("data: "):
+                    continue
+                raw = line[6:].strip()
+                if not raw:
+                    continue
+                try:
+                    payload = _json.loads(raw)
+                    yield StrategyEvent(
+                        type=payload.get("type", ""),
+                        strategy_id=payload.get("strategyId", ""),
+                        data=payload.get("data"),
+                        timestamp=payload.get("timestamp", 0),
+                    )
+                except _json.JSONDecodeError:
+                    pass  # skip malformed frame
 
     # -- Social & Signals --
 
