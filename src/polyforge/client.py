@@ -190,13 +190,14 @@ class PolyforgeClient:
             "/api/v1/markets",
             params={"search": search, "category": category, "limit": limit, "page": page},
         )
-        items = [_parse(Market, m) for m in data.get("items", data.get("markets", []))]
+        # Backend returns PaginatedResponse<Market> with 'data' field
+        items = [_parse(Market, m) for m in data["data"]]
         return PaginatedResponse(
             items=items,
-            total=data.get("total", len(items)),
-            page=data.get("page", page),
-            limit=data.get("limit", limit),
-            has_more=data.get("has_more", False),
+            total=data["total"],
+            page=data["page"],
+            limit=data["limit"],
+            has_more=data["hasNext"],
         )
 
     def get_market(self, market_id: str) -> Market:
@@ -206,7 +207,8 @@ class PolyforgeClient:
 
     def list_strategies(self, *, status: str | None = None) -> list[Strategy]:
         data = self._get("/api/v1/strategies", params={"status": status})
-        items = data if isinstance(data, list) else data.get("strategies", data.get("items", []))
+        # Backend returns PaginatedResponse<Strategy> with 'data' field
+        items = data["data"]
         return [_parse(Strategy, s) for s in items]
 
     def get_strategy(self, strategy_id: str) -> Strategy:
@@ -229,7 +231,8 @@ class PolyforgeClient:
 
     def get_strategy_templates(self) -> list[StrategyTemplate]:
         data = self._get("/api/v1/strategies/templates")
-        items = data if isinstance(data, list) else data.get("templates", [])
+        # Backend returns PaginatedResponse<StrategyTemplate> with 'data' field
+        items = data["data"]
         return [_parse(StrategyTemplate, t) for t in items]
 
     def export_strategy(self, strategy_id: str) -> dict:
@@ -242,7 +245,8 @@ class PolyforgeClient:
 
     def get_orders(self, *, limit: int = 20, status: str | None = None) -> list[Order]:
         data = self._get("/api/v1/orders", params={"limit": limit, "status": status})
-        items = data if isinstance(data, list) else data.get("orders", data.get("items", []))
+        # Backend returns PaginatedResponse<Order> with 'data' field
+        items = data["data"]
         return [_parse(Order, o) for o in items]
 
     def get_score(self) -> TraderScore:
@@ -282,29 +286,34 @@ class PolyforgeClient:
 
     def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
         data = self._get("/api/v1/whale-feed", params={"min_size": min_size})
-        items = data if isinstance(data, list) else data.get("trades", [])
+        # Backend returns PaginatedResponse<WhaleTrade> with 'data' field
+        items = data["data"]
         return [_parse(WhaleTrade, w) for w in items]
 
     def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
         data = self._get("/api/v1/news-signals", params={"min_confidence": min_confidence})
-        items = data if isinstance(data, list) else data.get("signals", [])
+        # Backend returns PaginatedResponse<NewsSignal> with 'data' field
+        items = data["data"]
         return [_parse(NewsSignal, s) for s in items]
 
     # -- Configuration --
 
     def list_alerts(self) -> list[Alert]:
         data = self._get("/api/v1/alerts")
-        items = data if isinstance(data, list) else data.get("alerts", [])
+        # Backend returns PaginatedResponse<Alert> with 'data' field
+        items = data["data"]
         return [_parse(Alert, a) for a in items]
 
     def list_copy_configs(self) -> list[CopyConfig]:
         data = self._get("/api/v1/copy-configs")
-        items = data if isinstance(data, list) else data.get("configs", [])
+        # Backend returns PaginatedResponse<CopyConfig> with 'data' field
+        items = data["data"]
         return [_parse(CopyConfig, c) for c in items]
 
     def list_webhooks(self) -> list[Webhook]:
         data = self._get("/api/v1/webhooks")
-        items = data if isinstance(data, list) else data.get("webhooks", [])
+        # Backend returns PaginatedResponse<Webhook> with 'data' field
+        items = data["data"]
         return [_parse(Webhook, w) for w in items]
 
     def create_webhook(self, url: str, events: list[str]) -> Webhook:
@@ -333,6 +342,16 @@ class PolyforgeClient:
 
 class AsyncPolyforgeClient:
     """Asynchronous Polyforge REST API client.
+
+    NOTE: This class mirrors the synchronous PolyforgeClient implementation above.
+    Code duplication is intentional for clarity and to avoid shared state issues
+    between sync/async codepaths (a common pattern with httpx).
+
+    When making changes to method signatures, error handling, or logic:
+    - Apply changes to BOTH the sync (PolyforgeClient) and async (AsyncPolyforgeClient) versions
+    - Keep the implementations synchronized to ensure feature parity
+    - Async methods should use `await` and `async with` where appropriate
+    - Sync methods should use blocking calls without await
 
     Usage::
 
@@ -390,13 +409,14 @@ class AsyncPolyforgeClient:
             "/api/v1/markets",
             params={"search": search, "category": category, "limit": limit, "page": page},
         )
-        items = [_parse(Market, m) for m in data.get("items", data.get("markets", []))]
+        # Backend returns PaginatedResponse<Market> with 'data' field
+        items = [_parse(Market, m) for m in data["data"]]
         return PaginatedResponse(
             items=items,
-            total=data.get("total", len(items)),
-            page=data.get("page", page),
-            limit=data.get("limit", limit),
-            has_more=data.get("has_more", False),
+            total=data["total"],
+            page=data["page"],
+            limit=data["limit"],
+            has_more=data["hasNext"],
         )
 
     async def get_market(self, market_id: str) -> Market:
@@ -406,7 +426,8 @@ class AsyncPolyforgeClient:
 
     async def list_strategies(self, *, status: str | None = None) -> list[Strategy]:
         data = await self._get("/api/v1/strategies", params={"status": status})
-        items = data if isinstance(data, list) else data.get("strategies", data.get("items", []))
+        # Backend returns PaginatedResponse<Strategy> with 'data' field
+        items = data["data"]
         return [_parse(Strategy, s) for s in items]
 
     async def get_strategy(self, strategy_id: str) -> Strategy:
@@ -429,7 +450,8 @@ class AsyncPolyforgeClient:
 
     async def get_strategy_templates(self) -> list[StrategyTemplate]:
         data = await self._get("/api/v1/strategies/templates")
-        items = data if isinstance(data, list) else data.get("templates", [])
+        # Backend returns PaginatedResponse<StrategyTemplate> with 'data' field
+        items = data["data"]
         return [_parse(StrategyTemplate, t) for t in items]
 
     async def export_strategy(self, strategy_id: str) -> dict:
@@ -442,7 +464,8 @@ class AsyncPolyforgeClient:
 
     async def get_orders(self, *, limit: int = 20, status: str | None = None) -> list[Order]:
         data = await self._get("/api/v1/orders", params={"limit": limit, "status": status})
-        items = data if isinstance(data, list) else data.get("orders", data.get("items", []))
+        # Backend returns PaginatedResponse<Order> with 'data' field
+        items = data["data"]
         return [_parse(Order, o) for o in items]
 
     async def get_score(self) -> TraderScore:
@@ -482,29 +505,34 @@ class AsyncPolyforgeClient:
 
     async def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
         data = await self._get("/api/v1/whale-feed", params={"min_size": min_size})
-        items = data if isinstance(data, list) else data.get("trades", [])
+        # Backend returns PaginatedResponse<WhaleTrade> with 'data' field
+        items = data["data"]
         return [_parse(WhaleTrade, w) for w in items]
 
     async def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
         data = await self._get("/api/v1/news-signals", params={"min_confidence": min_confidence})
-        items = data if isinstance(data, list) else data.get("signals", [])
+        # Backend returns PaginatedResponse<NewsSignal> with 'data' field
+        items = data["data"]
         return [_parse(NewsSignal, s) for s in items]
 
     # -- Configuration --
 
     async def list_alerts(self) -> list[Alert]:
         data = await self._get("/api/v1/alerts")
-        items = data if isinstance(data, list) else data.get("alerts", [])
+        # Backend returns PaginatedResponse<Alert> with 'data' field
+        items = data["data"]
         return [_parse(Alert, a) for a in items]
 
     async def list_copy_configs(self) -> list[CopyConfig]:
         data = await self._get("/api/v1/copy-configs")
-        items = data if isinstance(data, list) else data.get("configs", [])
+        # Backend returns PaginatedResponse<CopyConfig> with 'data' field
+        items = data["data"]
         return [_parse(CopyConfig, c) for c in items]
 
     async def list_webhooks(self) -> list[Webhook]:
         data = await self._get("/api/v1/webhooks")
-        items = data if isinstance(data, list) else data.get("webhooks", [])
+        # Backend returns PaginatedResponse<Webhook> with 'data' field
+        items = data["data"]
         return [_parse(Webhook, w) for w in items]
 
     async def create_webhook(self, url: str, events: list[str]) -> Webhook:
