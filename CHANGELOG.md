@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.0] — 2026-03-28
+
+### Fixed
+- Align all API paths to canonical `/api/v1/*` pattern matching backend
+- Fix strategy endpoint: `/api/strategies/generate` → `/api/v1/strategies/from-description`
+- Standardize response parsing to match backend PaginatedResponse format
+
+### Added
+- Smoke tests for client, error classes, and model parsing (pytest)
+- Docstring documenting sync/async code pattern
+
 ## [1.1.0] — 2026-03-27
 
 ### Added

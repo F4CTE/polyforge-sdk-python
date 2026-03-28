@@ -130,6 +130,12 @@ with PolyforgeClient(api_key="pk_live_...") as client:
 | `RateLimitError` | 429 |
 | `ServerError` | 5xx |
 
+## Testing
+
+```bash
+pytest tests/
+```
+
 ## License
 
 MIT
