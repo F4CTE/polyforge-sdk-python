@@ -32,7 +32,7 @@ const STATUS_STYLES: Record<TicketStatus, { text: string; bg: string }> = {
   OPEN:           { text: 'text-pf-cyan-400', bg: 'bg-pf-cyan-500/10' },
   AWAITING_USER:  { text: 'text-pf-warning', bg: 'bg-pf-warning/10' },
   AWAITING_ADMIN: { text: 'text-pf-info', bg: 'bg-pf-info/10' },
-  CLOSED:         { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
+  CLOSED:         { text: 'text-pf-text-secondary', bg: 'bg-pf-overlay' },
 };
 
 const PRIORITY_STYLES: Record<TicketPriority, { text: string; bg: string }> = {
@@ -168,7 +168,7 @@ export function Component() {
                 type="button"
                 id={`faq-btn-${idx}`}
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-pf-surface/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40 transition-colors"
+                className="w-full flex items-center justify-between px-4 py-4 text-left hover:bg-pf-surface/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40 transition-colors"
                 aria-expanded={openFaq === idx}
                 aria-controls={`faq-panel-${idx}`}
               >

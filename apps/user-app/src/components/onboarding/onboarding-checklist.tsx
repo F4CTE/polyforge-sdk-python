@@ -151,7 +151,7 @@ export function OnboardingChecklist() {
 
       {/* Progress bar */}
       <div className="px-4 pt-2">
-        <div className="w-full h-1.5 bg-pf-overlay rounded-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed`}>
+        <div className="w-full h-1.5 bg-pf-overlay rounded-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed — ${Math.round((completedCount / CHECKLIST_ITEMS.length) * 100)}%`}>
           <div
             className="h-full bg-pf-cyan-500 rounded-full transition-all duration-500"
             style={{ width: `${(completedCount / CHECKLIST_ITEMS.length) * 100}%` }}
@@ -170,7 +170,7 @@ export function OnboardingChecklist() {
               <button
                 type="button"
                 onClick={() => toggleItem(item.key)}
-                className="mt-0.5 shrink-0 transition-colors"
+                className="mt-0.5 shrink-0 transition-colors cursor-pointer"
                 aria-label={`Mark "${item.label}" as ${completed[item.key] ? 'incomplete' : 'complete'}`}
               >
                 {completed[item.key] ? (
@@ -183,7 +183,7 @@ export function OnboardingChecklist() {
                 <button
                   type="button"
                   onClick={() => handleNavigate(item.route)}
-                  className={`text-sm text-left font-medium transition-colors ${
+                  className={`text-sm text-left font-medium transition-colors cursor-pointer ${
                     completed[item.key]
                       ? 'text-pf-text-muted line-through'
                       : 'text-pf-text hover:text-pf-cyan-400'

@@ -19,7 +19,7 @@ export function Topbar() {
   const notifRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdowns on outside click
+  // Close dropdowns on outside click or Escape
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
@@ -29,8 +29,18 @@ export function Topbar() {
         setMenuOpen(false);
       }
     }
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setNotifOpen(false);
+        setMenuOpen(false);
+      }
+    }
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, []);
 
   const initials = user
@@ -49,7 +59,7 @@ export function Topbar() {
         type="button"
         data-tour="theme-toggle"
         onClick={toggleTheme}
-        className="p-2 rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
         aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       >
         {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -60,7 +70,7 @@ export function Topbar() {
         <button
           type="button"
           onClick={() => setNotifOpen((v) => !v)}
-          className="relative p-2 rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          className="relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
           aria-label="Notifications"
           aria-expanded={notifOpen}
           aria-haspopup="dialog"

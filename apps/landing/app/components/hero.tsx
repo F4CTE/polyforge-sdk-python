@@ -69,7 +69,7 @@ export function Hero() {
         </p>
 
         {/* Hero strategy builder canvas */}
-        <div className="max-w-[620px] mx-auto mt-6 bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden p-2 sm:p-4 shadow-pf-lg">
+        <div className="max-w-[620px] mx-auto mt-6 bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden p-2 sm:p-4 shadow-pf-lg min-w-0">
           <svg
             viewBox="0 0 560 300"
             fill="none"

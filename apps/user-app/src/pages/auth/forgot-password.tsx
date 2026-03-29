@@ -67,10 +67,12 @@ export function Component() {
                       id="email"
                       type="email"
                       autoComplete="email"
+                      autoFocus
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       onBlur={() => setTouched(true)}
                       placeholder="you@example.com"
+                      aria-invalid={!!emailError}
                       aria-describedby={emailError ? 'forgot-email-error' : undefined}
                       className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                     />

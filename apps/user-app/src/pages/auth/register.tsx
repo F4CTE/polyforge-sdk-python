@@ -149,10 +149,12 @@ export function Component() {
                   id="email"
                   type="email"
                   autoComplete="email"
+                  autoFocus
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, email: true }))}
                   placeholder="you@example.com"
+                  aria-invalid={!!fieldError('email')}
                   aria-describedby={fieldError('email') ? 'register-email-error' : undefined}
                   className={inputClass}
                 />
@@ -173,6 +175,7 @@ export function Component() {
                   onChange={(e) => setUsername(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, username: true }))}
                   placeholder="alice"
+                  aria-invalid={!!fieldError('username')}
                   aria-describedby={fieldError('username') ? 'register-username-error' : undefined}
                   className={inputClass}
                 />
@@ -193,13 +196,14 @@ export function Component() {
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, password: true }))}
                   placeholder="At least 8 characters"
-                  aria-describedby={fieldError('password') ? 'register-password-error' : undefined}
+                  aria-invalid={!!fieldError('password')}
+                  aria-describedby={fieldError('password') ? 'register-password-error' : 'register-password-requirements'}
                   className={inputClass}
                 />
               </div>
               {fieldError('password') && <p id="register-password-error" role="alert" className="mt-1 text-xs text-pf-danger">{fieldError('password')}</p>}
               {touched.password && password && (
-                <ul className="mt-1.5 text-xs space-y-0.5 list-disc list-inside">
+                <ul id="register-password-requirements" className="mt-1.5 text-xs space-y-0.5 list-disc list-inside" aria-label="Password requirements">
                   <li className={password.length >= 8 ? 'text-pf-success' : 'text-pf-text-muted'}>Minimum 8 characters</li>
                   <li className={/[A-Z]/.test(password) ? 'text-pf-success' : 'text-pf-text-muted'}>One uppercase letter</li>
                   <li className={/[a-z]/.test(password) ? 'text-pf-success' : 'text-pf-text-muted'}>One lowercase letter</li>
@@ -221,6 +225,7 @@ export function Component() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, confirmPassword: true }))}
                   placeholder="Repeat your password"
+                  aria-invalid={!!fieldError('confirmPassword')}
                   aria-describedby={fieldError('confirmPassword') ? 'register-confirm-password-error' : undefined}
                   className={inputClass}
                 />
@@ -253,7 +258,9 @@ export function Component() {
                 type="checkbox"
                 checked={tosAccepted}
                 onChange={(e) => { setTosAccepted(e.target.checked); setTouched((t) => ({ ...t, tos: true })); }}
-                className="mt-1 size-4 rounded border-pf-border bg-pf-base accent-pf-cyan-500"
+                aria-invalid={!!fieldError('tos')}
+                aria-describedby={fieldError('tos') ? 'register-tos-error' : undefined}
+                className="mt-1 size-5 rounded border-pf-border bg-pf-base accent-pf-cyan-500 cursor-pointer"
               />
               <label htmlFor="tos" className="text-sm text-pf-text leading-relaxed cursor-pointer">
                 I agree to the{' '}

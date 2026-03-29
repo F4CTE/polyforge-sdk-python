@@ -80,7 +80,7 @@ const STATUS_STYLES: Record<OrderStatus, { text: string; bg: string }> = {
   LIVE:      { text: 'text-pf-cyan-400', bg: 'bg-pf-cyan-500/10' },
   MATCHED:   { text: 'text-pf-cyan-300', bg: 'bg-pf-cyan-500/8' },
   CONFIRMED: { text: 'text-pf-success', bg: 'bg-pf-success/10' },
-  CANCELLED: { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
+  CANCELLED: { text: 'text-pf-text-secondary', bg: 'bg-pf-overlay' },
   FAILED:    { text: 'text-pf-danger', bg: 'bg-pf-danger/10' },
 };
 
@@ -95,7 +95,7 @@ const CONDITIONAL_TYPE_STYLES: Record<ConditionalOrderType, { text: string; bg: 
 const CONDITIONAL_STATUS_STYLES: Record<ConditionalOrderStatus, { text: string; bg: string }> = {
   PENDING:   { text: 'text-pf-warning', bg: 'bg-pf-warning/10' },
   TRIGGERED: { text: 'text-pf-success', bg: 'bg-pf-success/10' },
-  CANCELLED: { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
+  CANCELLED: { text: 'text-pf-text-secondary', bg: 'bg-pf-overlay' },
   EXPIRED:   { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
   FAILED:    { text: 'text-pf-danger', bg: 'bg-pf-danger/10' },
 };
@@ -182,7 +182,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
       <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg w-full max-w-lg p-6 shadow-pf-lg">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-semibold text-pf-text">Create Conditional Order</h2>
-          <button type="button" onClick={onClose} aria-label="Close dialog" className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors">
+          <button type="button" onClick={onClose} aria-label="Close dialog" className="p-1 rounded text-pf-text-muted hover:text-pf-text cursor-pointer transition-colors">
             <X className="size-4" />
           </button>
         </div>
@@ -684,7 +684,7 @@ export function Component() {
           <div className="animate-slide-right relative w-full max-w-md h-full bg-pf-surface border-l border-pf-border overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-pf-border-subtle">
               <h2 className="text-lg font-semibold text-pf-text">Order Details</h2>
-              <button type="button" onClick={() => setSelectedOrder(null)} aria-label="Close order details" className="text-pf-text-muted hover:text-pf-text transition-colors">
+              <button type="button" onClick={() => setSelectedOrder(null)} aria-label="Close order details" className="text-pf-text-muted hover:text-pf-text cursor-pointer transition-colors">
                 <X className="size-5" />
               </button>
             </div>

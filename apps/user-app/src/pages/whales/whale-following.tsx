@@ -89,7 +89,7 @@ export function Component() {
 
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Fish className="size-6 text-pf-cyan-400" />
+        <Fish className="size-6 text-pf-cyan-400" aria-hidden="true" />
         <h1 className="text-2xl font-semibold text-pf-text">Following</h1>
         {!loading && <span className="text-sm text-pf-text-muted">{wallets.length} wallets</span>}
       </div>
@@ -101,7 +101,7 @@ export function Component() {
         </div>
       ) : wallets.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Fish className="size-10 text-pf-text-muted mb-4" />
+          <Fish className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
           <p className="text-pf-text font-medium">You're not following any whales yet</p>
           <p className="text-sm text-pf-text-muted mt-1">Follow whales from the feed to track their trades.</p>
           <Link

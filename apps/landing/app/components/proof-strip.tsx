@@ -24,7 +24,7 @@ export function ProofStrip() {
               )}
               <div className="flex flex-col items-center gap-1 px-4 sm:px-10 py-3">
                 <dt className="order-2 text-xs sm:text-[13px] text-pf-text-muted">{stat.label}</dt>
-                <dd className="order-1 m-0 text-xl sm:text-[28px] font-extrabold text-pf-cyan-300 tracking-tight">
+                <dd className="order-1 m-0 text-xl sm:text-[28px] font-extrabold text-pf-cyan-400 tracking-tight">
                   {stat.number}
                 </dd>
               </div>

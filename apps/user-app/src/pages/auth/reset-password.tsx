@@ -93,10 +93,12 @@ export function Component() {
                       id="password"
                       type="password"
                       autoComplete="new-password"
+                      autoFocus
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       onBlur={() => setTouched((t) => ({ ...t, password: true }))}
                       placeholder="At least 8 characters"
+                      aria-invalid={!!passwordError}
                       aria-describedby={passwordError ? 'reset-password-error' : undefined}
                       className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                     />
@@ -117,6 +119,7 @@ export function Component() {
                       onChange={(e) => setConfirm(e.target.value)}
                       onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
                       placeholder="Repeat password"
+                      aria-invalid={!!confirmError}
                       aria-describedby={confirmError ? 'reset-confirm-error' : undefined}
                       className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                     />

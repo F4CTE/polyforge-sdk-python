@@ -76,6 +76,16 @@ function ThemeToggle() {
 export function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  useEffect(() => {
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape' && mobileOpen) setMobileOpen(false);
+    }
+    if (mobileOpen) {
+      window.addEventListener('keydown', handleEscape);
+      return () => window.removeEventListener('keydown', handleEscape);
+    }
+  }, [mobileOpen]);
+
   return (
     <nav
       className="sticky top-0 z-50 bg-pf-base/85 backdrop-blur-xl border-b border-pf-border-subtle"
@@ -134,7 +144,7 @@ export function Nav() {
           </a>
           <a
             href="/register"
-            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
           >
             Start building free
           </a>
@@ -142,7 +152,7 @@ export function Nav() {
 
         <button
           type="button"
-          className="flex md:hidden flex-col items-center justify-center gap-1.5 w-10 h-10 bg-transparent border-none cursor-pointer ml-auto hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
+          className="flex md:hidden flex-col items-center justify-center gap-1.5 w-11 h-11 bg-transparent border-none cursor-pointer ml-auto hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav-menu"
@@ -164,6 +174,8 @@ export function Nav() {
 
       <div
         id="mobile-nav-menu"
+        role="navigation"
+        aria-label="Mobile navigation"
         className={`${mobileOpen ? 'flex' : 'hidden'} md:hidden flex-col gap-1 px-6 pb-4 border-t border-pf-border-subtle`}
       >
         {[
@@ -184,7 +196,7 @@ export function Nav() {
         <a
           href="/register"
           onClick={() => setMobileOpen(false)}
-          className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+          className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
         >
           Start building free
         </a>

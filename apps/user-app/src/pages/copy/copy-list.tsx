@@ -196,7 +196,7 @@ export function Component() {
             type="button"
             key={f.value}
             onClick={() => onFilterChange(f.value)}
-            className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+            className={`px-3 py-1.5 text-sm rounded-full border transition-colors cursor-pointer ${
               filter === f.value
                 ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
                 : 'border-pf-border text-pf-text-secondary hover:text-pf-text'
@@ -338,7 +338,7 @@ export function Component() {
                       type="button"
                       onClick={() => doAction(config.id, 'pause')}
                       disabled={busy}
-                      className="p-1.5 rounded-pf-sm text-pf-warning hover:bg-pf-warning/10 disabled:opacity-40 transition-colors"
+                      className="px-3 py-2 rounded-pf-sm text-pf-warning hover:bg-pf-warning/10 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
                       aria-label="Pause config"
                       title="Pause"
                     >
@@ -350,7 +350,7 @@ export function Component() {
                       type="button"
                       onClick={() => doAction(config.id, 'resume')}
                       disabled={busy}
-                      className="p-1.5 rounded-pf-sm text-pf-cyan-400 hover:bg-pf-cyan-500/10 disabled:opacity-40 transition-colors"
+                      className="px-3 py-2 rounded-pf-sm text-pf-cyan-400 hover:bg-pf-cyan-500/10 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
                       aria-label="Resume config"
                       title="Resume"
                     >
@@ -362,7 +362,7 @@ export function Component() {
                       type="button"
                       onClick={() => doAction(config.id, 'stop')}
                       disabled={busy}
-                      className="p-1.5 rounded-pf-sm text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
+                      className="px-3 py-2 rounded-pf-sm text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
                       aria-label="Stop config"
                       title="Stop"
                     >

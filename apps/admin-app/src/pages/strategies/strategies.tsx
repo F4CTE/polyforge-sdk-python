@@ -115,7 +115,7 @@ export function Component() {
                         <button type="button"
                           onClick={() => handleForceStop(s.id)}
                           aria-label={`Force stop strategy ${s.name}`}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-danger)]"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40"
                         >
                           <Square size={12} />
                           Force Stop

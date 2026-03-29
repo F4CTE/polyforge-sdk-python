@@ -89,7 +89,7 @@ export function Component() {
                type="button"
                 
                 onClick={() => setSessionExpired(false)}
-                className="shrink-0 text-pf-warning hover:text-pf-warning/70 transition-colors"
+                className="shrink-0 text-pf-warning hover:text-pf-warning/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-warning/40 rounded-pf-sm cursor-pointer"
                 aria-label="Dismiss warning"
               >
                 <X className="size-4" />
@@ -105,7 +105,7 @@ export function Component() {
                type="button"
                 
                 onClick={() => setError('')}
-                className="shrink-0 text-pf-danger hover:text-pf-danger/70 transition-colors"
+                className="shrink-0 text-pf-danger hover:text-pf-danger/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 rounded-pf-sm cursor-pointer"
                 aria-label="Dismiss error"
               >
                 <X className="size-4" />
@@ -123,10 +123,12 @@ export function Component() {
                   id="email"
                   type="email"
                   autoComplete="email"
+                  autoFocus
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, email: true }))}
                   placeholder="you@example.com"
+                  aria-invalid={!!emailError}
                   aria-describedby={emailError ? 'login-email-error' : undefined}
                   className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                 />
@@ -147,14 +149,14 @@ export function Component() {
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, password: true }))}
                   placeholder="Your password"
+                  aria-invalid={!!passwordError}
                   aria-describedby={passwordError ? 'login-password-error' : undefined}
                   className="w-full pl-10 pr-10 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                 />
                 <button
-                 type="button"
-                  
+                  type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -174,10 +176,13 @@ export function Component() {
                     id="totp"
                     type="text"
                     inputMode="numeric"
+                    autoComplete="one-time-code"
+                    autoFocus
                     maxLength={6}
                     value={totp}
                     onChange={(e) => setTotp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="000000"
+                    aria-label="6-digit authentication code"
                     className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 tracking-[0.3em] font-mono transition-colors"
                   />
                 </div>

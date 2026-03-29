@@ -159,7 +159,7 @@ export function Component() {
           <ArrowLeft className="size-4" /> Back to feed
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Fish className="size-10 text-pf-text-muted mb-4" />
+          <Fish className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
           <p className="text-pf-text font-medium">Wallet not found</p>
           <p className="text-sm text-pf-text-muted mt-1">No whale activity recorded for this address.</p>
         </div>
@@ -198,7 +198,7 @@ export function Component() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="size-10 rounded-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center">
-            <Fish className="size-5 text-pf-cyan-400" />
+            <Fish className="size-5 text-pf-cyan-400" aria-hidden="true" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -206,11 +206,11 @@ export function Component() {
               <button
                 type="button"
                 onClick={() => copyToClipboard(address ?? '')}
-                className="text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors shrink-0"
+                className="p-2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors shrink-0"
                 aria-label="Copy wallet address"
                 title="Copy address"
               >
-                <Copy className="size-3.5" />
+                <Copy className="size-4" />
               </button>
             </div>
           </div>

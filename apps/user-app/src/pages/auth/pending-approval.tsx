@@ -19,7 +19,7 @@ export function Component() {
           </div>
         </div>
 
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg text-center">
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg text-center" role="status" aria-labelledby="pending-heading">
           <div className="w-16 h-16 rounded-full bg-pf-warning/10 flex items-center justify-center mx-auto mb-4">
             <Clock className="size-8 text-pf-warning" />
           </div>

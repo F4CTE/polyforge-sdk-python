@@ -83,13 +83,13 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           required
           aria-invalid={status === 'error'}
           aria-describedby={status === 'error' ? 'waitlist-error' : undefined}
-          className="flex-1 min-w-[180px] bg-pf-elevated border border-pf-border-subtle rounded-pf-md text-pf-text font-sans text-[15px] px-4 py-3 outline-none transition-colors focus:border-pf-cyan-400 focus-visible:ring-2 focus-visible:ring-pf-cyan-400/50 placeholder:text-pf-text-muted"
+          className="flex-1 min-w-[180px] min-h-[44px] bg-pf-elevated border border-pf-border-subtle rounded-pf-md text-pf-text font-sans text-[15px] px-4 py-3 outline-none transition-colors focus:border-pf-cyan-400 focus:ring-2 focus:ring-pf-cyan-400/50 focus-visible:ring-2 focus-visible:ring-pf-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base placeholder:text-pf-text-muted"
         />
         <button
           type="submit"
           disabled={status === 'loading'}
           aria-busy={status === 'loading'}
-          className="inline-flex items-center justify-center font-semibold text-[15px] px-6 py-3 rounded-pf-md bg-pf-cyan-500 text-black cursor-pointer transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none disabled:hover:bg-pf-cyan-500 whitespace-nowrap"
+          className="inline-flex items-center justify-center font-semibold text-[15px] px-6 py-3 min-h-[44px] rounded-pf-md bg-pf-cyan-500 text-black cursor-pointer transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:bg-pf-cyan-500 whitespace-nowrap"
         >
           <span>Request access</span>
           {status === 'loading' && (
