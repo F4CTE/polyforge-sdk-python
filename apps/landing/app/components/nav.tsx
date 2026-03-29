@@ -141,7 +141,7 @@ export function Nav() {
         </div>
 
         <button
-          className="flex md:hidden flex-col gap-1.5 bg-transparent border-none cursor-pointer p-1 ml-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
+          className="flex md:hidden items-center justify-center w-10 h-10 bg-transparent border-none cursor-pointer ml-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav-menu"

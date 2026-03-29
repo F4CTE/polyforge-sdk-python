@@ -47,7 +47,7 @@ export function Hero() {
           Early Access &mdash; Limited Invites
         </div>
 
-        <h1 className="text-[clamp(40px,7vw,72px)] font-extrabold leading-[1.08] tracking-[-0.035em] text-pf-text mb-6">
+        <h1 className="text-[clamp(40px,7vw,72px)] font-extrabold leading-[1.15] tracking-[-0.035em] text-pf-text mb-6">
           Automate your edge on
           <br />
           <span className="bg-gradient-to-br from-pf-cyan-300 to-pf-cyan-500 bg-clip-text text-transparent">

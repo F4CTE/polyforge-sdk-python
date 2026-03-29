@@ -99,9 +99,10 @@ export function Component() {
                     key={t.id}
                     role="link"
                     tabIndex={0}
+                    aria-label={`View ticket: ${t.subject}`}
                     onClick={() => navigate(`/tickets/${t.id}`)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/tickets/${t.id}`); }}
-                    className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] cursor-pointer transition-colors"
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/tickets/${t.id}`); } }}
+                    className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
                   >
                     <td className="px-4 py-3 font-medium text-[var(--color-pf-text)]">{t.subject}</td>
                     <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{t.username ?? t.userId?.slice(0, 8)}</td>

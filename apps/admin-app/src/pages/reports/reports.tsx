@@ -152,7 +152,7 @@ export function Component() {
       {reviewingId && (
         <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
           <h3 className="text-sm font-semibold text-[var(--color-pf-text)] mb-3">Review Report</h3>
-          <label htmlFor="admin-note" className="sr-only">Admin note</label>
+          <label htmlFor="admin-note" className="block text-sm font-medium text-[var(--color-pf-text-secondary)] mb-2">Admin Note</label>
           <textarea
             id="admin-note"
             value={adminNote}

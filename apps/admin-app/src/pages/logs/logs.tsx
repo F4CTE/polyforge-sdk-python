@@ -114,7 +114,7 @@ export function Component() {
                 ))
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12">
+                  <td colSpan={tab === 'audit' ? 4 : tab === 'logins' ? 5 : 3} className="text-center py-12">
                     <ScrollText className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
                     <p className="text-[var(--color-pf-text-secondary)] font-medium">No logs found</p>
                     <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">System logs will appear here</p>

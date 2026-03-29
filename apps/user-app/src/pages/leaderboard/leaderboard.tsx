@@ -57,8 +57,8 @@ function rankMedal(rank: number): React.ReactNode {
 
 function rankColor(rank: number): string {
   if (rank === 1) return 'text-pf-warning'; /* gold */
-  if (rank === 2) return 'text-gray-400';
-  if (rank === 3) return 'text-amber-700'; /* bronze – no pf-* equivalent */
+  if (rank === 2) return 'text-pf-text-secondary';
+  if (rank === 3) return 'text-pf-gold-600';
   return 'text-pf-text-muted';
 }
 

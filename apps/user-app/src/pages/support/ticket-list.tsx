@@ -165,9 +165,11 @@ export function Component() {
           {FAQ_ITEMS.map((item, idx) => (
             <div key={idx} className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
               <button
+                id={`faq-btn-${idx}`}
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                 className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-pf-surface/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40 transition-colors"
                 aria-expanded={openFaq === idx}
+                aria-controls={`faq-panel-${idx}`}
               >
                 <span className="text-sm font-medium text-pf-text">{item.q}</span>
                 {openFaq === idx ? (
@@ -177,7 +179,7 @@ export function Component() {
                 )}
               </button>
               {openFaq === idx && (
-                <div className="px-4 pb-3 text-sm text-pf-text-secondary leading-relaxed border-l-2 border-pf-cyan-500/40 ml-4 mr-4">
+                <div id={`faq-panel-${idx}`} role="region" aria-labelledby={`faq-btn-${idx}`} className="px-4 pb-3 text-sm text-pf-text-secondary leading-relaxed border-l-2 border-pf-cyan-500/40 ml-4 mr-4">
                   {item.a}
                 </div>
               )}

@@ -230,6 +230,7 @@ export function Component() {
         <select
           value={source}
           onChange={e => changeSource(e.target.value)}
+          aria-label="Filter by news source"
           className="px-3 py-1.5 rounded-pf-sm text-xs bg-pf-elevated text-pf-text-secondary border border-pf-border hover:border-pf-border-strong transition-colors"
         >
           {SOURCES.map(s => (
@@ -256,8 +257,9 @@ export function Component() {
 
         {/* Min confidence slider */}
         <div className="flex items-center gap-3 ml-auto">
-          <span className="text-xs text-pf-text-muted">Min Confidence:</span>
+          <label htmlFor="min-confidence" className="text-xs text-pf-text-muted">Min Confidence:</label>
           <input
+            id="min-confidence"
             type="range"
             min={0}
             max={100}

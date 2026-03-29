@@ -157,7 +157,7 @@ export function Component() {
                   className={inputClass}
                 />
               </div>
-              {fieldError('email') && <p id="register-email-error" className="mt-1 text-xs text-pf-danger">{fieldError('email')}</p>}
+              {fieldError('email') && <p id="register-email-error" role="alert" className="mt-1 text-xs text-pf-danger">{fieldError('email')}</p>}
             </div>
 
             {/* Username */}
@@ -177,7 +177,7 @@ export function Component() {
                   className={inputClass}
                 />
               </div>
-              {fieldError('username') && <p id="register-username-error" className="mt-1 text-xs text-pf-danger">{fieldError('username')}</p>}
+              {fieldError('username') && <p id="register-username-error" role="alert" className="mt-1 text-xs text-pf-danger">{fieldError('username')}</p>}
             </div>
 
             {/* Password */}
@@ -197,7 +197,7 @@ export function Component() {
                   className={inputClass}
                 />
               </div>
-              {fieldError('password') && <p id="register-password-error" className="mt-1 text-xs text-pf-danger">{fieldError('password')}</p>}
+              {fieldError('password') && <p id="register-password-error" role="alert" className="mt-1 text-xs text-pf-danger">{fieldError('password')}</p>}
               {touched.password && password && (
                 <ul className="mt-1.5 text-xs space-y-0.5 list-disc list-inside">
                   <li className={password.length >= 8 ? 'text-pf-success' : 'text-pf-text-muted'}>Minimum 8 characters</li>
@@ -225,7 +225,7 @@ export function Component() {
                   className={inputClass}
                 />
               </div>
-              {fieldError('confirmPassword') && <p id="register-confirm-password-error" className="mt-1 text-xs text-pf-danger">{fieldError('confirmPassword')}</p>}
+              {fieldError('confirmPassword') && <p id="register-confirm-password-error" role="alert" className="mt-1 text-xs text-pf-danger">{fieldError('confirmPassword')}</p>}
             </div>
 
             {/* Invite Code */}
@@ -262,7 +262,7 @@ export function Component() {
                 </a>
               </label>
             </div>
-            {fieldError('tos') && <p id="register-tos-error" className="text-xs text-pf-danger -mt-2">{fieldError('tos')}</p>}
+            {fieldError('tos') && <p id="register-tos-error" role="alert" className="text-xs text-pf-danger -mt-2">{fieldError('tos')}</p>}
 
             <button
               type="submit"
