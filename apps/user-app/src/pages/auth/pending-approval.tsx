@@ -4,9 +4,8 @@ import { AuthBackground } from '@/components/auth-background';
 
 export function Component() {
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4 relative"
-      style={{ background: 'var(--color-pf-base)' }}
+    <main
+      className="min-h-screen flex items-center justify-center p-4 relative bg-pf-base"
     >
       <AuthBackground />
       <div className="w-full max-w-md relative z-10">
@@ -46,6 +45,6 @@ export function Component() {
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -93,7 +93,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
   const [marketSlots, setMarketSlots] = useState<{ slot: string; label?: string }[]>([]);
   const [marketBindings, setMarketBindings] = useState<Record<string, string>>({});
   const [marketSearch, setMarketSearch] = useState<Record<string, string>>({});
-  const [marketResults, setMarketResults] = useState<Record<string, any[]>>({});
+  const [marketResults, setMarketResults] = useState<Record<string, Record<string, unknown>[]>>({});
 
   // ─── Live state ────────────────────────────────────────────────────
   const [live, setLive] = useState<LiveState>(INITIAL_LIVE);

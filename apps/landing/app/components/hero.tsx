@@ -1,28 +1,26 @@
 import { WaitlistForm } from './waitlist-form';
 
+const PARTICLES = [
+  { w: 4, left: '15%', top: '20%', dur: '8s', delay: '0s' },
+  { w: 3, left: '80%', top: '30%', dur: '10s', delay: '1s' },
+  { w: 5, left: '40%', top: '60%', dur: '12s', delay: '2s' },
+  { w: 3, left: '70%', top: '70%', dur: '9s', delay: '3s' },
+  { w: 4, left: '25%', top: '80%', dur: '11s', delay: '0.5s' },
+  { w: 3, left: '55%', top: '15%', dur: '7s', delay: '1.5s' },
+] as const;
+
 export function Hero() {
   return (
     <section className="relative overflow-hidden pt-16 sm:pt-[100px] pb-12 sm:pb-20 text-center" aria-labelledby="hero-heading">
       {/* Glow */}
       <div
-        className="absolute -top-[200px] left-1/2 -translate-x-1/2 w-[900px] h-[900px] pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(ellipse, rgba(6,182,212,0.14) 0%, rgba(6,182,212,0.04) 40%, transparent 65%)',
-        }}
+        className="absolute -top-[200px] left-1/2 -translate-x-1/2 w-[900px] h-[900px] pointer-events-none hero-glow"
         aria-hidden="true"
       />
 
       {/* Floating particles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        {[
-          { w: 4, left: '15%', top: '20%', dur: '8s', delay: '0s' },
-          { w: 3, left: '80%', top: '30%', dur: '10s', delay: '1s' },
-          { w: 5, left: '40%', top: '60%', dur: '12s', delay: '2s' },
-          { w: 3, left: '70%', top: '70%', dur: '9s', delay: '3s' },
-          { w: 4, left: '25%', top: '80%', dur: '11s', delay: '0.5s' },
-          { w: 3, left: '55%', top: '15%', dur: '7s', delay: '1.5s' },
-        ].map((p) => (
+        {PARTICLES.map((p) => (
           <div
             key={`${p.left}-${p.top}`}
             className="absolute rounded-full bg-pf-cyan-500/25"

@@ -43,10 +43,10 @@ export function Component() {
     setSending(true);
     try {
       const res = await adminApi.replyTicket(id, reply);
-      setTicket((t) => ({
+      setTicket((t) => t ? ({
         ...t,
-        messages: [...(t.messages ?? []), res],
-      }));
+        messages: [...((t.messages as unknown[]) ?? []), res],
+      }) : t);
       setReply('');
       toast.success('Reply sent');
     } catch {
@@ -61,7 +61,7 @@ export function Component() {
     try {
       await adminApi.updateTicket(id, { status: newStatus });
       setStatusValue(newStatus);
-      setTicket((t) => ({ ...t, status: newStatus }));
+      setTicket((t) => t ? { ...t, status: newStatus } : t);
       toast.success(`Status updated to ${newStatus}`);
     } catch {
       toast.error('Failed to update status');
@@ -121,7 +121,7 @@ export function Component() {
       </button>
 
       {/* Header */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6">
+      <header className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6">
         <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
           <div>
             <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">
@@ -179,10 +179,10 @@ export function Component() {
             </select>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Messages Thread */}
-      <div className="space-y-3">
+      <section aria-label="Ticket messages" className="space-y-3">
         {messages.map((msg: Record<string, unknown>, i: number) => {
           const isAdmin = msg.senderType === 'admin' || msg.adminId;
           return (
@@ -206,7 +206,7 @@ export function Component() {
             </div>
           );
         })}
-      </div>
+      </section>
 
       {/* Reply */}
       <form

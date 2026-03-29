@@ -7,21 +7,13 @@ export function CtaBanner() {
         <div className="relative overflow-hidden bg-pf-surface border border-pf-cyan-500/20 rounded-pf-lg px-6 sm:px-12 py-12 sm:py-16 text-center">
           {/* Glow */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(ellipse, rgba(6,182,212,0.12) 0%, rgba(6,182,212,0.04) 40%, transparent 65%)',
-            }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] pointer-events-none cta-glow"
             aria-hidden="true"
           />
 
           {/* Dot pattern */}
           <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)',
-              backgroundSize: '24px 24px',
-            }}
+            className="absolute inset-0 pointer-events-none cta-dots"
             aria-hidden="true"
           />
 

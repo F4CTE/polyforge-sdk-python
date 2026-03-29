@@ -2,6 +2,15 @@
 
 import { useState, useEffect } from 'react';
 
+const MOBILE_NAV_LINKS = [
+  { href: '#features', label: 'Features' },
+  { href: '#how-it-works', label: 'How it works' },
+  { href: '/api-docs', label: 'API Docs' },
+  { href: '/terms', label: 'Terms' },
+  { href: '/privacy', label: 'Privacy' },
+  { href: '/login', label: 'Sign in' },
+] as const;
+
 function PolyforgeIcon({ className = '' }: { className?: string }) {
   return (
     <svg
@@ -176,20 +185,12 @@ export function Nav() {
         </button>
       </div>
 
-      <div
+      <nav
         id="mobile-nav-menu"
-        role="region"
         aria-label="Mobile navigation"
         className={`${mobileOpen ? 'flex' : 'hidden'} md:hidden flex-col gap-1 px-6 pb-4 border-t border-pf-border-subtle`}
       >
-        {[
-          { href: '#features', label: 'Features' },
-          { href: '#how-it-works', label: 'How it works' },
-          { href: '/api-docs', label: 'API Docs' },
-          { href: '/terms', label: 'Terms' },
-          { href: '/privacy', label: 'Privacy' },
-          { href: '/login', label: 'Sign in' },
-        ].map(({ href, label }) => (
+        {MOBILE_NAV_LINKS.map(({ href, label }) => (
           <a
             key={href}
             href={href}
@@ -206,7 +207,7 @@ export function Nav() {
         >
           Start building free
         </a>
-      </div>
+      </nav>
     </nav>
   );
 }
