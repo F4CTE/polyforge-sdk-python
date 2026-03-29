@@ -80,7 +80,15 @@ infra/terraform/*.tfvars
 # Compiled TS artifacts in packages/*/src (should be in dist/)
 packages/*/src/*.js
 packages/*/src/*.js.map
-packages/*/src/*.d.tstests/e2e/playwright-report/
+packages/*/src/*.d.ts
+
+# Compiled TS artifacts emitted into apps src directories
+apps/*/src/**/*.js
+apps/*/src/**/*.js.map
+apps/*/src/**/*.d.ts
+apps/*/src/**/*.d.ts.map
+
+tests/e2e/playwright-report/
 tests/e2e/test-results/
 packages/**/src/*.d.ts
 services/gateway/certs/
