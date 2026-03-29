@@ -204,7 +204,7 @@ export function Component() {
           if (e.isIntersecting) setActiveId(e.target.id);
         }
       },
-      { rootMargin: '-10% 0px -80% 0px', threshold: 0 }
+      { root: document.getElementById('main-content'), rootMargin: '0px 0px -80% 0px', threshold: 0 }
     );
     const sectionEls = mainRef.current?.querySelectorAll('section[id]') ?? [];
     sectionEls.forEach(el => observer.observe(el));
@@ -212,13 +212,21 @@ export function Component() {
   }, []);
 
   function scrollTo(id: string) {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const el = document.getElementById(id);
+    if (!el) return;
+    const container = document.getElementById('main-content');
+    if (container) {
+      const top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop - 24;
+      container.scrollTo({ top, behavior: 'smooth' });
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   return (
-    <div className="flex h-full min-h-0 animate-fade-in">
+    <div className="flex animate-fade-in">
       {/* ── Sidebar ── */}
-      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r border-pf-border-subtle bg-pf-surface overflow-y-auto py-6 px-3">
+      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r border-pf-border-subtle bg-pf-surface overflow-y-auto py-6 px-3 sticky top-0 h-screen self-start">
         <div className="mb-6 px-2">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-pf-text-muted mb-0.5">Base URL</p>
           <code className="text-[10px] font-mono text-pf-cyan-300 break-all">api.polyforge.app</code>
@@ -246,7 +254,7 @@ export function Component() {
       </aside>
 
       {/* ── Content ── */}
-      <div ref={mainRef} className="flex-1 overflow-y-auto">
+      <div ref={mainRef} className="flex-1 min-w-0">
         <div className="max-w-3xl mx-auto px-6 py-8">
 
           {/* Page header */}
