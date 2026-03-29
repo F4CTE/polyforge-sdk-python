@@ -36,39 +36,39 @@ const navSections: NavSection[] = [
   {
     title: 'Overview',
     items: [
-      { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={iconSize} /> },
+      { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={iconSize} aria-hidden="true" /> },
     ],
   },
   {
     title: 'Management',
     items: [
-      { label: 'Users', path: '/users', icon: <Users size={iconSize} /> },
-      { label: 'Strategies', path: '/strategies', icon: <Blocks size={iconSize} /> },
-      { label: 'Orders', path: '/orders', icon: <ShoppingCart size={iconSize} /> },
-      { label: 'Backtests', path: '/backtests', icon: <FlaskConical size={iconSize} /> },
+      { label: 'Users', path: '/users', icon: <Users size={iconSize} aria-hidden="true" /> },
+      { label: 'Strategies', path: '/strategies', icon: <Blocks size={iconSize} aria-hidden="true" /> },
+      { label: 'Orders', path: '/orders', icon: <ShoppingCart size={iconSize} aria-hidden="true" /> },
+      { label: 'Backtests', path: '/backtests', icon: <FlaskConical size={iconSize} aria-hidden="true" /> },
     ],
   },
   {
     title: 'System',
     items: [
-      { label: 'Cache', path: '/cache', icon: <Database size={iconSize} /> },
-      { label: 'Reports', path: '/reports', icon: <Flag size={iconSize} /> },
-      { label: 'Logs', path: '/logs', icon: <ScrollText size={iconSize} /> },
+      { label: 'Cache', path: '/cache', icon: <Database size={iconSize} aria-hidden="true" /> },
+      { label: 'Reports', path: '/reports', icon: <Flag size={iconSize} aria-hidden="true" /> },
+      { label: 'Logs', path: '/logs', icon: <ScrollText size={iconSize} aria-hidden="true" /> },
     ],
   },
   {
     title: 'Programs',
     items: [
-      { label: 'Builder', path: '/builder', icon: <Hammer size={iconSize} /> },
-      { label: 'Invites', path: '/invites', icon: <Mail size={iconSize} /> },
-      { label: 'Tickets', path: '/tickets', icon: <TicketCheck size={iconSize} /> },
+      { label: 'Builder', path: '/builder', icon: <Hammer size={iconSize} aria-hidden="true" /> },
+      { label: 'Invites', path: '/invites', icon: <Mail size={iconSize} aria-hidden="true" /> },
+      { label: 'Tickets', path: '/tickets', icon: <TicketCheck size={iconSize} aria-hidden="true" /> },
     ],
   },
   {
     title: 'Access',
     superAdminOnly: true,
     items: [
-      { label: 'Admins', path: '/admins', icon: <ShieldCheck size={iconSize} /> },
+      { label: 'Admins', path: '/admins', icon: <ShieldCheck size={iconSize} aria-hidden="true" /> },
     ],
   },
 ];

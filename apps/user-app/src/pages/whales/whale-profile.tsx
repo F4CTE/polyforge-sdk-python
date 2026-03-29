@@ -155,7 +155,7 @@ export function Component() {
   if (notFound) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/whales" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 transition-colors mb-6">
+        <Link to="/whales" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to feed
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -170,7 +170,7 @@ export function Component() {
   if (error || !profile) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/whales" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 transition-colors mb-6">
+        <Link to="/whales" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to feed
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">

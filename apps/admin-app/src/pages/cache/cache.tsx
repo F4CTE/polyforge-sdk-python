@@ -75,10 +75,10 @@ export function Component() {
         <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Cache</h2>
         <button type="button"
           onClick={loadStats}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] cursor-pointer transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
           aria-label="Refresh cache stats"
         >
-          <RefreshCw size={14} />
+          <RefreshCw size={14} aria-hidden="true" />
           Refresh
         </button>
       </div>
@@ -110,7 +110,7 @@ export function Component() {
       {/* Flush */}
       <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Trash2 size={16} className="text-pf-warning" />
+          <Trash2 size={16} className="text-pf-warning" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">Flush by Pattern</h3>
         </div>
         <div className="flex gap-3">
@@ -126,7 +126,7 @@ export function Component() {
           <button type="button"
             onClick={handleFlush}
             disabled={flushing || !pattern.trim()}
-            className="px-4 py-2 text-sm rounded-pf-sm bg-pf-warning text-white hover:bg-pf-warning/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm rounded-pf-sm bg-pf-warning text-white hover:bg-pf-warning/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-warning"
           >
             {flushing ? 'Flushing...' : 'Flush'}
           </button>
@@ -137,7 +137,7 @@ export function Component() {
       {stats && stats.patterns && stats.patterns.length > 0 && (
         <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Database size={16} className="text-[var(--color-pf-cyan-500)]" />
+            <Database size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
             <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">Cache Patterns</h3>
           </div>
           <div className="overflow-x-auto">

@@ -93,7 +93,7 @@ export function Component() {
               ) : backtests.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="text-center py-12">
-                    <FlaskConical className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
+                    <FlaskConical className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} aria-hidden="true" />
                     <p className="text-[var(--color-pf-text-secondary)] font-medium">No backtests found</p>
                     <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Backtest runs will appear here</p>
                   </td>

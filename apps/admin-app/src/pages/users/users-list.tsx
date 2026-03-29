@@ -146,6 +146,7 @@ export function Component() {
           <Search
             size={14}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-pf-text-tertiary)]"
+            aria-hidden="true"
           />
           <input
             type="text"
@@ -179,7 +180,7 @@ export function Component() {
             onChange={(e) => setHideTestAccounts((e.target as HTMLInputElement).checked)}
             className="accent-[var(--color-pf-cyan-500)]"
           />
-          <EyeOff size={14} />
+          <EyeOff size={14} aria-hidden="true" />
           Hide test accounts
         </label>
       </div>
@@ -187,7 +188,7 @@ export function Component() {
       {/* Error state */}
       {error && (
         <div className="text-center py-12">
-          <AlertCircle className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)]" size={40} />
+          <AlertCircle className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)]" size={40} aria-hidden="true" />
           <p className="text-[var(--color-pf-text-secondary)] mb-4">Failed to load data</p>
           <button type="button" onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded-pf-sm px-2 py-1">
             Try again
@@ -226,7 +227,7 @@ export function Component() {
               ) : displayUsers.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-12">
-                    <Users className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
+                    <Users className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} aria-hidden="true" />
                     <p className="text-[var(--color-pf-text-secondary)] font-medium">No users found</p>
                     <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Try adjusting your search or filters</p>
                   </td>

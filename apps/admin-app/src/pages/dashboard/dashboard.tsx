@@ -121,10 +121,10 @@ export function Component() {
   }
 
   const statCards = [
-    { label: 'Total Users', value: stats.totalUsers, icon: <Users size={20} />, color: 'text-pf-info', bg: 'bg-pf-info/10' },
-    { label: 'Active Strategies', value: stats.activeStrategies, icon: <Blocks size={20} />, color: 'text-pf-success', bg: 'bg-pf-success/10' },
-    { label: 'Total Orders', value: stats.totalOrders, icon: <ShoppingCart size={20} />, color: 'text-[var(--color-pf-purple-500)]', bg: 'bg-[var(--color-pf-purple-500)]/10' },
-    { label: 'Open Tickets', value: stats.openTickets, icon: <TicketCheck size={20} />, color: 'text-pf-warning', bg: 'bg-pf-warning/10' },
+    { label: 'Total Users', value: stats.totalUsers, icon: <Users size={20} aria-hidden="true" />, color: 'text-pf-info', bg: 'bg-pf-info/10' },
+    { label: 'Active Strategies', value: stats.activeStrategies, icon: <Blocks size={20} aria-hidden="true" />, color: 'text-pf-success', bg: 'bg-pf-success/10' },
+    { label: 'Total Orders', value: stats.totalOrders, icon: <ShoppingCart size={20} aria-hidden="true" />, color: 'text-[var(--color-pf-purple-500)]', bg: 'bg-[var(--color-pf-purple-500)]/10' },
+    { label: 'Open Tickets', value: stats.openTickets, icon: <TicketCheck size={20} aria-hidden="true" />, color: 'text-pf-warning', bg: 'bg-pf-warning/10' },
   ];
 
   return (
@@ -132,7 +132,7 @@ export function Component() {
       {/* Stat Cards */}
       {statsError ? (
         <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 text-center">
-          <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={24} />
+          <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={24} aria-hidden="true" />
           <p className="text-sm text-[var(--color-pf-text-secondary)]">Stats unavailable</p>
         </div>
       ) : (
@@ -163,13 +163,13 @@ export function Component() {
         {healthError ? (
           <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Activity size={16} className="text-[var(--color-pf-text-tertiary)]" />
+              <Activity size={16} className="text-[var(--color-pf-text-tertiary)]" aria-hidden="true" />
               <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
                 System Health
               </h2>
             </div>
             <div className="text-center py-6">
-              <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={24} />
+              <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={24} aria-hidden="true" />
               <p className="text-sm text-[var(--color-pf-text-secondary)]">Health unavailable</p>
               <button type="button" onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded">
                 Retry
@@ -179,7 +179,7 @@ export function Component() {
         ) : health ? (
           <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Activity size={16} className="text-[var(--color-pf-cyan-500)]" />
+              <Activity size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
               <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
                 System Health
               </h2>
@@ -225,7 +225,7 @@ export function Component() {
           {health?.db && (
           <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Database size={16} className="text-[var(--color-pf-cyan-500)]" />
+              <Database size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
               <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
                 Database
               </h2>
@@ -244,7 +244,7 @@ export function Component() {
           {health?.redis && (
           <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Server size={16} className="text-[var(--color-pf-cyan-500)]" />
+              <Server size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
               <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
                 Redis
               </h2>
@@ -293,7 +293,7 @@ export function Component() {
       {/* Rate Limiting */}
       <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
-          <ShieldAlert size={16} className="text-[var(--color-pf-cyan-500)]" />
+          <ShieldAlert size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
           <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
             Rate Limiting
           </h2>
@@ -349,7 +349,7 @@ export function Component() {
             )}
           </div>
         ) : (
-          <p className="text-sm text-[var(--color-pf-text-tertiary)]">Loading...</p>
+          <p className="text-sm text-[var(--color-pf-text-tertiary)]" role="status">Loading...</p>
         )}
       </div>
 
@@ -360,7 +360,7 @@ export function Component() {
         </h2>
         {logsError ? (
           <div className="text-center py-4">
-            <Clock className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={20} />
+            <Clock className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={20} aria-hidden="true" />
             <p className="text-sm text-[var(--color-pf-text-secondary)]">No recent activity</p>
             <p className="text-xs text-[var(--color-pf-text-tertiary)] mt-1">Activity will appear here as admins take actions.</p>
             <button type="button" onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded">

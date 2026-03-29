@@ -189,8 +189,8 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Market</label>
-              <select value={form.marketId} onChange={e => {
+              <label htmlFor="cond-market-select" className="block text-xs font-medium text-pf-text-secondary mb-1">Market</label>
+              <select id="cond-market-select" value={form.marketId} onChange={e => {
                 const mkt = positions.find(p => p.marketId === e.target.value);
                 updateField('marketId', e.target.value);
                 if (mkt) updateField('tokenId', mkt.tokenId);

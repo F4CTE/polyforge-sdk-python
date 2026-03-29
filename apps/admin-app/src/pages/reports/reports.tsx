@@ -91,7 +91,7 @@ export function Component() {
               ) : reports.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-12">
-                    <Flag className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
+                    <Flag className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} aria-hidden="true" />
                     <p className="text-[var(--color-pf-text-secondary)] font-medium">No reports found</p>
                     <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Content reports will appear here</p>
                   </td>
@@ -120,9 +120,9 @@ export function Component() {
                             setReviewingId(r.id);
                             setAdminNote('');
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--color-pf-cyan-500)]/10 text-[var(--color-pf-cyan-500)] hover:bg-[var(--color-pf-cyan-500)]/20 cursor-pointer transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--color-pf-cyan-500)]/10 text-[var(--color-pf-cyan-500)] hover:bg-[var(--color-pf-cyan-500)]/20 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
                         >
-                          <Flag size={12} />
+                          <Flag size={12} aria-hidden="true" />
                           Review
                         </button>
                       )}
@@ -165,16 +165,16 @@ export function Component() {
           <div className="flex gap-3">
             <button type="button"
               onClick={() => handleResolve(reviewingId, 'REVIEWED')}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 cursor-pointer transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success"
             >
-              <CheckCircle size={14} />
+              <CheckCircle size={14} aria-hidden="true" />
               Approve
             </button>
             <button type="button"
               onClick={() => handleResolve(reviewingId, 'DISMISSED')}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] cursor-pointer transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
             >
-              <XCircle size={14} />
+              <XCircle size={14} aria-hidden="true" />
               Dismiss
             </button>
             <button type="button"

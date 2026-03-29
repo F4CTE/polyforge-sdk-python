@@ -291,15 +291,15 @@ export function Component() {
 
       {/* Empty state */}
       {!loading && strategies.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Code2 className="size-10 text-pf-text-muted mb-4" />
+        <div className="flex flex-col items-center justify-center py-20 text-center" role="status">
+          <Code2 className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
           <p className="text-pf-text font-medium">No strategies yet</p>
           <p className="text-sm text-pf-text-muted mt-1">Create your first strategy to start trading.</p>
           <Link
             to="/strategies/new"
             className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
           >
-            <Plus className="size-4" /> New Strategy
+            <Plus className="size-4" aria-hidden="true" /> New Strategy
           </Link>
         </div>
       )}
@@ -403,7 +403,7 @@ export function Component() {
                           className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 text-[11px] font-medium hover:bg-pf-cyan-500/20 disabled:opacity-40 transition-colors"
                           title="Start strategy"
                         >
-                          <Zap className="size-3" /> Live
+                          <Zap className="size-3" aria-hidden="true" /> Live
                         </button>
                         <button
                           type="button"
@@ -412,7 +412,7 @@ export function Component() {
                           className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-overlay text-pf-text-secondary text-[11px] font-medium hover:bg-pf-border-subtle disabled:opacity-40 transition-colors"
                           title="Start strategy"
                         >
-                          <FileText className="size-3" /> Paper
+                          <FileText className="size-3" aria-hidden="true" /> Paper
                         </button>
                       </>
                     )}

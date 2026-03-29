@@ -59,7 +59,7 @@ export function Component() {
             Polyforge Admin
           </h1>
           <div className="flex items-center justify-center gap-1.5 mt-2">
-            <ShieldCheck size={14} className="text-[var(--color-pf-cyan-500)]" />
+            <ShieldCheck size={14} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
             <span className="text-xs text-[var(--color-pf-text-tertiary)]">
               Admin Console
             </span>
@@ -69,6 +69,7 @@ export function Component() {
         {/* Form */}
         <form
           onSubmit={handleSubmit}
+          noValidate
           className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 space-y-4 shadow-pf-lg"
         >
           <div>

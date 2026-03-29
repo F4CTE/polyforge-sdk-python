@@ -55,7 +55,7 @@ export function Component() {
 
       {error && (
         <div className="text-center py-12">
-          <AlertCircle className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)]" size={40} />
+          <AlertCircle className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)]" size={40} aria-hidden="true" />
           <p className="text-[var(--color-pf-text-secondary)] mb-4">Failed to load data</p>
           <button type="button" onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded-pf-sm px-2 py-1">
             Try again
@@ -92,7 +92,7 @@ export function Component() {
               ) : strategies.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12">
-                    <Zap className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
+                    <Zap className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} aria-hidden="true" />
                     <p className="text-[var(--color-pf-text-secondary)] font-medium">No strategies found</p>
                     <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">User strategies will appear here</p>
                   </td>
@@ -117,7 +117,7 @@ export function Component() {
                           aria-label={`Force stop strategy ${s.name}`}
                           className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40"
                         >
-                          <Square size={12} />
+                          <Square size={12} aria-hidden="true" />
                           Force Stop
                         </button>
                       )}

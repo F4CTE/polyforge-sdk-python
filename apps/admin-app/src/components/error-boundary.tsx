@@ -32,10 +32,10 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-pf-base p-6">
+        <div role="alert" className="min-h-screen flex items-center justify-center bg-pf-base p-6">
           <div className="max-w-md w-full text-center space-y-6">
             <div className="mx-auto size-16 rounded-full bg-pf-danger/10 flex items-center justify-center">
-              <AlertTriangle className="size-8 text-pf-danger" />
+              <AlertTriangle className="size-8 text-pf-danger" aria-hidden="true" />
             </div>
             <div>
               <h1 className="text-xl font-semibold text-pf-text mb-2">
@@ -50,7 +50,7 @@ export class ErrorBoundary extends Component<Props, State> {
               onClick={this.handleReset}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
             >
-              <RefreshCw className="size-4" />
+              <RefreshCw className="size-4" aria-hidden="true" />
               Try again
             </button>
           </div>

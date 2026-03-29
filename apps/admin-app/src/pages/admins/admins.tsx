@@ -122,7 +122,7 @@ export function Component() {
   if (!isSuperAdmin) {
     return (
       <div className="text-center py-12">
-        <ShieldCheck size={48} className="mx-auto text-[var(--color-pf-text-tertiary)] mb-4" />
+        <ShieldCheck size={48} className="mx-auto text-[var(--color-pf-text-tertiary)] mb-4" aria-hidden="true" />
         <p className="text-[var(--color-pf-text-secondary)]">Super Admin access required</p>
       </div>
     );
@@ -140,7 +140,7 @@ export function Component() {
           onClick={openAdd}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-pf-base)]"
         >
-          <Plus size={14} />
+          <Plus size={14} aria-hidden="true" />
           Add Admin
         </button>
       </div>
@@ -173,7 +173,7 @@ export function Component() {
               ) : admins.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-12">
-                    <ShieldCheck className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
+                    <ShieldCheck className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} aria-hidden="true" />
                     <p className="text-[var(--color-pf-text-secondary)] font-medium">No admins found</p>
                     <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Add an admin account to get started</p>
                   </td>
@@ -247,7 +247,7 @@ export function Component() {
                 <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
               {dialogMode === 'add' && (
                 <div>
                   <label htmlFor="admin-email" className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1">Email</label>

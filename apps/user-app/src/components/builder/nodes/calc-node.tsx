@@ -236,10 +236,11 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         <div className="px-2.5 py-2 space-y-2">
           {dropdownOptions && (
             <div>
-              <label className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+              <label htmlFor={`${id}-${dropdownOptions.key}`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                 {d.type === 'MATH' ? 'Operation' : d.type === 'COMPARISON' ? 'Operator' : 'Function'}
               </label>
               <select
+                id={`${id}-${dropdownOptions.key}`}
                 value={d.config[dropdownOptions.key] ?? dropdownOptions.options[0]?.value ?? ''}
                 onChange={(e) => onFieldChange(dropdownOptions.key, e.target.value)}
                 aria-label={d.type === 'MATH' ? 'Operation' : d.type === 'COMPARISON' ? 'Operator' : 'Function'}
@@ -257,10 +258,11 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {/* Window size for aggregation */}
           {showWindowField && (
             <div>
-              <label className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+              <label htmlFor={`${id}-windowSize`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                 Window (N ticks)
               </label>
               <input
+                id={`${id}-windowSize`}
                 type="number"
                 placeholder="20"
                 value={d.config.windowSize ?? ''}
@@ -275,10 +277,11 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {showBetweenFields && (
             <>
               <div>
-                <label className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+                <label htmlFor={`${id}-min`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                   Min
                 </label>
                 <input
+                  id={`${id}-min`}
                   type="number"
                   placeholder="0"
                   value={d.config.min ?? ''}
@@ -288,10 +291,11 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+                <label htmlFor={`${id}-max`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                   Max
                 </label>
                 <input
+                  id={`${id}-max`}
                   type="number"
                   placeholder="100"
                   value={d.config.max ?? ''}
@@ -306,10 +310,11 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {/* Decimals field for abs/round */}
           {showDecimalsField && (
             <div>
-              <label className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+              <label htmlFor={`${id}-decimals`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                 Decimals
               </label>
               <input
+                id={`${id}-decimals`}
                 type="number"
                 placeholder="0"
                 value={d.config.decimals ?? ''}

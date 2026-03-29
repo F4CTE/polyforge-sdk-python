@@ -88,9 +88,9 @@ export function Component() {
 
       {error && (
         <div className="text-center py-12">
-          <AlertCircle className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)]" size={40} />
+          <AlertCircle className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)]" size={40} aria-hidden="true" />
           <p className="text-[var(--color-pf-text-secondary)] mb-4">Failed to load data</p>
-          <button type="button" onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-sm cursor-pointer">
+          <button type="button" onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded-pf-sm">
             Try again
           </button>
         </div>
@@ -100,7 +100,7 @@ export function Component() {
       {dlqEntries.length > 0 && (
         <div className="bg-[var(--color-pf-elevated)] border border-pf-warning/30 rounded-pf-lg p-5">
           <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle size={16} className="text-pf-warning" />
+            <AlertTriangle size={16} className="text-pf-warning" aria-hidden="true" />
             <h3 className="text-sm font-semibold text-pf-warning">
               Dead Letter Queue ({dlqEntries.length})
             </h3>
@@ -130,14 +130,14 @@ export function Component() {
                       <button
                         type="button"
                         onClick={() => confirmAction?.type === 'replay' ? handleReplay(entry.intentId) : handleDiscard(entry.intentId)}
-                        className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors"
+                        className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
                       >
                         Confirm
                       </button>
                       <button
                         type="button"
                         onClick={() => setConfirmAction(null)}
-                        className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] cursor-pointer transition-colors"
+                        className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
                       >
                         Cancel
                       </button>
@@ -147,17 +147,17 @@ export function Component() {
                       <button
                         type="button"
                         onClick={() => setConfirmAction({ type: 'replay', intentId: entry.intentId })}
-                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-info/10 text-pf-info hover:bg-pf-info/20 cursor-pointer transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-info/10 text-pf-info hover:bg-pf-info/20 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-info"
                       >
-                        <RotateCcw size={12} />
+                        <RotateCcw size={12} aria-hidden="true" />
                         Replay
                       </button>
                       <button
                         type="button"
                         onClick={() => setConfirmAction({ type: 'discard', intentId: entry.intentId })}
-                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
                       >
-                        <Trash2 size={12} />
+                        <Trash2 size={12} aria-hidden="true" />
                         Discard
                       </button>
                     </>
@@ -199,14 +199,14 @@ export function Component() {
               ) : orders.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12">
-                    <ClipboardList className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
+                    <ClipboardList className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} aria-hidden="true" />
                     <p className="text-[var(--color-pf-text-secondary)] font-medium">No orders found</p>
                     <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Orders will appear here once users start trading</p>
                   </td>
                 </tr>
               ) : (
                 orders.map((o) => (
-                  <tr key={o.id} className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] cursor-pointer transition-colors">
+                  <tr key={o.id} className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] transition-colors">
                     <td className="px-4 py-3 font-mono text-xs text-[var(--color-pf-text-secondary)]">
                       {o.id.slice(0, 8)}
                     </td>

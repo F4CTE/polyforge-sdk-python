@@ -80,7 +80,7 @@ export function Component() {
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-6">
+      <div className="animate-pulse space-y-6" role="status" aria-label="Loading user details">
         <div className="h-4 bg-[var(--color-pf-elevated)] rounded w-32" />
         <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 space-y-4">
           <div className="h-5 bg-[var(--color-pf-bg)] rounded w-48" />
@@ -193,7 +193,7 @@ export function Component() {
               disabled={actionLoading}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 disabled:opacity-50 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success"
             >
-              <CheckCircle size={14} />
+              <CheckCircle size={14} aria-hidden="true" />
               Unsuspend
             </button>
           ) : (
@@ -203,7 +203,7 @@ export function Component() {
               disabled={actionLoading}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 disabled:opacity-50 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
             >
-              <Ban size={14} />
+              <Ban size={14} aria-hidden="true" />
               Suspend
             </button>
           )}
@@ -246,7 +246,7 @@ export function Component() {
       {/* API Keys */}
       <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Key size={16} className="text-[var(--color-pf-cyan-500)]" />
+          <Key size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">API Keys</h3>
         </div>
         {apiKeys.length === 0 ? (
@@ -296,7 +296,7 @@ export function Component() {
                           <button
                             type="button"
                             onClick={() => setConfirmRevokeKeyId(key.id)}
-                            className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger cursor-pointer transition-colors"
+                            className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
                             aria-label="Revoke key"
                             title="Revoke key"
                           >

@@ -217,7 +217,7 @@ export function Component() {
       {/* Empty state */}
       {!loading && configs.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <svg className="size-10 text-pf-text-muted mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="size-10 text-pf-text-muted mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="9" cy="7" r="4" />
             <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
             <circle cx="16" cy="4" r="3" opacity="0.6" />
@@ -271,6 +271,7 @@ export function Component() {
                       }}
                       className="text-pf-text-muted hover:text-pf-text transition-colors shrink-0"
                       title="Copy address"
+                      aria-label="Copy wallet address"
                     >
                       <Copy className="size-3.5" />
                     </button>

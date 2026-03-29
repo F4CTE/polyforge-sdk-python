@@ -73,7 +73,7 @@ export function Component() {
       {/* Generate Form */}
       <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Plus size={16} className="text-[var(--color-pf-cyan-500)]" />
+          <Plus size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">Generate Invite Codes</h3>
         </div>
         <form onSubmit={handleGenerate} className="flex flex-wrap items-end gap-4">
@@ -133,7 +133,7 @@ export function Component() {
                   <button
                     type="button"
                     onClick={() => copyCode(code)}
-                    className="p-1 rounded hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-cyan-400)] cursor-pointer transition-colors"
+                    className="p-1 rounded hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-cyan-400)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
                     aria-label={`Copy code ${code}`}
                   >
                     <Copy size={12} />
@@ -148,7 +148,7 @@ export function Component() {
       {/* Active Invites Table */}
       <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Mail size={16} className="text-[var(--color-pf-cyan-500)]" />
+          <Mail size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">
             Active Invites ({invites.length})
           </h3>
@@ -171,7 +171,7 @@ export function Component() {
           </div>
         ) : invites.length === 0 ? (
           <div className="text-center py-12">
-            <KeyRound className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} />
+            <KeyRound className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} aria-hidden="true" />
             <p className="text-[var(--color-pf-text-secondary)] font-medium">No active invites</p>
             <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Generate invite codes above to get started</p>
           </div>
@@ -196,7 +196,7 @@ export function Component() {
                         <button
                           type="button"
                           onClick={() => copyCode(inv.code)}
-                          className="p-1 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-cyan-400)] cursor-pointer transition-colors"
+                          className="p-1 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-cyan-400)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
                           aria-label={`Copy code ${inv.code}`}
                         >
                           <Copy size={12} />
@@ -212,14 +212,14 @@ export function Component() {
                     <td className="px-3 py-2.5 text-right">
                       {confirmRevokeCode === inv.code ? (
                         <div className="flex items-center justify-end gap-1.5 text-xs">
-                          <button type="button" onClick={() => handleDelete(inv.code)} className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors">Revoke</button>
-                          <button type="button" onClick={() => setConfirmRevokeCode(null)} className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors">Cancel</button>
+                          <button type="button" onClick={() => handleDelete(inv.code)} className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger">Revoke</button>
+                          <button type="button" onClick={() => setConfirmRevokeCode(null)} className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]">Cancel</button>
                         </div>
                       ) : (
                         <button
                           type="button"
                           onClick={() => setConfirmRevokeCode(inv.code)}
-                          className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
+                          className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
                           aria-label="Revoke invite"
                           title="Revoke invite"
                         >

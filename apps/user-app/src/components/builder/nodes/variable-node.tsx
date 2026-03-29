@@ -111,10 +111,11 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
         <div className="px-2.5 py-2 space-y-2">
           {/* Name */}
           <div>
-            <label className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+            <label htmlFor={`${id}-var-name`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
               Name
             </label>
             <input
+              id={`${id}-var-name`}
               type="text"
               placeholder="myVar"
               value={data.variableName ?? ''}
@@ -135,10 +136,11 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
 
           {/* Expression */}
           <div>
-            <label className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+            <label htmlFor={`${id}-var-expr`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
               Expression
             </label>
             <input
+              id={`${id}-var-expr`}
               type="text"
               placeholder="price * 0.95"
               value={data.expression ?? ''}

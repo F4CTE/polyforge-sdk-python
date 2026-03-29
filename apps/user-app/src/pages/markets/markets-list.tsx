@@ -227,7 +227,7 @@ const MarketCard = memo(function MarketCard({ market, featured }: { market: Mark
       {/* Footer */}
       {market.tokens.length > 0 && (
         <div className="flex items-center gap-1 mt-3 text-[11px] text-pf-text-muted">
-          <Zap className="size-3" />
+          <Zap className="size-3" aria-hidden="true" />
           {market.tokens.length} outcomes
         </div>
       )}
@@ -315,7 +315,7 @@ export function Component() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" aria-hidden="true" />
         <input
           type="text"
           placeholder="Search markets..."
@@ -408,8 +408,8 @@ export function Component() {
       {!loading && viewMode === 'cards' && (
         <>
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <Search className="size-10 text-pf-text-muted mb-4" />
+            <div className="flex flex-col items-center justify-center py-20 text-center" role="status">
+              <Search className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
               <p className="text-pf-text font-medium">No markets found</p>
               <p className="text-sm text-pf-text-muted mt-1">Try adjusting your search or filters</p>
             </div>
@@ -436,8 +436,8 @@ export function Component() {
       {!loading && viewMode === 'table' && (
         <>
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <Search className="size-10 text-pf-text-muted mb-4" />
+            <div className="flex flex-col items-center justify-center py-20 text-center" role="status">
+              <Search className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
               <p className="text-pf-text font-medium">No markets found</p>
               <p className="text-sm text-pf-text-muted mt-1">Try adjusting your search or filters</p>
             </div>

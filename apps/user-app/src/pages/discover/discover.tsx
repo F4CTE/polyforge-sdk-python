@@ -117,7 +117,7 @@ export function Component() {
 
       {/* Search bar */}
       <div className="relative">
-        <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
         <input
           type="text"
           placeholder="Search strategies..."
@@ -152,8 +152,8 @@ export function Component() {
           {Array.from({ length: 9 }, (_, i) => <CardSkeleton key={i} />)}
         </div>
       ) : strategies.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Compass className="size-10 text-pf-text-muted mb-4" />
+        <div className="flex flex-col items-center justify-center py-20 text-center" role="status">
+          <Compass className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
           <p className="text-pf-text font-medium">No strategies found</p>
           <p className="text-sm text-pf-text-muted mt-1">Be the first to publish a public strategy.</p>
         </div>

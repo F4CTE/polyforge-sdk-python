@@ -571,7 +571,7 @@ export function Component() {
                 {liveLog.length === 0 ? (
                   <div className="py-8 text-center text-sm text-pf-text-muted space-y-2">
                     <p>{isActive(status) ? 'Strategy is running.' : 'Start the strategy to generate events.'}</p>
-                    <p className="text-xs">Check the <a href={`/orders?strategy=${strategy?.id}`} className="text-pf-cyan-400 hover:underline">Orders</a> page for trade activity.</p>
+                    <p className="text-xs">Check the <a href={`/orders?strategy=${strategy?.id}`} className="text-pf-cyan-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm">Orders</a> page for trade activity.</p>
                   </div>
                 ) : (
                   <div className="space-y-1.5">

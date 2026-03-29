@@ -211,6 +211,7 @@ export function Component() {
       {/* Reply */}
       <form
         onSubmit={handleReply}
+        noValidate
         className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4"
       >
         <label htmlFor="ticket-reply" className="sr-only">Reply message</label>
@@ -227,9 +228,9 @@ export function Component() {
           <button
             type="submit"
             disabled={sending || !reply.trim()}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
           >
-            <Send size={14} />
+            <Send size={14} aria-hidden="true" />
             {sending ? 'Sending...' : 'Reply'}
           </button>
         </div>

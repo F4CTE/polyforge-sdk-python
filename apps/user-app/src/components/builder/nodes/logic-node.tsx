@@ -138,10 +138,11 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           <div className="px-2.5 py-2 space-y-2">
             {d.fields.map((field) => (
               <div key={field.key}>
-                <label className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+                <label htmlFor={`${id}-${field.key}`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                   {field.label}
                 </label>
                 <input
+                  id={`${id}-${field.key}`}
                   type={field.type}
                   placeholder={field.placeholder}
                   value={d.config[field.key] ?? ''}

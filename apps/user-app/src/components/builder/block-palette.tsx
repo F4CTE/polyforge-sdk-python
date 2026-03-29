@@ -133,10 +133,11 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
         {/* Metadata form */}
         <div className="px-4 py-3 space-y-3 border-b border-pf-border-subtle">
           <div>
-            <label className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-strategy-name" className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
               Strategy Name *
             </label>
             <input
+              id="bp-strategy-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -148,10 +149,11 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           </div>
 
           <div>
-            <label className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-strategy-description" className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
               Description
             </label>
             <textarea
+              id="bp-strategy-description"
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -163,10 +165,11 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           </div>
 
           <div>
-            <label className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-exec-mode" className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
               Exec Mode
             </label>
             <select
+              id="bp-exec-mode"
               value={execMode}
               onChange={(e) => setExecMode(e.target.value)}
               aria-label="Execution mode"
@@ -197,10 +200,11 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           )}
 
           <div>
-            <label className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-visibility" className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
               Visibility
             </label>
             <select
+              id="bp-visibility"
               value={visibility}
               onChange={(e) => setVisibility(e.target.value)}
               aria-label="Strategy visibility"
@@ -213,10 +217,11 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           </div>
 
           <div>
-            <label className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-strategy-tags" className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
               Tags <span className="font-normal opacity-60">(comma separated)</span>
             </label>
             <input
+              id="bp-strategy-tags"
               type="text"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
