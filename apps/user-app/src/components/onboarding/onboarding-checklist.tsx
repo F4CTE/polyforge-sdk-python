@@ -204,7 +204,7 @@ export function OnboardingChecklist() {
               const event = new CustomEvent('polyforge:start-tour');
               window.dispatchEvent(event);
             }}
-            className="text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors font-medium"
+            className="text-xs text-pf-cyan-400 hover:text-pf-cyan-300 cursor-pointer transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
           >
             Take a tour of the platform
           </button>

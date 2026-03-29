@@ -129,13 +129,13 @@ export function Component() {
                       </span>
                       <button
                         onClick={() => confirmAction?.type === 'replay' ? handleReplay(entry.intentId) : handleDiscard(entry.intentId)}
-                        className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
+                        className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors"
                       >
                         Confirm
                       </button>
                       <button
                         onClick={() => setConfirmAction(null)}
-                        className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors"
+                        className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] cursor-pointer transition-colors"
                       >
                         Cancel
                       </button>
@@ -144,14 +144,14 @@ export function Component() {
                     <>
                       <button
                         onClick={() => setConfirmAction({ type: 'replay', intentId: entry.intentId })}
-                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-info/10 text-pf-info hover:bg-pf-info/20 transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-info/10 text-pf-info hover:bg-pf-info/20 cursor-pointer transition-colors"
                       >
                         <RotateCcw size={12} />
                         Replay
                       </button>
                       <button
                         onClick={() => setConfirmAction({ type: 'discard', intentId: entry.intentId })}
-                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors"
                       >
                         <Trash2 size={12} />
                         Discard
@@ -201,7 +201,7 @@ export function Component() {
                 </tr>
               ) : (
                 orders.map((o) => (
-                  <tr key={o.id} className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] transition-colors">
+                  <tr key={o.id} className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] cursor-pointer transition-colors">
                     <td className="px-4 py-3 font-mono text-xs text-[var(--color-pf-text-secondary)]">
                       {o.id.slice(0, 8)}
                     </td>

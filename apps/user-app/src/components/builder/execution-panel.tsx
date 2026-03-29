@@ -800,7 +800,7 @@ function LiveTab({
           {live.status === 'RUNNING' && (
             <button
               onClick={onPause}
-              className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-warning hover:bg-pf-warning/10 transition-colors"
+              className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-warning hover:bg-pf-warning/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
               title="Pause"
               aria-label="Pause execution"
             >
@@ -810,7 +810,7 @@ function LiveTab({
           {live.status === 'PAUSED' && (
             <button
               onClick={onResume}
-              className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-success hover:bg-pf-success/10 transition-colors"
+              className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-success hover:bg-pf-success/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
               title="Resume"
               aria-label="Resume execution"
             >
@@ -819,7 +819,7 @@ function LiveTab({
           )}
           <button
             onClick={onStop}
-            className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-danger hover:bg-pf-danger/10 transition-colors"
+            className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-danger hover:bg-pf-danger/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
             title="Stop"
             aria-label="Stop execution"
           >

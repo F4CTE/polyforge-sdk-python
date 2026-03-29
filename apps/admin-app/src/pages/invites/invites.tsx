@@ -132,7 +132,7 @@ export function Component() {
                   <code className="text-sm font-mono text-[var(--color-pf-cyan-500)]">{code}</code>
                   <button
                     onClick={() => copyCode(code)}
-                    className="p-1 rounded hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-cyan-400)] transition-colors"
+                    className="p-1 rounded hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-cyan-400)] cursor-pointer transition-colors"
                     aria-label={`Copy code ${code}`}
                   >
                     <Copy size={12} />
@@ -193,7 +193,7 @@ export function Component() {
                         <code className="text-sm font-mono text-[var(--color-pf-text)]">{inv.code}</code>
                         <button
                           onClick={() => copyCode(inv.code)}
-                          className="p-1 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-cyan-400)] transition-colors"
+                          className="p-1 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-cyan-400)] cursor-pointer transition-colors"
                           aria-label={`Copy code ${inv.code}`}
                         >
                           <Copy size={12} />

@@ -197,7 +197,7 @@ export function Component() {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEdit(a)}
-                          className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
+                          className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
                           aria-label="Edit admin"
                           title="Edit admin"
                         >
@@ -209,7 +209,7 @@ export function Component() {
                               setDeleteConfirmId(a.id);
                               setDeletePassword('');
                             }}
-                            className="p-1.5 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-danger)]"
+                            className="p-1.5 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-danger)]"
                             aria-label="Deactivate admin"
                             title="Deactivate admin"
                           >

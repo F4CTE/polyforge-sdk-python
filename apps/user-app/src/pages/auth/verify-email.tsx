@@ -91,7 +91,7 @@ export function Component() {
           {/* Pending - loading */}
           {state === 'pending' && (
             <div className="text-center py-4" role="status">
-              <Loader2 className="size-12 text-pf-cyan-500 animate-spin mx-auto mb-4" aria-hidden="true" />
+              <Loader2 className="size-12 text-pf-cyan-500 motion-safe:animate-spin mx-auto mb-4" aria-hidden="true" />
               <p className="text-pf-text-muted text-sm">Verifying your email...</p>
             </div>
           )}

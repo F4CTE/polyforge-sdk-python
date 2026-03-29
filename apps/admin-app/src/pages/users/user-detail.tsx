@@ -288,7 +288,7 @@ export function Component() {
                         ) : (
                           <button
                             onClick={() => setConfirmRevokeKeyId(key.id)}
-                            className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
+                            className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger cursor-pointer transition-colors"
                             aria-label="Revoke key"
                             title="Revoke key"
                           >
