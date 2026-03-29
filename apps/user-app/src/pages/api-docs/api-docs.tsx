@@ -729,7 +729,7 @@ export function Component() {
           {currentGroup && <><span>{currentGroup}</span><ChevronRight className="size-3 shrink-0" /></>}
           <span className="text-pf-text-secondary">{currentLabel}</span>
         </nav>
-        <div className="px-6 py-6 max-w-4xl">
+        <div className="px-6 py-6 max-w-4xl mx-auto">
           {renderContent()}
         </div>
       </div>
