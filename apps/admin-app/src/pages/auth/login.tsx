@@ -54,12 +54,12 @@ export function Component() {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold text-[var(--color-pf-text)]">
+          <h1 className="text-2xl font-semibold text-pf-text">
             Polyforge Admin
           </h1>
           <div className="flex items-center justify-center gap-1.5 mt-2">
-            <ShieldCheck size={14} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
-            <span className="text-xs text-[var(--color-pf-text-tertiary)]">
+            <ShieldCheck size={14} className="text-pf-cyan-500" aria-hidden="true" />
+            <span className="text-xs text-pf-text-tertiary">
               Admin Console
             </span>
           </div>
@@ -69,10 +69,10 @@ export function Component() {
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 space-y-4 shadow-pf-lg"
+          className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4 shadow-pf-lg"
         >
           <div>
-            <label htmlFor="email" className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1.5">
+            <label htmlFor="email" className="block text-xs font-medium text-pf-text-secondary mb-1.5">
               Email
             </label>
             <input
@@ -83,13 +83,13 @@ export function Component() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoFocus
-              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] focus:border-[var(--color-pf-cyan-500)] transition-colors"
+              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus:outline-none focus:ring-1 focus:ring-pf-cyan-500 focus:border-pf-cyan-500 transition-colors"
               placeholder="admin@polyforge.io"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1.5">
+            <label htmlFor="password" className="block text-xs font-medium text-pf-text-secondary mb-1.5">
               Password
             </label>
             <input
@@ -99,14 +99,14 @@ export function Component() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] focus:border-[var(--color-pf-cyan-500)] transition-colors"
+              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus:outline-none focus:ring-1 focus:ring-pf-cyan-500 focus:border-pf-cyan-500 transition-colors"
               placeholder="Enter password"
             />
           </div>
 
           {totpRequired && (
             <div>
-              <label htmlFor="totp" className="block text-xs font-medium text-[var(--color-pf-text-secondary)] mb-1.5">
+              <label htmlFor="totp" className="block text-xs font-medium text-pf-text-secondary mb-1.5">
                 2FA Code
               </label>
               <input
@@ -120,7 +120,7 @@ export function Component() {
                 onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
                 required
                 autoFocus
-                className="w-full px-3 py-2 text-sm text-center tracking-[0.3em] font-mono rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] focus:border-[var(--color-pf-cyan-500)] transition-colors"
+                className="w-full px-3 py-2 text-sm text-center tracking-[0.3em] font-mono rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus:outline-none focus:ring-1 focus:ring-pf-cyan-500 focus:border-pf-cyan-500 transition-colors"
                 placeholder="000000"
               />
             </div>
@@ -129,7 +129,7 @@ export function Component() {
           <button
             type="submit"
             disabled={loading || (totpRequired && totpCode.length < 6)}
-            className="w-full py-2 px-4 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-pf-elevated)]"
+            className="w-full py-2 px-4 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
           >
             {loading ? 'Signing in...' : totpRequired ? 'Verify & Sign In' : 'Sign In'}
           </button>
@@ -139,7 +139,7 @@ export function Component() {
           </p>
         </form>
 
-        <p className="text-sm text-[var(--color-pf-text-muted)] mt-3 text-center">
+        <p className="text-sm text-pf-text-muted mt-3 text-center">
           Forgot password? Contact your system administrator.
         </p>
       </div>

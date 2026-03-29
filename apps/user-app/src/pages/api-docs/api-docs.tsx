@@ -1,6 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronDown, Sun, Moon, Menu } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth-store';
+import { useThemeStore } from '@/stores/theme-store';
+import { Sidebar } from '@/components/layout/sidebar';
+import { Topbar } from '@/components/layout/topbar';
 import type { EndpointDef, EndpointField } from './api-docs-endpoints';
 import { MARKETS, STRATEGIES, LIVE_WATCHING, TRADING, ORDERS,
   CONDITIONAL_ORDERS, PORTFOLIO, BACKTESTS, COPY_TRADING,
@@ -195,6 +199,45 @@ function PageTitle({ title, subtitle, count }: { title: string; subtitle?: strin
   );
 }
 
+/* ─── Public header (unauthenticated only) ───────────────────────── */
+
+function PublicHeader() {
+  const { isDark, toggle } = useThemeStore();
+  return (
+    <header className="shrink-0 flex items-center justify-between px-5 h-[57px] border-b border-pf-border bg-pf-surface">
+      <Link to="/" className="flex items-center gap-2.5">
+        <span className="text-sm font-bold tracking-tight text-pf-text">
+          <span className="text-pf-cyan-400">Poly</span>forge
+        </span>
+        <span className="text-pf-border-strong text-sm font-light select-none">/</span>
+        <span className="text-xs font-medium text-pf-text-secondary">API Reference</span>
+      </Link>
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors cursor-pointer"
+        >
+          {isDark ? <Sun size={15} /> : <Moon size={15} />}
+        </button>
+        <Link
+          to="/login"
+          className="text-sm font-medium text-pf-text-secondary hover:text-pf-text transition-colors px-3 py-1.5"
+        >
+          Sign in
+        </Link>
+        <Link
+          to="/register"
+          className="text-sm font-semibold px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors duration-150"
+        >
+          Sign up free
+        </Link>
+      </div>
+    </header>
+  );
+}
+
 /* ─── Navigation data ────────────────────────────────────────────── */
 
 const NAV_GROUPS = [
@@ -251,9 +294,14 @@ const ENDPOINT_SECTIONS: { id: string; title: string; eps: EndpointDef[] }[] = [
 /* ─── Main Component ─────────────────────────────────────────────── */
 
 export function Component() {
+  const user = useAuthStore(s => s.user);
   const [lang, setLang] = useState<Lang>('curl');
   const [activeId, setActiveId] = useState('getting-started');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const toggleSidebar = useCallback(() => setSidebarCollapsed(v => !v), []);
 
   function navigate(id: string) {
     setActiveId(id);
@@ -627,38 +675,34 @@ export function Component() {
     return null;
   }
 
-  return (
-    <div className="flex h-screen animate-fade-in">
-
-      {/* ── Sidebar — bg-pf-surface matches app's surface panels ── */}
-      <aside className="hidden lg:flex flex-col w-60 shrink-0 border-r border-pf-border bg-pf-surface overflow-y-auto">
-
-        {/* Branding */}
-        <div className="px-4 py-4 border-b border-pf-border shrink-0">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-pf-text">API Reference</span>
+  /* ── Shared docs panel (sidebar + content) ── */
+  const docsPanel = (
+    <>
+      {/* API docs sidebar */}
+      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r border-pf-border bg-pf-surface overflow-y-auto">
+        <div className="px-4 py-3.5 border-b border-pf-border shrink-0">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-pf-text-secondary uppercase tracking-wider">API Reference</span>
             <Badge text="v1" cls="bg-pf-cyan-500/10 text-pf-cyan-400" />
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-pf-success shrink-0" />
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-pf-success shrink-0" aria-hidden="true" />
             <code className="text-[11px] font-mono text-pf-text-muted">api.polyforge.app</code>
           </div>
         </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto">
+        <nav aria-label="API documentation sections" className="flex-1 px-2 py-2 space-y-3 overflow-y-auto">
           {NAV_GROUPS.map(g => (
             <div key={g.group ?? 'overview'}>
               {g.group && (
-                <p className="text-xs font-medium text-pf-text-muted uppercase tracking-wider mb-1.5 px-2">{g.group}</p>
+                <p className="text-[10px] font-semibold text-pf-text-muted uppercase tracking-widest mb-1 px-2 pt-1">{g.group}</p>
               )}
-              <div className="space-y-0.5">
+              <div className="space-y-px">
                 {g.items.map(item => (
                   <button
                     type="button"
                     key={item.id}
                     onClick={() => navigate(item.id)}
-                    className={`w-full text-left px-2 py-1.5 rounded-pf text-sm transition-colors duration-150 cursor-pointer border-l-2 ${
+                    className={`w-full text-left px-2.5 py-1.5 rounded-pf text-sm transition-colors duration-150 cursor-pointer border-l-2 ${
                       activeId === item.id
                         ? 'border-pf-cyan-500 bg-pf-cyan-500/10 text-pf-cyan-400 font-medium'
                         : 'border-transparent text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated'
@@ -671,29 +715,73 @@ export function Component() {
             </div>
           ))}
         </nav>
-
-        {/* Footer */}
-        <div className="px-4 py-3 border-t border-pf-border shrink-0">
-          <Link to="/settings" className="text-xs text-pf-text-muted hover:text-pf-text transition-colors">
-            Settings → API Keys
-          </Link>
-        </div>
+        {user && (
+          <div className="px-4 py-3 border-t border-pf-border shrink-0">
+            <Link to="/settings" className="text-xs text-pf-text-muted hover:text-pf-cyan-400 transition-colors">
+              Settings → API Keys
+            </Link>
+          </div>
+        )}
       </aside>
 
-      {/* ── Content ── */}
+      {/* Content panel */}
       <div ref={contentRef} className="flex-1 min-w-0 overflow-y-auto bg-pf-base">
-
-        {/* Breadcrumb — matches app's secondary text style */}
         <nav aria-label="Breadcrumb" className="sticky top-0 z-10 flex items-center gap-1.5 px-6 py-3 bg-pf-base/90 backdrop-blur-sm border-b border-pf-border text-xs text-pf-text-muted">
           <span>Docs</span>
           <ChevronRight className="size-3 shrink-0" />
           {currentGroup && <><span>{currentGroup}</span><ChevronRight className="size-3 shrink-0" /></>}
           <span className="text-pf-text-secondary">{currentLabel}</span>
         </nav>
-
         <div className="max-w-3xl mx-auto px-6 py-6">
           {renderContent()}
         </div>
+      </div>
+    </>
+  );
+
+  /* ── Authenticated layout — full app chrome + docs panel ── */
+  if (user) {
+    return (
+      <div className="flex h-screen bg-pf-base text-pf-text overflow-hidden animate-fade-in">
+        {/* App sidebar */}
+        <div className={`hidden md:block overflow-hidden transition-[width,min-width] duration-200 ${sidebarCollapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
+          <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+        </div>
+        {/* Mobile sidebar overlay */}
+        {mobileOpen && (
+          <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+            <div className="relative z-50 h-full w-60">
+              <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
+            </div>
+          </div>
+        )}
+        <div className="flex flex-col flex-1 min-w-0">
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center ml-2 rounded-pf-sm text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors md:hidden"
+              aria-label="Open navigation menu"
+            >
+              <Menu size={20} />
+            </button>
+            <div className="flex-1"><Topbar /></div>
+          </div>
+          <main className="flex-1 overflow-hidden flex" id="main-content">
+            {docsPanel}
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Public layout — minimal header + docs panel ── */
+  return (
+    <div className="flex flex-col h-screen bg-pf-base text-pf-text overflow-hidden animate-fade-in">
+      <PublicHeader />
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {docsPanel}
       </div>
     </div>
   );

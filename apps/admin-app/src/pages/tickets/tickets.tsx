@@ -54,8 +54,8 @@ export function Component() {
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">
-          Tickets <span className="text-sm font-normal text-[var(--color-pf-text-tertiary)]">({total})</span>
+        <h2 className="text-lg font-semibold text-pf-text">
+          Tickets <span className="text-sm font-normal text-pf-text-tertiary">({total})</span>
         </h2>
         <select
           value={statusFilter}
@@ -64,7 +64,7 @@ export function Component() {
             setPage(1);
           }}
           aria-label="Filter by ticket status"
-          className="px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+          className="px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus:outline-none focus:ring-1 focus:ring-pf-cyan-500"
         >
           <option value="">All statuses</option>
           <option value="OPEN">Open</option>
@@ -74,18 +74,18 @@ export function Component() {
         </select>
       </div>
 
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg overflow-hidden">
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <caption className="sr-only">Support tickets</caption>
             <thead>
-              <tr className="border-b border-[var(--color-pf-border)]">
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Subject</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">User</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Status</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Priority</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Assigned To</th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Created</th>
+              <tr className="border-b border-pf-border">
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Subject</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">User</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Status</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Priority</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Assigned To</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Created</th>
               </tr>
             </thead>
             <tbody>
@@ -102,9 +102,9 @@ export function Component() {
               ) : tickets.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-12">
-                    <MessageSquare className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} aria-hidden="true" />
-                    <p className="text-[var(--color-pf-text-secondary)] font-medium">No tickets found</p>
-                    <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Support tickets will appear here</p>
+                    <MessageSquare className="mx-auto mb-3 text-pf-text-tertiary opacity-40" size={40} aria-hidden="true" />
+                    <p className="text-pf-text-secondary font-medium">No tickets found</p>
+                    <p className="text-pf-text-tertiary text-xs mt-1">Support tickets will appear here</p>
                   </td>
                 </tr>
               ) : (
@@ -115,10 +115,10 @@ export function Component() {
                     aria-label={`View ticket: ${t.subject}`}
                     onClick={() => navigate(`/tickets/${t.id}`)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/tickets/${t.id}`); } }}
-                    className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
+                    className="border-b border-pf-border last:border-0 hover:bg-pf-base cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
                   >
-                    <td className="px-4 py-3 font-medium text-[var(--color-pf-text)]">{t.subject}</td>
-                    <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{t.username ?? (t.userId ? t.userId.slice(0, 8) : '')}</td>
+                    <td className="px-4 py-3 font-medium text-pf-text">{t.subject}</td>
+                    <td className="px-4 py-3 text-pf-text-secondary">{t.username ?? (t.userId ? t.userId.slice(0, 8) : '')}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(t.status)}`}>
                         {t.status}
@@ -132,18 +132,18 @@ export function Component() {
                     <td className="px-4 py-3">
                       {t.assignedTo ? (
                         <div className="flex items-center gap-1.5">
-                          <div className="w-5 h-5 rounded-full bg-[var(--color-pf-cyan-500)]/20 flex items-center justify-center text-[9px] font-bold text-[var(--color-pf-cyan-500)]">
+                          <div className="w-5 h-5 rounded-full bg-pf-cyan-500/20 flex items-center justify-center text-[9px] font-bold text-pf-cyan-500">
                             {t.assignedToName?.[0]?.toUpperCase() ?? 'A'}
                           </div>
-                          <span className="text-[var(--color-pf-text-secondary)] text-xs">
+                          <span className="text-pf-text-secondary text-xs">
                             {t.assignedToName ?? (t.assignedTo ? t.assignedTo.slice(0, 8) : '')}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-[var(--color-pf-text-tertiary)] text-xs">Unassigned</span>
+                        <span className="text-pf-text-tertiary text-xs">Unassigned</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-[var(--color-pf-text-tertiary)]">{formatDateTime(t.createdAt)}</td>
+                    <td className="px-4 py-3 text-pf-text-tertiary">{formatDateTime(t.createdAt)}</td>
                   </tr>
                 ))
               )}
@@ -152,13 +152,13 @@ export function Component() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--color-pf-border)]">
-            <span className="text-xs text-[var(--color-pf-text-tertiary)]">Page {page} of {totalPages}</span>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-pf-border">
+            <span className="text-xs text-pf-text-tertiary">Page {page} of {totalPages}</span>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page" className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
+              <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page" className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
                 <ChevronLeft size={16} />
               </button>
-              <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page" className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
+              <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page" className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
                 <ChevronRight size={16} />
               </button>
             </div>

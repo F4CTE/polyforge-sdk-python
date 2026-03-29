@@ -122,9 +122,9 @@ export function Component() {
       <div className="space-y-6" role="status" aria-label="Loading dashboard">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4 animate-pulse">
-              <div className="h-3 bg-[var(--color-pf-bg)] rounded w-24 mb-3" />
-              <div className="h-7 bg-[var(--color-pf-bg)] rounded w-16" />
+            <div key={i} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 animate-pulse">
+              <div className="h-3 bg-pf-base rounded w-24 mb-3" />
+              <div className="h-7 bg-pf-base rounded w-16" />
             </div>
           ))}
         </div>
@@ -143,26 +143,26 @@ export function Component() {
     <div className="animate-fade-in space-y-6">
       {/* Stat Cards */}
       {statsError ? (
-        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 text-center">
-          <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={24} aria-hidden="true" />
-          <p className="text-sm text-[var(--color-pf-text-secondary)]">Stats unavailable</p>
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 text-center">
+          <AlertCircle className="mx-auto mb-2 text-pf-text-tertiary" size={24} aria-hidden="true" />
+          <p className="text-sm text-pf-text-secondary">Stats unavailable</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
           {statCards.map((card) => (
             <div
               key={card.label}
-              className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4"
+              className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4"
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-[var(--color-pf-text-secondary)]">
+                <span className="text-xs font-medium text-pf-text-secondary">
                   {card.label}
                 </span>
                 <div className={`p-2 rounded-pf-sm ${card.bg}`}>
                   <span className={card.color}>{card.icon}</span>
                 </div>
               </div>
-              <div className="text-2xl font-bold text-[var(--color-pf-text)]">
+              <div className="text-2xl font-bold text-pf-text">
                 {card.value.toLocaleString()}
               </div>
             </div>
@@ -173,26 +173,26 @@ export function Component() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* System Health */}
         {healthError ? (
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Activity size={16} className="text-[var(--color-pf-text-tertiary)]" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
+              <Activity size={16} className="text-pf-text-tertiary" aria-hidden="true" />
+              <h2 className="text-sm font-semibold text-pf-text">
                 System Health
               </h2>
             </div>
             <div className="text-center py-6">
-              <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={24} aria-hidden="true" />
-              <p className="text-sm text-[var(--color-pf-text-secondary)]">Health unavailable</p>
-              <button type="button" onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded">
+              <AlertCircle className="mx-auto mb-2 text-pf-text-tertiary" size={24} aria-hidden="true" />
+              <p className="text-sm text-pf-text-secondary">Health unavailable</p>
+              <button type="button" onClick={load} className="text-pf-cyan-400 hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded">
                 Retry
               </button>
             </div>
           </div>
         ) : health ? (
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Activity size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
+              <Activity size={16} className="text-pf-cyan-500" aria-hidden="true" />
+              <h2 className="text-sm font-semibold text-pf-text">
                 System Health
               </h2>
               <span
@@ -205,13 +205,13 @@ export function Component() {
               {Object.entries(health.services ?? {}).map(([name, svc]) => (
                 <div
                   key={name}
-                  className="flex items-center justify-between p-2.5 rounded-pf-sm bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)]"
+                  className="flex items-center justify-between p-2.5 rounded-pf-sm bg-pf-base border border-pf-border"
                 >
                   <div>
-                    <div className="text-xs font-medium text-[var(--color-pf-text)] capitalize">
+                    <div className="text-xs font-medium text-pf-text capitalize">
                       {name}
                     </div>
-                    <div className="text-[11px] text-[var(--color-pf-text-tertiary)]">
+                    <div className="text-[11px] text-pf-text-tertiary">
                       {svc?.latencyMs ?? 0}ms
                     </div>
                   </div>
@@ -235,10 +235,10 @@ export function Component() {
         {/* Infrastructure + Launch Control */}
         <div className="space-y-4">
           {health?.db && (
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Database size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
+              <Database size={16} className="text-pf-cyan-500" aria-hidden="true" />
+              <h2 className="text-sm font-semibold text-pf-text">
                 Database
               </h2>
               <span
@@ -247,17 +247,17 @@ export function Component() {
                 {health.db?.status ?? 'UNKNOWN'}
               </span>
             </div>
-            <div className="text-sm text-[var(--color-pf-text-secondary)]">
-              Active connections: <span className="text-[var(--color-pf-text)] font-medium">{health.db?.connections ?? 0}</span>
+            <div className="text-sm text-pf-text-secondary">
+              Active connections: <span className="text-pf-text font-medium">{health.db?.connections ?? 0}</span>
             </div>
           </div>
           )}
 
           {health?.redis && (
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Server size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
+              <Server size={16} className="text-pf-cyan-500" aria-hidden="true" />
+              <h2 className="text-sm font-semibold text-pf-text">
                 Redis
               </h2>
               <span
@@ -266,20 +266,20 @@ export function Component() {
                 {health.redis?.status ?? 'UNKNOWN'}
               </span>
             </div>
-            <div className="text-sm text-[var(--color-pf-text-secondary)]">
-              Memory usage: <span className="text-[var(--color-pf-text)] font-medium">{(health.redis?.memoryUsageMb ?? 0).toFixed(1)} MB</span>
+            <div className="text-sm text-pf-text-secondary">
+              Memory usage: <span className="text-pf-text font-medium">{(health.redis?.memoryUsageMb ?? 0).toFixed(1)} MB</span>
             </div>
           </div>
           )}
 
           {/* Launch Control */}
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
+                <h2 className="text-sm font-semibold text-pf-text">
                   Launch Control
                 </h2>
-                <p className="text-xs text-[var(--color-pf-text-tertiary)] mt-0.5">
+                <p className="text-xs text-pf-text-tertiary mt-0.5">
                   Invite-only registration
                 </p>
               </div>
@@ -287,14 +287,14 @@ export function Component() {
                 type="button"
                 onClick={toggleInviteOnly}
                 disabled={!isSuperAdmin}
-                className={`transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded ${isSuperAdmin ? 'cursor-pointer text-[var(--color-pf-cyan-500)] hover:text-[var(--color-pf-cyan-400)]' : 'text-[var(--color-pf-text-tertiary)] opacity-50 cursor-not-allowed'}`}
+                className={`transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded ${isSuperAdmin ? 'cursor-pointer text-pf-cyan-500 hover:text-pf-cyan-400' : 'text-pf-text-tertiary opacity-50 cursor-not-allowed'}`}
                 aria-label={config?.inviteOnly ? 'Disable invite-only registration' : 'Enable invite-only registration'}
                 title={!isSuperAdmin ? 'Super Admin only' : undefined}
               >
                 {config?.inviteOnly ? (
                   <ToggleRight size={32} />
                 ) : (
-                  <ToggleLeft size={32} className="text-[var(--color-pf-text-tertiary)]" />
+                  <ToggleLeft size={32} className="text-pf-text-tertiary" />
                 )}
               </button>
             </div>
@@ -303,56 +303,56 @@ export function Component() {
       </div>
 
       {/* Rate Limiting */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
-          <ShieldAlert size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
-          <h2 className="text-sm font-semibold text-[var(--color-pf-text)]">
+          <ShieldAlert size={16} className="text-pf-cyan-500" aria-hidden="true" />
+          <h2 className="text-sm font-semibold text-pf-text">
             Rate Limiting
           </h2>
         </div>
         {rateLimitsError ? (
           <div className="text-center py-4">
-            <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={20} aria-hidden="true" />
-            <p className="text-sm text-[var(--color-pf-text-secondary)]">Rate limit data unavailable</p>
+            <AlertCircle className="mx-auto mb-2 text-pf-text-tertiary" size={20} aria-hidden="true" />
+            <p className="text-sm text-pf-text-secondary">Rate limit data unavailable</p>
           </div>
         ) : rateLimits ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] rounded-pf-sm p-3">
-                <span className="text-[11px] text-[var(--color-pf-text-tertiary)] uppercase">Tracked Keys</span>
-                <span className="block text-lg font-bold text-[var(--color-pf-text)]">{rateLimits.totalTrackedKeys}</span>
+              <div className="bg-pf-base border border-pf-border rounded-pf-sm p-3">
+                <span className="text-[11px] text-pf-text-tertiary uppercase">Tracked Keys</span>
+                <span className="block text-lg font-bold text-pf-text">{rateLimits.totalTrackedKeys}</span>
               </div>
-              <div className="bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] rounded-pf-sm p-3">
-                <span className="text-[11px] text-[var(--color-pf-text-tertiary)] uppercase">Recent 429s</span>
-                <span className={`block text-lg font-bold ${rateLimits.recent429Count > 0 ? 'text-pf-warning' : 'text-[var(--color-pf-text)]'}`}>
+              <div className="bg-pf-base border border-pf-border rounded-pf-sm p-3">
+                <span className="text-[11px] text-pf-text-tertiary uppercase">Recent 429s</span>
+                <span className={`block text-lg font-bold ${rateLimits.recent429Count > 0 ? 'text-pf-warning' : 'text-pf-text'}`}>
                   {rateLimits.recent429Count}
                 </span>
               </div>
-              <div className="bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] rounded-pf-sm p-3">
-                <span className="text-[11px] text-[var(--color-pf-text-tertiary)] uppercase">Top Offenders</span>
-                <span className="block text-lg font-bold text-[var(--color-pf-text)]">{rateLimits.topOffenders?.length ?? 0}</span>
+              <div className="bg-pf-base border border-pf-border rounded-pf-sm p-3">
+                <span className="text-[11px] text-pf-text-tertiary uppercase">Top Offenders</span>
+                <span className="block text-lg font-bold text-pf-text">{rateLimits.topOffenders?.length ?? 0}</span>
               </div>
             </div>
             {rateLimits.totalTrackedKeys === 0 && rateLimits.recent429Count === 0 && (rateLimits.topOffenders?.length ?? 0) === 0 && (
-              <p className="text-xs text-[var(--color-pf-text-tertiary)] italic">No rate limit events recorded</p>
+              <p className="text-xs text-pf-text-tertiary italic">No rate limit events recorded</p>
             )}
             {rateLimits.topOffenders?.length > 0 && (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <caption className="sr-only">Rate limit top offenders</caption>
                   <thead>
-                    <tr className="text-left text-[var(--color-pf-text-tertiary)] uppercase tracking-wider border-b border-[var(--color-pf-border)]">
+                    <tr className="text-left text-pf-text-tertiary uppercase tracking-wider border-b border-pf-border">
                       <th scope="col" className="pb-2 font-medium">Identifier</th>
                       <th scope="col" className="pb-2 font-medium text-right">Hits</th>
                       <th scope="col" className="pb-2 font-medium text-right">TTL (s)</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[var(--color-pf-border)]">
+                  <tbody className="divide-y divide-pf-border">
                     {rateLimits.topOffenders.slice(0, 10).map((entry) => (
                       <tr key={entry.key}>
-                        <td className="py-1.5 font-mono text-[var(--color-pf-text-secondary)] truncate max-w-[200px]">{entry.key}</td>
-                        <td className={`py-1.5 text-right font-mono ${entry.hits > 50 ? 'text-pf-danger' : 'text-[var(--color-pf-text)]'}`}>{entry.hits}</td>
-                        <td className="py-1.5 text-right font-mono text-[var(--color-pf-text-secondary)]">{entry.ttl}</td>
+                        <td className="py-1.5 font-mono text-pf-text-secondary truncate max-w-[200px]">{entry.key}</td>
+                        <td className={`py-1.5 text-right font-mono ${entry.hits > 50 ? 'text-pf-danger' : 'text-pf-text'}`}>{entry.hits}</td>
+                        <td className="py-1.5 text-right font-mono text-pf-text-secondary">{entry.ttl}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -361,46 +361,46 @@ export function Component() {
             )}
           </div>
         ) : (
-          <p className="text-sm text-[var(--color-pf-text-tertiary)]" role="status">Loading...</p>
+          <p className="text-sm text-pf-text-tertiary" role="status">Loading...</p>
         )}
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
-        <h2 className="text-sm font-semibold text-[var(--color-pf-text)] mb-4">
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
+        <h2 className="text-sm font-semibold text-pf-text mb-4">
           Recent Activity
         </h2>
         {logsError ? (
           <div className="text-center py-4">
-            <Clock className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={20} aria-hidden="true" />
-            <p className="text-sm text-[var(--color-pf-text-secondary)]">No recent activity</p>
-            <p className="text-xs text-[var(--color-pf-text-tertiary)] mt-1">Activity will appear here as admins take actions.</p>
-            <button type="button" onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded">
+            <Clock className="mx-auto mb-2 text-pf-text-tertiary" size={20} aria-hidden="true" />
+            <p className="text-sm text-pf-text-secondary">No recent activity</p>
+            <p className="text-xs text-pf-text-tertiary mt-1">Activity will appear here as admins take actions.</p>
+            <button type="button" onClick={load} className="text-pf-cyan-400 hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded">
               Refresh
             </button>
           </div>
         ) : auditLogs.length === 0 ? (
           <div className="py-2">
-            <p className="text-sm text-[var(--color-pf-text-secondary)]">No admin actions recorded yet.</p>
-            <p className="text-xs text-[var(--color-pf-text-tertiary)] mt-1">Activity will appear as admins manage users, strategies, and settings.</p>
+            <p className="text-sm text-pf-text-secondary">No admin actions recorded yet.</p>
+            <p className="text-xs text-pf-text-tertiary mt-1">Activity will appear as admins manage users, strategies, and settings.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {auditLogs.map((log) => (
               <div
                 key={log.id}
-                className="flex items-center justify-between py-2 border-b border-[var(--color-pf-border)] last:border-0"
+                className="flex items-center justify-between py-2 border-b border-pf-border last:border-0"
               >
                 <div className="flex items-center gap-3">
-                  <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--color-pf-bg)] text-[var(--color-pf-cyan-500)] border border-[var(--color-pf-border)]">
+                  <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-pf-base text-pf-cyan-500 border border-pf-border">
                     {log.action}
                   </span>
-                  <span className="text-sm text-[var(--color-pf-text-secondary)]">
+                  <span className="text-sm text-pf-text-secondary">
                     {log.target ?? ''}
                     {log.targetId ? ` #${log.targetId.slice(0, 8)}` : ''}
                   </span>
                 </div>
-                <span className="text-xs text-[var(--color-pf-text-tertiary)] whitespace-nowrap">
+                <span className="text-xs text-pf-text-tertiary whitespace-nowrap">
                   {timeAgo(log.createdAt)}
                 </span>
               </div>

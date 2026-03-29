@@ -45,19 +45,19 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
         : 'Viewer';
 
   return (
-    <header className="flex items-center justify-between h-14 px-4 md:px-6 border-b border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] shrink-0">
+    <header className="flex items-center justify-between h-14 px-4 md:px-6 border-b border-pf-border bg-pf-surface shrink-0">
       <div className="flex items-center gap-2">
         {onMenuClick && (
           <button
             type="button"
             onClick={onMenuClick}
-            className="p-2 rounded-pf-sm text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors md:hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
+            className="p-2 rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated transition-colors md:hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
             aria-label="Open menu"
           >
             <Menu size={20} />
           </button>
         )}
-        <h1 className="text-base font-semibold text-[var(--color-pf-text)]">
+        <h1 className="text-base font-semibold text-pf-text">
           {currentPage}
         </h1>
       </div>
@@ -66,21 +66,21 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
         <button
           type="button"
           onClick={toggle}
-          className="p-2 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
+          className="p-2 rounded-pf-sm hover:bg-pf-elevated text-pf-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
           aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-[var(--color-pf-cyan-500)] text-pf-text text-[11px] font-bold" role="img" aria-label={`Avatar for ${admin?.displayName ?? 'admin'}`}>
+          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-pf-cyan-500 text-black text-[11px] font-bold" role="img" aria-label={`Avatar for ${admin?.displayName ?? 'admin'}`}>
             {initials}
           </div>
           <div className="hidden sm:block">
-            <div className="text-sm font-medium text-[var(--color-pf-text)] leading-tight">
+            <div className="text-sm font-medium text-pf-text leading-tight">
               {admin?.displayName}
             </div>
-            <div className="text-[10px] text-[var(--color-pf-text-tertiary)] leading-tight">
+            <div className="text-[10px] text-pf-text-tertiary leading-tight">
               {roleLabel}
             </div>
           </div>
@@ -89,7 +89,7 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
         <button
           type="button"
           onClick={logout}
-          className="p-2 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-danger)]"
+          className="p-2 rounded-pf-sm hover:bg-pf-elevated text-pf-text-secondary hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
           aria-label="Logout"
         >
           <LogOut size={16} />

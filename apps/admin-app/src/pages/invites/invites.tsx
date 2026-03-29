@@ -68,17 +68,17 @@ export function Component() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Invites</h2>
+      <h2 className="text-lg font-semibold text-pf-text">Invites</h2>
 
       {/* Generate Form */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Plus size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">Generate Invite Codes</h3>
+          <Plus size={16} className="text-pf-cyan-500" aria-hidden="true" />
+          <h3 className="text-sm font-semibold text-pf-text">Generate Invite Codes</h3>
         </div>
         <form onSubmit={handleGenerate} className="flex flex-wrap items-end gap-4">
           <div>
-            <label htmlFor="invite-count" className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Count</label>
+            <label htmlFor="invite-count" className="block text-xs text-pf-text-tertiary mb-1">Count</label>
             <input
               id="invite-count"
               type="number"
@@ -86,11 +86,11 @@ export function Component() {
               max={50}
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus:outline-none focus:ring-1 focus:ring-pf-cyan-500"
             />
           </div>
           <div>
-            <label htmlFor="invite-max-uses" className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Max Uses</label>
+            <label htmlFor="invite-max-uses" className="block text-xs text-pf-text-tertiary mb-1">Max Uses</label>
             <input
               id="invite-max-uses"
               type="number"
@@ -98,11 +98,11 @@ export function Component() {
               max={100}
               value={maxUses}
               onChange={(e) => setMaxUses(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus:outline-none focus:ring-1 focus:ring-pf-cyan-500"
             />
           </div>
           <div>
-            <label htmlFor="invite-ttl" className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">TTL (days)</label>
+            <label htmlFor="invite-ttl" className="block text-xs text-pf-text-tertiary mb-1">TTL (days)</label>
             <input
               id="invite-ttl"
               type="number"
@@ -110,13 +110,13 @@ export function Component() {
               max={365}
               value={ttlDays}
               onChange={(e) => setTtlDays(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus:outline-none focus:ring-1 focus:ring-pf-cyan-500"
             />
           </div>
           <button
             type="submit"
             disabled={generating}
-            className="px-4 py-2 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
+            className="px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
           >
             {generating ? 'Generating...' : 'Generate'}
           </button>
@@ -124,16 +124,16 @@ export function Component() {
 
         {/* Generated Codes */}
         {generatedCodes.length > 0 && (
-          <div className="mt-4 p-3 rounded-pf-sm bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)]">
-            <div className="text-xs text-[var(--color-pf-text-tertiary)] mb-2">Generated codes:</div>
+          <div className="mt-4 p-3 rounded-pf-sm bg-pf-base border border-pf-border">
+            <div className="text-xs text-pf-text-tertiary mb-2">Generated codes:</div>
             <div className="space-y-1">
               {generatedCodes.map((code) => (
                 <div key={code} className="flex items-center gap-2">
-                  <code className="text-sm font-mono text-[var(--color-pf-cyan-500)]">{code}</code>
+                  <code className="text-sm font-mono text-pf-cyan-500">{code}</code>
                   <button
                     type="button"
                     onClick={() => copyCode(code)}
-                    className="p-1 rounded hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-cyan-400)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
+                    className="p-1 rounded hover:bg-pf-elevated text-pf-text-tertiary hover:text-pf-cyan-400 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
                     aria-label={`Copy code ${code}`}
                   >
                     <Copy size={12} />
@@ -146,70 +146,70 @@ export function Component() {
       </div>
 
       {/* Active Invites Table */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Mail size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">
+          <Mail size={16} className="text-pf-cyan-500" aria-hidden="true" />
+          <h3 className="text-sm font-semibold text-pf-text">
             Active Invites ({invites.length})
           </h3>
         </div>
         {loading ? (
           <div className="space-y-3" role="status" aria-label="Loading invite codes">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-10 bg-[var(--color-pf-bg)] rounded animate-pulse" />
+              <div key={i} className="h-10 bg-pf-base rounded animate-pulse" />
             ))}
           </div>
         ) : invites.length === 0 ? (
           <div className="text-center py-12">
-            <KeyRound className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)] opacity-40" size={40} aria-hidden="true" />
-            <p className="text-[var(--color-pf-text-secondary)] font-medium">No active invites</p>
-            <p className="text-[var(--color-pf-text-tertiary)] text-xs mt-1">Generate invite codes above to get started</p>
+            <KeyRound className="mx-auto mb-3 text-pf-text-tertiary opacity-40" size={40} aria-hidden="true" />
+            <p className="text-pf-text-secondary font-medium">No active invites</p>
+            <p className="text-pf-text-tertiary text-xs mt-1">Generate invite codes above to get started</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <caption className="sr-only">Active invite codes</caption>
               <thead>
-                <tr className="border-b border-[var(--color-pf-border)]">
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Code</th>
-                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Remaining Uses</th>
-                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">TTL</th>
+                <tr className="border-b border-pf-border">
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase">Code</th>
+                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase">Remaining Uses</th>
+                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase">TTL</th>
                   <th scope="col" className="text-right px-3 py-2"><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody>
                 {invites.map((inv) => (
-                  <tr key={inv.code} className="border-b border-[var(--color-pf-border)] last:border-0">
+                  <tr key={inv.code} className="border-b border-pf-border last:border-0">
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-2">
-                        <code className="text-sm font-mono text-[var(--color-pf-text)]">{inv.code}</code>
+                        <code className="text-sm font-mono text-pf-text">{inv.code}</code>
                         <button
                           type="button"
                           onClick={() => copyCode(inv.code)}
-                          className="p-1 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-cyan-400)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
+                          className="p-1 rounded hover:bg-pf-base text-pf-text-tertiary hover:text-pf-cyan-400 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
                           aria-label={`Copy code ${inv.code}`}
                         >
                           <Copy size={12} />
                         </button>
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-right text-[var(--color-pf-text-secondary)]">
+                    <td className="px-3 py-2.5 text-right text-pf-text-secondary">
                       {inv.remainingUses}
                     </td>
-                    <td className="px-3 py-2.5 text-right text-[var(--color-pf-text-tertiary)]">
+                    <td className="px-3 py-2.5 text-right text-pf-text-tertiary">
                       {inv.ttl > 0 ? `${Math.ceil(inv.ttl / 86400)}d` : 'No expiry'}
                     </td>
                     <td className="px-3 py-2.5 text-right">
                       {confirmRevokeCode === inv.code ? (
                         <div className="flex items-center justify-end gap-1.5 text-xs">
                           <button type="button" onClick={() => handleDelete(inv.code)} className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger">Revoke</button>
-                          <button type="button" onClick={() => setConfirmRevokeCode(null)} className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]">Cancel</button>
+                          <button type="button" onClick={() => setConfirmRevokeCode(null)} className="px-2 py-0.5 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500">Cancel</button>
                         </div>
                       ) : (
                         <button
                           type="button"
                           onClick={() => setConfirmRevokeCode(inv.code)}
-                          className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
+                          className="p-1 rounded hover:bg-pf-danger/10 text-pf-text-tertiary hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
                           aria-label="Revoke invite"
                           title="Revoke invite"
                         >

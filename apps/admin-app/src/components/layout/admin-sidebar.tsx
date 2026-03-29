@@ -98,12 +98,10 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
   return (
     <aside
       aria-label="Admin sidebar"
-      className={`flex flex-col h-screen border-r border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] transition-all duration-200 ${
-        collapsed ? 'w-16' : 'w-60'
-      }`}
+      className="flex flex-col h-full border-r border-pf-border bg-pf-surface"
     >
       {/* Brand */}
-      <div className="flex items-center gap-2 h-14 px-3 border-b border-[var(--color-pf-border)] shrink-0">
+      <div className="flex items-center gap-2 h-14 px-3 border-b border-pf-border shrink-0">
         <Link to="/dashboard" className="flex items-center gap-2 min-w-0" aria-label="Polyforge Admin home">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="shrink-0" aria-hidden="true">
             <path
@@ -119,16 +117,16 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
             />
           </svg>
           {!collapsed && (
-            <span className="text-sm font-semibold text-[var(--color-pf-text)] whitespace-nowrap">
+            <span className="text-sm font-semibold text-pf-text whitespace-nowrap">
               Polyforge{' '}
-              <span className="text-[var(--color-pf-cyan-500)]">Admin</span>
+              <span className="text-pf-cyan-500">Admin</span>
             </span>
           )}
         </Link>
         <button
           type="button"
           onClick={onToggle}
-          className="ml-auto p-1.5 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
+          className="ml-auto p-1.5 rounded-pf-sm hover:bg-pf-elevated border border-pf-border text-pf-text-secondary hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
@@ -142,7 +140,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
           return (
             <div key={section.title} className="mb-2">
               {!collapsed && (
-                <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-pf-text-tertiary)]">
+                <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-pf-text-tertiary">
                   {section.title}
                 </div>
               )}
@@ -153,17 +151,17 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                   title={collapsed ? item.label : undefined}
                   onClick={onNavigate}
                   className={({ isActive }) =>
-                    `flex items-center gap-2.5 px-2.5 py-2 rounded-pf-sm text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] ${
+                    `flex items-center gap-2.5 px-2.5 py-2 rounded-pf-sm text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
                       isActive
-                        ? 'bg-[var(--color-pf-cyan-500)]/10 text-[var(--color-pf-cyan-500)] font-medium'
-                        : 'text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] hover:text-[var(--color-pf-text)]'
+                        ? 'bg-pf-cyan-500/10 text-pf-cyan-500 font-medium'
+                        : 'text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text'
                     }`
                   }
                 >
                   <span className="shrink-0 relative">
                     {item.icon}
                     {collapsed && item.label === 'Tickets' && openTickets > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-[var(--color-pf-cyan-500)] text-[8px] font-bold text-pf-text" aria-label={`${openTickets} open tickets`}>
+                      <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-pf-cyan-500 text-[8px] font-bold text-black" aria-label={`${openTickets} open tickets`}>
                         {openTickets}
                       </span>
                     )}
@@ -172,7 +170,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                     <>
                       <span className="truncate">{item.label}</span>
                       {item.label === 'Tickets' && openTickets > 0 && (
-                        <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-[var(--color-pf-cyan-500)] text-[10px] font-bold text-pf-text" aria-label={`${openTickets} open tickets`}>
+                        <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-pf-cyan-500 text-[10px] font-bold text-black" aria-label={`${openTickets} open tickets`}>
                           {openTickets}
                         </span>
                       )}
@@ -186,17 +184,17 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-[var(--color-pf-border)] px-3 py-4 shrink-0">
+      <div className="border-t border-pf-border px-3 py-4 shrink-0">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-pf-elevated)] text-[var(--color-pf-cyan-500)] text-[11px] font-bold shrink-0">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-pf-elevated text-pf-cyan-500 text-[11px] font-bold shrink-0">
             {initials}
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <div className="text-sm font-medium text-[var(--color-pf-text)] truncate">
+              <div className="text-sm font-medium text-pf-text truncate">
                 {admin?.displayName}
               </div>
-              <div className="text-[11px] text-[var(--color-pf-text-tertiary)]">
+              <div className="text-[11px] text-pf-text-tertiary">
                 {roleLabel}
               </div>
             </div>

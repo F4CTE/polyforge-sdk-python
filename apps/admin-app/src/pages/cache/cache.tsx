@@ -53,16 +53,16 @@ export function Component() {
       <div className="animate-fade-in space-y-6" role="status" aria-label="Loading cache statistics">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5 space-y-3">
-              <div className="h-3 bg-[var(--color-pf-bg)] rounded w-20 animate-pulse" />
-              <div className="h-6 bg-[var(--color-pf-bg)] rounded w-16 animate-pulse" />
+            <div key={i} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 space-y-3">
+              <div className="h-3 bg-pf-base rounded w-20 animate-pulse" />
+              <div className="h-6 bg-pf-base rounded w-16 animate-pulse" />
             </div>
           ))}
         </div>
-        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
-          <div className="h-4 bg-[var(--color-pf-bg)] rounded w-32 animate-pulse mb-4" />
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
+          <div className="h-4 bg-pf-base rounded w-32 animate-pulse mb-4" />
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-8 bg-[var(--color-pf-bg)] rounded animate-pulse mb-2" />
+            <div key={i} className="h-8 bg-pf-base rounded animate-pulse mb-2" />
           ))}
         </div>
       </div>
@@ -72,10 +72,10 @@ export function Component() {
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Cache</h2>
+        <h2 className="text-lg font-semibold text-pf-text">Cache</h2>
         <button type="button"
           onClick={loadStats}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
           aria-label="Refresh cache stats"
         >
           <RefreshCw size={14} aria-hidden="true" />
@@ -86,21 +86,21 @@ export function Component() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
-            <div className="text-xs text-[var(--color-pf-text-tertiary)] mb-1">Hit Rate</div>
-            <div className="text-2xl font-bold text-[var(--color-pf-text)]">
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+            <div className="text-xs text-pf-text-tertiary mb-1">Hit Rate</div>
+            <div className="text-2xl font-bold text-pf-text">
               {((stats.hitRate ?? 0) * 100).toFixed(1)}%
             </div>
           </div>
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
-            <div className="text-xs text-[var(--color-pf-text-tertiary)] mb-1">Total Keys</div>
-            <div className="text-2xl font-bold text-[var(--color-pf-text)]">
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+            <div className="text-xs text-pf-text-tertiary mb-1">Total Keys</div>
+            <div className="text-2xl font-bold text-pf-text">
               {(stats.keyCount ?? 0).toLocaleString()}
             </div>
           </div>
-          <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4">
-            <div className="text-xs text-[var(--color-pf-text-tertiary)] mb-1">Memory Usage</div>
-            <div className="text-2xl font-bold text-[var(--color-pf-text)]">
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+            <div className="text-xs text-pf-text-tertiary mb-1">Memory Usage</div>
+            <div className="text-2xl font-bold text-pf-text">
               {(stats.memoryUsageMb ?? 0).toFixed(1)} MB
             </div>
           </div>
@@ -108,10 +108,10 @@ export function Component() {
       )}
 
       {/* Flush */}
-      <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
           <Trash2 size={16} className="text-pf-warning" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">Flush by Pattern</h3>
+          <h3 className="text-sm font-semibold text-pf-text">Flush by Pattern</h3>
         </div>
         <div className="flex gap-3">
           <label htmlFor="cache-pattern" className="sr-only">Cache key pattern</label>
@@ -121,7 +121,7 @@ export function Component() {
             value={pattern}
             onChange={(e) => setPattern(e.target.value)}
             placeholder="e.g. user:*, strategy:abc*"
-            className="flex-1 px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] font-mono"
+            className="flex-1 px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus:outline-none focus:ring-1 focus:ring-pf-cyan-500 font-mono"
           />
           <button type="button"
             onClick={handleFlush}
@@ -135,27 +135,27 @@ export function Component() {
 
       {/* Patterns Table */}
       {stats && stats.patterns && stats.patterns.length > 0 && (
-        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5">
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Database size={16} className="text-[var(--color-pf-cyan-500)]" aria-hidden="true" />
-            <h3 className="text-sm font-semibold text-[var(--color-pf-text)]">Cache Patterns</h3>
+            <Database size={16} className="text-pf-cyan-500" aria-hidden="true" />
+            <h3 className="text-sm font-semibold text-pf-text">Cache Patterns</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <caption className="sr-only">Cache patterns</caption>
               <thead>
-                <tr className="border-b border-[var(--color-pf-border)]">
-                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Pattern</th>
-                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Keys</th>
-                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Hit Rate</th>
+                <tr className="border-b border-pf-border">
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase">Pattern</th>
+                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase">Keys</th>
+                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase">Hit Rate</th>
                 </tr>
               </thead>
               <tbody>
                 {stats.patterns.map((p) => (
-                  <tr key={p.pattern} className="border-b border-[var(--color-pf-border)] last:border-0">
-                    <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-pf-text)]">{p.pattern}</td>
-                    <td className="px-3 py-2.5 text-right text-[var(--color-pf-text-secondary)]">{p.keyCount.toLocaleString()}</td>
-                    <td className="px-3 py-2.5 text-right text-[var(--color-pf-text-secondary)]">{(p.hitRate * 100).toFixed(1)}%</td>
+                  <tr key={p.pattern} className="border-b border-pf-border last:border-0">
+                    <td className="px-3 py-2.5 font-mono text-xs text-pf-text">{p.pattern}</td>
+                    <td className="px-3 py-2.5 text-right text-pf-text-secondary">{p.keyCount.toLocaleString()}</td>
+                    <td className="px-3 py-2.5 text-right text-pf-text-secondary">{(p.hitRate * 100).toFixed(1)}%</td>
                   </tr>
                 ))}
               </tbody>

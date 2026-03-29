@@ -22,10 +22,11 @@ export function Component() {
   }, [mobileOpen]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[var(--color-pf-bg)]">
+    <div className="flex h-screen overflow-hidden bg-pf-base text-pf-text">
       <a href="#main-content" className="skip-to-content">Skip to content</a>
+
       {/* Desktop sidebar */}
-      <div className="hidden md:block">
+      <div className={`hidden md:block overflow-hidden transition-[width,min-width] duration-200 ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
         <AdminSidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
       </div>
 
@@ -33,7 +34,7 @@ export function Component() {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <div className="absolute inset-0 bg-black/50" role="button" tabIndex={0} aria-label="Close sidebar" onClick={() => setMobileOpen(false)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setMobileOpen(false); }} />
-          <div className="relative z-50 h-full">
+          <div className="relative z-50 h-full w-60">
             <AdminSidebar collapsed={false} onToggle={() => setMobileOpen(false)} onNavigate={() => setMobileOpen(false)} />
           </div>
         </div>

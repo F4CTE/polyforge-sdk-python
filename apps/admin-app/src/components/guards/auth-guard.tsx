@@ -6,7 +6,7 @@ export function AuthGuard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[var(--color-pf-bg)]">
+      <div className="flex items-center justify-center h-screen bg-pf-base">
         <div className="text-center">
           <svg
             className="mx-auto animate-pulse"
@@ -28,7 +28,7 @@ export function AuthGuard() {
               fill="var(--color-pf-cyan-500)"
             />
           </svg>
-          <p className="mt-4 text-sm text-[var(--color-pf-text-secondary)]" role="status">
+          <p className="mt-4 text-sm text-pf-text-secondary" role="status">
             Verifying admin session...
           </p>
         </div>

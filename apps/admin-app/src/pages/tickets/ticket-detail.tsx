@@ -112,13 +112,13 @@ export function Component() {
   if (loading) {
     return (
       <div className="animate-pulse space-y-6" role="status" aria-label="Loading ticket details">
-        <div className="h-4 bg-[var(--color-pf-elevated)] rounded w-32" />
-        <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 space-y-4">
-          <div className="h-5 bg-[var(--color-pf-bg)] rounded w-64" />
-          <div className="h-4 bg-[var(--color-pf-bg)] rounded w-48" />
-          <div className="h-4 bg-[var(--color-pf-bg)] rounded w-32" />
+        <div className="h-4 bg-pf-elevated rounded w-32" />
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
+          <div className="h-5 bg-pf-base rounded w-64" />
+          <div className="h-4 bg-pf-base rounded w-48" />
+          <div className="h-4 bg-pf-base rounded w-32" />
         </div>
-        <div className="h-32 bg-[var(--color-pf-elevated)] rounded-pf-lg animate-pulse" />
+        <div className="h-32 bg-pf-elevated rounded-pf-lg animate-pulse" />
       </div>
     );
   }
@@ -126,10 +126,10 @@ export function Component() {
   if (!ticket) {
     return (
       <div className="text-center py-12">
-        <p className="text-[var(--color-pf-text-secondary)]">Ticket not found</p>
+        <p className="text-pf-text-secondary">Ticket not found</p>
         <button type="button"
           onClick={() => navigate('/tickets')}
-          className="mt-4 text-sm text-[var(--color-pf-cyan-500)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded"
+          className="mt-4 text-sm text-pf-cyan-500 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded"
         >
           Back to tickets
         </button>
@@ -144,20 +144,20 @@ export function Component() {
       {/* Back */}
       <button type="button"
         onClick={() => navigate('/tickets')}
-        className="flex items-center gap-1.5 text-sm text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded-pf-sm"
+        className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded-pf-sm"
       >
         <ArrowLeft size={16} aria-hidden="true" />
         Back to tickets
       </button>
 
       {/* Header */}
-      <header className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6">
+      <header className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
         <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">
+            <h2 className="text-lg font-semibold text-pf-text">
               {ticket.subject}
             </h2>
-            <p className="text-sm text-[var(--color-pf-text-tertiary)] mt-0.5">
+            <p className="text-sm text-pf-text-tertiary mt-0.5">
               {ticket.username ?? ticket.userId} - {formatDateTime(ticket.createdAt)}
             </p>
           </div>
@@ -169,7 +169,7 @@ export function Component() {
               {ticket.priority}
             </span>
             {ticket.category && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] border border-[var(--color-pf-border)]">
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-pf-base text-pf-text-secondary border border-pf-border">
                 {ticket.category}
               </span>
             )}
@@ -177,14 +177,14 @@ export function Component() {
         </div>
 
         {/* Controls */}
-        <div className="flex flex-wrap gap-4 pt-4 border-t border-[var(--color-pf-border)]">
+        <div className="flex flex-wrap gap-4 pt-4 border-t border-pf-border">
           <div>
-            <label htmlFor="ticket-status" className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Status</label>
+            <label htmlFor="ticket-status" className="block text-xs text-pf-text-tertiary mb-1">Status</label>
             <select
               id="ticket-status"
               value={statusValue}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className="px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+              className="px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus:outline-none focus:ring-1 focus:ring-pf-cyan-500"
             >
               <option value="OPEN">Open</option>
               <option value="IN_PROGRESS">In Progress</option>
@@ -193,12 +193,12 @@ export function Component() {
             </select>
           </div>
           <div>
-            <label htmlFor="ticket-assign" className="block text-xs text-[var(--color-pf-text-tertiary)] mb-1">Assign To</label>
+            <label htmlFor="ticket-assign" className="block text-xs text-pf-text-tertiary mb-1">Assign To</label>
             <select
               id="ticket-assign"
               value={assignedTo}
               onChange={(e) => handleAssign(e.target.value)}
-              className="px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)]"
+              className="px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus:outline-none focus:ring-1 focus:ring-pf-cyan-500"
             >
               <option value="">Unassigned</option>
               {admins.map((a) => (
@@ -220,19 +220,19 @@ export function Component() {
               key={msg.id ?? i}
               className={`p-4 rounded-pf-lg border ${
                 isAdmin
-                  ? 'bg-[var(--color-pf-cyan-500)]/5 border-[var(--color-pf-cyan-500)]/20 ml-8'
-                  : 'bg-[var(--color-pf-elevated)] border-[var(--color-pf-border)] mr-8'
+                  ? 'bg-pf-cyan-500/5 border-pf-cyan-500/20 ml-8'
+                  : 'bg-pf-elevated border-pf-border mr-8'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-[var(--color-pf-text-secondary)]">
+                <span className="text-xs font-medium text-pf-text-secondary">
                   {isAdmin ? (msg.senderName ?? 'Admin') : (ticket.username ?? 'User')}
                 </span>
-                <span className="text-[11px] text-[var(--color-pf-text-tertiary)]">
+                <span className="text-[11px] text-pf-text-tertiary">
                   {msg.createdAt ? timeAgo(msg.createdAt) : ''}
                 </span>
               </div>
-              <p className="text-sm text-[var(--color-pf-text)] whitespace-pre-wrap">{msg.body}</p>
+              <p className="text-sm text-pf-text whitespace-pre-wrap">{msg.body}</p>
             </div>
           );
         })}
@@ -242,7 +242,7 @@ export function Component() {
       <form
         onSubmit={handleReply}
         noValidate
-        className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4"
+        className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4"
       >
         <label htmlFor="ticket-reply" className="sr-only">Reply message</label>
         <textarea
@@ -252,13 +252,13 @@ export function Component() {
           placeholder="Type your reply..."
           rows={4}
           disabled={sending}
-          className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] mb-3 resize-y disabled:opacity-50"
+          className="w-full px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus:outline-none focus:ring-1 focus:ring-pf-cyan-500 mb-3 resize-y disabled:opacity-50"
         />
         <div className="flex justify-end">
           <button
             type="submit"
             disabled={sending || !reply.trim()}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
           >
             <Send size={14} aria-hidden="true" />
             {sending ? 'Sending...' : 'Reply'}
