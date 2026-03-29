@@ -13,6 +13,8 @@ export interface EndpointDef {
   queryParams?: EndpointField[];
   requestFields?: EndpointField[];
   responseNote?: string;
+  response?: string;
+  status?: 'stable' | 'beta' | 'deprecated';
   examples: { curl?: string; ts?: string; py?: string; rust?: string };
 }
 
@@ -33,6 +35,7 @@ export const MARKETS: EndpointDef[] = [
       { name: 'limit',   type: 'int',     description: 'Results per page, max 100 (default: 20)' },
     ],
     responseNote: 'Returns { data: Market[], total, page, limit, totalPages, hasNext }. Each Market includes tokens with tokenId, outcome, price, and liquidity.',
+    response: `{\n  "data": [\n    { "id": "mkt_abc123", "title": "Will BTC hit $100k in 2026?", "tokens": [{ "tokenId": "tok_yes", "outcome": "YES", "price": 0.62 }] }\n  ],\n  "total": 142,\n  "page": 1,\n  "limit": 20,\n  "totalPages": 8,\n  "hasNext": true\n}`,
     examples: {
       curl: `curl "${BASE}/api/v1/markets?search=election&sort=volume" \\\n  -H "Authorization: Bearer pf_live_..."`,
       ts: `const { data } = await client.listMarkets({ search: 'election', sort: 'volume', limit: 10 });\ndata.forEach(m => console.log(m.title, m.tokens[0]?.price));`,
@@ -45,6 +48,7 @@ export const MARKETS: EndpointDef[] = [
     summary: 'Get a single market',
     description: 'Returns full market details including all tokens, current prices, bid/ask spread, volume, and end date.',
     responseNote: 'Returns a single Market object. 404 if the market does not exist or is not synced yet.',
+    response: `{\n  "id": "mkt_abc123",\n  "title": "Will BTC hit $100k in 2026?",\n  "endDate": "2026-12-31T23:59:59Z",\n  "volume24h": 845200,\n  "tokens": [\n    { "tokenId": "tok_yes", "outcome": "YES", "price": 0.62, "liquidity": 320000 },\n    { "tokenId": "tok_no",  "outcome": "NO",  "price": 0.38, "liquidity": 210000 }\n  ]\n}`,
     examples: {
       curl: `curl "${BASE}/api/v1/markets/mkt_abc123" \\\n  -H "Authorization: Bearer pf_live_..."`,
       ts: `const market = await client.getMarket('mkt_abc123');`,
@@ -62,6 +66,7 @@ export const MARKETS: EndpointDef[] = [
       { name: 'limit',      type: 'int',    description: 'Max candles (default: 200, max: 1000)' },
     ],
     responseNote: 'Returns { tokenId, resolution, data: [{time, open, high, low, close, volume}] }.',
+    response: `{\n  "tokenId": "tok_yes_abc",\n  "resolution": "1h",\n  "data": [\n    { "time": "2026-03-01T00:00:00Z", "open": 0.58, "high": 0.63, "low": 0.57, "close": 0.62, "volume": 12400 }\n  ]\n}`,
     examples: {
       curl: `curl "${BASE}/api/v1/markets/tok_yes_abc/price-history?resolution=1h&from=2026-03-01" \\\n  -H "Authorization: Bearer pf_live_..."`,
     },
@@ -71,6 +76,7 @@ export const MARKETS: EndpointDef[] = [
     summary: 'Order book (bid/ask)',
     description: 'Returns the current CLOB order book for a token — aggregated bids and asks, spread, and midpoint price.',
     responseNote: 'Returns { tokenId, bids, asks, spread, midpoint, timestamp }.',
+    response: `{\n  "tokenId": "tok_yes_abc",\n  "bids": [{ "price": 0.61, "size": 500 }, { "price": 0.60, "size": 1200 }],\n  "asks": [{ "price": 0.62, "size": 400 }, { "price": 0.63, "size": 800 }],\n  "spread": 0.01,\n  "midpoint": 0.615,\n  "timestamp": 1743200000000\n}`,
     examples: {
       curl: `curl "${BASE}/api/v1/markets/tok_yes_abc/book" \\\n  -H "Authorization: Bearer pf_live_..."`,
     },
@@ -83,6 +89,7 @@ export const STRATEGIES: EndpointDef[] = [
   {
     method: 'GET', path: '/api/v1/strategies', scope: 'READ',
     summary: 'List your strategies',
+    response: `{\n  "data": [\n    { "id": "strat_123", "name": "Momentum Bot", "status": "RUNNING", "mode": "live", "createdAt": "2026-01-15T12:00:00Z" }\n  ],\n  "total": 5,\n  "page": 1,\n  "limit": 20\n}`,
     queryParams: [
       { name: 'status', type: 'string', description: 'IDLE | RUNNING | PAUSED | PAPER | ARCHIVED' },
       { name: 'page',   type: 'int',    description: 'Page (default: 1)' },
@@ -117,6 +124,7 @@ export const STRATEGIES: EndpointDef[] = [
   },
   {
     method: 'POST', path: '/api/v1/strategies/from-description', scope: 'WRITE',
+    status: 'beta',
     summary: 'AI-generate a strategy from text',
     description: 'Sends a natural language description to an LLM which assembles a block-based strategy and returns it ready to run. The strategy is saved to your account.',
     requestFields: [
@@ -264,6 +272,7 @@ export const ORDERS: EndpointDef[] = [
 export const CONDITIONAL_ORDERS: EndpointDef[] = [
   {
     method: 'POST', path: '/api/v1/orders/conditional', scope: 'TRADE',
+    status: 'beta',
     summary: 'Create a conditional order',
     description: 'Conditional orders execute automatically when a price trigger fires. Types: TAKE_PROFIT, STOP_LOSS, TRAILING_STOP, LIMIT, PEGGED.',
     requestFields: [
@@ -281,6 +290,7 @@ export const CONDITIONAL_ORDERS: EndpointDef[] = [
   },
   {
     method: 'GET', path: '/api/v1/orders/conditional', scope: 'READ',
+    status: 'beta',
     summary: 'List conditional orders',
     queryParams: [
       { name: 'status', type: 'string', description: 'ACTIVE | TRIGGERED | CANCELLED' },
@@ -292,6 +302,7 @@ export const CONDITIONAL_ORDERS: EndpointDef[] = [
   },
   {
     method: 'DELETE', path: '/api/v1/orders/conditional/:id', scope: 'TRADE',
+    status: 'beta',
     summary: 'Cancel a conditional order',
     examples: {
       curl: `curl -X DELETE "${BASE}/api/v1/orders/conditional/co_abc123" \\\n  -H "Authorization: Bearer pf_live_..."`,
