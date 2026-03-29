@@ -25,6 +25,8 @@ interface StrategyChartGridProps {
   dateFrom?: string;
   /** Price history end date (ISO or YYYY-MM-DD) */
   dateTo?: string;
+  /** When true, each chart polls for live price data every 30s */
+  live?: boolean;
 }
 
 /* ─── Grid layout helper ─────────────────────────────────────────────── */
@@ -37,7 +39,7 @@ function gridClass(count: number): string {
 /* ─── Component ──────────────────────────────────────────────────────── */
 
 export function StrategyChartGrid({
-  marketBindings, marketSlots, trades, recentTrades, dateFrom, dateTo,
+  marketBindings, marketSlots, trades, recentTrades, dateFrom, dateTo, live = false,
 }: StrategyChartGridProps) {
   // Build list of {tokenId, label} pairs in slot order
   const charts = marketSlots
@@ -73,6 +75,7 @@ export function StrategyChartGrid({
             trades={markers}
             dateFrom={dateFrom}
             dateTo={dateTo}
+            live={live}
           />
         );
       })}

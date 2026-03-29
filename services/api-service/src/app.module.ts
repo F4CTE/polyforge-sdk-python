@@ -8,7 +8,7 @@ import { SharedDbModule } from "@polyforge/shared-db";
 import { RedisModule } from "@polyforge/shared-redis";
 import { SharedAuthModule } from "@polyforge/shared-auth";
 import { LoggerModule } from "@polyforge/logger";
-import { HealthController } from "./health/health.controller";
+import { HealthController, StatusController } from "./health/health.controller";
 import { MarketsModule } from "./markets/markets.module";
 import { StrategiesModule } from "./strategies/strategies.module";
 import { DiscoverModule } from "./discover/discover.module";
@@ -69,7 +69,7 @@ import { ApiKeysModule } from "./api-keys/api-keys.module";
     AiModule,
     ApiKeysModule,
   ],
-  controllers: [HealthController],
+  controllers: [HealthController, StatusController],
   providers: [{ provide: APP_GUARD, useClass: ApiKeyThrottlerGuard }],
 })
 export class AppModule {}

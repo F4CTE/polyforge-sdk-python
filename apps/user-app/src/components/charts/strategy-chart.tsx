@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceDot,
 } from 'recharts';
@@ -60,17 +60,28 @@ function getTheme() {
 
 /* ─── Component ──────────────────────────────────────────────────────── */
 
-export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo }: StrategyChartProps) {
-  const [candles, setCandles] = useState<PriceCandle[]>([]);
+interface StrategyChartPropsExtended extends StrategyChartProps {
+  /** When true, chart polls for new candles every 30s (live mode) */
+  live?: boolean;
+}
+
+/** Animation duration in ms for backtest replay */
+const REPLAY_DURATION_MS = 2000;
+/** Live poll interval in ms */
+const LIVE_POLL_MS = 30_000;
+
+export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live = false }: StrategyChartPropsExtended) {
+  const [allCandles, setAllCandles] = useState<PriceCandle[]>([]);
+  const [displayedCount, setDisplayedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const theme = useRef(getTheme());
+  const rafRef = useRef<number | null>(null);
+  const animStartRef = useRef<number | null>(null);
 
-  useEffect(() => {
+  const fetchCandles = useCallback((append = false) => {
     if (!tokenId) return;
-
-    setLoading(true);
-    setError(null);
+    if (!append) { setLoading(true); setError(null); }
 
     const params = new URLSearchParams({ resolution: '1h', limit: '200' });
     if (dateFrom) params.set('from', new Date(dateFrom).toISOString());
@@ -80,21 +91,73 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo }: Stra
       .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
       .then((body: { data?: { time: string; close: string }[] }) => {
         const data = body?.data ?? [];
-        setCandles(
-          data.map(c => ({
-            ts: new Date(c.time).getTime(),
-            label: formatTickLabel(new Date(c.time).getTime()),
-            close: parseFloat(c.close),
-          }))
-        );
+        const parsed = data.map(c => ({
+          ts: new Date(c.time).getTime(),
+          label: formatTickLabel(new Date(c.time).getTime()),
+          close: parseFloat(c.close),
+        }));
+        setAllCandles(prev => {
+          if (!append) return parsed;
+          // Merge: keep existing, append only genuinely new candles
+          const lastTs = prev.at(-1)?.ts ?? 0;
+          const fresh = parsed.filter(c => c.ts > lastTs);
+          return fresh.length ? [...prev, ...fresh] : prev;
+        });
       })
-      .catch(() => setError('Failed to load price data'))
-      .finally(() => setLoading(false));
+      .catch(() => { if (!append) setError('Failed to load price data'); })
+      .finally(() => { if (!append) setLoading(false); });
   }, [tokenId, dateFrom, dateTo]);
+
+  // Initial fetch
+  useEffect(() => { fetchCandles(false); }, [fetchCandles]);
+
+  // Live polling
+  useEffect(() => {
+    if (!live) return;
+    const id = setInterval(() => fetchCandles(true), LIVE_POLL_MS);
+    return () => clearInterval(id);
+  }, [live, fetchCandles]);
+
+  // Replay animation for backtest (non-live) mode
+  useEffect(() => {
+    if (live || allCandles.length === 0) {
+      // Live mode or empty: show all immediately
+      setDisplayedCount(allCandles.length);
+      return;
+    }
+
+    // Cancel any in-progress animation
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    animStartRef.current = null;
+    setDisplayedCount(0);
+
+    const total = allCandles.length;
+
+    const step = (now: number) => {
+      if (!animStartRef.current) animStartRef.current = now;
+      const elapsed = now - animStartRef.current;
+      const progress = Math.min(elapsed / REPLAY_DURATION_MS, 1);
+      // Ease-out curve so it starts fast and slows near the end
+      const eased = 1 - Math.pow(1 - progress, 2);
+      const count = Math.max(1, Math.ceil(eased * total));
+      setDisplayedCount(count);
+      if (progress < 1) rafRef.current = requestAnimationFrame(step);
+    };
+
+    rafRef.current = requestAnimationFrame(step);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [allCandles, live]);
+
+  const candles = live ? allCandles : allCandles.slice(0, displayedCount);
+  const playheadTs = candles.at(-1)?.ts ?? 0;
+  const fullDomainMin = allCandles[0]?.ts ?? 0;
+  const fullDomainMax = allCandles.at(-1)?.ts ?? 0;
 
   const { cyan, bgElevated, border, textMuted } = theme.current;
 
-  // Trade markers — map to nearest candle timestamp
+  // Trade markers — only show those the playhead has reached
+  const visibleBuyDots  = trades.filter(t => t.side === 'BUY'  && new Date(t.time).getTime() <= playheadTs);
+  const visibleSellDots = trades.filter(t => t.side === 'SELL' && new Date(t.time).getTime() <= playheadTs);
   const buyDots  = trades.filter(t => t.side === 'BUY');
   const sellDots = trades.filter(t => t.side === 'SELL');
 
@@ -107,9 +170,10 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo }: Stra
         <span className="text-[10px] font-medium text-pf-text-secondary uppercase tracking-wider truncate max-w-[70%]">
           {label}
         </span>
-        {!loading && !error && candles.length > 0 && (
+        {!loading && !error && allCandles.length > 0 && (
           <span className="text-[10px] font-mono text-pf-text-muted">
-            {candles[candles.length - 1]?.close.toFixed(3)}
+            {(candles.at(-1) ?? allCandles.at(-1))?.close.toFixed(3)}
+            {live && <span className="ml-1 text-pf-cyan-400 animate-pulse">●</span>}
           </span>
         )}
       </div>
@@ -127,13 +191,13 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo }: Stra
             <span className="text-[10px]">{error}</span>
           </div>
         )}
-        {!loading && !error && candles.length === 0 && (
+        {!loading && !error && allCandles.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center gap-1 text-pf-text-muted">
             <TrendingUp className="size-4 opacity-20" />
             <span className="text-[10px]">No price data</span>
           </div>
         )}
-        {!loading && !error && candles.length > 0 && (
+        {!loading && !error && allCandles.length > 0 && (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={candles} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
               <defs>
@@ -147,7 +211,7 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo }: Stra
                 dataKey="ts"
                 type="number"
                 scale="time"
-                domain={['dataMin', 'dataMax']}
+                domain={[fullDomainMin, fullDomainMax]}
                 tickFormatter={formatTickLabel}
                 tick={{ fontSize: 9, fill: textMuted }}
                 tickLine={false}
@@ -188,8 +252,8 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo }: Stra
                 isAnimationActive={false}
               />
 
-              {/* BUY markers — green dots */}
-              {buyDots.map((t, i) => (
+              {/* BUY markers — revealed as playhead advances */}
+              {visibleBuyDots.map((t, i) => (
                 <ReferenceDot
                   key={`buy-${i}`}
                   x={new Date(t.time).getTime()}
@@ -202,8 +266,8 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo }: Stra
                 />
               ))}
 
-              {/* SELL markers — red dots */}
-              {sellDots.map((t, i) => (
+              {/* SELL markers — revealed as playhead advances */}
+              {visibleSellDots.map((t, i) => (
                 <ReferenceDot
                   key={`sell-${i}`}
                   x={new Date(t.time).getTime()}
@@ -221,18 +285,18 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo }: Stra
       </div>
 
       {/* Legend — only if there are trade markers */}
-      {trades.length > 0 && !loading && !error && candles.length > 0 && (
+      {trades.length > 0 && !loading && !error && allCandles.length > 0 && (
         <div className="flex items-center gap-3 px-3 py-1 border-t border-pf-border">
           {buyDots.length > 0 && (
             <span className="flex items-center gap-1 text-[9px] text-pf-text-muted">
               <span className="size-2 rounded-full bg-pf-success inline-block" />
-              {buyDots.length} BUY
+              {visibleBuyDots.length}/{buyDots.length} BUY
             </span>
           )}
           {sellDots.length > 0 && (
             <span className="flex items-center gap-1 text-[9px] text-pf-text-muted">
               <span className="size-2 rounded-full bg-pf-danger inline-block" />
-              {sellDots.length} SELL
+              {visibleSellDots.length}/{sellDots.length} SELL
             </span>
           )}
         </div>

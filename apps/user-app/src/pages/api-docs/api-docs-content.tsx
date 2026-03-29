@@ -13,6 +13,7 @@ import {
 } from './api-docs-primitives';
 import { EndpointCard } from './api-docs-endpoint-card';
 import { McpSection } from './api-docs-content-mcp';
+import { StatusSection } from './api-docs-content-status';
 import { ENDPOINT_SECTIONS } from './api-docs-nav';
 
 /* ─── Changelog data ─────────────────────────────────────────────── */
@@ -447,6 +448,9 @@ export function renderContent({
       </Sub>
     </div>
   );
+
+  /* ── Service Status ── */
+  if (activeId === 'status') return <StatusSection />;
 
   /* ── MCP Server ── */
   if (activeId === 'mcp-server') return <McpSection />;

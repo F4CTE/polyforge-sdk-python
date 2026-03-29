@@ -866,12 +866,13 @@ function LiveTab({
         <MetricCard label="Filled" value={String(live.ordersFilled)} color="text-pf-text" icon={<Activity className="size-3" />} />
       </div>
 
-      {/* Price charts with trade markers */}
+      {/* Price charts with trade markers — live polling enabled */}
       {Object.keys(marketBindings).length > 0 && (
         <StrategyChartGrid
           marketBindings={marketBindings}
           marketSlots={marketSlots}
           recentTrades={live.recentTrades.map(t => ({ ...t, market: t.market }))}
+          live
         />
       )}
 

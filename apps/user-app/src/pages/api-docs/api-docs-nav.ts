@@ -14,6 +14,7 @@ export const NAV_GROUPS: { group: string | null; items: { id: string; label: str
       { id: 'getting-started', label: 'Getting Started' },
       { id: 'authentication',  label: 'Authentication' },
       { id: 'sdks',            label: 'SDKs & Clients' },
+      { id: 'status',          label: 'Service Status' },
       { id: 'changelog',       label: 'Changelog' },
     ],
   },
