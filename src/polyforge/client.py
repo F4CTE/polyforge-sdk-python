@@ -173,6 +173,11 @@ class PolyforgeClient:
         _raise_for_status(resp)
         return resp.json()
 
+    def _patch(self, path: str, *, json: dict[str, Any] | None = None) -> Any:
+        resp = self._client.patch(path, json=json or {})
+        _raise_for_status(resp)
+        return resp.json()
+
     def _delete(self, path: str) -> Any:
         resp = self._client.delete(path)
         _raise_for_status(resp)
@@ -240,19 +245,55 @@ class PolyforgeClient:
     def export_strategy(self, strategy_id: str) -> dict:
         return self._get(f"/api/v1/strategies/{strategy_id}/export")
 
+    def update_strategy(self, strategy_id: str, name: str | None = None, description: str | None = None) -> Strategy:
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        if description is not None:
+            body["description"] = description
+        return _parse(Strategy, self._patch(f"/api/v1/strategies/{strategy_id}", json=body))
+
+    def delete_strategy(self, strategy_id: str) -> None:
+        self._delete(f"/api/v1/strategies/{strategy_id}")
+
+    def import_strategy(self, data: dict) -> Strategy:
+        return _parse(Strategy, self._post("/api/v1/strategies/import", json={"data": data}))
+
+    def pause_strategy(self, strategy_id: str) -> Strategy:
+        return _parse(Strategy, self._post(f"/api/v1/strategies/{strategy_id}/pause"))
+
+    def resume_strategy(self, strategy_id: str) -> Strategy:
+        return _parse(Strategy, self._post(f"/api/v1/strategies/{strategy_id}/resume"))
+
+    def fork_strategy(self, strategy_id: str) -> Strategy:
+        return _parse(Strategy, self._post(f"/api/v1/strategies/{strategy_id}/fork"))
+
     # -- Portfolio & Orders --
 
     def get_portfolio(self) -> Portfolio:
         return _parse(Portfolio, self._get("/api/v1/portfolio"))
 
-    def get_orders(self, *, limit: int = 20, status: str | None = None) -> list[Order]:
-        data = self._get("/api/v1/orders", params={"limit": limit, "status": status})
-        # Backend returns PaginatedResponse<Order> with 'data' field
+    def get_orders(
+        self,
+        *,
+        limit: int = 20,
+        status: str | None = None,
+        strategy_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> list[Order]:
+        data = self._get("/api/v1/orders", params={
+            "limit": limit,
+            "status": status,
+            "strategyId": strategy_id,
+            "from": from_date,
+            "to": to_date,
+        })
         items = data["data"]
         return [_parse(Order, o) for o in items]
 
     def get_score(self) -> TraderScore:
-        return _parse(TraderScore, self._get("/api/v1/score"))
+        return _parse(TraderScore, self._get("/api/v1/scores/me"))
 
     # -- Direct Trading --
 
@@ -283,6 +324,32 @@ class PolyforgeClient:
     def cancel_order(self, order_id: str) -> dict:
         """Cancel a pending or live order."""
         return self._delete(f"/api/v1/orders/{order_id}")
+
+    def close_position(self, token_id: str, size: float | None = None) -> PlaceOrderResponse:
+        """Close an open position (sell all shares at market price)."""
+        body: dict[str, Any] = {"tokenId": token_id}
+        if size is not None:
+            body["size"] = size
+        data = self._post("/api/v1/orders/close-position", json=body)
+        return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
+
+    def redeem_position(self, token_id: str, condition_id: str | None = None) -> PlaceOrderResponse:
+        """Redeem winning shares after a market resolves."""
+        body: dict[str, Any] = {"tokenId": token_id}
+        if condition_id is not None:
+            body["conditionId"] = condition_id
+        data = self._post("/api/v1/orders/redeem", json=body)
+        return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
+
+    def split_position(self, token_id: str, size: float, price: float) -> PlaceOrderResponse:
+        """Split a position into smaller positions."""
+        data = self._post("/api/v1/orders/split", json={"tokenId": token_id, "size": size, "price": price})
+        return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
+
+    def merge_positions(self, token_ids: list[str]) -> PlaceOrderResponse:
+        """Merge multiple positions into one."""
+        data = self._post("/api/v1/orders/merge", json={"tokenIds": token_ids})
+        return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
     def watch_strategy(self, strategy_id: str) -> Iterator[StrategyEvent]:
         """Stream live execution events for a strategy via SSE.
@@ -326,14 +393,12 @@ class PolyforgeClient:
     # -- Social & Signals --
 
     def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
-        data = self._get("/api/v1/whale-feed", params={"min_size": min_size})
-        # Backend returns PaginatedResponse<WhaleTrade> with 'data' field
+        data = self._get("/api/v1/whales/feed", params={"min_size": min_size})
         items = data["data"]
         return [_parse(WhaleTrade, w) for w in items]
 
     def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
-        data = self._get("/api/v1/news-signals", params={"min_confidence": min_confidence})
-        # Backend returns PaginatedResponse<NewsSignal> with 'data' field
+        data = self._get("/api/v1/news/signals", params={"min_confidence": min_confidence})
         items = data["data"]
         return [_parse(NewsSignal, s) for s in items]
 
@@ -341,13 +406,11 @@ class PolyforgeClient:
 
     def list_alerts(self) -> list[Alert]:
         data = self._get("/api/v1/alerts")
-        # Backend returns PaginatedResponse<Alert> with 'data' field
         items = data["data"]
         return [_parse(Alert, a) for a in items]
 
     def list_copy_configs(self) -> list[CopyConfig]:
-        data = self._get("/api/v1/copy-configs")
-        # Backend returns PaginatedResponse<CopyConfig> with 'data' field
+        data = self._get("/api/v1/copy")
         items = data["data"]
         return [_parse(CopyConfig, c) for c in items]
 
@@ -431,6 +494,11 @@ class AsyncPolyforgeClient:
         _raise_for_status(resp)
         return resp.json()
 
+    async def _patch(self, path: str, *, json: dict[str, Any] | None = None) -> Any:
+        resp = await self._client.patch(path, json=json or {})
+        _raise_for_status(resp)
+        return resp.json()
+
     async def _delete(self, path: str) -> Any:
         resp = await self._client.delete(path)
         _raise_for_status(resp)
@@ -498,19 +566,55 @@ class AsyncPolyforgeClient:
     async def export_strategy(self, strategy_id: str) -> dict:
         return await self._get(f"/api/v1/strategies/{strategy_id}/export")
 
+    async def update_strategy(self, strategy_id: str, name: str | None = None, description: str | None = None) -> Strategy:
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        if description is not None:
+            body["description"] = description
+        return _parse(Strategy, await self._patch(f"/api/v1/strategies/{strategy_id}", json=body))
+
+    async def delete_strategy(self, strategy_id: str) -> None:
+        await self._delete(f"/api/v1/strategies/{strategy_id}")
+
+    async def import_strategy(self, data: dict) -> Strategy:
+        return _parse(Strategy, await self._post("/api/v1/strategies/import", json={"data": data}))
+
+    async def pause_strategy(self, strategy_id: str) -> Strategy:
+        return _parse(Strategy, await self._post(f"/api/v1/strategies/{strategy_id}/pause"))
+
+    async def resume_strategy(self, strategy_id: str) -> Strategy:
+        return _parse(Strategy, await self._post(f"/api/v1/strategies/{strategy_id}/resume"))
+
+    async def fork_strategy(self, strategy_id: str) -> Strategy:
+        return _parse(Strategy, await self._post(f"/api/v1/strategies/{strategy_id}/fork"))
+
     # -- Portfolio & Orders --
 
     async def get_portfolio(self) -> Portfolio:
         return _parse(Portfolio, await self._get("/api/v1/portfolio"))
 
-    async def get_orders(self, *, limit: int = 20, status: str | None = None) -> list[Order]:
-        data = await self._get("/api/v1/orders", params={"limit": limit, "status": status})
-        # Backend returns PaginatedResponse<Order> with 'data' field
+    async def get_orders(
+        self,
+        *,
+        limit: int = 20,
+        status: str | None = None,
+        strategy_id: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> list[Order]:
+        data = await self._get("/api/v1/orders", params={
+            "limit": limit,
+            "status": status,
+            "strategyId": strategy_id,
+            "from": from_date,
+            "to": to_date,
+        })
         items = data["data"]
         return [_parse(Order, o) for o in items]
 
     async def get_score(self) -> TraderScore:
-        return _parse(TraderScore, await self._get("/api/v1/score"))
+        return _parse(TraderScore, await self._get("/api/v1/scores/me"))
 
     # -- Direct Trading --
 
@@ -541,6 +645,32 @@ class AsyncPolyforgeClient:
     async def cancel_order(self, order_id: str) -> dict:
         """Cancel a pending or live order."""
         return await self._delete(f"/api/v1/orders/{order_id}")
+
+    async def close_position(self, token_id: str, size: float | None = None) -> PlaceOrderResponse:
+        """Close an open position (sell all shares at market price)."""
+        body: dict[str, Any] = {"tokenId": token_id}
+        if size is not None:
+            body["size"] = size
+        data = await self._post("/api/v1/orders/close-position", json=body)
+        return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
+
+    async def redeem_position(self, token_id: str, condition_id: str | None = None) -> PlaceOrderResponse:
+        """Redeem winning shares after a market resolves."""
+        body: dict[str, Any] = {"tokenId": token_id}
+        if condition_id is not None:
+            body["conditionId"] = condition_id
+        data = await self._post("/api/v1/orders/redeem", json=body)
+        return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
+
+    async def split_position(self, token_id: str, size: float, price: float) -> PlaceOrderResponse:
+        """Split a position into smaller positions."""
+        data = await self._post("/api/v1/orders/split", json={"tokenId": token_id, "size": size, "price": price})
+        return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
+
+    async def merge_positions(self, token_ids: list[str]) -> PlaceOrderResponse:
+        """Merge multiple positions into one."""
+        data = await self._post("/api/v1/orders/merge", json={"tokenIds": token_ids})
+        return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
     async def watch_strategy(self, strategy_id: str) -> AsyncIterator[StrategyEvent]:  # type: ignore[override]
         """Stream live execution events for a strategy via SSE.
@@ -581,14 +711,12 @@ class AsyncPolyforgeClient:
     # -- Social & Signals --
 
     async def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
-        data = await self._get("/api/v1/whale-feed", params={"min_size": min_size})
-        # Backend returns PaginatedResponse<WhaleTrade> with 'data' field
+        data = await self._get("/api/v1/whales/feed", params={"min_size": min_size})
         items = data["data"]
         return [_parse(WhaleTrade, w) for w in items]
 
     async def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
-        data = await self._get("/api/v1/news-signals", params={"min_confidence": min_confidence})
-        # Backend returns PaginatedResponse<NewsSignal> with 'data' field
+        data = await self._get("/api/v1/news/signals", params={"min_confidence": min_confidence})
         items = data["data"]
         return [_parse(NewsSignal, s) for s in items]
 
@@ -596,13 +724,11 @@ class AsyncPolyforgeClient:
 
     async def list_alerts(self) -> list[Alert]:
         data = await self._get("/api/v1/alerts")
-        # Backend returns PaginatedResponse<Alert> with 'data' field
         items = data["data"]
         return [_parse(Alert, a) for a in items]
 
     async def list_copy_configs(self) -> list[CopyConfig]:
-        data = await self._get("/api/v1/copy-configs")
-        # Backend returns PaginatedResponse<CopyConfig> with 'data' field
+        data = await self._get("/api/v1/copy")
         items = data["data"]
         return [_parse(CopyConfig, c) for c in items]
 
