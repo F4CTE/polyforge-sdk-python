@@ -97,9 +97,9 @@ export function Component() {
     return (
       <div className="text-center py-12">
         <p className="text-[var(--color-pf-text-secondary)]">Ticket not found</p>
-        <button
+        <button type="button"
           onClick={() => navigate('/tickets')}
-          className="mt-4 text-sm text-[var(--color-pf-cyan-500)] hover:underline"
+          className="mt-4 text-sm text-[var(--color-pf-cyan-500)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded"
         >
           Back to tickets
         </button>
@@ -112,7 +112,7 @@ export function Component() {
   return (
     <div className="animate-fade-in space-y-6">
       {/* Back */}
-      <button
+      <button type="button"
         onClick={() => navigate('/tickets')}
         className="flex items-center gap-1.5 text-sm text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded-pf-sm"
       >

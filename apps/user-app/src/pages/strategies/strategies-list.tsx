@@ -249,6 +249,7 @@ export function Component() {
         <h1 className="text-2xl font-semibold text-pf-text">My Strategies</h1>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={handleImport}
             className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary font-medium hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
           >
@@ -267,6 +268,7 @@ export function Component() {
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {FILTERS.map((f) => (
           <button
+            type="button"
             key={f.value}
             onClick={() => onFilterChange(f.value)}
             className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
@@ -316,9 +318,10 @@ export function Component() {
                 data-testid="strategy-card"
                 role="link"
                 tabIndex={0}
+                aria-label={`Strategy: ${strategy.name}, status: ${strategy.status}`}
                 onClick={() => navigate(`/strategies/${strategy.id}`)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/strategies/${strategy.id}`); }}
-                className="group bg-pf-elevated border border-pf-border rounded-pf-lg p-5 cursor-pointer transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-0.5 overflow-hidden"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/strategies/${strategy.id}`); } }}
+                className="group bg-pf-elevated border border-pf-border rounded-pf-lg p-5 cursor-pointer transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-0.5 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
               >
                 {/* Gradient status bar */}
                 <div
@@ -394,6 +397,7 @@ export function Component() {
                     {isIdle(strategy) && (
                       <>
                         <button
+                          type="button"
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'live' }); }}
                           disabled={busy}
                           className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 text-[11px] font-medium hover:bg-pf-cyan-500/20 disabled:opacity-40 transition-colors"
@@ -402,6 +406,7 @@ export function Component() {
                           <Zap className="size-3" /> Live
                         </button>
                         <button
+                          type="button"
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'paper' }); }}
                           disabled={busy}
                           className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-overlay text-pf-text-secondary text-[11px] font-medium hover:bg-pf-border-subtle disabled:opacity-40 transition-colors"
@@ -415,6 +420,7 @@ export function Component() {
                     {isActive(strategy) && (
                       <>
                         <button
+                          type="button"
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'pause'); }}
                           disabled={busy}
                           className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:bg-pf-overlay disabled:opacity-40 transition-colors"
@@ -424,6 +430,7 @@ export function Component() {
                           <Pause className="size-3.5" />
                         </button>
                         <button
+                          type="button"
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'stop'); }}
                           disabled={busy}
                           className="p-1.5 rounded-pf-sm text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
@@ -438,6 +445,7 @@ export function Component() {
                     {isPaused(strategy) && (
                       <>
                         <button
+                          type="button"
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'resume'); }}
                           disabled={busy}
                           className="p-1.5 rounded-pf-sm text-pf-cyan-400 hover:bg-pf-cyan-500/10 disabled:opacity-40 transition-colors"
@@ -447,6 +455,7 @@ export function Component() {
                           <Play className="size-3.5" />
                         </button>
                         <button
+                          type="button"
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'stop'); }}
                           disabled={busy}
                           className="p-1.5 rounded-pf-sm text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
@@ -460,6 +469,7 @@ export function Component() {
 
                     {/* Export */}
                     <button
+                      type="button"
                       onClick={(e) => handleExport(e, strategy.id)}
                       className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
                       aria-label="Export strategy"

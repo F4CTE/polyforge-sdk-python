@@ -126,6 +126,7 @@ export function Component() {
                   {truncateAddress(wallet.walletAddress)}
                 </Link>
                 <button
+                  type="button"
                   onClick={() => unfollow(wallet.walletAddress)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border border-pf-danger/30 text-pf-danger hover:bg-pf-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 transition-colors"
                   aria-label={`Unfollow wallet ${truncateAddress(wallet.walletAddress)}`}

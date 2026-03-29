@@ -128,16 +128,21 @@ export function Footer() {
                   {col.title}
                 </h4>
                 <ul className="flex flex-col gap-2.5">
-                  {col.links.map((link) => (
-                    <li key={link.label}>
-                      <a
-                        href={link.href}
-                        className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
-                      >
-                        {link.label}
-                      </a>
-                    </li>
-                  ))}
+                  {col.links.map((link) => {
+                    const isExternal = link.href.startsWith('http');
+                    return (
+                      <li key={link.label}>
+                        <a
+                          href={link.href}
+                          {...(isExternal && { target: '_blank', rel: 'noopener noreferrer' })}
+                          className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
+                        >
+                          {link.label}
+                          {isExternal && <span className="sr-only"> (opens in a new tab)</span>}
+                        </a>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}

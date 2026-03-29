@@ -132,6 +132,7 @@ export function Component() {
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {SORT_OPTIONS.map(opt => (
           <button
+            type="button"
             key={opt.value}
             onClick={() => changeSort(opt.value)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
@@ -251,6 +252,7 @@ export function Component() {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
           <button
+            type="button"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
@@ -260,6 +262,7 @@ export function Component() {
           </button>
           <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
           <button
+            type="button"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"

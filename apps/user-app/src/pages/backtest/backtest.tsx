@@ -268,6 +268,7 @@ export function Component() {
             </div>
             <div className="flex items-end">
               <button
+                type="button"
                 onClick={submit}
                 disabled={!canSubmit}
                 className="w-full h-9 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
@@ -303,6 +304,7 @@ export function Component() {
                     <div className="bg-pf-elevated border border-pf-border rounded-pf max-h-40 overflow-y-auto">
                       {marketResults[slot.slot].map((m: any) => (
                         <button
+                          type="button"
                           key={m.id}
                           onClick={() => {
                             setMarketBindings(prev => ({ ...prev, [slot.slot]: m.id }));
@@ -331,7 +333,7 @@ export function Component() {
               <div className="text-sm font-medium text-pf-text">{selectedRun.strategyName ?? 'Unnamed Strategy'}</div>
               <div className="text-xs font-mono text-pf-text-muted mt-1">{dateRangeLabel(selectedRun)}</div>
             </div>
-            <button onClick={() => setSelectedRun(null)} aria-label="Close run details" className="text-pf-text-muted hover:text-pf-text transition-colors">
+            <button type="button" onClick={() => setSelectedRun(null)} aria-label="Close run details" className="text-pf-text-muted hover:text-pf-text transition-colors">
               <X className="size-4" />
             </button>
           </div>
@@ -391,16 +393,16 @@ export function Component() {
       {/* History table */}
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label="Backtest history">
             <thead>
               <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
-                <th className="px-4 py-3 font-medium">Strategy</th>
-                <th className="px-4 py-3 font-medium">Date Range</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Progress</th>
-                <th className="px-4 py-3 font-medium text-right">P&L</th>
-                <th className="px-4 py-3 font-medium text-right">Win Rate</th>
-                <th className="px-4 py-3 font-medium text-right">Created</th>
+                <th scope="col" className="px-4 py-3 font-medium">Strategy</th>
+                <th scope="col" className="px-4 py-3 font-medium">Date Range</th>
+                <th scope="col" className="px-4 py-3 font-medium">Status</th>
+                <th scope="col" className="px-4 py-3 font-medium">Progress</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">P&L</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Win Rate</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Created</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-pf-border-subtle">
@@ -487,6 +489,7 @@ export function Component() {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
           <button
+            type="button"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
@@ -496,6 +499,7 @@ export function Component() {
           </button>
           <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
           <button
+            type="button"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"

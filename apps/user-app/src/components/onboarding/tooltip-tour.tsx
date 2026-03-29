@@ -241,7 +241,7 @@ export function TooltipTour() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
           <span className="text-sm font-semibold text-pf-text">{step.title}</span>
-          <button
+          <button type="button"
             onClick={closeTour}
             className="p-1 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
             aria-label="Close tour"
@@ -262,7 +262,7 @@ export function TooltipTour() {
           </span>
           <div className="flex items-center gap-2">
             {!isFirst && (
-              <button
+              <button type="button"
                 onClick={prevStep}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium text-pf-text-secondary hover:text-pf-text bg-pf-surface border border-pf-border hover:border-pf-border-strong transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
               >
@@ -270,7 +270,7 @@ export function TooltipTour() {
                 Back
               </button>
             )}
-            <button
+            <button type="button"
               onClick={nextStep}
               className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
             >

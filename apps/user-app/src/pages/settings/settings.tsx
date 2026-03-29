@@ -365,6 +365,7 @@ export function Component() {
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {TABS.map(t => (
           <button
+            type="button"
             key={t.value}
             onClick={() => handleTab(t.value)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
@@ -402,7 +403,7 @@ export function Component() {
             </div>
           </div>
           <div className="flex justify-end">
-            <button onClick={saveProfile} disabled={profileSaving}
+            <button type="button" onClick={saveProfile} disabled={profileSaving}
               className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors">
               {profileSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Save Profile
@@ -419,6 +420,7 @@ export function Component() {
               Permanently delete your account and all associated data. This action cannot be undone.
             </p>
             <button
+              type="button"
               onClick={() => setDeleteDialogOpen(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger/10 text-pf-danger border border-pf-danger/20 text-sm font-medium hover:bg-pf-danger/20 transition-colors"
             >
@@ -458,12 +460,14 @@ export function Component() {
                   </div>
                   <div className="flex gap-3 justify-end">
                     <button
+                      type="button"
                       onClick={() => { setDeleteDialogOpen(false); setDeletePassword(''); }}
                       className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text rounded-pf hover:bg-pf-overlay transition-colors"
                     >
                       Cancel
                     </button>
                     <button
+                      type="button"
                       onClick={handleDeleteAccount}
                       disabled={deleting || !deletePassword}
                       className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger text-white text-sm font-medium hover:bg-pf-danger/80 disabled:opacity-50 transition-colors"
@@ -490,6 +494,7 @@ export function Component() {
                 <div className="text-xs text-pf-text-secondary mt-0.5">{item.desc}</div>
               </div>
               <button
+                type="button"
                 role="switch"
                 aria-checked={notifPrefs[item.key]}
                 aria-label={`${item.label} notifications`}
@@ -501,7 +506,7 @@ export function Component() {
             </div>
           ))}
           <div className="flex justify-end pt-4">
-            <button onClick={saveNotifications} disabled={notifSaving}
+            <button type="button" onClick={saveNotifications} disabled={notifSaving}
               className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors">
               {notifSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Save Preferences
@@ -543,7 +548,7 @@ export function Component() {
             )}
           </div>
           <div className="flex justify-end">
-            <button onClick={savePassword} disabled={pwSaving || !currentPassword || !newPassword || newPassword !== confirmPassword}
+            <button type="button" onClick={savePassword} disabled={pwSaving || !currentPassword || !newPassword || newPassword !== confirmPassword}
               className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors">
               {pwSaving ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}
               Change Password
@@ -569,7 +574,7 @@ export function Component() {
                   ))}
                 </div>
               </div>
-              <button onClick={() => setTotpSetupData(null)}
+              <button type="button" onClick={() => setTotpSetupData(null)}
                 className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors">
                 <Check className="size-4" />
                 I've saved my backup codes
@@ -585,7 +590,7 @@ export function Component() {
                 <input id="settings-totp-disable-password" type="password" value={totpDisablePassword} onChange={e => setTotpDisablePassword(e.target.value)} placeholder="Your password"
                   className="w-full max-w-[280px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
               </div>
-              <button onClick={disableTotp} disabled={totpSaving || !totpDisablePassword}
+              <button type="button" onClick={disableTotp} disabled={totpSaving || !totpDisablePassword}
                 className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger/10 text-pf-danger border border-pf-danger/20 text-sm font-medium hover:bg-pf-danger/20 disabled:opacity-50 transition-colors">
                 {totpSaving ? <Loader2 className="size-4 animate-spin" /> : <Shield className="size-4" />}
                 Disable 2FA
@@ -612,7 +617,7 @@ export function Component() {
                   </div>
                 </div>
               )}
-              <button onClick={confirmTotp} disabled={totpSaving || !totpCode}
+              <button type="button" onClick={confirmTotp} disabled={totpSaving || !totpCode}
                 className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors">
                 {totpSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                 Confirm & Enable 2FA
@@ -623,7 +628,7 @@ export function Component() {
               <p className="text-sm text-pf-text-secondary">
                 2FA is currently <strong className="text-pf-text-muted">disabled</strong>. Add an extra layer of security to your account.
               </p>
-              <button onClick={startTotpSetup} disabled={totpLoading}
+              <button type="button" onClick={startTotpSetup} disabled={totpLoading}
                 className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm font-medium text-pf-text hover:border-pf-border-strong disabled:opacity-50 transition-colors">
                 {totpLoading ? <Loader2 className="size-4 animate-spin" /> : <Shield className="size-4" />}
                 {totpLoading ? 'Setting up...' : 'Enable 2FA'}
@@ -693,7 +698,7 @@ export function Component() {
               </div>
 
               <div className="flex justify-end">
-                <button onClick={loadGasUsage}
+                <button type="button" onClick={loadGasUsage}
                   className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm font-medium text-pf-text hover:border-pf-border-strong transition-colors">
                   <Fuel className="size-4" />
                   Refresh
@@ -738,7 +743,7 @@ export function Component() {
               <input id="settings-key-expiration" type="date" lang="en" value={newKeyExpiration} onChange={e => setNewKeyExpiration(e.target.value)}
                 className="w-full max-w-[220px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
-            <button onClick={createApiKey} disabled={apiKeysCreating || !newKeyName.trim()}
+            <button type="button" onClick={createApiKey} disabled={apiKeysCreating || !newKeyName.trim()}
               className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors">
               {apiKeysCreating ? <Loader2 className="size-4 animate-spin" /> : <Key className="size-4" />}
               Generate API Key
@@ -754,11 +759,11 @@ export function Component() {
               </div>
               <div className="flex items-center gap-2 bg-pf-surface rounded-pf p-3 border border-pf-border">
                 <code className="flex-1 text-xs font-mono text-pf-text break-all">{createdKey.key}</code>
-                <button onClick={() => copyKey(createdKey.key!)} aria-label="Copy API key" className="p-1.5 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text">
+                <button type="button" onClick={() => copyKey(createdKey.key!)} aria-label="Copy API key" className="p-1.5 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text">
                   <Copy className="size-3.5" />
                 </button>
               </div>
-              <button onClick={() => setCreatedKey(null)}
+              <button type="button" onClick={() => setCreatedKey(null)}
                 className="text-xs text-pf-text-muted hover:text-pf-text transition-colors">Got it</button>
             </div>
           )}
@@ -779,16 +784,16 @@ export function Component() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm" aria-label="API keys">
                   <thead>
                     <tr className="text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border-subtle">
-                      <th className="pb-2 font-medium">Name</th>
-                      <th className="pb-2 font-medium">Key Prefix</th>
-                      <th className="pb-2 font-medium">Scopes</th>
-                      <th className="pb-2 font-medium">Created</th>
-                      <th className="pb-2 font-medium">Last Used</th>
-                      <th className="pb-2 font-medium">Status</th>
-                      <th className="pb-2 font-medium">Actions</th>
+                      <th scope="col" className="pb-2 font-medium">Name</th>
+                      <th scope="col" className="pb-2 font-medium">Key Prefix</th>
+                      <th scope="col" className="pb-2 font-medium">Scopes</th>
+                      <th scope="col" className="pb-2 font-medium">Created</th>
+                      <th scope="col" className="pb-2 font-medium">Last Used</th>
+                      <th scope="col" className="pb-2 font-medium">Status</th>
+                      <th scope="col" className="pb-2 font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-pf-border-subtle">
@@ -818,6 +823,7 @@ export function Component() {
                         </td>
                         <td className="py-2">
                           <button
+                            type="button"
                             onClick={() => revokeApiKey(key.id)}
                             disabled={key.revoked}
                             className="flex items-center gap-1 text-xs text-pf-danger hover:text-pf-danger disabled:opacity-30 transition-colors"

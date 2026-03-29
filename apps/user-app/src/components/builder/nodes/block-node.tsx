@@ -242,13 +242,16 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
             </span>
             {/* Misconfiguration indicator in header — visible even when badge is suppressed */}
             {isMisconfigured && !showSetupBadge && (
-              <AlertTriangle
-                className="size-3 shrink-0"
-                style={{ color: '#ef4444', opacity: 0.6 }}
-                title={`${emptyFieldKeys.size} field${emptyFieldKeys.size !== 1 ? 's' : ''} need configuration`}
-              />
+              <span title={`${emptyFieldKeys.size} field${emptyFieldKeys.size !== 1 ? 's' : ''} need configuration`}>
+                <AlertTriangle
+                  className="size-3 shrink-0"
+                  style={{ color: '#ef4444', opacity: 0.6 }}
+                  aria-hidden="true"
+                />
+              </span>
             )}
             <button
+              type="button"
               onClick={onDelete}
               className="p-0.5 rounded hover:bg-pf-danger/20 active:bg-pf-danger/30 text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
               aria-label="Remove block"

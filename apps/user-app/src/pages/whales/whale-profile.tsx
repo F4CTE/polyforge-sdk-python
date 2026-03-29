@@ -177,7 +177,7 @@ export function Component() {
           <AlertCircle className="size-10 text-pf-danger mb-4" />
           <p className="text-pf-text font-medium">Something went wrong</p>
           <p className="text-sm text-pf-text-muted mt-1">Failed to load whale profile. Please try again.</p>
-          <button onClick={load} className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-pf-elevated border border-pf-border text-pf-text hover:border-pf-border-strong transition-colors">
+          <button type="button" onClick={load} className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-pf-elevated border border-pf-border text-pf-text hover:border-pf-border-strong transition-colors">
             Retry
           </button>
         </div>
@@ -204,6 +204,7 @@ export function Component() {
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm text-pf-text break-all">{address}</span>
               <button
+                type="button"
                 onClick={() => copyToClipboard(address ?? '')}
                 className="text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors shrink-0"
                 aria-label="Copy wallet address"
@@ -216,6 +217,7 @@ export function Component() {
         </div>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={toggleFollow}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors ${
               following
@@ -270,15 +272,15 @@ export function Component() {
           <h2 className="text-sm font-medium text-pf-text">Recent Trades</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label="Recent whale trades">
             <thead>
               <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
-                <th className="px-4 py-3 font-medium">Market</th>
-                <th className="px-4 py-3 font-medium">Side</th>
-                <th className="px-4 py-3 font-medium">Outcome</th>
-                <th className="px-4 py-3 font-medium text-right">Size</th>
-                <th className="px-4 py-3 font-medium text-right">Price</th>
-                <th className="px-4 py-3 font-medium text-right">Date</th>
+                <th scope="col" className="px-4 py-3 font-medium">Market</th>
+                <th scope="col" className="px-4 py-3 font-medium">Side</th>
+                <th scope="col" className="px-4 py-3 font-medium">Outcome</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Size</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Price</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-pf-border-subtle">

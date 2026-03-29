@@ -193,6 +193,7 @@ export function Component() {
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {FILTERS.map((f) => (
           <button
+            type="button"
             key={f.value}
             onClick={() => onFilterChange(f.value)}
             className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
@@ -249,11 +250,12 @@ export function Component() {
                 data-testid="copy-config-card"
                 role="link"
                 tabIndex={0}
+                aria-label={`Copy config for wallet ${truncateAddress(config.targetWallet)}, status: ${config.status}`}
                 onClick={() => navigate(`/copy/${config.id}`)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') navigate(`/copy/${config.id}`);
+                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/copy/${config.id}`); }
                 }}
-                className="group bg-pf-elevated border border-pf-border rounded-pf-lg p-5 cursor-pointer transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-0.5"
+                className="group bg-pf-elevated border border-pf-border rounded-pf-lg p-5 cursor-pointer transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
               >
                 {/* Wallet + Status */}
                 <div className="flex items-start justify-between gap-3 mb-3">
@@ -262,6 +264,7 @@ export function Component() {
                       {truncateAddress(config.targetWallet)}
                     </span>
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         copyToClipboard(config.targetWallet);
@@ -332,6 +335,7 @@ export function Component() {
                 >
                   {config.status === 'ACTIVE' && (
                     <button
+                      type="button"
                       onClick={() => doAction(config.id, 'pause')}
                       disabled={busy}
                       className="p-1.5 rounded-pf-sm text-pf-warning hover:bg-pf-warning/10 disabled:opacity-40 transition-colors"
@@ -343,6 +347,7 @@ export function Component() {
                   )}
                   {config.status === 'PAUSED' && (
                     <button
+                      type="button"
                       onClick={() => doAction(config.id, 'resume')}
                       disabled={busy}
                       className="p-1.5 rounded-pf-sm text-pf-cyan-400 hover:bg-pf-cyan-500/10 disabled:opacity-40 transition-colors"
@@ -354,6 +359,7 @@ export function Component() {
                   )}
                   {config.status !== 'STOPPED' && (
                     <button
+                      type="button"
                       onClick={() => doAction(config.id, 'stop')}
                       disabled={busy}
                       className="p-1.5 rounded-pf-sm text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
@@ -383,6 +389,7 @@ export function Component() {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
           <button
+            type="button"
             onClick={() => {
               const p = Math.max(1, page - 1);
               setPage(p);
@@ -398,6 +405,7 @@ export function Component() {
             Page {page} of {totalPages}
           </span>
           <button
+            type="button"
             onClick={() => {
               const p = Math.min(totalPages, page + 1);
               setPage(p);

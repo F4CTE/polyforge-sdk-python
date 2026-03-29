@@ -95,12 +95,12 @@ export function Component() {
           <table className="w-full text-sm" aria-label="Support tickets">
             <thead>
               <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
-                <th className="px-4 py-3 font-medium">Subject</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Priority</th>
-                <th className="px-4 py-3 font-medium">Category</th>
-                <th className="px-4 py-3 font-medium text-right">Created</th>
-                <th className="px-4 py-3 font-medium text-right">Last Reply</th>
+                <th scope="col" className="px-4 py-3 font-medium">Subject</th>
+                <th scope="col" className="px-4 py-3 font-medium">Status</th>
+                <th scope="col" className="px-4 py-3 font-medium">Priority</th>
+                <th scope="col" className="px-4 py-3 font-medium">Category</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Created</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Last Reply</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-pf-border-subtle">
@@ -165,6 +165,7 @@ export function Component() {
           {FAQ_ITEMS.map((item, idx) => (
             <div key={idx} className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
               <button
+                type="button"
                 id={`faq-btn-${idx}`}
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                 className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-pf-surface/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40 transition-colors"

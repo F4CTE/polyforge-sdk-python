@@ -10,10 +10,10 @@ export function ProductPreview() {
           }}
         >
           {/* Browser chrome */}
-          <div className="flex items-center gap-1.5 px-4 py-3 border-b border-pf-border-subtle bg-pf-elevated">
-            <span className="w-[11px] h-[11px] rounded-full bg-red-500" aria-hidden="true" />
-            <span className="w-[11px] h-[11px] rounded-full bg-amber-400" aria-hidden="true" />
-            <span className="w-[11px] h-[11px] rounded-full bg-emerald-500" aria-hidden="true" />
+          <div className="flex items-center gap-1.5 px-4 py-3 border-b border-pf-border-subtle bg-pf-elevated" aria-hidden="true">
+            <span className="w-[11px] h-[11px] rounded-full bg-red-500" />
+            <span className="w-[11px] h-[11px] rounded-full bg-amber-400" />
+            <span className="w-[11px] h-[11px] rounded-full bg-emerald-500" />
             <span className="flex-1 text-center text-[11px] font-mono text-pf-text-muted bg-white/4 rounded px-3 py-1 ml-2">
               app.polyforge.app/dashboard
             </span>

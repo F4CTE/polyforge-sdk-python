@@ -2,7 +2,7 @@ import { WaitlistForm } from './waitlist-form';
 
 export function Hero() {
   return (
-    <header className="relative overflow-hidden pt-16 sm:pt-[100px] pb-12 sm:pb-20 text-center">
+    <section className="relative overflow-hidden pt-16 sm:pt-[100px] pb-12 sm:pb-20 text-center" aria-labelledby="hero-heading">
       {/* Glow */}
       <div
         className="absolute -top-[200px] left-1/2 -translate-x-1/2 w-[900px] h-[900px] pointer-events-none"
@@ -22,9 +22,9 @@ export function Hero() {
           { w: 3, left: '70%', top: '70%', dur: '9s', delay: '3s' },
           { w: 4, left: '25%', top: '80%', dur: '11s', delay: '0.5s' },
           { w: 3, left: '55%', top: '15%', dur: '7s', delay: '1.5s' },
-        ].map((p, i) => (
+        ].map((p) => (
           <div
-            key={i}
+            key={`${p.left}-${p.top}`}
             className="absolute rounded-full bg-pf-cyan-500/25"
             style={{
               width: p.w,
@@ -47,7 +47,7 @@ export function Hero() {
           Early Access &mdash; Limited Invites
         </div>
 
-        <h1 className="text-[clamp(40px,7vw,72px)] font-extrabold leading-[1.15] tracking-[-0.035em] text-pf-text mb-6">
+        <h1 id="hero-heading" className="text-[clamp(40px,7vw,72px)] font-extrabold leading-[1.15] tracking-[-0.035em] text-pf-text mb-6">
           Automate your edge on
           <br />
           <span className="bg-gradient-to-br from-pf-cyan-300 to-pf-cyan-500 bg-clip-text text-transparent">
@@ -123,6 +123,6 @@ export function Hero() {
           </svg>
         </div>
       </div>
-    </header>
+    </section>
   );
 }

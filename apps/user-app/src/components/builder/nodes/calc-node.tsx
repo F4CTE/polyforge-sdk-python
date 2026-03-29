@@ -222,6 +222,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           <span className="text-[11px] font-bold flex-1 truncate">{displaySymbol}</span>
           <span className="text-[9px] opacity-70">{d.label}</span>
           <button
+            type="button"
             onClick={onDelete}
             className="p-0.5 rounded hover:bg-white/20 active:bg-white/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             aria-label="Remove block"

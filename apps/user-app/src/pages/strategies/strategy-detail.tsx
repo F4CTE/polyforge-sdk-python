@@ -289,6 +289,7 @@ export function Component() {
           <p className="text-pf-text font-medium text-lg">Strategy not found</p>
           <p className="text-sm text-pf-text-muted mt-1">This strategy may have been deleted or the link is invalid.</p>
           <button
+            type="button"
             onClick={() => navigate('/strategies')}
             className="mt-4 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text hover:border-pf-border-strong transition-colors"
           >
@@ -302,6 +303,7 @@ export function Component() {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="text-pf-text font-medium">{loadError}</p>
           <button
+            type="button"
             onClick={() => navigate('/strategies')}
             className="mt-4 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text hover:border-pf-border-strong transition-colors"
           >
@@ -333,6 +335,7 @@ export function Component() {
               {isIdle(status) && (
                 <>
                   <button
+                    type="button"
                     onClick={() => doAction('start', { mode: 'live' })}
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
@@ -340,6 +343,7 @@ export function Component() {
                     <Zap className="size-3.5" /> Start Live
                   </button>
                   <button
+                    type="button"
                     onClick={() => doAction('start', { mode: 'paper' })}
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
@@ -351,6 +355,7 @@ export function Component() {
               {isActive(status) && (
                 <>
                   <button
+                    type="button"
                     onClick={() => doAction('pause')}
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
@@ -358,6 +363,7 @@ export function Component() {
                     <Pause className="size-3.5" /> Pause
                   </button>
                   <button
+                    type="button"
                     onClick={() => doAction('stop')}
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors text-sm"
@@ -369,6 +375,7 @@ export function Component() {
               {isPaused(status) && (
                 <>
                   <button
+                    type="button"
                     onClick={() => doAction('resume')}
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
@@ -376,6 +383,7 @@ export function Component() {
                     <Play className="size-3.5" /> Resume
                   </button>
                   <button
+                    type="button"
                     onClick={() => doAction('stop')}
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors text-sm"
@@ -393,6 +401,7 @@ export function Component() {
                 <Pencil className="size-4" />
               </Link>
               <button
+                type="button"
                 onClick={handleExport}
                 className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
                 aria-label="Export strategy"
@@ -401,6 +410,7 @@ export function Component() {
                 <Download className="size-4" />
               </button>
               <button
+                type="button"
                 onClick={handleShare}
                 className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
                 aria-label="Share strategy"

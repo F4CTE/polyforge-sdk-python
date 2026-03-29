@@ -157,6 +157,7 @@ export function BuilderTutorial() {
           <span className="text-sm font-semibold text-pf-text">{current.title}</span>
         </div>
         <button
+          type="button"
           onClick={dismiss}
           className="p-1 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
           aria-label="Dismiss tutorial"
@@ -177,6 +178,7 @@ export function BuilderTutorial() {
         <div className="flex items-center gap-1">
           {STEPS.map((_, i) => (
             <button
+              type="button"
               key={i}
               onClick={() => setStep(i)}
               aria-label={`Go to step ${i + 1}`}
@@ -195,6 +197,7 @@ export function BuilderTutorial() {
         <div className="flex items-center gap-2">
           {!isFirst && (
             <button
+              type="button"
               onClick={() => setStep((s) => s - 1)}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-pf text-xs font-medium text-pf-text-secondary hover:text-pf-text bg-pf-surface border border-pf-border hover:border-pf-border-strong transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
             >
@@ -204,6 +207,7 @@ export function BuilderTutorial() {
           )}
           {isFirst && (
             <button
+              type="button"
               onClick={dismiss}
               className="px-2.5 py-1.5 rounded-pf text-xs font-medium text-pf-text-muted hover:text-pf-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
             >
@@ -211,6 +215,7 @@ export function BuilderTutorial() {
             </button>
           )}
           <button
+            type="button"
             onClick={isLast ? dismiss : () => setStep((s) => s + 1)}
             className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
           >

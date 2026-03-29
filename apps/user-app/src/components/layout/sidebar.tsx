@@ -181,9 +181,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </Link>
         )}
         <button
+          type="button"
           onClick={onToggle}
-          className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text w-full"
-          aria-label="Toggle sidebar"
+          className="flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:rounded-lg"
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? (
             <ChevronRight size={18} className="shrink-0" />
@@ -193,8 +194,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </button>
         <NavLink
           to="/settings"
+          title={collapsed ? 'Settings' : undefined}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 ${
+            `flex items-center gap-3 px-2 py-2 rounded-pf-sm text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:rounded-lg ${
               isActive
                 ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
                 : 'text-pf-text-secondary hover:bg-pf-surface hover:text-pf-text'

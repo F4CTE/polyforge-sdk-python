@@ -49,6 +49,7 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
       <div className="flex items-center gap-2">
         {onMenuClick && (
           <button
+            type="button"
             onClick={onMenuClick}
             className="p-2 rounded-pf-sm text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors md:hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
             aria-label="Open menu"
@@ -63,6 +64,7 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
 
       <div className="flex items-center gap-3">
         <button
+          type="button"
           onClick={toggle}
           className="p-2 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
           aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -85,6 +87,7 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
         </div>
 
         <button
+          type="button"
           onClick={logout}
           className="p-2 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-danger)]"
           aria-label="Logout"

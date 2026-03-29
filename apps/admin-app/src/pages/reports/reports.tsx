@@ -66,14 +66,15 @@ export function Component() {
       <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
+            <caption className="sr-only">Content reports</caption>
             <thead>
               <tr className="border-b border-[var(--color-pf-border)]">
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Reporter</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Target</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Reason</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Status</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Created</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Actions</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Reporter</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Target</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Reason</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Status</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Created</th>
+                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -114,7 +115,7 @@ export function Component() {
                     <td className="px-4 py-3 text-[var(--color-pf-text-tertiary)]">{formatDateTime(r.createdAt)}</td>
                     <td className="px-4 py-3 text-right">
                       {r.status === 'PENDING' && (
-                        <button
+                        <button type="button"
                           onClick={() => {
                             setReviewingId(r.id);
                             setAdminNote('');
@@ -137,10 +138,10 @@ export function Component() {
           <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--color-pf-border)]">
             <span className="text-xs text-[var(--color-pf-text-tertiary)]">Page {page} of {totalPages}</span>
             <div className="flex items-center gap-2">
-              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page" className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
+              <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page" className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
                 <ChevronLeft size={16} />
               </button>
-              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page" className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
+              <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page" className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -162,21 +163,21 @@ export function Component() {
             className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] mb-3"
           />
           <div className="flex gap-3">
-            <button
+            <button type="button"
               onClick={() => handleResolve(reviewingId, 'REVIEWED')}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 cursor-pointer transition-colors"
             >
               <CheckCircle size={14} />
               Approve
             </button>
-            <button
+            <button type="button"
               onClick={() => handleResolve(reviewingId, 'DISMISSED')}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] cursor-pointer transition-colors"
             >
               <XCircle size={14} />
               Dismiss
             </button>
-            <button
+            <button type="button"
               onClick={() => setReviewingId(null)}
               className="px-3 py-1.5 text-sm rounded-pf-sm text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text-secondary)] transition-colors"
             >

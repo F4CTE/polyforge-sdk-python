@@ -107,7 +107,7 @@ export function Component() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6" role="status" aria-label="Loading dashboard">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-4 animate-pulse">
@@ -171,7 +171,7 @@ export function Component() {
             <div className="text-center py-6">
               <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={24} />
               <p className="text-sm text-[var(--color-pf-text-secondary)]">Health unavailable</p>
-              <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded">
+              <button type="button" onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded">
                 Retry
               </button>
             </div>
@@ -272,10 +272,11 @@ export function Component() {
                 </p>
               </div>
               <button
+                type="button"
                 onClick={toggleInviteOnly}
                 disabled={!isSuperAdmin}
-                className={`transition-colors ${isSuperAdmin ? 'text-[var(--color-pf-cyan-500)] hover:text-[var(--color-pf-cyan-400)]' : 'text-[var(--color-pf-text-tertiary)] opacity-50 cursor-not-allowed'}`}
-                aria-label="Toggle invite-only"
+                className={`transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded ${isSuperAdmin ? 'text-[var(--color-pf-cyan-500)] hover:text-[var(--color-pf-cyan-400)]' : 'text-[var(--color-pf-text-tertiary)] opacity-50 cursor-not-allowed'}`}
+                aria-label={config?.inviteOnly ? 'Disable invite-only registration' : 'Enable invite-only registration'}
                 title={!isSuperAdmin ? 'Super Admin only' : undefined}
               >
                 {config?.inviteOnly ? (
@@ -326,11 +327,12 @@ export function Component() {
             {rateLimits.topOffenders?.length > 0 && (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
+                  <caption className="sr-only">Rate limit top offenders</caption>
                   <thead>
                     <tr className="text-left text-[var(--color-pf-text-tertiary)] uppercase tracking-wider border-b border-[var(--color-pf-border)]">
-                      <th className="pb-2 font-medium">Identifier</th>
-                      <th className="pb-2 font-medium text-right">Hits</th>
-                      <th className="pb-2 font-medium text-right">TTL (s)</th>
+                      <th scope="col" className="pb-2 font-medium">Identifier</th>
+                      <th scope="col" className="pb-2 font-medium text-right">Hits</th>
+                      <th scope="col" className="pb-2 font-medium text-right">TTL (s)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--color-pf-border)]">
@@ -361,7 +363,7 @@ export function Component() {
             <Clock className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={20} />
             <p className="text-sm text-[var(--color-pf-text-secondary)]">No recent activity</p>
             <p className="text-xs text-[var(--color-pf-text-tertiary)] mt-1">Activity will appear here as admins take actions.</p>
-            <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer">
+            <button type="button" onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded">
               Refresh
             </button>
           </div>

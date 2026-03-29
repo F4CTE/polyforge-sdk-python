@@ -183,7 +183,7 @@ function EditDialog({
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 w-full max-w-md space-y-5 animate-fade-in">
         <div className="flex items-center justify-between">
           <h2 id="edit-config-title" className="text-sm font-medium text-pf-text">Edit Config</h2>
-          <button onClick={onClose} aria-label="Close edit config" className="text-pf-text-muted hover:text-pf-text transition-colors">
+          <button type="button" onClick={onClose} aria-label="Close edit config" className="text-pf-text-muted hover:text-pf-text transition-colors">
             <X className="size-4" />
           </button>
         </div>
@@ -244,12 +244,14 @@ function EditDialog({
 
         <div className="flex items-center justify-end gap-2 pt-2">
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 rounded-pf-sm text-sm text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong transition-colors"
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={saving}
             className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm bg-pf-cyan-500 text-black font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
@@ -368,7 +370,7 @@ export function Component() {
           <AlertCircle className="size-10 text-pf-danger mb-4" />
           <p className="text-pf-text font-medium">Something went wrong</p>
           <p className="text-sm text-pf-text-muted mt-1">Failed to load copy config. Please try again.</p>
-          <button onClick={loadConfig} className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-pf-elevated border border-pf-border text-pf-text hover:border-pf-border-strong transition-colors">
+          <button type="button" onClick={loadConfig} className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-pf-elevated border border-pf-border text-pf-text hover:border-pf-border-strong transition-colors">
             Retry
           </button>
         </div>
@@ -396,6 +398,7 @@ export function Component() {
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm text-pf-text">{truncateAddress(config.targetWallet)}</span>
               <button
+                type="button"
                 onClick={() => copyToClipboard(config.targetWallet)}
                 className="text-pf-text-muted hover:text-pf-text transition-colors shrink-0"
                 title="Copy address"
@@ -418,6 +421,7 @@ export function Component() {
         {/* Action buttons */}
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => setShowEdit(true)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text transition-colors"
           >
@@ -425,6 +429,7 @@ export function Component() {
           </button>
           {config.status === 'ACTIVE' && (
             <button
+              type="button"
               onClick={() => doAction('pause')}
               disabled={actionLoading}
               className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-warning/30 text-pf-warning hover:bg-pf-warning/10 disabled:opacity-40 transition-colors"
@@ -434,6 +439,7 @@ export function Component() {
           )}
           {config.status === 'PAUSED' && (
             <button
+              type="button"
               onClick={() => doAction('resume')}
               disabled={actionLoading}
               className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 disabled:opacity-40 transition-colors"
@@ -443,6 +449,7 @@ export function Component() {
           )}
           {config.status !== 'STOPPED' && (
             <button
+              type="button"
               onClick={() => doAction('stop')}
               disabled={actionLoading}
               className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-danger/30 text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
@@ -507,18 +514,18 @@ export function Component() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm" aria-label="Trade history">
               <thead>
                 <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
-                  <th className="px-4 py-3 font-medium">Market</th>
-                  <th className="px-4 py-3 font-medium">Side</th>
-                  <th className="px-4 py-3 font-medium">Outcome</th>
-                  <th className="px-4 py-3 font-medium text-right">Source Size</th>
-                  <th className="px-4 py-3 font-medium text-right">Copied Size</th>
-                  <th className="px-4 py-3 font-medium text-right">Price</th>
-                  <th className="px-4 py-3 font-medium text-right">P&L</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium text-right">Date</th>
+                  <th scope="col" className="px-4 py-3 font-medium">Market</th>
+                  <th scope="col" className="px-4 py-3 font-medium">Side</th>
+                  <th scope="col" className="px-4 py-3 font-medium">Outcome</th>
+                  <th scope="col" className="px-4 py-3 font-medium text-right">Source Size</th>
+                  <th scope="col" className="px-4 py-3 font-medium text-right">Copied Size</th>
+                  <th scope="col" className="px-4 py-3 font-medium text-right">Price</th>
+                  <th scope="col" className="px-4 py-3 font-medium text-right">P&L</th>
+                  <th scope="col" className="px-4 py-3 font-medium">Status</th>
+                  <th scope="col" className="px-4 py-3 font-medium text-right">Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-pf-border-subtle">
@@ -575,6 +582,7 @@ export function Component() {
       {tradeTotalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
           <button
+            type="button"
             onClick={() => setTradePage((p) => Math.max(1, p - 1))}
             disabled={tradePage === 1}
             aria-label="Previous page"
@@ -586,6 +594,7 @@ export function Component() {
             Page {tradePage} of {tradeTotalPages}
           </span>
           <button
+            type="button"
             onClick={() => setTradePage((p) => Math.min(tradeTotalPages, p + 1))}
             disabled={tradePage === tradeTotalPages}
             aria-label="Next page"

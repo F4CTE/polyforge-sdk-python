@@ -125,9 +125,10 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
           )}
         </Link>
         <button
+          type="button"
           onClick={onToggle}
-          className="ml-auto p-1.5 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)] transition-colors"
-          aria-label="Toggle sidebar"
+          className="ml-auto p-1.5 rounded-pf-sm hover:bg-[var(--color-pf-elevated)] bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
         </button>

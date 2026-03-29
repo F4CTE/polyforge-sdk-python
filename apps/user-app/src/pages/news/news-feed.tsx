@@ -242,6 +242,7 @@ export function Component() {
         <div className="flex gap-1.5">
           {SENTIMENT_TABS.map(tab => (
             <button
+              type="button"
               key={tab.value}
               onClick={() => changeSentiment(tab.value)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
@@ -332,6 +333,7 @@ export function Component() {
                     {signals.length > 0 && (
                       <>
                         <button
+                          type="button"
                           onClick={() => setExpandedId(expanded ? null : article.id)}
                           className="flex items-center gap-1 mt-3 text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
                         >
@@ -411,6 +413,7 @@ export function Component() {
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 pt-2">
               <button
+                type="button"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
                 aria-label="Previous page"
@@ -420,6 +423,7 @@ export function Component() {
               </button>
               <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
               <button
+                type="button"
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 aria-label="Next page"

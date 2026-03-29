@@ -154,7 +154,7 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors" aria-label="Go back">
+          <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors" aria-label="Go back">
             <ArrowLeft className="size-4" aria-hidden="true" />
           </button>
           <h1 className="text-2xl font-semibold text-pf-text">{profile.displayName ?? profile.username}</h1>
@@ -174,6 +174,7 @@ export function Component() {
           </Link>
         ) : (
           <button
+            type="button"
             onClick={toggleFollow}
             disabled={followLoading}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors ${

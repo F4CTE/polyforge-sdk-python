@@ -330,6 +330,7 @@ export function Component() {
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {CATEGORIES.map((cat) => (
           <button
+            type="button"
             key={cat}
             onClick={() => { setCategory(cat); setPage(1); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
@@ -357,6 +358,7 @@ export function Component() {
           {/* View toggle */}
           <div className="flex bg-pf-surface rounded-pf border border-pf-border-subtle">
             <button
+              type="button"
               onClick={() => changeViewMode('cards')}
               className={`p-1.5 rounded-pf-sm transition-colors ${viewMode === 'cards' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-muted hover:text-pf-text-secondary'}`}
               aria-label="Card view"
@@ -364,6 +366,7 @@ export function Component() {
               <Grid3X3 className="size-4" />
             </button>
             <button
+              type="button"
               onClick={() => changeViewMode('table')}
               className={`p-1.5 rounded-pf-sm transition-colors ${viewMode === 'table' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-muted hover:text-pf-text-secondary'}`}
               aria-label="Table view"
@@ -443,12 +446,12 @@ export function Component() {
               <table className="w-full text-sm" aria-label="Markets">
                 <thead>
                   <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
-                    <th className="px-4 py-3 font-medium">Market</th>
-                    <th className="px-4 py-3 font-medium">Category</th>
-                    <th className="px-4 py-3 font-medium text-right">YES</th>
-                    <th className="px-4 py-3 font-medium text-right">NO</th>
-                    <th className="px-4 py-3 font-medium text-right">Vol 24h</th>
-                    <th className="px-4 py-3 font-medium text-right">Closes</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Market</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Category</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">YES</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">NO</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">Vol 24h</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">Closes</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-pf-border-subtle">
@@ -495,6 +498,7 @@ export function Component() {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
           <button
+            type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
@@ -506,6 +510,7 @@ export function Component() {
             Page {page} of {totalPages}
           </span>
           <button
+            type="button"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"

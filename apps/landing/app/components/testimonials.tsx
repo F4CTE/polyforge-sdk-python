@@ -42,7 +42,7 @@ export function Testimonials() {
           {testimonials.map((t) => (
             <figure
               key={t.name}
-              className="animate-fade-in bg-pf-base border border-pf-border-subtle rounded-pf-lg p-6 sm:p-8 transition-all duration-200 hover:border-pf-cyan-500/20 cursor-default"
+              className="animate-fade-in bg-pf-base border border-pf-border-subtle rounded-pf-lg p-6 sm:p-8 transition-all duration-200 hover:border-pf-cyan-500/20"
             >
               <div
                 className="text-5xl font-extrabold leading-none text-pf-cyan-500/15 -mb-2 font-serif"
@@ -59,10 +59,10 @@ export function Testimonials() {
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pf-cyan-500/20 to-pf-cyan-500/5 border border-pf-cyan-500/25 flex items-center justify-center text-[13px] font-semibold text-pf-cyan-400 font-mono shrink-0" aria-hidden="true">
                   {t.initials}
                 </div>
-                <div>
+                <cite className="not-italic">
                   <div className="text-sm font-semibold text-pf-text">{t.name}</div>
                   <div className="text-xs text-pf-text-muted mt-0.5">{t.role}</div>
-                </div>
+                </cite>
               </figcaption>
             </figure>
           ))}

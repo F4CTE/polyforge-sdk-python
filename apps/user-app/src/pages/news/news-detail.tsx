@@ -193,12 +193,12 @@ export function Component() {
                 <table className="w-full text-xs" role="table" aria-label="Trading signals">
                   <thead>
                     <tr className="border-b border-pf-border-subtle">
-                      <th className="text-left py-2 px-3 text-pf-text-muted font-medium">Market</th>
-                      <th className="text-left py-2 px-3 text-pf-text-muted font-medium">Direction</th>
-                      <th className="text-left py-2 px-3 text-pf-text-muted font-medium">Outcome</th>
-                      <th className="text-left py-2 px-3 text-pf-text-muted font-medium">Confidence</th>
-                      <th className="text-left py-2 px-3 text-pf-text-muted font-medium">Reasoning</th>
-                      <th className="text-right py-2 px-3 text-pf-text-muted font-medium">Action</th>
+                      <th scope="col" className="text-left py-2 px-3 text-pf-text-muted font-medium">Market</th>
+                      <th scope="col" className="text-left py-2 px-3 text-pf-text-muted font-medium">Direction</th>
+                      <th scope="col" className="text-left py-2 px-3 text-pf-text-muted font-medium">Outcome</th>
+                      <th scope="col" className="text-left py-2 px-3 text-pf-text-muted font-medium">Confidence</th>
+                      <th scope="col" className="text-left py-2 px-3 text-pf-text-muted font-medium">Reasoning</th>
+                      <th scope="col" className="text-right py-2 px-3 text-pf-text-muted font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>

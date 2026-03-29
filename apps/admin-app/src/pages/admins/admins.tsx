@@ -136,6 +136,7 @@ export function Component() {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Admin Accounts</h2>
         <button
+          type="button"
           onClick={openAdd}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-pf-base)]"
         >
@@ -148,13 +149,14 @@ export function Component() {
       <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
+            <caption className="sr-only">Admin accounts</caption>
             <thead>
               <tr className="border-b border-[var(--color-pf-border)]">
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Name</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Email</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Role</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Created</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Actions</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Name</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Email</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Role</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Created</th>
+                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -196,6 +198,7 @@ export function Component() {
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
+                          type="button"
                           onClick={() => openEdit(a)}
                           className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
                           aria-label="Edit admin"
@@ -205,6 +208,7 @@ export function Component() {
                         </button>
                         {a.id !== currentAdmin?.id && (
                           <button
+                            type="button"
                             onClick={() => {
                               setDeleteConfirmId(a.id);
                               setDeletePassword('');
@@ -235,6 +239,7 @@ export function Component() {
                 {dialogMode === 'add' ? 'Add Admin' : 'Edit Admin'}
               </h3>
               <button
+                type="button"
                 onClick={closeDialog}
                 className="p-1 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
                 aria-label="Close dialog"
@@ -335,6 +340,7 @@ export function Component() {
             />
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={handleDeactivate}
                 disabled={submitting || !deletePassword}
                 className="flex-1 py-2 text-sm font-medium rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/80 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-danger)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-pf-elevated)]"
@@ -342,6 +348,7 @@ export function Component() {
                 {submitting ? 'Deactivating...' : 'Deactivate'}
               </button>
               <button
+                type="button"
                 onClick={() => setDeleteConfirmId(null)}
                 className="px-4 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
               >

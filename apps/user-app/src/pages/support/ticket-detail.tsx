@@ -137,7 +137,7 @@ export function Component() {
     return (
       <div className="p-6 max-w-3xl mx-auto text-center py-20">
         <p className="text-pf-text font-medium">Ticket not found</p>
-        <button onClick={() => navigate('/support')} className="text-sm text-pf-cyan-400 mt-2">
+        <button type="button" onClick={() => navigate('/support')} className="text-sm text-pf-cyan-400 mt-2">
           Back to support
         </button>
       </div>
@@ -152,6 +152,7 @@ export function Component() {
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={() => navigate('/support')}
             className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
             aria-label="Back to support"
@@ -174,15 +175,16 @@ export function Component() {
           showCloseConfirm ? (
             <div className="flex items-center gap-2">
               <span className="text-xs text-pf-text-muted">Close this ticket?</span>
-              <button onClick={closeTicket} disabled={closing} className="px-2 py-1 text-xs rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors">
+              <button type="button" onClick={closeTicket} disabled={closing} className="px-2 py-1 text-xs rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors">
                 {closing ? 'Closing...' : 'Confirm'}
               </button>
-              <button onClick={() => setShowCloseConfirm(false)} className="px-2 py-1 text-xs rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface transition-colors">
+              <button type="button" onClick={() => setShowCloseConfirm(false)} className="px-2 py-1 text-xs rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface transition-colors">
                 Cancel
               </button>
             </div>
           ) : (
             <button
+              type="button"
               onClick={() => setShowCloseConfirm(true)}
               disabled={closing}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs text-pf-text-muted border border-pf-border hover:border-pf-border-strong hover:text-pf-text cursor-pointer disabled:cursor-not-allowed transition-colors"
@@ -248,6 +250,7 @@ export function Component() {
               {charCount} / {MAX_CHARS}
             </span>
             <button
+              type="button"
               onClick={sendReply}
               disabled={!reply.trim() || sending}
               className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

@@ -131,6 +131,7 @@ export function OnboardingChecklist() {
         </div>
         <div className="flex items-center gap-1">
           <button
+            type="button"
             onClick={() => setCollapsed(!collapsed)}
             className="p-1 rounded hover:bg-pf-overlay transition-colors active:scale-95 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
             aria-label={collapsed ? 'Expand checklist' : 'Collapse checklist'}
@@ -138,6 +139,7 @@ export function OnboardingChecklist() {
             {collapsed ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
           </button>
           <button
+            type="button"
             onClick={handleDismiss}
             className="p-1 rounded hover:bg-pf-overlay transition-colors active:scale-95 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
             aria-label="Dismiss checklist"
@@ -166,6 +168,7 @@ export function OnboardingChecklist() {
               className="flex items-start gap-2.5 py-2 group"
             >
               <button
+                type="button"
                 onClick={() => toggleItem(item.key)}
                 className="mt-0.5 shrink-0 transition-colors"
                 aria-label={`Mark "${item.label}" as ${completed[item.key] ? 'incomplete' : 'complete'}`}
@@ -178,6 +181,7 @@ export function OnboardingChecklist() {
               </button>
               <div className="flex-1 min-w-0">
                 <button
+                  type="button"
                   onClick={() => handleNavigate(item.route)}
                   className={`text-sm text-left font-medium transition-colors ${
                     completed[item.key]
@@ -200,6 +204,7 @@ export function OnboardingChecklist() {
       {!collapsed && (
         <div className="px-4 py-2.5 border-t border-pf-border-subtle">
           <button
+            type="button"
             onClick={() => {
               const event = new CustomEvent('polyforge:start-tour');
               window.dispatchEvent(event);

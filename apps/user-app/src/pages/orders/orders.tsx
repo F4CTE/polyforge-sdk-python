@@ -182,7 +182,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
       <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg w-full max-w-lg p-6 shadow-pf-lg">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-semibold text-pf-text">Create Conditional Order</h2>
-          <button onClick={onClose} aria-label="Close dialog" className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors">
+          <button type="button" onClick={onClose} aria-label="Close dialog" className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors">
             <X className="size-4" />
           </button>
         </div>
@@ -372,6 +372,7 @@ export function Component() {
         <div className="flex items-center gap-3">
           {viewTab === 'conditional' && (
             <button
+              type="button"
               onClick={() => setShowCreateDialog(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-cyan-500/15 text-pf-cyan-400 text-xs font-medium border border-pf-cyan-500/30 hover:bg-pf-cyan-500/25 transition-colors"
             >
@@ -386,6 +387,7 @@ export function Component() {
       {/* View tabs */}
       <div className="flex gap-2 border-b border-pf-border-subtle pb-2">
         <button
+          type="button"
           onClick={() => setViewTab('orders')}
           className={`px-3 py-1.5 rounded-t text-sm font-medium transition-colors ${
             viewTab === 'orders' ? 'text-pf-cyan-400 border-b-2 border-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'
@@ -394,6 +396,7 @@ export function Component() {
           Orders
         </button>
         <button
+          type="button"
           onClick={() => setViewTab('conditional')}
           className={`px-3 py-1.5 rounded-t text-sm font-medium transition-colors ${
             viewTab === 'conditional' ? 'text-pf-cyan-400 border-b-2 border-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'
@@ -410,6 +413,7 @@ export function Component() {
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
             {FILTERS.map(f => (
               <button
+                type="button"
                 key={f.value}
                 onClick={() => changeFilter(f.value)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
@@ -426,20 +430,20 @@ export function Component() {
           {/* Table */}
           <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" aria-label="Orders">
                 <thead>
                   <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
-                    <th className="px-4 py-3 font-medium w-10">#</th>
-                    <th className="px-4 py-3 font-medium">Market</th>
-                    <th className="px-4 py-3 font-medium">Side</th>
-                    <th className="px-4 py-3 font-medium">Outcome</th>
-                    <th className="px-4 py-3 font-medium text-right">Size</th>
-                    <th className="px-4 py-3 font-medium text-right">Price</th>
-                    <th className="px-4 py-3 font-medium text-right">Filled / Total</th>
-                    <th className="px-4 py-3 font-medium text-right">Avg Fill</th>
-                    <th className="px-4 py-3 font-medium">Type</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium text-right">Date</th>
+                    <th scope="col" className="px-4 py-3 font-medium w-10">#</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Market</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Side</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Outcome</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">Size</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">Price</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">Filled / Total</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">Avg Fill</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Type</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Status</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-pf-border-subtle">
@@ -522,6 +526,7 @@ export function Component() {
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 pt-2">
               <button
+                type="button"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
                 aria-label="Previous page"
@@ -531,6 +536,7 @@ export function Component() {
               </button>
               <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
               <button
+                type="button"
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 aria-label="Next page"
@@ -548,19 +554,19 @@ export function Component() {
         <>
           <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" aria-label="Conditional orders">
                 <thead>
                   <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
-                    <th className="px-4 py-3 font-medium">Type</th>
-                    <th className="px-4 py-3 font-medium">Market</th>
-                    <th className="px-4 py-3 font-medium text-right">Trigger</th>
-                    <th className="px-4 py-3 font-medium text-right">Size</th>
-                    <th className="px-4 py-3 font-medium">Side</th>
-                    <th className="px-4 py-3 font-medium">Outcome</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium text-right">Expires</th>
-                    <th className="px-4 py-3 font-medium text-right">Created</th>
-                    <th className="px-4 py-3 font-medium w-10"></th>
+                    <th scope="col" className="px-4 py-3 font-medium">Type</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Market</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">Trigger</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">Size</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Side</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Outcome</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Status</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">Expires</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">Created</th>
+                    <th scope="col" className="px-4 py-3 font-medium w-10"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-pf-border-subtle">
@@ -628,6 +634,7 @@ export function Component() {
                           <td className="px-4 py-3">
                             {co.status === 'PENDING' && (
                               <button
+                                type="button"
                                 onClick={() => cancelConditional(co.id)}
                                 aria-label="Cancel conditional order"
                                 className="p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors"
@@ -649,6 +656,7 @@ export function Component() {
           {condTotalPages > 1 && (
             <div className="flex items-center justify-center gap-4 pt-2">
               <button
+                type="button"
                 onClick={() => setCondPage(p => Math.max(1, p - 1))}
                 disabled={condPage === 1}
                 className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -657,6 +665,7 @@ export function Component() {
               </button>
               <span className="text-sm font-mono text-pf-text-secondary">{condPage} / {condTotalPages}</span>
               <button
+                type="button"
                 onClick={() => setCondPage(p => Math.min(condTotalPages, p + 1))}
                 disabled={condPage === condTotalPages}
                 className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -675,7 +684,7 @@ export function Component() {
           <div className="animate-slide-right relative w-full max-w-md h-full bg-pf-surface border-l border-pf-border overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-pf-border-subtle">
               <h2 className="text-lg font-semibold text-pf-text">Order Details</h2>
-              <button onClick={() => setSelectedOrder(null)} aria-label="Close order details" className="text-pf-text-muted hover:text-pf-text transition-colors">
+              <button type="button" onClick={() => setSelectedOrder(null)} aria-label="Close order details" className="text-pf-text-muted hover:text-pf-text transition-colors">
                 <X className="size-5" />
               </button>
             </div>

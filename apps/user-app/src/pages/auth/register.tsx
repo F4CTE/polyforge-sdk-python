@@ -265,10 +265,10 @@ export function Component() {
             {fieldError('tos') && <p id="register-tos-error" role="alert" className="text-xs text-pf-danger -mt-2">{fieldError('tos')}</p>}
 
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
+ type="submit"
+ disabled={loading}
+ className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+ >
               {loading ? 'Creating account...' : 'Create account'}
             </button>
           </form>

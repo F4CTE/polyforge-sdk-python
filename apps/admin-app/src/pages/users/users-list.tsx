@@ -189,7 +189,7 @@ export function Component() {
         <div className="text-center py-12">
           <AlertCircle className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)]" size={40} />
           <p className="text-[var(--color-pf-text-secondary)] mb-4">Failed to load data</p>
-          <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-sm cursor-pointer">
+          <button type="button" onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded-pf-sm px-2 py-1">
             Try again
           </button>
         </div>
@@ -199,16 +199,17 @@ export function Component() {
       <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
+            <caption className="sr-only">User accounts list</caption>
             <thead>
               <tr className="border-b border-[var(--color-pf-border)]">
-                <th onClick={() => toggleSort('username')} role="columnheader" aria-sort={sortField === 'username' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Username{sortIndicator('username')}</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Email</th>
-                <th onClick={() => toggleSort('status')} role="columnheader" aria-sort={sortField === 'status' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Status{sortIndicator('status')}</th>
-                <th onClick={() => toggleSort('emailVerified')} role="columnheader" aria-sort={sortField === 'emailVerified' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Verified{sortIndicator('emailVerified')}</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">2FA</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Connected</th>
-                <th onClick={() => toggleSort('createdAt')} role="columnheader" aria-sort={sortField === 'createdAt' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Created{sortIndicator('createdAt')}</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Actions</th>
+                <th scope="col" onClick={() => toggleSort('username')} role="columnheader" aria-sort={sortField === 'username' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Username{sortIndicator('username')}</th>
+                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Email</th>
+                <th scope="col" onClick={() => toggleSort('status')} role="columnheader" aria-sort={sortField === 'status' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Status{sortIndicator('status')}</th>
+                <th scope="col" onClick={() => toggleSort('emailVerified')} role="columnheader" aria-sort={sortField === 'emailVerified' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Verified{sortIndicator('emailVerified')}</th>
+                <th scope="col" className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">2FA</th>
+                <th scope="col" className="text-center px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Connected</th>
+                <th scope="col" onClick={() => toggleSort('createdAt')} role="columnheader" aria-sort={sortField === 'createdAt' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="text-left px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider cursor-pointer hover:text-[var(--color-pf-text-secondary)] select-none transition-colors">Created{sortIndicator('createdAt')}</th>
+                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -282,14 +283,16 @@ export function Component() {
                       {computeUserStatus(user) === 'PENDING' && (
                         <div className="flex items-center gap-2 justify-end">
                           <button
+                            type="button"
                             onClick={(e) => { e.stopPropagation(); handleApprove(user.id, user.username); }}
-                            className="px-2 py-1 text-xs font-medium rounded bg-pf-success/10 text-pf-success hover:bg-pf-success/20 transition-colors"
+                            className="px-2 py-1 text-xs font-medium rounded bg-pf-success/10 text-pf-success hover:bg-pf-success/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success"
                           >
                             Approve
                           </button>
                           <button
+                            type="button"
                             onClick={(e) => { e.stopPropagation(); handleReject(user.id, user.username); }}
-                            className="px-2 py-1 text-xs font-medium rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
+                            className="px-2 py-1 text-xs font-medium rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
                           >
                             Reject
                           </button>
@@ -311,18 +314,20 @@ export function Component() {
             </span>
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 aria-label="Previous page"
-                className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed"
+                className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
+                type="button"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 aria-label="Next page"
-                className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed"
+                className="p-1.5 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-secondary)] disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
               >
                 <ChevronRight size={16} />
               </button>

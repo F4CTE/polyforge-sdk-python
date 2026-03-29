@@ -295,6 +295,7 @@ export function Component() {
         </div>
         <div className="flex bg-pf-surface rounded-pf border border-pf-border-subtle" role="tablist" aria-label="Portfolio mode">
           <button
+            type="button"
             onClick={() => handleTabChange('live')}
             role="tab"
             aria-selected={tab === 'live'}
@@ -305,6 +306,7 @@ export function Component() {
             Live
           </button>
           <button
+            type="button"
             onClick={() => handleTabChange('paper')}
             role="tab"
             aria-selected={tab === 'paper'}
@@ -362,6 +364,8 @@ export function Component() {
                 <p className="text-sm font-medium text-pf-text mb-1">Failed to load portfolio</p>
                 <p className="text-xs text-pf-text-muted mb-4">Something went wrong while fetching your data.</p>
                 <button
+                 type="button"
+                  
                   onClick={loadPortfolio}
                   className="px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
                 >
@@ -378,6 +382,7 @@ export function Component() {
               <div className="flex gap-1">
                 {PERIODS.map(p => (
                   <button
+                    type="button"
                     key={p.value}
                     onClick={() => setPeriod(p.value)}
                     className={`px-2.5 py-1 text-xs font-medium rounded-pf transition-colors ${
@@ -450,17 +455,17 @@ export function Component() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm" aria-label="Open positions">
                   <thead>
                     <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
-                      <th className="px-4 py-3 font-medium">Market</th>
-                      <th className="px-4 py-3 font-medium">Side</th>
-                      <th className="px-4 py-3 font-medium text-right">Size</th>
-                      <th className="px-4 py-3 font-medium text-right">Avg Entry</th>
-                      <th className="px-4 py-3 font-medium text-right">Current</th>
-                      <th className="px-4 py-3 font-medium text-right">Unreal. P&L</th>
-                      <th className="px-4 py-3 font-medium text-right">Status</th>
-                      <th className="px-4 py-3 font-medium" />
+                      <th scope="col" className="px-4 py-3 font-medium">Market</th>
+                      <th scope="col" className="px-4 py-3 font-medium">Side</th>
+                      <th scope="col" className="px-4 py-3 font-medium text-right">Size</th>
+                      <th scope="col" className="px-4 py-3 font-medium text-right">Avg Entry</th>
+                      <th scope="col" className="px-4 py-3 font-medium text-right">Current</th>
+                      <th scope="col" className="px-4 py-3 font-medium text-right">Unreal. P&L</th>
+                      <th scope="col" className="px-4 py-3 font-medium text-right">Status</th>
+                      <th scope="col" className="px-4 py-3 font-medium"><span className="sr-only">Actions</span></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-pf-border-subtle">
@@ -503,6 +508,7 @@ export function Component() {
                         <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
                           {pos.resolutionStatus === 'UNRESOLVED' && (
                             <button
+                              type="button"
                               onClick={() => closePosition(pos)}
                               disabled={closingPosition[pos.id]}
                               className="text-xs text-pf-danger hover:text-pf-danger disabled:opacity-50 transition-colors"
@@ -512,6 +518,7 @@ export function Component() {
                           )}
                           {pos.resolutionStatus === 'RESOLVED' && (
                             <button
+                              type="button"
                               onClick={() => redeemPosition(pos)}
                               disabled={redeemingPosition[pos.id]}
                               className="text-xs text-pf-success hover:text-pf-success disabled:opacity-50 transition-colors"
@@ -560,6 +567,7 @@ export function Component() {
                 </div>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 flex items-end justify-end">
                   <button
+                    type="button"
                     onClick={() => setShowResetConfirm(true)}
                     disabled={resettingPaper}
                     className="flex items-center gap-1.5 text-xs text-pf-danger hover:text-pf-danger disabled:opacity-50 transition-colors"
@@ -576,8 +584,8 @@ export function Component() {
                         </div>
                         <p className="text-sm text-pf-text-secondary mb-4">This will delete all paper positions and orders. This cannot be undone.</p>
                         <div className="flex justify-end gap-2">
-                          <button onClick={() => setShowResetConfirm(false)} className="px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface transition-colors">Cancel</button>
-                          <button onClick={resetPaper} className="px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/90 transition-colors">Reset</button>
+                          <button type="button" onClick={() => setShowResetConfirm(false)} className="px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface transition-colors">Cancel</button>
+                          <button type="button" onClick={resetPaper} className="px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/90 transition-colors">Reset</button>
                         </div>
                       </div>
                     </div>
@@ -600,13 +608,13 @@ export function Component() {
                     <span className="text-sm font-medium text-pf-text">Paper Positions</span>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
+                    <table className="w-full text-sm" aria-label="Paper positions">
                       <thead>
                         <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
-                          <th className="px-4 py-3 font-medium">Token</th>
-                          <th className="px-4 py-3 font-medium">Side</th>
-                          <th className="px-4 py-3 font-medium text-right">Size</th>
-                          <th className="px-4 py-3 font-medium text-right">Unreal. P&L</th>
+                          <th scope="col" className="px-4 py-3 font-medium">Token</th>
+                          <th scope="col" className="px-4 py-3 font-medium">Side</th>
+                          <th scope="col" className="px-4 py-3 font-medium text-right">Size</th>
+                          <th scope="col" className="px-4 py-3 font-medium text-right">Unreal. P&L</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-pf-border-subtle">

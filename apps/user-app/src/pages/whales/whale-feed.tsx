@@ -213,6 +213,7 @@ export function Component() {
         <div className="flex gap-1.5">
           {MIN_SIZES.map(s => (
             <button
+              type="button"
               key={s.value}
               onClick={() => changeMinSize(s.value)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
@@ -230,6 +231,7 @@ export function Component() {
         <select
           value={category}
           onChange={e => changeCategory(e.target.value)}
+          aria-label="Filter by category"
           className="px-3 py-1.5 rounded-pf-sm text-xs bg-pf-elevated text-pf-text-secondary border border-pf-border hover:border-pf-border-strong transition-colors"
         >
           <option value="">All Categories</option>
@@ -284,6 +286,7 @@ export function Component() {
                     {truncateAddress(trade.walletAddress)}
                   </Link>
                   <button
+                    type="button"
                     onClick={() => copyToClipboard(trade.walletAddress)}
                     className="text-pf-text-muted hover:text-pf-text transition-colors"
                     title="Copy address"
@@ -334,6 +337,7 @@ export function Component() {
               {/* Action buttons */}
               <div className="flex items-center gap-2 pt-1">
                 <button
+                  type="button"
                   onClick={() => toggleFollow(trade.walletAddress)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border cursor-pointer transition-colors ${
                     followingSet.has(trade.walletAddress)
@@ -363,6 +367,7 @@ export function Component() {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
           <button
+            type="button"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
@@ -372,6 +377,7 @@ export function Component() {
           </button>
           <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
           <button
+            type="button"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"

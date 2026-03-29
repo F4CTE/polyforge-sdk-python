@@ -97,6 +97,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
           <Variable className="size-3" />
           <span className="text-[11px] font-semibold flex-1 truncate">Variable</span>
           <button
+            type="button"
             onClick={onDelete}
             className="p-0.5 rounded hover:bg-white/20 active:bg-white/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             aria-label="Remove variable"

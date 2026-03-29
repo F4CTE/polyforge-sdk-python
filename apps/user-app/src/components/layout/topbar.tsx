@@ -46,9 +46,10 @@ export function Topbar() {
 
       {/* Theme toggle */}
       <button
+        type="button"
         data-tour="theme-toggle"
         onClick={toggleTheme}
-        className="p-2 rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text transition-colors"
+        className="p-2 rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
         aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       >
         {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -57,10 +58,12 @@ export function Topbar() {
       {/* Notification bell */}
       <div className="relative" ref={notifRef} data-tour="notification-bell">
         <button
+          type="button"
           onClick={() => setNotifOpen((v) => !v)}
-          className="relative p-2 rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text transition-colors"
+          className="relative p-2 rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
           aria-label="Notifications"
           aria-expanded={notifOpen}
+          aria-haspopup="dialog"
         >
           <Bell size={18} />
           {unread > 0 && (
@@ -78,6 +81,7 @@ export function Topbar() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border">
               <strong className="text-sm text-pf-text">Notifications</strong>
               <button
+                type="button"
                 onClick={markAllRead}
                 className="text-xs text-pf-cyan-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
               >
@@ -92,11 +96,13 @@ export function Topbar() {
               ) : (
                 notifications.slice(0, 8).map((n) => (
                   <button
+                    type="button"
                     key={n.id}
                     onClick={() => markRead(n.id)}
-                    className={`w-full flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                    className={`w-full flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40 ${
                       !n.read ? 'bg-pf-cyan-500/5' : ''
                     }`}
+                    aria-label={`${n.read ? '' : 'Unread: '}${n.title}`}
                   >
                     <span
                       className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${
@@ -122,11 +128,12 @@ export function Topbar() {
               )}
             </div>
             <button
+              type="button"
               onClick={() => {
                 setNotifOpen(false);
                 navigate('/settings');
               }}
-              className="block w-full text-center text-xs text-pf-cyan-400 py-3 border-t border-pf-border hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+              className="block w-full text-center text-xs text-pf-cyan-400 py-3 border-t border-pf-border hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
             >
               Manage notification preferences
             </button>
@@ -137,11 +144,13 @@ export function Topbar() {
       {/* User menu */}
       <div className="relative ml-2" ref={menuRef}>
         <button
+          type="button"
           data-testid="user-menu-btn"
           onClick={() => setMenuOpen((v) => !v)}
-          className="flex items-center gap-2 p-1 rounded-pf-sm hover:bg-pf-elevated transition-colors"
+          className="flex items-center gap-2 p-1 rounded-pf-sm hover:bg-pf-elevated active:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
           aria-label="User menu"
           aria-expanded={menuOpen}
+          aria-haspopup="menu"
         >
           <div className="w-8 h-8 rounded-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-xs font-semibold">
             {initials}
@@ -155,32 +164,35 @@ export function Topbar() {
         {menuOpen && (
           <div role="menu" className="animate-slide-up absolute right-0 top-12 w-48 bg-pf-elevated border border-pf-border rounded-pf shadow-xl z-50 py-1">
             <button
+              type="button"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
                 navigate('/profile/me');
               }}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-pf-text hover:bg-pf-surface transition-colors"
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-pf-text hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
             >
               <User size={16} />
               Profile
             </button>
             <button
+              type="button"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
                 navigate('/settings');
               }}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-pf-text hover:bg-pf-surface transition-colors"
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-pf-text hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
             >
               <Settings size={16} />
               Settings
             </button>
-            <div className="border-t border-pf-border my-1" />
+            <div className="border-t border-pf-border my-1" role="separator" />
             <button
+              type="button"
               role="menuitem"
               onClick={logout}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-pf-danger hover:bg-pf-surface transition-colors"
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-pf-danger hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
             >
               <LogOut size={16} />
               Sign out

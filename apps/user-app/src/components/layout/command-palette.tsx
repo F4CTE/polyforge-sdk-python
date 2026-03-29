@@ -107,7 +107,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[11px] text-pf-text-muted border border-pf-border font-mono">
             Esc
           </kbd>
-          <button onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-pf-text-muted hover:text-pf-text transition-colors" aria-label="Close command palette">
+          <button type="button" onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-pf-text-muted hover:text-pf-text transition-colors" aria-label="Close command palette">
             <X className="size-4" />
           </button>
         </div>
@@ -133,11 +133,12 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           )}
           {results.map((r, i) => (
             <button
+              type="button"
               key={`${r.type}-${r.id}`}
               role="option"
               aria-selected={i === activeIndex}
               onClick={() => select(r)}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40 ${
                 i === activeIndex ? 'bg-pf-cyan-500/10' : 'hover:bg-pf-surface'
               }`}
             >

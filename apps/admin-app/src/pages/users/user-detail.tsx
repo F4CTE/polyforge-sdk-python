@@ -98,8 +98,9 @@ export function Component() {
       <div className="text-center py-12">
         <p className="text-[var(--color-pf-text-secondary)]">User not found</p>
         <button
+          type="button"
           onClick={() => navigate('/users')}
-          className="mt-4 text-sm text-[var(--color-pf-cyan-500)] hover:underline"
+          className="mt-4 text-sm text-[var(--color-pf-cyan-500)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded"
         >
           Back to users
         </button>
@@ -111,6 +112,7 @@ export function Component() {
     <div className="animate-fade-in space-y-6">
       {/* Back */}
       <button
+        type="button"
         onClick={() => navigate('/users')}
         className="flex items-center gap-1.5 text-sm text-[var(--color-pf-text-secondary)] hover:text-[var(--color-pf-text)] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded-pf-sm"
       >
@@ -186,18 +188,20 @@ export function Component() {
         <div className="mt-4 pt-4 border-t border-[var(--color-pf-border)] flex gap-3">
           {user.suspended ? (
             <button
+             type="button"
               onClick={handleUnsuspend}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success"
             >
               <CheckCircle size={14} />
               Unsuspend
             </button>
           ) : (
             <button
+             type="button"
               onClick={() => setShowSuspendDialog(true)}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
             >
               <Ban size={14} />
               Suspend
@@ -220,15 +224,17 @@ export function Component() {
             />
             <div className="flex gap-2">
               <button
+               type="button"
                 onClick={handleSuspend}
                 disabled={actionLoading || !suspendReason.trim()}
-                className="px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/80 disabled:opacity-50 transition-colors"
+                className="px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/80 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
               >
                 Confirm Suspend
               </button>
               <button
+               type="button"
                 onClick={() => setShowSuspendDialog(false)}
-                className="px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors"
+                className="px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
               >
                 Cancel
               </button>
@@ -248,14 +254,15 @@ export function Component() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
+              <caption className="sr-only">User API keys</caption>
               <thead>
                 <tr className="border-b border-[var(--color-pf-border)]">
-                  <th className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Name</th>
-                  <th className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Prefix</th>
-                  <th className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Scopes</th>
-                  <th className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Created</th>
-                  <th className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Status</th>
-                  <th className="text-right px-3 py-2"></th>
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Name</th>
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Prefix</th>
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Scopes</th>
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Created</th>
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Status</th>
+                  <th scope="col" className="text-right px-3 py-2"><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -282,11 +289,12 @@ export function Component() {
                       {!key.revoked && (
                         confirmRevokeKeyId === key.id ? (
                           <div className="flex items-center justify-end gap-1.5 text-xs">
-                            <button onClick={() => revokeKey(key.id)} className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors">Revoke</button>
-                            <button onClick={() => setConfirmRevokeKeyId(null)} className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors">Cancel</button>
+                            <button type="button" onClick={() => revokeKey(key.id)} className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger">Revoke</button>
+                            <button type="button" onClick={() => setConfirmRevokeKeyId(null)} className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]">Cancel</button>
                           </div>
                         ) : (
                           <button
+                            type="button"
                             onClick={() => setConfirmRevokeKeyId(key.id)}
                             className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger cursor-pointer transition-colors"
                             aria-label="Revoke key"

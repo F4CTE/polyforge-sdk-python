@@ -189,6 +189,7 @@ export function Component() {
         {STEPS.map((label, i) => (
           <div key={label} className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => i < step && setStep(i)}
               disabled={i > step}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
@@ -235,6 +236,7 @@ export function Component() {
                   ) : (
                     followedWhales.map((w) => (
                       <button
+                        type="button"
                         key={w.walletAddress}
                         onClick={() => setTargetWallet(w.walletAddress)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-mono border transition-colors ${
@@ -263,6 +265,7 @@ export function Component() {
                 const selected = mode === opt.value;
                 return (
                   <button
+                    type="button"
                     key={opt.value}
                     onClick={() => setMode(opt.value)}
                     className={`flex flex-col items-start gap-2 p-4 rounded-pf-lg border text-left transition-all duration-150 ${
@@ -306,6 +309,7 @@ export function Component() {
               <div className="space-y-3">
                 <input
                   type="range"
+                  aria-label="Trade size"
                   min={mode === 'PERCENTAGE' ? 1 : 1}
                   max={mode === 'PERCENTAGE' ? 100 : 10000}
                   step={mode === 'PERCENTAGE' ? 1 : 10}
@@ -340,6 +344,7 @@ export function Component() {
                 <label className="text-xs text-pf-text-secondary">Max Exposure ($)</label>
                 <input
                   type="range"
+                  aria-label="Max exposure"
                   min={100}
                   max={50000}
                   step={100}
@@ -364,6 +369,7 @@ export function Component() {
                 <label className="text-xs text-pf-text-secondary">Max Daily Loss ($)</label>
                 <input
                   type="range"
+                  aria-label="Max daily loss"
                   min={10}
                   max={10000}
                   step={10}
@@ -388,6 +394,7 @@ export function Component() {
                 <label className="text-xs text-pf-text-secondary">Price Offset (%)</label>
                 <input
                   type="range"
+                  aria-label="Price offset"
                   min={-5}
                   max={5}
                   step={0.1}
@@ -459,6 +466,7 @@ export function Component() {
       {/* Navigation buttons */}
       <div className="flex items-center justify-between">
         <button
+          type="button"
           onClick={prevStep}
           disabled={step === 0}
           className="flex items-center gap-1.5 px-4 py-2.5 rounded-pf text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -467,6 +475,7 @@ export function Component() {
         </button>
         {step < STEPS.length - 1 ? (
           <button
+            type="button"
             onClick={nextStep}
             disabled={!canAdvance()}
             className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -475,6 +484,7 @@ export function Component() {
           </button>
         ) : (
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={submitting || !isFormValid}
             className="flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-40 transition-colors"

@@ -122,6 +122,7 @@ export function Component() {
               <h2 className="text-xl font-semibold text-pf-text mb-2">Verification failed</h2>
               <p className="text-sm text-pf-danger mb-6">{error}</p>
               <button
+                type="button"
                 onClick={handleResend}
                 disabled={resending}
                 className="inline-block px-6 py-2.5 border border-pf-border text-pf-text font-medium rounded-pf hover:bg-pf-border/30 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
@@ -152,6 +153,7 @@ export function Component() {
               )}
 
               <button
+                type="button"
                 onClick={handleResend}
                 disabled={resending}
                 className="w-full py-2.5 border border-pf-border text-pf-text font-medium rounded-pf hover:bg-pf-border/30 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"

@@ -421,6 +421,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
             <button
+              type="button"
               onClick={(e) => { e.stopPropagation(); onTabChange('backtest'); if (!expanded) onToggle(); }}
               className={`px-2.5 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
                 activeTab === 'backtest'
@@ -435,6 +436,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
               )}
             </button>
             <button
+              type="button"
               onClick={(e) => { e.stopPropagation(); onTabChange('live'); if (!expanded) onToggle(); }}
               className={`px-2.5 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
                 activeTab === 'live'
@@ -573,6 +575,7 @@ function BacktestTab({
             />
           </div>
           <button
+            type="button"
             onClick={onSubmit}
             disabled={submitting || !strategyId || !dateStart || !dateEnd}
             className="h-8 px-4 rounded-pf-sm bg-pf-cyan-500 text-black text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5 shrink-0"
@@ -629,6 +632,7 @@ function BacktestTab({
             <BarChart3 className="size-3" /> Backtest Complete
           </span>
           <button
+            type="button"
             onClick={onReset}
             className="text-[10px] text-pf-text-muted hover:text-pf-text-secondary flex items-center gap-1 transition-colors"
           >
@@ -689,6 +693,7 @@ function BacktestTab({
         {bt.error ?? 'Backtest failed'}
       </div>
       <button
+        type="button"
         onClick={onReset}
         className="text-[10px] text-pf-text-muted hover:text-pf-text-secondary flex items-center gap-1 transition-colors"
       >
@@ -741,6 +746,7 @@ function LiveTab({
 
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => onStart('PAPER')}
             disabled={!strategyId}
             className="flex-1 h-8 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-cyan-500/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
@@ -749,6 +755,7 @@ function LiveTab({
             Paper Trade
           </button>
           <button
+            type="button"
             onClick={() => onStart('LIVE')}
             disabled={!strategyId}
             className="flex-1 h-8 rounded-pf-sm bg-pf-success/10 border border-pf-success/30 text-xs font-medium text-pf-success hover:bg-pf-success/20 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
@@ -799,6 +806,7 @@ function LiveTab({
         <div className="flex items-center gap-1.5">
           {live.status === 'RUNNING' && (
             <button
+              type="button"
               onClick={onPause}
               className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-warning hover:bg-pf-warning/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
               title="Pause"
@@ -809,6 +817,7 @@ function LiveTab({
           )}
           {live.status === 'PAUSED' && (
             <button
+              type="button"
               onClick={onResume}
               className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-success hover:bg-pf-success/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
               title="Resume"
@@ -818,6 +827,7 @@ function LiveTab({
             </button>
           )}
           <button
+            type="button"
             onClick={onStop}
             className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-danger hover:bg-pf-danger/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
             title="Stop"
@@ -851,11 +861,11 @@ function LiveTab({
             <table className="w-full text-[11px]" aria-label="Trade history">
               <thead>
                 <tr className="text-pf-text-muted text-left">
-                  <th className="px-2 py-1 font-medium">Time</th>
-                  <th className="px-2 py-1 font-medium">Side</th>
-                  <th className="px-2 py-1 font-medium text-right">Price</th>
-                  <th className="px-2 py-1 font-medium text-right">Amount</th>
-                  <th className="px-2 py-1 font-medium text-right">P&L</th>
+                  <th scope="col" className="px-2 py-1 font-medium">Time</th>
+                  <th scope="col" className="px-2 py-1 font-medium">Side</th>
+                  <th scope="col" className="px-2 py-1 font-medium text-right">Price</th>
+                  <th scope="col" className="px-2 py-1 font-medium text-right">Amount</th>
+                  <th scope="col" className="px-2 py-1 font-medium text-right">P&L</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-pf-border-subtle">
@@ -933,6 +943,7 @@ function MarketBindingsSection({
               <div className="absolute z-50 w-full mt-0.5 bg-pf-elevated border border-pf-border rounded-pf-sm max-h-32 overflow-y-auto shadow-pf-lg">
                 {marketResults[slot.slot].map((m: any) => (
                   <button
+                    type="button"
                     key={m.id}
                     onClick={() => {
                       setMarketBindings(prev => ({ ...prev, [slot.slot]: m.id }));

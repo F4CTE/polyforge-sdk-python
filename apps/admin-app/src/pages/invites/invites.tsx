@@ -116,7 +116,7 @@ export function Component() {
           <button
             type="submit"
             disabled={generating}
-            className="px-4 py-2 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 transition-colors"
+            className="px-4 py-2 text-sm font-semibold rounded-pf-sm bg-[var(--color-pf-cyan-500)] text-black hover:bg-[var(--color-pf-cyan-400)] disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
           >
             {generating ? 'Generating...' : 'Generate'}
           </button>
@@ -131,6 +131,7 @@ export function Component() {
                 <div key={code} className="flex items-center gap-2">
                   <code className="text-sm font-mono text-[var(--color-pf-cyan-500)]">{code}</code>
                   <button
+                    type="button"
                     onClick={() => copyCode(code)}
                     className="p-1 rounded hover:bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-cyan-400)] cursor-pointer transition-colors"
                     aria-label={`Copy code ${code}`}
@@ -177,12 +178,13 @@ export function Component() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
+              <caption className="sr-only">Active invite codes</caption>
               <thead>
                 <tr className="border-b border-[var(--color-pf-border)]">
-                  <th className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Code</th>
-                  <th className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Remaining Uses</th>
-                  <th className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">TTL</th>
-                  <th className="text-right px-3 py-2"></th>
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Code</th>
+                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Remaining Uses</th>
+                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">TTL</th>
+                  <th scope="col" className="text-right px-3 py-2"></th>
                 </tr>
               </thead>
               <tbody>
@@ -192,6 +194,7 @@ export function Component() {
                       <div className="flex items-center gap-2">
                         <code className="text-sm font-mono text-[var(--color-pf-text)]">{inv.code}</code>
                         <button
+                          type="button"
                           onClick={() => copyCode(inv.code)}
                           className="p-1 rounded hover:bg-[var(--color-pf-bg)] text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-cyan-400)] cursor-pointer transition-colors"
                           aria-label={`Copy code ${inv.code}`}
@@ -209,11 +212,12 @@ export function Component() {
                     <td className="px-3 py-2.5 text-right">
                       {confirmRevokeCode === inv.code ? (
                         <div className="flex items-center justify-end gap-1.5 text-xs">
-                          <button onClick={() => handleDelete(inv.code)} className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors">Revoke</button>
-                          <button onClick={() => setConfirmRevokeCode(null)} className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors">Cancel</button>
+                          <button type="button" onClick={() => handleDelete(inv.code)} className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors">Revoke</button>
+                          <button type="button" onClick={() => setConfirmRevokeCode(null)} className="px-2 py-0.5 rounded bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] transition-colors">Cancel</button>
                         </div>
                       ) : (
                         <button
+                          type="button"
                           onClick={() => setConfirmRevokeCode(inv.code)}
                           className="p-1 rounded hover:bg-pf-danger/10 text-[var(--color-pf-text-tertiary)] hover:text-pf-danger transition-colors"
                           aria-label="Revoke invite"

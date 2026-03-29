@@ -51,8 +51,9 @@ export class ErrorBoundary extends Component<Props, State> {
               </pre>
             )}
             <button
+              type="button"
               onClick={this.handleReset}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 active:bg-pf-cyan-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
             >
               <RefreshCw className="size-4" />
               Reload Application

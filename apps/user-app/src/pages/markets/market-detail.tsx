@@ -464,6 +464,7 @@ export function Component() {
             This market may have been removed or the link is incorrect.
           </p>
           <button
+            type="button"
             onClick={() => navigate('/markets')}
             className="mt-4 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text hover:border-pf-border-strong transition-colors"
           >
@@ -508,6 +509,7 @@ export function Component() {
                   </span>
                   <div className="flex gap-1 mt-1">
                     <button
+                      type="button"
                       onClick={() => openConditional('TAKE_PROFIT', 'YES')}
                       aria-label="Set take profit for YES"
                       className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-success/20 text-pf-success hover:bg-pf-success/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
@@ -515,6 +517,7 @@ export function Component() {
                       TP
                     </button>
                     <button
+                      type="button"
                       onClick={() => openConditional('STOP_LOSS', 'YES')}
                       aria-label="Set stop loss for YES"
                       className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-danger/20 text-pf-danger hover:bg-pf-danger/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
@@ -530,6 +533,7 @@ export function Component() {
                   </span>
                   <div className="flex gap-1 mt-1">
                     <button
+                      type="button"
                       onClick={() => openConditional('TAKE_PROFIT', 'NO')}
                       aria-label="Set take profit for NO"
                       className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-success/20 text-pf-success hover:bg-pf-success/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
@@ -537,6 +541,7 @@ export function Component() {
                       TP
                     </button>
                     <button
+                      type="button"
                       onClick={() => openConditional('STOP_LOSS', 'NO')}
                       aria-label="Set stop loss for NO"
                       className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-danger/20 text-pf-danger hover:bg-pf-danger/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
@@ -547,6 +552,7 @@ export function Component() {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowRunStrategy(true)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-success text-white text-sm font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base"
               >
@@ -581,6 +587,7 @@ export function Component() {
                 <div className="flex gap-1">
                   {(['1m', '1h', '1d'] as Resolution[]).map((r) => (
                     <button
+                      type="button"
                       key={r}
                       onClick={() => onResolutionChange(r)}
                       aria-pressed={resolution === r}
@@ -651,6 +658,7 @@ export function Component() {
                     <TrendingUp className="size-8 opacity-20 mb-2" />
                     No price data available for this resolution
                     <button
+                      type="button"
                       onClick={() => {
                         const yesToken = (market?.tokens ?? []).find((t) => t.outcome === 'YES');
                         if (yesToken) loadChart(yesToken.id, resolution);
@@ -735,6 +743,7 @@ export function Component() {
               <div className="flex gap-1 mt-3">
                 {(['YES', 'NO'] as const).map((o) => (
                   <button
+                    type="button"
                     key={o}
                     onClick={() => {
                       setTradeOutcome(o);
@@ -758,6 +767,7 @@ export function Component() {
               <div className="flex gap-1 mt-2">
                 {(['BUY', 'SELL'] as const).map((s) => (
                   <button
+                    type="button"
                     key={s}
                     onClick={() => setTradeSide(s)}
                     className={`flex-1 py-1.5 rounded-pf-sm text-xs font-semibold transition-colors ${
@@ -837,6 +847,7 @@ export function Component() {
 
               {/* Place order button */}
               <button
+                type="button"
                 onClick={placeOrder}
                 disabled={placingOrder || !tradeAmount || parseFloat(tradeAmount || '0') <= 0 || (!isMarketOrder && (!tradePrice || parseFloat(tradePrice || '0') <= 0))}
                 className={`w-full mt-3 py-2.5 rounded-pf text-sm font-semibold text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
@@ -886,6 +897,7 @@ export function Component() {
                           </span>
                         </div>
                         <button
+                          type="button"
                           onClick={() => cancelMyOrder(order.id)}
                           className="shrink-0 p-0.5 rounded text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                           title="Cancel order"
@@ -909,6 +921,7 @@ export function Component() {
               <Zap className="size-6 text-pf-text-muted mb-2" />
               <p className="text-sm text-pf-text-muted">No strategies running on this market yet.</p>
               <button
+                type="button"
                 onClick={() => setShowRunStrategy(true)}
                 className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong transition-colors"
               >
@@ -997,6 +1010,7 @@ export function Component() {
                     {condType === 'TAKE_PROFIT' ? 'Set Take Profit' : 'Set Stop Loss'} &mdash; {condOutcome}
                   </h2>
                   <button
+                    type="button"
                     onClick={() => setShowConditional(false)}
                     aria-label="Close dialog"
                     className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
@@ -1032,12 +1046,14 @@ export function Component() {
                   </div>
                   <div className="flex gap-2 justify-end pt-3 border-t border-pf-border-subtle">
                     <button
+                      type="button"
                       onClick={() => setShowConditional(false)}
                       className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
                     >
                       Cancel
                     </button>
                     <button
+                      type="button"
                       onClick={submitConditional}
                       disabled={!condSize || !condTriggerPrice || condSubmitting}
                       className={`flex items-center gap-2 px-4 py-2 rounded-pf text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${
@@ -1059,6 +1075,7 @@ export function Component() {
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-semibold text-pf-text">Run Strategy on This Market</h2>
                   <button
+                    type="button"
                     onClick={() => setShowRunStrategy(false)}
                     aria-label="Close dialog"
                     className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
@@ -1096,12 +1113,14 @@ export function Component() {
 
                   <div className="flex gap-2 justify-end pt-3 border-t border-pf-border-subtle">
                     <button
+                      type="button"
                       onClick={() => setShowRunStrategy(false)}
                       className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
                     >
                       Cancel
                     </button>
                     <button
+                      type="button"
                       onClick={onStartStrategy}
                       disabled={!selectedStrategyId}
                       className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-success text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"

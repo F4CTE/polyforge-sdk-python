@@ -259,6 +259,7 @@ export function Component() {
         <div className="flex items-center gap-2 shrink-0">
           {/* Panel toggle */}
           <button
+            type="button"
             onClick={() => setPanelOpen((v) => !v)}
             className={`p-1.5 rounded-pf-sm transition-colors ${
               panelOpen
@@ -273,6 +274,7 @@ export function Component() {
 
           {/* Execution panel toggle */}
           <button
+            type="button"
             onClick={() => { setExecPanelExpanded((v) => !v); }}
             className={`p-1.5 rounded-pf-sm transition-colors ${
               execPanelExpanded
@@ -286,6 +288,7 @@ export function Component() {
           </button>
 
           <button
+            type="button"
             onClick={onQuickTest}
             disabled={quickTesting || !strategyId}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-border-strong disabled:opacity-50 transition-colors"
@@ -307,6 +310,7 @@ export function Component() {
           </Link>
 
           <button
+            type="button"
             onClick={onSave}
             disabled={saving}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm bg-pf-cyan-500 text-black text-xs font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 transition-colors"
@@ -375,7 +379,7 @@ export function Component() {
               <div className="absolute bottom-4 left-4 z-40 bg-pf-elevated border border-pf-border rounded-pf-lg p-4 shadow-pf-lg max-w-xs">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-pf-text uppercase tracking-wider">Quick Test Results</span>
-                  <button onClick={() => setQuickResult(null)} className="text-pf-text-muted hover:text-pf-text text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Close quick test results">&times;</button>
+                  <button type="button" onClick={() => setQuickResult(null)} className="text-pf-text-muted hover:text-pf-text text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Close quick test results">&times;</button>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="bg-pf-surface rounded-pf p-2">

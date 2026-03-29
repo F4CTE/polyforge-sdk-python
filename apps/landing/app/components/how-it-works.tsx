@@ -65,8 +65,8 @@ export function HowItWorks() {
         <ol className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-[1000px] mx-auto stagger-children list-none p-0 m-0">
           {steps.map((step) => (
             <li key={step.number} className="flex flex-col items-center animate-fade-in">
-              <div className="flex flex-col items-center gap-3 mb-5">
-                <div className="w-14 h-14 bg-gradient-to-br from-pf-cyan-500/20 to-pf-elevated border border-pf-cyan-500/35 rounded-full flex items-center justify-center text-[15px] font-bold font-mono text-pf-cyan-400 shadow-pf-md" aria-hidden="true">
+              <div className="flex flex-col items-center gap-3 mb-5" aria-hidden="true">
+                <div className="w-14 h-14 bg-gradient-to-br from-pf-cyan-500/20 to-pf-elevated border border-pf-cyan-500/35 rounded-full flex items-center justify-center text-[15px] font-bold font-mono text-pf-cyan-400 shadow-pf-md">
                   {step.number}
                 </div>
                 {step.visual}

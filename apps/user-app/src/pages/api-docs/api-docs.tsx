@@ -73,10 +73,10 @@ function FieldTable({ fields }: { fields: EndpointField[] }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border">
-            <th className="px-4 py-3 font-medium">Field</th>
-            <th className="px-4 py-3 font-medium">Type</th>
-            <th className="px-4 py-3 font-medium">Req.</th>
-            <th className="px-4 py-3 font-medium">Description</th>
+            <th scope="col" className="px-4 py-3 font-medium">Field</th>
+            <th scope="col" className="px-4 py-3 font-medium">Type</th>
+            <th scope="col" className="px-4 py-3 font-medium">Req.</th>
+            <th scope="col" className="px-4 py-3 font-medium">Description</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-pf-border-subtle">
@@ -102,6 +102,7 @@ function LangTabs({ lang, setLang, available }: { lang: Lang; setLang: (l: Lang)
     <div className="flex flex-wrap gap-1.5 mb-3">
       {available.map(l => (
         <button
+          type="button"
           key={l}
           onClick={() => setLang(l)}
           className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
@@ -136,6 +137,7 @@ function EndpointCard({ ep, lang, setLang }: { ep: EndpointDef; lang: Lang; setL
   return (
     <div className={`border border-pf-border border-l-[3px] ${METHOD_BORDER[ep.method]} rounded-pf-lg overflow-hidden transition-all duration-200 ${open ? '' : 'hover:border-pf-border-strong'}`}>
       <button
+        type="button"
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-3 px-4 py-3 bg-pf-elevated hover:bg-pf-elevated/80 text-left transition-colors duration-200 cursor-pointer"
         aria-expanded={open}
@@ -377,7 +379,7 @@ export function Component() {
           <Code code={'npx @polyforge/mcp-server'} lang="curl" />
           <p className="text-xs text-pf-text-secondary">
             23 tools covering markets, strategies, orders, and live events.{' '}
-            <button onClick={() => navigate('mcp-server')} className="text-pf-cyan-400 hover:text-pf-cyan-300 underline underline-offset-2 cursor-pointer">Setup guide →</button>
+            <button type="button" onClick={() => navigate('mcp-server')} className="text-pf-cyan-400 hover:text-pf-cyan-300 underline underline-offset-2 cursor-pointer">Setup guide →</button>
           </p>
         </div>
       </div>
@@ -412,8 +414,8 @@ export function Component() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border">
-                  <th className="px-4 py-3 font-medium">Event</th>
-                  <th className="px-4 py-3 font-medium">Payload</th>
+                  <th scope="col" className="px-4 py-3 font-medium">Event</th>
+                  <th scope="col" className="px-4 py-3 font-medium">Payload</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-pf-border-subtle">
@@ -506,8 +508,8 @@ export function Component() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border">
-                <th className="px-4 py-3 font-medium">Header</th>
-                <th className="px-4 py-3 font-medium">Value</th>
+                <th scope="col" className="px-4 py-3 font-medium">Header</th>
+                <th scope="col" className="px-4 py-3 font-medium">Value</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-pf-border-subtle">
@@ -547,8 +549,8 @@ export function Component() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border">
-                  <th className="px-4 py-3 font-medium w-16">Code</th>
-                  <th className="px-4 py-3 font-medium">Meaning</th>
+                  <th scope="col" className="px-4 py-3 font-medium w-16">Code</th>
+                  <th scope="col" className="px-4 py-3 font-medium">Meaning</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-pf-border-subtle">
@@ -653,6 +655,7 @@ export function Component() {
               <div className="space-y-0.5">
                 {g.items.map(item => (
                   <button
+                    type="button"
                     key={item.id}
                     onClick={() => navigate(item.id)}
                     className={`w-full text-left px-2 py-1.5 rounded-pf text-sm transition-colors duration-150 cursor-pointer border-l-2 ${

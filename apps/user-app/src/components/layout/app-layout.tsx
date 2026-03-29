@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Outlet } from 'react-router';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './sidebar';
@@ -10,8 +10,24 @@ export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+
+  // Close mobile nav on Escape
+  useEffect(() => {
+    if (!mobileOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') closeMobile();
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [mobileOpen, closeMobile]);
+
   return (
     <div className="flex h-screen bg-pf-base text-pf-text overflow-hidden">
+      {/* Skip to main content */}
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-pf-cyan-500 focus:text-black focus:rounded-pf focus:text-sm focus:font-medium">
+        Skip to main content
+      </a>
       {/* Desktop sidebar */}
       <div className="hidden md:block overflow-hidden" style={{ width: collapsed ? 64 : 240, minWidth: collapsed ? 64 : 240, transition: 'width 200ms, min-width 200ms' }}>
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
@@ -19,9 +35,9 @@ export function AppLayout() {
 
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} role="button" tabIndex={-1} aria-label="Close menu" onKeyDown={(e) => { if (e.key === 'Escape') setMobileOpen(false); }} />
-          <div className="relative z-50 h-full">
+        <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+          <div className="relative z-50 h-full" style={{ width: 240 }}>
             <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
           </div>
         </div>
@@ -30,9 +46,10 @@ export function AppLayout() {
       <div className="flex flex-col flex-1 min-w-0">
         <div className="flex items-center">
           <button
+            type="button"
             onClick={() => setMobileOpen(true)}
-            className="p-2 ml-2 rounded-pf-sm text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors md:hidden"
-            aria-label="Open menu"
+            className="p-2 ml-2 rounded-pf-sm text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors md:hidden"
+            aria-label="Open navigation menu"
           >
             <Menu size={20} />
           </button>

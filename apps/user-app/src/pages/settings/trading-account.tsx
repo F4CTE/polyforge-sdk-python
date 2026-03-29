@@ -115,7 +115,7 @@ export function Component() {
             <p className="text-sm text-pf-text-secondary">
               Your Polymarket account is connected. You can disconnect it at any time -- your strategies will stop trading until you reconnect.
             </p>
-            <button onClick={deleteCredentials} disabled={deleting}
+            <button type="button" onClick={deleteCredentials} disabled={deleting}
               className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger/10 text-pf-danger border border-pf-danger/20 text-sm font-medium hover:bg-pf-danger/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 disabled:opacity-50 transition-colors">
               {deleting ? <Loader2 className="size-4 animate-spin" /> : <Unlink className="size-4" />}
               Disconnect Account
@@ -177,7 +177,7 @@ export function Component() {
               <input id="trading-safe-address" type="text" value={safeAddress} onChange={e => setSafeAddress(e.target.value)} placeholder="0x..."
                 className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
-            <button onClick={importCredentials} disabled={!canImport}
+            <button type="button" onClick={importCredentials} disabled={!canImport}
               className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {importing ? <Loader2 className="size-4 animate-spin" /> : <Link2 className="size-4" />}
               Connect Account
@@ -196,7 +196,7 @@ export function Component() {
         {botCode && (
           <div className="flex items-center gap-3 bg-pf-surface rounded-pf p-3 border border-pf-border">
             <code className="flex-1 font-mono text-lg text-pf-text tracking-wider">{botCode}</code>
-            <button onClick={copyBotCode} className="p-1.5 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text cursor-pointer" aria-label="Copy bot code">
+            <button type="button" onClick={copyBotCode} className="p-1.5 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text cursor-pointer" aria-label="Copy bot code">
               <Copy className="size-4" />
             </button>
           </div>
@@ -205,7 +205,7 @@ export function Component() {
           <p className="text-xs text-pf-text-muted">Expires: <span className="font-mono">{botCodeExpiry}</span></p>
         )}
 
-        <button onClick={generateBotCode} disabled={botCodeLoading}
+        <button type="button" onClick={generateBotCode} disabled={botCodeLoading}
           className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm font-medium text-pf-text hover:border-pf-border-strong disabled:opacity-50 transition-colors">
           {botCodeLoading ? <Loader2 className="size-4 animate-spin" /> : <QrCode className="size-4" />}
           {botCode ? 'Regenerate Code' : 'Generate Code'}

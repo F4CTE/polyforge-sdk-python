@@ -119,6 +119,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           <span className="text-sm font-medium text-pf-text">Strategy Settings</span>
         </div>
         <button
+          type="button"
           onClick={onClose}
           aria-label="Close panel"
           className="p-1 rounded hover:bg-pf-overlay text-pf-text-muted hover:text-pf-text transition-colors"
@@ -242,6 +243,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               const isActive = activeSection === key;
               return (
                 <button
+                  type="button"
                   key={key}
                   onClick={() => setActiveSection(key)}
                   aria-pressed={isActive}
@@ -282,6 +284,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 in block fields with <code className="text-pf-purple-500 font-mono">$varName</code>.
               </p>
               <button
+                type="button"
                 onClick={addVariable}
                 className="flex items-center gap-2 w-full px-3 py-2 rounded-pf-sm text-xs font-medium text-white transition-colors hover:opacity-90"
                 style={{ backgroundColor: 'var(--color-pf-purple-500)' }}

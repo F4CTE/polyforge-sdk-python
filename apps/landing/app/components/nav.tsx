@@ -47,6 +47,7 @@ function ThemeToggle() {
 
   return (
     <button
+      type="button"
       onClick={toggle}
       aria-label={isLight ? 'Switch to dark mode' : 'Switch to light mode'}
       className="inline-flex items-center justify-center w-9 h-9 rounded-pf-sm border border-pf-border-subtle text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 transition-colors"
@@ -78,10 +79,9 @@ export function Nav() {
   return (
     <nav
       className="sticky top-0 z-50 bg-pf-base/85 backdrop-blur-xl border-b border-pf-border-subtle"
-      role="navigation"
       aria-label="Main navigation"
     >
-      <div className="flex items-center gap-8 h-16 max-w-[1100px] mx-auto px-6">
+      <div className="flex items-center gap-4 md:gap-8 h-16 max-w-[1100px] mx-auto px-6">
         <a
           href="/"
           className="flex items-center gap-2 text-[17px] font-bold text-pf-text shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
@@ -141,52 +141,54 @@ export function Nav() {
         </div>
 
         <button
-          className="flex md:hidden items-center justify-center w-10 h-10 bg-transparent border-none cursor-pointer ml-auto hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
+          type="button"
+          className="flex md:hidden flex-col items-center justify-center gap-1.5 w-10 h-10 bg-transparent border-none cursor-pointer ml-auto hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav-menu"
           onClick={() => setMobileOpen(!mobileOpen)}
         >
           {mobileOpen ? (
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="text-pf-text-secondary">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="text-pf-text-secondary" aria-hidden="true">
               <path d="M5 5L17 17M17 5L5 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           ) : (
             <>
-              <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" />
-              <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" />
-              <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" />
+              <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" aria-hidden="true" />
+              <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" aria-hidden="true" />
+              <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" aria-hidden="true" />
             </>
           )}
         </button>
       </div>
 
-      {mobileOpen && (
-        <div id="mobile-nav-menu" className="flex md:hidden flex-col gap-1 px-6 pb-4 border-t border-pf-border-subtle">
-          {[
-            { href: '#features', label: 'Features' },
-            { href: '#how-it-works', label: 'How it works' },
-            { href: '/api-docs', label: 'API Docs' },
-            { href: '/login', label: 'Sign in' },
-          ].map(({ href, label }) => (
-            <a
-              key={href}
-              href={href}
-              onClick={() => setMobileOpen(false)}
-              className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
-            >
-              {label}
-            </a>
-          ))}
+      <div
+        id="mobile-nav-menu"
+        className={`${mobileOpen ? 'flex' : 'hidden'} md:hidden flex-col gap-1 px-6 pb-4 border-t border-pf-border-subtle`}
+      >
+        {[
+          { href: '#features', label: 'Features' },
+          { href: '#how-it-works', label: 'How it works' },
+          { href: '/api-docs', label: 'API Docs' },
+          { href: '/login', label: 'Sign in' },
+        ].map(({ href, label }) => (
           <a
-            href="/register"
+            key={href}
+            href={href}
             onClick={() => setMobileOpen(false)}
-            className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
           >
-            Start building free
+            {label}
           </a>
-        </div>
-      )}
+        ))}
+        <a
+          href="/register"
+          onClick={() => setMobileOpen(false)}
+          className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+        >
+          Start building free
+        </a>
+      </div>
     </nav>
   );
 }

@@ -115,6 +115,7 @@ export function Component() {
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {PERIODS.map(p => (
           <button
+            type="button"
             key={p.value}
             onClick={() => changePeriod(p.value)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
@@ -134,12 +135,12 @@ export function Component() {
           <table className="w-full text-sm" aria-label="Leaderboard rankings">
             <thead>
               <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
-                <th className="px-4 py-3 font-medium text-right w-16">Rank</th>
-                <th className="px-4 py-3 font-medium">Trader</th>
-                <th className="px-4 py-3 font-medium text-right">Score</th>
-                <th className="px-4 py-3 font-medium text-right">P&L</th>
-                <th className="px-4 py-3 font-medium text-right">Win Rate</th>
-                <th className="px-4 py-3 font-medium text-right">Trades</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right w-16">Rank</th>
+                <th scope="col" className="px-4 py-3 font-medium">Trader</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Score</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">P&L</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Win Rate</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Trades</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-pf-border-subtle">
@@ -226,6 +227,7 @@ export function Component() {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
           <button
+            type="button"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
@@ -235,6 +237,7 @@ export function Component() {
           </button>
           <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
           <button
+            type="button"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"

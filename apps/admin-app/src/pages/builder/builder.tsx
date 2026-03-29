@@ -30,7 +30,7 @@ export function Component() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" role="status" aria-label="Loading builder statistics">
         <div className="text-sm text-[var(--color-pf-text-secondary)]">Loading builder stats...</div>
       </div>
     );
@@ -84,11 +84,12 @@ export function Component() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
+              <caption className="sr-only">Weekly builder history</caption>
               <thead>
                 <tr className="border-b border-[var(--color-pf-border)]">
-                  <th className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Week</th>
-                  <th className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Volume</th>
-                  <th className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Reward</th>
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Week</th>
+                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Volume</th>
+                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Reward</th>
                 </tr>
               </thead>
               <tbody>

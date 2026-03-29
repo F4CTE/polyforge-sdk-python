@@ -73,7 +73,7 @@ export function Component() {
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Cache</h2>
-        <button
+        <button type="button"
           onClick={loadStats}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] cursor-pointer transition-colors"
           aria-label="Refresh cache stats"
@@ -123,7 +123,7 @@ export function Component() {
             placeholder="e.g. user:*, strategy:abc*"
             className="flex-1 px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] font-mono"
           />
-          <button
+          <button type="button"
             onClick={handleFlush}
             disabled={flushing || !pattern.trim()}
             className="px-4 py-2 text-sm rounded-pf-sm bg-pf-warning text-white hover:bg-pf-warning/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -142,11 +142,12 @@ export function Component() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
+              <caption className="sr-only">Cache patterns</caption>
               <thead>
                 <tr className="border-b border-[var(--color-pf-border)]">
-                  <th className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Pattern</th>
-                  <th className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Keys</th>
-                  <th className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Hit Rate</th>
+                  <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Pattern</th>
+                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Keys</th>
+                  <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Hit Rate</th>
                 </tr>
               </thead>
               <tbody>
