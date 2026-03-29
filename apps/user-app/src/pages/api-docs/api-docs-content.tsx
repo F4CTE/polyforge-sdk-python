@@ -12,6 +12,7 @@ import {
   type Lang,
 } from './api-docs-primitives';
 import { EndpointCard } from './api-docs-endpoint-card';
+import { McpSection } from './api-docs-content-mcp';
 import { ENDPOINT_SECTIONS } from './api-docs-nav';
 
 /* ─── Changelog data ─────────────────────────────────────────────── */
@@ -212,7 +213,7 @@ export function renderContent({
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 hover:border-pf-border-strong transition-all duration-200">
         <div className="flex items-center gap-2">
           <p className="text-sm font-semibold text-pf-purple-300">MCP Server</p>
-          <Badge text="Claude Desktop" cls="bg-pf-purple-500/10 text-pf-purple-400" />
+          <Badge text="Claude · Cursor · Windsurf · Zed" cls="bg-pf-purple-500/10 text-pf-purple-400" />
         </div>
         <Code code={'npx @polyforge/mcp-server'} lang="curl" />
         <p className="text-xs text-pf-text-secondary">
@@ -448,47 +449,7 @@ export function renderContent({
   );
 
   /* ── MCP Server ── */
-  if (activeId === 'mcp-server') return (
-    <div className="space-y-6">
-      <PageTitle
-        title="MCP Server (Claude)"
-        subtitle="23 tools for Claude Desktop and Claude Code covering markets, strategies, portfolio, orders, whale feed, news signals, and live execution watching."
-      />
-      <Sub title="Claude Desktop setup">
-        <p className="text-xs text-pf-text-muted mb-2">Add to <InlineCode>claude_desktop_config.json</InlineCode>:</p>
-        <Code code={`{\n  "mcpServers": {\n    "polyforge": {\n      "command": "npx",\n      "args": ["@polyforge/mcp-server"],\n      "env": {\n        "POLYFORGE_API_URL": "https://api.polyforge.app",\n        "POLYFORGE_API_KEY": "pf_live_your_key"\n      }\n    }\n  }\n}`} lang="ts" />
-      </Sub>
-      <Sub title="Claude Code setup">
-        <Code code={'claude mcp add polyforge -- npx @polyforge/mcp-server\nexport POLYFORGE_API_KEY=pf_live_your_key'} lang="curl" />
-      </Sub>
-      <Sub title="Available tools">
-        <div className="flex flex-wrap gap-1.5">
-          {['list_markets','get_market','list_strategies','get_strategy',
-            'create_strategy','create_strategy_from_description','start_strategy',
-            'stop_strategy','get_strategy_templates','export_strategy',
-            'get_strategy_events','get_portfolio','get_orders','get_score',
-            'place_order','cancel_order','get_whale_feed','get_news_signals',
-            'list_alerts','list_copy_configs','list_webhooks','create_webhook',
-            'ai_query'].map(tool => (
-            <InlineCode key={tool}>{tool}</InlineCode>
-          ))}
-        </div>
-      </Sub>
-      <Sub title="Example prompts">
-        <div className="space-y-2">
-          {[
-            '"What are the top prediction markets about crypto right now?"',
-            '"Create a strategy that buys YES when price drops below 0.30"',
-            '"Start my momentum strategy in paper mode and watch for events"',
-            '"Show me whale trades over $50,000 from the last hour"',
-            '"What\'s my portfolio P&L this week?"',
-          ].map(p => (
-            <p key={p} className="text-xs text-pf-text-secondary bg-pf-elevated border border-pf-border rounded-pf px-3.5 py-2.5 font-mono hover:border-pf-border-strong transition-all duration-200">{p}</p>
-          ))}
-        </div>
-      </Sub>
-    </div>
-  );
+  if (activeId === 'mcp-server') return <McpSection />;
 
   return null;
 }

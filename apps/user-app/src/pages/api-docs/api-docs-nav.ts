@@ -49,7 +49,7 @@ export const NAV_GROUPS: { group: string | null; items: { id: string; label: str
     items: [
       { id: 'rate-limits',    label: 'Rate Limits' },
       { id: 'error-handling', label: 'Error Handling' },
-      { id: 'mcp-server',     label: 'MCP Server (Claude)' },
+      { id: 'mcp-server',     label: 'MCP Server' },
     ],
   },
 ];
