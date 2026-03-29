@@ -4,6 +4,15 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   transpilePackages: ['@polyforge/ui'],
   eslint: { ignoreDuringBuilds: false },
+  async redirects() {
+    return [
+      {
+        source: '/api-docs',
+        destination: process.env.APP_URL ?? 'http://localhost:5173/api-docs',
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
