@@ -1,4 +1,4 @@
-import { WaitlistForm } from './waitlist-form';
+import { WaitlistForm } from "./waitlist-form";
 
 export function CtaBanner() {
   return (
@@ -21,20 +21,21 @@ export function CtaBanner() {
             id="cta-heading"
             className="relative text-[clamp(24px,4vw,36px)] font-bold text-pf-text mb-4"
           >
-            Your edge{' '}
+            Your edge{" "}
             <span className="bg-gradient-to-br from-pf-cyan-300 to-pf-cyan-500 bg-clip-text text-transparent">
               starts here
             </span>
           </h2>
           <p className="relative text-base text-pf-text-secondary max-w-[480px] mx-auto mb-8 leading-relaxed">
-            Start building smarter strategies today. Visual builder, AI signals, whale tracking,
-            copy trading &mdash; all in one platform. No credit card required.
+            Start building smarter strategies today. Visual builder, AI signals,
+            whale tracking, copy trading &mdash; all in one platform. No credit
+            card required.
           </p>
 
           <WaitlistForm className="relative max-w-[480px] mx-auto" />
 
           <p className="relative text-sm text-pf-text-muted mt-4">
-            Or{' '}
+            Or{" "}
             <a
               href="/login"
               className="text-pf-cyan-400 underline underline-offset-4 hover:text-pf-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"

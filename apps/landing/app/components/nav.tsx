@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 const MOBILE_NAV_LINKS = [
-  { href: '#features', label: 'Features' },
-  { href: '#how-it-works', label: 'How it works' },
-  { href: '/api-docs', label: 'API Docs' },
-  { href: '/terms', label: 'Terms' },
-  { href: '/privacy', label: 'Privacy' },
-  { href: '/login', label: 'Sign in' },
+  { href: "#features", label: "Features" },
+  { href: "#how-it-works", label: "How it works" },
+  { href: "/api-docs", label: "API Docs" },
+  { href: "/terms", label: "Terms" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/login", label: "Sign in" },
 ] as const;
 
-function PolyforgeIcon({ className = '' }: { className?: string }) {
+function PolyforgeIcon({ className = "" }: { className?: string }) {
   return (
     <svg
       className={className}
@@ -37,20 +37,20 @@ function ThemeToggle() {
   const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
-    setIsLight(document.documentElement.classList.contains('light'));
+    setIsLight(document.documentElement.classList.contains("light"));
   }, []);
 
   function toggle() {
     const next = !isLight;
     setIsLight(next);
     if (next) {
-      document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('pf-landing-theme', 'light');
+      document.documentElement.classList.add("light");
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("pf-landing-theme", "light");
     } else {
-      document.documentElement.classList.remove('light');
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('pf-landing-theme', 'dark');
+      document.documentElement.classList.remove("light");
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("pf-landing-theme", "dark");
     }
   }
 
@@ -58,15 +58,33 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      aria-label={isLight ? 'Switch to dark mode' : 'Switch to light mode'}
+      aria-label={isLight ? "Switch to dark mode" : "Switch to light mode"}
       className="inline-flex items-center justify-center w-9 h-9 rounded-pf-sm border border-pf-border-subtle text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 transition-colors"
     >
       {isLight ? (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
         </svg>
       ) : (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <circle cx="12" cy="12" r="5" />
           <line x1="12" y1="1" x2="12" y2="3" />
           <line x1="12" y1="21" x2="12" y2="23" />
@@ -90,14 +108,14 @@ export function Nav() {
 
   useEffect(() => {
     function handleEscape(e: KeyboardEvent) {
-      if (e.key === 'Escape' && mobileOpen) setMobileOpen(false);
+      if (e.key === "Escape" && mobileOpen) setMobileOpen(false);
     }
     if (mobileOpen) {
-      document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", handleEscape);
       return () => {
-        document.body.style.overflow = '';
-        window.removeEventListener('keydown', handleEscape);
+        document.body.style.overflow = "";
+        window.removeEventListener("keydown", handleEscape);
       };
     }
   }, [mobileOpen]);
@@ -169,20 +187,41 @@ export function Nav() {
         <button
           type="button"
           className="flex md:hidden flex-col items-center justify-center gap-1.5 w-11 h-11 bg-transparent border-none cursor-pointer ml-auto hover:bg-pf-text/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
-          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav-menu"
           onClick={toggleMobile}
         >
           {mobileOpen ? (
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="text-pf-text-secondary" aria-hidden="true">
-              <path d="M5 5L17 17M17 5L5 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 22 22"
+              fill="none"
+              className="text-pf-text-secondary"
+              aria-hidden="true"
+            >
+              <path
+                d="M5 5L17 17M17 5L5 17"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
             </svg>
           ) : (
             <>
-              <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" aria-hidden="true" />
-              <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" aria-hidden="true" />
-              <span className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm" aria-hidden="true" />
+              <span
+                className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm"
+                aria-hidden="true"
+              />
+              <span
+                className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm"
+                aria-hidden="true"
+              />
+              <span
+                className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm"
+                aria-hidden="true"
+              />
             </>
           )}
         </button>
@@ -192,7 +231,7 @@ export function Nav() {
         id="mobile-nav-menu"
         role="navigation"
         aria-label="Mobile navigation"
-        className={`${mobileOpen ? 'flex' : 'hidden'} md:hidden flex-col gap-1 px-6 pb-4 border-t border-pf-border-subtle`}
+        className={`${mobileOpen ? "flex" : "hidden"} md:hidden flex-col gap-1 px-6 pb-4 border-t border-pf-border-subtle`}
       >
         {MOBILE_NAV_LINKS.map(({ href, label }) => (
           <a

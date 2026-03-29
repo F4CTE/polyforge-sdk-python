@@ -1,21 +1,21 @@
 const testimonials = [
   {
-    initials: 'AK',
-    name: 'Alex Kowalski',
-    role: 'Quantitative Analyst',
-    text: 'The visual canvas builder is incredible. I wired up IF/THEN blocks, logic gates, and variables into a full strategy in under an hour. Backtesting gave me the confidence to go live, and the advanced orders keep my risk locked down.',
+    initials: "AK",
+    name: "Alex Kowalski",
+    role: "Quantitative Analyst",
+    text: "The visual canvas builder is incredible. I wired up IF/THEN blocks, logic gates, and variables into a full strategy in under an hour. Backtesting gave me the confidence to go live, and the advanced orders keep my risk locked down.",
   },
   {
-    initials: 'SR',
-    name: 'Sarah Reeves',
-    role: 'Independent Trader',
-    text: 'Copy trading changed everything for me. I follow two whale wallets and mirror their trades automatically. The whale tracker alerts me the moment big money moves, and I can react instantly without staring at screens all day.',
+    initials: "SR",
+    name: "Sarah Reeves",
+    role: "Independent Trader",
+    text: "Copy trading changed everything for me. I follow two whale wallets and mirror their trades automatically. The whale tracker alerts me the moment big money moves, and I can react instantly without staring at screens all day.",
   },
   {
-    initials: 'MC',
-    name: 'Marcus Chen',
-    role: 'Crypto Fund Analyst',
-    text: 'The AI signals pipeline is a game-changer. It picks up breaking news, matches it to markets I care about, and generates trade signals before I even see the headline. I just review and approve. My hit rate has never been higher.',
+    initials: "MC",
+    name: "Marcus Chen",
+    role: "Crypto Fund Analyst",
+    text: "The AI signals pipeline is a game-changer. It picks up breaking news, matches it to markets I care about, and generates trade signals before I even see the headline. I just review and approve. My hit rate has never been higher.",
   },
 ];
 
@@ -56,12 +56,19 @@ export function Testimonials() {
                 </p>
               </blockquote>
               <figcaption className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pf-cyan-500/20 to-pf-cyan-500/5 border border-pf-cyan-500/25 flex items-center justify-center text-[13px] font-semibold text-pf-cyan-400 font-mono shrink-0" aria-hidden="true">
+                <div
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-pf-cyan-500/20 to-pf-cyan-500/5 border border-pf-cyan-500/25 flex items-center justify-center text-[13px] font-semibold text-pf-cyan-400 font-mono shrink-0"
+                  aria-hidden="true"
+                >
                   {t.initials}
                 </div>
                 <cite className="not-italic">
-                  <div className="text-sm font-semibold text-pf-text">{t.name}</div>
-                  <div className="text-xs text-pf-text-muted mt-0.5">{t.role}</div>
+                  <div className="text-sm font-semibold text-pf-text">
+                    {t.name}
+                  </div>
+                  <div className="text-xs text-pf-text-muted mt-0.5">
+                    {t.role}
+                  </div>
                 </cite>
               </figcaption>
             </figure>

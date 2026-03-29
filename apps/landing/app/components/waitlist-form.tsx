@@ -1,17 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useCallback, type FormEvent, type ChangeEvent } from 'react';
+import { useState, useCallback, type FormEvent, type ChangeEvent } from "react";
 
-const API = '/auth/v1/waitlist';
+const API = "/auth/v1/waitlist";
 
 interface WaitlistFormProps {
   className?: string;
 }
 
-export function WaitlistForm({ className = '' }: WaitlistFormProps) {
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [errorMsg, setErrorMsg] = useState('');
+export function WaitlistForm({ className = "" }: WaitlistFormProps) {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleEmailChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -22,40 +24,50 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
     const trimmed = email.trim();
 
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setStatus('error');
-      setErrorMsg('Please enter a valid email address.');
+      setStatus("error");
+      setErrorMsg("Please enter a valid email address.");
       return;
     }
 
-    setStatus('loading');
-    setErrorMsg('');
+    setStatus("loading");
+    setErrorMsg("");
 
     try {
       const res = await fetch(API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmed }),
       });
 
       if (res.status === 409) {
-        setStatus('success');
-        setErrorMsg('already');
+        setStatus("success");
+        setErrorMsg("already");
       } else if (res.ok) {
-        setStatus('success');
+        setStatus("success");
       } else {
-        throw new Error('server error');
+        throw new Error("server error");
       }
     } catch {
-      setStatus('error');
-      setErrorMsg('Something went wrong. Please try again.');
+      setStatus("error");
+      setErrorMsg("Something went wrong. Please try again.");
     }
   }
 
-  if (status === 'success') {
+  if (status === "success") {
     return (
-      <div className={`text-center ${className}`} role="status" aria-live="polite">
+      <div
+        className={`text-center ${className}`}
+        role="status"
+        aria-live="polite"
+      >
         <p className="text-sm text-pf-success flex items-center justify-center gap-1.5">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
             <path
               d="M3 8l3.5 3.5L13 5"
               stroke="currentColor"
@@ -64,7 +76,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
               strokeLinejoin="round"
             />
           </svg>
-          {errorMsg === 'already'
+          {errorMsg === "already"
             ? "You\u2019re already on the list \u2014 check your inbox!"
             : "You\u2019re on the list! We\u2019ll be in touch soon."}
         </p>
@@ -73,9 +85,17 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className={className}>
+    <form
+      onSubmit={(e) => {
+        void handleSubmit(e);
+      }}
+      noValidate
+      className={className}
+    >
       <div className="flex gap-2 flex-col sm:flex-row">
-        <label htmlFor="waitlist-email" className="sr-only">Email address</label>
+        <label htmlFor="waitlist-email" className="sr-only">
+          Email address
+        </label>
         <input
           type="email"
           name="email"
@@ -85,18 +105,18 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           placeholder="you@example.com"
           autoComplete="email"
           required
-          aria-invalid={status === 'error'}
-          aria-describedby={status === 'error' ? 'waitlist-error' : undefined}
+          aria-invalid={status === "error"}
+          aria-describedby={status === "error" ? "waitlist-error" : undefined}
           className="flex-1 min-w-[180px] min-h-[44px] bg-pf-elevated border border-pf-border-subtle rounded-pf-md text-pf-text font-sans text-[15px] px-4 py-3 outline-none transition-colors focus:border-pf-cyan-400 focus:ring-2 focus:ring-pf-cyan-400/50 focus-visible:ring-2 focus-visible:ring-pf-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base placeholder:text-pf-text-muted"
         />
         <button
           type="submit"
-          disabled={status === 'loading'}
-          aria-busy={status === 'loading'}
+          disabled={status === "loading"}
+          aria-busy={status === "loading"}
           className="inline-flex items-center justify-center font-semibold text-[15px] px-6 py-3 min-h-[44px] rounded-pf-md bg-pf-cyan-500 text-black cursor-pointer transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_color-mix(in_srgb,var(--color-pf-cyan-500)_30%,transparent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:bg-pf-cyan-500 whitespace-nowrap"
         >
           <span>Request access</span>
-          {status === 'loading' && (
+          {status === "loading" && (
             <svg
               width="16"
               height="16"
@@ -121,8 +141,14 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
       <p className="text-[13px] text-pf-text-muted mt-2.5 text-center">
         Join the early-access list &mdash; no spam, ever.
       </p>
-      {status === 'error' && errorMsg && (
-        <p id="waitlist-error" role="alert" className="text-[13px] text-pf-danger mt-2 text-center">{errorMsg}</p>
+      {status === "error" && errorMsg && (
+        <p
+          id="waitlist-error"
+          role="alert"
+          className="text-[13px] text-pf-danger mt-2 text-center"
+        >
+          {errorMsg}
+        </p>
       )}
     </form>
   );
