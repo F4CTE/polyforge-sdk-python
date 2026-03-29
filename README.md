@@ -29,16 +29,16 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Copy trading** — mirror trades from followed traders with risk controls (max position, daily loss limit, drawdown breaker), session management, trade attribution
 - **Advanced order types** — take-profit/stop-loss, trailing stop, limit orders, pegged orders, conditional order evaluator
 - **AI news-to-trade pipeline** — real-time news ingestion, LLM signal extraction (Claude + GPT-4o fallback), confidence-scored trade signals
-- **AI-friendly API** — OpenAPI spec endpoint, Swagger UI, actions catalog, batch API, webhook callbacks with HMAC-SHA256 signatures, natural language query endpoint, strategy-from-description via LLM, and standalone MCP server (`polyforge-mcp`, 22 tools) for Claude and other AI assistants
+- **AI-friendly API** — OpenAPI spec endpoint, Swagger UI, actions catalog, batch API, webhook callbacks with HMAC-SHA256 signatures, natural language query endpoint, strategy-from-description via LLM, and standalone MCP server (`polyforge-mcp`, 23 tools) compatible with Claude Desktop, Claude Code, Cursor, Windsurf, Zed, and Continue
 - **Official SDKs** — typed REST clients for TypeScript (`@polyforge/sdk`), Python (`polyforge`), and Rust (`polyforge`) with full API coverage
-- **Comprehensive API documentation** — interactive reference at `/api-docs` covering trading, conditional orders, copy trading, webhooks, whale feed, news signals, scores, and API keys with examples in curl, TypeScript, and Python
+- **Comprehensive API documentation** — interactive reference at `/api-docs` with copy buttons, response examples, Try It Out playground, Cmd+K search, "On this page" TOC, OpenAPI/Postman downloads, status badges, and a Changelog section; covers trading, conditional orders, copy trading, webhooks, whale feed, news signals, scores, and MCP setup for all supported AI clients
 - **Operational docs** — Backup & Recovery (RDS/Redis/EBS), Incident Response (P0-P3), Performance Tuning guides
 - **AWS infrastructure** — Terraform with tfvars template (20 variables), budget alerts ($800/month)
 - **Gasless trading** — platform absorbs Polygon gas fees with per-user daily budget tracking
 - **Educational onboarding** — guided tour, checklist widget, and 5 pre-built strategy templates for new users
 - **Future features planned** — arbitrage scanner, multi-platform aggregation, browser extension, mobile app, fund management, UMA oracle dashboard, LP/market making (see [`docs/19-future-features.md`](./docs/19-future-features.md))
 
-> **Current version: v6.7.0.** Strategy execution watching: `GET /api/v1/strategies/:id/events` SSE endpoint + `watchStrategy()` in TypeScript, Python, and Rust SDKs; MCP `get_strategy_events` polling tool. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
+> **Current version: v6.8.0.** API docs redesigned with 9 new features (Try It Out, search, copy buttons, response examples, TOC, Changelog); MCP server now documented for Claude, Cursor, Windsurf, Zed, and Continue; admin app design tokens standardized; light theme WCAG contrast fixed. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
 
 ---
 

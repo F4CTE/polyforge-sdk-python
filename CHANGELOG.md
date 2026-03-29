@@ -5,6 +5,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.8.0] — 2026-03-29
+
+### Added
+- **API docs — 9 new features** (`/api-docs`):
+  - Copy buttons on all code and response blocks (clipboard API, 2 s check icon feedback)
+  - Response JSON examples for key endpoints (Markets, Strategies, Portfolio, Orders)
+  - Sidebar search with Cmd+K / Ctrl+K shortcut — filters nav groups and endpoint summaries simultaneously
+  - Mobile docs sidebar overlay with `BookOpen` toggle in the breadcrumb bar
+  - "On this page" TOC panel (xl screens) listing every endpoint in the active section with method badge
+  - OpenAPI spec (JSON) and Postman collection download links in sidebar footer
+  - Status badges (`beta`, `deprecated`) on endpoint cards
+  - Try It Out playground — inline API key input, path param fields, JSON body editor, live response display
+  - Changelog section in the docs with 5 dated entries tagged Feature / Breaking / Improvement / Fix
+- **MCP Server docs expanded to all MCP-compatible AI clients** — Cursor, Windsurf, Zed, Continue.dev, and custom integrations now documented alongside Claude Desktop and Claude Code; nav label updated from "MCP Server (Claude)" to "MCP Server"
+
+### Changed
+- **Admin app design system** — replaced all raw `var(--color-pf-*)` CSS syntax with Tailwind token utilities across 19 files (sidebar, topbar, all pages); sidebar and topbar backgrounds changed from `bg-pf-base` to `bg-pf-surface` to match user-app visual hierarchy; sidebar collapse animation now uses `transition-[width,min-width] duration-200`
+- **Light theme WCAG compliance** — darkened accent and semantic colors to pass 4.5:1 minimum contrast on light backgrounds: `pf-cyan-400` → `#0891B2` (4.6:1 ✓), `pf-success` → `#059669` (5.1:1 ✓), `pf-danger` → `#dc2626` (5.6:1 ✓), `pf-warning` → `#d97706` (4.5:1 ✓), `pf-info` → `#2563eb` (6.0:1 ✓); adjusted base palette for softer contrast and stronger borders
+- **API docs refactored** — monolithic `api-docs.tsx` (789 lines) split into 6 focused modules, each under 500 lines: `api-docs-primitives.tsx`, `api-docs-sidebar.tsx`, `api-docs-endpoint-card.tsx`, `api-docs-content.tsx`, `api-docs-content-mcp.tsx`, `api-docs-nav.ts`
+
+---
+
 ## [6.7.0] — 2026-03-29
 
 ### Added
