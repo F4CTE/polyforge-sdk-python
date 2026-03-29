@@ -70,7 +70,7 @@ function InlineCode({ children }: { children: string }) {
 function FieldTable({ fields }: { fields: EndpointField[] }) {
   return (
     <div className="border border-pf-border rounded-pf-lg overflow-hidden">
-      <table className="w-full text-sm">
+      <table className="w-full text-sm" aria-label="Field definitions">
         <thead>
           <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border">
             <th scope="col" className="px-4 py-3 font-medium">Field</th>
@@ -390,8 +390,8 @@ export function Component() {
     if (epSection) return (
       <div className="space-y-3">
         <PageTitle title={epSection.title} count={epSection.eps.length} />
-        {epSection.eps.map((ep, i) => (
-          <EndpointCard key={i} ep={ep} lang={lang} setLang={setLang} />
+        {epSection.eps.map((ep) => (
+          <EndpointCard key={`${ep.method}-${ep.path}`} ep={ep} lang={lang} setLang={setLang} />
         ))}
       </div>
     );

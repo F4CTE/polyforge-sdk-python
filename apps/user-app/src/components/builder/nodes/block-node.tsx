@@ -69,9 +69,9 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
     fetch('/api/v1/strategies?limit=50', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : { data: [] }))
       .then((res) => {
-        const list: StrategyOption[] = (res.data ?? [])
-          .filter((s: any) => s.id !== currentStrategyId)
-          .map((s: any) => ({ id: s.id, name: s.name }));
+        const list: StrategyOption[] = ((res.data ?? []) as { id: string; name: string }[])
+          .filter((s) => s.id !== currentStrategyId)
+          .map((s) => ({ id: s.id, name: s.name }));
         setStrategies(list);
       })
       .catch(() => setStrategies([]));

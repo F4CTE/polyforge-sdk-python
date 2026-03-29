@@ -4,8 +4,19 @@ import { Flag, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-re
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime } from '@/lib/utils';
 
+interface ReportRow {
+  id: string;
+  reporterUsername: string;
+  targetType: string;
+  targetName?: string;
+  reason: string;
+  status: string;
+  createdAt: string;
+  [key: string]: unknown;
+}
+
 export function Component() {
-  const [reports, setReports] = useState<Record<string, unknown>[]>([]);
+  const [reports, setReports] = useState<ReportRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [reviewingId, setReviewingId] = useState<string | null>(null);
@@ -23,7 +34,7 @@ export function Component() {
         page,
         limit,
       });
-      setReports(res.data ?? []);
+      setReports((res.data ?? []) as unknown as ReportRow[]);
       setTotal(res.total ?? 0);
     } catch {
       toast.error('Failed to load reports');
@@ -37,7 +48,7 @@ export function Component() {
   async function handleResolve(id: string, status: 'REVIEWED' | 'DISMISSED') {
     try {
       const updated = await adminApi.resolveReport(id, status, adminNote || undefined);
-      setReports((r) => r.map((rep) => (rep.id === id ? updated : rep)));
+      setReports((r) => r.map((rep) => (rep.id === id ? updated as unknown as ReportRow : rep)));
       setReviewingId(null);
       setAdminNote('');
       toast.success(`Report ${status.toLowerCase()}`);

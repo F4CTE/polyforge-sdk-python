@@ -154,21 +154,10 @@ export function Component() {
           </h3>
         </div>
         {loading ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <caption className="sr-only">Loading active invite codes</caption>
-              <tbody>
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <tr key={i}>
-                    {Array.from({ length: 4 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-pf-surface rounded animate-pulse" />
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-3" role="status" aria-label="Loading invite codes">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-10 bg-[var(--color-pf-bg)] rounded animate-pulse" />
+            ))}
           </div>
         ) : invites.length === 0 ? (
           <div className="text-center py-12">
@@ -185,7 +174,7 @@ export function Component() {
                   <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Code</th>
                   <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">Remaining Uses</th>
                   <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-[var(--color-pf-text-tertiary)] uppercase">TTL</th>
-                  <th scope="col" className="text-right px-3 py-2"></th>
+                  <th scope="col" className="text-right px-3 py-2"><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody>

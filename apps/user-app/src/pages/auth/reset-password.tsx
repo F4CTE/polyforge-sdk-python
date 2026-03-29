@@ -72,7 +72,7 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg">
           {!done ? (
             <>
-              <h2 className="text-xl font-semibold text-pf-text mb-1">Set new password</h2>
+              <h1 className="text-xl font-semibold text-pf-text mb-1">Set new password</h1>
               <p className="text-sm text-pf-text-muted mb-6">Choose a strong password.</p>
 
               {error && (
@@ -140,7 +140,7 @@ export function Component() {
               <div className="size-16 rounded-full bg-pf-success/10 flex items-center justify-center mx-auto mb-4">
                 <Check className="size-8 text-pf-success" />
               </div>
-              <h2 className="text-xl font-semibold text-pf-text mb-2">Password reset</h2>
+              <h1 className="text-xl font-semibold text-pf-text mb-2">Password reset</h1>
               <p className="text-sm text-pf-text-muted mb-6">You can now sign in with your new password.</p>
               <Link
                 to="/login"

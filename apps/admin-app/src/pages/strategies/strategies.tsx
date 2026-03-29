@@ -4,8 +4,19 @@ import { ChevronLeft, ChevronRight, Square, Zap, AlertCircle } from 'lucide-reac
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDate } from '@/lib/utils';
 
+interface StrategyRow {
+  id: string;
+  name: string;
+  username: string;
+  status: string;
+  execMode: string;
+  visibility: string;
+  createdAt: string;
+  [key: string]: unknown;
+}
+
 export function Component() {
-  const [strategies, setStrategies] = useState<Record<string, unknown>[]>([]);
+  const [strategies, setStrategies] = useState<StrategyRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -19,7 +30,7 @@ export function Component() {
     setError(false);
     try {
       const res = await adminApi.strategies({ page, limit });
-      setStrategies(res.data ?? []);
+      setStrategies((res.data ?? []) as unknown as StrategyRow[]);
       setTotal(res.total ?? 0);
       setTotalPages(res.totalPages ?? 1);
     } catch {
@@ -34,12 +45,12 @@ export function Component() {
     load();
   }, [load]);
 
-  async function handleForceStop(id: string) {
+  async function handleForceStop(strategyId: string) {
     if (!window.confirm('Are you sure you want to force-stop this strategy?')) return;
     try {
-      await adminApi.forceStop(id);
+      await adminApi.forceStop(strategyId);
       setStrategies((s) =>
-        s.map((st) => (st.id === id ? { ...st, status: 'IDLE' } : st)),
+        s.map((st) => (st.id === strategyId ? { ...st, status: 'IDLE' } : st)),
       );
       toast.success('Strategy force-stopped');
     } catch {
@@ -103,8 +114,8 @@ export function Component() {
                     <td className="px-4 py-3 font-medium text-[var(--color-pf-text)]">{s.name}</td>
                     <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{s.username}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(s.status ?? 'UNKNOWN')}`}>
-                        {s.status ?? 'UNKNOWN'}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(s.status)}`}>
+                        {s.status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-[var(--color-pf-text-secondary)] capitalize">{s.execMode}</td>

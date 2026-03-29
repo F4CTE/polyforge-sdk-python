@@ -6,9 +6,24 @@ import { formatDateTime } from '@/lib/utils';
 
 type LogTab = 'audit' | 'events' | 'logins';
 
+interface LogEntry {
+  id: string;
+  createdAt: string;
+  action?: string;
+  target?: string;
+  targetId?: string;
+  ip?: string;
+  type?: string;
+  payload?: unknown;
+  username?: string;
+  success?: boolean;
+  failReason?: string;
+  [key: string]: unknown;
+}
+
 export function Component() {
   const [tab, setTab] = useState<LogTab>('audit');
-  const [logs, setLogs] = useState<Record<string, unknown>[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -18,11 +33,11 @@ export function Component() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      let res: { data?: Record<string, unknown>[]; totalPages?: number };
+      let res: { data?: unknown[]; totalPages?: number };
       if (tab === 'audit') res = await adminApi.auditLogs({ page, limit });
       else if (tab === 'events') res = await adminApi.eventLogs({ page, limit });
       else res = await adminApi.loginLogs({ page, limit });
-      setLogs(res.data ?? []);
+      setLogs((res.data ?? []) as LogEntry[]);
       setTotalPages(res.totalPages ?? 1);
     } catch {
       toast.error('Failed to load logs');

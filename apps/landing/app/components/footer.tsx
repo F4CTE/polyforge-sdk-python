@@ -124,9 +124,9 @@ export function Footer() {
           <nav className="flex gap-8 md:gap-16 flex-wrap flex-1" aria-label="Footer navigation">
             {footerLinks.map((col) => (
               <div key={col.title} className="min-w-[120px]">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-pf-text-muted mb-3.5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-pf-text-muted mb-3.5">
                   {col.title}
-                </h4>
+                </p>
                 <ul className="flex flex-col gap-2.5">
                   {col.links.map((link) => {
                     const isExternal = link.href.startsWith('http');

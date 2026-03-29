@@ -25,11 +25,19 @@ interface HealthData {
   redis: { status: string; memoryUsageMb: number };
 }
 
+interface AuditLogEntry {
+  id: string;
+  action: string;
+  target?: string;
+  targetId?: string;
+  createdAt: string;
+}
+
 export function Component() {
   const { isSuperAdmin } = useAdminAuthStore();
   const [health, setHealth] = useState<HealthData | null>(null);
   const [config, setConfig] = useState<{ inviteOnly: boolean } | null>(null);
-  const [auditLogs, setAuditLogs] = useState<Record<string, unknown>[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeStrategies: 0,
@@ -85,7 +93,7 @@ export function Component() {
     } else { setStatsError(true); }
 
     if (logsResult.status === 'fulfilled') {
-      setAuditLogs(Array.isArray(logsResult.value?.data) ? logsResult.value.data : []);
+      setAuditLogs(Array.isArray(logsResult.value?.data) ? logsResult.value.data as unknown as AuditLogEntry[] : []);
     } else { setLogsError(true); }
 
     if (rlResult.status === 'fulfilled') setRateLimits(rlResult.value);
@@ -340,8 +348,8 @@ export function Component() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--color-pf-border)]">
-                    {rateLimits.topOffenders.slice(0, 10).map((entry, i) => (
-                      <tr key={i}>
+                    {rateLimits.topOffenders.slice(0, 10).map((entry) => (
+                      <tr key={entry.key}>
                         <td className="py-1.5 font-mono text-[var(--color-pf-text-secondary)] truncate max-w-[200px]">{entry.key}</td>
                         <td className={`py-1.5 text-right font-mono ${entry.hits > 50 ? 'text-pf-danger' : 'text-[var(--color-pf-text)]'}`}>{entry.hits}</td>
                         <td className="py-1.5 text-right font-mono text-[var(--color-pf-text-secondary)]">{entry.ttl}</td>
@@ -388,7 +396,7 @@ export function Component() {
                     {log.action}
                   </span>
                   <span className="text-sm text-[var(--color-pf-text-secondary)]">
-                    {log.target ? `${log.target}` : ''}
+                    {log.target ?? ''}
                     {log.targetId ? ` #${log.targetId.slice(0, 8)}` : ''}
                   </span>
                 </div>

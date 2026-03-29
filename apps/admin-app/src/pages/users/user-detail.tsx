@@ -5,11 +5,41 @@ import { ArrowLeft, Ban, CheckCircle, Key, Trash2 } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDate, formatDateTime } from '@/lib/utils';
 
+interface UserDetail {
+  id: string;
+  username: string;
+  email: string;
+  status: string;
+  suspended: boolean;
+  suspendReason?: string | null;
+  createdAt: string;
+  lastSeen: string;
+  strategyCount: number;
+  orderCount: number;
+  limits?: {
+    maxStrategies: number;
+    maxOrdersPerMinute: number;
+    maxPositionSizeUsdc: number;
+    maxDailyLossUsdc: number;
+  };
+  [key: string]: unknown;
+}
+
+interface ApiKeyView {
+  id: string;
+  name: string;
+  prefix: string;
+  scopes: string[];
+  createdAt: string;
+  revoked: boolean;
+  [key: string]: unknown;
+}
+
 export function Component() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [user, setUser] = useState<Record<string, unknown> | null>(null);
-  const [apiKeys, setApiKeys] = useState<Record<string, unknown>[]>([]);
+  const [user, setUser] = useState<UserDetail | null>(null);
+  const [apiKeys, setApiKeys] = useState<ApiKeyView[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSuspendDialog, setShowSuspendDialog] = useState(false);
   const [suspendReason, setSuspendReason] = useState('');
@@ -23,8 +53,8 @@ export function Component() {
           adminApi.user(id!),
           adminApi.userApiKeys(id!),
         ]);
-        setUser(userRes);
-        setApiKeys(keysRes?.data ?? []);
+        setUser(userRes as unknown as UserDetail);
+        setApiKeys((keysRes?.data ?? []) as unknown as ApiKeyView[]);
       } catch {
         toast.error('Failed to load user');
       } finally {
@@ -71,7 +101,7 @@ export function Component() {
     setConfirmRevokeKeyId(null);
     try {
       await adminApi.revokeUserApiKey(id, keyId);
-      setApiKeys((keys) => keys.map((k) => (k.id === keyId ? { ...k, revoked: true } : k)));
+      setApiKeys((keys) => keys.map((k): ApiKeyView => (k.id === keyId ? { ...k, revoked: true } : k)));
       toast.success('API key revoked');
     } catch {
       toast.error('Failed to revoke key');

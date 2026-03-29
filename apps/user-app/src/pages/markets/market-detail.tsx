@@ -204,7 +204,7 @@ export function Component() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [tradeSuccess, setTradeSuccess] = useState('');
   const [tradeError, setTradeError] = useState('');
-  const [myOrders, setMyOrders] = useState<any[]>([]);
+  const [myOrders, setMyOrders] = useState<Array<{ id: string; side: string; outcome: string; size: string; price: string; status: string }>>([]);
   const [loadingMyOrders, setLoadingMyOrders] = useState(false);
 
   // Load market
@@ -424,8 +424,8 @@ export function Component() {
       setTradeSuccess(`Order placed (${data.orderId.slice(0, 8)}...)`);
       setTradeAmount('');
       loadMyOrders();
-    } catch (err: any) {
-      setTradeError(err.message);
+    } catch (err: unknown) {
+      setTradeError(err instanceof Error ? err.message : 'Order failed');
     } finally {
       setPlacingOrder(false);
     }
@@ -455,9 +455,9 @@ export function Component() {
       {/* Back */}
       <Link
         to="/markets"
-        className="inline-flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
       >
-        <ArrowLeft className="size-3.5" /> Markets
+        <ArrowLeft className="size-3.5" aria-hidden="true" /> Markets
       </Link>
 
       {loadingMarket && <DetailSkeleton />}
@@ -790,8 +790,9 @@ export function Component() {
 
               {/* Price input */}
               <div className="mt-3">
-                <label className="block text-xs font-medium text-pf-text-secondary mb-1">Price</label>
+                <label htmlFor="trade-price" className="block text-xs font-medium text-pf-text-secondary mb-1">Price</label>
                 <input
+                  id="trade-price"
                   type="number"
                   step="0.01"
                   min="0.01"
@@ -804,9 +805,9 @@ export function Component() {
                 />
               </div>
 
-              {/* Market order checkbox */}
-              <label className="flex items-center gap-2 mt-2 cursor-pointer">
+              <label htmlFor="trade-market-order" className="flex items-center gap-2 mt-2 cursor-pointer">
                 <input
+                  id="trade-market-order"
                   type="checkbox"
                   checked={isMarketOrder}
                   onChange={(e) => setIsMarketOrder(e.target.checked)}
@@ -815,11 +816,11 @@ export function Component() {
                 <span className="text-xs text-pf-text-secondary">Market Order</span>
               </label>
 
-              {/* Amount input */}
               <div className="mt-3">
-                <label className="block text-xs font-medium text-pf-text-secondary mb-1">Amount</label>
+                <label htmlFor="trade-amount" className="block text-xs font-medium text-pf-text-secondary mb-1">Amount</label>
                 <div className="relative">
                   <input
+                    id="trade-amount"
                     type="number"
                     step="1"
                     min="1"
@@ -885,7 +886,7 @@ export function Component() {
                   <p className="mt-2 text-xs text-pf-text-muted">No open orders</p>
                 ) : (
                   <div className="mt-2 space-y-1">
-                    {myOrders.map((order: any) => (
+                    {myOrders.map((order) => (
                       <div
                         key={order.id}
                         className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-pf-sm bg-pf-surface border border-pf-border-subtle text-xs"
@@ -921,7 +922,7 @@ export function Component() {
 
           {/* Strategies on this market */}
           <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
-            <h3 className="text-sm font-medium text-pf-text mb-4">Strategies on This Market</h3>
+            <h2 className="text-sm font-medium text-pf-text mb-4">Strategies on This Market</h2>
             <div className="flex flex-col items-center py-6 text-center">
               <Zap className="size-6 text-pf-text-muted mb-2" />
               <p className="text-sm text-pf-text-muted">No strategies running on this market yet.</p>
@@ -940,7 +941,7 @@ export function Component() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Newspaper className="size-4 text-pf-text-muted" />
-                <h3 className="text-sm font-medium text-pf-text">Related News</h3>
+                <h2 className="text-sm font-medium text-pf-text">Related News</h2>
               </div>
               <Link
                 to={`/news?market=${id}`}
@@ -1001,7 +1002,7 @@ export function Component() {
           {/* Description */}
           {market.description && (
             <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
-              <h3 className="text-sm font-medium text-pf-text mb-2">About</h3>
+              <h2 className="text-sm font-medium text-pf-text mb-2">About</h2>
               <p className="text-sm text-pf-text-secondary leading-relaxed">{market.description}</p>
             </div>
           )}
@@ -1025,8 +1026,9 @@ export function Component() {
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium text-pf-text-secondary mb-1.5">Trigger Price</label>
+                    <label htmlFor="cond-trigger-price-dialog" className="block text-xs font-medium text-pf-text-secondary mb-1.5">Trigger Price</label>
                     <input
+                      id="cond-trigger-price-dialog"
                       type="number"
                       step="0.01"
                       min="0.01"
@@ -1038,8 +1040,9 @@ export function Component() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-pf-text-secondary mb-1.5">Size (shares)</label>
+                    <label htmlFor="cond-size-dialog" className="block text-xs font-medium text-pf-text-secondary mb-1.5">Size (shares)</label>
                     <input
+                      id="cond-size-dialog"
                       type="number"
                       step="1"
                       min="1"
@@ -1091,10 +1094,11 @@ export function Component() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium text-pf-text-secondary mb-1.5">
+                    <label htmlFor="run-strategy-select" className="block text-xs font-medium text-pf-text-secondary mb-1.5">
                       Select Strategy
                     </label>
                     <select
+                      id="run-strategy-select"
                       value={selectedStrategyId}
                       onChange={(e) => setSelectedStrategyId(e.target.value)}
                       className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"

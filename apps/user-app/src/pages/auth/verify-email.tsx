@@ -101,7 +101,7 @@ export function Component() {
               <div className="size-16 rounded-full bg-pf-success/10 flex items-center justify-center mx-auto mb-4">
                 <Check className="size-8 text-pf-success" />
               </div>
-              <h2 className="text-xl font-semibold text-pf-text mb-2">Email verified!</h2>
+              <h1 className="text-xl font-semibold text-pf-text mb-2">Email verified!</h1>
               <p className="text-sm text-pf-text-muted mb-6">Your account is now active.</p>
               <Link
                 to="/markets"
@@ -118,7 +118,7 @@ export function Component() {
               <div className="size-16 rounded-full bg-pf-danger/10 flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="size-8 text-pf-danger" />
               </div>
-              <h2 className="text-xl font-semibold text-pf-text mb-2">Verification failed</h2>
+              <h1 className="text-xl font-semibold text-pf-text mb-2">Verification failed</h1>
               <p className="text-sm text-pf-danger mb-6">{error}</p>
               <button
                 type="button"
@@ -137,7 +137,7 @@ export function Component() {
               <div className="size-16 rounded-full bg-pf-cyan-500/10 flex items-center justify-center mx-auto mb-4">
                 <Mail className="size-8 text-pf-cyan-500" />
               </div>
-              <h2 className="text-xl font-semibold text-pf-text mb-2">Check your email</h2>
+              <h1 className="text-xl font-semibold text-pf-text mb-2">Check your email</h1>
               <p className="text-sm text-pf-text-muted mb-4">
                 We sent a verification link to{' '}
                 {user?.email ? <strong className="text-pf-text">{user.email}</strong> : 'your email'}

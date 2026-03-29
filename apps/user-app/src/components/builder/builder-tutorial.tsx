@@ -30,9 +30,9 @@ const STEPS: TutorialStep[] = [
     title: 'Safety Blocks — Always Active',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md" style={{ backgroundColor: '#ef444422', border: '1px solid #ef444444' }}>
-          <Shield className="size-4 shrink-0" style={{ color: '#ef4444' }} />
-          <span className="text-sm font-medium" style={{ color: '#ef4444' }}>Safety</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-red-500/[0.13] border border-red-500/[0.27]">
+          <Shield className="size-4 shrink-0 text-red-500" />
+          <span className="text-sm font-medium text-red-500">Safety</span>
         </div>
         <p className="text-sm text-pf-text-secondary leading-relaxed">
           Safety blocks are <strong className="text-pf-text">always enforced globally</strong> — they protect every execution path, every tick. They have no connection handles because they can't be scoped.
@@ -47,16 +47,16 @@ const STEPS: TutorialStep[] = [
     title: 'Trigger Blocks — Must Be Wired',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md" style={{ backgroundColor: '#f59e0b22', border: '1px solid #f59e0b44' }}>
-          <Zap className="size-4 shrink-0" style={{ color: '#f59e0b' }} />
-          <span className="text-sm font-medium" style={{ color: '#f59e0b' }}>Trigger</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-amber-500/[0.13] border border-amber-500/[0.27]">
+          <Zap className="size-4 shrink-0 text-amber-500" />
+          <span className="text-sm font-medium text-amber-500">Trigger</span>
         </div>
         <p className="text-sm text-pf-text-secondary leading-relaxed">
           Triggers detect when something happens (e.g. price crosses a threshold). They only fire if they have an <strong className="text-pf-text">outgoing connection</strong> — the wire tells the engine where to route execution.
         </p>
-        <div className="flex items-center gap-2 p-2 rounded-pf text-xs" style={{ backgroundColor: '#f59e0b11' }}>
-          <Unlink className="size-3 shrink-0" style={{ color: '#f59e0b' }} />
-          <span style={{ color: '#f59e0b' }}>Unwired triggers show a "Not wired" badge and are dimmed — they won't execute.</span>
+        <div className="flex items-center gap-2 p-2 rounded-pf text-xs bg-amber-500/[0.07]">
+          <Unlink className="size-3 shrink-0 text-amber-500" />
+          <span className="text-amber-500">Unwired triggers show a &ldquo;Not wired&rdquo; badge and are dimmed — they won&rsquo;t execute.</span>
         </div>
       </div>
     ),
@@ -65,16 +65,16 @@ const STEPS: TutorialStep[] = [
     title: 'Condition Blocks — Global or Scoped',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md" style={{ backgroundColor: '#06b6d422', border: '1px solid #06b6d444' }}>
-          <Filter className="size-4 shrink-0" style={{ color: '#06b6d4' }} />
-          <span className="text-sm font-medium" style={{ color: '#06b6d4' }}>Condition</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-cyan-500/[0.13] border border-cyan-500/[0.27]">
+          <Filter className="size-4 shrink-0 text-cyan-500" />
+          <span className="text-sm font-medium text-cyan-500">Condition</span>
         </div>
         <p className="text-sm text-pf-text-secondary leading-relaxed">
           Conditions are gates — they let execution through only when their rule passes.
         </p>
         <ul className="space-y-2 text-sm text-pf-text-secondary">
           <li className="flex items-start gap-2">
-            <Globe className="size-3 mt-0.5 shrink-0" style={{ color: '#06b6d4' }} />
+            <Globe className="size-3 mt-0.5 shrink-0 text-cyan-500" />
             <span><strong className="text-pf-text">Unwired:</strong> acts as a <em>global gate</em> — all execution paths must pass it.</span>
           </li>
           <li className="flex items-start gap-2">
@@ -89,16 +89,16 @@ const STEPS: TutorialStep[] = [
     title: 'Action Blocks — Must Be Wired',
     content: (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md" style={{ backgroundColor: '#22c55e22', border: '1px solid #22c55e44' }}>
-          <Play className="size-4 shrink-0" style={{ color: '#22c55e' }} />
-          <span className="text-sm font-medium" style={{ color: '#22c55e' }}>Action</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-md bg-green-500/[0.13] border border-green-500/[0.27]">
+          <Play className="size-4 shrink-0 text-green-500" />
+          <span className="text-sm font-medium text-green-500">Action</span>
         </div>
         <p className="text-sm text-pf-text-secondary leading-relaxed">
           Actions execute trades — buy, sell, close positions, run sub-strategies. They only execute if they have an <strong className="text-pf-text">incoming connection</strong> from a trigger or condition.
         </p>
-        <div className="flex items-center gap-2 p-2 rounded-pf text-xs" style={{ backgroundColor: '#f59e0b11' }}>
-          <Unlink className="size-3 shrink-0" style={{ color: '#f59e0b' }} />
-          <span style={{ color: '#f59e0b' }}>Unwired actions are dimmed and won't execute — they need upstream context.</span>
+        <div className="flex items-center gap-2 p-2 rounded-pf text-xs bg-amber-500/[0.07]">
+          <Unlink className="size-3 shrink-0 text-amber-500" />
+          <span className="text-amber-500">Unwired actions are dimmed and won&rsquo;t execute — they need upstream context.</span>
         </div>
       </div>
     ),
@@ -183,12 +183,9 @@ export function BuilderTutorial() {
               onClick={() => setStep(i)}
               aria-label={`Go to step ${i + 1}`}
               aria-current={i === step ? 'step' : undefined}
-              className="rounded-full transition-all focus-visible:outline-none"
-              style={{
-                width: i === step ? 16 : 6,
-                height: 6,
-                backgroundColor: i === step ? 'var(--color-pf-cyan-500)' : 'var(--color-pf-border)',
-              }}
+              className={`rounded-full transition-all focus-visible:outline-none h-1.5 ${
+                i === step ? 'w-4 bg-pf-cyan-500' : 'w-1.5 bg-pf-border'
+              }`}
             />
           ))}
         </div>

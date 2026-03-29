@@ -176,7 +176,7 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Copy className="size-6 text-pf-cyan-400" />
+          <Copy className="size-6 text-pf-cyan-400" aria-hidden="true" />
           <h1 className="text-2xl font-semibold text-pf-text">Copy Trading</h1>
         </div>
         {!loading && configs.length > 0 && (

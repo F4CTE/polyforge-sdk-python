@@ -5,7 +5,20 @@ import { Search, ChevronLeft, ChevronRight, Check, X, Wifi, Shield, Users, Alert
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDate } from '@/lib/utils';
 
-function computeUserStatus(user: Record<string, unknown>): string {
+interface UserRow {
+  id: string;
+  username: string;
+  email: string;
+  emailVerified: boolean;
+  totpEnabled: boolean;
+  polymarketConnected: boolean;
+  suspended: boolean;
+  approved: boolean | null;
+  createdAt: string;
+  [key: string]: unknown;
+}
+
+function computeUserStatus(user: UserRow): string {
   if (user.suspended) return 'SUSPENDED';
   if (user.approved === false) return 'PENDING';
   if (user.polymarketConnected) return 'CONNECTED';
@@ -13,7 +26,7 @@ function computeUserStatus(user: Record<string, unknown>): string {
   return 'UNVERIFIED';
 }
 
-function isTestAccount(user: Record<string, unknown>): boolean {
+function isTestAccount(user: UserRow): boolean {
   const email = (user.email ?? '').toLowerCase();
   const username = (user.username ?? '').toLowerCase();
   if (email.endsWith('@e2e.dev.local') || email.includes('e2e.')) return true;
@@ -27,7 +40,7 @@ type SortDir = 'asc' | 'desc';
 
 export function Component() {
   const navigate = useNavigate();
-  const [users, setUsers] = useState<Record<string, unknown>[]>([]);
+  const [users, setUsers] = useState<UserRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -41,7 +54,7 @@ export function Component() {
 
   const limit = 20;
 
-  async function handleApprove(userId: string, username: string) {
+  async function handleApprove(userId: string, username: string | undefined) {
     try {
       await adminApi.approveUser(userId);
       toast.success(`${username} approved for beta access`);
@@ -49,7 +62,7 @@ export function Component() {
     } catch { toast.error('Failed to approve user'); }
   }
 
-  async function handleReject(userId: string, username: string) {
+  async function handleReject(userId: string, username: string | undefined) {
     if (!window.confirm(`Are you sure you want to reject ${username}?`)) return;
     try {
       await adminApi.rejectUser(userId);
@@ -62,7 +75,7 @@ export function Component() {
     setLoading(true);
     setError(false);
     try {
-      const params: Record<string, unknown> = {
+      const params: Record<string, string | number | boolean | undefined> = {
         page,
         limit,
         search: search || undefined,
@@ -72,10 +85,9 @@ export function Component() {
         params.suspended = true;
       }
       const res = await adminApi.users(params);
-      let data = res.data ?? [];
-      // Client-side filtering for statuses not supported by backend
+      let data = (res.data ?? []) as unknown as UserRow[];
       if (statusFilter && statusFilter !== 'SUSPENDED') {
-        data = data.filter((u: Record<string, unknown>) => computeUserStatus(u) === statusFilter);
+        data = data.filter((u) => computeUserStatus(u) === statusFilter);
       }
       setUsers(data);
       setTotal(statusFilter && statusFilter !== 'SUSPENDED' ? data.length : (res.total ?? 0));

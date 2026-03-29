@@ -140,16 +140,14 @@ export function Component() {
         const slots = new Set<string>();
 
         // Scan block configs for marketSlot values (strategy stores blocks as {id, type, config})
-        const scanBlocks = (blocks: any[]) => {
+        const scanBlocks = (blocks: Array<Record<string, unknown>>) => {
           if (!Array.isArray(blocks)) return;
           blocks.forEach(block => {
-            const cfg = block.config ?? block;
-            // Check for marketSlot key in config
+            const cfg = (block.config ?? block) as Record<string, unknown>;
             if (cfg.marketSlot && typeof cfg.marketSlot === 'string' && cfg.marketSlot.startsWith('$MARKET_')) {
               slots.add(cfg.marketSlot);
             }
-            // Also scan all config values for $MARKET_ references
-            Object.values(cfg).forEach((v: any) => {
+            Object.values(cfg).forEach((v: unknown) => {
               if (typeof v === 'string' && v.startsWith('$MARKET_')) slots.add(v);
             });
           });
@@ -303,13 +301,13 @@ export function Component() {
                   </div>
                   {(marketResults[slot.slot] ?? []).length > 0 && (
                     <div className="bg-pf-elevated border border-pf-border rounded-pf max-h-40 overflow-y-auto">
-                      {marketResults[slot.slot].map((m: any) => (
+                      {marketResults[slot.slot].map((m) => (
                         <button
                           type="button"
                           key={m.id}
                           onClick={() => {
                             setMarketBindings(prev => ({ ...prev, [slot.slot]: m.id }));
-                            setMarketSearch(prev => ({ ...prev, [slot.slot]: m.title ?? m.question }));
+                            setMarketSearch(prev => ({ ...prev, [slot.slot]: m.title ?? m.question ?? '' }));
                             setMarketResults(prev => ({ ...prev, [slot.slot]: [] }));
                           }}
                           className="w-full text-left px-3 py-2 text-xs text-pf-text hover:bg-pf-surface cursor-pointer transition-colors border-b border-pf-border-subtle last:border-b-0"

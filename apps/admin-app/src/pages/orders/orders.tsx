@@ -4,9 +4,29 @@ import { ChevronLeft, ChevronRight, RotateCcw, Trash2, AlertTriangle, ClipboardL
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime } from '@/lib/utils';
 
+interface OrderRow {
+  id: string;
+  username: string;
+  side: string;
+  status: string;
+  size: string | number;
+  price: string | number;
+  createdAt: string;
+  [key: string]: unknown;
+}
+
+interface DlqEntry {
+  intentId: string;
+  username: string;
+  lastError: string;
+  attempts: number;
+  enqueuedAt: string;
+  [key: string]: unknown;
+}
+
 export function Component() {
-  const [orders, setOrders] = useState<Record<string, unknown>[]>([]);
-  const [dlqEntries, setDlqEntries] = useState<Record<string, unknown>[]>([]);
+  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [dlqEntries, setDlqEntries] = useState<DlqEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -24,10 +44,10 @@ export function Component() {
         adminApi.orders({ page, limit, status: statusFilter || undefined }),
         adminApi.dlq(),
       ]);
-      setOrders(ordersRes.data ?? []);
+      setOrders((ordersRes.data ?? []) as unknown as OrderRow[]);
       setTotal(ordersRes.total ?? 0);
       setTotalPages(ordersRes.totalPages ?? 1);
-      setDlqEntries(dlqRes?.data ?? []);
+      setDlqEntries((dlqRes?.data ?? []) as unknown as DlqEntry[]);
     } catch {
       setError(true);
       toast.error('Failed to load orders');
@@ -217,8 +237,8 @@ export function Component() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(o.status ?? 'UNKNOWN')}`}>
-                        {o.status ?? 'UNKNOWN'}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(o.status)}`}>
+                        {o.status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right text-[var(--color-pf-text)]">{o.size}</td>

@@ -29,7 +29,7 @@ export function AppLayout() {
         Skip to main content
       </a>
       {/* Desktop sidebar */}
-      <div className="hidden md:block overflow-hidden" style={{ width: collapsed ? 64 : 240, minWidth: collapsed ? 64 : 240, transition: 'width 200ms, min-width 200ms' }}>
+      <div className={`hidden md:block overflow-hidden transition-[width,min-width] duration-200 ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
       </div>
 
@@ -37,7 +37,7 @@ export function AppLayout() {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} aria-hidden="true" />
-          <div className="relative z-50 h-full" style={{ width: 240 }}>
+          <div className="relative z-50 h-full w-60">
             <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
           </div>
         </div>

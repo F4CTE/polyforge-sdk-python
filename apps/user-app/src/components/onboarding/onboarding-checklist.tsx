@@ -83,16 +83,6 @@ export function OnboardingChecklist() {
     } catch { /* ignore parse errors */ }
   }, []);
 
-  // Only show for users who joined within the last 7 days
-  if (!user) return null;
-  const joinDate = new Date(user.createdAt);
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  if (joinDate < sevenDaysAgo) return null;
-
-  // Don't show if dismissed
-  if (dismissed) return null;
-
   const completedCount = CHECKLIST_ITEMS.filter(item => completed[item.key]).length;
   const allDone = completedCount === CHECKLIST_ITEMS.length;
 
@@ -105,6 +95,16 @@ export function OnboardingChecklist() {
     }, 2000);
     return () => clearTimeout(timer);
   }, [allDone]);
+
+  // Only show for users who joined within the last 7 days
+  if (!user) return null;
+  const joinDate = new Date(user.createdAt);
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  if (joinDate < sevenDaysAgo) return null;
+
+  // Don't show if dismissed
+  if (dismissed) return null;
 
   function toggleItem(key: string) {
     const next = { ...completed, [key]: !completed[key] };
@@ -153,7 +153,7 @@ export function OnboardingChecklist() {
 
       {/* Progress bar */}
       <div className="px-4 pt-2">
-        <div className="w-full h-1.5 bg-pf-overlay rounded-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed — ${Math.round((completedCount / CHECKLIST_ITEMS.length) * 100)}%`}>
+        <div className="w-full h-1.5 bg-pf-overlay rounded-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed`}>
           <div
             className="h-full bg-pf-cyan-500 rounded-full transition-all duration-500"
             style={{ width: `${(completedCount / CHECKLIST_ITEMS.length) * 100}%` }}

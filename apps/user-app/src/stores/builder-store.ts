@@ -100,7 +100,7 @@ interface BuilderState {
   setTags: (tags: string) => void;
 
   // Persistence
-  save: () => Promise<any>;
+  save: () => Promise<Record<string, unknown>>;
   loadStrategy: (id: string) => Promise<void>;
   reset: () => void;
 }
@@ -349,7 +349,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to load');
-      const s = await res.json() as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const s = await res.json() as Record<string, unknown>;
 
       const nodes: Node<BlockNodeData>[] = [];
       const canvasLayout = s.canvas as Record<string, unknown> | undefined;
@@ -365,7 +365,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         const items = (s[section] ?? []) as {
           id?: string;
           type: string;
-          config: Record<string, any>;
+          config: Record<string, string>;
         }[];
         items.forEach((b, i) => {
           const blockId = b.id || crypto.randomUUID();
@@ -397,7 +397,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       const storedLogicBlocks = (s.logicBlocks ?? canvasLayout?.logicBlocks ?? []) as {
         id?: string;
         type: string;
-        config: Record<string, any>;
+        config: Record<string, unknown>;
         outputs?: string[];
       }[];
       storedLogicBlocks.forEach((lb, i) => {
@@ -430,7 +430,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       const storedCalcBlocks = (s.calcBlocks ?? canvasLayout?.calcBlocks ?? []) as {
         id?: string;
         type: string;
-        config: Record<string, any>;
+        config: Record<string, unknown>;
       }[];
       storedCalcBlocks.forEach((cb, i) => {
         const cbId = cb.id || crypto.randomUUID();
@@ -496,12 +496,12 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
       set({
         strategyId: id,
-        name: s.name ?? '',
-        description: s.description ?? '',
-        execMode: s.execMode ?? 'TICK',
-        tickMs: s.tickMs ?? 1000,
-        visibility: s.visibility ?? 'PRIVATE',
-        tags: (s.tags ?? []).join(', '),
+        name: (s.name as string) ?? '',
+        description: (s.description as string) ?? '',
+        execMode: (s.execMode as string) ?? 'TICK',
+        tickMs: (s.tickMs as number) ?? 1000,
+        visibility: (s.visibility as string) ?? 'PRIVATE',
+        tags: ((s.tags as string[]) ?? []).join(', '),
         nodes,
         edges,
         loading: false,
@@ -608,12 +608,12 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
       if (!res.ok) {
         if (res.status === 401) throw new Error('SESSION_EXPIRED');
-        const err = await res.json().catch(() => ({})) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-        throw new Error(err.message ?? 'Save failed');
+        const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+        throw new Error((err.message as string) ?? 'Save failed');
       }
 
-      const saved = await res.json() as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-      set({ strategyId: saved.id, saving: false, dirty: false });
+      const saved = await res.json() as Record<string, unknown>;
+      set({ strategyId: saved.id as string, saving: false, dirty: false });
       return saved;
     } catch (err: unknown) {
       set({ saving: false });

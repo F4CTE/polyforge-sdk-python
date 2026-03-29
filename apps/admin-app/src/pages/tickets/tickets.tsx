@@ -5,9 +5,22 @@ import { ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime, priorityColor } from '@/lib/utils';
 
+interface TicketRow {
+  id: string;
+  subject: string;
+  status: string;
+  priority: string;
+  username?: string;
+  userId?: string;
+  assignedTo?: string;
+  assignedToName?: string;
+  createdAt: string;
+  [key: string]: unknown;
+}
+
 export function Component() {
   const navigate = useNavigate();
-  const [tickets, setTickets] = useState<Record<string, unknown>[]>([]);
+  const [tickets, setTickets] = useState<TicketRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -24,7 +37,7 @@ export function Component() {
         limit,
         status: statusFilter || undefined,
       });
-      setTickets(res.data ?? []);
+      setTickets((res.data ?? []) as unknown as TicketRow[]);
       setTotal(res.total ?? 0);
       setTotalPages(res.totalPages ?? 1);
     } catch {
@@ -106,10 +119,10 @@ export function Component() {
                     className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
                   >
                     <td className="px-4 py-3 font-medium text-[var(--color-pf-text)]">{t.subject}</td>
-                    <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{t.username ?? t.userId?.slice(0, 8)}</td>
+                    <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{t.username ?? (t.userId ? t.userId.slice(0, 8) : '')}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(t.status ?? 'UNKNOWN')}`}>
-                        {t.status ?? 'UNKNOWN'}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(t.status)}`}>
+                        {t.status}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -124,7 +137,7 @@ export function Component() {
                             {t.assignedToName?.[0]?.toUpperCase() ?? 'A'}
                           </div>
                           <span className="text-[var(--color-pf-text-secondary)] text-xs">
-                            {t.assignedToName ?? t.assignedTo.slice(0, 8)}
+                            {t.assignedToName ?? (t.assignedTo ? t.assignedTo.slice(0, 8) : '')}
                           </span>
                         </div>
                       ) : (

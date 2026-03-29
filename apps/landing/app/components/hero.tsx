@@ -39,8 +39,7 @@ export function Hero() {
         {/* Badge */}
         <div className="inline-flex items-center gap-2 text-[13px] font-medium text-pf-cyan-400 bg-pf-cyan-500/8 border border-pf-cyan-500/20 rounded-full px-3.5 py-1 mb-7">
           <span
-            className="w-[7px] h-[7px] rounded-full bg-pf-cyan-400"
-            style={{ animation: 'pulse-dot 2s infinite' }}
+            className="w-[7px] h-[7px] rounded-full bg-pf-cyan-400 animate-[pulse-dot_2s_infinite]"
           />
           Early Access &mdash; Limited Invites
         </div>

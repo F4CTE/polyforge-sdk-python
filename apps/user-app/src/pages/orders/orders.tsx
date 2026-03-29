@@ -570,7 +570,7 @@ export function Component() {
                     <th scope="col" className="px-4 py-3 font-medium">Status</th>
                     <th scope="col" className="px-4 py-3 font-medium text-right">Expires</th>
                     <th scope="col" className="px-4 py-3 font-medium text-right">Created</th>
-                    <th scope="col" className="px-4 py-3 font-medium w-10"></th>
+                    <th scope="col" className="px-4 py-3 font-medium w-10"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-pf-border-subtle">
@@ -663,15 +663,17 @@ export function Component() {
                 type="button"
                 onClick={() => setCondPage(p => Math.max(1, p - 1))}
                 disabled={condPage === 1}
+                aria-label="Previous page"
                 className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="size-4" />
               </button>
-              <span className="text-sm font-mono text-pf-text-secondary">{condPage} / {condTotalPages}</span>
+              <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {condPage} of {condTotalPages}</span>
               <button
                 type="button"
                 onClick={() => setCondPage(p => Math.min(condTotalPages, p + 1))}
                 disabled={condPage === condTotalPages}
+                aria-label="Next page"
                 className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight className="size-4" />

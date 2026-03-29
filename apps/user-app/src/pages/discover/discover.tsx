@@ -232,8 +232,8 @@ export function Component() {
 
                 {/* Footer stats */}
                 <div className="flex items-center gap-3 text-sm text-pf-text-muted pt-1">
-                  <span className="flex items-center gap-1"><Heart className="size-3.5" /> {s.likeCount}</span>
-                  <span className="flex items-center gap-1"><GitFork className="size-3.5" /> {s.forkCount}</span>
+                  <span className="flex items-center gap-1"><Heart className="size-3.5" aria-hidden="true" /> {s.likeCount}</span>
+                  <span className="flex items-center gap-1"><GitFork className="size-3.5" aria-hidden="true" /> {s.forkCount}</span>
                   <span className="ml-auto text-[11px] text-pf-text-muted">&bull;</span>
                   <span className="font-mono text-[11px]">{formatDate(s.createdAt)}</span>
                 </div>

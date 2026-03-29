@@ -54,7 +54,7 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-8 shadow-pf-lg">
           {!sent ? (
             <>
-              <h2 className="text-xl font-semibold text-pf-text mb-1">Reset password</h2>
+              <h1 className="text-xl font-semibold text-pf-text mb-1">Reset password</h1>
               <p className="text-sm text-pf-text-muted mb-6">We&apos;ll send you a reset link.</p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -93,7 +93,7 @@ export function Component() {
               <div className="size-16 rounded-full bg-pf-cyan-500/10 flex items-center justify-center mx-auto mb-4">
                 <Check className="size-8 text-pf-cyan-500" />
               </div>
-              <h2 className="text-xl font-semibold text-pf-text mb-2">Check your inbox</h2>
+              <h1 className="text-xl font-semibold text-pf-text mb-2">Check your inbox</h1>
               <p className="text-sm text-pf-text-muted">
                 If an account with that email exists, we&apos;ve sent a reset link.
               </p>

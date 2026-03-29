@@ -141,8 +141,8 @@ export function Component() {
   const [loadingPortfolio, setLoadingPortfolio] = useState(true);
   const [loadingChart, setLoadingChart] = useState(true);
   const [loadingPaper, setLoadingPaper] = useState(false);
-  const [closingPosition, setClosingPosition] = useState<Record<string, boolean>>({});
-  const [redeemingPosition, setRedeemingPosition] = useState<Record<string, boolean>>({});
+  const [closingPosition, setClosingPosition] = useState<Record<string, boolean | undefined>>({});
+  const [redeemingPosition, setRedeemingPosition] = useState<Record<string, boolean | undefined>>({});
   const [resettingPaper, setResettingPaper] = useState(false);
 
   const loadPortfolio = useCallback(async () => {
@@ -583,12 +583,12 @@ export function Component() {
                       <div role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 max-w-sm mx-4 shadow-pf-lg" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2 mb-3">
                           <AlertTriangle className="size-5 text-pf-danger" />
-                          <h3 id="reset-dialog-title" className="text-sm font-semibold text-pf-text">Reset Paper Account</h3>
+                          <h2 id="reset-dialog-title" className="text-sm font-semibold text-pf-text">Reset Paper Account</h2>
                         </div>
                         <p className="text-sm text-pf-text-secondary mb-4">This will delete all paper positions and orders. This cannot be undone.</p>
                         <div className="flex justify-end gap-2">
-                          <button type="button" onClick={() => setShowResetConfirm(false)} className="px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface transition-colors">Cancel</button>
-                          <button type="button" onClick={resetPaper} className="px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/90 transition-colors">Reset</button>
+                          <button type="button" onClick={() => setShowResetConfirm(false)} className="px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface cursor-pointer transition-colors">Cancel</button>
+                          <button type="button" onClick={resetPaper} className="px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/90 cursor-pointer transition-colors">Reset</button>
                         </div>
                       </div>
                     </div>

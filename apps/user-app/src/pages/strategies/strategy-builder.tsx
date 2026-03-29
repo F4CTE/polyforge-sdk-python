@@ -248,13 +248,15 @@ export function Component() {
             autoFocus
           />
         ) : (
-          <h1
-            className="text-lg font-semibold cursor-pointer hover:text-pf-cyan-400 transition-colors group flex items-center gap-2 truncate flex-1"
+          <button
+            type="button"
+            className="text-lg font-semibold cursor-pointer hover:text-pf-cyan-400 transition-colors group flex items-center gap-2 truncate flex-1 text-left text-pf-text bg-transparent border-none p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
             onClick={() => setEditingName(true)}
+            aria-label={`Edit strategy name: ${name || 'Untitled Strategy'}`}
           >
-            {name || 'Untitled Strategy'}
-            <Pencil size={14} className="opacity-0 group-hover:opacity-50 transition-opacity shrink-0" />
-          </h1>
+            <h1 className="text-lg font-semibold truncate">{name || 'Untitled Strategy'}</h1>
+            <Pencil size={14} className="opacity-0 group-hover:opacity-50 transition-opacity shrink-0" aria-hidden="true" />
+          </button>
         )}
 
         <div className="flex items-center gap-2 shrink-0">

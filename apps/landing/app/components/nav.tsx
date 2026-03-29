@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const MOBILE_NAV_LINKS = [
   { href: '#features', label: 'Features' },
@@ -84,6 +84,9 @@ function ThemeToggle() {
 
 export function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+  const toggleMobile = useCallback(() => setMobileOpen((prev) => !prev), []);
 
   useEffect(() => {
     function handleEscape(e: KeyboardEvent) {
@@ -169,7 +172,7 @@ export function Nav() {
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav-menu"
-          onClick={() => setMobileOpen(!mobileOpen)}
+          onClick={toggleMobile}
         >
           {mobileOpen ? (
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="text-pf-text-secondary" aria-hidden="true">
@@ -185,8 +188,9 @@ export function Nav() {
         </button>
       </div>
 
-      <nav
+      <div
         id="mobile-nav-menu"
+        role="navigation"
         aria-label="Mobile navigation"
         className={`${mobileOpen ? 'flex' : 'hidden'} md:hidden flex-col gap-1 px-6 pb-4 border-t border-pf-border-subtle`}
       >
@@ -194,7 +198,7 @@ export function Nav() {
           <a
             key={href}
             href={href}
-            onClick={() => setMobileOpen(false)}
+            onClick={closeMobile}
             className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
           >
             {label}
@@ -202,12 +206,12 @@ export function Nav() {
         ))}
         <a
           href="/register"
-          onClick={() => setMobileOpen(false)}
+          onClick={closeMobile}
           className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
         >
           Start building free
         </a>
-      </nav>
+      </div>
     </nav>
   );
 }

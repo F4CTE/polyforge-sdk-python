@@ -95,6 +95,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
   const [marketSearch, setMarketSearch] = useState<Record<string, string>>({});
   const [marketResults, setMarketResults] = useState<Record<string, Record<string, unknown>[]>>({});
 
+
   // ─── Live state ────────────────────────────────────────────────────
   const [live, setLive] = useState<LiveState>(INITIAL_LIVE);
 
@@ -123,9 +124,9 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
   useEffect(() => {
     const slots = new Set<string>();
     for (const node of nodes) {
-      const cfg = (node.data as any)?.config;
+      const cfg = (node.data as Record<string, unknown>)?.config as Record<string, unknown> | undefined;
       if (!cfg) continue;
-      Object.values(cfg).forEach((v: any) => {
+      Object.values(cfg).forEach((v) => {
         if (typeof v === 'string' && v.startsWith('$MARKET_')) slots.add(v);
       });
     }
@@ -159,32 +160,32 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
     function handleMsg(msg: WsMessage) {
       // Backtest events
       if (msg.type === 'BACKTEST_PROGRESS') {
-        const data = (msg.data ?? msg) as any;
+        const data = (msg.data ?? msg) as Record<string, unknown>;
         setBt(prev => {
           if (prev.runId && data.runId && data.runId !== prev.runId) return prev;
           return {
             ...prev,
             status: 'RUNNING',
-            progress: parseFloat(data.progress ?? prev.progress),
+            progress: parseFloat(String(data.progress ?? prev.progress)),
           };
         });
         // Flash trigger blocks to visualise the strategy evaluating each tick
         nodes
-          .filter((n) => n.type === 'blockNode' && (n.data as any).section === 'triggers')
+          .filter((n) => n.type === 'blockNode' && (n.data as Record<string, unknown>).section === 'triggers')
           .forEach((n) => fireBlock(n.id));
       }
       if (msg.type === 'BACKTEST_COMPLETED') {
-        const data = (msg.data ?? msg) as any;
+        const data = (msg.data ?? msg) as Record<string, unknown>;
         setBt(prev => {
           if (prev.runId && data.runId && data.runId !== prev.runId) return prev;
           return {
             ...prev,
             status: 'COMPLETED',
             progress: 100,
-            totalPnl: data.totalPnl ?? prev.totalPnl,
-            winRate: data.winRate ?? prev.winRate,
-            maxDrawdown: data.maxDrawdown ?? prev.maxDrawdown,
-            sharpeRatio: data.sharpeRatio ?? prev.sharpeRatio,
+            totalPnl: (data.totalPnl as string | null) ?? prev.totalPnl,
+            winRate: (data.winRate as string | null) ?? prev.winRate,
+            maxDrawdown: (data.maxDrawdown as string | null) ?? prev.maxDrawdown,
+            sharpeRatio: (data.sharpeRatio as string | null) ?? prev.sharpeRatio,
             totalOrders: data.totalOrders != null ? Number(data.totalOrders) : prev.totalOrders,
             filledOrders: data.filledOrders != null ? Number(data.filledOrders) : prev.filledOrders,
             hasDataGaps: !!data.hasDataGaps,
@@ -193,68 +194,66 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
         toast.success('Backtest completed');
       }
       if (msg.type === 'BACKTEST_FAILED') {
-        const data = (msg.data ?? msg) as any;
+        const data = (msg.data ?? msg) as Record<string, unknown>;
         setBt(prev => {
           if (prev.runId && data.runId && data.runId !== prev.runId) return prev;
-          return { ...prev, status: 'FAILED', error: data.error ?? data.reason ?? 'Backtest failed' };
+          return { ...prev, status: 'FAILED', error: (data.error as string) ?? (data.reason as string) ?? 'Backtest failed' };
         });
         toast.error('Backtest failed');
       }
 
       // Strategy events
       if (msg.type === 'STRATEGY_STARTED') {
-        const data = (msg.data ?? msg) as any;
+        const data = (msg.data ?? msg) as Record<string, unknown>;
         if (data.strategyId === strategyId) {
           setLive(prev => ({ ...prev, status: 'RUNNING', error: null }));
         }
       }
       if (msg.type === 'STRATEGY_STOPPED') {
-        const data = (msg.data ?? msg) as any;
+        const data = (msg.data ?? msg) as Record<string, unknown>;
         if (data.strategyId === strategyId) {
           setLive(prev => ({ ...prev, status: 'IDLE' }));
         }
       }
       if (msg.type === 'STRATEGY_PAUSED') {
-        const data = (msg.data ?? msg) as any;
+        const data = (msg.data ?? msg) as Record<string, unknown>;
         if (data.strategyId === strategyId) {
           setLive(prev => ({ ...prev, status: 'PAUSED' }));
         }
       }
       if (msg.type === 'STRATEGY_RESUMED') {
-        const data = (msg.data ?? msg) as any;
+        const data = (msg.data ?? msg) as Record<string, unknown>;
         if (data.strategyId === strategyId) {
           setLive(prev => ({ ...prev, status: 'RUNNING', error: null }));
         }
       }
       if (msg.type === 'STRATEGY_ERROR') {
-        const data = (msg.data ?? msg) as any;
+        const data = (msg.data ?? msg) as Record<string, unknown>;
         if (data.strategyId === strategyId) {
-          setLive(prev => ({ ...prev, status: 'ERROR', error: data.reason ?? 'Strategy error' }));
+          setLive(prev => ({ ...prev, status: 'ERROR', error: (data.reason as string) ?? 'Strategy error' }));
         }
       }
 
       // Order events (for live trades)
       if (msg.type === 'ORDER_FILLED') {
-        const data = (msg.data ?? msg) as any;
+        const data = (msg.data ?? msg) as Record<string, unknown>;
         setLive(prev => ({
           ...prev,
           ordersFilled: prev.ordersFilled + 1,
           recentTrades: [
-            { time: new Date().toISOString(), side: data.side ?? '?', market: data.tokenId ?? '', price: data.price ?? '0', amount: data.amount ?? '0', pnl: data.pnl ?? '0' },
+            { time: new Date().toISOString(), side: (data.side as string) ?? '?', market: (data.tokenId as string) ?? '', price: (data.price as string) ?? '0', amount: (data.amount as string) ?? '0', pnl: (data.pnl as string) ?? '0' },
             ...prev.recentTrades,
           ].slice(0, 50),
-          totalPnl: data.totalPnl ?? prev.totalPnl,
+          totalPnl: (data.totalPnl as string) ?? prev.totalPnl,
         }));
-        // Flash action blocks when an order fills — confirms execution reached the action
         nodes
-          .filter((n) => n.type === 'blockNode' && (n.data as any).section === 'actions')
+          .filter((n) => n.type === 'blockNode' && (n.data as Record<string, unknown>).section === 'actions')
           .forEach((n) => fireBlock(n.id));
       }
       if (msg.type === 'ORDER_PLACED') {
         setLive(prev => ({ ...prev, ordersPlaced: prev.ordersPlaced + 1 }));
-        // Flash action blocks on placement too (shows action dispatched)
         nodes
-          .filter((n) => n.type === 'blockNode' && (n.data as any).section === 'actions')
+          .filter((n) => n.type === 'blockNode' && (n.data as Record<string, unknown>).section === 'actions')
           .forEach((n) => fireBlock(n.id));
       }
     }
@@ -476,7 +475,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
 
       {/* ─── Panel content ────────────────────────────────────────── */}
       {expanded && (
-        <div className="px-4 pb-3 overflow-y-auto" style={{ maxHeight: '320px' }}>
+        <div className="px-4 pb-3 overflow-y-auto max-h-80">
           {activeTab === 'backtest' ? (
             <BacktestTab
               bt={bt}
@@ -539,8 +538,8 @@ function BacktestTab({
   setMarketBindings: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   marketSearch: Record<string, string>;
   setMarketSearch: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  marketResults: Record<string, any[]>;
-  setMarketResults: React.Dispatch<React.SetStateAction<Record<string, any[]>>>;
+  marketResults: Record<string, Record<string, unknown>[]>;
+  setMarketResults: React.Dispatch<React.SetStateAction<Record<string, Record<string, unknown>[]>>>;
   searchMarkets: (slot: string, query: string) => void;
   submitting: boolean;
   onSubmit: () => void;
@@ -723,8 +722,8 @@ function LiveTab({
   setMarketBindings: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   marketSearch: Record<string, string>;
   setMarketSearch: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  marketResults: Record<string, any[]>;
-  setMarketResults: React.Dispatch<React.SetStateAction<Record<string, any[]>>>;
+  marketResults: Record<string, Record<string, unknown>[]>;
+  setMarketResults: React.Dispatch<React.SetStateAction<Record<string, Record<string, unknown>[]>>>;
   searchMarkets: (slot: string, query: string) => void;
 }) {
   if (live.status === 'IDLE') {
@@ -913,8 +912,8 @@ function MarketBindingsSection({
   setMarketBindings: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   marketSearch: Record<string, string>;
   setMarketSearch: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  marketResults: Record<string, any[]>;
-  setMarketResults: React.Dispatch<React.SetStateAction<Record<string, any[]>>>;
+  marketResults: Record<string, Record<string, unknown>[]>;
+  setMarketResults: React.Dispatch<React.SetStateAction<Record<string, Record<string, unknown>[]>>>;
   searchMarkets: (slot: string, query: string) => void;
 }) {
   return (
@@ -941,18 +940,18 @@ function MarketBindingsSection({
             )}
             {(marketResults[slot.slot] ?? []).length > 0 && (
               <div className="absolute z-50 w-full mt-0.5 bg-pf-elevated border border-pf-border rounded-pf-sm max-h-32 overflow-y-auto shadow-pf-lg">
-                {marketResults[slot.slot].map((m: any) => (
+                {marketResults[slot.slot].map((m) => (
                   <button
                     type="button"
-                    key={m.id}
+                    key={m.id as string}
                     onClick={() => {
-                      setMarketBindings(prev => ({ ...prev, [slot.slot]: m.id }));
-                      setMarketSearch(prev => ({ ...prev, [slot.slot]: m.title ?? m.question }));
+                      setMarketBindings(prev => ({ ...prev, [slot.slot]: m.id as string }));
+                      setMarketSearch(prev => ({ ...prev, [slot.slot]: (m.title ?? m.question) as string }));
                       setMarketResults(prev => ({ ...prev, [slot.slot]: [] }));
                     }}
                     className="w-full text-left px-2 py-1.5 text-[11px] text-pf-text hover:bg-pf-surface transition-colors border-b border-pf-border-subtle last:border-b-0"
                   >
-                    {m.title ?? m.question}
+                    {(m.title ?? m.question) as string}
                   </button>
                 ))}
               </div>

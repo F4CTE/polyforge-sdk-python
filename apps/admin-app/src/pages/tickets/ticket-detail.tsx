@@ -5,16 +5,45 @@ import { ArrowLeft, Send } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime, timeAgo, priorityColor } from '@/lib/utils';
 
+interface TicketMessage {
+  id?: string;
+  body: string;
+  senderType?: string;
+  adminId?: string;
+  senderName?: string;
+  createdAt?: string;
+}
+
+interface TicketView {
+  id: string;
+  subject: string;
+  status: string;
+  priority: string;
+  category?: string;
+  username?: string;
+  userId?: string;
+  assignedTo?: string | null;
+  createdAt: string;
+  messages: TicketMessage[];
+  [key: string]: unknown;
+}
+
+interface AdminOption {
+  id: string;
+  displayName: string;
+  [key: string]: unknown;
+}
+
 export function Component() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [ticket, setTicket] = useState<Record<string, unknown> | null>(null);
+  const [ticket, setTicket] = useState<TicketView | null>(null);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [statusValue, setStatusValue] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
-  const [admins, setAdmins] = useState<Record<string, unknown>[]>([]);
+  const [admins, setAdmins] = useState<AdminOption[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -24,10 +53,11 @@ export function Component() {
           adminApi.ticket(id!),
           adminApi.listAdmins().catch(() => []),
         ]);
-        setTicket(ticketRes);
-        setStatusValue(ticketRes.status);
-        setAssignedTo((ticketRes.assignedTo as string | null) ?? '');
-        setAdmins(adminsRes);
+        const ticketData = ticketRes as unknown as TicketView;
+        setTicket(ticketData);
+        setStatusValue(ticketData.status);
+        setAssignedTo(ticketData.assignedTo ?? '');
+        setAdmins((adminsRes ?? []) as unknown as AdminOption[]);
       } catch {
         toast.error('Failed to load ticket');
       } finally {
@@ -45,7 +75,7 @@ export function Component() {
       const res = await adminApi.replyTicket(id, reply);
       setTicket((t) => t ? ({
         ...t,
-        messages: [...((t.messages as unknown[]) ?? []), res],
+        messages: [...(t.messages ?? []), res as unknown as TicketMessage],
       }) : t);
       setReply('');
       toast.success('Reply sent');
@@ -107,7 +137,7 @@ export function Component() {
     );
   }
 
-  const messages = ticket.messages ?? [];
+  const messages: TicketMessage[] = ticket.messages ?? [];
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -183,8 +213,8 @@ export function Component() {
 
       {/* Messages Thread */}
       <section aria-label="Ticket messages" className="space-y-3">
-        {messages.map((msg: Record<string, unknown>, i: number) => {
-          const isAdmin = msg.senderType === 'admin' || msg.adminId;
+        {messages.map((msg, i) => {
+          const isAdmin = msg.senderType === 'admin' || !!msg.adminId;
           return (
             <div
               key={msg.id ?? i}

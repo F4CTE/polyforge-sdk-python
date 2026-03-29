@@ -101,14 +101,13 @@ export function Component() {
         if (!r.ok) throw new Error('Not found');
         return r.json();
       })
-      .then((data: any) => {
+      .then((data: NewsArticle) => {
         if (cancelled) return;
-        // Normalise: flatten nested market into marketName on signals
         const article: NewsArticle = {
           ...data,
-          signals: (data.signals ?? []).map((s: any) => ({
+          signals: (data.signals ?? []).map((s) => ({
             ...s,
-            marketName: s.marketName ?? s.market?.title ?? 'Unknown market',
+            marketName: s.marketName ?? (s as NewsSignal & { market?: { title?: string } }).market?.title ?? 'Unknown market',
           })),
         };
         setArticle(article);

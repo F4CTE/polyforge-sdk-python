@@ -86,8 +86,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <aside
       data-tour="sidebar"
       aria-label="Main navigation"
-      className="flex flex-col h-full bg-pf-elevated border-r border-pf-border transition-all duration-200"
-      style={{ width: collapsed ? 64 : 240, minWidth: collapsed ? 64 : 240 }}
+      className={`flex flex-col h-full bg-pf-elevated border-r border-pf-border transition-all duration-200 ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 h-14 border-b border-pf-border">
@@ -142,7 +141,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     }`
                   }
                 >
-                  <item.icon size={18} className="shrink-0" />
+                  <item.icon size={18} className="shrink-0" aria-hidden="true" />
                   {!collapsed && <span>{item.label}</span>}
                 </NavLink>
               ))}
@@ -203,7 +202,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             }`
           }
         >
-          <Settings size={18} className="shrink-0" />
+          <Settings size={18} className="shrink-0" aria-hidden="true" />
           {!collapsed && <span>Settings</span>}
         </NavLink>
       </div>

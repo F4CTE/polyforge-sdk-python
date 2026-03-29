@@ -171,7 +171,7 @@ export function Component() {
         // Normalise: signals may include nested market object — flatten marketName
         const articles = (json.data ?? []).map(a => ({
           ...a,
-          signals: (a.signals ?? []).map((s: any) => ({
+          signals: (a.signals ?? []).map((s: NewsSignal & { market?: { title?: string } }) => ({
             ...s,
             marketName: s.marketName ?? s.market?.title ?? 'Unknown market',
           })),
@@ -191,7 +191,7 @@ export function Component() {
       const res = await fetch('/api/v1/news/signals?minConfidence=70&limit=10', { credentials: 'include' });
       if (res.ok) {
         const json = await res.json();
-        const signals: TopSignal[] = ((json.data ?? json) as any[]).map((s: any) => ({
+        const signals: TopSignal[] = ((json.data ?? json) as (TopSignal & { market?: { title?: string } })[]).map((s) => ({
           ...s,
           marketName: s.marketName ?? s.market?.title ?? 'Unknown market',
         }));
@@ -218,7 +218,7 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Newspaper className="size-6 text-pf-cyan-400" />
+          <Newspaper className="size-6 text-pf-cyan-400" aria-hidden="true" />
           <h1 className="text-2xl font-semibold text-pf-text">AI News &amp; Signals</h1>
         </div>
         <span className="text-sm text-pf-text-muted">{loading ? '...' : total} articles</span>

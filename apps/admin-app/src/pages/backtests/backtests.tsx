@@ -4,8 +4,20 @@ import { ChevronLeft, ChevronRight, FlaskConical, XCircle, Loader2 } from 'lucid
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime } from '@/lib/utils';
 
+interface BacktestRow {
+  id: string;
+  username: string;
+  strategyName?: string;
+  status: string;
+  totalPnl?: string;
+  winRate?: string;
+  createdAt: string;
+  completedAt?: string;
+  [key: string]: unknown;
+}
+
 export function Component() {
-  const [backtests, setBacktests] = useState<Record<string, unknown>[]>([]);
+  const [backtests, setBacktests] = useState<BacktestRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -31,7 +43,7 @@ export function Component() {
     setLoading(true);
     try {
       const res = await adminApi.backtests({ page, limit });
-      setBacktests(res.data ?? []);
+      setBacktests((res.data ?? []) as unknown as BacktestRow[]);
       setTotal(res.total ?? 0);
       setTotalPages(res.totalPages ?? 1);
     } catch {
@@ -45,7 +57,7 @@ export function Component() {
     load();
   }, [load]);
 
-  function getDuration(bt: Record<string, unknown>): string {
+  function getDuration(bt: BacktestRow): string {
     if (!bt.createdAt) return '-';
     const start = new Date(bt.createdAt).getTime();
     const end = bt.completedAt ? new Date(bt.completedAt).getTime() : Date.now();
@@ -105,8 +117,8 @@ export function Component() {
                     <td className="px-4 py-3 text-[var(--color-pf-text)]">{bt.username}</td>
                     <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{bt.strategyName ?? '-'}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(bt.status ?? 'UNKNOWN')}`}>
-                        {bt.status ?? 'UNKNOWN'}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(bt.status)}`}>
+                        {bt.status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-[var(--color-pf-text-secondary)]">{getDuration(bt)}</td>

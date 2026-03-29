@@ -31,12 +31,6 @@
   }
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* Glow & pattern backgrounds (extracted from inline styles) */
 .hero-glow {
   background: radial-gradient(

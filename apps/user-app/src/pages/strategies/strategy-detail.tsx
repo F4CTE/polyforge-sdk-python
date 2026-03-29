@@ -472,11 +472,11 @@ export function Component() {
           {/* Sub-Strategies */}
           {childStrategies.length > 0 && (
             <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-              <h3 className="text-sm font-medium text-pf-text mb-3 flex items-center gap-2">
+              <h2 className="text-sm font-medium text-pf-text mb-3 flex items-center gap-2">
                 <GitBranch className="size-4" />
                 Sub-Strategies
                 <span className="text-xs text-pf-text-muted">({childStrategies.length})</span>
-              </h3>
+              </h2>
               <div className="space-y-2">
                 {childStrategies.map((child) => {
                   const childStyle = STATUS_STYLES[child.status] ?? STATUS_STYLES.IDLE;
@@ -525,9 +525,9 @@ export function Component() {
                 .filter(({ blocks }) => blocks.length > 0)
                 .map(({ key, title, blocks }) => (
                   <div key={key}>
-                    <h4 className="text-xs font-medium text-pf-text-secondary uppercase tracking-wider mb-2">
+                    <h3 className="text-xs font-medium text-pf-text-secondary uppercase tracking-wider mb-2">
                       {title}
-                    </h4>
+                    </h3>
                     <div className="flex flex-wrap gap-2">
                       {blocks.map((b, i) => (
                         <span

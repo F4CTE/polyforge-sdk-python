@@ -71,7 +71,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
       const section = n.type === 'variableNode' ? 'variables'
         : n.type === 'logicNode' ? 'logic'
         : n.type === 'calcNode' ? 'calc'
-        : (n.data as Record<string, string>)?.section ?? 'unknown';
+        : (n.data as Record<string, unknown>)?.section as string ?? 'unknown';
       counts[section] = (counts[section] ?? 0) + 1;
     }
     return counts;

@@ -130,7 +130,7 @@ export function Component() {
       if (res.ok) {
         const json: WhaleFeedResponse = await res.json();
         // Normalise: API returns nested market object + detectedAt; flatten for UI
-        const trades: WhaleTrade[] = (json.data ?? []).map((t: any) => ({
+        const trades: WhaleTrade[] = (json.data ?? []).map((t: WhaleTrade & { market?: { title?: string; category?: string }; detectedAt?: string; createdAt?: string }) => ({
           ...t,
           marketName: t.marketName ?? t.market?.title ?? 'Unknown market',
           marketCategory: t.marketCategory ?? t.market?.category ?? '',
@@ -193,7 +193,7 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Fish className="size-6 text-pf-cyan-400" />
+          <Fish className="size-6 text-pf-cyan-400" aria-hidden="true" />
           <h1 className="text-2xl font-semibold text-pf-text">Whale Tracker</h1>
         </div>
         <div className="flex items-center gap-3">
