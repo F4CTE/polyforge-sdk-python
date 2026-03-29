@@ -8,13 +8,13 @@ import { statusColor, formatDateTime, timeAgo, priorityColor } from '@/lib/utils
 export function Component() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [ticket, setTicket] = useState<any>(null);
+  const [ticket, setTicket] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [statusValue, setStatusValue] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
-  const [admins, setAdmins] = useState<any[]>([]);
+  const [admins, setAdmins] = useState<Record<string, unknown>[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -43,7 +43,7 @@ export function Component() {
     setSending(true);
     try {
       const res = await adminApi.replyTicket(id, reply);
-      setTicket((t: any) => ({
+      setTicket((t) => ({
         ...t,
         messages: [...(t.messages ?? []), res],
       }));
@@ -61,7 +61,7 @@ export function Component() {
     try {
       await adminApi.updateTicket(id, { status: newStatus });
       setStatusValue(newStatus);
-      setTicket((t: any) => ({ ...t, status: newStatus }));
+      setTicket((t) => ({ ...t, status: newStatus }));
       toast.success(`Status updated to ${newStatus}`);
     } catch {
       toast.error('Failed to update status');

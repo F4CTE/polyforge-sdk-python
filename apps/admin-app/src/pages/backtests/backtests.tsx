@@ -5,7 +5,7 @@ import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime } from '@/lib/utils';
 
 export function Component() {
-  const [backtests, setBacktests] = useState<any[]>([]);
+  const [backtests, setBacktests] = useState<Record<string, unknown>[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -45,7 +45,7 @@ export function Component() {
     load();
   }, [load]);
 
-  function getDuration(bt: any): string {
+  function getDuration(bt: Record<string, unknown>): string {
     if (!bt.createdAt) return '-';
     const start = new Date(bt.createdAt).getTime();
     const end = bt.completedAt ? new Date(bt.completedAt).getTime() : Date.now();

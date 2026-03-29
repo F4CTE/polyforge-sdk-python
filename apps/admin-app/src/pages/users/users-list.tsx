@@ -5,7 +5,7 @@ import { Search, ChevronLeft, ChevronRight, Check, X, Wifi, Shield, Users, Alert
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDate } from '@/lib/utils';
 
-function computeUserStatus(user: any): string {
+function computeUserStatus(user: Record<string, unknown>): string {
   if (user.suspended) return 'SUSPENDED';
   if (user.approved === false) return 'PENDING';
   if (user.polymarketConnected) return 'CONNECTED';
@@ -13,7 +13,7 @@ function computeUserStatus(user: any): string {
   return 'UNVERIFIED';
 }
 
-function isTestAccount(user: any): boolean {
+function isTestAccount(user: Record<string, unknown>): boolean {
   const email = (user.email ?? '').toLowerCase();
   const username = (user.username ?? '').toLowerCase();
   if (email.endsWith('@e2e.dev.local') || email.includes('e2e.')) return true;
@@ -27,7 +27,7 @@ type SortDir = 'asc' | 'desc';
 
 export function Component() {
   const navigate = useNavigate();
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<Record<string, unknown>[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -62,7 +62,7 @@ export function Component() {
     setLoading(true);
     setError(false);
     try {
-      const params: Record<string, any> = {
+      const params: Record<string, unknown> = {
         page,
         limit,
         search: search || undefined,
@@ -75,7 +75,7 @@ export function Component() {
       let data = res.data ?? [];
       // Client-side filtering for statuses not supported by backend
       if (statusFilter && statusFilter !== 'SUSPENDED') {
-        data = data.filter((u: any) => computeUserStatus(u) === statusFilter);
+        data = data.filter((u: Record<string, unknown>) => computeUserStatus(u) === statusFilter);
       }
       setUsers(data);
       setTotal(statusFilter && statusFilter !== 'SUSPENDED' ? data.length : (res.total ?? 0));
@@ -239,7 +239,7 @@ export function Component() {
                     role="link"
                     tabIndex={0}
                     onClick={() => navigate(`/users/${user.id}`)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/users/${user.id}`); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/users/${user.id}`); } }}
                     className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] focus-visible:bg-[var(--color-pf-cyan-500)]/5 cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3 font-medium text-[var(--color-pf-text)]">

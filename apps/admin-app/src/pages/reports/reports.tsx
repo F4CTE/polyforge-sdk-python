@@ -5,7 +5,7 @@ import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime } from '@/lib/utils';
 
 export function Component() {
-  const [reports, setReports] = useState<any[]>([]);
+  const [reports, setReports] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [reviewingId, setReviewingId] = useState<string | null>(null);

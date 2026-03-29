@@ -5,7 +5,7 @@ import { adminApi } from '@/lib/api';
 import { statusColor, formatDate } from '@/lib/utils';
 
 export function Component() {
-  const [strategies, setStrategies] = useState<any[]>([]);
+  const [strategies, setStrategies] = useState<Record<string, unknown>[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);

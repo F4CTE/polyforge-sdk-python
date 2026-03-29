@@ -81,8 +81,12 @@ export function Nav() {
       if (e.key === 'Escape' && mobileOpen) setMobileOpen(false);
     }
     if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleEscape);
-      return () => window.removeEventListener('keydown', handleEscape);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleEscape);
+      };
     }
   }, [mobileOpen]);
 
@@ -174,7 +178,7 @@ export function Nav() {
 
       <div
         id="mobile-nav-menu"
-        role="navigation"
+        role="region"
         aria-label="Mobile navigation"
         className={`${mobileOpen ? 'flex' : 'hidden'} md:hidden flex-col gap-1 px-6 pb-4 border-t border-pf-border-subtle`}
       >
@@ -182,6 +186,8 @@ export function Nav() {
           { href: '#features', label: 'Features' },
           { href: '#how-it-works', label: 'How it works' },
           { href: '/api-docs', label: 'API Docs' },
+          { href: '/terms', label: 'Terms' },
+          { href: '/privacy', label: 'Privacy' },
           { href: '/login', label: 'Sign in' },
         ].map(({ href, label }) => (
           <a

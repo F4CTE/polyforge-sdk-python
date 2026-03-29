@@ -5,8 +5,8 @@ import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime } from '@/lib/utils';
 
 export function Component() {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [dlqEntries, setDlqEntries] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Record<string, unknown>[]>([]);
+  const [dlqEntries, setDlqEntries] = useState<Record<string, unknown>[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);

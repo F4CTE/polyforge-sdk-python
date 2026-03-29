@@ -86,8 +86,7 @@ export function Component() {
               <AlertCircle className="size-4 shrink-0" />
               <span className="flex-1">Your session has expired. Please sign in again.</span>
               <button
-               type="button"
-                
+                type="button"
                 onClick={() => setSessionExpired(false)}
                 className="shrink-0 text-pf-warning hover:text-pf-warning/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-warning/40 rounded-pf-sm cursor-pointer"
                 aria-label="Dismiss warning"
@@ -102,8 +101,7 @@ export function Component() {
               <AlertCircle className="size-4 shrink-0" />
               <span className="flex-1">{error}</span>
               <button
-               type="button"
-                
+                type="button"
                 onClick={() => setError('')}
                 className="shrink-0 text-pf-danger hover:text-pf-danger/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 rounded-pf-sm cursor-pointer"
                 aria-label="Dismiss error"
@@ -190,10 +188,10 @@ export function Component() {
             )}
 
             <button
- type="submit"
- disabled={loading}
- className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
- >
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>

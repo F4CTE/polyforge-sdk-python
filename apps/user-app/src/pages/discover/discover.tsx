@@ -86,10 +86,12 @@ export function Component() {
   const [sort, setSort] = useState<SortOption>('popular');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const load = useCallback(async (p: number, s: SortOption) => {
+  const load = useCallback(async (p: number, s: SortOption, q?: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/discover?sort=${s}&page=${p}&limit=12`, { credentials: 'include' });
+      const params = new URLSearchParams({ sort: s, page: String(p), limit: '12' });
+      if (q) params.set('search', q);
+      const res = await fetch(`/api/v1/discover?${params}`, { credentials: 'include' });
       if (res.ok) {
         const data: DiscoverResponse = await res.json();
         setStrategies(data.data);
@@ -100,7 +102,7 @@ export function Component() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(page, sort); }, [page, sort, load]);
+  useEffect(() => { load(page, sort, searchQuery); }, [page, sort, searchQuery, load]);
 
   function changeSort(s: SortOption) {
     setSort(s);
@@ -159,14 +161,7 @@ export function Component() {
         </div>
       ) : (
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children ${loading ? 'opacity-60' : ''}`}>
-          {strategies.filter(s => {
-            if (!searchQuery.trim()) return true;
-            const q = searchQuery.toLowerCase();
-            return s.name.toLowerCase().includes(q) ||
-              (s.description ?? '').toLowerCase().includes(q) ||
-              s.tags.some(t => t.toLowerCase().includes(q)) ||
-              (s.author.displayName ?? s.author.username).toLowerCase().includes(q);
-          }).map(s => {
+          {strategies.map(s => {
             return (
               <Link
                 key={s.id}
@@ -182,13 +177,15 @@ export function Component() {
                       {authorInitials(s)}
                     </div>
                   )}
-                  <Link
-                    to={`/profile/${s.author.username}`}
-                    onClick={e => { e.stopPropagation(); }}
+                  <span
+                    role="link"
+                    tabIndex={0}
+                    onClick={e => { e.preventDefault(); e.stopPropagation(); window.location.href = `/profile/${s.author.username}`; }}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); window.location.href = `/profile/${s.author.username}`; } }}
                     className="text-xs text-pf-text-secondary hover:text-pf-cyan-400 transition-colors cursor-pointer"
                   >
                     {s.author.displayName ?? s.author.username}
-                  </Link>
+                  </span>
                   {s.author.score != null && s.author.score > 0 && (
                     <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
                       s.author.score >= 80 ? 'text-pf-success bg-pf-success/10 border-pf-success/20' :

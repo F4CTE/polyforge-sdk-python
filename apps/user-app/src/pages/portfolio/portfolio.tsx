@@ -278,9 +278,12 @@ export function Component() {
     }));
   }, [pnl?.snapshots]);
   const isProfitable = parseFloat(pnl?.totalPnl ?? '0') >= 0;
-  const chartColor = isProfitable
-    ? (getComputedStyle(document.documentElement).getPropertyValue('--color-pf-success').trim() || '#10B981')
-    : (getComputedStyle(document.documentElement).getPropertyValue('--color-pf-danger').trim() || '#EF4444');
+  const chartColor = useMemo(() => {
+    const s = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
+    const success = s?.getPropertyValue('--color-pf-success').trim() || '#10B981';
+    const danger = s?.getPropertyValue('--color-pf-danger').trim() || '#EF4444';
+    return isProfitable ? success : danger;
+  }, [isProfitable, isDark]);
 
   return (
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
@@ -576,7 +579,7 @@ export function Component() {
                     Reset Paper Account
                   </button>
                   {showResetConfirm && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowResetConfirm(false)} onKeyDown={(e) => { if (e.key === 'Escape') setShowResetConfirm(false); }}>
+                    <div role="presentation" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowResetConfirm(false)} onKeyDown={(e) => { if (e.key === 'Escape') setShowResetConfirm(false); }}>
                       <div role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 max-w-sm mx-4 shadow-pf-lg" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2 mb-3">
                           <AlertTriangle className="size-5 text-pf-danger" />

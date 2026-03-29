@@ -239,6 +239,7 @@ export function Component() {
 
         {editingName ? (
           <input
+            aria-label="Strategy name"
             className="text-lg font-semibold bg-transparent border-b border-pf-cyan-500 outline-none text-pf-text px-1 flex-1 min-w-0"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -340,12 +341,12 @@ export function Component() {
               {/* Canvas issue banner — unwired blocks and/or misconfigured fields */}
               {(canvasIssues.orphaned > 0 || canvasIssues.misconfigured > 0) && (
                 <div
-                  className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-3 py-1.5 rounded-full text-xs font-medium pointer-events-none"
-                  style={
+                  className={`absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-3 py-1.5 rounded-full text-xs font-medium pointer-events-none border ${
                     canvasIssues.misconfigured > 0
-                      ? { backgroundColor: '#ef444418', border: '1px solid #ef444444', color: '#ef4444' }
-                      : { backgroundColor: '#f59e0b18', border: '1px solid #f59e0b44', color: '#f59e0b' }
-                  }
+                      ? 'bg-pf-danger/10 border-pf-danger/25 text-pf-danger'
+                      : 'bg-pf-warning/10 border-pf-warning/25 text-pf-warning'
+                  }`}
+                  role="status"
                 >
                   {canvasIssues.orphaned > 0 && (
                     <span>

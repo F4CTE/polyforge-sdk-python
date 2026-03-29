@@ -95,7 +95,7 @@ export function Component() {
   const [marketSlots, setMarketSlots] = useState<{slot: string; label?: string; defaultMarketId?: string}[]>([]);
   const [marketBindings, setMarketBindings] = useState<Record<string, string>>({});
   const [marketSearch, setMarketSearch] = useState<Record<string, string>>({});
-  const [marketResults, setMarketResults] = useState<Record<string, any[]>>({});
+  const [marketResults, setMarketResults] = useState<Record<string, Array<{ id: string; title?: string; question?: string }>>>({});
 
   const loadHistory = useCallback(async (p: number) => {
     setLoading(true);
@@ -281,12 +281,13 @@ export function Component() {
 
           {marketSlots.length > 0 && (
             <div className="space-y-3">
-              <label className="text-xs text-pf-text-secondary font-medium uppercase tracking-wider">Market Bindings</label>
+              <span className="text-xs text-pf-text-secondary font-medium uppercase tracking-wider" id="market-bindings-label">Market Bindings</span>
               {marketSlots.map(slot => (
                 <div key={slot.slot} className="space-y-1">
-                  <label className="text-xs text-pf-text-muted">{slot.label || slot.slot}</label>
+                  <label htmlFor={`market-binding-${slot.slot}`} className="text-xs text-pf-text-muted">{slot.label || slot.slot}</label>
                   <div className="relative">
                     <input
+                      id={`market-binding-${slot.slot}`}
                       type="text"
                       value={marketSearch[slot.slot] ?? marketBindings[slot.slot] ?? ''}
                       onChange={e => {

@@ -7,13 +7,7 @@ export function AuthBackground() {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
       {/* Base gradient */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-pf-cyan-500) 10%, transparent) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, color-mix(in srgb, var(--color-pf-cyan-500) 5%, transparent) 0%, transparent 40%)',
-        }}
-      />
+      <div className="absolute inset-0 auth-bg-gradient" />
 
       {/* Grid lines */}
       <svg className="absolute inset-0 w-full h-full opacity-[0.03]">
@@ -55,14 +49,6 @@ export function AuthBackground() {
         style={{ top: '50%', right: '12%', transform: 'rotate(-20deg)' }}
       />
 
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          25% { transform: translateY(-15px) rotate(1deg); }
-          50% { transform: translateY(-8px) rotate(-1deg); }
-          75% { transform: translateY(-20px) rotate(0.5deg); }
-        }
-      `}</style>
     </div>
   );
 }

@@ -341,7 +341,7 @@ export function Component() {
             <div className="space-y-5">
               {/* Max Exposure */}
               <div className="space-y-2">
-                <label className="text-xs text-pf-text-secondary">Max Exposure ($)</label>
+                <label htmlFor="copy-max-exposure" className="text-xs text-pf-text-secondary">Max Exposure ($)</label>
                 <input
                   type="range"
                   aria-label="Max exposure"
@@ -354,6 +354,7 @@ export function Component() {
                 />
                 <div className="flex items-center gap-3">
                   <input
+                    id="copy-max-exposure"
                     type="number"
                     min={0}
                     value={maxExposure}
@@ -366,7 +367,7 @@ export function Component() {
 
               {/* Max Daily Loss */}
               <div className="space-y-2">
-                <label className="text-xs text-pf-text-secondary">Max Daily Loss ($)</label>
+                <label htmlFor="copy-max-daily-loss" className="text-xs text-pf-text-secondary">Max Daily Loss ($)</label>
                 <input
                   type="range"
                   aria-label="Max daily loss"
@@ -379,6 +380,7 @@ export function Component() {
                 />
                 <div className="flex items-center gap-3">
                   <input
+                    id="copy-max-daily-loss"
                     type="number"
                     min={0}
                     value={maxDailyLoss}
@@ -391,7 +393,7 @@ export function Component() {
 
               {/* Price Offset */}
               <div className="space-y-2">
-                <label className="text-xs text-pf-text-secondary">Price Offset (%)</label>
+                <label htmlFor="copy-price-offset" className="text-xs text-pf-text-secondary">Price Offset (%)</label>
                 <input
                   type="range"
                   aria-label="Price offset"
@@ -404,6 +406,7 @@ export function Component() {
                 />
                 <div className="flex items-center gap-3">
                   <input
+                    id="copy-price-offset"
                     type="number"
                     min={-5}
                     max={5}

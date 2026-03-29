@@ -34,8 +34,7 @@ export function Component() {
 
   return (
     <div
-      className="flex items-center justify-center min-h-screen p-4"
-      style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(6,182,212,0.06) 0%, transparent 60%), var(--color-pf-bg)' }}
+      className="flex items-center justify-center min-h-screen p-4 admin-login-bg"
     >
       <div className="w-full max-w-sm">
         {/* Brand */}

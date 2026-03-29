@@ -402,6 +402,7 @@ export function Component() {
                 onClick={() => copyToClipboard(config.targetWallet)}
                 className="text-pf-text-muted hover:text-pf-text transition-colors shrink-0"
                 title="Copy address"
+                aria-label="Copy wallet address"
               >
                 <Copy className="size-3.5" />
               </button>

@@ -8,8 +8,8 @@ import { statusColor, formatDate, formatDateTime } from '@/lib/utils';
 export function Component() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-  const [apiKeys, setApiKeys] = useState<any[]>([]);
+  const [user, setUser] = useState<Record<string, unknown> | null>(null);
+  const [apiKeys, setApiKeys] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSuspendDialog, setShowSuspendDialog] = useState(false);
   const [suspendReason, setSuspendReason] = useState('');
@@ -39,7 +39,7 @@ export function Component() {
     setActionLoading(true);
     try {
       await adminApi.suspendUser(id, suspendReason);
-      setUser((u: any) => ({ ...u, suspended: true, suspendReason }));
+      setUser((u) => u ? ({ ...u, suspended: true, suspendReason }) : u);
       setShowSuspendDialog(false);
       setSuspendReason('');
       toast.success('User suspended');
@@ -55,7 +55,7 @@ export function Component() {
     setActionLoading(true);
     try {
       await adminApi.unsuspendUser(id);
-      setUser((u: any) => ({ ...u, suspended: false, suspendReason: null }));
+      setUser((u) => u ? ({ ...u, suspended: false, suspendReason: null }) : u);
       toast.success('User unsuspended');
     } catch {
       toast.error('Failed to unsuspend user');

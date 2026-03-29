@@ -8,7 +8,7 @@ type LogTab = 'audit' | 'events' | 'logins';
 
 export function Component() {
   const [tab, setTab] = useState<LogTab>('audit');
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<Record<string, unknown>[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);

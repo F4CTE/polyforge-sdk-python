@@ -204,16 +204,16 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Token</label>
-              <input value={form.tokenId} readOnly
+              <label htmlFor="cond-token-id" className="block text-xs font-medium text-pf-text-secondary mb-1">Token</label>
+              <input id="cond-token-id" value={form.tokenId} readOnly
                 className="w-full h-9 px-3 rounded-pf bg-pf-overlay border border-pf-border text-sm text-pf-text-secondary cursor-not-allowed font-mono text-xs" />
               <p className="text-[10px] text-pf-text-muted mt-0.5">Auto-filled from selected position</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Type</label>
-              <select value={form.type} onChange={e => updateField('type', e.target.value)}
+              <label htmlFor="cond-type" className="block text-xs font-medium text-pf-text-secondary mb-1">Type</label>
+              <select id="cond-type" value={form.type} onChange={e => updateField('type', e.target.value)}
                 className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50">
                 <option value="TAKE_PROFIT">Take Profit</option>
                 <option value="STOP_LOSS">Stop Loss</option>
@@ -223,16 +223,16 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Side</label>
-              <select value={form.side} onChange={e => updateField('side', e.target.value)}
+              <label htmlFor="cond-side" className="block text-xs font-medium text-pf-text-secondary mb-1">Side</label>
+              <select id="cond-side" value={form.side} onChange={e => updateField('side', e.target.value)}
                 className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50">
                 <option value="BUY">BUY</option>
                 <option value="SELL">SELL</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Outcome</label>
-              <select value={form.outcome} onChange={e => updateField('outcome', e.target.value)}
+              <label htmlFor="cond-outcome" className="block text-xs font-medium text-pf-text-secondary mb-1">Outcome</label>
+              <select id="cond-outcome" value={form.outcome} onChange={e => updateField('outcome', e.target.value)}
                 className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50">
                 <option value="YES">YES</option>
                 <option value="NO">NO</option>
@@ -241,37 +241,37 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Size</label>
-              <input type="number" step="any" value={form.size} onChange={e => updateField('size', e.target.value)} required
+              <label htmlFor="cond-size" className="block text-xs font-medium text-pf-text-secondary mb-1">Size</label>
+              <input id="cond-size" type="number" step="any" value={form.size} onChange={e => updateField('size', e.target.value)} required
                 className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Trigger Price</label>
-              <input type="number" step="any" value={form.triggerPrice} onChange={e => updateField('triggerPrice', e.target.value)} required
+              <label htmlFor="cond-trigger-price" className="block text-xs font-medium text-pf-text-secondary mb-1">Trigger Price</label>
+              <input id="cond-trigger-price" type="number" step="any" value={form.triggerPrice} onChange={e => updateField('triggerPrice', e.target.value)} required
                 className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50" />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Limit Price</label>
-              <input type="number" step="any" value={form.limitPrice} onChange={e => updateField('limitPrice', e.target.value)} placeholder="Optional"
+              <label htmlFor="cond-limit-price" className="block text-xs font-medium text-pf-text-secondary mb-1">Limit Price</label>
+              <input id="cond-limit-price" type="number" step="any" value={form.limitPrice} onChange={e => updateField('limitPrice', e.target.value)} placeholder="Optional"
                 className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Trailing %</label>
-              <input type="number" step="any" value={form.trailingPct} onChange={e => updateField('trailingPct', e.target.value)} placeholder="Optional"
+              <label htmlFor="cond-trailing-pct" className="block text-xs font-medium text-pf-text-secondary mb-1">Trailing %</label>
+              <input id="cond-trailing-pct" type="number" step="any" value={form.trailingPct} onChange={e => updateField('trailingPct', e.target.value)} placeholder="Optional"
                 className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-pf-text-secondary mb-1">Expires At</label>
-              <input type="datetime-local" lang="en" value={form.expiresAt} onChange={e => updateField('expiresAt', e.target.value)}
+              <label htmlFor="cond-expires-at" className="block text-xs font-medium text-pf-text-secondary mb-1">Expires At</label>
+              <input id="cond-expires-at" type="datetime-local" lang="en" value={form.expiresAt} onChange={e => updateField('expiresAt', e.target.value)}
                 className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50" />
             </div>
           </div>
           <div className="flex gap-2 justify-end pt-3 border-t border-pf-border-subtle">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors">Cancel</button>
             <button type="submit" disabled={submitting}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               <Plus className="size-3.5" /> Create
             </button>
           </div>
@@ -385,9 +385,11 @@ export function Component() {
       </div>
 
       {/* View tabs */}
-      <div className="flex gap-2 border-b border-pf-border-subtle pb-2">
+      <div className="flex gap-2 border-b border-pf-border-subtle pb-2" role="tablist" aria-label="Order type">
         <button
           type="button"
+          role="tab"
+          aria-selected={viewTab === 'orders'}
           onClick={() => setViewTab('orders')}
           className={`px-3 py-1.5 rounded-t text-sm font-medium transition-colors ${
             viewTab === 'orders' ? 'text-pf-cyan-400 border-b-2 border-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'
@@ -397,6 +399,8 @@ export function Component() {
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={viewTab === 'conditional'}
           onClick={() => setViewTab('conditional')}
           className={`px-3 py-1.5 rounded-t text-sm font-medium transition-colors ${
             viewTab === 'conditional' ? 'text-pf-cyan-400 border-b-2 border-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'

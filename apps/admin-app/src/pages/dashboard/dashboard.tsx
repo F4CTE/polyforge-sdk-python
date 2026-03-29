@@ -29,14 +29,18 @@ export function Component() {
   const { isSuperAdmin } = useAdminAuthStore();
   const [health, setHealth] = useState<HealthData | null>(null);
   const [config, setConfig] = useState<{ inviteOnly: boolean } | null>(null);
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<Record<string, unknown>[]>([]);
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeStrategies: 0,
     totalOrders: 0,
     openTickets: 0,
   });
-  const [rateLimits, setRateLimits] = useState<any>(null);
+  const [rateLimits, setRateLimits] = useState<{
+    totalTrackedKeys: number;
+    recent429Count: number;
+    topOffenders: { key: string; hits: number; ttl: number }[];
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [healthError, setHealthError] = useState(false);
   const [statsError, setStatsError] = useState(false);
@@ -300,7 +304,7 @@ export function Component() {
         </div>
         {rateLimitsError ? (
           <div className="text-center py-4">
-            <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={20} />
+            <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={20} aria-hidden="true" />
             <p className="text-sm text-[var(--color-pf-text-secondary)]">Rate limit data unavailable</p>
           </div>
         ) : rateLimits ? (
@@ -336,7 +340,7 @@ export function Component() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--color-pf-border)]">
-                    {rateLimits.topOffenders.slice(0, 10).map((entry: any, i: number) => (
+                    {rateLimits.topOffenders.slice(0, 10).map((entry, i) => (
                       <tr key={i}>
                         <td className="py-1.5 font-mono text-[var(--color-pf-text-secondary)] truncate max-w-[200px]">{entry.key}</td>
                         <td className={`py-1.5 text-right font-mono ${entry.hits > 50 ? 'text-pf-danger' : 'text-[var(--color-pf-text)]'}`}>{entry.hits}</td>
@@ -374,7 +378,7 @@ export function Component() {
           </div>
         ) : (
           <div className="space-y-3">
-            {auditLogs.map((log: any) => (
+            {auditLogs.map((log) => (
               <div
                 key={log.id}
                 className="flex items-center justify-between py-2 border-b border-[var(--color-pf-border)] last:border-0"

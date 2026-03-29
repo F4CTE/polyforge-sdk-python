@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { toast } from 'sonner';
 import {
@@ -157,13 +157,18 @@ export function Component() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Read CSS variables for Recharts (which needs raw color strings)
-  const styles = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
-  const textMuted = styles?.getPropertyValue('--color-pf-text-muted').trim() || '#445E7A';
-  const bgElevated = styles?.getPropertyValue('--color-pf-elevated').trim() || '#111D2E';
-  const borderColor = styles?.getPropertyValue('--color-pf-border').trim() || '#1E3350';
-  const textSecondary = styles?.getPropertyValue('--color-pf-text-secondary').trim() || '#7A94B4';
-  const cyan500 = styles?.getPropertyValue('--color-pf-cyan-500').trim() || '#06B6D4';
+  // Read CSS variables for Recharts (which needs raw color strings) — memoized to avoid layout thrashing
+  const themeColors = useMemo(() => {
+    const s = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
+    return {
+      textMuted: s?.getPropertyValue('--color-pf-text-muted').trim() || '#445E7A',
+      bgElevated: s?.getPropertyValue('--color-pf-elevated').trim() || '#111D2E',
+      borderColor: s?.getPropertyValue('--color-pf-border').trim() || '#1E3350',
+      textSecondary: s?.getPropertyValue('--color-pf-text-secondary').trim() || '#7A94B4',
+      cyan500: s?.getPropertyValue('--color-pf-cyan-500').trim() || '#06B6D4',
+    };
+  }, []);
+  const { textMuted, bgElevated, borderColor, textSecondary, cyan500 } = themeColors;
 
   const [market, setMarket] = useState<Market | null>(null);
   const [loadingMarket, setLoadingMarket] = useState(true);

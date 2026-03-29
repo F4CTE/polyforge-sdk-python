@@ -450,7 +450,7 @@ export function Component() {
                           disabled={busy}
                           className="p-1.5 rounded-pf-sm text-pf-cyan-400 hover:bg-pf-cyan-500/10 disabled:opacity-40 transition-colors"
                           aria-label="Resume strategy"
-                          title="Start strategy"
+                          title="Resume strategy"
                         >
                           <Play className="size-3.5" />
                         </button>

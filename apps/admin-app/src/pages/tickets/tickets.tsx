@@ -7,7 +7,7 @@ import { statusColor, formatDateTime, priorityColor } from '@/lib/utils';
 
 export function Component() {
   const navigate = useNavigate();
-  const [tickets, setTickets] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<Record<string, unknown>[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
