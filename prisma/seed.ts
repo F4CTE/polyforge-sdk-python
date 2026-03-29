@@ -47,6 +47,62 @@ function hoursAgo(n: number): Date {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// FIXED SEED UUIDs — deterministic so upserts are idempotent
+// ─────────────────────────────────────────────────────────────────────────────
+
+const IDS = {
+  // Strategies
+  stratMomentum:   'a1b2c3d4-0001-4000-8000-000000000001',
+  stratCrossDown:  'a1b2c3d4-0001-4000-8000-000000000002',
+  stratScalper:    'a1b2c3d4-0001-4000-8000-000000000003',
+  stratForked:     'a1b2c3d4-0001-4000-8000-000000000004',
+  // Orders
+  order1:  'b2c3d4e5-0002-4000-8000-000000000001',
+  order2:  'b2c3d4e5-0002-4000-8000-000000000002',
+  order3:  'b2c3d4e5-0002-4000-8000-000000000003',
+  order4:  'b2c3d4e5-0002-4000-8000-000000000004',
+  order5:  'b2c3d4e5-0002-4000-8000-000000000005',
+  order6:  'b2c3d4e5-0002-4000-8000-000000000006',
+  order7:  'b2c3d4e5-0002-4000-8000-000000000007',
+  order8:  'b2c3d4e5-0002-4000-8000-000000000008',
+  order9:  'b2c3d4e5-0002-4000-8000-000000000009',
+  // Paper orders
+  paperOrder1:      'c3d4e5f6-0003-4000-8000-000000000001',
+  paperOrderAlice1: 'c3d4e5f6-0003-4000-8000-000000000002',
+  // Backtest runs
+  backtest1: 'd4e5f6a7-0004-4000-8000-000000000001',
+  backtest2: 'd4e5f6a7-0004-4000-8000-000000000002',
+  backtest3: 'd4e5f6a7-0004-4000-8000-000000000003',
+  // Backtest orders
+  btOrder1: 'e5f6a7b8-0005-4000-8000-000000000001',
+  btOrder2: 'e5f6a7b8-0005-4000-8000-000000000002',
+  btOrder3: 'e5f6a7b8-0005-4000-8000-000000000003',
+  btOrder4: 'e5f6a7b8-0005-4000-8000-000000000004',
+  btOrder5: 'e5f6a7b8-0005-4000-8000-000000000005',
+  // Comments
+  comment1: 'f6a7b8c9-0006-4000-8000-000000000001',
+  comment2: 'f6a7b8c9-0006-4000-8000-000000000002',
+  comment3: 'f6a7b8c9-0006-4000-8000-000000000003',
+  // Fork record
+  forkCharlie: 'a7b8c9d0-0007-4000-8000-000000000001',
+  // Price alerts
+  alert1: 'b8c9d0e1-0008-4000-8000-000000000001',
+  alert2: 'b8c9d0e1-0008-4000-8000-000000000002',
+  // Strategy templates
+  templateMomentum:    'c9d0e1f2-0009-4000-8000-000000000001',
+  templateMeanRev:     'c9d0e1f2-0009-4000-8000-000000000002',
+  templateNewsReact:   'c9d0e1f2-0009-4000-8000-000000000003',
+  templateRiskMgr:     'c9d0e1f2-0009-4000-8000-000000000004',
+  templateWhaleFollow: 'c9d0e1f2-0009-4000-8000-000000000005',
+  // Login history
+  login1: 'd0e1f2a3-0010-4000-8000-000000000001',
+  login2: 'd0e1f2a3-0010-4000-8000-000000000002',
+  login3: 'd0e1f2a3-0010-4000-8000-000000000003',
+  login4: 'd0e1f2a3-0010-4000-8000-000000000004',
+  login5: 'd0e1f2a3-0010-4000-8000-000000000005',
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MOCK MARKET / TOKEN IDs (matches mock-polymarket)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -520,10 +576,10 @@ async function main() {
   console.log('\n♟️  Creating strategies...');
 
   const stratMomentum = await prisma.strategy.upsert({
-    where: { id: 'seed-strat-alice-momentum' },
+    where: { id: IDS.stratMomentum },
     update: {},
     create: {
-      id: 'seed-strat-alice-momentum',
+      id: IDS.stratMomentum,
       userId: alice.id,
       name: 'Momentum Blitz',
       description: 'Buys YES tokens when price crosses above 0.60. Designed for high-volume political markets.',
@@ -544,10 +600,10 @@ async function main() {
   });
 
   const stratCrossDown = await prisma.strategy.upsert({
-    where: { id: 'seed-strat-alice-crossdown' },
+    where: { id: IDS.stratCrossDown },
     update: {},
     create: {
-      id: 'seed-strat-alice-crossdown',
+      id: IDS.stratCrossDown,
       userId: alice.id,
       name: 'Cross Down Guard',
       description: 'Sells everything when price drops below 0.40.',
@@ -569,10 +625,10 @@ async function main() {
 
   // BOB'S strategy — paper trading
   const stratScalper = await prisma.strategy.upsert({
-    where: { id: 'seed-strat-bob-scalper' },
+    where: { id: IDS.stratScalper },
     update: {},
     create: {
-      id: 'seed-strat-bob-scalper',
+      id: IDS.stratScalper,
       userId: bob.id,
       name: 'Safe Scalper v2',
       description: 'High-frequency scalping on spread. Paper trading while I tune the params.',
@@ -595,10 +651,10 @@ async function main() {
 
   // CHARLIE forked from alice
   const stratForked = await prisma.strategy.upsert({
-    where: { id: 'seed-strat-charlie-fork' },
+    where: { id: IDS.stratForked },
     update: {},
     create: {
-      id: 'seed-strat-charlie-fork',
+      id: IDS.stratForked,
       userId: charlie.id,
       name: 'Momentum Blitz (fork)',
       description: 'Forked from alice. Lowered threshold to 0.55.',
@@ -627,10 +683,10 @@ async function main() {
   // ───────────────────────────────────────────────
 
   await prisma.strategyFork.upsert({
-    where: { id: 'seed-fork-charlie-momentum' },
+    where: { id: IDS.forkCharlie },
     update: {},
     create: {
-      id: 'seed-fork-charlie-momentum',
+      id: IDS.forkCharlie,
       originalId: stratMomentum.id,
       forkId: stratForked.id,
       forkedById: charlie.id,
@@ -657,10 +713,10 @@ async function main() {
   }
 
   const comment1 = await prisma.strategyComment.upsert({
-    where: { id: 'seed-comment-1' },
+    where: { id: IDS.comment1 },
     update: {},
     create: {
-      id: 'seed-comment-1',
+      id: IDS.comment1,
       strategyId: stratMomentum.id,
       userId: bob.id,
       content: 'Really solid strategy. Have you tried a 0.55 threshold instead of 0.60?',
@@ -670,10 +726,10 @@ async function main() {
   });
 
   await prisma.strategyComment.upsert({
-    where: { id: 'seed-comment-2' },
+    where: { id: IDS.comment2 },
     update: {},
     create: {
-      id: 'seed-comment-2',
+      id: IDS.comment2,
       strategyId: stratMomentum.id,
       userId: alice.id,
       parentId: comment1.id,
@@ -684,10 +740,10 @@ async function main() {
   });
 
   await prisma.strategyComment.upsert({
-    where: { id: 'seed-comment-3' },
+    where: { id: IDS.comment3 },
     update: {},
     create: {
-      id: 'seed-comment-3',
+      id: IDS.comment3,
       strategyId: stratMomentum.id,
       userId: charlie.id,
       content: 'Just forked this, excited to try it out!',
@@ -706,7 +762,7 @@ async function main() {
 
   const orders = [
     {
-      id: 'seed-order-1',
+      id: IDS.order1,
       intentId: 'intent-seed-order-1',
       clobOrderId: 'clob-order-abc001',
       clobStatus: 'MATCHED',
@@ -728,7 +784,7 @@ async function main() {
       createdAt: hoursAgo(48),
     },
     {
-      id: 'seed-order-2',
+      id: IDS.order2,
       intentId: 'intent-seed-order-2',
       clobOrderId: 'clob-order-abc002',
       clobStatus: 'MATCHED',
@@ -750,7 +806,7 @@ async function main() {
       createdAt: hoursAgo(24),
     },
     {
-      id: 'seed-order-3',
+      id: IDS.order3,
       intentId: 'intent-seed-order-3',
       clobOrderId: 'clob-order-abc003',
       clobStatus: 'LIVE',
@@ -780,7 +836,7 @@ async function main() {
   // Additional orders with varied statuses
   const additionalOrders = [
     {
-      id: 'seed-order-4',
+      id: IDS.order4,
       intentId: 'intent-seed-order-4',
       clobOrderId: 'clob-order-abc004',
       clobStatus: 'CANCELLED',
@@ -798,7 +854,7 @@ async function main() {
       createdAt: daysAgo(5),
     },
     {
-      id: 'seed-order-5',
+      id: IDS.order5,
       intentId: 'intent-seed-order-5',
       clobOrderId: 'clob-order-abc005',
       clobStatus: 'MATCHED',
@@ -820,7 +876,7 @@ async function main() {
       createdAt: daysAgo(4),
     },
     {
-      id: 'seed-order-6',
+      id: IDS.order6,
       intentId: 'intent-seed-order-6',
       userId: alice.id,
       strategyId: stratMomentum.id,
@@ -840,7 +896,7 @@ async function main() {
       createdAt: daysAgo(3),
     },
     {
-      id: 'seed-order-7',
+      id: IDS.order7,
       intentId: 'intent-seed-order-7',
       userId: alice.id,
       strategyId: stratCrossDown.id,
@@ -860,7 +916,7 @@ async function main() {
       createdAt: daysAgo(7),
     },
     {
-      id: 'seed-order-8',
+      id: IDS.order8,
       intentId: 'intent-seed-order-8',
       userId: alice.id,
       strategyId: stratMomentum.id,
@@ -877,7 +933,7 @@ async function main() {
       createdAt: daysAgo(2),
     },
     {
-      id: 'seed-order-9',
+      id: IDS.order9,
       intentId: 'intent-seed-order-9',
       clobOrderId: 'clob-order-abc009',
       clobStatus: 'MATCHED',
@@ -1028,10 +1084,10 @@ async function main() {
   });
 
   await prisma.paperOrder.upsert({
-    where: { id: 'seed-paper-order-alice-1' },
+    where: { id: IDS.paperOrderAlice1 },
     update: {},
     create: {
-      id: 'seed-paper-order-alice-1',
+      id: IDS.paperOrderAlice1,
       userId: alice.id,
       strategyId: stratCrossDown.id,
       marketId: MARKETS.superbowl.id,
@@ -1057,10 +1113,10 @@ async function main() {
   console.log('\n📝 Creating paper orders and positions...');
 
   await prisma.paperOrder.upsert({
-    where: { id: 'seed-paper-order-1' },
+    where: { id: IDS.paperOrder1 },
     update: {},
     create: {
-      id: 'seed-paper-order-1',
+      id: IDS.paperOrder1,
       userId: bob.id,
       strategyId: stratScalper.id,
       marketId: MARKETS.superbowl.id,
@@ -1102,10 +1158,10 @@ async function main() {
   console.log('\n🔬 Creating backtest run...');
 
   await prisma.backtestRun.upsert({
-    where: { id: 'seed-backtest-1' },
+    where: { id: IDS.backtest1 },
     update: {},
     create: {
-      id: 'seed-backtest-1',
+      id: IDS.backtest1,
       userId: bob.id,
       strategyId: stratScalper.id,
       dateRangeStart: daysAgo(90),
@@ -1128,10 +1184,10 @@ async function main() {
 
   // Additional backtest — alice, completed
   await prisma.backtestRun.upsert({
-    where: { id: 'seed-backtest-2' },
+    where: { id: IDS.backtest2 },
     update: {},
     create: {
-      id: 'seed-backtest-2',
+      id: IDS.backtest2,
       userId: alice.id,
       strategyId: stratMomentum.id,
       dateRangeStart: daysAgo(60),
@@ -1152,10 +1208,10 @@ async function main() {
 
   // Additional backtest — alice, different strategy
   await prisma.backtestRun.upsert({
-    where: { id: 'seed-backtest-3' },
+    where: { id: IDS.backtest3 },
     update: {},
     create: {
-      id: 'seed-backtest-3',
+      id: IDS.backtest3,
       userId: alice.id,
       strategyId: stratCrossDown.id,
       dateRangeStart: daysAgo(45),
@@ -1176,11 +1232,11 @@ async function main() {
 
   // Backtest orders for alice momentum backtest (sample equity curve)
   const backtestOrdersData = [
-    { id: 'seed-bt-order-1', runId: 'seed-backtest-2', tokenId: MARKETS.usElections.tokenYes, side: 'BUY' as const, outcome: 'YES' as const, size: '50.000000', price: '0.580000', fillPrice: '0.582000', pnl: '12.500000', equityCurve: '12.500000', simulatedAt: daysAgo(55) },
-    { id: 'seed-bt-order-2', runId: 'seed-backtest-2', tokenId: MARKETS.usElections.tokenYes, side: 'SELL' as const, outcome: 'YES' as const, size: '50.000000', price: '0.620000', fillPrice: '0.618000', pnl: '18.000000', equityCurve: '30.500000', simulatedAt: daysAgo(50) },
-    { id: 'seed-bt-order-3', runId: 'seed-backtest-2', tokenId: MARKETS.cryptoEtf.tokenYes, side: 'BUY' as const, outcome: 'YES' as const, size: '100.000000', price: '0.400000', fillPrice: '0.402000', pnl: '-8.200000', equityCurve: '22.300000', simulatedAt: daysAgo(45) },
-    { id: 'seed-bt-order-4', runId: 'seed-backtest-2', tokenId: MARKETS.usElections.tokenYes, side: 'BUY' as const, outcome: 'YES' as const, size: '75.000000', price: '0.650000', fillPrice: '0.652000', pnl: '35.100000', equityCurve: '57.400000', simulatedAt: daysAgo(40) },
-    { id: 'seed-bt-order-5', runId: 'seed-backtest-2', tokenId: MARKETS.cryptoEtf.tokenYes, side: 'SELL' as const, outcome: 'YES' as const, size: '100.000000', price: '0.450000', fillPrice: '0.448000', pnl: '44.600000', equityCurve: '102.000000', simulatedAt: daysAgo(30) },
+    { id: IDS.btOrder1, runId: IDS.backtest2, tokenId: MARKETS.usElections.tokenYes, side: 'BUY' as const, outcome: 'YES' as const, size: '50.000000', price: '0.580000', fillPrice: '0.582000', pnl: '12.500000', equityCurve: '12.500000', simulatedAt: daysAgo(55) },
+    { id: IDS.btOrder2, runId: IDS.backtest2, tokenId: MARKETS.usElections.tokenYes, side: 'SELL' as const, outcome: 'YES' as const, size: '50.000000', price: '0.620000', fillPrice: '0.618000', pnl: '18.000000', equityCurve: '30.500000', simulatedAt: daysAgo(50) },
+    { id: IDS.btOrder3, runId: IDS.backtest2, tokenId: MARKETS.cryptoEtf.tokenYes, side: 'BUY' as const, outcome: 'YES' as const, size: '100.000000', price: '0.400000', fillPrice: '0.402000', pnl: '-8.200000', equityCurve: '22.300000', simulatedAt: daysAgo(45) },
+    { id: IDS.btOrder4, runId: IDS.backtest2, tokenId: MARKETS.usElections.tokenYes, side: 'BUY' as const, outcome: 'YES' as const, size: '75.000000', price: '0.650000', fillPrice: '0.652000', pnl: '35.100000', equityCurve: '57.400000', simulatedAt: daysAgo(40) },
+    { id: IDS.btOrder5, runId: IDS.backtest2, tokenId: MARKETS.cryptoEtf.tokenYes, side: 'SELL' as const, outcome: 'YES' as const, size: '100.000000', price: '0.450000', fillPrice: '0.448000', pnl: '44.600000', equityCurve: '102.000000', simulatedAt: daysAgo(30) },
   ];
 
   for (const btOrder of backtestOrdersData) {
@@ -1287,10 +1343,10 @@ async function main() {
   console.log('\n🔔 Creating price alerts...');
 
   await prisma.priceAlert.upsert({
-    where: { id: 'seed-alert-1' },
+    where: { id: IDS.alert1 },
     update: {},
     create: {
-      id: 'seed-alert-1',
+      id: IDS.alert1,
       userId: alice.id,
       tokenId: MARKETS.usElections.tokenYes,
       direction: 'above',
@@ -1302,10 +1358,10 @@ async function main() {
   });
 
   await prisma.priceAlert.upsert({
-    where: { id: 'seed-alert-2' },
+    where: { id: IDS.alert2 },
     update: {},
     create: {
-      id: 'seed-alert-2',
+      id: IDS.alert2,
       userId: alice.id,
       tokenId: MARKETS.cryptoEtf.tokenYes,
       direction: 'below',
@@ -1325,11 +1381,11 @@ async function main() {
   console.log('\n🔑 Creating login history...');
 
   const loginHistory = [
-    { id: 'seed-login-1', userId: alice.id, ip: '127.0.0.1', userAgent: 'Mozilla/5.0 (dev)', success: true, createdAt: hoursAgo(1) },
-    { id: 'seed-login-2', userId: alice.id, ip: '127.0.0.1', userAgent: 'Mozilla/5.0 (dev)', success: true, createdAt: daysAgo(1) },
-    { id: 'seed-login-3', userId: bob.id, ip: '127.0.0.1', userAgent: 'Mozilla/5.0 (dev)', success: true, createdAt: hoursAgo(3) },
-    { id: 'seed-login-4', userId: charlie.id, ip: '127.0.0.1', userAgent: 'Mozilla/5.0 (dev)', success: false, createdAt: hoursAgo(12) },
-    { id: 'seed-login-5', userId: charlie.id, ip: '127.0.0.1', userAgent: 'Mozilla/5.0 (dev)', success: true, createdAt: hoursAgo(11) },
+    { id: IDS.login1, userId: alice.id, ip: '127.0.0.1', userAgent: 'Mozilla/5.0 (dev)', success: true, createdAt: hoursAgo(1) },
+    { id: IDS.login2, userId: alice.id, ip: '127.0.0.1', userAgent: 'Mozilla/5.0 (dev)', success: true, createdAt: daysAgo(1) },
+    { id: IDS.login3, userId: bob.id, ip: '127.0.0.1', userAgent: 'Mozilla/5.0 (dev)', success: true, createdAt: hoursAgo(3) },
+    { id: IDS.login4, userId: charlie.id, ip: '127.0.0.1', userAgent: 'Mozilla/5.0 (dev)', success: false, createdAt: hoursAgo(12) },
+    { id: IDS.login5, userId: charlie.id, ip: '127.0.0.1', userAgent: 'Mozilla/5.0 (dev)', success: true, createdAt: hoursAgo(11) },
   ];
 
   for (const entry of loginHistory) {
@@ -1350,7 +1406,7 @@ async function main() {
 
   const templates = [
     {
-      id: 'template-simple-momentum',
+      id: IDS.templateMomentum,
       name: 'Simple Momentum',
       description: 'Buys YES when price crosses above 0.6 — a straightforward trend-following template for beginners.',
       isTemplate: true,
@@ -1367,7 +1423,7 @@ async function main() {
       createdAt: daysAgo(30),
     },
     {
-      id: 'template-mean-reversion',
+      id: IDS.templateMeanRev,
       name: 'Mean Reversion',
       description: 'Buys when price drops below the recent average — capitalizes on temporary dips that tend to revert.',
       isTemplate: true,
@@ -1390,7 +1446,7 @@ async function main() {
       createdAt: daysAgo(28),
     },
     {
-      id: 'template-news-reactive',
+      id: IDS.templateNewsReact,
       name: 'News Reactive',
       description: 'Uses AI news signals to trigger trades — buys when high-confidence bullish signals are detected.',
       isTemplate: true,
@@ -1410,7 +1466,7 @@ async function main() {
       createdAt: daysAgo(25),
     },
     {
-      id: 'template-risk-manager',
+      id: IDS.templateRiskMgr,
       name: 'Risk Manager',
       description: 'Stop-loss and take-profit wrapper — automatically exits positions when price targets are hit.',
       isTemplate: true,
@@ -1433,7 +1489,7 @@ async function main() {
       createdAt: daysAgo(22),
     },
     {
-      id: 'template-whale-follower',
+      id: IDS.templateWhaleFollow,
       name: 'Whale Follower',
       description: 'Copies whale trades with size and risk filters — follows smart money while managing your exposure.',
       isTemplate: true,
