@@ -74,17 +74,18 @@ export function Hero() {
             className="w-full h-auto"
             aria-hidden="true"
           >
+            <style>{`@media(prefers-reduced-motion:reduce){animate{display:none}}`}</style>
             {/* Connection lines */}
-            <path d="M140 80 L240 80" stroke="rgba(6,182,212,0.4)" strokeWidth="2" strokeDasharray="6 4">
+            <path d="M140 80 L240 80" stroke="var(--color-pf-cyan-500)" strokeOpacity="0.4" strokeWidth="2" strokeDasharray="6 4">
               <animate attributeName="stroke-dashoffset" from="20" to="0" dur="2s" repeatCount="indefinite" />
             </path>
-            <path d="M340 80 L420 130" stroke="rgba(6,182,212,0.4)" strokeWidth="2" strokeDasharray="6 4">
+            <path d="M340 80 L420 130" stroke="var(--color-pf-cyan-500)" strokeOpacity="0.4" strokeWidth="2" strokeDasharray="6 4">
               <animate attributeName="stroke-dashoffset" from="20" to="0" dur="2s" repeatCount="indefinite" />
             </path>
-            <path d="M140 200 L240 200" stroke="rgba(6,182,212,0.4)" strokeWidth="2" strokeDasharray="6 4">
+            <path d="M140 200 L240 200" stroke="var(--color-pf-cyan-500)" strokeOpacity="0.4" strokeWidth="2" strokeDasharray="6 4">
               <animate attributeName="stroke-dashoffset" from="20" to="0" dur="2.5s" repeatCount="indefinite" />
             </path>
-            <path d="M340 200 L420 170" stroke="rgba(6,182,212,0.4)" strokeWidth="2" strokeDasharray="6 4">
+            <path d="M340 200 L420 170" stroke="var(--color-pf-cyan-500)" strokeOpacity="0.4" strokeWidth="2" strokeDasharray="6 4">
               <animate attributeName="stroke-dashoffset" from="20" to="0" dur="2.5s" repeatCount="indefinite" />
             </path>
 

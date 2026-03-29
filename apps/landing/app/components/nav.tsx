@@ -160,7 +160,7 @@ export function Nav() {
           </a>
           <a
             href="/register"
-            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_color-mix(in_srgb,var(--color-pf-cyan-500)_30%,transparent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
           >
             Start building free
           </a>
@@ -168,7 +168,7 @@ export function Nav() {
 
         <button
           type="button"
-          className="flex md:hidden flex-col items-center justify-center gap-1.5 w-11 h-11 bg-transparent border-none cursor-pointer ml-auto hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
+          className="flex md:hidden flex-col items-center justify-center gap-1.5 w-11 h-11 bg-transparent border-none cursor-pointer ml-auto hover:bg-pf-text/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav-menu"
@@ -207,7 +207,7 @@ export function Nav() {
         <a
           href="/register"
           onClick={closeMobile}
-          className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+          className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-black transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_color-mix(in_srgb,var(--color-pf-cyan-500)_30%,transparent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
         >
           Start building free
         </a>

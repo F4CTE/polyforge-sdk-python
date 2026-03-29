@@ -552,8 +552,9 @@ function BacktestTab({
         {/* Form row */}
         <div className="flex items-end gap-3 flex-wrap">
           <div className="flex-1 min-w-[140px]">
-            <label className="text-[10px] text-pf-text-secondary uppercase tracking-wider mb-1 block">Start Date</label>
+            <label htmlFor="ep-start-date" className="text-[10px] text-pf-text-secondary uppercase tracking-wider mb-1 block">Start Date</label>
             <input
+              id="ep-start-date"
               type="date"
               lang="en"
               value={dateStart}
@@ -563,8 +564,9 @@ function BacktestTab({
             />
           </div>
           <div className="flex-1 min-w-[140px]">
-            <label className="text-[10px] text-pf-text-secondary uppercase tracking-wider mb-1 block">End Date</label>
+            <label htmlFor="ep-end-date" className="text-[10px] text-pf-text-secondary uppercase tracking-wider mb-1 block">End Date</label>
             <input
+              id="ep-end-date"
               type="date"
               lang="en"
               value={dateEnd}
@@ -918,14 +920,15 @@ function MarketBindingsSection({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-[10px] text-pf-text-secondary uppercase tracking-wider flex items-center gap-1">
+      <span className="text-[10px] text-pf-text-secondary uppercase tracking-wider flex items-center gap-1">
         <Search className="size-2.5" /> Market Bindings
-      </label>
+      </span>
       <div className="flex flex-wrap gap-2">
         {marketSlots.map(slot => (
           <div key={slot.slot} className="flex-1 min-w-[200px] relative">
-            <label className="text-[10px] text-pf-text-muted mb-0.5 block">{slot.label || slot.slot}</label>
+            <label htmlFor={`ep-market-${slot.slot}`} className="text-[10px] text-pf-text-muted mb-0.5 block">{slot.label || slot.slot}</label>
             <input
+              id={`ep-market-${slot.slot}`}
               type="text"
               value={marketSearch[slot.slot] ?? ''}
               onChange={e => {

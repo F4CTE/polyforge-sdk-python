@@ -186,7 +186,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {isGlobal && (
           <div
             className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap z-10 pointer-events-none"
-            style={{ backgroundColor: '#06b6d422', border: '1px solid #06b6d455', color: '#06b6d4' }}
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-pf-cyan-500) 13%, transparent)', border: '1px solid color-mix(in srgb, var(--color-pf-cyan-500) 33%, transparent)', color: 'var(--color-pf-cyan-500)' }}
             title={isSafety ? 'Safety block — always enforced globally on every tick' : 'Condition block — no connections, acts as a global gate for all execution paths. Wire it to scope it to a specific path.'}
           >
             <Globe className="size-2.5" />
@@ -198,7 +198,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {isInactive && (
           <div
             className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap z-10 pointer-events-none"
-            style={{ backgroundColor: '#f59e0b22', border: '1px solid #f59e0b55', color: '#f59e0b' }}
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-pf-gold-500) 13%, transparent)', border: '1px solid color-mix(in srgb, var(--color-pf-gold-500) 33%, transparent)', color: 'var(--color-pf-gold-500)' }}
             title={isTrigger ? 'Trigger has no outgoing connection — wire it to a condition or action to activate it' : 'Action has no incoming connection — wire a trigger or condition to it to activate it'}
           >
             <Unlink className="size-2.5" />
@@ -210,7 +210,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {showSetupBadge && (
           <div
             className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap z-10 pointer-events-none"
-            style={{ backgroundColor: '#ef444422', border: '1px solid #ef444455', color: '#ef4444' }}
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-pf-danger) 13%, transparent)', border: '1px solid color-mix(in srgb, var(--color-pf-danger) 33%, transparent)', color: 'var(--color-pf-danger)' }}
             title={`${emptyFieldKeys.size} required field${emptyFieldKeys.size !== 1 ? 's' : ''} not filled in`}
           >
             <AlertTriangle className="size-2.5" />
@@ -245,7 +245,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
               <span title={`${emptyFieldKeys.size} field${emptyFieldKeys.size !== 1 ? 's' : ''} need configuration`}>
                 <AlertTriangle
                   className="size-3 shrink-0"
-                  style={{ color: '#ef4444', opacity: 0.6 }}
+                  style={{ color: 'var(--color-pf-danger)', opacity: 0.6 }}
                   aria-hidden="true"
                 />
               </span>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { Search, ChevronLeft, ChevronRight, Check, X, Wifi, Shield, Users, AlertCircle, EyeOff } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Check, X, Wifi, Shield, Users, AlertCircle, EyeOff } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDate } from '@/lib/utils';
 
@@ -123,8 +123,8 @@ export function Component() {
   }
 
   function sortIndicator(field: SortField) {
-    if (sortField !== field) return <span className="text-[var(--color-pf-text-tertiary)]/40 ml-1">{'▲▼'}</span>;
-    return <span className="ml-1 text-[var(--color-pf-cyan-500)]">{sortDir === 'asc' ? '▲' : '▼'}</span>;
+    if (sortField !== field) return <span className="text-[var(--color-pf-text-tertiary)]/40 ml-1"><ChevronUp className="inline w-3 h-3" /><ChevronDown className="inline w-3 h-3" /></span>;
+    return <span className="ml-1 text-[var(--color-pf-cyan-500)]">{sortDir === 'asc' ? <ChevronUp className="inline w-3 h-3" /> : <ChevronDown className="inline w-3 h-3" />}</span>;
   }
 
   const displayUsers = useMemo(() => {
@@ -248,7 +248,6 @@ export function Component() {
                 displayUsers.map((user) => (
                   <tr
                     key={user.id}
-                    role="link"
                     tabIndex={0}
                     onClick={() => navigate(`/users/${user.id}`)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/users/${user.id}`); } }}

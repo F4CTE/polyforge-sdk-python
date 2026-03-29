@@ -215,7 +215,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         {/* Header bar */}
         <div
           className="flex items-center gap-1.5 px-2.5 py-1.5"
-          style={{ backgroundColor: CALC_COLOR, color: 'white' }}
+          style={{ backgroundColor: CALC_COLOR, color: 'var(--color-pf-text)' }}
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
           {icon}

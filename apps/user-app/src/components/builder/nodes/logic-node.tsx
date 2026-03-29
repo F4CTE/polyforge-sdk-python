@@ -116,7 +116,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
         {/* Header bar */}
         <div
           className="flex items-center gap-1.5 px-2.5 py-1.5"
-          style={{ backgroundColor: color, color: 'white' }}
+          style={{ backgroundColor: color, color: 'var(--color-pf-text)' }}
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
           {icon}
@@ -150,7 +150,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
                   aria-label={field.label}
                   className={`w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors ${
                     (d.config[field.key] ?? '').startsWith('$')
-                      ? 'text-purple-400 font-mono'
+                      ? 'text-pf-purple-400 font-mono'
                       : 'text-pf-text'
                   }`}
                 />

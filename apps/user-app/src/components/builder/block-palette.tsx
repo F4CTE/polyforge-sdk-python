@@ -266,7 +266,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                     <span
                       className="ml-0.5 px-1 py-px rounded-full text-[9px] font-semibold leading-none"
                       style={{
-                        backgroundColor: isActive ? 'rgba(255,255,255,0.25)' : meta.color + '30',
+                        backgroundColor: isActive ? 'color-mix(in srgb, var(--color-pf-text) 25%, transparent)' : meta.color + '30',
                         color: isActive ? 'white' : meta.color,
                       }}
                     >
@@ -292,8 +292,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               <button
                 type="button"
                 onClick={addVariable}
-                className="flex items-center gap-2 w-full px-3 py-2 rounded-pf-sm text-xs font-medium text-white transition-colors hover:opacity-90"
-                style={{ backgroundColor: 'var(--color-pf-purple-500)' }}
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-pf-sm text-xs font-medium text-white transition-colors hover:opacity-90 bg-pf-purple-500"
               >
                 <Plus className="size-3.5" />
                 Add Variable

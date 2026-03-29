@@ -262,7 +262,7 @@ export function Features() {
               className={`bg-pf-surface bg-gradient-to-br ${feature.gradientClass} to-pf-surface border border-pf-border-subtle rounded-pf-lg transition-all duration-250 hover:border-pf-cyan-500/30 hover:shadow-pf-md`}
             >
               {/* Visual preview */}
-              <div className="px-4 py-3 border-b border-pf-border-subtle bg-black/20 rounded-t-pf-lg overflow-hidden" aria-hidden="true">
+              <div className="px-4 py-3 border-b border-pf-border-subtle bg-pf-base/20 rounded-t-pf-lg overflow-hidden" aria-hidden="true">
                 <div className="w-full h-auto">{feature.visual}</div>
               </div>
 

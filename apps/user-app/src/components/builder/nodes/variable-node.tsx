@@ -91,7 +91,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
         {/* Header bar */}
         <div
           className="flex items-center gap-1.5 px-2.5 py-1.5"
-          style={{ backgroundColor: VARIABLE_COLOR, color: 'white' }}
+          style={{ backgroundColor: VARIABLE_COLOR, color: 'var(--color-pf-text)' }}
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
           <Variable className="size-3" />

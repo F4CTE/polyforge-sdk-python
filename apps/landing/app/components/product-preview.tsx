@@ -26,6 +26,7 @@ export function ProductPreview() {
               role="img"
               aria-label="Polyforge dashboard showing portfolio P&amp;L, active strategies, market data, and recent trades"
             >
+              <style>{`@media(prefers-reduced-motion:reduce){animate{display:none}}`}</style>
               {/* Sidebar */}
               <rect x="0" y="0" width="180" height="440" fill="#12121a" />
               <rect x="0" y="0" width="180" height="440" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />

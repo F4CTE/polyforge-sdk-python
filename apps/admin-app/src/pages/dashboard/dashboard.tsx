@@ -287,7 +287,7 @@ export function Component() {
                 type="button"
                 onClick={toggleInviteOnly}
                 disabled={!isSuperAdmin}
-                className={`transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded ${isSuperAdmin ? 'text-[var(--color-pf-cyan-500)] hover:text-[var(--color-pf-cyan-400)]' : 'text-[var(--color-pf-text-tertiary)] opacity-50 cursor-not-allowed'}`}
+                className={`transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded ${isSuperAdmin ? 'cursor-pointer text-[var(--color-pf-cyan-500)] hover:text-[var(--color-pf-cyan-400)]' : 'text-[var(--color-pf-text-tertiary)] opacity-50 cursor-not-allowed'}`}
                 aria-label={config?.inviteOnly ? 'Disable invite-only registration' : 'Enable invite-only registration'}
                 title={!isSuperAdmin ? 'Super Admin only' : undefined}
               >

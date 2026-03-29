@@ -32,7 +32,7 @@ export function Component() {
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
-          <div className="absolute inset-0 bg-black/50" aria-hidden="true" onClick={() => setMobileOpen(false)} />
+          <div className="absolute inset-0 bg-black/50" role="button" tabIndex={0} aria-label="Close sidebar" onClick={() => setMobileOpen(false)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setMobileOpen(false); }} />
           <div className="relative z-50 h-full">
             <AdminSidebar collapsed={false} onToggle={() => setMobileOpen(false)} onNavigate={() => setMobileOpen(false)} />
           </div>

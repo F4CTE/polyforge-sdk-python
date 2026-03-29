@@ -111,7 +111,6 @@ export function Component() {
                 tickets.map((t) => (
                   <tr
                     key={t.id}
-                    role="link"
                     tabIndex={0}
                     aria-label={`View ticket: ${t.subject}`}
                     onClick={() => navigate(`/tickets/${t.id}`)}

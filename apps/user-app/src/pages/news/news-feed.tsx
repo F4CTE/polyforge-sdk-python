@@ -452,7 +452,7 @@ export function Component() {
                     key={signal.id}
                     className={`rounded-pf-sm border p-3 transition-all duration-200 ${
                       signal.confidence > 80
-                        ? 'border-pf-cyan-500/30 shadow-[0_0_12px_rgba(6,182,212,0.08)]'
+                        ? 'border-pf-cyan-500/30 shadow-[0_0_12px_color-mix(in_srgb,var(--color-pf-cyan-500)_8%,transparent)]'
                         : 'border-pf-border-subtle'
                     }`}
                   >

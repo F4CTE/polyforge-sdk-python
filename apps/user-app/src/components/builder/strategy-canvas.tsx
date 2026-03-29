@@ -54,9 +54,9 @@ export function StrategyCanvas() {
       ...e,
       style: {
         ...e.style,
-        stroke: 'rgba(6,182,212,0.75)',
+        stroke: 'color-mix(in srgb, var(--color-pf-cyan-500) 75%, transparent)',
         strokeWidth: 2,
-        filter: 'drop-shadow(0 0 4px rgba(6,182,212,0.45))',
+        filter: 'drop-shadow(0 0 4px color-mix(in srgb, var(--color-pf-cyan-500) 45%, transparent))',
       },
     }));
   }, [edges, isExecuting]);

@@ -35,6 +35,7 @@ const steps = [
       'Go live with one click. Set advanced orders like TP/SL and trailing stops, copy whale traders, or let AI signals guide your trades. Monitor everything from your dashboard or via the REST API.',
     visual: (
       <svg className="w-20 h-20" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <style>{`@media(prefers-reduced-motion:reduce){animate{display:none}}`}</style>
         <rect x="12" y="20" width="56" height="40" rx="6" fill="rgba(6,182,212,0.06)" stroke="rgba(6,182,212,0.2)" strokeWidth="1" />
         <circle cx="40" cy="36" r="4" fill="#4ade80">
           <animate attributeName="r" values="4;5;4" dur="2s" repeatCount="indefinite" />

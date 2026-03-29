@@ -148,7 +148,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               }`}
             >
               <span className={`p-1.5 rounded-pf-sm shrink-0 ${
-                r.type === 'market' ? 'bg-pf-cyan-500/10 text-pf-cyan-400' : 'bg-purple-500/10 text-purple-400'
+                r.type === 'market' ? 'bg-pf-cyan-500/10 text-pf-cyan-400' : 'bg-pf-purple-500/10 text-pf-purple-400'
               }`}>
                 {r.type === 'market' ? <BarChart3 className="size-3.5" /> : <Zap className="size-3.5" />}
               </span>
@@ -157,7 +157,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                 {r.sub && <div className="text-[11px] text-pf-text-muted capitalize">{r.sub}</div>}
               </div>
               <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 ${
-                r.type === 'market' ? 'bg-pf-cyan-500/10 text-pf-cyan-400' : 'bg-purple-500/10 text-purple-400'
+                r.type === 'market' ? 'bg-pf-cyan-500/10 text-pf-cyan-400' : 'bg-pf-purple-500/10 text-pf-purple-400'
               }`}>
                 {r.type === 'market' ? 'Market' : 'Strategy'}
               </span>
