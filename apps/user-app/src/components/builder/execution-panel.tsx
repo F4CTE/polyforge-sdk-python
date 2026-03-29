@@ -9,6 +9,7 @@ import {
 import { wsManager, type WsMessage } from '../../lib/websocket';
 import { useBuilderStore } from '../../stores/builder-store';
 import { useExecutionStore } from '../../stores/execution-store';
+import { StrategyChartGrid } from '../charts/strategy-chart-grid';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -682,6 +683,17 @@ function BacktestTab({
             Results may be affected by data gaps in the selected date range.
           </div>
         )}
+
+        {/* Price charts with trade markers */}
+        {Object.keys(marketBindings).length > 0 && (
+          <StrategyChartGrid
+            marketBindings={marketBindings}
+            marketSlots={marketSlots}
+            trades={bt.trades}
+            dateFrom={dateStart}
+            dateTo={dateEnd}
+          />
+        )}
       </div>
     );
   }
@@ -853,6 +865,15 @@ function LiveTab({
         <MetricCard label="Placed" value={String(live.ordersPlaced)} color="text-pf-text" icon={<Target className="size-3" />} />
         <MetricCard label="Filled" value={String(live.ordersFilled)} color="text-pf-text" icon={<Activity className="size-3" />} />
       </div>
+
+      {/* Price charts with trade markers */}
+      {Object.keys(marketBindings).length > 0 && (
+        <StrategyChartGrid
+          marketBindings={marketBindings}
+          marketSlots={marketSlots}
+          recentTrades={live.recentTrades.map(t => ({ ...t, market: t.market }))}
+        />
+      )}
 
       {/* Recent trades */}
       {live.recentTrades.length > 0 && (
