@@ -162,7 +162,7 @@ export function Hero() {
               x="80"
               y="73"
               textAnchor="middle"
-              fill="#67e8f9"
+              fill="var(--color-pf-cyan-300)"
               fontSize="10"
               fontFamily="Inter, sans-serif"
               fontWeight="600"
@@ -173,7 +173,7 @@ export function Hero() {
               x="80"
               y="93"
               textAnchor="middle"
-              fill="#9898b0"
+              fill="var(--color-pf-text-muted)"
               fontSize="9"
               fontFamily="Inter, sans-serif"
             >
@@ -195,7 +195,7 @@ export function Hero() {
               x="80"
               y="193"
               textAnchor="middle"
-              fill="#67e8f9"
+              fill="var(--color-pf-cyan-300)"
               fontSize="10"
               fontFamily="Inter, sans-serif"
               fontWeight="600"
@@ -206,7 +206,7 @@ export function Hero() {
               x="80"
               y="213"
               textAnchor="middle"
-              fill="#9898b0"
+              fill="var(--color-pf-text-muted)"
               fontSize="9"
               fontFamily="Inter, sans-serif"
             >
@@ -228,7 +228,7 @@ export function Hero() {
               x="300"
               y="73"
               textAnchor="middle"
-              fill="#67e8f9"
+              fill="var(--color-pf-cyan-300)"
               fontSize="10"
               fontFamily="Inter, sans-serif"
               fontWeight="600"
@@ -239,7 +239,7 @@ export function Hero() {
               x="300"
               y="93"
               textAnchor="middle"
-              fill="#9898b0"
+              fill="var(--color-pf-text-muted)"
               fontSize="9"
               fontFamily="Inter, sans-serif"
             >
@@ -261,7 +261,7 @@ export function Hero() {
               x="300"
               y="193"
               textAnchor="middle"
-              fill="#67e8f9"
+              fill="var(--color-pf-cyan-300)"
               fontSize="10"
               fontFamily="Inter, sans-serif"
               fontWeight="600"
@@ -272,7 +272,7 @@ export function Hero() {
               x="300"
               y="213"
               textAnchor="middle"
-              fill="#9898b0"
+              fill="var(--color-pf-text-muted)"
               fontSize="9"
               fontFamily="Inter, sans-serif"
             >
@@ -294,7 +294,7 @@ export function Hero() {
               x="480"
               y="143"
               textAnchor="middle"
-              fill="#4ade80"
+              fill="var(--color-pf-success)"
               fontSize="10"
               fontFamily="Inter, sans-serif"
               fontWeight="600"
@@ -305,7 +305,7 @@ export function Hero() {
               x="480"
               y="163"
               textAnchor="middle"
-              fill="#9898b0"
+              fill="var(--color-pf-text-muted)"
               fontSize="9"
               fontFamily="Inter, sans-serif"
             >
@@ -313,7 +313,7 @@ export function Hero() {
             </text>
 
             {/* Live pulse */}
-            <circle cx="530" cy="128" r="4" fill="#4ade80">
+            <circle cx="530" cy="128" r="4" fill="var(--color-pf-success)">
               <animate
                 attributeName="opacity"
                 values="1;0.3;1"

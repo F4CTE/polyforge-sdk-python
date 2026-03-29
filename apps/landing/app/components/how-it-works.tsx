@@ -78,17 +78,17 @@ const steps = [
         />
         <polyline
           points="10,55 20,50 30,52 40,40 50,35 60,30 70,22"
-          stroke="#22d3ee"
+          stroke="var(--color-pf-cyan-400)"
           strokeWidth="1.5"
           fill="none"
           strokeLinecap="round"
         />
-        <circle cx="70" cy="22" r="3" fill="#22d3ee" opacity="0.7" />
+        <circle cx="70" cy="22" r="3" fill="var(--color-pf-cyan-400)" opacity="0.7" />
         <text
           x="70"
           y="17"
           textAnchor="middle"
-          fill="#4ade80"
+          fill="var(--color-pf-success)"
           fontSize="7"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -120,7 +120,7 @@ const steps = [
           stroke="rgba(6,182,212,0.2)"
           strokeWidth="1"
         />
-        <circle cx="40" cy="36" r="4" fill="#4ade80">
+        <circle cx="40" cy="36" r="4" fill="var(--color-pf-success)">
           <animate
             attributeName="r"
             values="4;5;4"
@@ -138,7 +138,7 @@ const steps = [
           x="40"
           y="52"
           textAnchor="middle"
-          fill="#9898b0"
+          fill="var(--color-pf-text-muted)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
         >

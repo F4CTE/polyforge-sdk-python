@@ -11,9 +11,9 @@ export function ProductPreview() {
             className="flex items-center gap-1.5 px-4 py-3 border-b border-pf-border-subtle bg-pf-elevated"
             aria-hidden="true"
           >
-            <span className="w-[11px] h-[11px] rounded-full bg-red-500" />
-            <span className="w-[11px] h-[11px] rounded-full bg-amber-400" />
-            <span className="w-[11px] h-[11px] rounded-full bg-emerald-500" />
+            <span className="w-[11px] h-[11px] rounded-full bg-pf-danger" />
+            <span className="w-[11px] h-[11px] rounded-full bg-pf-warning" />
+            <span className="w-[11px] h-[11px] rounded-full bg-pf-success" />
             <span className="flex-1 text-center text-[11px] font-mono text-pf-text-muted bg-white/4 rounded px-3 py-1 ml-2">
               app.polyforge.app/dashboard
             </span>
@@ -28,11 +28,11 @@ export function ProductPreview() {
               xmlns="http://www.w3.org/2000/svg"
               className="block w-full h-auto"
               role="img"
-              aria-label="Polyforge dashboard showing portfolio P&amp;L, active strategies, market data, and recent trades"
+              aria-label="Polyforge dashboard showing portfolio P&L, active strategies, market data, and recent trades"
             >
               <style>{`@media(prefers-reduced-motion:reduce){animate{display:none}}`}</style>
               {/* Sidebar */}
-              <rect x="0" y="0" width="180" height="440" fill="#12121a" />
+              <rect x="0" y="0" width="180" height="440" fill="var(--color-pf-base)" />
               <rect
                 x="0"
                 y="0"
@@ -44,7 +44,7 @@ export function ProductPreview() {
               <text
                 x="24"
                 y="32"
-                fill="#67e8f9"
+                fill="var(--color-pf-cyan-300)"
                 fontSize="13"
                 fontFamily="Inter, sans-serif"
                 fontWeight="700"
@@ -62,7 +62,7 @@ export function ProductPreview() {
               <text
                 x="44"
                 y="76"
-                fill="#22d3ee"
+                fill="var(--color-pf-cyan-400)"
                 fontSize="11"
                 fontFamily="Inter, sans-serif"
                 fontWeight="500"
@@ -73,7 +73,7 @@ export function ProductPreview() {
               <text
                 x="44"
                 y="112"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="11"
                 fontFamily="Inter, sans-serif"
               >
@@ -83,7 +83,7 @@ export function ProductPreview() {
               <text
                 x="44"
                 y="144"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="11"
                 fontFamily="Inter, sans-serif"
               >
@@ -93,7 +93,7 @@ export function ProductPreview() {
               <text
                 x="44"
                 y="176"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="11"
                 fontFamily="Inter, sans-serif"
               >
@@ -103,7 +103,7 @@ export function ProductPreview() {
               <text
                 x="44"
                 y="208"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="11"
                 fontFamily="Inter, sans-serif"
               >
@@ -113,7 +113,7 @@ export function ProductPreview() {
               <text
                 x="44"
                 y="240"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="11"
                 fontFamily="Inter, sans-serif"
               >
@@ -123,7 +123,7 @@ export function ProductPreview() {
               <text
                 x="44"
                 y="272"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="11"
                 fontFamily="Inter, sans-serif"
               >
@@ -133,7 +133,7 @@ export function ProductPreview() {
               <text
                 x="44"
                 y="304"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="11"
                 fontFamily="Inter, sans-serif"
               >
@@ -143,7 +143,7 @@ export function ProductPreview() {
               <text
                 x="44"
                 y="336"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="11"
                 fontFamily="Inter, sans-serif"
               >
@@ -152,11 +152,11 @@ export function ProductPreview() {
               <circle cx="28" cy="332" r="3" fill="rgba(255,255,255,0.1)" />
 
               {/* Main content area */}
-              <rect x="180" y="0" width="720" height="440" fill="#0a0a0f" />
+              <rect x="180" y="0" width="720" height="440" fill="var(--color-pf-base)" />
               <text
                 x="204"
                 y="32"
-                fill="#f0f0f5"
+                fill="var(--color-pf-text)"
                 fontSize="14"
                 fontFamily="Inter, sans-serif"
                 fontWeight="600"
@@ -177,7 +177,7 @@ export function ProductPreview() {
                 x="800"
                 y="33"
                 textAnchor="middle"
-                fill="#22d3ee"
+                fill="var(--color-pf-cyan-400)"
                 fontSize="10"
                 fontFamily="Inter, sans-serif"
                 fontWeight="500"
@@ -192,14 +192,14 @@ export function ProductPreview() {
                 width="220"
                 height="100"
                 rx="10"
-                fill="#12121a"
+                fill="var(--color-pf-base)"
                 stroke="rgba(255,255,255,0.08)"
                 strokeWidth="1"
               />
               <text
                 x="224"
                 y="76"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="10"
                 fontFamily="Inter, sans-serif"
               >
@@ -208,7 +208,7 @@ export function ProductPreview() {
               <text
                 x="224"
                 y="102"
-                fill="#4ade80"
+                fill="var(--color-pf-success)"
                 fontSize="22"
                 fontFamily="JetBrains Mono, monospace"
                 fontWeight="700"
@@ -218,7 +218,7 @@ export function ProductPreview() {
               <text
                 x="224"
                 y="122"
-                fill="#4ade80"
+                fill="var(--color-pf-success)"
                 fontSize="10"
                 fontFamily="JetBrains Mono, monospace"
               >
@@ -226,7 +226,7 @@ export function ProductPreview() {
               </text>
               <polyline
                 points="330,105 345,98 360,100 375,88 390,82 405,78"
-                stroke="#4ade80"
+                stroke="var(--color-pf-success)"
                 strokeWidth="1.5"
                 fill="none"
               />
@@ -238,14 +238,14 @@ export function ProductPreview() {
                 width="220"
                 height="100"
                 rx="10"
-                fill="#12121a"
+                fill="var(--color-pf-base)"
                 stroke="rgba(255,255,255,0.08)"
                 strokeWidth="1"
               />
               <text
                 x="460"
                 y="76"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="10"
                 fontFamily="Inter, sans-serif"
               >
@@ -254,7 +254,7 @@ export function ProductPreview() {
               <text
                 x="460"
                 y="102"
-                fill="#f0f0f5"
+                fill="var(--color-pf-text)"
                 fontSize="22"
                 fontFamily="JetBrains Mono, monospace"
                 fontWeight="700"
@@ -264,7 +264,7 @@ export function ProductPreview() {
               <text
                 x="460"
                 y="122"
-                fill="#9898b0"
+                fill="var(--color-pf-text-muted)"
                 fontSize="10"
                 fontFamily="JetBrains Mono, monospace"
               >
@@ -278,14 +278,14 @@ export function ProductPreview() {
                 width="148"
                 height="100"
                 rx="10"
-                fill="#12121a"
+                fill="var(--color-pf-base)"
                 stroke="rgba(255,255,255,0.08)"
                 strokeWidth="1"
               />
               <text
                 x="696"
                 y="76"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="10"
                 fontFamily="Inter, sans-serif"
               >
@@ -294,7 +294,7 @@ export function ProductPreview() {
               <text
                 x="696"
                 y="102"
-                fill="#f0f0f5"
+                fill="var(--color-pf-text)"
                 fontSize="22"
                 fontFamily="JetBrains Mono, monospace"
                 fontWeight="700"
@@ -304,7 +304,7 @@ export function ProductPreview() {
               <text
                 x="696"
                 y="122"
-                fill="#22d3ee"
+                fill="var(--color-pf-cyan-400)"
                 fontSize="10"
                 fontFamily="JetBrains Mono, monospace"
               >
@@ -318,11 +318,11 @@ export function ProductPreview() {
                 width="340"
                 height="80"
                 rx="10"
-                fill="#12121a"
+                fill="var(--color-pf-base)"
                 stroke="rgba(255,255,255,0.08)"
                 strokeWidth="1"
               />
-              <circle cx="224" cy="198" r="5" fill="#4ade80">
+              <circle cx="224" cy="198" r="5" fill="var(--color-pf-success)">
                 <animate
                   attributeName="opacity"
                   values="1;0.4;1"
@@ -333,7 +333,7 @@ export function ProductPreview() {
               <text
                 x="238"
                 y="201"
-                fill="#f0f0f5"
+                fill="var(--color-pf-text)"
                 fontSize="12"
                 fontFamily="Inter, sans-serif"
                 fontWeight="600"
@@ -343,7 +343,7 @@ export function ProductPreview() {
               <text
                 x="460"
                 y="201"
-                fill="#4ade80"
+                fill="var(--color-pf-success)"
                 fontSize="11"
                 fontFamily="JetBrains Mono, monospace"
                 textAnchor="end"
@@ -353,7 +353,7 @@ export function ProductPreview() {
               <text
                 x="238"
                 y="222"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="9"
                 fontFamily="Inter, sans-serif"
               >
@@ -373,11 +373,11 @@ export function ProductPreview() {
                 width="340"
                 height="80"
                 rx="10"
-                fill="#12121a"
+                fill="var(--color-pf-base)"
                 stroke="rgba(255,255,255,0.08)"
                 strokeWidth="1"
               />
-              <circle cx="224" cy="294" r="5" fill="#4ade80">
+              <circle cx="224" cy="294" r="5" fill="var(--color-pf-success)">
                 <animate
                   attributeName="opacity"
                   values="1;0.4;1"
@@ -388,7 +388,7 @@ export function ProductPreview() {
               <text
                 x="238"
                 y="297"
-                fill="#f0f0f5"
+                fill="var(--color-pf-text)"
                 fontSize="12"
                 fontFamily="Inter, sans-serif"
                 fontWeight="600"
@@ -398,7 +398,7 @@ export function ProductPreview() {
               <text
                 x="460"
                 y="297"
-                fill="#4ade80"
+                fill="var(--color-pf-success)"
                 fontSize="11"
                 fontFamily="JetBrains Mono, monospace"
                 textAnchor="end"
@@ -408,7 +408,7 @@ export function ProductPreview() {
               <text
                 x="238"
                 y="318"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="9"
                 fontFamily="Inter, sans-serif"
               >
@@ -428,14 +428,14 @@ export function ProductPreview() {
                 width="264"
                 height="70"
                 rx="10"
-                fill="#12121a"
+                fill="var(--color-pf-base)"
                 stroke="rgba(255,255,255,0.08)"
                 strokeWidth="1"
               />
               <text
                 x="580"
                 y="196"
-                fill="#f0f0f5"
+                fill="var(--color-pf-text)"
                 fontSize="11"
                 fontFamily="Inter, sans-serif"
                 fontWeight="500"
@@ -445,7 +445,7 @@ export function ProductPreview() {
               <text
                 x="580"
                 y="214"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="9"
                 fontFamily="Inter, sans-serif"
               >
@@ -454,7 +454,7 @@ export function ProductPreview() {
               <text
                 x="780"
                 y="196"
-                fill="#22d3ee"
+                fill="var(--color-pf-cyan-400)"
                 fontSize="10"
                 fontFamily="JetBrains Mono, monospace"
                 textAnchor="end"
@@ -484,14 +484,14 @@ export function ProductPreview() {
                 width="264"
                 height="70"
                 rx="10"
-                fill="#12121a"
+                fill="var(--color-pf-base)"
                 stroke="rgba(255,255,255,0.08)"
                 strokeWidth="1"
               />
               <text
                 x="580"
                 y="280"
-                fill="#f0f0f5"
+                fill="var(--color-pf-text)"
                 fontSize="11"
                 fontFamily="Inter, sans-serif"
                 fontWeight="500"
@@ -501,7 +501,7 @@ export function ProductPreview() {
               <text
                 x="580"
                 y="298"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="9"
                 fontFamily="Inter, sans-serif"
               >
@@ -510,7 +510,7 @@ export function ProductPreview() {
               <text
                 x="780"
                 y="280"
-                fill="#22d3ee"
+                fill="var(--color-pf-cyan-400)"
                 fontSize="10"
                 fontFamily="JetBrains Mono, monospace"
                 textAnchor="end"
@@ -540,14 +540,14 @@ export function ProductPreview() {
                 width="264"
                 height="70"
                 rx="10"
-                fill="#12121a"
+                fill="var(--color-pf-base)"
                 stroke="rgba(255,255,255,0.08)"
                 strokeWidth="1"
               />
               <text
                 x="580"
                 y="364"
-                fill="#f0f0f5"
+                fill="var(--color-pf-text)"
                 fontSize="11"
                 fontFamily="Inter, sans-serif"
                 fontWeight="500"
@@ -557,7 +557,7 @@ export function ProductPreview() {
               <text
                 x="580"
                 y="382"
-                fill="#5a5a72"
+                fill="var(--color-pf-text-muted)"
                 fontSize="9"
                 fontFamily="Inter, sans-serif"
               >
@@ -566,7 +566,7 @@ export function ProductPreview() {
               <text
                 x="780"
                 y="364"
-                fill="#22d3ee"
+                fill="var(--color-pf-cyan-400)"
                 fontSize="10"
                 fontFamily="JetBrains Mono, monospace"
                 textAnchor="end"

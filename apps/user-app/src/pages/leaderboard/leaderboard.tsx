@@ -49,9 +49,9 @@ function pnlSign(pnl: string): string {
 }
 
 function rankMedal(rank: number): React.ReactNode {
-  if (rank === 1) return <Trophy className="size-3.5 text-amber-400" aria-label="Gold medal" />;
-  if (rank === 2) return <Trophy className="size-3.5 text-gray-400" aria-label="Silver medal" />;
-  if (rank === 3) return <Trophy className="size-3.5 text-amber-700" aria-label="Bronze medal" />;
+  if (rank === 1) return <Trophy className="size-3.5 text-pf-gold-400" aria-label="Gold medal" />;
+  if (rank === 2) return <Trophy className="size-3.5 text-pf-text-secondary" aria-label="Silver medal" />;
+  if (rank === 3) return <Trophy className="size-3.5 text-pf-gold-600" aria-label="Bronze medal" />;
   return null;
 }
 

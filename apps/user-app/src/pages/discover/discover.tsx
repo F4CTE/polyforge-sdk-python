@@ -213,12 +213,12 @@ export function Component() {
                   <div className="flex flex-wrap gap-1 mb-3">
                     {s.tags.slice(0, 4).map(tag => (
                       <span key={tag} className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                        tag === 'momentum' ? 'bg-amber-500/15 text-amber-400' :
-                        tag === 'political' ? 'bg-blue-500/15 text-blue-400' :
-                        tag === 'yes-bias' ? 'bg-emerald-500/15 text-emerald-400' :
-                        tag === 'defensive' ? 'bg-purple-500/15 text-purple-400' :
-                        tag === 'scalping' ? 'bg-red-500/15 text-red-400' :
-                        tag === 'high-freq' ? 'bg-pink-500/15 text-pink-400' :
+                        tag === 'momentum' ? 'bg-pf-warning/15 text-pf-warning' :
+                        tag === 'political' ? 'bg-pf-info/15 text-pf-info' :
+                        tag === 'yes-bias' ? 'bg-pf-success/15 text-pf-success' :
+                        tag === 'defensive' ? 'bg-pf-purple-500/15 text-pf-purple-400' :
+                        tag === 'scalping' ? 'bg-pf-danger/15 text-pf-danger' :
+                        tag === 'high-freq' ? 'bg-pf-purple-300/15 text-pf-purple-300' :
                         'bg-pf-overlay text-pf-text-muted'
                       }`}>
                         {tag}

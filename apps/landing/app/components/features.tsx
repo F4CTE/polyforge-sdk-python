@@ -63,7 +63,7 @@ const features = [
           x="26"
           y="26"
           textAnchor="middle"
-          fill="#67e8f9"
+          fill="var(--color-pf-cyan-300)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
         >
@@ -83,7 +83,7 @@ const features = [
           x="26"
           y="60"
           textAnchor="middle"
-          fill="#67e8f9"
+          fill="var(--color-pf-cyan-300)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
         >
@@ -116,7 +116,7 @@ const features = [
           x="77"
           y="44"
           textAnchor="middle"
-          fill="#fbbf24"
+          fill="var(--color-pf-gold-400)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
         >
@@ -143,7 +143,7 @@ const features = [
           x="127"
           y="44"
           textAnchor="middle"
-          fill="#c084fc"
+          fill="var(--color-pf-purple-400)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
         >
@@ -169,7 +169,7 @@ const features = [
           x="176"
           y="44"
           textAnchor="middle"
-          fill="#4ade80"
+          fill="var(--color-pf-success)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
         >
@@ -179,7 +179,7 @@ const features = [
           x="100"
           y="90"
           textAnchor="middle"
-          fill="#5a5a72"
+          fill="var(--color-pf-text-muted)"
           fontSize="6"
           fontFamily="Inter, sans-serif"
         >
@@ -238,7 +238,7 @@ const features = [
         />
         <polyline
           points="20,75 40,70 55,72 75,60 90,55 110,58 125,45 145,40 160,35 180,28"
-          stroke="#22d3ee"
+          stroke="var(--color-pf-cyan-400)"
           strokeWidth="2"
           fill="none"
           strokeLinecap="round"
@@ -258,15 +258,15 @@ const features = [
             y2="85"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stopColor="#22d3ee" stopOpacity="0.4" />
-            <stop offset="1" stopColor="#22d3ee" stopOpacity="0" />
+            <stop stopColor="var(--color-pf-cyan-400)" stopOpacity="0.4" />
+            <stop offset="1" stopColor="var(--color-pf-cyan-400)" stopOpacity="0" />
           </linearGradient>
         </defs>
         <text
           x="180"
           y="23"
           textAnchor="end"
-          fill="#4ade80"
+          fill="var(--color-pf-success)"
           fontSize="8"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -286,7 +286,7 @@ const features = [
           x="45"
           y="20"
           textAnchor="middle"
-          fill="#fbbf24"
+          fill="var(--color-pf-gold-400)"
           fontSize="6"
           fontFamily="Inter, sans-serif"
         >
@@ -340,7 +340,7 @@ const features = [
           x="45"
           y="33"
           textAnchor="middle"
-          fill="#4ade80"
+          fill="var(--color-pf-success)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
           fontWeight="600"
@@ -351,7 +351,7 @@ const features = [
           x="45"
           y="44"
           textAnchor="middle"
-          fill="#9898b0"
+          fill="var(--color-pf-text-muted)"
           fontSize="6"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -379,7 +379,7 @@ const features = [
           x="135"
           y="33"
           textAnchor="middle"
-          fill="#67e8f9"
+          fill="var(--color-pf-cyan-300)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
           fontWeight="600"
@@ -390,7 +390,7 @@ const features = [
           x="135"
           y="44"
           textAnchor="middle"
-          fill="#9898b0"
+          fill="var(--color-pf-text-muted)"
           fontSize="6"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -411,7 +411,7 @@ const features = [
           x="37"
           y="74"
           textAnchor="middle"
-          fill="#67e8f9"
+          fill="var(--color-pf-cyan-300)"
           fontSize="6"
           fontFamily="Inter, sans-serif"
         >
@@ -431,7 +431,7 @@ const features = [
           x="89"
           y="74"
           textAnchor="middle"
-          fill="#67e8f9"
+          fill="var(--color-pf-cyan-300)"
           fontSize="6"
           fontFamily="Inter, sans-serif"
         >
@@ -451,7 +451,7 @@ const features = [
           x="141"
           y="74"
           textAnchor="middle"
-          fill="#67e8f9"
+          fill="var(--color-pf-cyan-300)"
           fontSize="6"
           fontFamily="Inter, sans-serif"
         >
@@ -514,7 +514,7 @@ const features = [
         <text
           x="18"
           y="24"
-          fill="#9898b0"
+          fill="var(--color-pf-text-muted)"
           fontSize="6"
           fontFamily="Inter, sans-serif"
         >
@@ -533,7 +533,7 @@ const features = [
         <text
           x="18"
           y="48"
-          fill="#9898b0"
+          fill="var(--color-pf-text-muted)"
           fontSize="6"
           fontFamily="Inter, sans-serif"
         >
@@ -561,7 +561,7 @@ const features = [
           x="122"
           y="33"
           textAnchor="middle"
-          fill="#c084fc"
+          fill="var(--color-pf-purple-400)"
           fontSize="8"
           fontFamily="Inter, sans-serif"
           fontWeight="600"
@@ -572,7 +572,7 @@ const features = [
           x="122"
           y="44"
           textAnchor="middle"
-          fill="#9898b0"
+          fill="var(--color-pf-text-muted)"
           fontSize="5"
           fontFamily="Inter, sans-serif"
         >
@@ -600,7 +600,7 @@ const features = [
           x="176"
           y="33"
           textAnchor="middle"
-          fill="#4ade80"
+          fill="var(--color-pf-success)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
           fontWeight="600"
@@ -611,7 +611,7 @@ const features = [
           x="176"
           y="44"
           textAnchor="middle"
-          fill="#9898b0"
+          fill="var(--color-pf-text-muted)"
           fontSize="5"
           fontFamily="Inter, sans-serif"
         >
@@ -631,7 +631,7 @@ const features = [
         <text
           x="18"
           y="82"
-          fill="#4ade80"
+          fill="var(--color-pf-success)"
           fontSize="7"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -640,7 +640,7 @@ const features = [
         <text
           x="130"
           y="82"
-          fill="#9898b0"
+          fill="var(--color-pf-text-muted)"
           fontSize="6"
           fontFamily="Inter, sans-serif"
         >
@@ -682,7 +682,7 @@ const features = [
         {/* Price line */}
         <polyline
           points="15,60 40,55 60,58 80,48 100,50 120,42 140,45 160,38 185,35"
-          stroke="#22d3ee"
+          stroke="var(--color-pf-cyan-400)"
           strokeWidth="1.5"
           fill="none"
           strokeLinecap="round"
@@ -700,7 +700,7 @@ const features = [
         <text
           x="187"
           y="28"
-          fill="#4ade80"
+          fill="var(--color-pf-success)"
           fontSize="6"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -719,7 +719,7 @@ const features = [
         <text
           x="187"
           y="78"
-          fill="#f87171"
+          fill="var(--color-pf-danger)"
           fontSize="6"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -736,7 +736,7 @@ const features = [
         <text
           x="187"
           y="48"
-          fill="#fbbf24"
+          fill="var(--color-pf-gold-400)"
           fontSize="6"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -757,7 +757,7 @@ const features = [
           x="33"
           y="93"
           textAnchor="middle"
-          fill="#4ade80"
+          fill="var(--color-pf-success)"
           fontSize="5.5"
           fontFamily="Inter, sans-serif"
         >
@@ -777,7 +777,7 @@ const features = [
           x="74"
           y="93"
           textAnchor="middle"
-          fill="#fbbf24"
+          fill="var(--color-pf-gold-400)"
           fontSize="5.5"
           fontFamily="Inter, sans-serif"
         >
@@ -797,7 +797,7 @@ const features = [
           x="115"
           y="93"
           textAnchor="middle"
-          fill="#67e8f9"
+          fill="var(--color-pf-cyan-300)"
           fontSize="5.5"
           fontFamily="Inter, sans-serif"
         >
@@ -817,7 +817,7 @@ const features = [
           x="156"
           y="93"
           textAnchor="middle"
-          fill="#c084fc"
+          fill="var(--color-pf-purple-400)"
           fontSize="5.5"
           fontFamily="Inter, sans-serif"
         >
@@ -879,7 +879,7 @@ const features = [
           x="24"
           y="24"
           textAnchor="middle"
-          fill="#4ade80"
+          fill="var(--color-pf-success)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
           fontWeight="700"
@@ -889,7 +889,7 @@ const features = [
         <text
           x="38"
           y="18"
-          fill="#f0f0f5"
+          fill="var(--color-pf-text)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
           fontWeight="600"
@@ -899,7 +899,7 @@ const features = [
         <text
           x="38"
           y="28"
-          fill="#4ade80"
+          fill="var(--color-pf-success)"
           fontSize="7"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -909,7 +909,7 @@ const features = [
           x="182"
           y="24"
           textAnchor="end"
-          fill="#9898b0"
+          fill="var(--color-pf-text-muted)"
           fontSize="6"
           fontFamily="Inter, sans-serif"
         >
@@ -938,7 +938,7 @@ const features = [
           x="24"
           y="56"
           textAnchor="middle"
-          fill="#f87171"
+          fill="var(--color-pf-danger)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
           fontWeight="700"
@@ -948,7 +948,7 @@ const features = [
         <text
           x="38"
           y="50"
-          fill="#f0f0f5"
+          fill="var(--color-pf-text)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
           fontWeight="600"
@@ -958,7 +958,7 @@ const features = [
         <text
           x="38"
           y="60"
-          fill="#f87171"
+          fill="var(--color-pf-danger)"
           fontSize="7"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -968,7 +968,7 @@ const features = [
           x="182"
           y="56"
           textAnchor="end"
-          fill="#9898b0"
+          fill="var(--color-pf-text-muted)"
           fontSize="6"
           fontFamily="Inter, sans-serif"
         >
@@ -997,7 +997,7 @@ const features = [
           x="24"
           y="88"
           textAnchor="middle"
-          fill="#4ade80"
+          fill="var(--color-pf-success)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
           fontWeight="700"
@@ -1007,7 +1007,7 @@ const features = [
         <text
           x="38"
           y="82"
-          fill="#f0f0f5"
+          fill="var(--color-pf-text)"
           fontSize="7"
           fontFamily="Inter, sans-serif"
           fontWeight="600"
@@ -1017,7 +1017,7 @@ const features = [
         <text
           x="38"
           y="92"
-          fill="#4ade80"
+          fill="var(--color-pf-success)"
           fontSize="7"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -1027,7 +1027,7 @@ const features = [
           x="182"
           y="88"
           textAnchor="end"
-          fill="#9898b0"
+          fill="var(--color-pf-text-muted)"
           fontSize="6"
           fontFamily="Inter, sans-serif"
         >
@@ -1091,7 +1091,7 @@ const features = [
         <text
           x="20"
           y="39"
-          fill="#5a5a72"
+          fill="var(--color-pf-text-muted)"
           fontSize="6.5"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -1100,7 +1100,7 @@ const features = [
         <text
           x="20"
           y="50"
-          fill="#c084fc"
+          fill="var(--color-pf-purple-400)"
           fontSize="6.5"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -1109,7 +1109,7 @@ const features = [
         <text
           x="20"
           y="63"
-          fill="#22d3ee"
+          fill="var(--color-pf-cyan-400)"
           fontSize="6.5"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -1118,7 +1118,7 @@ const features = [
         <text
           x="20"
           y="74"
-          fill="#22d3ee"
+          fill="var(--color-pf-cyan-400)"
           fontSize="6.5"
           fontFamily="JetBrains Mono, monospace"
         >
@@ -1128,7 +1128,7 @@ const features = [
         <text
           x="20"
           y="85"
-          fill="#4ade80"
+          fill="var(--color-pf-success)"
           fontSize="6.5"
           fontFamily="JetBrains Mono, monospace"
         >

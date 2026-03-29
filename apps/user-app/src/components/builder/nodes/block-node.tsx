@@ -95,13 +95,13 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   // ── Border & animation logic ──────────────────────────────────────────────
   // Priority: fired > executing > inactive > setup-needed > normal
   const borderColor = hasFired
-    ? 'rgba(6,182,212,0.9)'
+    ? 'color-mix(in srgb, var(--color-pf-cyan-500) 90%, transparent)'
     : isExecuting
     ? d.color + '60'
     : isInactive
-    ? '#f59e0b44'
+    ? 'color-mix(in srgb, var(--color-pf-warning) 27%, transparent)'
     : showSetupBadge
-    ? '#ef444455'
+    ? 'color-mix(in srgb, var(--color-pf-danger) 33%, transparent)'
     : 'var(--color-pf-border)';
 
   // Pulse animation speed varies by section to convey different "rhythms":
@@ -124,14 +124,14 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
     : undefined;
 
   const boxShadow = !isExecuting && !hasFired && showSetupBadge
-    ? '0 0 0 1px rgba(239,68,68,0.18), 0 0 14px rgba(239,68,68,0.12)'
+    ? '0 0 0 1px color-mix(in srgb, var(--color-pf-danger) 18%, transparent), 0 0 14px color-mix(in srgb, var(--color-pf-danger) 12%, transparent)'
     : undefined;
 
   /** Render a select field for strategy picker or mode picker */
   function renderSelectField(field: { key: string; label: string; placeholder: string; options?: string[] }) {
     const isEmpty = emptyFieldKeys.has(field.key);
     const selectClass = `w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors ${
-      isEmpty ? 'border-red-500/40 bg-red-500/5' : 'border-pf-border-subtle'
+      isEmpty ? 'border-pf-danger/40 bg-pf-danger/5' : 'border-pf-border-subtle'
     }`;
 
     if (field.key === 'strategyId' && isRunStrategy) {
@@ -268,9 +268,9 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                 const isEmpty = emptyFieldKeys.has(field.key);
                 return (
                   <div key={field.key}>
-                    <label className={`flex items-center gap-1 text-[10px] font-medium mb-0.5 uppercase tracking-wider ${isEmpty ? 'text-red-400/80' : 'text-pf-text-muted'}`}>
+                    <label className={`flex items-center gap-1 text-[10px] font-medium mb-0.5 uppercase tracking-wider ${isEmpty ? 'text-pf-danger/80' : 'text-pf-text-muted'}`}>
                       {field.label}
-                      {isEmpty && <span className="text-red-400/80 normal-case tracking-normal font-normal">— required</span>}
+                      {isEmpty && <span className="text-pf-danger/80 normal-case tracking-normal font-normal">— required</span>}
                     </label>
                     {field.type === 'market_slot' ? (
                       <select
@@ -279,7 +279,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                         aria-label={field.label}
                         className={`w-full h-7 px-2 rounded text-xs text-pf-text focus:outline-none transition-colors ${
                           isEmpty
-                            ? 'bg-red-500/8 border border-red-500/40 focus:border-red-500/60'
+                            ? 'bg-pf-danger/8 border border-pf-danger/40 focus:border-pf-danger/60'
                             : 'bg-[var(--block-color)]/10 border border-[var(--block-color)]/20 focus:border-[var(--block-color)]/50'
                         }`}
                       >
@@ -302,7 +302,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                           aria-label={field.label}
                           className={`w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm placeholder:text-pf-text-muted/50 focus:outline-none transition-colors ${
                             isEmpty
-                              ? 'border-red-500/40 bg-red-500/5 focus:border-red-500/60'
+                              ? 'border-pf-danger/40 bg-pf-danger/5 focus:border-pf-danger/60'
                               : 'border-pf-border-subtle focus:border-pf-cyan-500/50'
                           } ${
                             (d.config[field.key] ?? '').startsWith('$')
