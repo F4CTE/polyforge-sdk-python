@@ -64,7 +64,7 @@ function Code({ code, lang }: { code: string; lang?: string }) {
 
 function InlineCode({ children }: { children: string }) {
   return (
-    <code className="bg-pf-overlay px-1.5 py-0.5 rounded text-[11px] font-mono text-pf-cyan-300">
+    <code className="bg-pf-overlay px-1.5 py-0.5 rounded text-[11px] font-mono text-pf-cyan-400">
       {children}
     </code>
   );
@@ -679,22 +679,19 @@ export function Component() {
   const docsPanel = (
     <>
       {/* API docs sidebar */}
-      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r border-pf-border bg-pf-surface overflow-y-auto">
-        <div className="px-4 py-3.5 border-b border-pf-border shrink-0">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-pf-text-secondary uppercase tracking-wider">API Reference</span>
-            <Badge text="v1" cls="bg-pf-cyan-500/10 text-pf-cyan-400" />
-          </div>
-          <div className="flex items-center gap-1.5 mt-1.5">
+      <aside className="hidden lg:flex flex-col w-60 shrink-0 border-r border-pf-border bg-pf-surface overflow-y-auto">
+        <div className="px-3 py-3 border-b border-pf-border shrink-0 flex items-center justify-between gap-2">
+          <span className="text-xs font-semibold text-pf-text-secondary uppercase tracking-wider">API Reference</span>
+          <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-pf-success shrink-0" aria-hidden="true" />
-            <code className="text-[11px] font-mono text-pf-text-muted">api.polyforge.app</code>
+            <Badge text="v1" cls="bg-pf-cyan-500/10 text-pf-cyan-400" />
           </div>
         </div>
         <nav aria-label="API documentation sections" className="flex-1 px-2 py-2 space-y-3 overflow-y-auto">
           {NAV_GROUPS.map(g => (
             <div key={g.group ?? 'overview'}>
               {g.group && (
-                <p className="text-[10px] font-semibold text-pf-text-muted uppercase tracking-widest mb-1 px-2 pt-1">{g.group}</p>
+                <p className="text-[10px] font-semibold text-pf-text-muted uppercase tracking-wider mb-1 px-2 pt-1">{g.group}</p>
               )}
               <div className="space-y-px">
                 {g.items.map(item => (
@@ -702,10 +699,10 @@ export function Component() {
                     type="button"
                     key={item.id}
                     onClick={() => navigate(item.id)}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-pf text-sm transition-colors duration-150 cursor-pointer border-l-2 ${
+                    className={`w-full text-left px-2.5 py-2 rounded-pf-sm text-sm transition-colors duration-150 cursor-pointer ${
                       activeId === item.id
-                        ? 'border-pf-cyan-500 bg-pf-cyan-500/10 text-pf-cyan-400 font-medium'
-                        : 'border-transparent text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated'
+                        ? 'bg-pf-cyan-500/10 text-pf-cyan-400 font-medium'
+                        : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated'
                     }`}
                   >
                     {item.label}
@@ -726,13 +723,13 @@ export function Component() {
 
       {/* Content panel */}
       <div ref={contentRef} className="flex-1 min-w-0 overflow-y-auto bg-pf-base">
-        <nav aria-label="Breadcrumb" className="sticky top-0 z-10 flex items-center gap-1.5 px-6 py-3 bg-pf-base/90 backdrop-blur-sm border-b border-pf-border text-xs text-pf-text-muted">
+        <nav aria-label="Breadcrumb" className="sticky top-0 z-10 flex items-center gap-1.5 px-6 h-11 bg-pf-surface/80 backdrop-blur-sm border-b border-pf-border text-xs text-pf-text-muted shrink-0">
           <span>Docs</span>
           <ChevronRight className="size-3 shrink-0" />
           {currentGroup && <><span>{currentGroup}</span><ChevronRight className="size-3 shrink-0" /></>}
           <span className="text-pf-text-secondary">{currentLabel}</span>
         </nav>
-        <div className="max-w-3xl mx-auto px-6 py-6">
+        <div className="px-6 py-6 max-w-4xl">
           {renderContent()}
         </div>
       </div>
