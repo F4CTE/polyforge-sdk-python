@@ -754,4 +754,129 @@ Comprehensive security and quality assurance audit to ensure deployment-ready st
 
 ---
 
+---
+
+## Phase 11 — Execution Intelligence & Platform Moat (Post-Phase 10)
+
+**Strategic framing:** Polyforge is a layer over Polymarket — a Bloomberg terminal + algo execution engine. It enhances information, execution, and automation within the user's own Polymarket account. **Polyforge does not custody or manage user funds.** Every feature in this phase follows that constraint.
+
+See full feature specs in [`docs/19-future-features.md`](./19-future-features.md).
+
+---
+
+### 11.1 · Smart Order Execution `P0` `HIGH IMPACT · MEDIUM EFFORT`
+
+Institutional-grade execution on top of the existing order pipeline. Users set intent; Polyforge handles mechanics.
+
+- **Bracket Orders** — entry + take-profit + stop-loss as a single linked bundle; most universally requested execution feature
+- **Dollar-Cost Averaging** — recurring buy on a schedule (amount + interval + end condition); especially compelling for long-dated markets
+- **TWAP** — enter or exit in equal time-based tranches; minimizes market impact on large positions
+- **Scale-in / Scale-out** — price-triggered tranches (buy 25% at 0.40, 50% at 0.35, 25% at 0.30)
+- **Iceberg Orders** — hidden reserve with auto-refill; prevents frontrunning
+
+**New strategy blocks:** `TWAP_ENTRY`, `DCA_ENTRY`, `BRACKET_ORDER`, `ICEBERG_ORDER`
+
+---
+
+### 11.2 · Portfolio Risk Intelligence `P0` `HIGH IMPACT · LOW EFFORT`
+
+Guardrails and analytics that make every user safer — using their own data.
+
+- **Drawdown Circuit Breaker** — global setting: pause all strategies if portfolio drops X% in Y hours; single most impactful risk feature
+- **Kelly Criterion Position Sizer** — pre-order suggestion panel: input confidence → get optimal size based on portfolio balance
+- **Portfolio Correlation Heat Map** — capital exposure by market category; flag over-concentration
+- **P&L Attribution** — break down returns by market, strategy, category, and time period
+- **Resolution Calendar** — markets expiring soon sorted by price uncertainty (closest to 0.50)
+
+---
+
+### 11.3 · Merge Arbitrage `P0` `HIGH IMPACT · LOW EFFORT`
+
+Exploit the fundamental YES + NO = $1.00 pricing identity in conditional token markets.
+
+- **Arb scanner** — monitor all markets for combined YES + NO price below threshold (< $0.99 after fees)
+- **One-click execution** — buy both sides + merge in one action; expected profit shown before confirmation
+- **Automated arb strategy** — strategy block that auto-executes when opportunity detected above profit threshold
+- **Arb opportunity feed** — real-time sorted list of current opportunities across all markets
+
+**User-facing framing:** "Earn risk-free yield" — split/merge mechanics are invisible.
+
+---
+
+### 11.4 · Strategy Marketplace `P0` `HIGH IMPACT · HIGH EFFORT`
+
+Two-sided marketplace with verified performance — network effects flywheel that no competitor has.
+
+- **Publishing flow** — creator sets visibility to For Sale / For Rent with one-time or monthly pricing
+- **Verified performance** — P&L computed from on-chain trade history, not self-reported
+- **Performance fee model** — optional creator % of profits from rented strategies (0–20%), weekly settlement
+- **Discovery feed** — filter by category, risk level, verified win rate, minimum capital
+- **Strategy challenges** — time-boxed competitions driving UGC and press coverage
+- **Creator dashboard** — revenue earned, active subscribers, strategy performance
+
+---
+
+### 11.5 · Prediction Accuracy & Calibration Score `P1` `MEDIUM IMPACT · MEDIUM EFFORT`
+
+Track the quality of probability estimates — unique to prediction markets, no competitor has built it.
+
+- **Brier score per user** — industry-standard probabilistic scoring computed from resolved market history
+- **Calibration curve** — visual: "when you said 70%, did it happen ~70% of the time?"
+- **Accuracy by category** — are you better at politics vs. crypto vs. sports?
+- **Public accuracy badge** — shareable, opt-in display on public profile
+- **Accuracy leaderboard** — rank by forecasting quality, not just P&L
+
+---
+
+### 11.6 · AI Portfolio Optimizer `P1` `MEDIUM IMPACT · MEDIUM EFFORT`
+
+Personalized, actionable suggestions from the user's own data — no fund management required.
+
+- **Confidence-based position sizer** — type "I'm 80% confident" → AI returns Kelly-adjusted suggested size
+- **Weekly portfolio review** — auto-generated summary of what happened, which strategies performed, what to watch
+- **Rebalancing suggestions** — detect over-concentration and surface one-click strategy adjustments
+- **"What if" simulator** — replay historical market outcomes against a proposed strategy
+- **Auto trade journal** — structured weekly report: P&L, best/worst trades, execution quality score
+
+---
+
+### 11.7 · Sentiment Intelligence `P2` `MEDIUM IMPACT · MEDIUM EFFORT`
+
+Real-time signal layer connecting news and social media to market prices.
+
+- **Sentiment overlay on market cards** — shift indicator (bullish/bearish/neutral) updated every 4 hours
+- **Sentiment feed** — curated news tied to user's open positions and watchlist
+- **`SENTIMENT_SIGNAL` strategy block** — fire when confidence + direction threshold is met
+- **Sentiment history chart overlay** — alongside market price; surface sentiment-price divergences
+
+---
+
+### 11.8 · LP / Market Making `P2` `MEDIUM IMPACT · MEDIUM EFFORT`
+
+Automated liquidity provision built transparently on split/merge primitives. User sees "Provide Liquidity."
+
+- **"Provide Liquidity" button on market detail** — user sets capital + spread; Polyforge handles the rest
+- **Auto-rebalancing** — maintain neutral inventory; merge lopsided positions back to USDC
+- **LP performance dashboard** — spread income vs. directional inventory risk, fill rate, capital utilization
+- **Multi-market market making** — spread capital across multiple markets simultaneously
+
+---
+
+### Phase 11 Priority Matrix
+
+| Feature | Business Impact | Technical Effort | Priority |
+|---------|:-:|:-:|:-:|
+| Smart Order Execution (Bracket + DCA) | 🔴 HIGH | 🟢 LOW | **P0** |
+| Drawdown Circuit Breaker | 🔴 HIGH | 🟢 LOW | **P0** |
+| Merge Arbitrage Scanner | 🔴 HIGH | 🟢 LOW | **P0** |
+| Strategy Marketplace | 🔴 HIGH | 🔴 HIGH | **P0** |
+| Kelly Position Sizer | 🔴 HIGH | 🟢 LOW | **P1** |
+| Prediction Accuracy Score | 🟡 MEDIUM | 🟡 MEDIUM | **P1** |
+| AI Portfolio Optimizer | 🟡 MEDIUM | 🟡 MEDIUM | **P1** |
+| Sentiment Intelligence | 🟡 MEDIUM | 🟡 MEDIUM | **P2** |
+| LP / Market Making | 🟡 MEDIUM | 🟡 MEDIUM | **P2** |
+| TWAP / Iceberg Orders | 🟡 MEDIUM | 🟡 MEDIUM | **P2** |
+
+---
+
 *Documents de référence : [Architecture](./01-architecture.md) · [Fonctionnalités](./00-features-and-functionalities.md) · [API Catalog](./06-api-catalog.md) · [Dev Setup](./09-dev-setup.md) · [Competitor Audit](./polyforge_competitor_audit.md) · [Future Features](./19-future-features.md)*
