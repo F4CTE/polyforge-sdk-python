@@ -32,13 +32,20 @@ export function ProductPreview() {
             >
               <style>{`@media(prefers-reduced-motion:reduce){animate{display:none}}`}</style>
               {/* Sidebar */}
-              <rect x="0" y="0" width="180" height="440" fill="var(--color-pf-base)" />
               <rect
                 x="0"
                 y="0"
                 width="180"
                 height="440"
-                stroke="rgba(255,255,255,0.06)"
+                fill="var(--color-pf-base)"
+              />
+              <rect
+                x="0"
+                y="0"
+                width="180"
+                height="440"
+                stroke="var(--color-pf-text)"
+                strokeOpacity="0.06"
                 strokeWidth="1"
               />
               <text
@@ -57,7 +64,8 @@ export function ProductPreview() {
                 width="156"
                 height="32"
                 rx="6"
-                fill="rgba(6,182,212,0.1)"
+                fill="var(--color-pf-cyan-500)"
+                fillOpacity="0.1"
               />
               <text
                 x="44"
@@ -69,7 +77,13 @@ export function ProductPreview() {
               >
                 Dashboard
               </text>
-              <circle cx="28" cy="72" r="4" fill="rgba(6,182,212,0.5)" />
+              <circle
+                cx="28"
+                cy="72"
+                r="4"
+                fill="var(--color-pf-cyan-500)"
+                fillOpacity="0.5"
+              />
               <text
                 x="44"
                 y="112"
@@ -79,7 +93,13 @@ export function ProductPreview() {
               >
                 Markets
               </text>
-              <circle cx="28" cy="108" r="3" fill="rgba(255,255,255,0.1)" />
+              <circle
+                cx="28"
+                cy="108"
+                r="3"
+                fill="var(--color-pf-text)"
+                fillOpacity="0.1"
+              />
               <text
                 x="44"
                 y="144"
@@ -89,7 +109,13 @@ export function ProductPreview() {
               >
                 Strategies
               </text>
-              <circle cx="28" cy="140" r="3" fill="rgba(255,255,255,0.1)" />
+              <circle
+                cx="28"
+                cy="140"
+                r="3"
+                fill="var(--color-pf-text)"
+                fillOpacity="0.1"
+              />
               <text
                 x="44"
                 y="176"
@@ -99,7 +125,13 @@ export function ProductPreview() {
               >
                 Whale Tracker
               </text>
-              <circle cx="28" cy="172" r="3" fill="rgba(74,222,128,0.4)" />
+              <circle
+                cx="28"
+                cy="172"
+                r="3"
+                fill="var(--color-pf-success)"
+                fillOpacity="0.4"
+              />
               <text
                 x="44"
                 y="208"
@@ -109,7 +141,13 @@ export function ProductPreview() {
               >
                 Copy Trading
               </text>
-              <circle cx="28" cy="204" r="3" fill="rgba(74,222,128,0.4)" />
+              <circle
+                cx="28"
+                cy="204"
+                r="3"
+                fill="var(--color-pf-success)"
+                fillOpacity="0.4"
+              />
               <text
                 x="44"
                 y="240"
@@ -119,7 +157,13 @@ export function ProductPreview() {
               >
                 AI Signals
               </text>
-              <circle cx="28" cy="236" r="3" fill="rgba(168,85,247,0.4)" />
+              <circle
+                cx="28"
+                cy="236"
+                r="3"
+                fill="var(--color-pf-purple-400)"
+                fillOpacity="0.4"
+              />
               <text
                 x="44"
                 y="272"
@@ -129,7 +173,13 @@ export function ProductPreview() {
               >
                 Orders
               </text>
-              <circle cx="28" cy="268" r="3" fill="rgba(255,255,255,0.1)" />
+              <circle
+                cx="28"
+                cy="268"
+                r="3"
+                fill="var(--color-pf-text)"
+                fillOpacity="0.1"
+              />
               <text
                 x="44"
                 y="304"
@@ -139,7 +189,13 @@ export function ProductPreview() {
               >
                 Portfolio
               </text>
-              <circle cx="28" cy="300" r="3" fill="rgba(255,255,255,0.1)" />
+              <circle
+                cx="28"
+                cy="300"
+                r="3"
+                fill="var(--color-pf-text)"
+                fillOpacity="0.1"
+              />
               <text
                 x="44"
                 y="336"
@@ -149,10 +205,22 @@ export function ProductPreview() {
               >
                 API Keys
               </text>
-              <circle cx="28" cy="332" r="3" fill="rgba(255,255,255,0.1)" />
+              <circle
+                cx="28"
+                cy="332"
+                r="3"
+                fill="var(--color-pf-text)"
+                fillOpacity="0.1"
+              />
 
               {/* Main content area */}
-              <rect x="180" y="0" width="720" height="440" fill="var(--color-pf-base)" />
+              <rect
+                x="180"
+                y="0"
+                width="720"
+                height="440"
+                fill="var(--color-pf-base)"
+              />
               <text
                 x="204"
                 y="32"
@@ -169,8 +237,10 @@ export function ProductPreview() {
                 width="80"
                 height="28"
                 rx="6"
-                fill="rgba(6,182,212,0.15)"
-                stroke="rgba(6,182,212,0.3)"
+                fill="var(--color-pf-cyan-500)"
+                fillOpacity="0.15"
+                stroke="var(--color-pf-cyan-500)"
+                strokeOpacity="0.3"
                 strokeWidth="1"
               />
               <text
@@ -193,7 +263,8 @@ export function ProductPreview() {
                 height="100"
                 rx="10"
                 fill="var(--color-pf-base)"
-                stroke="rgba(255,255,255,0.08)"
+                stroke="var(--color-pf-text)"
+                strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <text
@@ -239,7 +310,8 @@ export function ProductPreview() {
                 height="100"
                 rx="10"
                 fill="var(--color-pf-base)"
-                stroke="rgba(255,255,255,0.08)"
+                stroke="var(--color-pf-text)"
+                strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <text
@@ -279,7 +351,8 @@ export function ProductPreview() {
                 height="100"
                 rx="10"
                 fill="var(--color-pf-base)"
-                stroke="rgba(255,255,255,0.08)"
+                stroke="var(--color-pf-text)"
+                strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <text
@@ -319,7 +392,8 @@ export function ProductPreview() {
                 height="80"
                 rx="10"
                 fill="var(--color-pf-base)"
-                stroke="rgba(255,255,255,0.08)"
+                stroke="var(--color-pf-text)"
+                strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <circle cx="224" cy="198" r="5" fill="var(--color-pf-success)">
@@ -361,7 +435,8 @@ export function ProductPreview() {
               </text>
               <polyline
                 points="224,242 260,238 296,234 332,240 368,230 404,225 440,222 476,218 512,214"
-                stroke="rgba(6,182,212,0.5)"
+                stroke="var(--color-pf-cyan-500)"
+                strokeOpacity="0.5"
                 strokeWidth="1.2"
                 fill="none"
               />
@@ -374,7 +449,8 @@ export function ProductPreview() {
                 height="80"
                 rx="10"
                 fill="var(--color-pf-base)"
-                stroke="rgba(255,255,255,0.08)"
+                stroke="var(--color-pf-text)"
+                strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <circle cx="224" cy="294" r="5" fill="var(--color-pf-success)">
@@ -416,7 +492,8 @@ export function ProductPreview() {
               </text>
               <polyline
                 points="224,338 260,340 296,336 332,330 368,335 404,328 440,324 476,320 512,316"
-                stroke="rgba(6,182,212,0.5)"
+                stroke="var(--color-pf-cyan-500)"
+                strokeOpacity="0.5"
                 strokeWidth="1.2"
                 fill="none"
               />
@@ -429,7 +506,8 @@ export function ProductPreview() {
                 height="70"
                 rx="10"
                 fill="var(--color-pf-base)"
-                stroke="rgba(255,255,255,0.08)"
+                stroke="var(--color-pf-text)"
+                strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <text
@@ -467,7 +545,8 @@ export function ProductPreview() {
                 width="100"
                 height="4"
                 rx="2"
-                fill="rgba(255,255,255,0.06)"
+                fill="var(--color-pf-text)"
+                fillOpacity="0.06"
               />
               <rect
                 x="580"
@@ -475,7 +554,8 @@ export function ProductPreview() {
                 width="42"
                 height="4"
                 rx="2"
-                fill="rgba(6,182,212,0.5)"
+                fill="var(--color-pf-cyan-500)"
+                fillOpacity="0.5"
               />
 
               <rect
@@ -485,7 +565,8 @@ export function ProductPreview() {
                 height="70"
                 rx="10"
                 fill="var(--color-pf-base)"
-                stroke="rgba(255,255,255,0.08)"
+                stroke="var(--color-pf-text)"
+                strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <text
@@ -523,7 +604,8 @@ export function ProductPreview() {
                 width="100"
                 height="4"
                 rx="2"
-                fill="rgba(255,255,255,0.06)"
+                fill="var(--color-pf-text)"
+                fillOpacity="0.06"
               />
               <rect
                 x="580"
@@ -531,7 +613,8 @@ export function ProductPreview() {
                 width="31"
                 height="4"
                 rx="2"
-                fill="rgba(6,182,212,0.5)"
+                fill="var(--color-pf-cyan-500)"
+                fillOpacity="0.5"
               />
 
               <rect
@@ -541,7 +624,8 @@ export function ProductPreview() {
                 height="70"
                 rx="10"
                 fill="var(--color-pf-base)"
-                stroke="rgba(255,255,255,0.08)"
+                stroke="var(--color-pf-text)"
+                strokeOpacity="0.08"
                 strokeWidth="1"
               />
               <text
@@ -579,7 +663,8 @@ export function ProductPreview() {
                 width="100"
                 height="4"
                 rx="2"
-                fill="rgba(255,255,255,0.06)"
+                fill="var(--color-pf-text)"
+                fillOpacity="0.06"
               />
               <rect
                 x="580"
@@ -587,7 +672,8 @@ export function ProductPreview() {
                 width="73"
                 height="4"
                 rx="2"
-                fill="rgba(6,182,212,0.5)"
+                fill="var(--color-pf-cyan-500)"
+                fillOpacity="0.5"
               />
             </svg>
           </div>

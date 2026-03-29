@@ -154,8 +154,10 @@ export function Hero() {
               width="120"
               height="60"
               rx="10"
-              fill="rgba(6,182,212,0.08)"
-              stroke="rgba(6,182,212,0.35)"
+              fill="var(--color-pf-cyan-500)"
+              fillOpacity="0.08"
+              stroke="var(--color-pf-cyan-500)"
+              strokeOpacity="0.35"
               strokeWidth="1.5"
             />
             <text
@@ -187,8 +189,10 @@ export function Hero() {
               width="120"
               height="60"
               rx="10"
-              fill="rgba(6,182,212,0.08)"
-              stroke="rgba(6,182,212,0.35)"
+              fill="var(--color-pf-cyan-500)"
+              fillOpacity="0.08"
+              stroke="var(--color-pf-cyan-500)"
+              strokeOpacity="0.35"
               strokeWidth="1.5"
             />
             <text
@@ -220,8 +224,10 @@ export function Hero() {
               width="120"
               height="60"
               rx="10"
-              fill="rgba(34,211,238,0.06)"
-              stroke="rgba(34,211,238,0.3)"
+              fill="var(--color-pf-cyan-400)"
+              fillOpacity="0.06"
+              stroke="var(--color-pf-cyan-400)"
+              strokeOpacity="0.3"
               strokeWidth="1.5"
             />
             <text
@@ -253,8 +259,10 @@ export function Hero() {
               width="120"
               height="60"
               rx="10"
-              fill="rgba(34,211,238,0.06)"
-              stroke="rgba(34,211,238,0.3)"
+              fill="var(--color-pf-cyan-400)"
+              fillOpacity="0.06"
+              stroke="var(--color-pf-cyan-400)"
+              strokeOpacity="0.3"
               strokeWidth="1.5"
             />
             <text
@@ -286,8 +294,10 @@ export function Hero() {
               width="120"
               height="60"
               rx="10"
-              fill="rgba(74,222,128,0.06)"
-              stroke="rgba(74,222,128,0.3)"
+              fill="var(--color-pf-success)"
+              fillOpacity="0.06"
+              stroke="var(--color-pf-success)"
+              strokeOpacity="0.3"
               strokeWidth="1.5"
             />
             <text

@@ -17,8 +17,10 @@ const steps = [
           width="28"
           height="18"
           rx="4"
-          fill="rgba(6,182,212,0.1)"
-          stroke="rgba(6,182,212,0.3)"
+          fill="var(--color-pf-cyan-500)"
+          fillOpacity="0.1"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.3"
           strokeWidth="1"
         />
         <rect
@@ -27,8 +29,10 @@ const steps = [
           width="28"
           height="18"
           rx="4"
-          fill="rgba(6,182,212,0.1)"
-          stroke="rgba(6,182,212,0.3)"
+          fill="var(--color-pf-cyan-500)"
+          fillOpacity="0.1"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.3"
           strokeWidth="1"
         />
         <rect
@@ -37,19 +41,23 @@ const steps = [
           width="28"
           height="18"
           rx="4"
-          fill="rgba(74,222,128,0.1)"
-          stroke="rgba(74,222,128,0.3)"
+          fill="var(--color-pf-success)"
+          fillOpacity="0.1"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.3"
           strokeWidth="1"
         />
         <path
           d="M22 33 L36 48"
-          stroke="rgba(6,182,212,0.4)"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.4"
           strokeWidth="1"
           strokeDasharray="2 2"
         />
         <path
           d="M58 33 L44 48"
-          stroke="rgba(6,182,212,0.4)"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.4"
           strokeWidth="1"
           strokeDasharray="2 2"
         />
@@ -73,7 +81,8 @@ const steps = [
           y1="65"
           x2="70"
           y2="65"
-          stroke="rgba(255,255,255,0.06)"
+          stroke="var(--color-pf-text)"
+          strokeOpacity="0.06"
           strokeWidth="1"
         />
         <polyline
@@ -83,7 +92,13 @@ const steps = [
           fill="none"
           strokeLinecap="round"
         />
-        <circle cx="70" cy="22" r="3" fill="var(--color-pf-cyan-400)" opacity="0.7" />
+        <circle
+          cx="70"
+          cy="22"
+          r="3"
+          fill="var(--color-pf-cyan-400)"
+          opacity="0.7"
+        />
         <text
           x="70"
           y="17"
@@ -116,8 +131,10 @@ const steps = [
           width="56"
           height="40"
           rx="6"
-          fill="rgba(6,182,212,0.06)"
-          stroke="rgba(6,182,212,0.2)"
+          fill="var(--color-pf-cyan-500)"
+          fillOpacity="0.06"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.2"
           strokeWidth="1"
         />
         <circle cx="40" cy="36" r="4" fill="var(--color-pf-success)">

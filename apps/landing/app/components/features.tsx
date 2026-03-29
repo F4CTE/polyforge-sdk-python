@@ -55,8 +55,10 @@ const features = [
           width="42"
           height="24"
           rx="5"
-          fill="rgba(6,182,212,0.1)"
-          stroke="rgba(6,182,212,0.3)"
+          fill="var(--color-pf-cyan-500)"
+          fillOpacity="0.1"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.3"
           strokeWidth="1"
         />
         <text
@@ -75,8 +77,10 @@ const features = [
           width="42"
           height="24"
           rx="5"
-          fill="rgba(6,182,212,0.1)"
-          stroke="rgba(6,182,212,0.3)"
+          fill="var(--color-pf-cyan-500)"
+          fillOpacity="0.1"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.3"
           strokeWidth="1"
         />
         <text
@@ -91,13 +95,15 @@ const features = [
         </text>
         <path
           d="M47 22 L62 38"
-          stroke="rgba(6,182,212,0.4)"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.4"
           strokeWidth="1.5"
           strokeDasharray="3 2"
         />
         <path
           d="M47 56 L62 42"
-          stroke="rgba(6,182,212,0.4)"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.4"
           strokeWidth="1.5"
           strokeDasharray="3 2"
         />
@@ -108,8 +114,10 @@ const features = [
           width="30"
           height="24"
           rx="5"
-          fill="rgba(251,191,36,0.1)"
-          stroke="rgba(251,191,36,0.3)"
+          fill="var(--color-pf-gold-400)"
+          fillOpacity="0.1"
+          stroke="var(--color-pf-gold-400)"
+          strokeOpacity="0.3"
           strokeWidth="1"
         />
         <text
@@ -124,7 +132,8 @@ const features = [
         </text>
         <path
           d="M92 40 L108 40"
-          stroke="rgba(6,182,212,0.4)"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.4"
           strokeWidth="1.5"
           strokeDasharray="3 2"
         />
@@ -135,8 +144,10 @@ const features = [
           width="38"
           height="24"
           rx="5"
-          fill="rgba(168,85,247,0.1)"
-          stroke="rgba(168,85,247,0.3)"
+          fill="var(--color-pf-purple-400)"
+          fillOpacity="0.1"
+          stroke="var(--color-pf-purple-400)"
+          strokeOpacity="0.3"
           strokeWidth="1"
         />
         <text
@@ -151,7 +162,8 @@ const features = [
         </text>
         <path
           d="M146 40 L158 40"
-          stroke="rgba(74,222,128,0.4)"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.4"
           strokeWidth="1.5"
           strokeDasharray="3 2"
         />
@@ -161,8 +173,10 @@ const features = [
           width="36"
           height="24"
           rx="5"
-          fill="rgba(74,222,128,0.1)"
-          stroke="rgba(74,222,128,0.3)"
+          fill="var(--color-pf-success)"
+          fillOpacity="0.1"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.3"
           strokeWidth="1"
         />
         <text
@@ -217,7 +231,8 @@ const features = [
           y1="85"
           x2="180"
           y2="85"
-          stroke="rgba(255,255,255,0.06)"
+          stroke="var(--color-pf-text)"
+          strokeOpacity="0.06"
           strokeWidth="1"
         />
         <line
@@ -225,7 +240,8 @@ const features = [
           y1="60"
           x2="180"
           y2="60"
-          stroke="rgba(255,255,255,0.04)"
+          stroke="var(--color-pf-text)"
+          strokeOpacity="0.04"
           strokeWidth="1"
         />
         <line
@@ -233,7 +249,8 @@ const features = [
           y1="35"
           x2="180"
           y2="35"
-          stroke="rgba(255,255,255,0.04)"
+          stroke="var(--color-pf-text)"
+          strokeOpacity="0.04"
           strokeWidth="1"
         />
         <polyline
@@ -259,7 +276,11 @@ const features = [
             gradientUnits="userSpaceOnUse"
           >
             <stop stopColor="var(--color-pf-cyan-400)" stopOpacity="0.4" />
-            <stop offset="1" stopColor="var(--color-pf-cyan-400)" stopOpacity="0" />
+            <stop
+              offset="1"
+              stopColor="var(--color-pf-cyan-400)"
+              stopOpacity="0"
+            />
           </linearGradient>
         </defs>
         <text
@@ -278,8 +299,10 @@ const features = [
           width="50"
           height="14"
           rx="3"
-          fill="rgba(251,191,36,0.1)"
-          stroke="rgba(251,191,36,0.3)"
+          fill="var(--color-pf-gold-400)"
+          fillOpacity="0.1"
+          stroke="var(--color-pf-gold-400)"
+          strokeOpacity="0.3"
           strokeWidth="0.5"
         />
         <text
@@ -332,8 +355,10 @@ const features = [
           width="60"
           height="30"
           rx="6"
-          fill="rgba(74,222,128,0.08)"
-          stroke="rgba(74,222,128,0.3)"
+          fill="var(--color-pf-success)"
+          fillOpacity="0.08"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.3"
           strokeWidth="1"
         />
         <text
@@ -360,10 +385,15 @@ const features = [
         {/* Arrow */}
         <path
           d="M75 35 L95 35"
-          stroke="rgba(74,222,128,0.5)"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.5"
           strokeWidth="1.5"
         />
-        <polygon points="95,32 100,35 95,38" fill="rgba(74,222,128,0.5)" />
+        <polygon
+          points="95,32 100,35 95,38"
+          fill="var(--color-pf-success)"
+          fillOpacity="0.5"
+        />
         {/* Your copy */}
         <rect
           x="105"
@@ -371,8 +401,10 @@ const features = [
           width="60"
           height="30"
           rx="6"
-          fill="rgba(6,182,212,0.08)"
-          stroke="rgba(6,182,212,0.3)"
+          fill="var(--color-pf-cyan-500)"
+          fillOpacity="0.08"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.3"
           strokeWidth="1"
         />
         <text
@@ -403,8 +435,10 @@ const features = [
           width="45"
           height="18"
           rx="4"
-          fill="rgba(6,182,212,0.06)"
-          stroke="rgba(6,182,212,0.15)"
+          fill="var(--color-pf-cyan-500)"
+          fillOpacity="0.06"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.15"
           strokeWidth="0.5"
         />
         <text
@@ -423,8 +457,10 @@ const features = [
           width="45"
           height="18"
           rx="4"
-          fill="rgba(6,182,212,0.06)"
-          stroke="rgba(6,182,212,0.15)"
+          fill="var(--color-pf-cyan-500)"
+          fillOpacity="0.06"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.15"
           strokeWidth="0.5"
         />
         <text
@@ -443,8 +479,10 @@ const features = [
           width="45"
           height="18"
           rx="4"
-          fill="rgba(6,182,212,0.06)"
-          stroke="rgba(6,182,212,0.15)"
+          fill="var(--color-pf-cyan-500)"
+          fillOpacity="0.06"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.15"
           strokeWidth="0.5"
         />
         <text
@@ -507,8 +545,10 @@ const features = [
           width="75"
           height="20"
           rx="4"
-          fill="rgba(255,255,255,0.03)"
-          stroke="rgba(255,255,255,0.08)"
+          fill="var(--color-pf-text)"
+          fillOpacity="0.03"
+          stroke="var(--color-pf-text)"
+          strokeOpacity="0.08"
           strokeWidth="0.5"
         />
         <text
@@ -526,8 +566,10 @@ const features = [
           width="75"
           height="20"
           rx="4"
-          fill="rgba(255,255,255,0.03)"
-          stroke="rgba(255,255,255,0.08)"
+          fill="var(--color-pf-text)"
+          fillOpacity="0.03"
+          stroke="var(--color-pf-text)"
+          strokeOpacity="0.08"
           strokeWidth="0.5"
         />
         <text
@@ -542,7 +584,8 @@ const features = [
         {/* Arrow to AI */}
         <path
           d="M85 35 L100 35"
-          stroke="rgba(168,85,247,0.5)"
+          stroke="var(--color-pf-purple-400)"
+          strokeOpacity="0.5"
           strokeWidth="1.5"
           strokeDasharray="3 2"
         />
@@ -553,8 +596,10 @@ const features = [
           width="45"
           height="34"
           rx="8"
-          fill="rgba(168,85,247,0.08)"
-          stroke="rgba(168,85,247,0.3)"
+          fill="var(--color-pf-purple-400)"
+          fillOpacity="0.08"
+          stroke="var(--color-pf-purple-400)"
+          strokeOpacity="0.3"
           strokeWidth="1"
         />
         <text
@@ -581,7 +626,8 @@ const features = [
         {/* Arrow to signal */}
         <path
           d="M145 35 L160 35"
-          stroke="rgba(74,222,128,0.5)"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.5"
           strokeWidth="1.5"
           strokeDasharray="3 2"
         />
@@ -592,8 +638,10 @@ const features = [
           width="32"
           height="34"
           rx="6"
-          fill="rgba(74,222,128,0.08)"
-          stroke="rgba(74,222,128,0.3)"
+          fill="var(--color-pf-success)"
+          fillOpacity="0.08"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.3"
           strokeWidth="1"
         />
         <text
@@ -624,8 +672,10 @@ const features = [
           width="182"
           height="20"
           rx="4"
-          fill="rgba(74,222,128,0.04)"
-          stroke="rgba(74,222,128,0.15)"
+          fill="var(--color-pf-success)"
+          fillOpacity="0.04"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.15"
           strokeWidth="0.5"
         />
         <text
@@ -693,7 +743,8 @@ const features = [
           y1="25"
           x2="185"
           y2="25"
-          stroke="rgba(74,222,128,0.4)"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.4"
           strokeWidth="1"
           strokeDasharray="4 3"
         />
@@ -712,7 +763,8 @@ const features = [
           y1="75"
           x2="185"
           y2="75"
-          stroke="rgba(248,113,113,0.4)"
+          stroke="var(--color-pf-danger)"
+          strokeOpacity="0.4"
           strokeWidth="1"
           strokeDasharray="4 3"
         />
@@ -728,7 +780,8 @@ const features = [
         {/* Trailing stop */}
         <polyline
           points="80,58 100,60 120,52 140,55 160,48 185,45"
-          stroke="rgba(251,191,36,0.4)"
+          stroke="var(--color-pf-gold-400)"
+          strokeOpacity="0.4"
           strokeWidth="1"
           strokeDasharray="3 2"
           fill="none"
@@ -749,8 +802,10 @@ const features = [
           width="36"
           height="12"
           rx="3"
-          fill="rgba(74,222,128,0.08)"
-          stroke="rgba(74,222,128,0.2)"
+          fill="var(--color-pf-success)"
+          fillOpacity="0.08"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.2"
           strokeWidth="0.5"
         />
         <text
@@ -769,8 +824,10 @@ const features = [
           width="36"
           height="12"
           rx="3"
-          fill="rgba(251,191,36,0.08)"
-          stroke="rgba(251,191,36,0.2)"
+          fill="var(--color-pf-gold-400)"
+          fillOpacity="0.08"
+          stroke="var(--color-pf-gold-400)"
+          strokeOpacity="0.2"
           strokeWidth="0.5"
         />
         <text
@@ -789,8 +846,10 @@ const features = [
           width="36"
           height="12"
           rx="3"
-          fill="rgba(6,182,212,0.08)"
-          stroke="rgba(6,182,212,0.2)"
+          fill="var(--color-pf-cyan-500)"
+          fillOpacity="0.08"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.2"
           strokeWidth="0.5"
         />
         <text
@@ -809,8 +868,10 @@ const features = [
           width="36"
           height="12"
           rx="3"
-          fill="rgba(168,85,247,0.08)"
-          stroke="rgba(168,85,247,0.2)"
+          fill="var(--color-pf-purple-400)"
+          fillOpacity="0.08"
+          stroke="var(--color-pf-purple-400)"
+          strokeOpacity="0.2"
           strokeWidth="0.5"
         />
         <text
@@ -863,16 +924,20 @@ const features = [
           width="180"
           height="26"
           rx="5"
-          fill="rgba(74,222,128,0.06)"
-          stroke="rgba(74,222,128,0.2)"
+          fill="var(--color-pf-success)"
+          fillOpacity="0.06"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.2"
           strokeWidth="1"
         />
         <circle
           cx="24"
           cy="21"
           r="6"
-          fill="rgba(74,222,128,0.15)"
-          stroke="rgba(74,222,128,0.3)"
+          fill="var(--color-pf-success)"
+          fillOpacity="0.15"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.3"
           strokeWidth="0.5"
         />
         <text
@@ -922,16 +987,20 @@ const features = [
           width="180"
           height="26"
           rx="5"
-          fill="rgba(248,113,113,0.06)"
-          stroke="rgba(248,113,113,0.2)"
+          fill="var(--color-pf-danger)"
+          fillOpacity="0.06"
+          stroke="var(--color-pf-danger)"
+          strokeOpacity="0.2"
           strokeWidth="1"
         />
         <circle
           cx="24"
           cy="53"
           r="6"
-          fill="rgba(248,113,113,0.15)"
-          stroke="rgba(248,113,113,0.3)"
+          fill="var(--color-pf-danger)"
+          fillOpacity="0.15"
+          stroke="var(--color-pf-danger)"
+          strokeOpacity="0.3"
           strokeWidth="0.5"
         />
         <text
@@ -981,16 +1050,20 @@ const features = [
           width="180"
           height="26"
           rx="5"
-          fill="rgba(74,222,128,0.06)"
-          stroke="rgba(74,222,128,0.2)"
+          fill="var(--color-pf-success)"
+          fillOpacity="0.06"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.2"
           strokeWidth="1"
         />
         <circle
           cx="24"
           cy="85"
           r="6"
-          fill="rgba(74,222,128,0.15)"
-          stroke="rgba(74,222,128,0.3)"
+          fill="var(--color-pf-success)"
+          fillOpacity="0.15"
+          stroke="var(--color-pf-success)"
+          strokeOpacity="0.3"
           strokeWidth="0.5"
         />
         <text
@@ -1073,19 +1146,40 @@ const features = [
           width="180"
           height="84"
           rx="6"
-          fill="rgba(6,182,212,0.04)"
-          stroke="rgba(6,182,212,0.2)"
+          fill="var(--color-pf-cyan-500)"
+          fillOpacity="0.04"
+          stroke="var(--color-pf-cyan-500)"
+          strokeOpacity="0.2"
           strokeWidth="1"
         />
-        <circle cx="22" cy="18" r="3" fill="rgba(239,68,68,0.5)" />
-        <circle cx="32" cy="18" r="3" fill="rgba(245,158,11,0.5)" />
-        <circle cx="42" cy="18" r="3" fill="rgba(34,197,94,0.5)" />
+        <circle
+          cx="22"
+          cy="18"
+          r="3"
+          fill="var(--color-pf-danger)"
+          fillOpacity="0.5"
+        />
+        <circle
+          cx="32"
+          cy="18"
+          r="3"
+          fill="var(--color-pf-warning)"
+          fillOpacity="0.5"
+        />
+        <circle
+          cx="42"
+          cy="18"
+          r="3"
+          fill="var(--color-pf-success)"
+          fillOpacity="0.5"
+        />
         <line
           x1="10"
           y1="26"
           x2="190"
           y2="26"
-          stroke="rgba(255,255,255,0.06)"
+          stroke="var(--color-pf-text)"
+          strokeOpacity="0.06"
           strokeWidth="1"
         />
         <text
