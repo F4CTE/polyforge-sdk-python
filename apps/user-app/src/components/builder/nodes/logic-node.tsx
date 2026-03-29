@@ -124,7 +124,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           <span className="text-[9px] opacity-70">{d.label}</span>
           <button
             onClick={onDelete}
-            className="p-0.5 rounded hover:bg-white/20 transition-colors"
+            className="p-0.5 rounded hover:bg-white/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             aria-label="Remove block"
             title="Remove block"
           >
@@ -145,6 +145,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
                   placeholder={field.placeholder}
                   value={d.config[field.key] ?? ''}
                   onChange={(e) => onFieldChange(field.key, e.target.value)}
+                  aria-label={field.label}
                   className={`w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors ${
                     (d.config[field.key] ?? '').startsWith('$')
                       ? 'text-purple-400 font-mono'

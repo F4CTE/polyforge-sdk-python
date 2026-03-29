@@ -63,7 +63,7 @@ export function Hero() {
         <WaitlistForm className="max-w-[480px] mx-auto mb-4" />
 
         <p className="mt-6">
-          <a href="#how-it-works" className="text-[13px] text-pf-text-muted hover:text-pf-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors">
+          <a href="#how-it-works" title="Scroll to features" className="text-[13px] text-pf-text-muted hover:text-pf-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors">
             See how it works <span aria-hidden="true">&darr;</span>
           </a>
         </p>

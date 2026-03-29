@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import {
   ArrowLeft, UserPlus, UserMinus, Settings, Loader2, User,
-  TrendingUp, Award,
+  TrendingUp, Award, Target, Flame, Hexagon, DollarSign, Users, Eye,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 
@@ -54,17 +54,13 @@ function scoreBg(score: number): string {
   return 'bg-pf-danger/15 border-pf-danger/25';
 }
 
-const BADGE_ICONS: Record<string, string> = {
-  FIRST_TRADE: '\u{1F3AF}',
-  WINNING_STREAK_5: '\u{1F525}',
-  WHALE_HUNTER: '\u{1F433}',
-  STRATEGY_MASTER: '\u{1F9E0}',
-  COPY_LEADER: '\u{1F451}',
-  TOP_10: '\u{1F3C6}',
-  TOP_50: '\u{1F31F}',
-  CONSISTENT_WINNER: '\u{1F4C8}',
-  PAPER_GRADUATE: '\u{1F393}',
-  EARLY_ADOPTER: '\u{1F680}',
+const BADGE_ICONS: Record<string, React.ReactNode> = {
+  PROPHET: <Target className="size-4" />,
+  PROPHET_ELITE: <Flame className="size-4" />,
+  POLYMARKET_OG: <Hexagon className="size-4" />,
+  TRADING_VOLUME: <DollarSign className="size-4" />,
+  FOLLOWERS: <Users className="size-4" />,
+  WHALE_WATCHER: <Eye className="size-4" />,
 };
 
 /* ─── Component ──────────────────────────────────────────────────────── */
@@ -180,7 +176,7 @@ export function Component() {
           <button
             onClick={toggleFollow}
             disabled={followLoading}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors ${
               profile.isFollowing
                 ? 'bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong'
                 : 'bg-pf-cyan-500 text-black hover:bg-pf-cyan-400'
@@ -289,7 +285,7 @@ export function Component() {
                 key={badge.id}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border-subtle"
               >
-                <span className="text-lg">{BADGE_ICONS[badge.type] ?? '\u{2B50}'}</span>
+                <span className="text-lg">{BADGE_ICONS[badge.type] ?? <Target className="size-4" />}</span>
                 <div className="min-w-0">
                   <div className="text-xs font-medium text-pf-text truncate">{badge.name}</div>
                   <div className="text-[10px] text-pf-text-muted">

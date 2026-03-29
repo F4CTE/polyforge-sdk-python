@@ -132,14 +132,14 @@ export function OnboardingChecklist() {
         <div className="flex items-center gap-1">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+            className="p-1 rounded hover:bg-pf-overlay transition-colors active:scale-95 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
             aria-label={collapsed ? 'Expand checklist' : 'Collapse checklist'}
           >
             {collapsed ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
           </button>
           <button
             onClick={handleDismiss}
-            className="p-1 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+            className="p-1 rounded hover:bg-pf-overlay transition-colors active:scale-95 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
             aria-label="Dismiss checklist"
           >
             <X className="size-4" />

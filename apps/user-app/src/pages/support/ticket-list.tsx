@@ -130,7 +130,7 @@ export function Component() {
                   return (
                     <tr key={ticket.id} className="hover:bg-pf-surface/50 transition-colors">
                       <td className="px-4 py-3">
-                        <Link to={`/support/${ticket.id}`} className="text-pf-text hover:text-pf-cyan-400 transition-colors font-medium">
+                        <Link to={`/support/${ticket.id}`} className="text-pf-text hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors font-medium">
                           {ticket.subject}
                         </Link>
                       </td>

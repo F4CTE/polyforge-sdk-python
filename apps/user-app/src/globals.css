@@ -100,3 +100,19 @@
 .light .react-flow__controls-button:hover {
   background: var(--color-pf-surface) !important;
 }
+.react-flow__controls-button:focus-visible {
+  outline: 2px solid var(--color-pf-cyan-500) !important;
+  outline-offset: -2px !important;
+}
+
+/* ─── Reduced motion ────────────────��───────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .react-flow__minimap,
+  .react-flow__controls-button {
+    transition: none !important;
+  }
+  .react-flow__edge.animated .react-flow__edge-path {
+    stroke-dasharray: none !important;
+    animation: none !important;
+  }
+}

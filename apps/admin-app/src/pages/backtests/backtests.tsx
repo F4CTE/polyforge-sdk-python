@@ -128,7 +128,7 @@ export function Component() {
                           onClick={() => cancelBacktest(bt.id)}
                           disabled={cancelling[bt.id]}
                           aria-label={`Cancel backtest ${bt.id.slice(0, 8)}`}
-                          className="inline-flex items-center gap-1 text-xs text-pf-danger hover:text-pf-danger disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-danger)] rounded"
+                          className="inline-flex items-center gap-1 text-xs text-pf-danger hover:text-pf-danger disabled:opacity-50 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-danger)] rounded"
                         >
                           {cancelling[bt.id] ? <Loader2 size={12} className="animate-spin" /> : <XCircle size={12} />}
                           Cancel

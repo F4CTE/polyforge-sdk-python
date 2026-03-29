@@ -139,6 +139,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         <select
           value={d.config[field.key] ?? ''}
           onChange={(e) => onFieldChange(field.key, e.target.value)}
+          aria-label="Select strategy"
           className={selectClass}
         >
           <option value="">{field.placeholder}</option>
@@ -155,6 +156,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
       <select
         value={d.config[field.key] ?? ''}
         onChange={(e) => onFieldChange(field.key, e.target.value)}
+        aria-label={field.label}
         className={selectClass}
       >
         <option value="">{field.placeholder}</option>
@@ -248,7 +250,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
             )}
             <button
               onClick={onDelete}
-              className="p-0.5 rounded hover:bg-pf-danger/20 text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+              className="p-0.5 rounded hover:bg-pf-danger/20 active:bg-pf-danger/30 text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
               aria-label="Remove block"
               title="Remove block"
             >
@@ -271,6 +273,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                       <select
                         value={d.config[field.key] ?? ''}
                         onChange={(e) => onFieldChange(field.key, e.target.value)}
+                        aria-label={field.label}
                         className={`w-full h-7 px-2 rounded text-xs text-pf-text focus:outline-none transition-colors ${
                           isEmpty
                             ? 'bg-red-500/8 border border-red-500/40 focus:border-red-500/60'
@@ -293,6 +296,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                           placeholder={field.placeholder}
                           value={d.config[field.key] ?? ''}
                           onChange={(e) => onFieldChange(field.key, e.target.value)}
+                          aria-label={field.label}
                           className={`w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm placeholder:text-pf-text-muted/50 focus:outline-none transition-colors ${
                             isEmpty
                               ? 'border-red-500/40 bg-red-500/5 focus:border-red-500/60'

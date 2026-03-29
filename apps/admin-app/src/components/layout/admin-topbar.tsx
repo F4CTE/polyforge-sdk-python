@@ -50,7 +50,7 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
         {onMenuClick && (
           <button
             onClick={onMenuClick}
-            className="p-2 rounded-pf-sm text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
+            className="p-2 rounded-pf-sm text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors md:hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
             aria-label="Open menu"
           >
             <Menu size={20} />

@@ -119,7 +119,7 @@ export function Component() {
                             setReviewingId(r.id);
                             setAdminNote('');
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--color-pf-cyan-500)]/10 text-[var(--color-pf-cyan-500)] hover:bg-[var(--color-pf-cyan-500)]/20 transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-[var(--color-pf-cyan-500)]/10 text-[var(--color-pf-cyan-500)] hover:bg-[var(--color-pf-cyan-500)]/20 cursor-pointer transition-colors"
                         >
                           <Flag size={12} />
                           Review
@@ -164,14 +164,14 @@ export function Component() {
           <div className="flex gap-3">
             <button
               onClick={() => handleResolve(reviewingId, 'REVIEWED')}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 cursor-pointer transition-colors"
             >
               <CheckCircle size={14} />
               Approve
             </button>
             <button
               onClick={() => handleResolve(reviewingId, 'DISMISSED')}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm bg-[var(--color-pf-elevated)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-bg)] border border-[var(--color-pf-border)] cursor-pointer transition-colors"
             >
               <XCircle size={14} />
               Dismiss

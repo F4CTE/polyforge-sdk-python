@@ -112,7 +112,7 @@ export function StrategyCanvas() {
   const isEmpty = nodes.length === 0;
 
   return (
-    <div ref={reactFlowWrapper} className="w-full h-full relative">
+    <div ref={reactFlowWrapper} className="w-full h-full relative" aria-label="Strategy canvas editor">
       <style>{`
         @keyframes blockPulse {
           0%, 100% {

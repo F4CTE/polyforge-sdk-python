@@ -49,9 +49,9 @@ function pnlSign(pnl: string): string {
 }
 
 function rankMedal(rank: number): React.ReactNode {
-  if (rank === 1) return <span role="img" aria-label="Gold medal">{'\u{1F947}'}</span>;
-  if (rank === 2) return <span role="img" aria-label="Silver medal">{'\u{1F948}'}</span>;
-  if (rank === 3) return <span role="img" aria-label="Bronze medal">{'\u{1F949}'}</span>;
+  if (rank === 1) return <Trophy className="size-3.5 text-amber-400" aria-label="Gold medal" />;
+  if (rank === 2) return <Trophy className="size-3.5 text-gray-400" aria-label="Silver medal" />;
+  if (rank === 3) return <Trophy className="size-3.5 text-amber-700" aria-label="Bronze medal" />;
   return null;
 }
 
@@ -174,7 +174,7 @@ export function Component() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <Link to={`/profile/${entry.username}`} className="flex items-center gap-3 hover:text-pf-cyan-400 transition-colors">
+                      <Link to={`/profile/${entry.username}`} className="flex items-center gap-3 hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors">
                         {entry.avatarUrl ? (
                           <img src={entry.avatarUrl} alt={`${entry.displayName ?? entry.username} avatar`} className="size-8 rounded-full object-cover" width={32} height={32} loading="lazy" />
                         ) : (

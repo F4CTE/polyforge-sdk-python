@@ -72,7 +72,7 @@ export function HowItWorks() {
                 {step.visual}
               </div>
               <div className="text-center">
-                <h3 className="text-lg font-semibold text-pf-text mb-2.5">{step.title}</h3>
+                <h3 className="text-lg font-semibold text-pf-text mb-2.5"><span className="sr-only">Step {step.number}: </span>{step.title}</h3>
                 <p className="text-sm text-pf-text-secondary leading-7">{step.description}</p>
               </div>
             </li>

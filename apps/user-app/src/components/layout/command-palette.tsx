@@ -88,7 +88,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
       aria-label="Command palette"
     >
       <div
-        className="motion-safe:animate-scale-in w-full max-w-xl mx-4 bg-pf-elevated border border-pf-border rounded-pf-lg shadow-pf-lg overflow-hidden"
+        className="motion-safe:animate-scale-in w-full max-w-sm sm:max-w-xl mx-4 bg-pf-elevated border border-pf-border rounded-pf-lg shadow-pf-lg overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Search input */}

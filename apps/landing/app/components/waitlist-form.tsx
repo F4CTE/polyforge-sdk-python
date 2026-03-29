@@ -71,9 +71,11 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
   return (
     <form onSubmit={handleSubmit} noValidate className={className}>
       <div className="flex gap-2 flex-col sm:flex-row">
+        <label htmlFor="waitlist-email" className="sr-only">Email address</label>
         <input
           type="email"
           name="email"
+          id="waitlist-email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
@@ -87,6 +89,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
         <button
           type="submit"
           disabled={status === 'loading'}
+          aria-busy={status === 'loading'}
           className="inline-flex items-center justify-center font-semibold text-[15px] px-6 py-3 rounded-pf-md bg-pf-cyan-500 text-black cursor-pointer transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
         >
           <span>Request access</span>

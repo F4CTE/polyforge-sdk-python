@@ -141,6 +141,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onChange={(e) => setName(e.target.value)}
               onBlur={(e) => setName(e.target.value)}
               placeholder="My Strategy"
+              aria-required="true"
               className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
             />
           </div>
@@ -155,6 +156,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onChange={(e) => setDescription(e.target.value)}
               onBlur={(e) => setDescription(e.target.value)}
               placeholder="What does this strategy do?"
+              aria-label="Strategy description"
               className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors resize-none"
             />
           </div>
@@ -166,6 +168,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
             <select
               value={execMode}
               onChange={(e) => setExecMode(e.target.value)}
+              aria-label="Execution mode"
               className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
             >
               <option value="TICK">Tick - evaluate on timer</option>
@@ -186,6 +189,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 onBlur={(e) => setTickMs(Number(e.target.value))}
                 placeholder="1000"
                 min={200}
+                aria-label="Tick interval in milliseconds"
                 className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
               />
             </div>
@@ -198,6 +202,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
             <select
               value={visibility}
               onChange={(e) => setVisibility(e.target.value)}
+              aria-label="Strategy visibility"
               className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
             >
               <option value="PRIVATE">Private</option>
@@ -216,6 +221,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onChange={(e) => setTags(e.target.value)}
               onBlur={(e) => setTags(e.target.value)}
               placeholder="momentum, politics"
+              aria-label="Strategy tags, comma-separated"
               className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
             />
           </div>

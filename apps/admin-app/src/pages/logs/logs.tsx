@@ -149,7 +149,7 @@ export function Component() {
                         </td>
                         <td className="px-4 py-3 text-[var(--color-pf-text-secondary)] max-w-[300px] font-mono text-xs">
                           <details className="cursor-pointer">
-                            <summary className="truncate">{JSON.stringify(log.payload)}</summary>
+                            <summary className="truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]">{JSON.stringify(log.payload)}</summary>
                             <pre className="mt-2 p-2 bg-[var(--color-pf-bg)] rounded text-[10px] whitespace-pre-wrap break-all max-h-40 overflow-y-auto">{JSON.stringify(log.payload, null, 2)}</pre>
                           </details>
                         </td>

@@ -98,7 +98,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
           <span className="text-[11px] font-semibold flex-1 truncate">Variable</span>
           <button
             onClick={onDelete}
-            className="p-0.5 rounded hover:bg-white/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            className="p-0.5 rounded hover:bg-white/20 active:bg-white/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             aria-label="Remove variable"
             title="Remove variable"
           >
@@ -118,6 +118,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               placeholder="myVar"
               value={data.variableName ?? ''}
               onChange={onNameChange}
+              aria-describedby={!nameValid ? `${id}-name-error` : undefined}
               className={`w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none transition-colors ${
                 nameValid
                   ? 'border-pf-border-subtle focus:border-pf-purple-500/50'
@@ -125,7 +126,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               }`}
             />
             {!nameValid && (
-              <p className="text-[9px] text-pf-danger mt-0.5">
+              <p id={`${id}-name-error`} className="text-[9px] text-pf-danger mt-0.5">
                 Letters, digits, underscores only
               </p>
             )}
@@ -141,6 +142,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               placeholder="price * 0.95"
               value={data.expression ?? ''}
               onChange={onExpressionChange}
+              aria-label="Variable expression"
               className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-purple-500/50 transition-colors font-mono"
             />
           </div>

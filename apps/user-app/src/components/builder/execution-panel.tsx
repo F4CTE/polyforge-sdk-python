@@ -557,6 +557,7 @@ function BacktestTab({
               lang="en"
               value={dateStart}
               onChange={e => setDateStart(e.target.value)}
+              aria-label="Start date"
               className="w-full h-8 px-2.5 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
             />
           </div>
@@ -567,6 +568,7 @@ function BacktestTab({
               lang="en"
               value={dateEnd}
               onChange={e => setDateEnd(e.target.value)}
+              aria-label="End date"
               className="w-full h-8 px-2.5 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
             />
           </div>

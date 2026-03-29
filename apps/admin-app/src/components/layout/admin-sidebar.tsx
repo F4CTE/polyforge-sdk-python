@@ -161,7 +161,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                   <span className="shrink-0 relative">
                     {item.icon}
                     {collapsed && item.label === 'Tickets' && openTickets > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-[var(--color-pf-cyan-500)] text-[8px] font-bold text-white">
+                      <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-[var(--color-pf-cyan-500)] text-[8px] font-bold text-white" aria-label={`${openTickets} open tickets`}>
                         {openTickets}
                       </span>
                     )}
@@ -170,7 +170,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                     <>
                       <span className="truncate">{item.label}</span>
                       {item.label === 'Tickets' && openTickets > 0 && (
-                        <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-[var(--color-pf-cyan-500)] text-[10px] font-bold text-white">
+                        <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-[var(--color-pf-cyan-500)] text-[10px] font-bold text-white" aria-label={`${openTickets} open tickets`}>
                           {openTickets}
                         </span>
                       )}

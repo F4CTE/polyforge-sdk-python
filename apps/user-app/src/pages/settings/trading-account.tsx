@@ -196,7 +196,7 @@ export function Component() {
         {botCode && (
           <div className="flex items-center gap-3 bg-pf-surface rounded-pf p-3 border border-pf-border">
             <code className="flex-1 font-mono text-lg text-pf-text tracking-wider">{botCode}</code>
-            <button onClick={copyBotCode} className="p-1.5 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text" aria-label="Copy bot code">
+            <button onClick={copyBotCode} className="p-1.5 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text cursor-pointer" aria-label="Copy bot code">
               <Copy className="size-4" />
             </button>
           </div>

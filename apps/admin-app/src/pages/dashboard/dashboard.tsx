@@ -171,7 +171,7 @@ export function Component() {
             <div className="text-center py-6">
               <AlertCircle className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={24} />
               <p className="text-sm text-[var(--color-pf-text-secondary)]">Health unavailable</p>
-              <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded">
+              <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)] rounded">
                 Retry
               </button>
             </div>
@@ -361,7 +361,7 @@ export function Component() {
             <Clock className="mx-auto mb-2 text-[var(--color-pf-text-tertiary)]" size={20} />
             <p className="text-sm text-[var(--color-pf-text-secondary)]">No recent activity</p>
             <p className="text-xs text-[var(--color-pf-text-tertiary)] mt-1">Activity will appear here as admins take actions.</p>
-            <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2">
+            <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer">
               Refresh
             </button>
           </div>

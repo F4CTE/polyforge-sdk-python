@@ -170,7 +170,7 @@ export function Component() {
               <Link
                 key={s.id}
                 to={`/strategies/${s.id}`}
-                className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-0.5"
+                className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
               >
                 {/* Author row */}
                 <div className="flex items-center gap-2 mb-3">
@@ -181,15 +181,13 @@ export function Component() {
                       {authorInitials(s)}
                     </div>
                   )}
-                  <span
-                    role="link"
-                    tabIndex={0}
-                    onClick={e => { e.preventDefault(); e.stopPropagation(); window.location.href = `/profile/${s.author.username}`; }}
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); window.location.href = `/profile/${s.author.username}`; } }}
+                  <Link
+                    to={`/profile/${s.author.username}`}
+                    onClick={e => { e.stopPropagation(); }}
                     className="text-xs text-pf-text-secondary hover:text-pf-cyan-400 transition-colors cursor-pointer"
                   >
                     {s.author.displayName ?? s.author.username}
-                  </span>
+                  </Link>
                   {s.author.score != null && s.author.score > 0 && (
                     <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
                       s.author.score >= 80 ? 'text-pf-success bg-pf-success/10 border-pf-success/20' :

@@ -220,7 +220,8 @@ export function Component() {
           onChange={(e) => setReply(e.target.value)}
           placeholder="Type your reply..."
           rows={4}
-          className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] mb-3 resize-y"
+          disabled={sending}
+          className="w-full px-3 py-2 text-sm rounded-pf-sm border border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] text-[var(--color-pf-text)] placeholder:text-[var(--color-pf-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-pf-cyan-500)] mb-3 resize-y disabled:opacity-50"
         />
         <div className="flex justify-end">
           <button

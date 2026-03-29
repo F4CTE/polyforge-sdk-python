@@ -287,6 +287,7 @@ export function Component() {
                     onClick={() => copyToClipboard(trade.walletAddress)}
                     className="text-pf-text-muted hover:text-pf-text transition-colors"
                     title="Copy address"
+                    aria-label="Copy wallet address"
                   >
                     <Copy className="size-3.5" />
                   </button>
@@ -334,7 +335,7 @@ export function Component() {
               <div className="flex items-center gap-2 pt-1">
                 <button
                   onClick={() => toggleFollow(trade.walletAddress)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border cursor-pointer transition-colors ${
                     followingSet.has(trade.walletAddress)
                       ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                       : 'text-pf-cyan-400 border-pf-cyan-500/30 hover:bg-pf-cyan-500/10'

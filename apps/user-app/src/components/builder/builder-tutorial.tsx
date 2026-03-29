@@ -21,7 +21,7 @@ const STEPS: TutorialStep[] = [
           Strategies are built by connecting <strong className="text-pf-text">blocks</strong> — each representing a piece of trading logic. Blocks are wired together to define execution flow.
         </p>
         <p className="text-sm text-pf-text-secondary leading-relaxed">
-          Drag blocks from the palette onto the canvas, then connect them by dragging from the <span className="text-pf-cyan-400 font-mono text-xs">◉</span> handles on each block.
+          Drag blocks from the palette onto the canvas, then connect them by dragging from the <span className="inline-block size-1.5 rounded-full bg-pf-cyan-400 mr-1.5" aria-hidden="true" /> handles on each block.
         </p>
       </div>
     ),
@@ -180,6 +180,7 @@ export function BuilderTutorial() {
               key={i}
               onClick={() => setStep(i)}
               aria-label={`Go to step ${i + 1}`}
+              aria-current={i === step ? 'step' : undefined}
               className="rounded-full transition-all focus-visible:outline-none"
               style={{
                 width: i === step ? 16 : 6,

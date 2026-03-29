@@ -74,12 +74,12 @@ export function Topbar() {
         </button>
 
         {notifOpen && (
-          <div role="region" aria-label="Notifications" className="animate-slide-up absolute right-0 top-12 w-80 bg-pf-elevated border border-pf-border rounded-pf shadow-xl z-50">
+          <div role="dialog" aria-modal="false" aria-label="Notifications" className="animate-slide-up absolute right-0 top-12 w-80 bg-pf-elevated border border-pf-border rounded-pf shadow-xl z-50">
             <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border">
               <strong className="text-sm text-pf-text">Notifications</strong>
               <button
                 onClick={markAllRead}
-                className="text-xs text-pf-cyan-400 hover:underline"
+                className="text-xs text-pf-cyan-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
               >
                 Mark all read
               </button>
@@ -91,13 +91,10 @@ export function Topbar() {
                 </p>
               ) : (
                 notifications.slice(0, 8).map((n) => (
-                  <div
+                  <button
                     key={n.id}
                     onClick={() => markRead(n.id)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') markRead(n.id); }}
-                    className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-pf-surface transition-colors ${
+                    className={`w-full flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                       !n.read ? 'bg-pf-cyan-500/5' : ''
                     }`}
                   >
@@ -120,7 +117,7 @@ export function Topbar() {
                         {n.body}
                       </p>
                     </div>
-                  </div>
+                  </button>
                 ))
               )}
             </div>
@@ -129,7 +126,7 @@ export function Topbar() {
                 setNotifOpen(false);
                 navigate('/settings');
               }}
-              className="block w-full text-center text-xs text-pf-cyan-400 py-3 border-t border-pf-border hover:bg-pf-surface transition-colors"
+              className="block w-full text-center text-xs text-pf-cyan-400 py-3 border-t border-pf-border hover:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
             >
               Manage notification preferences
             </button>

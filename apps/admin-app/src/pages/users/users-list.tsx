@@ -189,7 +189,7 @@ export function Component() {
         <div className="text-center py-12">
           <AlertCircle className="mx-auto mb-3 text-[var(--color-pf-text-tertiary)]" size={40} />
           <p className="text-[var(--color-pf-text-secondary)] mb-4">Failed to load data</p>
-          <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-sm">
+          <button onClick={load} className="text-[var(--color-pf-cyan-400)] hover:text-[var(--color-pf-cyan-300)] text-sm cursor-pointer">
             Try again
           </button>
         </div>
@@ -238,7 +238,7 @@ export function Component() {
                     tabIndex={0}
                     onClick={() => navigate(`/users/${user.id}`)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/users/${user.id}`); }}
-                    className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] cursor-pointer transition-colors"
+                    className="border-b border-[var(--color-pf-border)] last:border-0 hover:bg-[var(--color-pf-bg)] focus-visible:bg-[var(--color-pf-cyan-500)]/5 cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3 font-medium text-[var(--color-pf-text)]">
                       {user.username ?? ''}

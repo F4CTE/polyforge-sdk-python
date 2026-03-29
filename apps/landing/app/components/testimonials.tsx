@@ -42,7 +42,7 @@ export function Testimonials() {
           {testimonials.map((t) => (
             <figure
               key={t.name}
-              className="animate-fade-in bg-pf-base border border-pf-border-subtle rounded-pf-lg p-6 sm:p-8 transition-all duration-200 hover:border-pf-cyan-500/20 hover:-translate-y-0.5"
+              className="animate-fade-in bg-pf-base border border-pf-border-subtle rounded-pf-lg p-6 sm:p-8 transition-all duration-200 hover:border-pf-cyan-500/20 cursor-default"
             >
               <div
                 className="text-5xl font-extrabold leading-none text-pf-cyan-500/15 -mb-2 font-serif"

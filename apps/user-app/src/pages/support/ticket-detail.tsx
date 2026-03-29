@@ -185,7 +185,7 @@ export function Component() {
             <button
               onClick={() => setShowCloseConfirm(true)}
               disabled={closing}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs text-pf-text-muted border border-pf-border hover:border-pf-border-strong hover:text-pf-text transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs text-pf-text-muted border border-pf-border hover:border-pf-border-strong hover:text-pf-text cursor-pointer disabled:cursor-not-allowed transition-colors"
             >
               {closing ? <Loader2 className="size-3 animate-spin" /> : <Lock className="size-3" />}
               Close Ticket

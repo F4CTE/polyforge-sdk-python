@@ -224,6 +224,7 @@ export function TooltipTour() {
       <div
         className="fixed inset-0 z-[9998] bg-black/40 transition-opacity"
         onClick={closeTour}
+        role="presentation"
         aria-hidden="true"
       />
 
@@ -263,7 +264,7 @@ export function TooltipTour() {
             {!isFirst && (
               <button
                 onClick={prevStep}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium text-pf-text-secondary hover:text-pf-text bg-pf-surface border border-pf-border hover:border-pf-border-strong transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium text-pf-text-secondary hover:text-pf-text bg-pf-surface border border-pf-border hover:border-pf-border-strong transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
               >
                 <ChevronLeft className="size-3" />
                 Back
@@ -271,7 +272,7 @@ export function TooltipTour() {
             )}
             <button
               onClick={nextStep}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
             >
               {isLast ? 'Finish' : 'Next'}
               {!isLast && <ChevronRight className="size-3" />}

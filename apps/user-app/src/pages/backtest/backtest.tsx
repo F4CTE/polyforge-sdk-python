@@ -309,7 +309,7 @@ export function Component() {
                             setMarketSearch(prev => ({ ...prev, [slot.slot]: m.title ?? m.question }));
                             setMarketResults(prev => ({ ...prev, [slot.slot]: [] }));
                           }}
-                          className="w-full text-left px-3 py-2 text-xs text-pf-text hover:bg-pf-surface transition-colors border-b border-pf-border-subtle last:border-b-0"
+                          className="w-full text-left px-3 py-2 text-xs text-pf-text hover:bg-pf-surface cursor-pointer transition-colors border-b border-pf-border-subtle last:border-b-0"
                         >
                           {m.title ?? m.question}
                         </button>
@@ -431,6 +431,7 @@ export function Component() {
                       tabIndex={0}
                       onClick={() => selectRun(run)}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectRun(run); }}
+                      aria-label={run.strategyName ?? strategies.find(s => s.id === run.strategyId)?.name ?? 'Backtest run'}
                       className={`hover:bg-pf-surface/50 transition-colors cursor-pointer ${
                         selectedRun?.id === run.id ? 'bg-pf-cyan-500/5' : ''
                       }`}

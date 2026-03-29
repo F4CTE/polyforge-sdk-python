@@ -28,6 +28,7 @@ export function App() {
                 <rect x="2" y="2" width="28" height="28" rx="8" stroke="currentColor" strokeWidth="2.5" />
                 <path d="M10 22V10h5a4 4 0 010 8h-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
+              <span className="sr-only">Loading</span>
             </div>
           }
         />

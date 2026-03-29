@@ -75,7 +75,7 @@ export function Component() {
                       className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                     />
                   </div>
-                  {emailError && <p id="forgot-email-error" className="mt-1 text-xs text-pf-danger">{emailError}</p>}
+                  {emailError && <p id="forgot-email-error" role="alert" className="mt-1 text-xs text-pf-danger">{emailError}</p>}
                 </div>
 
                 <button

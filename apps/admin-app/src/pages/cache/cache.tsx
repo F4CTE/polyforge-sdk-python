@@ -75,7 +75,7 @@ export function Component() {
         <h2 className="text-lg font-semibold text-[var(--color-pf-text)]">Cache</h2>
         <button
           onClick={loadStats}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-[var(--color-pf-border)] text-[var(--color-pf-text-secondary)] hover:bg-[var(--color-pf-elevated)] cursor-pointer transition-colors"
           aria-label="Refresh cache stats"
         >
           <RefreshCw size={14} />
