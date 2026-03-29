@@ -86,7 +86,7 @@ export function Component() {
         setAdmins((a) => [...a, newAdmin]);
         toast.success('Admin created');
       } else if (dialogMode === 'edit' && editId) {
-        const data: Record<string, any> = {
+        const data: Record<string, string | number | boolean> = {
           displayName: form.displayName,
           role: form.role,
         };
@@ -96,8 +96,9 @@ export function Component() {
         toast.success('Admin updated');
       }
       closeDialog();
-    } catch (err: any) {
-      toast.error(err?.body?.message || 'Operation failed');
+    } catch (err: unknown) {
+      const apiErr = err as { body?: { message?: string } };
+      toast.error(apiErr?.body?.message || 'Operation failed');
     } finally {
       setSubmitting(false);
     }

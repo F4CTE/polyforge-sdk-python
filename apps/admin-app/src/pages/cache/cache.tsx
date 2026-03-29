@@ -50,7 +50,7 @@ export function Component() {
 
   if (loading) {
     return (
-      <div className="animate-fade-in space-y-6">
+      <div className="animate-fade-in space-y-6" role="status" aria-label="Loading cache statistics">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-5 space-y-3">

@@ -156,6 +156,7 @@ export function Component() {
         {loading ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
+              <caption className="sr-only">Loading active invite codes</caption>
               <tbody>
                 {Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i}>

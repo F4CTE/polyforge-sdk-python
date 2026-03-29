@@ -39,7 +39,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
           // Retry the original request
           return request<T>(url, options);
         }
-      } catch (error: unknown) {
+      } catch {
         // refresh failed, fall through to redirect
       }
       // Import dynamically to avoid circular deps; show toast before redirect

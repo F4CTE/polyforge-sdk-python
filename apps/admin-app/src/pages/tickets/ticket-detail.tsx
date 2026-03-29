@@ -81,7 +81,7 @@ export function Component() {
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-6">
+      <div className="animate-pulse space-y-6" role="status" aria-label="Loading ticket details">
         <div className="h-4 bg-[var(--color-pf-elevated)] rounded w-32" />
         <div className="bg-[var(--color-pf-elevated)] border border-[var(--color-pf-border)] rounded-pf-lg p-6 space-y-4">
           <div className="h-5 bg-[var(--color-pf-bg)] rounded w-64" />
@@ -183,7 +183,7 @@ export function Component() {
 
       {/* Messages Thread */}
       <div className="space-y-3">
-        {messages.map((msg: any, i: number) => {
+        {messages.map((msg: Record<string, unknown>, i: number) => {
           const isAdmin = msg.senderType === 'admin' || msg.adminId;
           return (
             <div

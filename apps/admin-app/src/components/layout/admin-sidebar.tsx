@@ -97,13 +97,14 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
 
   return (
     <aside
+      aria-label="Admin sidebar"
       className={`flex flex-col h-screen border-r border-[var(--color-pf-border)] bg-[var(--color-pf-bg)] transition-all duration-200 ${
         collapsed ? 'w-16' : 'w-60'
       }`}
     >
       {/* Brand */}
       <div className="flex items-center gap-2 h-14 px-3 border-b border-[var(--color-pf-border)] shrink-0">
-        <Link to="/dashboard" className="flex items-center gap-2 min-w-0">
+        <Link to="/dashboard" className="flex items-center gap-2 min-w-0" aria-label="Polyforge Admin home">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="shrink-0" aria-hidden="true">
             <path
               d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"

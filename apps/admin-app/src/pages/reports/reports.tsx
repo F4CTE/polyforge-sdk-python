@@ -179,7 +179,7 @@ export function Component() {
             </button>
             <button type="button"
               onClick={() => setReviewingId(null)}
-              className="px-3 py-1.5 text-sm rounded-pf-sm text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text-secondary)] transition-colors"
+              className="px-3 py-1.5 text-sm rounded-pf-sm text-[var(--color-pf-text-tertiary)] hover:text-[var(--color-pf-text-secondary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-pf-cyan-500)]"
             >
               Cancel
             </button>

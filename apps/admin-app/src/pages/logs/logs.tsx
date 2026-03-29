@@ -18,7 +18,7 @@ export function Component() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      let res: any;
+      let res: { data?: Record<string, unknown>[]; totalPages?: number };
       if (tab === 'audit') res = await adminApi.auditLogs({ page, limit });
       else if (tab === 'events') res = await adminApi.eventLogs({ page, limit });
       else res = await adminApi.loginLogs({ page, limit });

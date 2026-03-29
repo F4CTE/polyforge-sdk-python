@@ -118,7 +118,7 @@ export function Component() {
   const displayUsers = useMemo(() => {
     let list = hideTestAccounts ? users.filter((u) => !isTestAccount(u)) : users;
     list = [...list].sort((a, b) => {
-      let av: any, bv: any;
+      let av: string | number, bv: string | number;
       switch (sortField) {
         case 'username': av = (a.username ?? '').toLowerCase(); bv = (b.username ?? '').toLowerCase(); break;
         case 'status': av = computeUserStatus(a); bv = computeUserStatus(b); break;
