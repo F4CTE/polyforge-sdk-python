@@ -19,7 +19,8 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaPg } = require('@prisma/adapter-pg');
 import { PrismaClient } from '.prisma/client';
-import * as bcrypt from 'bcrypt';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const bcrypt = require('bcrypt');
 
 const adapter = new PrismaPg({ connectionString: process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -1501,7 +1502,7 @@ async function main() {
 
   // Grab real market IDs from synced Polymarket data
   const realMarkets = await prisma.market.findMany({
-    where: { closedAt: null },
+    where: { closed: false },
     orderBy: { volume24h: 'desc' },
     take: 8,
     select: { id: true, title: true },
