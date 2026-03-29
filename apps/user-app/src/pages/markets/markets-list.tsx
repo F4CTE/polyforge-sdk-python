@@ -374,8 +374,9 @@ export function Component() {
 
           {/* Sort */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-pf-text-secondary">Sort by</span>
+            <label htmlFor="sort-select" className="text-xs text-pf-text-secondary">Sort by</label>
             <select
+              id="sort-select"
               value={sort}
               onChange={(e) => { setSort(e.target.value as SortOption); setPage(1); }}
               className="h-8 px-3 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
@@ -439,7 +440,7 @@ export function Component() {
             </div>
           ) : (
             <div className="border border-pf-border rounded-pf-lg overflow-hidden">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" aria-label="Markets">
                 <thead>
                   <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                     <th className="px-4 py-3 font-medium">Market</th>

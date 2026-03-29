@@ -64,12 +64,13 @@ export function Topbar() {
         >
           <Bell size={18} />
           {unread > 0 && (
-            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold text-white bg-pf-danger rounded-full">
+            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold text-white bg-pf-danger rounded-full" aria-label={`${unread} unread notifications`}>
               {unread > 9 ? '9+' : unread}
             </span>
           )}
           {/* WebSocket active indicator */}
-          <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-pf-success animate-pulse-dot" />
+          <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-pf-success animate-pulse-dot" aria-hidden="true" />
+          <span className="sr-only">Connected</span>
         </button>
 
         {notifOpen && (
@@ -157,6 +158,7 @@ export function Topbar() {
         {menuOpen && (
           <div role="menu" className="animate-slide-up absolute right-0 top-12 w-48 bg-pf-elevated border border-pf-border rounded-pf shadow-xl z-50 py-1">
             <button
+              role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
                 navigate('/profile/me');
@@ -167,6 +169,7 @@ export function Topbar() {
               Profile
             </button>
             <button
+              role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
                 navigate('/settings');
@@ -178,6 +181,7 @@ export function Topbar() {
             </button>
             <div className="border-t border-pf-border my-1" />
             <button
+              role="menuitem"
               onClick={logout}
               className="flex items-center gap-2 w-full px-4 py-2 text-sm text-pf-danger hover:bg-pf-surface transition-colors"
             >

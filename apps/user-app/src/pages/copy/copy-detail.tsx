@@ -64,12 +64,12 @@ interface TradesResponse {
 const STATUS_STYLES: Record<CopyStatus, { dot: string; bg: string; text: string }> = {
   ACTIVE:  { dot: 'bg-pf-success', bg: 'bg-pf-success/10', text: 'text-pf-success' },
   PAUSED:  { dot: 'bg-pf-warning',  bg: 'bg-pf-warning/10',  text: 'text-pf-warning' },
-  STOPPED: { dot: 'bg-gray-400',   bg: 'bg-gray-500/10',   text: 'text-gray-400' },
+  STOPPED: { dot: 'bg-pf-text-muted',   bg: 'bg-pf-text-muted/10',   text: 'text-pf-text-muted' },
 };
 
 const MODE_STYLES: Record<CopyMode, { bg: string; text: string }> = {
   PERCENTAGE: { bg: 'bg-pf-cyan-500/10', text: 'text-pf-cyan-400' },
-  FIXED:      { bg: 'bg-purple-500/10',  text: 'text-purple-400' },
+  FIXED:      { bg: 'bg-pf-purple-500/10',  text: 'text-pf-purple-500' },
   MIRROR:     { bg: 'bg-pf-success/10', text: 'text-pf-success' },
 };
 
@@ -77,7 +77,7 @@ const TRADE_STATUS_STYLES: Record<TradeStatus, string> = {
   FILLED:  'bg-pf-success/15 text-pf-success',
   PARTIAL: 'bg-pf-warning/15 text-pf-warning',
   FAILED:  'bg-pf-danger/15 text-pf-danger',
-  PENDING: 'bg-gray-500/15 text-gray-400',
+  PENDING: 'bg-pf-text-muted/15 text-pf-text-muted',
 };
 
 function truncateAddress(addr: string): string {
@@ -179,7 +179,7 @@ function EditDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="edit-config-title">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="edit-config-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 w-full max-w-md space-y-5 animate-fade-in">
         <div className="flex items-center justify-between">
           <h2 id="edit-config-title" className="text-sm font-medium text-pf-text">Edit Config</h2>
@@ -190,10 +190,11 @@ function EditDialog({
 
         {config.mode !== 'MIRROR' && (
           <div className="space-y-2">
-            <label className="text-xs text-pf-text-secondary">
+            <label htmlFor="edit-size-value" className="text-xs text-pf-text-secondary">
               {config.mode === 'PERCENTAGE' ? 'Size (%)' : 'Fixed Amount ($)'}
             </label>
             <input
+              id="edit-size-value"
               type="number"
               min={0}
               value={sizeValue}
@@ -204,8 +205,9 @@ function EditDialog({
         )}
 
         <div className="space-y-2">
-          <label className="text-xs text-pf-text-secondary">Max Exposure ($)</label>
+          <label htmlFor="edit-max-exposure" className="text-xs text-pf-text-secondary">Max Exposure ($)</label>
           <input
+            id="edit-max-exposure"
             type="number"
             min={0}
             value={maxExposure}
@@ -215,8 +217,9 @@ function EditDialog({
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs text-pf-text-secondary">Max Daily Loss ($)</label>
+          <label htmlFor="edit-max-daily-loss" className="text-xs text-pf-text-secondary">Max Daily Loss ($)</label>
           <input
+            id="edit-max-daily-loss"
             type="number"
             min={0}
             value={maxDailyLoss}
@@ -226,8 +229,9 @@ function EditDialog({
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs text-pf-text-secondary">Price Offset (%)</label>
+          <label htmlFor="edit-price-offset" className="text-xs text-pf-text-secondary">Price Offset (%)</label>
           <input
+            id="edit-price-offset"
             type="number"
             min={-5}
             max={5}

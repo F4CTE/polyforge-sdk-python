@@ -336,8 +336,8 @@ export function Component() {
                   onClick={() => toggleFollow(trade.walletAddress)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border transition-colors ${
                     followingSet.has(trade.walletAddress)
-                      ? 'bg-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                      : 'text-pf-cyan-400 border-pf-cyan-500/30 hover:bg-cyan-500/10'
+                      ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
+                      : 'text-pf-cyan-400 border-pf-cyan-500/30 hover:bg-pf-cyan-500/10'
                   }`}
                 >
                   {followingSet.has(trade.walletAddress) ? (

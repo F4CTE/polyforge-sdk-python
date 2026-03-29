@@ -239,6 +239,7 @@ export function Component() {
             value={reply}
             onChange={e => setReply(e.target.value.slice(0, MAX_CHARS))}
             placeholder="Write a reply..."
+            aria-label="Reply message"
             rows={4}
             className="w-full px-3 py-2.5 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors resize-y"
           />

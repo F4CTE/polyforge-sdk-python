@@ -47,12 +47,12 @@ interface CopyListResponse {
 const STATUS_STYLES: Record<CopyStatus, { dot: string; bg: string; text: string }> = {
   ACTIVE:  { dot: 'bg-pf-success', bg: 'bg-pf-success/10', text: 'text-pf-success' },
   PAUSED:  { dot: 'bg-pf-warning',  bg: 'bg-pf-warning/10',  text: 'text-pf-warning' },
-  STOPPED: { dot: 'bg-gray-400',   bg: 'bg-gray-500/10',   text: 'text-gray-400' },
+  STOPPED: { dot: 'bg-pf-text-muted',   bg: 'bg-pf-text-muted/10',   text: 'text-pf-text-muted' },
 };
 
 const MODE_STYLES: Record<CopyMode, { bg: string; text: string }> = {
   PERCENTAGE: { bg: 'bg-pf-cyan-500/10', text: 'text-pf-cyan-400' },
-  FIXED:      { bg: 'bg-purple-500/10',  text: 'text-purple-400' },
+  FIXED:      { bg: 'bg-pf-purple-500/10',  text: 'text-pf-purple-500' },
   MIRROR:     { bg: 'bg-pf-success/10', text: 'text-pf-success' },
 };
 

@@ -48,11 +48,11 @@ function pnlSign(pnl: string): string {
   return `${sign}$${Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function rankMedal(rank: number): string {
-  if (rank === 1) return '\u{1F947}';
-  if (rank === 2) return '\u{1F948}';
-  if (rank === 3) return '\u{1F949}';
-  return '';
+function rankMedal(rank: number): React.ReactNode {
+  if (rank === 1) return <span role="img" aria-label="Gold medal">{'\u{1F947}'}</span>;
+  if (rank === 2) return <span role="img" aria-label="Silver medal">{'\u{1F948}'}</span>;
+  if (rank === 3) return <span role="img" aria-label="Bronze medal">{'\u{1F949}'}</span>;
+  return null;
 }
 
 function rankColor(rank: number): string {
@@ -131,7 +131,7 @@ export function Component() {
       {/* Table */}
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label="Leaderboard rankings">
             <thead>
               <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                 <th className="px-4 py-3 font-medium text-right w-16">Rank</th>
@@ -166,7 +166,7 @@ export function Component() {
                   <tr key={entry.userId} className="hover:bg-pf-surface/50 transition-colors">
                     <td className="px-4 py-3 text-right">
                       <div className={`${rankColor(entry.rank)}`}>
-                        {rankMedal(entry.rank) ? (
+                        {rankMedal(entry.rank) !== null ? (
                           <span className="text-lg">{rankMedal(entry.rank)}</span>
                         ) : (
                           <span className="font-mono text-xs">{entry.rank}</span>

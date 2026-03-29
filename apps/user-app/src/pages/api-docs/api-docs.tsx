@@ -681,12 +681,12 @@ export function Component() {
       <div ref={contentRef} className="flex-1 min-w-0 overflow-y-auto bg-pf-base">
 
         {/* Breadcrumb — matches app's secondary text style */}
-        <div className="sticky top-0 z-10 flex items-center gap-1.5 px-6 py-3 bg-pf-base/90 backdrop-blur-sm border-b border-pf-border text-xs text-pf-text-muted">
+        <nav aria-label="Breadcrumb" className="sticky top-0 z-10 flex items-center gap-1.5 px-6 py-3 bg-pf-base/90 backdrop-blur-sm border-b border-pf-border text-xs text-pf-text-muted">
           <span>Docs</span>
           <ChevronRight className="size-3 shrink-0" />
           {currentGroup && <><span>{currentGroup}</span><ChevronRight className="size-3 shrink-0" /></>}
           <span className="text-pf-text-secondary">{currentLabel}</span>
-        </div>
+        </nav>
 
         <div className="max-w-3xl mx-auto px-6 py-6">
           {renderContent()}

@@ -92,7 +92,7 @@ export function Component() {
       {/* Tickets table */}
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label="Support tickets">
             <thead>
               <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                 <th className="px-4 py-3 font-medium">Subject</th>

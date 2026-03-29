@@ -609,7 +609,7 @@ function BacktestTab({
           </div>
           <span className="text-xs font-mono text-pf-cyan-400">{bt.progress}%</span>
         </div>
-        <div className="h-2 bg-pf-surface rounded-full overflow-hidden">
+        <div className="h-2 bg-pf-surface rounded-full overflow-hidden" role="progressbar" aria-valuenow={bt.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Backtest progress">
           <div
             className="h-full bg-gradient-to-r from-pf-cyan-500 to-pf-cyan-400 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${bt.progress}%` }}
@@ -800,6 +800,7 @@ function LiveTab({
               onClick={onPause}
               className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-warning hover:bg-pf-warning/10 transition-colors"
               title="Pause"
+              aria-label="Pause execution"
             >
               <Pause className="size-3" />
             </button>
@@ -809,6 +810,7 @@ function LiveTab({
               onClick={onResume}
               className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-success hover:bg-pf-success/10 transition-colors"
               title="Resume"
+              aria-label="Resume execution"
             >
               <Play className="size-3" />
             </button>
@@ -817,6 +819,7 @@ function LiveTab({
             onClick={onStop}
             className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-danger hover:bg-pf-danger/10 transition-colors"
             title="Stop"
+            aria-label="Stop execution"
           >
             <Square className="size-3" />
           </button>
@@ -843,7 +846,7 @@ function LiveTab({
         <div>
           <span className="text-[10px] text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Recent Trades</span>
           <div className="bg-pf-surface rounded-pf-sm overflow-hidden max-h-[120px] overflow-y-auto">
-            <table className="w-full text-[11px]">
+            <table className="w-full text-[11px]" aria-label="Trade history">
               <thead>
                 <tr className="text-pf-text-muted text-left">
                   <th className="px-2 py-1 font-medium">Time</th>

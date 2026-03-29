@@ -67,11 +67,11 @@ const SENTIMENT_TABS: { label: string; value: SentimentFilter }[] = [
 
 function sourceColor(source: string): string {
   const map: Record<string, string> = {
-    Reuters: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+    Reuters: 'bg-pf-info/15 text-pf-info border-pf-info/30',
     CNN: 'bg-pf-danger/15 text-pf-danger border-pf-danger/30',
     CoinGecko: 'bg-pf-warning/15 text-pf-warning border-pf-warning/30',
-    Bloomberg: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-    'AP News': 'bg-teal-500/15 text-teal-400 border-teal-500/30',
+    Bloomberg: 'bg-pf-purple-500/15 text-pf-purple-500 border-pf-purple-500/30',
+    'AP News': 'bg-pf-cyan-500/15 text-pf-cyan-500 border-pf-cyan-500/30',
   };
   return map[source] ?? 'bg-pf-overlay text-pf-text-muted border-pf-border';
 }
@@ -263,8 +263,7 @@ export function Component() {
             max={100}
             step={5}
             value={minConfidence}
-            onMouseUp={e => { setMinConfidence(Number((e.target as HTMLInputElement).value)); setPage(1); }}
-            onChange={e => { /* visual update only — commit on mouseUp */ }}
+            onChange={e => { setMinConfidence(Number(e.target.value)); setPage(1); }}
             className="w-24 accent-pf-cyan-500"
           />
           <span className="text-xs font-mono text-pf-text-secondary w-8 text-right">{minConfidence}%</span>

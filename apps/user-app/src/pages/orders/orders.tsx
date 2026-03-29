@@ -88,8 +88,8 @@ const CONDITIONAL_TYPE_STYLES: Record<ConditionalOrderType, { text: string; bg: 
   TAKE_PROFIT:   { text: 'text-pf-success', bg: 'bg-pf-success/10', label: 'TP' },
   STOP_LOSS:     { text: 'text-pf-danger', bg: 'bg-pf-danger/10', label: 'SL' },
   TRAILING_STOP: { text: 'text-pf-warning', bg: 'bg-pf-warning/10', label: 'TRAILING' },
-  LIMIT:         { text: 'text-blue-400', bg: 'bg-blue-500/10', label: 'LIMIT' },
-  PEGGED:        { text: 'text-purple-400', bg: 'bg-purple-500/10', label: 'PEGGED' },
+  LIMIT:         { text: 'text-pf-info', bg: 'bg-pf-info/10', label: 'LIMIT' },
+  PEGGED:        { text: 'text-pf-purple-500', bg: 'bg-pf-purple-500/10', label: 'PEGGED' },
 };
 
 const CONDITIONAL_STATUS_STYLES: Record<ConditionalOrderStatus, { text: string; bg: string }> = {

@@ -16,15 +16,15 @@
 }
 
 .light .react-flow {
-  --xy-background-color: #ffffff;
-  --xy-node-background-color: #ffffff;
-  --xy-node-border-color: #e2e8f0;
-  --xy-node-color: #0f172a;
-  --xy-edge-stroke: #cbd5e1;
-  --xy-minimap-background-color: #f8fafc;
-  --xy-controls-button-background-color: #ffffff;
-  --xy-controls-button-border-color: #e2e8f0;
-  --xy-controls-button-color: #0f172a;
+  --xy-background-color: var(--color-pf-elevated);
+  --xy-node-background-color: var(--color-pf-elevated);
+  --xy-node-border-color: var(--color-pf-border);
+  --xy-node-color: var(--color-pf-text);
+  --xy-edge-stroke: var(--color-pf-border-strong);
+  --xy-minimap-background-color: var(--color-pf-surface);
+  --xy-controls-button-background-color: var(--color-pf-elevated);
+  --xy-controls-button-border-color: var(--color-pf-border);
+  --xy-controls-button-color: var(--color-pf-text);
 }
 /* Block node override — React Flow default styles set white bg */
 .react-flow__node {
@@ -98,5 +98,5 @@
   background: var(--color-pf-surface) !important;
 }
 .light .react-flow__controls-button:hover {
-  background: #f1f5f9 !important;
+  background: var(--color-pf-surface) !important;
 }

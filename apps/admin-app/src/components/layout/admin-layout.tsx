@@ -14,6 +14,13 @@ export function Component() {
     return () => stop();
   }, [start, stop]);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileOpen(false); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [mobileOpen]);
+
   return (
     <div className="flex h-screen overflow-hidden bg-[var(--color-pf-bg)]">
       {/* Desktop sidebar */}

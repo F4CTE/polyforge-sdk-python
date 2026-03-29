@@ -293,9 +293,11 @@ export function Component() {
             Gasless
           </span>
         </div>
-        <div className="flex bg-pf-surface rounded-pf border border-pf-border-subtle">
+        <div className="flex bg-pf-surface rounded-pf border border-pf-border-subtle" role="tablist" aria-label="Portfolio mode">
           <button
             onClick={() => handleTabChange('live')}
+            role="tab"
+            aria-selected={tab === 'live'}
             className={`px-4 py-1.5 text-sm font-medium rounded-pf transition-colors ${
               tab === 'live' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-secondary hover:text-pf-text'
             }`}
@@ -304,6 +306,8 @@ export function Component() {
           </button>
           <button
             onClick={() => handleTabChange('paper')}
+            role="tab"
+            aria-selected={tab === 'paper'}
             className={`px-4 py-1.5 text-sm font-medium rounded-pf transition-colors ${
               tab === 'paper' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-secondary hover:text-pf-text'
             }`}

@@ -384,19 +384,19 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
           <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Public Profile</h2>
           <div>
-            <label className="text-xs text-pf-text-secondary mb-1.5 block">Display Name</label>
-            <input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your display name"
+            <label htmlFor="settings-display-name" className="text-xs text-pf-text-secondary mb-1.5 block">Display Name</label>
+            <input id="settings-display-name" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your display name"
               className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
           </div>
           <div>
-            <label className="text-xs text-pf-text-secondary mb-1.5 block">Bio</label>
-            <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="Tell others about yourself..."
+            <label htmlFor="settings-bio" className="text-xs text-pf-text-secondary mb-1.5 block">Bio</label>
+            <textarea id="settings-bio" value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="Tell others about yourself..."
               className="w-full px-3 py-2.5 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors resize-y" />
           </div>
           <div>
-            <label className="text-xs text-pf-text-secondary mb-1.5 block">Avatar URL</label>
+            <label htmlFor="settings-avatar-url" className="text-xs text-pf-text-secondary mb-1.5 block">Avatar URL</label>
             <div className="flex items-center gap-3">
-              <input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://..."
+              <input id="settings-avatar-url" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://..."
                 className="flex-1 h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
               {avatarUrl && <img src={avatarUrl} alt="Avatar preview" className="w-12 h-12 rounded-full object-cover border border-pf-border" />}
             </div>
@@ -427,7 +427,7 @@ export function Component() {
             </button>
 
             {deleteDialogOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title">
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title" onKeyDown={(e) => { if (e.key === 'Escape') { setDeleteDialogOpen(false); setDeletePassword(''); } }}>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 max-w-md w-full mx-4 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="size-10 rounded-full bg-pf-danger/10 flex items-center justify-center">
@@ -445,8 +445,9 @@ export function Component() {
                     </p>
                   </div>
                   <div>
-                    <label className="text-xs text-pf-text-secondary mb-1.5 block">Enter your password to confirm</label>
+                    <label htmlFor="settings-delete-password" className="text-xs text-pf-text-secondary mb-1.5 block">Enter your password to confirm</label>
                     <input
+                      id="settings-delete-password"
                       type="password"
                       autoComplete="current-password"
                       value={deletePassword}
@@ -514,9 +515,9 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
           <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Change Password</h2>
           <div>
-            <label className="text-xs text-pf-text-secondary mb-1.5 block">Current Password</label>
+            <label htmlFor="settings-current-password" className="text-xs text-pf-text-secondary mb-1.5 block">Current Password</label>
             <div className="relative">
-              <input type={showCurrentPw ? 'text' : 'password'} autoComplete="current-password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
+              <input id="settings-current-password" type={showCurrentPw ? 'text' : 'password'} autoComplete="current-password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
                 className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
               <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Toggle password visibility">
                 {showCurrentPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -524,9 +525,9 @@ export function Component() {
             </div>
           </div>
           <div>
-            <label className="text-xs text-pf-text-secondary mb-1.5 block">New Password</label>
+            <label htmlFor="settings-new-password" className="text-xs text-pf-text-secondary mb-1.5 block">New Password</label>
             <div className="relative">
-              <input type={showNewPw ? 'text' : 'password'} autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+              <input id="settings-new-password" type={showNewPw ? 'text' : 'password'} autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
                 className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
               <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Toggle password visibility">
                 {showNewPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -534,8 +535,8 @@ export function Component() {
             </div>
           </div>
           <div>
-            <label className="text-xs text-pf-text-secondary mb-1.5 block">Confirm New Password</label>
-            <input type="password" autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+            <label htmlFor="settings-confirm-password" className="text-xs text-pf-text-secondary mb-1.5 block">Confirm New Password</label>
+            <input id="settings-confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
               className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             {confirmPassword && newPassword !== confirmPassword && (
               <span className="text-xs text-pf-danger mt-1 block">Passwords do not match</span>
@@ -580,8 +581,8 @@ export function Component() {
                 2FA is currently <strong className="text-pf-success">enabled</strong>.
               </p>
               <div>
-                <label className="text-xs text-pf-text-secondary mb-1.5 block">Enter your password to disable 2FA</label>
-                <input type="password" value={totpDisablePassword} onChange={e => setTotpDisablePassword(e.target.value)} placeholder="Your password"
+                <label htmlFor="settings-totp-disable-password" className="text-xs text-pf-text-secondary mb-1.5 block">Enter your password to disable 2FA</label>
+                <input id="settings-totp-disable-password" type="password" value={totpDisablePassword} onChange={e => setTotpDisablePassword(e.target.value)} placeholder="Your password"
                   className="w-full max-w-[280px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
               </div>
               <button onClick={disableTotp} disabled={totpSaving || !totpDisablePassword}
@@ -597,8 +598,8 @@ export function Component() {
                 <img src={totpSetupData.qrCode} alt="TOTP QR Code" className="w-48 h-48 rounded-pf-lg bg-white p-2" />
               </div>
               <div>
-                <label className="text-xs text-pf-text-secondary mb-1.5 block">Verification Code</label>
-                <input value={totpCode} onChange={e => setTotpCode(e.target.value)} placeholder="6-digit code" maxLength={6}
+                <label htmlFor="settings-totp-code" className="text-xs text-pf-text-secondary mb-1.5 block">Verification Code</label>
+                <input id="settings-totp-code" value={totpCode} onChange={e => setTotpCode(e.target.value)} placeholder="6-digit code" maxLength={6}
                   className="w-full max-w-[200px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
               </div>
               {(totpSetupData.backupCodes ?? []).length > 0 && (
@@ -715,13 +716,13 @@ export function Component() {
           <div className="space-y-4">
             <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Generate API Key</h2>
             <div>
-              <label className="text-xs text-pf-text-secondary mb-1.5 block">Key Name</label>
-              <input value={newKeyName} onChange={e => setNewKeyName(e.target.value)} placeholder="My Integration"
+              <label htmlFor="settings-key-name" className="text-xs text-pf-text-secondary mb-1.5 block">Key Name</label>
+              <input id="settings-key-name" value={newKeyName} onChange={e => setNewKeyName(e.target.value)} placeholder="My Integration"
                 className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
             <div>
-              <label className="text-xs text-pf-text-secondary mb-1.5 block">Scopes</label>
-              <div className="flex gap-4 mt-1">
+              <span className="text-xs text-pf-text-secondary mb-1.5 block" id="settings-scopes-label">Scopes</span>
+              <div className="flex gap-4 mt-1" role="group" aria-labelledby="settings-scopes-label">
                 {(['read', 'write', 'trade'] as const).map(scope => (
                   <label key={scope} className="flex items-center gap-1.5 cursor-pointer text-sm text-pf-text-secondary">
                     <input type="checkbox" checked={newKeyScopes[scope]}
@@ -733,8 +734,8 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label className="text-xs text-pf-text-secondary mb-1.5 block">Expiration (optional)</label>
-              <input type="date" lang="en" value={newKeyExpiration} onChange={e => setNewKeyExpiration(e.target.value)}
+              <label htmlFor="settings-key-expiration" className="text-xs text-pf-text-secondary mb-1.5 block">Expiration (optional)</label>
+              <input id="settings-key-expiration" type="date" lang="en" value={newKeyExpiration} onChange={e => setNewKeyExpiration(e.target.value)}
                 className="w-full max-w-[220px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
             <button onClick={createApiKey} disabled={apiKeysCreating || !newKeyName.trim()}

@@ -128,11 +128,11 @@ export function Component() {
               Enter your Polymarket API credentials to enable live trading. These are encrypted at rest.
             </p>
             <div>
-              <label className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="trading-private-key" className="text-xs text-pf-text-secondary mb-1.5 block">
                 Private Key <span className="text-pf-danger">*</span>
               </label>
               <div className="relative">
-                <input type={showPrivateKey ? 'text' : 'password'} value={privateKey} onChange={e => setPrivateKey(e.target.value)} placeholder="0x..."
+                <input id="trading-private-key" type={showPrivateKey ? 'text' : 'password'} value={privateKey} onChange={e => setPrivateKey(e.target.value)} placeholder="0x..."
                   className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
                 <button type="button" onClick={() => setShowPrivateKey(!showPrivateKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Toggle visibility">
                   {showPrivateKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -140,18 +140,18 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="trading-api-key" className="text-xs text-pf-text-secondary mb-1.5 block">
                 API Key <span className="text-pf-danger">*</span>
               </label>
-              <input type="text" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="API Key"
+              <input id="trading-api-key" type="text" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="API Key"
                 className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
             <div>
-              <label className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="trading-api-secret" className="text-xs text-pf-text-secondary mb-1.5 block">
                 API Secret <span className="text-pf-danger">*</span>
               </label>
               <div className="relative">
-                <input type={showApiSecret ? 'text' : 'password'} value={apiSecret} onChange={e => setApiSecret(e.target.value)} placeholder="API Secret"
+                <input id="trading-api-secret" type={showApiSecret ? 'text' : 'password'} value={apiSecret} onChange={e => setApiSecret(e.target.value)} placeholder="API Secret"
                   className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
                 <button type="button" onClick={() => setShowApiSecret(!showApiSecret)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Toggle visibility">
                   {showApiSecret ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -159,11 +159,11 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="trading-api-passphrase" className="text-xs text-pf-text-secondary mb-1.5 block">
                 API Passphrase <span className="text-pf-danger">*</span>
               </label>
               <div className="relative">
-                <input type={showPassphrase ? 'text' : 'password'} value={apiPassphrase} onChange={e => setApiPassphrase(e.target.value)} placeholder="Passphrase"
+                <input id="trading-api-passphrase" type={showPassphrase ? 'text' : 'password'} value={apiPassphrase} onChange={e => setApiPassphrase(e.target.value)} placeholder="Passphrase"
                   className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
                 <button type="button" onClick={() => setShowPassphrase(!showPassphrase)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Toggle visibility">
                   {showPassphrase ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -171,10 +171,10 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="trading-safe-address" className="text-xs text-pf-text-secondary mb-1.5 block">
                 Safe Address <span className="text-pf-text-muted text-[10px]">(optional)</span>
               </label>
-              <input type="text" value={safeAddress} onChange={e => setSafeAddress(e.target.value)} placeholder="0x..."
+              <input id="trading-safe-address" type="text" value={safeAddress} onChange={e => setSafeAddress(e.target.value)} placeholder="0x..."
                 className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
             <button onClick={importCredentials} disabled={!canImport}

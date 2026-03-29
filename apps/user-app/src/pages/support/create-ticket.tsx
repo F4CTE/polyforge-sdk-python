@@ -80,22 +80,25 @@ export function Component() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
         <div>
-          <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Subject</label>
+          <label htmlFor="ticket-subject" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Subject</label>
           <input
+            id="ticket-subject"
             type="text"
             value={subject}
             onChange={e => setSubject(e.target.value)}
             onBlur={() => setTouched(t => ({ ...t, subject: true }))}
             placeholder="Brief description of your issue"
+            aria-describedby={subjectError ? 'ticket-subject-error' : undefined}
             className={`w-full h-10 px-3 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors ${subjectError ? 'border-pf-danger/50' : 'border-pf-border'}`}
           />
-          {subjectError && <p className="mt-1 text-xs text-pf-danger">{subjectError}</p>}
+          {subjectError && <p id="ticket-subject-error" className="mt-1 text-xs text-pf-danger">{subjectError}</p>}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Category</label>
+            <label htmlFor="ticket-category" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Category</label>
             <select
+              id="ticket-category"
               value={category}
               onChange={e => setCategory(e.target.value)}
               className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
@@ -104,8 +107,9 @@ export function Component() {
             </select>
           </div>
           <div>
-            <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Priority</label>
+            <label htmlFor="ticket-priority" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Priority</label>
             <select
+              id="ticket-priority"
               value={priority}
               onChange={e => setPriority(e.target.value)}
               className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
@@ -116,16 +120,18 @@ export function Component() {
         </div>
 
         <div>
-          <label className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Description</label>
+          <label htmlFor="ticket-body" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Description</label>
           <textarea
+            id="ticket-body"
             value={body}
             onChange={e => setBody(e.target.value)}
             onBlur={() => setTouched(t => ({ ...t, body: true }))}
             placeholder="Describe your issue in detail..."
             rows={6}
+            aria-describedby={bodyError ? 'ticket-body-error' : undefined}
             className={`w-full px-3 py-2.5 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors resize-y ${bodyError ? 'border-pf-danger/50' : 'border-pf-border'}`}
           />
-          {bodyError && <p className="mt-1 text-xs text-pf-danger">{bodyError}</p>}
+          {bodyError && <p id="ticket-body-error" className="mt-1 text-xs text-pf-danger">{bodyError}</p>}
         </div>
 
         {error && (

@@ -125,10 +125,11 @@ export function Component() {
                   onChange={(e) => setEmail(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, email: true }))}
                   placeholder="you@example.com"
+                  aria-describedby={emailError ? 'login-email-error' : undefined}
                   className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                 />
               </div>
-              {emailError && <p className="mt-1 text-xs text-pf-danger">{emailError}</p>}
+              {emailError && <p id="login-email-error" className="mt-1 text-xs text-pf-danger">{emailError}</p>}
             </div>
 
             {/* Password */}
@@ -144,6 +145,7 @@ export function Component() {
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, password: true }))}
                   placeholder="Your password"
+                  aria-describedby={passwordError ? 'login-password-error' : undefined}
                   className="w-full pl-10 pr-10 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                 />
                 <button
@@ -155,7 +157,7 @@ export function Component() {
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
-              {passwordError && <p className="mt-1 text-xs text-pf-danger">{passwordError}</p>}
+              {passwordError && <p id="login-password-error" className="mt-1 text-xs text-pf-danger">{passwordError}</p>}
             </div>
 
             {/* TOTP */}
