@@ -3,7 +3,7 @@ export function ProductPreview() {
     <section className="pt-8 -mt-2 overflow-hidden" aria-label="Product dashboard preview">
       <div className="max-w-[1100px] mx-auto px-6">
         <div
-          className="bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden transition-transform duration-400"
+          className="dark bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden transition-transform duration-400"
           style={{
             boxShadow: 'var(--shadow-pf-lg, 0 40px 100px rgba(0,0,0,0.6)), 0 0 0 1px rgba(6,182,212,0.05)',
             transform: 'perspective(1200px) rotateX(2deg)',
