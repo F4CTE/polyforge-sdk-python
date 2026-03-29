@@ -266,6 +266,10 @@ export function Component() {
                 I agree to the{' '}
                 <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-pf-cyan-500 hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
                   Terms of Service
+                </a>{' '}
+                and{' '}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-pf-cyan-500 hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
+                  Privacy Policy
                 </a>
               </label>
             </div>

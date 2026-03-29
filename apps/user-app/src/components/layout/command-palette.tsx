@@ -97,6 +97,10 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           <input
             ref={inputRef}
             type="search"
+            role="combobox"
+            aria-expanded={results.length > 0}
+            aria-controls="cmd-palette-results"
+            aria-activedescendant={results[activeIndex] ? `cmd-result-${results[activeIndex].type}-${results[activeIndex].id}` : undefined}
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -113,7 +117,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         </div>
 
         {/* Results */}
-        <div role="listbox" aria-label="Search results" className="max-h-72 overflow-y-auto">
+        <div role="listbox" id="cmd-palette-results" aria-label="Search results" className="max-h-72 overflow-y-auto">
           {loading && (
             <div className="px-4 py-3 text-sm text-pf-text-muted motion-safe:animate-pulse">Searching...</div>
           )}
@@ -135,6 +139,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             <button
               type="button"
               key={`${r.type}-${r.id}`}
+              id={`cmd-result-${r.type}-${r.id}`}
               role="option"
               aria-selected={i === activeIndex}
               onClick={() => select(r)}

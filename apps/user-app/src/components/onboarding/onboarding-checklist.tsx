@@ -97,12 +97,14 @@ export function OnboardingChecklist() {
   const allDone = completedCount === CHECKLIST_ITEMS.length;
 
   // Auto-dismiss when all items checked
-  if (allDone) {
-    setTimeout(() => {
+  useEffect(() => {
+    if (!allDone) return;
+    const timer = setTimeout(() => {
       setDismissed(true);
       localStorage.setItem(DISMISSED_KEY, 'true');
     }, 2000);
-  }
+    return () => clearTimeout(timer);
+  }, [allDone]);
 
   function toggleItem(key: string) {
     const next = { ...completed, [key]: !completed[key] };
@@ -170,7 +172,7 @@ export function OnboardingChecklist() {
               <button
                 type="button"
                 onClick={() => toggleItem(item.key)}
-                className="mt-0.5 shrink-0 transition-colors cursor-pointer"
+                className="mt-0.5 shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-full"
                 aria-label={`Mark "${item.label}" as ${completed[item.key] ? 'incomplete' : 'complete'}`}
               >
                 {completed[item.key] ? (
@@ -183,7 +185,7 @@ export function OnboardingChecklist() {
                 <button
                   type="button"
                   onClick={() => handleNavigate(item.route)}
-                  className={`text-sm text-left font-medium transition-colors cursor-pointer ${
+                  className={`text-sm text-left font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm ${
                     completed[item.key]
                       ? 'text-pf-text-muted line-through'
                       : 'text-pf-text hover:text-pf-cyan-400'

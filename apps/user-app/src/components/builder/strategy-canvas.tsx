@@ -113,38 +113,6 @@ export function StrategyCanvas() {
 
   return (
     <div ref={reactFlowWrapper} className="w-full h-full relative" aria-label="Strategy canvas editor">
-      <style>{`
-        @keyframes blockPulse {
-          0%, 100% {
-            box-shadow: 0 0 0 1px rgba(6,182,212,0.18), 0 0 8px rgba(6,182,212,0.10);
-          }
-          50% {
-            box-shadow: 0 0 0 2px rgba(6,182,212,0.42), 0 0 22px rgba(6,182,212,0.22);
-          }
-        }
-        @keyframes blockFired {
-          0% {
-            box-shadow: 0 0 0 3px rgba(6,182,212,0.9), 0 0 40px rgba(6,182,212,0.55);
-            transform: scale(1.025);
-          }
-          55% {
-            box-shadow: 0 0 0 2px rgba(6,182,212,0.5), 0 0 18px rgba(6,182,212,0.28);
-            transform: scale(1.005);
-          }
-          100% {
-            box-shadow: 0 0 0 1px rgba(6,182,212,0.18), 0 0 8px rgba(6,182,212,0.10);
-            transform: scale(1);
-          }
-        }
-        @keyframes safetyPulse {
-          0%, 100% {
-            box-shadow: 0 0 0 1px rgba(239,68,68,0.15), 0 0 6px rgba(239,68,68,0.08);
-          }
-          50% {
-            box-shadow: 0 0 0 2px rgba(239,68,68,0.35), 0 0 16px rgba(239,68,68,0.18);
-          }
-        }
-      `}</style>
       <ReactFlow
         colorMode={isDark ? 'dark' : 'light'}
         nodes={nodes}

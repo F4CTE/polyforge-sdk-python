@@ -122,7 +122,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           type="button"
           onClick={onClose}
           aria-label="Close panel"
-          className="p-1 rounded hover:bg-pf-overlay text-pf-text-muted hover:text-pf-text transition-colors"
+          className="p-1 rounded hover:bg-pf-overlay text-pf-text-muted hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
         >
           <X className="size-4" />
         </button>
@@ -183,10 +183,11 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
 
           {execMode !== 'EVENT' && (
             <div>
-              <label className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+              <label htmlFor="bp-tick-interval" className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
                 Tick Interval (ms)
               </label>
               <input
+                id="bp-tick-interval"
                 type="number"
                 value={tickMs}
                 onChange={(e) => setTickMs(Number(e.target.value))}

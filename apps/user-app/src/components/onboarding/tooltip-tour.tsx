@@ -281,15 +281,6 @@ export function TooltipTour() {
         </div>
       </div>
 
-      {/* Inline styles for tour highlight */}
-      <style>{`
-        .tour-highlight {
-          position: relative;
-          z-index: 9999 !important;
-          box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-pf-cyan-500) 30%, transparent), 0 0 20px color-mix(in srgb, var(--color-pf-cyan-500) 10%, transparent) !important;
-          border-radius: 8px;
-        }
-      `}</style>
     </>
   );
 }
