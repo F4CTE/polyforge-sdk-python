@@ -5,6 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.15.1] — 2026-03-30
+
+### Fixed
+- **AccuracyService 500** — Prisma rejected `resolutionStatus: { in: ['RESOLVED', 'REDEEMED'] }` at runtime because `REDEEMED` is not a valid `ResolutionStatus` enum value; changed to `resolutionStatus: 'RESOLVED'` (single equality filter)
+- **AI Optimizer blank page** — frontend `PortfolioReview` interface used `label` / `review` / `score` fields but the API returns `direction` / `summary` / `riskLevel`; updated interface, pill helper, and render accordingly
+- **Market cards "Market sentiment: undefined"** — `SentimentPill` referenced `sentiment.label` but the sentiment API returns `direction`; updated interface and all usages to `direction`
+- **Admin dashboard "Platform stats unavailable"** — `getPlatformStats` in `dashboard.service.ts` had the same `REDEEMED` Prisma enum bug; fixed to `resolutionStatus: 'RESOLVED'`
+
+### Admin App — v6.15.0 Feature Upgrades
+- **Sentiment Intelligence page** (`/sentiment`) — table of all markets with AI signal data; BULLISH / BEARISH / NEUTRAL filter tabs; score, direction, bullish/bearish counts, last updated
+- **User Accuracy tab** — Accuracy tab on admin user detail page showing Brier score, win rate, total predictions, and empty state when no resolved predictions exist; powered by new `GET /api/v1/users/:id/accuracy` endpoint
+- **Platform Activity dashboard cards** — four new stat cards on the admin dashboard: News Signals (30d), Markets w/ Sentiment, LP Orders, Resolved Positions; powered by new `GET /api/v1/dashboard/platform-stats` endpoint
+- **Admin API: SentimentModule** — new `sentiment.controller.ts` + `sentiment.module.ts` wired into `app.module.ts` for the admin-api-service
+
+---
+
 ## [6.15.0] — 2026-03-30
 
 ### Added
