@@ -19,6 +19,14 @@ const BACKTEST_EVENT_TYPES = new Set([
   'BACKTEST_FAILED',
 ]);
 
+const ORDER_EVENT_TYPES = new Set([
+  'ORDER_SUBMITTED',
+  'ORDER_FILLED',
+  'ORDER_PARTIALLY_FILLED',
+  'ORDER_CANCELLED',
+  'ORDER_FAILED',
+]);
+
 export class WebSocketManager {
   private ws: WebSocket | null = null;
   private reconnectDelay = 1000;
@@ -176,6 +184,10 @@ export class WebSocketManager {
 
   static isPriceUpdate(msg: WsMessage): boolean {
     return msg.type === 'PRICE_UPDATE';
+  }
+
+  static isOrderEvent(msg: WsMessage): boolean {
+    return ORDER_EVENT_TYPES.has(msg.type);
   }
 }
 

@@ -39,7 +39,7 @@ describe("BacktestsService", () => {
 
   beforeEach(() => {
     prisma = makePrisma();
-    service = new BacktestsService(prisma as any);
+    service = new BacktestsService(prisma as any, {} as any);
   });
 
   afterEach(() => {

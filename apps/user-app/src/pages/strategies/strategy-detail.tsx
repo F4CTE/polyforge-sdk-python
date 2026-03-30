@@ -156,6 +156,8 @@ export function Component() {
   const [liveLog] = useState<LiveLogEntry[]>([]);
   const [childStrategies, setChildStrategies] = useState<ChildStrategy[]>([]);
   const [parentStrategy, setParentStrategy] = useState<ParentStrategy | null>(null);
+  const [recentOrderCount, setRecentOrderCount] = useState<number | null>(null);
+  const [lastOrderAt, setLastOrderAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -171,6 +173,18 @@ export function Component() {
         if (s) {
           setStrategy(s);
           setLoading(false);
+
+          // Fetch recent orders count for health metrics
+          fetch(`/api/v1/orders?strategyId=${s.id}&limit=5`, { credentials: 'include' })
+            .then(r => r.ok ? r.json() : null)
+            .then(res => {
+              if (res) {
+                setRecentOrderCount(res.total ?? res.data?.length ?? 0);
+                const latest = res.data?.[0];
+                if (latest?.createdAt) setLastOrderAt(latest.createdAt);
+              }
+            })
+            .catch(() => {});
 
           // Fetch children if any
           if (s.childCount > 0) {
@@ -500,15 +514,33 @@ export function Component() {
             </div>
           )}
 
-          {/* P&L */}
-          {pnl !== null && (
+          {/* Health stats row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {pnl !== null && (
+              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                <span className="text-xs text-pf-text-muted block mb-1">Total P&L</span>
+                <span className={`font-mono text-xl font-semibold ${pnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                  {formatPnl(pnl)}
+                </span>
+              </div>
+            )}
             <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-              <span className="text-xs text-pf-text-muted block mb-1">Total P&L</span>
-              <span className={`font-mono text-2xl font-semibold ${pnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
-                {formatPnl(pnl)}
+              <span className="text-xs text-pf-text-muted block mb-1">Blocks</span>
+              <span className="font-mono text-xl font-semibold text-pf-text">{totalBlocks}</span>
+            </div>
+            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <span className="text-xs text-pf-text-muted block mb-1">Recent Orders</span>
+              <span className="font-mono text-xl font-semibold text-pf-text">
+                {recentOrderCount !== null ? recentOrderCount : '—'}
               </span>
             </div>
-          )}
+            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <span className="text-xs text-pf-text-muted block mb-1">Last Order</span>
+              <span className="font-mono text-sm font-semibold text-pf-text">
+                {lastOrderAt ? new Date(lastOrderAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
+              </span>
+            </div>
+          </div>
 
           {/* Body grid */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">

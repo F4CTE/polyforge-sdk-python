@@ -2122,7 +2122,7 @@ describe("StrategiesService", () => {
       });
       (llm.analyze as any).mockResolvedValue(llmResponse);
       db.strategy.count.mockResolvedValue(0);
-      db.strategy.create.mockImplementation(({ data }: any) =>
+      (db.strategy.create as any).mockImplementation(({ data }: any) =>
         Promise.resolve({ id: "new-id", ...data, createdAt: new Date(), updatedAt: new Date() }),
       );
 
@@ -2148,7 +2148,7 @@ describe("StrategiesService", () => {
       });
       (llm.analyze as any).mockResolvedValue(llmResponse);
       db.strategy.count.mockResolvedValue(0);
-      db.strategy.create.mockImplementation(({ data }: any) =>
+      (db.strategy.create as any).mockImplementation(({ data }: any) =>
         Promise.resolve({ id: "new-id", ...data, createdAt: new Date(), updatedAt: new Date() }),
       );
 
@@ -2207,7 +2207,7 @@ describe("StrategiesService", () => {
       });
       (llm.analyze as any).mockResolvedValue("```json\n" + json + "\n```");
       db.strategy.count.mockResolvedValue(0);
-      db.strategy.create.mockImplementation(({ data }: any) =>
+      (db.strategy.create as any).mockImplementation(({ data }: any) =>
         Promise.resolve({ id: "new-id", ...data, createdAt: new Date(), updatedAt: new Date() }),
       );
 

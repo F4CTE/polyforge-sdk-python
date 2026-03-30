@@ -6,6 +6,7 @@ import { useAuthStore } from './stores/auth-store';
 import { useThemeStore } from './stores/theme-store';
 import { ErrorBoundary } from './components/error-boundary';
 import { wsManager } from './lib/websocket';
+import { useNotificationStore } from './stores/notification-store';
 
 export function App() {
   const init = useAuthStore((s) => s.init);
@@ -14,7 +15,11 @@ export function App() {
   useEffect(() => {
     init();
     wsManager.connect();
-    return () => { wsManager.destroy(); };
+    const unbind = useNotificationStore.getState().bindWebSocket(wsManager);
+    return () => {
+      unbind();
+      wsManager.destroy();
+    };
   }, [init]);
 
   return (

@@ -201,7 +201,7 @@ export class MarketsService implements OnModuleInit {
                 last(close, time) AS close,
                 sum(volume) AS volume
             FROM price_snapshots
-            WHERE token_id = ${tokenId}
+            WHERE "tokenId" = ${tokenId}
               AND time >= ${fromDate}
               AND time <= ${toDate}
             GROUP BY 1

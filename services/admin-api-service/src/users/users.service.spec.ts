@@ -55,7 +55,7 @@ describe("UsersService", () => {
 
   beforeEach(() => {
     prisma = makePrisma();
-    service = new UsersService(prisma as any);
+    service = new UsersService(prisma as any, {} as any);
   });
 
   afterEach(() => {

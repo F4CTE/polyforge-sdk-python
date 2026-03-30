@@ -123,19 +123,32 @@ const STEPS: TutorialStep[] = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function BuilderTutorial() {
+interface BuilderTutorialProps {
+  /** When true, force the tutorial open regardless of localStorage state */
+  forceVisible?: boolean;
+  /** Called when the user dismisses a force-shown tutorial */
+  onDismiss?: () => void;
+}
+
+export function BuilderTutorial({ forceVisible, onDismiss }: BuilderTutorialProps) {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
 
   useEffect(() => {
+    if (forceVisible) {
+      setVisible(true);
+      setStep(0);
+      return;
+    }
     try {
       const seen = localStorage.getItem(STORAGE_KEY);
       if (!seen) setVisible(true);
     } catch { /* ignore */ }
-  }, []);
+  }, [forceVisible]);
 
   function dismiss() {
     setVisible(false);
+    onDismiss?.();
     try { localStorage.setItem(STORAGE_KEY, 'true'); } catch { /* ignore */ }
   }
 

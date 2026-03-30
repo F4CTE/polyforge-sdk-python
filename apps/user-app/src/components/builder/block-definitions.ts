@@ -9,6 +9,8 @@ export interface BlockField {
   placeholder: string;
   /** Options for 'select' type fields */
   options?: string[];
+  /** If true, this field can receive a data connection from a Variable or Calc node */
+  wireable?: boolean;
 }
 
 export interface BlockDef {
@@ -48,7 +50,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       type: 'stop_if_daily_loss',
       label: 'Stop on Daily Loss',
       description: 'Halts if cumulative daily loss exceeds threshold.',
-      fields: [{ key: 'maxLossUsdc', label: 'Max Loss (USDC)', type: 'number', placeholder: '200' }],
+      fields: [{ key: 'maxLossUsdc', label: 'Max Loss (USDC)', type: 'number', placeholder: '200', wireable: true }],
     },
     {
       type: 'stop_if_consecutive_losses',
@@ -60,7 +62,7 @@ export const BLOCK_DEFS: Record<BlockSection, BlockDef[]> = {
       type: 'stop_if_position_size',
       label: 'Max Position Size',
       description: 'Prevents positions larger than limit.',
-      fields: [{ key: 'maxPositionUsdc', label: 'Max Position (USDC)', type: 'number', placeholder: '500' }],
+      fields: [{ key: 'maxPositionUsdc', label: 'Max Position (USDC)', type: 'number', placeholder: '500', wireable: true }],
     },
     {
       type: 'stop_if_drawdown',

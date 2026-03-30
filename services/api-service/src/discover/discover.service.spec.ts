@@ -280,10 +280,10 @@ describe("DiscoverService", () => {
           avatarUrl: null,
         },
       ];
-      db.pnlSnapshot.groupBy
+      (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce(snapshots as any)
         .mockResolvedValueOnce(snapshots as any); // count query
-      db.order.groupBy.mockResolvedValue(tradeCounts as any);
+      (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
@@ -299,7 +299,7 @@ describe("DiscoverService", () => {
     });
 
     it("defaults period to 30d", async () => {
-      db.pnlSnapshot.groupBy
+      (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce([] as any)
         .mockResolvedValueOnce([] as any);
       db.user.findMany.mockResolvedValue([] as any);
@@ -311,7 +311,7 @@ describe("DiscoverService", () => {
     });
 
     it("handles the 7d period", async () => {
-      db.pnlSnapshot.groupBy
+      (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce([] as any)
         .mockResolvedValueOnce([] as any);
       db.user.findMany.mockResolvedValue([] as any);
@@ -324,7 +324,7 @@ describe("DiscoverService", () => {
     });
 
     it("handles the allTime period", async () => {
-      db.pnlSnapshot.groupBy
+      (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce([] as any)
         .mockResolvedValueOnce([] as any);
       db.user.findMany.mockResolvedValue([] as any);
@@ -337,7 +337,7 @@ describe("DiscoverService", () => {
     });
 
     it("caps limit at 100", async () => {
-      db.pnlSnapshot.groupBy
+      (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce([] as any)
         .mockResolvedValueOnce([] as any);
       db.user.findMany.mockResolvedValue([] as any);
@@ -355,10 +355,10 @@ describe("DiscoverService", () => {
       const tradeCounts = [
         { userId: "user-uuid-orphan", _count: 1 },
       ];
-      db.pnlSnapshot.groupBy
+      (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce(snapshots as any)
         .mockResolvedValueOnce(snapshots as any);
-      db.order.groupBy.mockResolvedValue(tradeCounts as any);
+      (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue([] as any); // no user record found
 
       const result = await service.leaderboard(makeLeaderboardQuery());
@@ -385,10 +385,10 @@ describe("DiscoverService", () => {
           avatarUrl: null,
         },
       ];
-      db.pnlSnapshot.groupBy
+      (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce(snapshots as any)
         .mockResolvedValueOnce(snapshots as any);
-      db.order.groupBy.mockResolvedValue(tradeCounts as any);
+      (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
@@ -397,7 +397,7 @@ describe("DiscoverService", () => {
     });
 
     it("handles empty groupBy count result", async () => {
-      db.pnlSnapshot.groupBy
+      (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce([] as any)
         .mockResolvedValueOnce([] as any);
 
@@ -428,10 +428,10 @@ describe("DiscoverService", () => {
           avatarUrl: null,
         },
       ];
-      db.pnlSnapshot.groupBy
+      (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce(snapshots as any)
         .mockResolvedValueOnce(allSnapshots as any);
-      db.order.groupBy.mockResolvedValue(tradeCounts as any);
+      (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
 
       const result = await service.leaderboard(

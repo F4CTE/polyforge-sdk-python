@@ -24,6 +24,11 @@ export class CacheAdminController {
     return this.cacheAdmin.getStats();
   }
 
+  @Get("streams")
+  getStreamStats() {
+    return this.cacheAdmin.getStreamStats();
+  }
+
   @Delete(":pattern")
   flushPattern(@Param("pattern") pattern: string) {
     // Validate pattern against whitelist

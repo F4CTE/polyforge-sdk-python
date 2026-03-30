@@ -365,12 +365,14 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         const items = (s[section] ?? []) as {
           id?: string;
           type: string;
-          config: Record<string, string>;
+          config?: Record<string, string>;
+          params?: Record<string, string>;
         }[];
         items.forEach((b, i) => {
           const blockId = b.id || crypto.randomUUID();
           const storedPos = storedPositions[blockId];
           const def = findBlockDef(b.type);
+          const rawConfig = b.config ?? b.params ?? {};
 
           nodes.push({
             id: blockId,
@@ -385,7 +387,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
               section,
               color: SECTION_COLORS[section],
               config: Object.fromEntries(
-                Object.entries(b.config).map(([k, v]) => [k, String(v)]),
+                Object.entries(rawConfig).map(([k, v]) => [k, String(v)]),
               ),
               fields: def?.fields ?? [],
             },
@@ -397,13 +399,15 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       const storedLogicBlocks = (s.logicBlocks ?? canvasLayout?.logicBlocks ?? []) as {
         id?: string;
         type: string;
-        config: Record<string, unknown>;
+        config?: Record<string, unknown>;
+        params?: Record<string, unknown>;
         outputs?: string[];
       }[];
       storedLogicBlocks.forEach((lb, i) => {
         const lbId = lb.id || crypto.randomUUID();
         const storedPos = storedPositions[lbId];
         const def = findBlockDef(lb.type);
+        const rawLbConfig = lb.config ?? lb.params ?? {};
 
         nodes.push({
           id: lbId,
@@ -418,7 +422,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
             section: 'logic',
             color: LOGIC_COLORS[lb.type] ?? '#3B82F6',
             config: Object.fromEntries(
-              Object.entries(lb.config).map(([k, v]) => [k, String(v)]),
+              Object.entries(rawLbConfig).map(([k, v]) => [k, String(v)]),
             ),
             fields: def?.fields ?? [],
             outputs: lb.outputs ?? def?.outputs,
@@ -430,12 +434,14 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       const storedCalcBlocks = (s.calcBlocks ?? canvasLayout?.calcBlocks ?? []) as {
         id?: string;
         type: string;
-        config: Record<string, unknown>;
+        config?: Record<string, unknown>;
+        params?: Record<string, unknown>;
       }[];
       storedCalcBlocks.forEach((cb, i) => {
         const cbId = cb.id || crypto.randomUUID();
         const storedPos = storedPositions[cbId];
         const def = findBlockDef(cb.type);
+        const rawCbConfig = cb.config ?? cb.params ?? {};
 
         nodes.push({
           id: cbId,
@@ -450,7 +456,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
             section: 'calc',
             color: '#10B981',
             config: Object.fromEntries(
-              Object.entries(cb.config).map(([k, v]) => [k, String(v)]),
+              Object.entries(rawCbConfig).map(([k, v]) => [k, String(v)]),
             ),
             fields: def?.fields ?? [],
           } satisfies CalcNodeData,

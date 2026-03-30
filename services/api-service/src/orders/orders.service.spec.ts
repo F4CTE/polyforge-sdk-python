@@ -83,7 +83,7 @@ describe("OrdersService", () => {
     config = {
       get: vi.fn().mockReturnValue(undefined),
     } as unknown as ConfigService;
-    service = new OrdersService(db as any, redis, config);
+    service = new OrdersService(db as any, redis, config, {} as any);
   });
 
   afterEach(() => {

@@ -49,7 +49,7 @@ describe("WebhooksService", () => {
   describe("create", () => {
     it("generates an HMAC secret and returns it on creation", async () => {
       db.webhook.count.mockResolvedValue(0);
-      db.webhook.create.mockImplementation(({ data }: any) =>
+      (db.webhook.create as any).mockImplementation(({ data }: any) =>
         Promise.resolve({
           id: uid(),
           ...data,
@@ -71,7 +71,7 @@ describe("WebhooksService", () => {
 
     it("validates URL is passed to Prisma create", async () => {
       db.webhook.count.mockResolvedValue(0);
-      db.webhook.create.mockImplementation(({ data }: any) =>
+      (db.webhook.create as any).mockImplementation(({ data }: any) =>
         Promise.resolve({
           id: uid(),
           ...data,

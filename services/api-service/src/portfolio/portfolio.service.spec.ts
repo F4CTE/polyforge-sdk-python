@@ -75,7 +75,7 @@ describe("PortfolioService", () => {
         size: "100.00",
       });
       db.position.findMany.mockResolvedValue([position] as any);
-      redis.getClient().mget.mockResolvedValue([
+      (redis.getClient() as any).mget.mockResolvedValue([
         JSON.stringify({ price: "0.70" }),
       ]);
 
@@ -112,7 +112,7 @@ describe("PortfolioService", () => {
         tokenId: "token-uuid-1",
       });
       db.position.findMany.mockResolvedValue([position] as any);
-      redis.getClient().mget.mockResolvedValue([
+      (redis.getClient() as any).mget.mockResolvedValue([
         JSON.stringify({ price: "0.80" }),
       ]);
 
@@ -141,7 +141,7 @@ describe("PortfolioService", () => {
       ];
       db.position.findMany.mockResolvedValue(positions as any);
       // MGET returns values in the same order as keys
-      redis.getClient().mget.mockResolvedValue([
+      (redis.getClient() as any).mget.mockResolvedValue([
         JSON.stringify({ price: "0.70" }), // token-1
         JSON.stringify({ price: "0.60" }), // token-2
       ]);

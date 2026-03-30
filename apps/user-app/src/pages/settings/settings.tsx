@@ -17,6 +17,7 @@ interface ApiKey {
   scopes: string[];
   createdAt: string;
   lastUsedAt: string | null;
+  expiresAt?: string | null;
   revoked: boolean;
   key?: string;
 }
@@ -792,6 +793,7 @@ export function Component() {
                       <th scope="col" className="pb-2 font-medium">Scopes</th>
                       <th scope="col" className="pb-2 font-medium">Created</th>
                       <th scope="col" className="pb-2 font-medium">Last Used</th>
+                      <th scope="col" className="pb-2 font-medium hidden sm:table-cell">Expires</th>
                       <th scope="col" className="pb-2 font-medium">Status</th>
                       <th scope="col" className="pb-2 font-medium">Actions</th>
                     </tr>
@@ -814,6 +816,13 @@ export function Component() {
                         </td>
                         <td className="py-2 font-mono text-xs text-pf-text-muted">{formatDate(key.createdAt)}</td>
                         <td className="py-2 font-mono text-xs text-pf-text-muted">{key.lastUsedAt ? formatDate(key.lastUsedAt) : '\u2014'}</td>
+                        <td className="py-2 font-mono text-xs text-pf-text-muted hidden sm:table-cell">
+                          {key.expiresAt ? (
+                            <span className={new Date(key.expiresAt) < new Date() ? 'text-pf-danger' : ''}>
+                              {formatDate(key.expiresAt)}
+                            </span>
+                          ) : '\u2014'}
+                        </td>
                         <td className="py-2">
                           {key.revoked ? (
                             <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-danger/10 text-pf-danger">Revoked</span>

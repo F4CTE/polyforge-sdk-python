@@ -5,6 +5,14 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { useNotificationStore } from '@/stores/notification-store';
 
+function timeAgo(ts: number): string {
+  const diff = Date.now() - ts;
+  if (diff < 60_000) return 'just now';
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
+  return `${Math.floor(diff / 86_400_000)}d ago`;
+}
+
 export function Topbar() {
   const { user, logout } = useAuthStore();
   const { isDark, toggle: toggleTheme } = useThemeStore();
@@ -104,7 +112,7 @@ export function Topbar() {
                   No notifications
                 </p>
               ) : (
-                notifications.slice(0, 8).map((n) => (
+                notifications.slice(0, 10).map((n) => (
                   <button
                     type="button"
                     key={n.id}
@@ -125,13 +133,16 @@ export function Topbar() {
                               : 'bg-pf-cyan-500'
                       }`}
                     />
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <strong className="text-sm text-pf-text block truncate">
                         {n.title}
                       </strong>
                       <p className="text-xs text-pf-text-muted truncate">
                         {n.body}
                       </p>
+                      <span className="text-[10px] text-pf-text-muted/70" title={new Date(n.timestamp).toLocaleString()}>
+                        {timeAgo(n.timestamp)}
+                      </span>
                     </div>
                   </button>
                 ))

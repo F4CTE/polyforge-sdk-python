@@ -174,8 +174,8 @@ describe("SettingsService", () => {
       db.notificationPreference.upsert.mockResolvedValue(prefs as any);
 
       const result = await service.updateNotifications("user-uuid-1", {
-        emailOnFill: true,
-        emailOnAlert: false,
+        onOrderFilled: true,
+        onStrategyError: false,
       });
 
       expect(result).toEqual(prefs);
@@ -183,7 +183,7 @@ describe("SettingsService", () => {
 
     it("calls upsert with the correct where, create and update args", async () => {
       db.notificationPreference.upsert.mockResolvedValue({} as any);
-      const dto = { emailOnFill: true, emailOnAlert: false };
+      const dto = { onOrderFilled: true, onStrategyError: false };
 
       await service.updateNotifications("user-uuid-1", dto);
 

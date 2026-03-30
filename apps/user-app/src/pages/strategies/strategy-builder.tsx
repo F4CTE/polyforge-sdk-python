@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ReactFlowProvider } from '@xyflow/react';
-import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { StrategyCanvas } from '../../components/builder/strategy-canvas';
@@ -24,6 +24,7 @@ export function Component() {
   // Execution panel state
   const [execPanelExpanded, setExecPanelExpanded] = useState(false);
   const [execTab, setExecTab] = useState<'backtest' | 'live'>('backtest');
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const name = useBuilderStore((s) => s.name);
   const setName = useBuilderStore((s) => s.setName);
@@ -290,6 +291,17 @@ export function Component() {
             <FlaskConical className="size-4" />
           </button>
 
+          {/* Tutorial help */}
+          <button
+            type="button"
+            onClick={() => setShowTutorial(true)}
+            className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-text-secondary hover:bg-pf-overlay transition-colors"
+            aria-label="Show builder tutorial"
+            title="How the builder works"
+          >
+            <HelpCircle className="size-4" />
+          </button>
+
           <button
             type="button"
             onClick={onQuickTest}
@@ -366,7 +378,7 @@ export function Component() {
                 </div>
               )}
               <StrategyCanvas />
-              <BuilderTutorial />
+              <BuilderTutorial forceVisible={showTutorial} onDismiss={() => setShowTutorial(false)} />
               {dragOver && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-pf-surface/80 backdrop-blur-sm border-2 border-dashed border-pf-cyan-500 rounded-pf-lg pointer-events-none">
                   <div className="flex flex-col items-center gap-2 text-pf-cyan-400">

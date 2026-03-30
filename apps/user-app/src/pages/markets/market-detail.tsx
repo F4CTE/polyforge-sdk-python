@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { toast } from 'sonner';
+import { wsManager, WebSocketManager } from '@/lib/websocket';
 import {
   ArrowLeft,
   Play,
@@ -14,6 +15,7 @@ import {
   Newspaper,
   ArrowUpRight,
   ArrowDownRight,
+  RefreshCw,
 } from 'lucide-react';
 import {
   XAxis,
@@ -282,6 +284,15 @@ export function Component() {
     return () => { cancelled = true; };
   }, [market, resolution, loadChart, loadBook]);
 
+  // Auto-refresh order book every 30s
+  useEffect(() => {
+    if (!market) return;
+    const yesToken = (market.tokens ?? []).find((t) => t.outcome === 'YES');
+    if (!yesToken) return;
+    const interval = setInterval(() => { loadBook(yesToken.id); }, 30_000);
+    return () => clearInterval(interval);
+  }, [market, loadBook]);
+
   // Load related news signals
   useEffect(() => {
     if (!id) return;
@@ -385,6 +396,20 @@ export function Component() {
   }, [id]);
 
   useEffect(() => { loadMyOrders(); }, [loadMyOrders]);
+
+  // Real-time order updates via WebSocket
+  useEffect(() => {
+    const handler = (msg: { type: string; orderId?: string }) => {
+      if (!WebSocketManager.isOrderEvent(msg)) return;
+      loadMyOrders();
+      const id = msg.orderId?.slice(0, 8);
+      if (msg.type === 'ORDER_FILLED') toast.success(`Order filled${id ? ` · ${id}…` : ''}`);
+      if (msg.type === 'ORDER_CANCELLED') toast.info('Order cancelled');
+      if (msg.type === 'ORDER_FAILED') toast.error('Order failed');
+    };
+    wsManager.addListener(handler);
+    return () => wsManager.removeListener(handler);
+  }, [loadMyOrders]);
 
   // Trade panel: pre-fill price when market loads
   useEffect(() => {
@@ -683,12 +708,47 @@ export function Component() {
             <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-pf-text">Order Book</span>
-                {orderBook && (
-                  <span className="font-mono text-[11px] text-pf-text-muted">
-                    spread {orderBook.spread}
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {orderBook && (
+                    <span className="font-mono text-[11px] text-pf-text-muted">
+                      spread {orderBook.spread}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const yesToken = (market?.tokens ?? []).find((t) => t.outcome === 'YES');
+                      if (yesToken) loadBook(yesToken.id);
+                    }}
+                    className="p-1 rounded text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                    aria-label="Refresh order book"
+                    title="Refresh book"
+                  >
+                    <RefreshCw size={12} />
+                  </button>
+                </div>
               </div>
+
+              {/* Bid/Ask depth ratio bar */}
+              {orderBook && !loadingBook && (() => {
+                const totalBid = orderBook.bids.reduce((s, e) => s + parseFloat(e.size), 0);
+                const totalAsk = orderBook.asks.reduce((s, e) => s + parseFloat(e.size), 0);
+                const total = totalBid + totalAsk;
+                const bidPct = total > 0 ? (totalBid / total) * 100 : 50;
+                const askPct = 100 - bidPct;
+                return (
+                  <div className="mb-3">
+                    <div className="flex h-1.5 rounded-full overflow-hidden">
+                      <div className="bg-pf-success/50" style={{ width: `${bidPct}%` }} title={`Bids: ${bidPct.toFixed(0)}%`} />
+                      <div className="bg-pf-danger/50 flex-1" title={`Asks: ${askPct.toFixed(0)}%`} />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-pf-text-muted mt-0.5">
+                      <span>Bid {bidPct.toFixed(0)}%</span>
+                      <span>Ask {askPct.toFixed(0)}%</span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {loadingBook ? (
                 <div className="space-y-1.5">
@@ -801,7 +861,7 @@ export function Component() {
                   onChange={(e) => setTradePrice(e.target.value)}
                   disabled={isMarketOrder}
                   placeholder="0.65"
-                  className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 disabled:opacity-40"
+                  className="w-full h-11 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 disabled:opacity-40"
                 />
               </div>
 
@@ -827,7 +887,7 @@ export function Component() {
                     value={tradeAmount}
                     onChange={(e) => setTradeAmount(e.target.value)}
                     placeholder="10"
-                    className="w-full h-9 px-3 pr-14 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                    className="w-full h-11 px-3 pr-14 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-pf-text-muted">USDC</span>
                 </div>
@@ -856,7 +916,7 @@ export function Component() {
                 type="button"
                 onClick={placeOrder}
                 disabled={placingOrder || !tradeAmount || parseFloat(tradeAmount || '0') <= 0 || (!isMarketOrder && (!tradePrice || parseFloat(tradePrice || '0') <= 0))}
-                className={`w-full mt-3 py-2.5 rounded-pf text-sm font-semibold text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
+                className={`w-full mt-3 py-3 min-h-[44px] rounded-pf text-sm font-semibold text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
                   tradeSide === 'BUY'
                     ? 'bg-pf-cyan-500 hover:bg-pf-cyan-600'
                     : 'bg-pf-danger hover:bg-pf-danger/90'

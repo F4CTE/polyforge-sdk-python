@@ -282,6 +282,9 @@ export const adminApi = {
       buildUrl(API_BASE, `/cache/${encodeURIComponent(pattern)}`),
       { method: 'DELETE' },
     ),
+  streamStats: () => request<{ streams: { name: string; length: number; groups: { name: unknown; consumers: number; pending: number }[]; error: boolean }[] }>(
+    buildUrl(API_BASE, '/cache/streams'),
+  ),
 
   // Reports
   reports: (params?: QueryParams) =>

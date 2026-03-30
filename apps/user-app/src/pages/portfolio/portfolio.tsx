@@ -4,7 +4,7 @@ import {
 } from 'recharts';
 import {
   Wallet, BarChart3,
-  RefreshCw, Loader2, AlertTriangle, Fuel,
+  RefreshCw, Loader2, AlertTriangle, Fuel, PieChart,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
@@ -537,6 +537,50 @@ export function Component() {
               </div>
             )}
           </div>
+          {/* Breakdown by market */}
+          {!loadingPortfolio && (portfolio?.positions ?? []).length > 0 && (() => {
+            const byMarket = (portfolio!.positions).reduce<Record<string, { title: string; pnl: number; count: number }>>((acc, pos) => {
+              const key = pos.marketTitle ?? pos.tokenId;
+              if (!acc[key]) acc[key] = { title: key, pnl: 0, count: 0 };
+              acc[key].pnl += parseFloat(pos.unrealizedPnl || '0');
+              acc[key].count++;
+              return acc;
+            }, {});
+            const sorted = Object.values(byMarket).sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl));
+            return (
+              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-pf-border-subtle">
+                  <PieChart className="size-4 text-pf-text-muted" />
+                  <span className="text-sm font-medium text-pf-text">Exposure by Market</span>
+                </div>
+                <div className="divide-y divide-pf-border-subtle">
+                  {sorted.map((m) => {
+                    const maxAbs = Math.max(...sorted.map(x => Math.abs(x.pnl)), 1);
+                    const barPct = Math.round((Math.abs(m.pnl) / maxAbs) * 100);
+                    return (
+                      <div key={m.title} className="flex items-center gap-3 px-4 py-2.5">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-pf-text truncate" title={m.title}>{m.title}</p>
+                          <div className="mt-1 h-1.5 rounded-full bg-pf-surface overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${m.pnl >= 0 ? 'bg-pf-success/60' : 'bg-pf-danger/60'}`}
+                              style={{ width: `${barPct}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className={`text-xs font-mono font-medium ${pnlColor(String(m.pnl))}`}>
+                            {formatPnl(String(m.pnl))}
+                          </span>
+                          <p className="text-[10px] text-pf-text-muted">{m.count} position{m.count !== 1 ? 's' : ''}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </>
       )}
 

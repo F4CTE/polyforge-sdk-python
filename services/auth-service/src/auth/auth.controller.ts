@@ -203,6 +203,11 @@ export class AuthController {
       result.token,
       cookieOpts(ACCESS_COOKIE_MAX_AGE),
     );
+    reply.setCookie(
+      REFRESH_COOKIE,
+      result.refreshToken,
+      cookieOpts(REFRESH_COOKIE_MAX_AGE),
+    );
     return { token: result.token };
   }
 

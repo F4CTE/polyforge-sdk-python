@@ -1,6 +1,6 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
-import { X, GripVertical, Shield, Zap, Filter, Play, Unlink, Globe, AlertTriangle } from 'lucide-react';
+import { X, GripVertical, Shield, Zap, Filter, Play, Unlink, Globe, AlertTriangle, Link2 } from 'lucide-react';
 import type { BlockNodeData } from '../../../stores/builder-store';
 import { useBuilderStore } from '../../../stores/builder-store';
 import { useExecutionStore } from '../../../stores/execution-store';
@@ -30,6 +30,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   const hasFired = useExecutionStore((s) => s.firedBlockIds.has(id));
 
   const edges = useBuilderStore((s) => s.edges);
+  const nodes = useBuilderStore((s) => s.nodes);
   const isSafety = d.section === 'safety';
   const isCondition = d.section === 'conditions';
   const isTrigger = d.section === 'triggers';
@@ -48,10 +49,34 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   const showTargetHandle = isCondition || isAction;
   const showSourceHandle = isTrigger || isCondition;
 
+  // ── Wireable field connections ────────────────────────────────────────────
+  // For safety blocks with wireable fields, track which fields have a Variable
+  // or Calc node wired into them (via a data edge targeting handle = field.key).
+  const wireableConnections = useMemo(() => {
+    const map = new Map<string, string>(); // fieldKey → source node label
+    if (!isSafety) return map;
+    for (const field of d.fields) {
+      if (!field.wireable) continue;
+      const edge = edges.find((e) => e.target === id && e.targetHandle === field.key);
+      if (!edge) continue;
+      const sourceNode = nodes.find((n) => n.id === edge.source);
+      const label = sourceNode
+        ? ((sourceNode.data as Record<string, unknown>).variableName ||
+           (sourceNode.data as Record<string, unknown>).label ||
+           'Connected') as string
+        : 'Connected';
+      map.set(field.key, label);
+    }
+    return map;
+  }, [isSafety, d.fields, edges, nodes, id]);
+
   // ── Validation ────────────────────────────────────────────────────────────
-  // Collect keys of fields that have no value set yet
+  // Collect keys of fields that have no value set yet.
+  // Connected wireable fields are treated as filled (value comes from the wire).
   const emptyFieldKeys = new Set(
-    d.fields.filter((f) => !(d.config[f.key] ?? '')).map((f) => f.key),
+    d.fields
+      .filter((f) => !wireableConnections.has(f.key) && !(d.config[f.key] ?? ''))
+      .map((f) => f.key),
   );
   const isMisconfigured = emptyFieldKeys.size > 0;
 
@@ -264,11 +289,35 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
           {/* Config fields */}
           {d.fields.length > 0 && (
             <div className="px-3 py-2 space-y-2">
-              {d.fields.map((field) => {
+              {d.fields.map((field, fieldIdx) => {
                 const isEmpty = emptyFieldKeys.has(field.key);
+                const isWired = wireableConnections.has(field.key);
+                // Approximate vertical center of this field relative to the node top:
+                // header ~34px + container padding 8px + fields before this one (each ~52px) + label 16px + input center 14px
+                const handleTop = 34 + 8 + fieldIdx * 52 + 30;
                 return (
-                  <div key={field.key}>
+                  <div key={field.key} className="relative">
+                    {/* Per-field data-input handle for wireable fields */}
+                    {field.wireable && (
+                      <Handle
+                        type="target"
+                        position={Position.Left}
+                        id={field.key}
+                        className="!w-2 !h-2 !bg-pf-elevated !border-2 !rounded-full"
+                        style={{
+                          top: `${handleTop}px`,
+                          borderColor: 'var(--color-pf-purple-500)',
+                        }}
+                      />
+                    )}
                     <label className={`flex items-center gap-1 text-[10px] font-medium mb-0.5 uppercase tracking-wider ${isEmpty ? 'text-pf-danger/80' : 'text-pf-text-muted'}`}>
+                      {field.wireable && (
+                        <Link2
+                          className="size-2.5 shrink-0"
+                          style={{ color: isWired ? 'var(--color-pf-purple-500)' : 'var(--color-pf-text-muted)', opacity: isWired ? 1 : 0.5 }}
+                          aria-label="This field can receive a value from a Variable or Calc node"
+                        />
+                      )}
                       {field.label}
                       {isEmpty && <span className="text-pf-danger/80 normal-case tracking-normal font-normal">— required</span>}
                     </label>
@@ -292,6 +341,14 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                       </select>
                     ) : field.type === 'select' ? (
                       renderSelectField(field)
+                    ) : isWired ? (
+                      // Field is driven by a connected Variable/Calc node — show chip instead of input
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-pf-sm bg-pf-purple-500/10 border border-pf-purple-500/30">
+                        <Link2 className="size-3 shrink-0 text-pf-purple-500" />
+                        <span className="text-xs text-pf-purple-500 font-mono truncate">
+                          {wireableConnections.get(field.key)}
+                        </span>
+                      </div>
                     ) : (
                       <div className="relative">
                         <input
