@@ -17,16 +17,28 @@ from polyforge.errors import (
     ServerError,
 )
 from polyforge.models import (
+    AccuracyScore,
     AiQueryResponse,
     Alert,
+    ArbitrageOpportunity,
+    CalibrationBucket,
+    CategoryAccuracy,
     CopyConfig,
+    LpPosition,
     Market,
+    MarketplaceListing,
+    MarketplacePurchaseResult,
+    MarketSentiment,
     NewsSignal,
     Order,
     PaginatedResponse,
     PlaceOrderResponse,
+    PlaceSmartOrderResponse,
     Portfolio,
+    PortfolioReview,
     Position,
+    SmartOrder,
+    SmartOrderChildOrder,
     Strategy,
     StrategyEvent,
     StrategyTemplate,
@@ -351,6 +363,120 @@ class PolyforgeClient:
         data = self._post("/api/v1/orders/merge", json={"tokenIds": token_ids})
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
+    # -- Arbitrage --
+
+    def get_arbitrage_opportunities(self, *, min_margin: float = 0.5) -> list[ArbitrageOpportunity]:
+        """Scan all markets for merge arbitrage opportunities (YES + NO < $1.00).
+
+        Args:
+            min_margin: Minimum profit margin percentage to include (default 0.5%).
+        """
+        data = self._get("/api/v1/arbitrage", params={"minMargin": min_margin})
+        return [ArbitrageOpportunity(
+            market_id=o.get("marketId", ""),
+            market_title=o.get("marketTitle", ""),
+            category=o.get("category", ""),
+            end_date=o.get("endDate"),
+            yes_token_id=o.get("yesTokenId", ""),
+            no_token_id=o.get("noTokenId", ""),
+            yes_price=o.get("yesPrice", ""),
+            no_price=o.get("noPrice", ""),
+            sum=o.get("sum", ""),
+            margin_pct=o.get("marginPct", ""),
+            cost_per_unit=o.get("costPerUnit", ""),
+            profit_per_unit=o.get("profitPerUnit", ""),
+        ) for o in data]
+
+    # -- Smart Orders --
+
+    def place_smart_order(
+        self,
+        *,
+        type: str,
+        token_id: str,
+        side: str,
+        outcome: str,
+        total_size: float,
+        slices: int | None = None,
+        interval_minutes: int | None = None,
+        limit_price: float | None = None,
+        entry_price: float | None = None,
+        take_profit_price: float | None = None,
+        stop_loss_price: float | None = None,
+        price_a: float | None = None,
+        price_b: float | None = None,
+    ) -> PlaceSmartOrderResponse:
+        """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
+        body: dict[str, Any] = {
+            "type": type,
+            "tokenId": token_id,
+            "side": side,
+            "outcome": outcome,
+            "totalSize": total_size,
+        }
+        if slices is not None: body["slices"] = slices
+        if interval_minutes is not None: body["intervalMinutes"] = interval_minutes
+        if limit_price is not None: body["limitPrice"] = limit_price
+        if entry_price is not None: body["entryPrice"] = entry_price
+        if take_profit_price is not None: body["takeProfitPrice"] = take_profit_price
+        if stop_loss_price is not None: body["stopLossPrice"] = stop_loss_price
+        if price_a is not None: body["priceA"] = price_a
+        if price_b is not None: body["priceB"] = price_b
+        data = self._post("/api/v1/orders/smart", json=body)
+        return PlaceSmartOrderResponse(
+            smart_order_id=data["smartOrderId"],
+            type=data["type"],
+            status=data["status"],
+            slices_total=data["slicesTotal"],
+        )
+
+    def list_smart_orders(self) -> list[SmartOrder]:
+        """List your smart orders with execution progress."""
+        data = self._get("/api/v1/orders/smart")
+        return [SmartOrder(
+            id=o["id"], type=o["type"], status=o["status"],
+            market_id=o.get("marketId", ""), token_id=o.get("tokenId", ""),
+            outcome=o.get("outcome", ""), side=o.get("side", ""),
+            total_size=o.get("totalSize", ""),
+            slices_filled=o.get("slicesFilled", 0), slices_total=o.get("slicesTotal", 1),
+            next_execute_at=o.get("nextExecuteAt"), completed_at=o.get("completedAt"),
+            created_at=o.get("createdAt", ""),
+        ) for o in data]
+
+    def cancel_smart_order(self, smart_order_id: str) -> dict:
+        """Cancel a pending or active smart order."""
+        return self._delete(f"/api/v1/orders/smart/{smart_order_id}")
+
+    # -- Marketplace --
+
+    def browse_marketplace(
+        self,
+        *,
+        sort: str = "newest",
+        tag: str | None = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> dict:
+        """Browse marketplace listings. Returns dict with 'items' list and 'total' count."""
+        return self._get("/api/v1/marketplace", params={
+            "sort": sort, "tag": tag, "limit": limit, "offset": offset,
+        })
+
+    def get_marketplace_listing(self, listing_id: str) -> dict:
+        """Get a single marketplace listing by ID."""
+        return self._get(f"/api/v1/marketplace/{listing_id}")
+
+    def purchase_strategy(self, listing_id: str) -> MarketplacePurchaseResult:
+        """Purchase a marketplace strategy and receive a private fork."""
+        data = self._post(f"/api/v1/marketplace/{listing_id}/purchase")
+        return MarketplacePurchaseResult(
+            purchase_id=data["purchaseId"],
+            forked_strategy_id=data["forkedStrategyId"],
+            price_usdc=float(data["priceUsdc"]),
+            platform_fee=float(data["platformFee"]),
+            seller_net=float(data["sellerNet"]),
+        )
+
     def watch_strategy(self, strategy_id: str) -> Iterator[StrategyEvent]:
         """Stream live execution events for a strategy via SSE.
 
@@ -427,6 +553,61 @@ class PolyforgeClient:
 
     def ai_query(self, query: str) -> AiQueryResponse:
         return _parse(AiQueryResponse, self._post("/api/v1/ai/query", json={"query": query}))
+
+    # -- Accuracy & Portfolio Review --
+
+    def get_accuracy(self) -> AccuracyScore:
+        data = self._get("/api/v1/accuracy/me")
+        calibration = [
+            CalibrationBucket(
+                bucket_mid=b.get("bucketMid", 0.0),
+                frequency=b.get("frequency", 0.0),
+                count=b.get("count", 0),
+            )
+            for b in data.get("calibration", [])
+        ]
+        by_category = {
+            k: CategoryAccuracy(count=v.get("count", 0), brier_score=v.get("brierScore", 0.0))
+            for k, v in data.get("byCategory", {}).items()
+        }
+        return AccuracyScore(
+            brier_score=data.get("brierScore"),
+            total_predictions=data.get("totalPredictions", 0),
+            correct_predictions=data.get("correctPredictions", 0),
+            win_rate=data.get("winRate", ""),
+            calibration=calibration,
+            by_category=by_category,
+        )
+
+    def get_portfolio_review(self) -> PortfolioReview:
+        data = self._get("/api/v1/ai/portfolio-review")
+        return PortfolioReview(
+            review=data.get("review", ""),
+            suggestions=data.get("suggestions", []),
+            score=data.get("score", 0),
+            generated_at=data.get("generatedAt", ""),
+        )
+
+    def get_market_sentiment(self, market_id: str) -> MarketSentiment:
+        data = self._get(f"/api/v1/news/sentiment/{market_id}")
+        return MarketSentiment(
+            market_id=data.get("marketId", ""),
+            score=data.get("score", 0.0),
+            label=data.get("label", ""),
+            signal_count=data.get("signalCount", 0),
+            last_updated=data.get("lastUpdated"),
+        )
+
+    def provide_liquidity(self, token_id: str, spread: float, size: float) -> LpPosition:
+        data = self._post("/api/v1/lp/provide", json={"tokenId": token_id, "spread": spread, "size": size})
+        return LpPosition(
+            buy_order_id=data.get("buyOrderId", ""),
+            sell_order_id=data.get("sellOrderId", ""),
+            token_id=data.get("tokenId", ""),
+            buy_price=data.get("buyPrice", ""),
+            sell_price=data.get("sellPrice", ""),
+            size=data.get("size", ""),
+        )
 
     # -- Lifecycle --
 
@@ -672,6 +853,116 @@ class AsyncPolyforgeClient:
         data = await self._post("/api/v1/orders/merge", json={"tokenIds": token_ids})
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
+    # -- Arbitrage --
+
+    async def get_arbitrage_opportunities(self, *, min_margin: float = 0.5) -> list[ArbitrageOpportunity]:
+        """Scan all markets for merge arbitrage opportunities (YES + NO < $1.00)."""
+        data = await self._get("/api/v1/arbitrage", params={"minMargin": min_margin})
+        return [ArbitrageOpportunity(
+            market_id=o.get("marketId", ""),
+            market_title=o.get("marketTitle", ""),
+            category=o.get("category", ""),
+            end_date=o.get("endDate"),
+            yes_token_id=o.get("yesTokenId", ""),
+            no_token_id=o.get("noTokenId", ""),
+            yes_price=o.get("yesPrice", ""),
+            no_price=o.get("noPrice", ""),
+            sum=o.get("sum", ""),
+            margin_pct=o.get("marginPct", ""),
+            cost_per_unit=o.get("costPerUnit", ""),
+            profit_per_unit=o.get("profitPerUnit", ""),
+        ) for o in data]
+
+    # -- Smart Orders --
+
+    async def place_smart_order(
+        self,
+        *,
+        type: str,
+        token_id: str,
+        side: str,
+        outcome: str,
+        total_size: float,
+        slices: int | None = None,
+        interval_minutes: int | None = None,
+        limit_price: float | None = None,
+        entry_price: float | None = None,
+        take_profit_price: float | None = None,
+        stop_loss_price: float | None = None,
+        price_a: float | None = None,
+        price_b: float | None = None,
+    ) -> PlaceSmartOrderResponse:
+        """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
+        body: dict[str, Any] = {
+            "type": type,
+            "tokenId": token_id,
+            "side": side,
+            "outcome": outcome,
+            "totalSize": total_size,
+        }
+        if slices is not None: body["slices"] = slices
+        if interval_minutes is not None: body["intervalMinutes"] = interval_minutes
+        if limit_price is not None: body["limitPrice"] = limit_price
+        if entry_price is not None: body["entryPrice"] = entry_price
+        if take_profit_price is not None: body["takeProfitPrice"] = take_profit_price
+        if stop_loss_price is not None: body["stopLossPrice"] = stop_loss_price
+        if price_a is not None: body["priceA"] = price_a
+        if price_b is not None: body["priceB"] = price_b
+        data = await self._post("/api/v1/orders/smart", json=body)
+        return PlaceSmartOrderResponse(
+            smart_order_id=data["smartOrderId"],
+            type=data["type"],
+            status=data["status"],
+            slices_total=data["slicesTotal"],
+        )
+
+    async def list_smart_orders(self) -> list[SmartOrder]:
+        """List your smart orders with execution progress."""
+        data = await self._get("/api/v1/orders/smart")
+        return [SmartOrder(
+            id=o["id"], type=o["type"], status=o["status"],
+            market_id=o.get("marketId", ""), token_id=o.get("tokenId", ""),
+            outcome=o.get("outcome", ""), side=o.get("side", ""),
+            total_size=o.get("totalSize", ""),
+            slices_filled=o.get("slicesFilled", 0), slices_total=o.get("slicesTotal", 1),
+            next_execute_at=o.get("nextExecuteAt"), completed_at=o.get("completedAt"),
+            created_at=o.get("createdAt", ""),
+        ) for o in data]
+
+    async def cancel_smart_order(self, smart_order_id: str) -> dict:
+        """Cancel a pending or active smart order."""
+        return await self._delete(f"/api/v1/orders/smart/{smart_order_id}")
+
+    # -- Marketplace --
+
+    async def browse_marketplace(
+        self,
+        *,
+        sort: str = "newest",
+        tag: str | None = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> dict:
+        """Browse marketplace listings. Returns dict with 'items' list and 'total' count."""
+        return await self._get("/api/v1/marketplace", params={
+            "sort": sort, "tag": tag, "limit": limit, "offset": offset,
+        })
+
+    async def get_marketplace_listing(self, listing_id: str) -> dict:
+        """Get a single marketplace listing by ID."""
+        return await self._get(f"/api/v1/marketplace/{listing_id}")
+
+    async def purchase_strategy(self, listing_id: str) -> MarketplacePurchaseResult:
+        """Purchase a marketplace strategy and receive a private fork."""
+        data = await self._post(f"/api/v1/marketplace/{listing_id}/purchase")
+        return MarketplacePurchaseResult(
+            purchase_id=data["purchaseId"],
+            forked_strategy_id=data["forkedStrategyId"],
+            price_usdc=float(data["priceUsdc"]),
+            platform_fee=float(data["platformFee"]),
+            seller_net=float(data["sellerNet"]),
+        )
+
     async def watch_strategy(self, strategy_id: str) -> AsyncIterator[StrategyEvent]:  # type: ignore[override]
         """Stream live execution events for a strategy via SSE.
 
@@ -745,6 +1036,61 @@ class AsyncPolyforgeClient:
 
     async def ai_query(self, query: str) -> AiQueryResponse:
         return _parse(AiQueryResponse, await self._post("/api/v1/ai/query", json={"query": query}))
+
+    # -- Accuracy & Portfolio Review --
+
+    async def get_accuracy(self) -> AccuracyScore:
+        data = await self._get("/api/v1/accuracy/me")
+        calibration = [
+            CalibrationBucket(
+                bucket_mid=b.get("bucketMid", 0.0),
+                frequency=b.get("frequency", 0.0),
+                count=b.get("count", 0),
+            )
+            for b in data.get("calibration", [])
+        ]
+        by_category = {
+            k: CategoryAccuracy(count=v.get("count", 0), brier_score=v.get("brierScore", 0.0))
+            for k, v in data.get("byCategory", {}).items()
+        }
+        return AccuracyScore(
+            brier_score=data.get("brierScore"),
+            total_predictions=data.get("totalPredictions", 0),
+            correct_predictions=data.get("correctPredictions", 0),
+            win_rate=data.get("winRate", ""),
+            calibration=calibration,
+            by_category=by_category,
+        )
+
+    async def get_portfolio_review(self) -> PortfolioReview:
+        data = await self._get("/api/v1/ai/portfolio-review")
+        return PortfolioReview(
+            review=data.get("review", ""),
+            suggestions=data.get("suggestions", []),
+            score=data.get("score", 0),
+            generated_at=data.get("generatedAt", ""),
+        )
+
+    async def get_market_sentiment(self, market_id: str) -> MarketSentiment:
+        data = await self._get(f"/api/v1/news/sentiment/{market_id}")
+        return MarketSentiment(
+            market_id=data.get("marketId", ""),
+            score=data.get("score", 0.0),
+            label=data.get("label", ""),
+            signal_count=data.get("signalCount", 0),
+            last_updated=data.get("lastUpdated"),
+        )
+
+    async def provide_liquidity(self, token_id: str, spread: float, size: float) -> LpPosition:
+        data = await self._post("/api/v1/lp/provide", json={"tokenId": token_id, "spread": spread, "size": size})
+        return LpPosition(
+            buy_order_id=data.get("buyOrderId", ""),
+            sell_order_id=data.get("sellOrderId", ""),
+            token_id=data.get("tokenId", ""),
+            buy_price=data.get("buyPrice", ""),
+            sell_price=data.get("sellPrice", ""),
+            size=data.get("size", ""),
+        )
 
     # -- Lifecycle --
 

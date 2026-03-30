@@ -146,6 +146,15 @@ asyncio.run(main())
 |--------|-------------|
 | `ai_query(query)` | Ask the Polyforge AI assistant a question |
 
+### Accuracy & Liquidity
+
+| Method | Description |
+|--------|-------------|
+| `get_accuracy()` | Get your accuracy score with Brier score, win rate, and calibration data |
+| `get_portfolio_review()` | Get an AI-generated portfolio review with suggestions and score (1–10) |
+| `get_market_sentiment(market_id)` | Get sentiment score (−100 to +100) and BULLISH / BEARISH / NEUTRAL label for a market |
+| `provide_liquidity(token_id, spread, size)` | Provide liquidity; returns `LpPosition` with buy and sell order IDs |
+
 ## Error Handling
 
 All API errors raise a `PolyforgeError` (or a specific subclass):

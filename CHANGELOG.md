@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.5.0] — 2026-03-30
+
+### Added
+- `get_accuracy()` — `GET /api/v1/accuracy/me`; returns `AccuracyScore` dataclass with Brier score, win rate, calibration list, and per-category breakdown
+- `get_portfolio_review()` — `GET /api/v1/ai/portfolio-review`; returns `PortfolioReview` dataclass with review text, suggestions list, and score (1–10)
+- `get_market_sentiment(market_id)` — `GET /api/v1/news/sentiment/:marketId`; returns `MarketSentiment` dataclass with score (−100 to +100) and BULLISH / BEARISH / NEUTRAL label
+- `provide_liquidity(token_id, spread, size)` — `POST /api/v1/lp/provide`; returns `LpPosition` dataclass with buy and sell order IDs
+- All methods available on both `PolyforgeClient` (sync) and `AsyncPolyforgeClient` (async)
+- New dataclasses: `CalibrationBucket`, `CategoryAccuracy`, `AccuracyScore`, `PortfolioReview`, `MarketSentiment`, `LpPosition`
+
+## [1.4.0] — 2026-03-30
+
+### Added
+- `get_arbitrage_opportunities(min_margin?)` — `GET /api/v1/arbitrage`; returns `list[ArbitrageOpportunity]`
+- `place_smart_order(**kwargs)` — `POST /api/v1/orders/smart`; supports TWAP, DCA, BRACKET, OCO types
+- `list_smart_orders()` — `GET /api/v1/orders/smart`; returns `list[SmartOrder]` with child order progress
+- `cancel_smart_order(id)` — `DELETE /api/v1/orders/smart/:id`
+- `browse_marketplace(sort?, tag?, limit?)` — `GET /api/v1/marketplace`; returns `list[MarketplaceListing]`
+- `get_marketplace_listing(id)` — `GET /api/v1/marketplace/:id`
+- `purchase_strategy(listing_id)` — `POST /api/v1/marketplace/:id/purchase`; returns `MarketplacePurchaseResult`
+- All new methods available on both `PolyforgeClient` (sync) and `AsyncPolyforgeClient` (async)
+- New dataclasses: `ArbitrageOpportunity`, `SmartOrderChildOrder`, `SmartOrder`, `PlaceSmartOrderResponse`, `MarketplaceSeller`, `MarketplaceStrategy`, `MarketplaceListing`, `MarketplacePurchaseResult`
+
 ## [1.3.0] — 2026-03-29
 
 ### Fixed

@@ -6,7 +6,7 @@ Uses Python dataclasses for zero additional dependencies beyond httpx.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar
+from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 T = TypeVar("T")
 
@@ -260,6 +260,179 @@ class PlaceOrderResponse:
     order_id: str = ""
     intent_id: str = ""
     status: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Arbitrage
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ArbitrageOpportunity:
+    """A merge arbitrage opportunity where YES + NO prices sum to less than $1.00."""
+
+    market_id: str = ""
+    market_title: str = ""
+    category: str = ""
+    end_date: str | None = None
+    yes_token_id: str = ""
+    no_token_id: str = ""
+    yes_price: str = ""
+    no_price: str = ""
+    sum: str = ""
+    margin_pct: str = ""
+    cost_per_unit: str = ""
+    profit_per_unit: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Smart Orders
+# ---------------------------------------------------------------------------
+
+@dataclass
+class SmartOrderChildOrder:
+    """A child order spawned by a smart order."""
+
+    id: str = ""
+    status: str = ""
+    fill_size: str | None = None
+    fill_price: str | None = None
+    created_at: str = ""
+
+
+@dataclass
+class SmartOrder:
+    """An advanced execution order (TWAP, DCA, BRACKET, or OCO)."""
+
+    id: str = ""
+    type: str = ""
+    status: str = ""
+    market_id: str = ""
+    token_id: str = ""
+    outcome: str = ""
+    side: str = ""
+    total_size: str = ""
+    slices_filled: int = 0
+    slices_total: int = 1
+    next_execute_at: str | None = None
+    completed_at: str | None = None
+    created_at: str = ""
+    orders: list[SmartOrderChildOrder] = field(default_factory=list)
+
+
+@dataclass
+class PlaceSmartOrderResponse:
+    """Response from placing a smart order."""
+
+    smart_order_id: str = ""
+    type: str = ""
+    status: str = ""
+    slices_total: int = 1
+
+
+# ---------------------------------------------------------------------------
+# Marketplace
+# ---------------------------------------------------------------------------
+
+@dataclass
+class MarketplaceSeller:
+    """Seller info embedded in a listing."""
+
+    id: str = ""
+    name: str = ""
+    avatar_url: str | None = None
+
+
+@dataclass
+class MarketplaceStrategy:
+    """Strategy info embedded in a listing."""
+
+    id: str = ""
+    name: str = ""
+    description: str | None = None
+
+
+@dataclass
+class MarketplaceListing:
+    """A strategy listing in the marketplace."""
+
+    id: str = ""
+    strategy_id: str = ""
+    seller_id: str = ""
+    title: str = ""
+    description: str | None = None
+    price_usdc: str = ""
+    status: str = "DRAFT"
+    purchase_count: int = 0
+    fork_count: int = 0
+    avg_rating: str | None = None
+    rating_count: int = 0
+    tags: list[str] = field(default_factory=list)
+    created_at: str = ""
+
+
+@dataclass
+class MarketplacePurchaseResult:
+    """Response from purchasing a marketplace strategy."""
+
+    purchase_id: str = ""
+    forked_strategy_id: str = ""
+    price_usdc: float = 0.0
+    platform_fee: float = 0.0
+    seller_net: float = 0.0
+
+
+# ---------------------------------------------------------------------------
+# Accuracy & Portfolio Review
+# ---------------------------------------------------------------------------
+
+@dataclass
+class CalibrationBucket:
+    bucket_mid: float = 0.0
+    frequency: float = 0.0
+    count: int = 0
+
+
+@dataclass
+class CategoryAccuracy:
+    count: int = 0
+    brier_score: float = 0.0
+
+
+@dataclass
+class AccuracyScore:
+    brier_score: Optional[float] = None
+    total_predictions: int = 0
+    correct_predictions: int = 0
+    win_rate: str = ""
+    calibration: List[CalibrationBucket] = field(default_factory=list)
+    by_category: Dict[str, CategoryAccuracy] = field(default_factory=dict)
+
+
+@dataclass
+class PortfolioReview:
+    review: str = ""
+    suggestions: List[str] = field(default_factory=list)
+    score: int = 0
+    generated_at: str = ""
+
+
+@dataclass
+class MarketSentiment:
+    market_id: str = ""
+    score: float = 0.0
+    label: str = ""  # 'BULLISH' | 'BEARISH' | 'NEUTRAL'
+    signal_count: int = 0
+    last_updated: Optional[str] = None
+
+
+@dataclass
+class LpPosition:
+    buy_order_id: str = ""
+    sell_order_id: str = ""
+    token_id: str = ""
+    buy_price: str = ""
+    sell_price: str = ""
+    size: str = ""
 
 
 # ---------------------------------------------------------------------------
