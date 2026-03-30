@@ -7,8 +7,44 @@
 
 ## Next Up
 
-v6.4.0 security and quality audit complete (2026-03-28). 40 issues resolved across 5 severity levels.
+v6.15.1 browser-tested and shipped (2026-03-30). All 4 v6.15.0 features verified end-to-end. Admin app upgraded with Sentiment page, User Accuracy tab, and Platform Activity dashboard cards.
 Next: deploy to AWS eu-west-2, then submit Polymarket Builders Program grant application.
+
+---
+
+## v6.15.1 — Bug Fixes (2026-03-30)
+
+- [x] Fix `AccuracyService` 500 — `REDEEMED` is not a valid `ResolutionStatus` enum; changed to `resolutionStatus: 'RESOLVED'`
+- [x] Fix AI Optimizer blank page — frontend used wrong API shape (`label`/`review` vs `direction`/`summary`)
+- [x] Fix market cards "Market sentiment: undefined" — `SentimentPill` used `label` field; API returns `direction`
+- [x] Fix admin dashboard "Platform stats unavailable" — same `REDEEMED` Prisma enum bug in `getPlatformStats`
+- [x] Fix all SDK `MarketSentiment` types — renamed `label` → `direction` in TS, Python, Rust SDKs
+
+### Admin App — v6.15.0 Feature Upgrades
+- [x] Sentiment Intelligence page (`/sentiment`) — market table with BULLISH/BEARISH/NEUTRAL filter tabs
+- [x] User Accuracy tab on admin user detail — Brier score, win rate, calibration data
+- [x] Platform Activity section on dashboard — News Signals, Markets w/ Sentiment, LP Orders, Resolved Positions
+- [x] `GET /api/v1/dashboard/platform-stats` — new admin-api-service endpoint
+- [x] `GET /api/v1/users/:id/accuracy` — new admin-api-service endpoint
+- [x] `SentimentModule` wired into admin-api-service `app.module`
+
+---
+
+## v6.15.0 — Prediction Accuracy, AI Optimizer, Sentiment Intelligence, LP Market Making (2026-03-30)
+
+- [x] `/accuracy` page — Brier score, win rate, calibration chart, per-category breakdown
+- [x] `GET /api/v1/accuracy/me` — on-the-fly stats from resolved positions
+- [x] `/optimizer` page — AI-generated portfolio review, risk level pill, suggestions, refresh
+- [x] `GET /api/v1/ai/portfolio-review` — LLM analysis with graceful fallback
+- [x] Sentiment pills on market cards — BULLISH/BEARISH/NEUTRAL (batch-fetched, hidden when no data)
+- [x] `GET /api/v1/news/sentiment/:marketId` — 7-day NewsSignal aggregation
+- [x] LP "Provide Liquidity" panel on market detail — token, spread, size; two-sided quotes
+- [x] `POST /api/v1/lp/provide` — publishes BUY+SELL intents to Redis stream
+- [x] Analytics nav section — Accuracy (Target icon) + AI Optimizer (Sparkles icon)
+- [x] MCP server v1.4.0 — 4 new tools (33 total)
+- [x] TypeScript SDK v1.6.0 — 4 methods + 5 types
+- [x] Python SDK v1.5.0 — 4 methods + 6 dataclasses
+- [x] Rust SDK v1.4.0 — 4 methods + 6 structs
 
 ---
 
