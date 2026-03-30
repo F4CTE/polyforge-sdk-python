@@ -273,6 +273,48 @@ export class UsersService {
     return { revoked: true };
   }
 
+  async getUserAccuracy(userId: string): Promise<any> {
+    const positions = await this.prisma.position.findMany({
+      where: { userId, resolutionStatus: { in: ['RESOLVED', 'REDEEMED'] as any[] } },
+    });
+
+    if (positions.length === 0) {
+      return { brierScore: null, totalPredictions: 0, correctPredictions: 0, winRate: '0', calibration: [], byCategory: {} };
+    }
+
+    let brierSum = 0;
+    let correct = 0;
+    for (const p of positions) {
+      const prob = parseFloat(String((p as any).avgPrice ?? 0));
+      const won = parseFloat(String((p as any).realizedPnl ?? 0)) > 0 ? 1 : 0;
+      if (won) correct++;
+      brierSum += Math.pow(prob - won, 2);
+    }
+    const brierScore = brierSum / positions.length;
+
+    const buckets: Record<number, { sum: number; count: number }> = {};
+    for (let b = 0; b <= 9; b++) buckets[b] = { sum: 0, count: 0 };
+    for (const p of positions) {
+      const prob = Math.min(0.999, Math.max(0.001, parseFloat(String((p as any).avgPrice ?? 0))));
+      const bucket = Math.floor(prob * 10);
+      const won = parseFloat(String((p as any).realizedPnl ?? 0)) > 0 ? 1 : 0;
+      buckets[bucket].sum += won;
+      buckets[bucket].count++;
+    }
+    const calibration = Object.entries(buckets)
+      .filter(([, v]) => v.count > 0)
+      .map(([k, v]) => ({ bucketMid: (parseInt(k) + 0.5) / 10, frequency: v.sum / v.count, count: v.count }));
+
+    return {
+      brierScore: parseFloat(brierScore.toFixed(4)),
+      totalPredictions: positions.length,
+      correctPredictions: correct,
+      winRate: ((correct / positions.length) * 100).toFixed(1),
+      calibration,
+      byCategory: {},
+    };
+  }
+
   private async findUserOrFail(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user || user.deleted) {

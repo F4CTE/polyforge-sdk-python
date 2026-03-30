@@ -55,7 +55,7 @@ type ViewMode = 'cards' | 'table';
 interface MarketSentiment {
   marketId: string;
   score: number;
-  label: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  direction: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
   signalCount: number;
   lastUpdated: string | null;
 }
@@ -159,18 +159,18 @@ function CardSkeleton() {
 
 function SentimentPill({ sentiment }: { sentiment: MarketSentiment | undefined }) {
   if (!sentiment || sentiment.signalCount === 0) return null;
-  const styles: Record<MarketSentiment['label'], string> = {
+  const styles: Record<MarketSentiment['direction'], string> = {
     BULLISH: 'bg-pf-success/15 text-pf-success',
     BEARISH: 'bg-pf-danger/15 text-pf-danger',
     NEUTRAL: 'bg-pf-overlay text-pf-text-muted',
   };
   return (
     <span
-      className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${styles[sentiment.label]}`}
+      className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${styles[sentiment.direction]}`}
       title={`Sentiment score: ${sentiment.score}`}
-      aria-label={`Market sentiment: ${sentiment.label}`}
+      aria-label={`Market sentiment: ${sentiment.direction}`}
     >
-      {sentiment.label}
+      {sentiment.direction}
     </span>
   );
 }

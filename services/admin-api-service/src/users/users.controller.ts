@@ -172,6 +172,11 @@ export class UsersController {
     return result;
   }
 
+  @Get(":id/accuracy")
+  getUserAccuracy(@Param("id", ParseUUIDPipe) id: string) {
+    return this.users.getUserAccuracy(id);
+  }
+
   @Delete(":id/api-keys/:keyId")
   @HttpCode(HttpStatus.OK)
   async revokeApiKey(

@@ -4,19 +4,30 @@ import { Sparkles, RefreshCw } from 'lucide-react';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
+interface Suggestion {
+  type?: string;
+  priority?: string;
+  description?: string;
+}
+
 interface PortfolioReview {
-  review: string;
-  suggestions: string[];
-  score: number;
+  summary: string;
+  riskLevel: 'low' | 'medium' | 'high';
+  suggestions: (Suggestion | string)[];
   generatedAt: string;
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
-function scorePillClass(score: number): string {
-  if (score > 7) return 'bg-pf-success/15 text-pf-success border border-pf-success/30';
-  if (score >= 4) return 'bg-pf-warning/15 text-pf-warning border border-pf-warning/30';
+function riskPillClass(level: string): string {
+  if (level === 'low') return 'bg-pf-success/15 text-pf-success border border-pf-success/30';
+  if (level === 'medium') return 'bg-pf-warning/15 text-pf-warning border border-pf-warning/30';
   return 'bg-pf-danger/15 text-pf-danger border border-pf-danger/30';
+}
+
+function suggestionText(s: Suggestion | string): string {
+  if (typeof s === 'string') return s;
+  return s.description ?? '';
 }
 
 function formatGeneratedAt(iso: string): string {
@@ -139,15 +150,15 @@ export function Component() {
               <h2 className="text-sm font-medium text-pf-text uppercase tracking-wide">Portfolio Review</h2>
               <div className="flex items-center gap-2">
                 <span
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-mono font-bold ${scorePillClass(data.score)}`}
-                  aria-label={`Score: ${data.score} out of 10`}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${riskPillClass(data.riskLevel)}`}
+                  aria-label={`Risk level: ${data.riskLevel}`}
                 >
-                  {data.score}/10
+                  {data.riskLevel} risk
                 </span>
               </div>
             </div>
             <p className="text-sm text-pf-text-secondary leading-relaxed whitespace-pre-wrap">
-              {data.review}
+              {data.summary}
             </p>
             {data.generatedAt && (
               <p className="text-[11px] text-pf-text-muted pt-1 border-t border-pf-border-subtle">
@@ -167,7 +178,7 @@ export function Component() {
                       className="mt-1.5 size-1.5 rounded-full bg-pf-cyan-500 shrink-0"
                       aria-hidden="true"
                     />
-                    <span className="leading-relaxed">{suggestion}</span>
+                    <span className="leading-relaxed">{suggestionText(suggestion)}</span>
                   </li>
                 ))}
               </ul>

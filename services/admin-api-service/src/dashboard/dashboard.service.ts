@@ -143,6 +143,43 @@ export class DashboardService {
     };
   }
 
+  async getPlatformStats() {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400_000);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000);
+
+    const [totalNewsSignals, marketsWithSentimentRaw, totalLpOrders, resolvedPositions] =
+      await Promise.all([
+        this.prisma.newsSignal.count({
+          where: { createdAt: { gte: thirtyDaysAgo } },
+        }),
+        this.prisma.$queryRaw<[{ count: bigint }]>`
+          SELECT COUNT(DISTINCT "marketId")::bigint AS count
+          FROM news_signals
+          WHERE "createdAt" >= ${sevenDaysAgo}
+        `,
+        this.prisma.order.count({
+          where: {
+            strategyId: null,
+            orderType: 'FOK',
+            status: { not: 'CANCELLED' },
+          },
+        }),
+        this.prisma.position.count({
+          where: {
+            resolutionStatus: 'RESOLVED' as any,
+          },
+        }),
+      ]);
+
+    return {
+      totalNewsSignals,
+      marketsWithSentiment: Number(marketsWithSentimentRaw[0]?.count ?? 0),
+      totalLpOrders,
+      resolvedPositions,
+      avgBrierScore: null,
+    };
+  }
+
   async getRateLimits() {
     const client = this.redis.getClient();
 

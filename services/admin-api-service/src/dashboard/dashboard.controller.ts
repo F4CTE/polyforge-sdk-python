@@ -16,4 +16,9 @@ export class DashboardController {
   getRateLimits() {
     return this.dashboard.getRateLimits();
   }
+
+  @Get("platform-stats")
+  getPlatformStats() {
+    return this.dashboard.getPlatformStats();
+  }
 }

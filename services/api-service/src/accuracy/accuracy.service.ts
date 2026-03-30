@@ -9,7 +9,7 @@ export class AccuracyService {
     const positions = await this.prisma.position.findMany({
       where: {
         userId,
-        resolutionStatus: { in: ['RESOLVED', 'REDEEMED'] as any[] },
+        resolutionStatus: 'RESOLVED' as any,
       },
     });
 

@@ -337,6 +337,24 @@ export const adminApi = {
       body: JSON.stringify(data),
     }),
 
+  // Platform Stats
+  platformStats: () =>
+    request<{ totalNewsSignals: number; marketsWithSentiment: number; totalLpOrders: number; resolvedPositions: number }>(
+      buildUrl(API_BASE, '/dashboard/platform-stats')
+    ),
+
+  // User Accuracy
+  userAccuracy: (userId: string) =>
+    request<{ brierScore: number | null; totalPredictions: number; correctPredictions: number; winRate: string; calibration: unknown[]; byCategory: unknown }>(
+      buildUrl(API_BASE, `/users/${userId}/accuracy`)
+    ),
+
+  // Sentiment Overview
+  sentimentOverview: (limit?: number) =>
+    request<Array<{ marketId: string; marketTitle: string; score: number; label: string; signalCount: number; bullishCount: number; bearishCount: number; lastUpdated: string }>>(
+      buildUrl(API_BASE, '/sentiment', limit ? { limit } : undefined)
+    ),
+
   // Admins
   listAdmins: () => request<AdminData[]>(buildUrl(API_BASE, '/admins')),
   createAdmin: (data: {

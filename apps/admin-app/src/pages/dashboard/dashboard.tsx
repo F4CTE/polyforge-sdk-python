@@ -13,6 +13,10 @@ import {
   AlertCircle,
   Clock,
   ShieldAlert,
+  Newspaper,
+  BarChart2,
+  Layers,
+  CheckSquare,
 } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, timeAgo } from '@/lib/utils';
@@ -49,11 +53,18 @@ export function Component() {
     recent429Count: number;
     topOffenders: { key: string; hits: number; ttl: number }[];
   } | null>(null);
+  const [platformStats, setPlatformStats] = useState<{
+    totalNewsSignals: number;
+    marketsWithSentiment: number;
+    totalLpOrders: number;
+    resolvedPositions: number;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [healthError, setHealthError] = useState(false);
   const [statsError, setStatsError] = useState(false);
   const [logsError, setLogsError] = useState(false);
   const [rateLimitsError, setRateLimitsError] = useState(false);
+  const [platformStatsError, setPlatformStatsError] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -61,9 +72,10 @@ export function Component() {
     setStatsError(false);
     setLogsError(false);
     setRateLimitsError(false);
+    setPlatformStatsError(false);
 
     // Fetch all independent API calls in parallel
-    const [healthResult, configResult, statsResult, logsResult, rlResult] =
+    const [healthResult, configResult, statsResult, logsResult, rlResult, platformStatsResult] =
       await Promise.allSettled([
         adminApi.health(),
         adminApi.config(),
@@ -75,6 +87,7 @@ export function Component() {
         ]),
         adminApi.auditLogs({ limit: 5 }),
         adminApi.rateLimits(),
+        adminApi.platformStats(),
       ]);
 
     if (healthResult.status === 'fulfilled') setHealth(healthResult.value ?? null);
@@ -98,6 +111,9 @@ export function Component() {
 
     if (rlResult.status === 'fulfilled') setRateLimits(rlResult.value);
     else setRateLimitsError(true);
+
+    if (platformStatsResult.status === 'fulfilled') setPlatformStats(platformStatsResult.value ?? null);
+    else setPlatformStatsError(true);
 
     setLoading(false);
   }
@@ -128,6 +144,14 @@ export function Component() {
             </div>
           ))}
         </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 animate-pulse">
+              <div className="h-3 bg-pf-base rounded w-24 mb-3" />
+              <div className="h-7 bg-pf-base rounded w-16" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -137,6 +161,13 @@ export function Component() {
     { label: 'Active Strategies', value: stats.activeStrategies, icon: <Blocks size={20} aria-hidden="true" />, color: 'text-pf-success', bg: 'bg-pf-success/10' },
     { label: 'Total Orders', value: stats.totalOrders, icon: <ShoppingCart size={20} aria-hidden="true" />, color: 'text-[var(--color-pf-purple-500)]', bg: 'bg-[var(--color-pf-purple-500)]/10' },
     { label: 'Open Tickets', value: stats.openTickets, icon: <TicketCheck size={20} aria-hidden="true" />, color: 'text-pf-warning', bg: 'bg-pf-warning/10' },
+  ];
+
+  const platformStatCards = [
+    { label: 'News Signals (30d)', value: platformStats?.totalNewsSignals ?? 0, icon: <Newspaper size={20} aria-hidden="true" />, color: 'text-pf-cyan-500', bg: 'bg-pf-cyan-500/10' },
+    { label: 'Markets w/ Sentiment', value: platformStats?.marketsWithSentiment ?? 0, icon: <BarChart2 size={20} aria-hidden="true" />, color: 'text-pf-info', bg: 'bg-pf-info/10' },
+    { label: 'LP Orders', value: platformStats?.totalLpOrders ?? 0, icon: <Layers size={20} aria-hidden="true" />, color: 'text-[var(--color-pf-purple-500)]', bg: 'bg-[var(--color-pf-purple-500)]/10' },
+    { label: 'Resolved Positions', value: platformStats?.resolvedPositions ?? 0, icon: <CheckSquare size={20} aria-hidden="true" />, color: 'text-pf-success', bg: 'bg-pf-success/10' },
   ];
 
   return (
@@ -169,6 +200,40 @@ export function Component() {
           ))}
         </div>
       )}
+
+      {/* Platform Activity */}
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-pf-text-tertiary mb-3 px-0.5">
+          Platform Activity
+        </h2>
+        {platformStatsError ? (
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 text-center">
+            <AlertCircle className="mx-auto mb-2 text-pf-text-tertiary" size={24} aria-hidden="true" />
+            <p className="text-sm text-pf-text-secondary">Platform stats unavailable</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
+            {platformStatCards.map((card) => (
+              <div
+                key={card.label}
+                className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-pf-text-secondary">
+                    {card.label}
+                  </span>
+                  <div className={`p-2 rounded-pf-sm ${card.bg}`}>
+                    <span className={card.color}>{card.icon}</span>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-pf-text">
+                  {card.value.toLocaleString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* System Health */}

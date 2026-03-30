@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { ArrowLeft, Ban, CheckCircle, Key, Trash2 } from 'lucide-react';
+import { ArrowLeft, Ban, CheckCircle, Key, Trash2, Target } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDate, formatDateTime } from '@/lib/utils';
 
@@ -35,6 +35,17 @@ interface ApiKeyView {
   [key: string]: unknown;
 }
 
+interface AccuracyData {
+  brierScore: number | null;
+  totalPredictions: number;
+  correctPredictions: number;
+  winRate: string;
+  calibration: { bucket: string; frequency: number; count: number }[];
+  byCategory: unknown;
+}
+
+type ActiveTab = 'overview' | 'accuracy';
+
 export function Component() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -44,6 +55,10 @@ export function Component() {
   const [showSuspendDialog, setShowSuspendDialog] = useState(false);
   const [suspendReason, setSuspendReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
+  const [accuracy, setAccuracy] = useState<AccuracyData | null>(null);
+  const [accuracyLoading, setAccuracyLoading] = useState(false);
+  const [accuracyLoaded, setAccuracyLoaded] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -91,6 +106,27 @@ export function Component() {
       toast.error('Failed to unsuspend user');
     } finally {
       setActionLoading(false);
+    }
+  }
+
+  async function loadAccuracy() {
+    if (!id || accuracyLoaded) return;
+    setAccuracyLoading(true);
+    try {
+      const res = await adminApi.userAccuracy(id);
+      setAccuracy(res as unknown as AccuracyData);
+    } catch {
+      toast.error('Failed to load accuracy data');
+    } finally {
+      setAccuracyLoading(false);
+      setAccuracyLoaded(true);
+    }
+  }
+
+  function handleTabChange(tab: ActiveTab) {
+    setActiveTab(tab);
+    if (tab === 'accuracy' && !accuracyLoaded) {
+      loadAccuracy();
     }
   }
 
@@ -273,7 +309,118 @@ export function Component() {
         )}
       </div>
 
+      {/* Tabs */}
+      <div>
+        <div className="flex gap-1 border-b border-pf-border mb-4" role="tablist" aria-label="User sections">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'overview'}
+            onClick={() => handleTabChange('overview')}
+            className={`px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded-t-pf-sm -mb-px border-b-2 ${
+              activeTab === 'overview'
+                ? 'border-pf-cyan-500 text-pf-cyan-500'
+                : 'border-transparent text-pf-text-secondary hover:text-pf-text'
+            }`}
+          >
+            API Keys
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'accuracy'}
+            onClick={() => handleTabChange('accuracy')}
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded-t-pf-sm -mb-px border-b-2 ${
+              activeTab === 'accuracy'
+                ? 'border-pf-cyan-500 text-pf-cyan-500'
+                : 'border-transparent text-pf-text-secondary hover:text-pf-text'
+            }`}
+          >
+            <Target size={14} aria-hidden="true" />
+            Accuracy
+          </button>
+        </div>
+
+        {/* Accuracy Tab */}
+        {activeTab === 'accuracy' && (
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
+            {accuracyLoading ? (
+              <div className="animate-pulse space-y-4" role="status" aria-label="Loading accuracy data">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-pf-base rounded" />)}
+                </div>
+              </div>
+            ) : accuracy && accuracy.totalPredictions === 0 ? (
+              <div className="text-center py-10">
+                <Target className="mx-auto mb-3 text-pf-text-tertiary opacity-40" size={36} aria-hidden="true" />
+                <p className="text-pf-text-secondary font-medium">No resolved predictions yet</p>
+                <p className="text-pf-text-tertiary text-xs mt-1">Accuracy stats will appear once predictions resolve.</p>
+              </div>
+            ) : accuracy ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="bg-pf-base border border-pf-border rounded-pf-sm p-3">
+                    <div className="text-pf-text-tertiary text-xs mb-1">Brier Score</div>
+                    <div className="text-2xl font-bold text-pf-text">
+                      {accuracy.brierScore !== null ? accuracy.brierScore.toFixed(3) : 'N/A'}
+                    </div>
+                  </div>
+                  <div className="bg-pf-base border border-pf-border rounded-pf-sm p-3">
+                    <div className="text-pf-text-tertiary text-xs mb-1">Win Rate</div>
+                    <div className="text-2xl font-bold text-pf-success">{accuracy.winRate}</div>
+                  </div>
+                  <div className="bg-pf-base border border-pf-border rounded-pf-sm p-3">
+                    <div className="text-pf-text-tertiary text-xs mb-1">Total Predictions</div>
+                    <div className="text-2xl font-bold text-pf-text">{accuracy.totalPredictions.toLocaleString()}</div>
+                  </div>
+                  <div className="bg-pf-base border border-pf-border rounded-pf-sm p-3">
+                    <div className="text-pf-text-tertiary text-xs mb-1">Correct</div>
+                    <div className="text-2xl font-bold text-pf-text">{accuracy.correctPredictions.toLocaleString()}</div>
+                  </div>
+                </div>
+
+                {Array.isArray(accuracy.calibration) && accuracy.calibration.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-pf-text-tertiary uppercase tracking-wider mb-2">
+                      Calibration
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <caption className="sr-only">Calibration buckets</caption>
+                        <thead>
+                          <tr className="border-b border-pf-border">
+                            <th scope="col" className="text-left px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase">Bucket</th>
+                            <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase">Frequency</th>
+                            <th scope="col" className="text-right px-3 py-2 text-xs font-medium text-pf-text-tertiary uppercase">Count</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {accuracy.calibration.map((row, i) => (
+                            <tr key={i} className="border-b border-pf-border last:border-0">
+                              <td className="px-3 py-2 text-pf-text font-mono">{row.bucket}</td>
+                              <td className="px-3 py-2 text-right text-pf-text-secondary">{row.frequency}</td>
+                              <td className="px-3 py-2 text-right text-pf-text-secondary">{row.count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <Target className="mx-auto mb-3 text-pf-text-tertiary opacity-40" size={36} aria-hidden="true" />
+                <p className="text-pf-text-secondary font-medium">No resolved predictions yet</p>
+                <p className="text-pf-text-tertiary text-xs mt-1">Accuracy stats will appear once predictions resolve.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* API Keys */}
+      {activeTab === 'overview' && (
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
         <div className="flex items-center gap-2 mb-4">
           <Key size={16} className="text-pf-cyan-500" aria-hidden="true" />
@@ -342,6 +489,7 @@ export function Component() {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }
