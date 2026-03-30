@@ -420,7 +420,7 @@ class PortfolioReview:
 class MarketSentiment:
     market_id: str = ""
     score: float = 0.0
-    label: str = ""  # 'BULLISH' | 'BEARISH' | 'NEUTRAL'
+    direction: str = ""  # 'BULLISH' | 'BEARISH' | 'NEUTRAL'
     signal_count: int = 0
     last_updated: Optional[str] = None
 
