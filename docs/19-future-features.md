@@ -41,7 +41,7 @@ Analytics and guardrails that make every user trade more safely — using their 
 ### Scope
 
 - **Kelly Criterion Position Sizer** — user inputs their confidence level; Polyforge calculates optimal position size based on current portfolio balance and Kelly formula; displayed as a suggestion before order placement
-- **Portfolio-Level Drawdown Circuit Breaker** — single global setting: if total portfolio value drops X% in Y hours, automatically pause all running strategies; the most impactful single risk feature possible
+- **Portfolio-Level Drawdown Circuit Breaker** ✅ *Shipped v6.10.0* — single global setting: if total portfolio value drops X% in Y hours, automatically pause all running strategies; configurable lookback (1h–7d), threshold slider (1–50%), Settings → Risk tab + Portfolio alert banner
 - **Correlation Heat Map** — visual breakdown of capital exposure by market topic/category (elections, crypto, sports, macro); flag over-concentration above a configurable threshold
 - **P&L Attribution** — break down realized and unrealized P&L by market, strategy, category, and time period; answer "which bets made money and why"
 - **Resolution Calendar** — markets expiring within 7/30/90 days sorted by price uncertainty (closest to 0.50); surface high-value opportunities for traders who believe the market is mispriced

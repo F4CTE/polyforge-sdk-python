@@ -5,6 +5,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.10.0] — 2026-03-30
+
+### Added
+- **Drawdown Circuit Breaker** — automatic strategy protection that pauses all running/paper strategies when portfolio drawdown exceeds a configurable threshold within a lookback window
+  - `DrawdownCircuitBreakerService` — `@Interval(60s)` polls opted-in users, computes PnL delta from `pnl_snapshots`, pauses strategies via atomic `updateMany`, publishes `CIRCUIT_BREAKER_TRIGGERED` to `stream:events`
+  - New Prisma fields on `UserLimit`: `drawdownEnabled`, `drawdownLookbackHours` (1–168h), `drawdownThresholdPct` (1–99%), `circuitBreakerTripped`, `circuitBreakerTrippedAt`
+  - Settings API: `GET /api/v1/settings/risk`, `PATCH /api/v1/settings/risk`, `POST /api/v1/settings/risk/reset`
+  - Notification: `CIRCUIT_BREAKER_TRIGGERED` event dispatched via `onDailyLossLimit` preference with dedicated template message
+  - Settings UI: new **Risk** tab with enable toggle, lookback window selector (1h / 4h / 8h / 24h / 7d), loss threshold slider (1–50%), and tripped-state reset button
+  - Portfolio page: red `ShieldAlert` banner when circuit breaker is active, linking to Settings → Risk for reset
+
+---
+
+## [6.9.0] — 2026-03-30
+
+### Fixed
+- **Session expiry bug** — users were being logged out after ~10 minutes despite a 7-day refresh token TTL; root cause: `POST /auth/v1/refresh` rotated the refresh token in Redis but only set the new access-token cookie — the browser's `pf_refresh` cookie pointed to a deleted key; fix: also call `reply.setCookie(REFRESH_COOKIE, result.refreshToken, ...)` after every successful refresh
+
+### Added
+- **Wireable safety block fields** — the Stop on Daily Loss (`maxLossUsdc`) and Max Position Size (`maxPositionUsdc`) fields in safety blocks can now accept live data connections from Variable and Calc nodes; per-field `<Handle>` targets positioned on the left edge; connected state renders a purple `Link2` chip with the source node label instead of the static input
+- **`wireable` field attribute** added to `BlockField` interface in `block-definitions.ts`
+
+---
+
 ## [6.8.0] — 2026-03-29
 
 ### Added
