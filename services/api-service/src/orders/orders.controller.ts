@@ -7,10 +7,13 @@ import {
   Body,
   Param,
   Req,
+  Res,
   UseGuards,
   HttpCode,
   HttpStatus,
 } from "@nestjs/common";
+import type { FastifyReply } from "fastify";
+type Response = FastifyReply;
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
@@ -30,6 +33,10 @@ class OrderQueryDto extends PaginationDto {
   @IsOptional()
   @IsString()
   strategyId?: string;
+
+  @IsOptional()
+  @IsString()
+  marketId?: string;
 
   @IsOptional()
   @IsString()
@@ -122,5 +129,15 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard)
   async cancelOrder(@Req() req: { user: { sub: string } }, @Param('id') id: string) {
     return this.orders.cancelOrder(req.user.sub, id);
+  }
+
+  @Get('export/csv')
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('READ')
+  async exportCsv(@CurrentUser() user: any, @Res() res: Response) {
+    const csv = await this.orders.exportCsv(user.sub);
+    res.header('Content-Type', 'text/csv');
+    res.header('Content-Disposition', 'attachment; filename="orders.csv"');
+    res.send(csv);
   }
 }

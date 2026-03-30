@@ -1,4 +1,6 @@
-import { Controller, Get, Query, UseGuards } from "@nestjs/common";
+import { Controller, Get, Query, Res, UseGuards } from "@nestjs/common";
+import type { FastifyReply } from "fastify";
+type Response = FastifyReply;
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { IsOptional, IsIn, IsString } from "class-validator";
@@ -33,5 +35,13 @@ export class PortfolioController {
       query.period ?? "30d",
       query.strategyId,
     );
+  }
+
+  @Get('export/csv')
+  async exportCsv(@CurrentUser() user: any, @Res() res: Response) {
+    const csv = await this.portfolio.exportCsv(user.sub);
+    res.header('Content-Type', 'text/csv');
+    res.header('Content-Disposition', 'attachment; filename="portfolio.csv"');
+    res.send(csv);
   }
 }

@@ -24,6 +24,7 @@ interface Order {
   filledAt?: string;
   marketQuestion?: string;
   marketId?: string;
+  marketCategory?: string | null;
 }
 
 interface OrdersResponse {
@@ -99,6 +100,24 @@ const CONDITIONAL_STATUS_STYLES: Record<ConditionalOrderStatus, { text: string; 
   EXPIRED:   { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
   FAILED:    { text: 'text-pf-danger', bg: 'bg-pf-danger/10' },
 };
+
+function CategoryBadge({ category }: { category?: string | null }) {
+  if (!category) return null;
+  const colors: Record<string, string> = {
+    crypto: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+    politics: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+    sports: 'bg-green-500/15 text-green-400 border-green-500/30',
+    entertainment: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+    science: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
+  };
+  const key = category.toLowerCase();
+  const cls = colors[key] ?? 'bg-pf-surface text-pf-text-muted border-pf-border';
+  return (
+    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${cls}`}>
+      {category}
+    </span>
+  );
+}
 
 function fillRatio(order: Order): string {
   const total = parseFloat(order.size);
@@ -344,6 +363,13 @@ export function Component() {
     if (viewTab === 'conditional') loadConditional(condPage);
   }, [condPage, loadConditional, viewTab]);
 
+  const exportCsv = () => {
+    const link = document.createElement('a');
+    link.href = '/api/v1/orders/export/csv';
+    link.download = 'orders.csv';
+    link.click();
+  };
+
   function changeFilter(f: FilterStatus) {
     setFilter(f);
     setPage(1);
@@ -379,7 +405,19 @@ export function Component() {
               <Plus className="size-3" /> New Conditional
             </button>
           )}
-          {!loading && viewTab === 'orders' && <span className="text-sm text-pf-text-muted">{total} orders</span>}
+          {!loading && viewTab === 'orders' && (
+            <>
+              <span className="text-sm text-pf-text-muted">{total} orders</span>
+              <button
+                type="button"
+                onClick={exportCsv}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export CSV
+              </button>
+            </>
+          )}
           {!condLoading && viewTab === 'conditional' && <span className="text-sm text-pf-text-muted">{condTotal} conditional</span>}
         </div>
       </div>
@@ -487,6 +525,7 @@ export function Component() {
                             <span className="text-pf-text text-xs line-clamp-1" title={order.marketQuestion ?? order.marketId ?? ''}>
                               {order.marketQuestion || (order.marketId?.slice(0, 12)) || '—'}
                             </span>
+                            <CategoryBadge category={order.marketCategory} />
                           </td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${

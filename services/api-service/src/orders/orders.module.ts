@@ -5,10 +5,12 @@ import { OrdersController } from "./orders.controller";
 import { OrdersService } from "./orders.service";
 import { ConditionalController } from "./conditional.controller";
 import { ConditionalEvaluatorService } from "./conditional-evaluator.service";
+import { SmartOrderController } from "./smart-order.controller";
+import { SmartOrderService } from "./smart-order.service";
 
 @Module({
   imports: [ScheduleModule.forRoot(), JwtModule.register({})],
-  controllers: [OrdersController, ConditionalController],
-  providers: [OrdersService, ConditionalEvaluatorService],
+  controllers: [OrdersController, ConditionalController, SmartOrderController],
+  providers: [OrdersService, ConditionalEvaluatorService, SmartOrderService],
 })
 export class OrdersModule {}

@@ -22,6 +22,7 @@ import { randomUUID } from "crypto";
 export interface OrderQueryDto extends PaginationDto {
   status?: string;
   strategyId?: string;
+  marketId?: string;
   from?: string;
   to?: string;
 }
@@ -39,12 +40,16 @@ export class OrdersService {
     userId: string,
     query: OrderQueryDto,
   ): Promise<PaginatedResponse<any>> {
-    const { page, limit, status, strategyId, from, to } = query;
+    const { page, limit, status, strategyId, marketId, from, to } = query;
     const skip = (page - 1) * limit;
 
     const where: any = { userId };
-    if (status) where.status = status;
+    if (status) {
+      const statuses = status.split(',').map((s) => s.trim()).filter(Boolean);
+      where.status = statuses.length === 1 ? statuses[0] : { in: statuses };
+    }
     if (strategyId) where.strategyId = strategyId;
+    if (marketId) where.marketId = marketId;
     if (from || to) {
       where.createdAt = {};
       if (from) where.createdAt.gte = new Date(from);
@@ -66,13 +71,14 @@ export class OrdersService {
     const markets = marketIds.length > 0
       ? await this.prisma.market.findMany({
           where: { id: { in: marketIds } },
-          select: { id: true, title: true },
+          select: { id: true, title: true, category: true },
         })
       : [];
-    const titleMap = new Map(markets.map((m) => [m.id, m.title]));
+    const marketMap = new Map(markets.map((m) => [m.id, m]));
     const enriched = orders.map((o) => ({
       ...o,
-      marketQuestion: titleMap.get(o.marketId) ?? null,
+      marketQuestion: marketMap.get(o.marketId)?.title ?? null,
+      marketCategory: marketMap.get(o.marketId)?.category ?? null,
     }));
 
     return paginate(enriched, total, page, limit);
@@ -351,6 +357,29 @@ export class OrdersService {
     });
 
     return { orderId: order.id, intentId, status: 'PENDING' };
+  }
+
+  async exportCsv(userId: string): Promise<string> {
+    const orders = await this.prisma.order.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const header = 'Market ID,Side,Outcome,Size,Price,Type,Status,Fill Price,Date\n';
+    const rows = orders.map(o =>
+      [
+        `"${o.marketId}"`,
+        o.side,
+        o.outcome ?? '',
+        o.size?.toString() ?? '',
+        o.price?.toString() ?? '',
+        o.orderType,
+        o.status,
+        o.fillPrice?.toString() ?? '',
+        o.createdAt.toISOString(),
+      ].join(',')
+    );
+    return header + rows.join('\n');
   }
 
   async cancelOrder(userId: string, orderId: string) {

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { StrategyStatus } from ".prisma/client";
+import { LlmService } from "../news/llm.service";
 
 export interface QueryResult {
   query: string;
@@ -21,7 +22,10 @@ export class AiService {
   private readonly logger = new Logger(AiService.name);
   private readonly patterns: QueryPattern[];
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly llm: LlmService,
+  ) {
     this.patterns = [
       {
         pattern: /running|active/i,
@@ -243,6 +247,62 @@ export class AiService {
       data: null,
       summary:
         "I didn't understand that query. Try asking about: strategies, portfolio, orders, whale trades, news signals, scores, alerts, copy trading, or markets.",
+    };
+  }
+
+  async portfolioReview(userId: string): Promise<any> {
+    const [positions, orders] = await Promise.all([
+      this.prisma.position.findMany({
+        where: { userId, resolutionStatus: 'UNRESOLVED' as any },
+        take: 20,
+      }),
+      this.prisma.order.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        select: { side: true, outcome: true, price: true, status: true, marketId: true },
+      }),
+    ]);
+
+    const totalUnrealized = positions.reduce((s, p) => s + parseFloat(String(p.unrealizedPnl ?? 0)), 0);
+    const totalRealized = positions.reduce((s, p) => s + parseFloat(String(p.realizedPnl ?? 0)), 0);
+
+    const positionSummary = positions.slice(0, 10).map((p) =>
+      `${p.outcome} in market ${p.marketId}: size=${p.size}, avgPrice=${p.avgPrice}, unrealizedPnl=${p.unrealizedPnl}`,
+    ).join('\n');
+
+    const orderSummary = orders.map((o) =>
+      `${o.side} ${o.outcome ?? ''} at $${o.price} (${o.status})`,
+    ).join(', ');
+
+    const prompt = `You are a prediction market portfolio advisor. Analyze this trader's portfolio and provide concise, actionable insights.
+
+Portfolio:
+- Open positions: ${positions.length}
+- Unrealized P&L: $${totalUnrealized.toFixed(2)}
+- Realized P&L: $${totalRealized.toFixed(2)}
+- Recent orders: ${orderSummary || 'none'}
+
+Positions:
+${positionSummary || 'No open positions'}
+
+Return ONLY a JSON object with this structure (no markdown, no explanation):
+{"summary":"2-3 sentence overview","riskLevel":"low|medium|high","suggestions":[{"type":"rebalance|hedge|reduce|opportunity","priority":"high|medium|low","description":"actionable suggestion"}]}`;
+
+    let parsed: any = null;
+    try {
+      const raw = await this.llm.analyze(prompt);
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) parsed = JSON.parse(match[0]);
+    } catch {
+      // fall through to fallback
+    }
+
+    return {
+      summary: parsed?.summary ?? `You have ${positions.length} open positions. Unrealized P&L: $${totalUnrealized.toFixed(2)}.`,
+      riskLevel: parsed?.riskLevel ?? (positions.length > 5 ? 'high' : positions.length > 2 ? 'medium' : 'low'),
+      suggestions: parsed?.suggestions ?? [],
+      generatedAt: new Date().toISOString(),
     };
   }
 }

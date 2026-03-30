@@ -224,6 +224,10 @@ model User {
   traderScore          TraderScore?
   badges               TraderBadge[]
   webhooks             Webhook[]
+  smartOrders          SmartOrder[]
+  marketplaceListings  MarketplaceListing[]    @relation("SellerListings")
+  marketplacePurchases MarketplacePurchase[]   @relation("BuyerPurchases")
+  watchlistItems       WatchlistItem[]
 
   @@map("users")
 }
@@ -439,13 +443,14 @@ model Strategy {
   forks         Strategy[]              @relation("Forks")
   orders        Order[]
   paperOrders   PaperOrder[]
-  backtestRuns  BacktestRun[]
-  likes         StrategyLike[]
-  comments      StrategyComment[]
-  versions      StrategyVersion[]
-  statusHistory StrategyStatusHistory[]
-  events        StrategyEvent[]
-  reports       Report[]
+  backtestRuns       BacktestRun[]
+  likes              StrategyLike[]
+  comments           StrategyComment[]
+  versions           StrategyVersion[]
+  statusHistory      StrategyStatusHistory[]
+  events             StrategyEvent[]
+  reports            Report[]
+  marketplaceListing MarketplaceListing?
 
   @@index([userId])
   @@index([status])
@@ -549,6 +554,7 @@ model Order {
   clobStatus   String?      @db.VarChar(20)
   userId       String
   strategyId   String?
+  smartOrderId String?
   marketId     String       @db.VarChar(255)
   tokenId      String       @db.VarChar(255)
   side         OrderSide
@@ -565,15 +571,67 @@ model Order {
   filledAt     DateTime?
   createdAt    DateTime     @default(now())
 
-  user     User      @relation(fields: [userId],     references: [id], onDelete: Cascade)
-  strategy Strategy? @relation(fields: [strategyId], references: [id], onDelete: SetNull)
+  user       User        @relation(fields: [userId],       references: [id], onDelete: Cascade)
+  strategy   Strategy?   @relation(fields: [strategyId],   references: [id], onDelete: SetNull)
+  smartOrder SmartOrder? @relation(fields: [smartOrderId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([userId, status])
   @@index([strategyId])
+  @@index([smartOrderId])
   @@index([tokenId])
   @@index([createdAt])
   @@map("orders")
+}
+
+// ─── Smart Order Execution ────────────────────────────────────────────────────
+
+enum SmartOrderType {
+  TWAP    // Time-Weighted Average Price — split into N equal slices over T minutes
+  DCA     // Dollar-Cost Averaging — recurring buy every X minutes
+  BRACKET // Entry + take-profit + stop-loss linked bundle
+  OCO     // One-Cancels-Other — two orders; filling one cancels the other
+}
+
+enum SmartOrderStatus {
+  PENDING    // Created, not yet started
+  ACTIVE     // Executing slices / waiting for triggers
+  COMPLETED  // All legs filled or goal reached
+  CANCELLED  // User cancelled or one OCO leg cancelled the other
+  FAILED     // Unrecoverable execution error
+}
+
+model SmartOrder {
+  id        String           @id @default(uuid())
+  userId    String
+  type      SmartOrderType
+  status    SmartOrderStatus @default(PENDING)
+  marketId  String           @db.VarChar(255)
+  tokenId   String           @db.VarChar(255)
+  outcome   OrderOutcome
+  side      OrderSide
+  // Total size in USDC (for TWAP/DCA) or per-leg size (for BRACKET/OCO)
+  totalSize Decimal          @db.Decimal(20, 6)
+  // Type-specific config stored as JSON
+  config    Json
+  // Progress tracking
+  slicesFilled  Int     @default(0)
+  slicesTotal   Int     @default(1)
+  totalFilled   Decimal @default(0) @db.Decimal(20, 6)
+  avgFillPrice  Decimal @default(0) @db.Decimal(10, 6)
+  // Schedule
+  nextExecuteAt DateTime?
+  completedAt   DateTime?
+  errorMessage  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@index([userId, status])
+  @@index([nextExecuteAt])
+  @@map("smart_orders")
 }
 
 model Position {
@@ -747,6 +805,7 @@ model Market {
   whaleAlerts       WhaleAlert[]
   conditionalOrders ConditionalOrder[]
   newsSignals       NewsSignal[]
+  watchlistItems    WatchlistItem[]
 
   @@index([category])
   @@index([closed])
@@ -1130,4 +1189,78 @@ model Webhook {
 
   @@index([userId])
   @@map("webhooks")
+}
+
+// ─── Strategy Marketplace ─────────────────────────────────────────────────────
+
+enum ListingStatus {
+  DRAFT      // Not yet visible to buyers
+  ACTIVE     // Listed and purchaseable
+  PAUSED     // Temporarily hidden by creator
+  DELISTED   // Permanently removed
+}
+
+model MarketplaceListing {
+  id          String        @id @default(uuid())
+  strategyId  String        @unique
+  sellerId    String
+  title       String        @db.VarChar(255)
+  description String?
+  priceUsdc   Decimal       @db.Decimal(20, 6)
+  status      ListingStatus @default(DRAFT)
+  forkCount   Int           @default(0)
+  // Platform takes a fee on each sale (default 20%)
+  platformFeePct Decimal    @default(0.20) @db.Decimal(5, 4)
+  tags        String[]
+  // Aggregate stats
+  purchaseCount Int         @default(0)
+  totalRevenue  Decimal     @default(0) @db.Decimal(20, 6)
+  avgRating     Decimal?    @db.Decimal(3, 2)
+  ratingCount   Int         @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  strategy  Strategy             @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+  seller    User                 @relation("SellerListings", fields: [sellerId], references: [id], onDelete: Cascade)
+  purchases MarketplacePurchase[]
+
+  @@index([sellerId, status])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("marketplace_listings")
+}
+
+model MarketplacePurchase {
+  id          String   @id @default(uuid())
+  listingId   String
+  buyerId     String
+  // The forked strategy the buyer received
+  forkedStrategyId String?
+  priceUsdc   Decimal  @db.Decimal(20, 6)
+  platformFee Decimal  @db.Decimal(20, 6)
+  sellerNet   Decimal  @db.Decimal(20, 6)
+  rating      Int?     // 1–5 stars, set after purchase
+  review      String?
+  createdAt   DateTime @default(now())
+
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer   User               @relation("BuyerPurchases", fields: [buyerId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, buyerId]) // one purchase per buyer per listing
+  @@index([buyerId])
+  @@index([listingId])
+  @@map("marketplace_purchases")
+}
+
+model WatchlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  marketId  String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId],   references: [id], onDelete: Cascade)
+  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, marketId])
+  @@index([userId])
+  @@map("watchlist_items")
 }

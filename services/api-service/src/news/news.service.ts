@@ -82,6 +82,50 @@ export class NewsService {
 
   // ─── Signals ──────────────────────────────────────────────────────────────
 
+  async getMarketSentiment(marketId: string): Promise<any> {
+    const since = new Date(Date.now() - 7 * 86400_000);
+    const signals = await this.prisma.newsSignal.findMany({
+      where: {
+        marketId,
+        createdAt: { gte: since },
+      },
+      select: { direction: true, confidence: true, createdAt: true },
+    });
+
+    if (signals.length === 0) {
+      return {
+        marketId,
+        score: 0,
+        direction: 'NEUTRAL',
+        signalCount: 0,
+        avgConfidence: 0,
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
+    let bullishWeight = 0;
+    let bearishWeight = 0;
+    let totalConf = 0;
+
+    for (const s of signals) {
+      totalConf += s.confidence;
+      if (s.direction === 'BUY') bullishWeight += s.confidence;
+      else bearishWeight += s.confidence;
+    }
+
+    const score = totalConf > 0 ? Math.round(((bullishWeight - bearishWeight) / totalConf) * 100) : 0;
+    const direction = score > 20 ? 'BULLISH' : score < -20 ? 'BEARISH' : 'NEUTRAL';
+
+    return {
+      marketId,
+      score,
+      direction,
+      signalCount: signals.length,
+      avgConfidence: Math.round(totalConf / signals.length),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
   async getSignals(query: NewsSignalQueryDto) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;

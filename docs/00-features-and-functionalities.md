@@ -25,6 +25,15 @@
 16. [Platform Infrastructure](#16-platform-infrastructure)
 17. [Support Ticket System](#17-support-ticket-system)
 18. [Advanced Strategy Builder (v3.2+)](#18-advanced-strategy-builder-v32)
+19. [Smart Score & Badges](#19-smart-score--badges)
+20. [Gas Sponsorship](#20-gas-sponsorship)
+21. [Educational Onboarding](#21-educational-onboarding)
+22. [WhatsApp Bot](#22-whatsapp-bot)
+23. [Geoblocking](#23-geoblocking)
+24. [Prediction Accuracy & Calibration](#24-prediction-accuracy--calibration-v6150)
+25. [AI Portfolio Optimizer](#25-ai-portfolio-optimizer-v6150)
+26. [Sentiment Intelligence](#26-sentiment-intelligence-v6150)
+27. [LP / Market Making](#27-lp--market-making-v6150)
 
 ---
 
@@ -792,6 +801,39 @@ Allows strategies to invoke other strategies, enabling modular strategy design.
 - Nginx GeoIP2 module with MaxMind GeoLite2 database
 - Blocks access from US and restricted regions at the reverse proxy level
 - Country-based IP filtering applied before requests reach application services
+
+---
+
+## 24. Prediction Accuracy & Calibration *(v6.15.0)*
+
+- `GET /api/v1/accuracy/me` — computes Brier score, win rate, calibration curve, and per-category breakdown on-the-fly from the user's resolved and redeemed positions
+- Brier score ranges 0–1 (lower is better); calibration buckets divide the 0–1 probability range into 10% intervals and show actual outcome frequency vs. predicted probability
+- Requires JWT; READ scope
+
+---
+
+## 25. AI Portfolio Optimizer *(v6.15.0)*
+
+- `GET /api/v1/ai/portfolio-review` — returns an AI-written portfolio analysis (`review`), a list of actionable `suggestions`, and a quality `score` (1–10)
+- Powered by LlmService (Claude API); graceful pattern-based fallback if LLM is unavailable
+- Requires JWT; READ scope
+
+---
+
+## 26. Sentiment Intelligence *(v6.15.0)*
+
+- `GET /api/v1/news/sentiment/:marketId` — aggregates the last 7 days of NewsSignal records for a market into a composite sentiment score (-100 to +100) and a label (`BULLISH` | `BEARISH` | `NEUTRAL`)
+- BUY signals contribute positive weight; SELL signals contribute negative weight
+- Requires JWT; READ scope
+
+---
+
+## 27. LP / Market Making *(v6.15.0)*
+
+- `POST /api/v1/lp/provide` — places two-sided quotes on a market: BUY at `midPrice - spread/2`, SELL at `midPrice + spread/2`
+- Body: `{ tokenId, spread, size }`; response includes both order IDs, computed prices, and size
+- Publishes intents to the Redis order stream and creates pending Order records
+- Requires JWT; TRADE scope
 
 ---
 

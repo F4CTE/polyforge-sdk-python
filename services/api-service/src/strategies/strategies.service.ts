@@ -841,6 +841,36 @@ export class StrategiesService {
     } as CreateStrategyDto);
   }
 
+  async listVersions(strategyId: string, userId: string) {
+    // Verify ownership
+    const strategy = await this.prisma.strategy.findFirst({ where: { id: strategyId, userId } });
+    if (!strategy) throw new ForbiddenException('Strategy not found');
+    return this.prisma.strategyVersion.findMany({
+      where: { strategyId },
+      orderBy: { version: 'desc' },
+    });
+  }
+
+  async rollbackToVersion(strategyId: string, versionId: string, userId: string) {
+    const strategy = await this.prisma.strategy.findFirst({ where: { id: strategyId, userId } });
+    if (!strategy) throw new ForbiddenException('Strategy not found');
+    const version = await this.prisma.strategyVersion.findFirst({
+      where: { id: versionId, strategyId },
+    });
+    if (!version) throw new ForbiddenException('Version not found');
+    // Apply version to strategy
+    await this.prisma.strategy.update({
+      where: { id: strategyId },
+      data: {
+        triggers: version.triggers as any,
+        conditions: version.conditions as any,
+        actions: version.actions as any,
+        safety: version.safety as any,
+      },
+    });
+    return { message: 'Rolled back successfully', version: version.version };
+  }
+
   private async getOwned(id: string, userId: string): Promise<Strategy> {
     const strategy = await this.prisma.strategy.findUnique({ where: { id } });
     if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {

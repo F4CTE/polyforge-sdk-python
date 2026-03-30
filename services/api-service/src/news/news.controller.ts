@@ -27,6 +27,11 @@ export class NewsController {
     return this.news.getSignals(query);
   }
 
+  @Get("sentiment/:marketId")
+  getMarketSentiment(@Param("marketId") marketId: string) {
+    return this.news.getMarketSentiment(marketId);
+  }
+
   @Get(":id")
   getArticleById(@Param("id") id: string) {
     return this.news.getArticleById(id);

@@ -1,0 +1,180 @@
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
+import { Sparkles, RefreshCw } from 'lucide-react';
+
+/* ─── Types ──────────────────────────────────────────────────────────── */
+
+interface PortfolioReview {
+  review: string;
+  suggestions: string[];
+  score: number;
+  generatedAt: string;
+}
+
+/* ─── Helpers ────────────────────────────────────────────────────────── */
+
+function scorePillClass(score: number): string {
+  if (score > 7) return 'bg-pf-success/15 text-pf-success border border-pf-success/30';
+  if (score >= 4) return 'bg-pf-warning/15 text-pf-warning border border-pf-warning/30';
+  return 'bg-pf-danger/15 text-pf-danger border border-pf-danger/30';
+}
+
+function formatGeneratedAt(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return iso;
+  }
+}
+
+/* ─── Loading Skeleton ───────────────────────────────────────────────── */
+
+function ReviewSkeleton() {
+  return (
+    <div className="animate-fade-in space-y-6">
+      {/* Score skeleton */}
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="h-4 bg-pf-overlay rounded w-28 animate-pulse" />
+          <div className="h-7 bg-pf-overlay rounded-full w-16 animate-pulse" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-3 bg-pf-overlay rounded w-full animate-pulse" />
+          <div className="h-3 bg-pf-overlay rounded w-[90%] animate-pulse" />
+          <div className="h-3 bg-pf-overlay rounded w-[75%] animate-pulse" />
+          <div className="h-3 bg-pf-overlay rounded w-[80%] animate-pulse" />
+        </div>
+      </div>
+      {/* Suggestions skeleton */}
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-2">
+        <div className="h-4 bg-pf-overlay rounded w-28 animate-pulse mb-4" />
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex items-start gap-2">
+            <div className="h-3 w-3 bg-pf-overlay rounded-full mt-0.5 shrink-0 animate-pulse" />
+            <div className="h-3 bg-pf-overlay rounded flex-1 animate-pulse" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Component ──────────────────────────────────────────────────────── */
+
+export function Component() {
+  const [data, setData] = useState<PortfolioReview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    const token = localStorage.getItem('access_token');
+    try {
+      const res = await fetch('/api/v1/ai/portfolio-review', {
+        credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error('Failed to load portfolio review');
+      const d: PortfolioReview = await res.json();
+      setData(d);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to load';
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  return (
+    <div className="animate-fade-in p-6 max-w-3xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Sparkles className="size-5 text-pf-text-muted" aria-hidden="true" />
+          <h1 className="text-2xl font-semibold text-pf-text">AI Portfolio Optimizer</h1>
+        </div>
+        <button
+          type="button"
+          onClick={load}
+          disabled={loading}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          aria-label="Refresh analysis"
+        >
+          <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+          Refresh Analysis
+        </button>
+      </div>
+
+      {loading && <ReviewSkeleton />}
+
+      {!loading && error && (
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-pf-elevated border border-pf-border rounded-pf-lg">
+          <Sparkles className="size-10 text-pf-text-muted mb-4 opacity-40" aria-hidden="true" />
+          <p className="text-pf-text font-medium">Failed to load review</p>
+          <p className="text-sm text-pf-text-muted mt-1">{error}</p>
+          <button
+            type="button"
+            onClick={load}
+            className="mt-4 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text hover:border-pf-border-strong transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {!loading && data && (
+        <>
+          {/* Review card */}
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h2 className="text-sm font-medium text-pf-text uppercase tracking-wide">Portfolio Review</h2>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-mono font-bold ${scorePillClass(data.score)}`}
+                  aria-label={`Score: ${data.score} out of 10`}
+                >
+                  {data.score}/10
+                </span>
+              </div>
+            </div>
+            <p className="text-sm text-pf-text-secondary leading-relaxed whitespace-pre-wrap">
+              {data.review}
+            </p>
+            {data.generatedAt && (
+              <p className="text-[11px] text-pf-text-muted pt-1 border-t border-pf-border-subtle">
+                Generated {formatGeneratedAt(data.generatedAt)}
+              </p>
+            )}
+          </div>
+
+          {/* Suggestions */}
+          {data.suggestions.length > 0 && (
+            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+              <h2 className="text-sm font-medium text-pf-text uppercase tracking-wide mb-4">Suggestions</h2>
+              <ul className="space-y-2.5" aria-label="Portfolio suggestions">
+                {data.suggestions.map((suggestion, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-pf-text-secondary">
+                    <span
+                      className="mt-1.5 size-1.5 rounded-full bg-pf-cyan-500 shrink-0"
+                      aria-hidden="true"
+                    />
+                    <span className="leading-relaxed">{suggestion}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}

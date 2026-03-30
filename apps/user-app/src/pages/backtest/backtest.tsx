@@ -210,6 +210,11 @@ export function Component() {
     setSubmitting(false);
   }
 
+  // Compare mode state
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareA, setCompareA] = useState<string | null>(null);
+  const [compareB, setCompareB] = useState<string | null>(null);
+
   function selectRun(run: BacktestRun) {
     setSelectedRun(prev => prev?.id === run.id ? null : run);
   }
@@ -391,6 +396,18 @@ export function Component() {
 
       {/* History table */}
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+        <div className="px-4 pt-4 pb-2">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-semibold text-pf-text">Backtest History</h2>
+            <button
+              type="button"
+              onClick={() => { setCompareMode(!compareMode); setCompareA(null); setCompareB(null); }}
+              className={`text-xs px-3 py-1.5 rounded-pf border transition-colors ${compareMode ? 'bg-pf-cyan-500/15 border-pf-cyan-500/30 text-pf-cyan-400' : 'border-pf-border text-pf-text-secondary hover:text-pf-text'}`}
+            >
+              {compareMode ? 'Exit Compare' : 'Compare Runs'}
+            </button>
+          </div>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Backtest history">
             <thead>
@@ -402,20 +419,21 @@ export function Component() {
                 <th scope="col" className="px-4 py-3 font-medium text-right">P&L</th>
                 <th scope="col" className="px-4 py-3 font-medium text-right">Win Rate</th>
                 <th scope="col" className="px-4 py-3 font-medium text-right">Created</th>
+                {compareMode && <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-pf-text-muted">Compare</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-pf-border-subtle">
               {loading ? (
                 Array.from({ length: 5 }, (_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 7 }, (_, j) => (
+                    {Array.from({ length: compareMode ? 8 : 7 }, (_, j) => (
                       <td key={j} className="px-4 py-3"><div className="h-3 bg-pf-overlay rounded animate-pulse" /></td>
                     ))}
                   </tr>
                 ))
               ) : runs.length === 0 ? (
                 <tr>
-                  <td colSpan={7}>
+                  <td colSpan={compareMode ? 8 : 7}>
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                       <History className="size-10 text-pf-text-muted mb-3" />
                       <p className="text-sm font-medium text-pf-text">No backtest runs yet</p>
@@ -475,6 +493,22 @@ export function Component() {
                       <td className="px-4 py-3 text-right">
                         <span className="font-mono text-[11px] text-pf-text-muted">{formatShortDate(run.createdAt)}</span>
                       </td>
+                      {compareMode && (
+                        <td className="px-3 py-2 text-right" onClick={e => e.stopPropagation()}>
+                          <div className="flex gap-1 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => setCompareA(run.id === compareA ? null : run.id)}
+                              className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${compareA === run.id ? 'bg-blue-500/20 border-blue-500/40 text-blue-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
+                            >A</button>
+                            <button
+                              type="button"
+                              onClick={() => setCompareB(run.id === compareB ? null : run.id)}
+                              className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${compareB === run.id ? 'bg-purple-500/20 border-purple-500/40 text-purple-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
+                            >B</button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   );
                 })
@@ -483,6 +517,58 @@ export function Component() {
           </table>
         </div>
       </div>
+
+      {/* Compare panel */}
+      {compareMode && compareA && compareB && (
+        <div className="mt-6 rounded-pf border border-pf-cyan-500/30 bg-pf-surface p-4">
+          <h3 className="text-sm font-semibold text-pf-text mb-4">Comparison</h3>
+          {(() => {
+            const runA = runs.find((r: BacktestRun) => r.id === compareA);
+            const runB = runs.find((r: BacktestRun) => r.id === compareB);
+            if (!runA || !runB) return null;
+            const pnlA = parseFloat(runA.totalPnl ?? '0');
+            const pnlB = parseFloat(runB.totalPnl ?? '0');
+            const winner = pnlA > pnlB ? 'A' : pnlA < pnlB ? 'B' : null;
+            const metrics = [
+              { label: 'Strategy', a: runA.strategyName ?? strategies.find(s => s.id === runA.strategyId)?.name ?? '-', b: runB.strategyName ?? strategies.find(s => s.id === runB.strategyId)?.name ?? '-', isNumeric: false },
+              { label: 'Date Range', a: dateRangeLabel(runA), b: dateRangeLabel(runB), isNumeric: false },
+              { label: 'P&L', a: pnlSign(runA.totalPnl), b: pnlSign(runB.totalPnl), isNumeric: true },
+              { label: 'Win Rate', a: winRatePct(runA.winRate), b: winRatePct(runB.winRate), isNumeric: false },
+              { label: 'Total Orders', a: runA.totalOrders?.toString() ?? '\u2014', b: runB.totalOrders?.toString() ?? '\u2014', isNumeric: false },
+              { label: 'Filled Orders', a: runA.filledOrders?.toString() ?? '\u2014', b: runB.filledOrders?.toString() ?? '\u2014', isNumeric: false },
+            ];
+            return (
+              <>
+                {winner && (
+                  <div className="mb-3 text-xs text-pf-text-secondary">
+                    Run <span className={`font-semibold ${winner === 'A' ? 'text-blue-400' : 'text-purple-400'}`}>{winner}</span> outperforms by <span className="font-mono text-pf-success">{Math.abs(pnlA - pnlB).toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-pf-border">
+                        <th className="text-left py-1.5 pr-4 font-medium text-pf-text-muted">Metric</th>
+                        <th className="text-center py-1.5 px-4 font-medium text-blue-400">Run A</th>
+                        <th className="text-center py-1.5 px-4 font-medium text-purple-400">Run B</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {metrics.map(m => (
+                        <tr key={m.label} className="border-b border-pf-border-subtle last:border-0">
+                          <td className="py-2 pr-4 text-pf-text-muted">{m.label}</td>
+                          <td className={`py-2 px-4 text-center font-mono ${m.isNumeric && pnlA > pnlB ? 'text-pf-success font-semibold' : 'text-pf-text'}`}>{m.a}</td>
+                          <td className={`py-2 px-4 text-center font-mono ${m.isNumeric && pnlB > pnlA ? 'text-pf-success font-semibold' : 'text-pf-text'}`}>{m.b}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (

@@ -2411,6 +2411,148 @@ Get a specific news article with full content and any associated trade signals.
 
 ---
 
+## API Service — Prediction Accuracy & Calibration (`/api/v1/accuracy`)
+
+### GET /api/v1/accuracy/me
+
+Get the authenticated user's prediction accuracy and calibration stats, computed on-the-fly from all resolved and redeemed positions.
+
+**Auth:** User JWT or API Key (READ scope)
+
+**Response `200`:**
+```json
+{
+  "brierScore": 0.18,
+  "totalPredictions": 142,
+  "correctPredictions": 97,
+  "winRate": 0.683,
+  "calibration": [
+    { "bucketMid": 0.05, "frequency": 0.04, "count": 12 },
+    { "bucketMid": 0.15, "frequency": 0.13, "count": 24 },
+    { "bucketMid": 0.25, "frequency": 0.22, "count": 18 }
+  ],
+  "byCategory": {
+    "crypto": { "count": 55, "brierScore": 0.14 },
+    "politics": { "count": 61, "brierScore": 0.21 },
+    "sports": { "count": 26, "brierScore": 0.19 }
+  }
+}
+```
+
+**Notes:**
+- `brierScore` ranges 0–1; lower is better
+- `calibration` divides the 0–1 probability range into 10% buckets; `frequency` is the actual outcome rate for predictions in that bucket
+- `byCategory` shows Brier score broken down by market category
+
+**Errors:** `401 UNAUTHORIZED`
+
+---
+
+## API Service — AI Portfolio Optimizer (`/api/v1/ai`)
+
+### GET /api/v1/ai/portfolio-review
+
+Get an AI-generated portfolio analysis with actionable suggestions and a quality score. Uses LlmService internally; falls back to a pattern-based review if the LLM is unavailable.
+
+**Auth:** User JWT or API Key (READ scope)
+
+**Response `200`:**
+```json
+{
+  "review": "Your portfolio shows strong conviction in crypto markets with 58% allocation...",
+  "suggestions": [
+    "Consider reducing crypto exposure ahead of upcoming volatility events",
+    "Your politics positions are well-diversified — no changes recommended",
+    "Three positions are within 5 days of resolution; review take-profit levels"
+  ],
+  "score": 7,
+  "generatedAt": "2026-03-30T12:00:00Z"
+}
+```
+
+**Notes:**
+- `score` is 1–10; higher is better
+- `generatedAt` is the UTC timestamp of generation
+- If the LLM is unavailable, `review` and `suggestions` are derived from rule-based pattern analysis; the response shape is identical
+
+**Errors:** `401 UNAUTHORIZED`
+
+---
+
+## API Service — Sentiment Intelligence (`/api/v1/news`)
+
+### GET /api/v1/news/sentiment/:marketId
+
+Get the aggregated sentiment score for a specific market, computed from the last 7 days of NewsSignal records.
+
+**Auth:** User JWT or API Key (READ scope)
+
+**Path param:** `marketId` — the Polymarket market ID
+
+**Response `200`:**
+```json
+{
+  "marketId": "mkt-abc",
+  "score": 42,
+  "label": "BULLISH",
+  "signalCount": 18,
+  "lastUpdated": "2026-03-30T11:45:00Z"
+}
+```
+
+**Notes:**
+- `score` ranges from -100 (maximally bearish) to +100 (maximally bullish)
+- `label` is `BULLISH` (score > 20), `BEARISH` (score < -20), or `NEUTRAL`
+- Score formula: `(bullish - bearish) / total * 100` where BUY signals are bullish and SELL signals are bearish
+- `signalCount` is the number of NewsSignal records used in the calculation
+
+**Errors:** `401 UNAUTHORIZED` · `404 NOT_FOUND` (no signals for the given market)
+
+---
+
+## API Service — LP / Market Making (`/api/v1/lp`)
+
+### POST /api/v1/lp/provide
+
+Place two-sided quotes on a market (BUY at mid minus half-spread, SELL at mid plus half-spread). Creates two pending Order records and publishes intents to the Redis order stream.
+
+**Auth:** User JWT or API Key (TRADE scope)
+
+**Request:**
+```json
+{
+  "tokenId": "tok-yes-abc",
+  "spread": 0.04,
+  "size": 200
+}
+```
+
+- `tokenId` — the YES or NO token to quote
+- `spread` — total spread as a decimal (e.g. `0.04` = 4 cents on a $1 token)
+- `size` — USDC size for each side of the quote
+
+**Response `201`:**
+```json
+{
+  "buyOrderId": "ord-buy-uuid",
+  "sellOrderId": "ord-sell-uuid",
+  "tokenId": "tok-yes-abc",
+  "buyPrice": 0.48,
+  "sellPrice": 0.52,
+  "size": 200
+}
+```
+
+**Notes:**
+- `buyPrice` = `midPrice - spread / 2`
+- `sellPrice` = `midPrice + spread / 2`
+- Mid price is sourced from the Redis price cache
+- Both orders follow the standard order lifecycle (`PENDING` → `SUBMITTED` → ...)
+
+**Errors:** `401 UNAUTHORIZED` · `422 NOT_CONNECTED` · `404 TOKEN_NOT_FOUND` · `429 RATE_LIMITED`
+
+---
+
 ## Common Error Codes
 
 | Code | Status | Meaning |
@@ -2697,6 +2839,320 @@ Create a strategy from a natural language description using the LLM service.
 **Response `201`:** Same as `POST /api/v1/strategies` — returns the created strategy object.
 
 **Errors:** `422 LLM_PARSE_ERROR` (LLM response was not valid JSON) · `422 LLM_INVALID_BLOCKS` (LLM generated unknown block types)
+
+---
+
+## Merge Arbitrage  (`/api/v1/arbitrage`)
+
+### GET /api/v1/arbitrage
+
+Scan all active prediction markets for merge arbitrage opportunities — situations where the combined cost of buying one YES share and one NO share is less than $1.00, guaranteeing a risk-free profit at resolution.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Query parameters:**
+
+| Param | Type | Description |
+|---|---|---|
+| `minMargin` | `number` | Minimum margin percentage to include (e.g. `2` = 2%). Default: any positive margin. |
+
+**Response `200`:**
+```json
+[
+  {
+    "marketId": "mkt-abc",
+    "marketTitle": "Will BTC exceed $100k by end of Q2?",
+    "category": "crypto",
+    "endDate": "2026-06-30T23:59:59Z",
+    "yesTokenId": "tok-yes-abc",
+    "noTokenId": "tok-no-abc",
+    "yesPrice": "0.47",
+    "noPrice": "0.49",
+    "sum": "0.96",
+    "marginPct": "4.17",
+    "costPerUnit": "0.96",
+    "profitPerUnit": "0.04"
+  }
+]
+```
+
+**Notes:**
+- Prices are sourced from the Redis price cache and may lag by up to 5 seconds
+- Only markets with both YES and NO token prices available are included
+- `marginPct` = `(1 - sum) / sum * 100`
+
+---
+
+## Smart Orders  (`/api/v1/orders/smart`)
+
+Advanced execution orders that split large trades across time or set conditional trigger logic.
+
+### POST /api/v1/orders/smart
+
+Place a smart order. Supported types:
+
+| Type | Description |
+|---|---|
+| `TWAP` | Time-Weighted Average Price — splits `totalSize` into `slices` equal parts executed every interval |
+| `DCA` | Dollar-Cost Averaging — recurring buy at fixed interval until cancelled or `maxSlices` reached |
+| `BRACKET` | Entry order + automatic Take Profit and Stop Loss legs placed simultaneously |
+| `OCO` | One-Cancels-Other — two conditional orders; when one fills, the other is automatically cancelled |
+
+**Auth:** JWT or API Key (TRADE scope)
+**Rate limit:** 10 requests / 60 s
+
+**Request (TWAP example):**
+```json
+{
+  "type": "TWAP",
+  "marketId": "mkt-abc",
+  "tokenId": "tok-yes-abc",
+  "outcome": "YES",
+  "side": "BUY",
+  "totalSize": "100",
+  "slices": 5,
+  "intervalSeconds": 300
+}
+```
+
+**Request (BRACKET example):**
+```json
+{
+  "type": "BRACKET",
+  "marketId": "mkt-abc",
+  "tokenId": "tok-yes-abc",
+  "outcome": "YES",
+  "side": "BUY",
+  "totalSize": "50",
+  "entryPrice": "0.45",
+  "takeProfitPrice": "0.65",
+  "stopLossPrice": "0.35"
+}
+```
+
+**Response `201`:**
+```json
+{
+  "smartOrderId": "so-uuid",
+  "type": "TWAP",
+  "status": "PENDING",
+  "slicesTotal": 5
+}
+```
+
+**Errors:** `400 INVALID_SMART_ORDER` · `403 POLYMARKET_NOT_CONNECTED` · `429 RATE_LIMITED`
+
+---
+
+### GET /api/v1/orders/smart
+
+List the authenticated user's smart orders with child order progress.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Response `200`:**
+```json
+[
+  {
+    "id": "so-uuid",
+    "type": "TWAP",
+    "status": "ACTIVE",
+    "marketId": "mkt-abc",
+    "tokenId": "tok-yes-abc",
+    "outcome": "YES",
+    "side": "BUY",
+    "totalSize": "100",
+    "slicesFilled": 2,
+    "slicesTotal": 5,
+    "nextExecuteAt": "2026-03-30T14:05:00Z",
+    "completedAt": null,
+    "createdAt": "2026-03-30T14:00:00Z",
+    "orders": [
+      {
+        "id": "ord-child-1",
+        "status": "FILLED",
+        "fillSize": "20",
+        "fillPrice": "0.46",
+        "createdAt": "2026-03-30T14:00:00Z"
+      }
+    ]
+  }
+]
+```
+
+---
+
+### DELETE /api/v1/orders/smart/:id
+
+Cancel a pending or active smart order. All pending child orders are also cancelled.
+
+**Auth:** JWT or API Key (TRADE scope)
+
+**Response `200`:**
+```json
+{ "cancelled": true }
+```
+
+**Errors:** `404 SMART_ORDER_NOT_FOUND` · `409 ALREADY_COMPLETED`
+
+---
+
+## Strategy Marketplace  (`/api/v1/marketplace`)
+
+### GET /api/v1/marketplace
+
+Browse published strategy listings.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Query parameters:**
+
+| Param | Type | Description |
+|---|---|---|
+| `sort` | `string` | Sort order: `popular` (default), `newest`, `top_rated`, `price_asc`, `price_desc` |
+| `tag` | `string` | Filter by tag (e.g. `momentum`, `arbitrage`) |
+| `limit` | `number` | Results per page. Default: 20, max: 100 |
+| `offset` | `number` | Pagination offset. Default: 0 |
+
+**Response `200`:**
+```json
+{
+  "items": [
+    {
+      "id": "lst-uuid",
+      "strategyId": "strat-uuid",
+      "sellerId": "user-uuid",
+      "title": "Delta-Neutral Arb Bot",
+      "description": "Exploits YES/NO price imbalances...",
+      "priceUsdc": "49.00",
+      "status": "PUBLISHED",
+      "purchaseCount": 12,
+      "forkCount": 12,
+      "avgRating": "4.3",
+      "ratingCount": 7,
+      "tags": ["arbitrage", "neutral"],
+      "createdAt": "2026-03-01T00:00:00Z"
+    }
+  ],
+  "total": 1,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+---
+
+### GET /api/v1/marketplace/my/listings
+
+List the authenticated user's own marketplace listings (all statuses).
+
+**Auth:** JWT or API Key (READ scope)
+
+**Response `200`:** Array of listing objects (same schema as browse).
+
+---
+
+### GET /api/v1/marketplace/my/purchases
+
+List strategies the authenticated user has purchased.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Response `200`:** Array of listing objects the user has purchased (includes their forked strategy reference).
+
+---
+
+### GET /api/v1/marketplace/:id
+
+Get a single marketplace listing by ID.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Response `200`:** Single listing object.
+
+**Errors:** `404 LISTING_NOT_FOUND`
+
+---
+
+### POST /api/v1/marketplace
+
+Create a new marketplace listing. The strategy must be owned by the authenticated user.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Request:**
+```json
+{
+  "strategyId": "strat-uuid",
+  "title": "Delta-Neutral Arb Bot",
+  "description": "Exploits YES/NO price imbalances for risk-free profit",
+  "priceUsdc": "49.00",
+  "tags": ["arbitrage", "neutral"]
+}
+```
+
+**Response `201`:** Created listing object with `status: "DRAFT"`.
+
+**Errors:** `404 STRATEGY_NOT_FOUND` · `403 NOT_STRATEGY_OWNER`
+
+---
+
+### PATCH /api/v1/marketplace/:id
+
+Update a listing's title, description, price, tags, or status. Only the listing owner can update.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Request** (all fields optional):
+```json
+{
+  "title": "Updated title",
+  "priceUsdc": "39.00",
+  "status": "PUBLISHED"
+}
+```
+
+**Response `200`:** Updated listing object.
+
+**Errors:** `404 LISTING_NOT_FOUND` · `403 NOT_LISTING_OWNER`
+
+---
+
+### POST /api/v1/marketplace/:id/purchase
+
+Purchase a published strategy listing. The buyer receives a private fork of the strategy added to their account. Cannot purchase your own listing or purchase the same listing twice.
+
+**Auth:** JWT or API Key (TRADE scope)
+
+**Response `201`:**
+```json
+{
+  "purchaseId": "pur-uuid",
+  "forkedStrategyId": "strat-forked-uuid",
+  "priceUsdc": 49.0,
+  "platformFee": 9.8,
+  "sellerNet": 39.2
+}
+```
+
+**Errors:** `404 LISTING_NOT_FOUND` · `409 ALREADY_PURCHASED` · `403 CANNOT_BUY_OWN_LISTING` · `400 LISTING_NOT_PUBLISHED`
+
+---
+
+### POST /api/v1/marketplace/:id/rate
+
+Submit a rating (1–5) for a purchased listing. One rating per buyer per listing.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Request:**
+```json
+{ "rating": 4 }
+```
+
+**Response `200`:** Updated listing object with recalculated `avgRating` and `ratingCount`.
+
+**Errors:** `404 LISTING_NOT_FOUND` · `403 NOT_PURCHASED` · `409 ALREADY_RATED`
 
 ---
 

@@ -77,6 +77,9 @@ export function Component() {
 
   // Step 3: Size
   const [sizeValue, setSizeValue] = useState<number>(10);
+  const [sizeMode, setSizeMode] = useState<'fixed' | 'percent'>('fixed');
+  const [sizePercent, setSizePercent] = useState(10);
+  const [maxPerTrade, setMaxPerTrade] = useState(500);
 
   // Step 4: Risk
   const [maxExposure, setMaxExposure] = useState<number>(1000);
@@ -142,6 +145,9 @@ export function Component() {
           targetWallet: targetWallet.trim(),
           mode,
           sizeValue: mode === 'MIRROR' ? 100 : sizeValue,
+          sizeMode: mode === 'MIRROR' ? 'fixed' : sizeMode,
+          sizePercent,
+          maxPerTrade,
           maxExposure,
           maxDailyLoss,
           priceOffset,
@@ -307,27 +313,84 @@ export function Component() {
               </p>
             ) : (
               <div className="space-y-3">
-                <input
-                  type="range"
-                  aria-label="Trade size"
-                  min={mode === 'PERCENTAGE' ? 1 : 1}
-                  max={mode === 'PERCENTAGE' ? 100 : 10000}
-                  step={mode === 'PERCENTAGE' ? 1 : 10}
-                  value={sizeValue}
-                  onChange={(e) => setSizeValue(Number(e.target.value))}
-                  className="w-full accent-[var(--color-pf-cyan-500)]"
-                />
-                <div className="flex items-center gap-3">
+                {/* Size mode toggle */}
+                <div className="flex rounded-pf border border-pf-border overflow-hidden w-fit mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setSizeMode('fixed')}
+                    className={`px-3 py-1.5 text-xs transition-colors ${sizeMode === 'fixed' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
+                  >
+                    Fixed $
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSizeMode('percent')}
+                    className={`px-3 py-1.5 text-xs border-l border-pf-border transition-colors ${sizeMode === 'percent' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
+                  >
+                    % of Whale
+                  </button>
+                </div>
+
+                {sizeMode === 'percent' ? (
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min="1"
+                        max="100"
+                        step="1"
+                        value={sizePercent}
+                        onChange={(e) => setSizePercent(parseInt(e.target.value))}
+                        className="flex-1 h-1.5 rounded-full bg-pf-border accent-pf-cyan-500"
+                      />
+                      <span className="text-sm font-mono text-pf-cyan-400 w-12 text-right">{sizePercent}%</span>
+                    </div>
+                    <p className="text-[10px] text-pf-text-muted mt-1">
+                      Copy {sizePercent}% of each whale trade size
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      type="range"
+                      aria-label="Trade size"
+                      min={mode === 'PERCENTAGE' ? 1 : 1}
+                      max={mode === 'PERCENTAGE' ? 100 : 10000}
+                      step={mode === 'PERCENTAGE' ? 1 : 10}
+                      value={sizeValue}
+                      onChange={(e) => setSizeValue(Number(e.target.value))}
+                      className="w-full accent-[var(--color-pf-cyan-500)]"
+                    />
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min={0}
+                        value={sizeValue}
+                        onChange={(e) => setSizeValue(Number(e.target.value))}
+                        className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus:border-pf-cyan-500/50 focus:outline-none font-mono"
+                      />
+                      <span className="text-sm text-pf-text-secondary">
+                        {mode === 'PERCENTAGE' ? '%' : 'USD'}
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {/* Max per trade cap — always visible */}
+                <div className="mt-3">
+                  <label className="block text-xs font-medium text-pf-text-secondary mb-1">
+                    Max per Trade (USDC cap)
+                  </label>
                   <input
                     type="number"
-                    min={0}
-                    value={sizeValue}
-                    onChange={(e) => setSizeValue(Number(e.target.value))}
-                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus:border-pf-cyan-500/50 focus:outline-none font-mono"
+                    min="1"
+                    step="1"
+                    value={maxPerTrade}
+                    onChange={(e) => setMaxPerTrade(parseInt(e.target.value) || 0)}
+                    placeholder="500"
+                    className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
                   />
-                  <span className="text-sm text-pf-text-secondary">
-                    {mode === 'PERCENTAGE' ? '%' : 'USD'}
-                  </span>
+                  <p className="text-[10px] text-pf-text-muted mt-0.5">Never copy more than this per single trade</p>
                 </div>
               </div>
             )}

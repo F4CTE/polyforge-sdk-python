@@ -1,0 +1,1 @@
+{"version":3,"file":"paper.service.d.ts","sourceRoot":"","sources":["paper.service.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,aAAa,EAAE,MAAM,sBAAsB,CAAC;AAErD,qBACa,YAAY;IACX,OAAO,CAAC,QAAQ,CAAC,MAAM;gBAAN,MAAM,EAAE,aAAa;IAE5C,UAAU,CAAC,MAAM,EAAE,MAAM,GAAG,OAAO,CAAC,GAAG,CAAC;IAgCxC,KAAK,CAAC,MAAM,EAAE,MAAM,GAAG,OAAO,CAAC,GAAG,CAAC;CAO1C"}

@@ -246,4 +246,24 @@ export class StrategiesController {
   ) {
     return this.strategies.report(id, user.sub, dto);
   }
+
+  @Get(':id/versions')
+  listVersions(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.strategies.listVersions(id, user.sub);
+  }
+
+  @Post(':id/versions/:versionId/rollback')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
+  rollback(
+    @Param('id') id: string,
+    @Param('versionId') versionId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.strategies.rollbackToVersion(id, versionId, user.sub);
+  }
 }

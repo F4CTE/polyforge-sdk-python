@@ -158,6 +158,12 @@ export function Component() {
   const [parentStrategy, setParentStrategy] = useState<ParentStrategy | null>(null);
   const [recentOrderCount, setRecentOrderCount] = useState<number | null>(null);
   const [lastOrderAt, setLastOrderAt] = useState<string | null>(null);
+  const [detailTab, setDetailTab] = useState<'overview' | 'log' | 'versions'>('overview');
+  const [execLog, setExecLog] = useState<Array<{id: string; eventType: string; payload: any; createdAt: string}>>([]);
+  const [versions, setVersions] = useState<Array<{id: string; version: number; changedBy: string; createdAt: string; triggers: any; conditions: any; actions: any}>>([]);
+  const [loadingLog, setLoadingLog] = useState(false);
+  const [loadingVersions, setLoadingVersions] = useState(false);
+  const [rollingBack, setRollingBack] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -207,6 +213,26 @@ export function Component() {
       })
       .catch(() => { setLoadError('Failed to load strategy. Please try again.'); setLoading(false); });
   }, [id]);
+
+  useEffect(() => {
+    if (!strategy?.id) return;
+    if (detailTab === 'log') {
+      setLoadingLog(true);
+      fetch(`/api/v1/strategies/${strategy.id}/events?limit=50`, { credentials: 'include' })
+        .then(r => r.ok ? r.json() : { data: [] })
+        .then(d => setExecLog(Array.isArray(d) ? d : (d.data ?? [])))
+        .catch(() => {})
+        .finally(() => setLoadingLog(false));
+    }
+    if (detailTab === 'versions') {
+      setLoadingVersions(true);
+      fetch(`/api/v1/strategies/${strategy.id}/versions`, { credentials: 'include' })
+        .then(r => r.ok ? r.json() : [])
+        .then(d => setVersions(Array.isArray(d) ? d : []))
+        .catch(() => {})
+        .finally(() => setLoadingVersions(false));
+    }
+  }, [detailTab, strategy?.id]);
 
   async function doAction(action: 'start' | 'stop' | 'pause' | 'resume', body?: object) {
     if (!strategy) return;
@@ -542,8 +568,33 @@ export function Component() {
             </div>
           </div>
 
+          {/* Detail tab bar */}
+          <div className="flex items-center gap-1 border-b border-pf-border-subtle pb-1">
+            <button
+              type="button"
+              onClick={() => setDetailTab('overview')}
+              className={`px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'overview' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
+            >
+              Overview
+            </button>
+            <button
+              type="button"
+              onClick={() => setDetailTab('log')}
+              className={`px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'log' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
+            >
+              Execution Log
+            </button>
+            <button
+              type="button"
+              onClick={() => setDetailTab('versions')}
+              className={`px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'versions' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
+            >
+              Version History
+            </button>
+          </div>
+
           {/* Body grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+          {detailTab === 'overview' && <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             {/* Blocks summary */}
             <div className="lg:col-span-3 bg-pf-elevated border border-pf-border rounded-pf-lg p-5 space-y-5">
               {(
@@ -620,7 +671,99 @@ export function Component() {
                 )}
               </div>
             </div>
-          </div>
+          </div>}
+
+          {detailTab === 'log' && (
+            <div className="mt-4">
+              {loadingLog ? (
+                <p className="text-sm text-pf-text-muted">Loading log...</p>
+              ) : execLog.length === 0 ? (
+                <div className="text-center py-8 text-pf-text-muted text-sm">
+                  <p>No execution events yet.</p>
+                  <p className="text-xs mt-1">Events appear when the strategy runs.</p>
+                </div>
+              ) : (
+                <ul className="space-y-1.5">
+                  {execLog.map(ev => (
+                    <li key={ev.id} className="flex items-start gap-3 rounded-pf bg-pf-surface px-3 py-2 border border-pf-border-subtle">
+                      <span className={`mt-0.5 flex-shrink-0 h-2 w-2 rounded-full ${
+                        ev.eventType === 'ERROR' ? 'bg-pf-danger' :
+                        ev.eventType === 'ORDER_PLACED' ? 'bg-pf-success' :
+                        ev.eventType === 'TRIGGERED' ? 'bg-pf-cyan-400' : 'bg-pf-text-muted'
+                      }`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-medium text-pf-text">{ev.eventType}</span>
+                          <span className="text-[10px] text-pf-text-muted flex-shrink-0">
+                            {new Date(ev.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                        {ev.payload && Object.keys(ev.payload).length > 0 && (
+                          <p className="text-[11px] text-pf-text-secondary mt-0.5 font-mono truncate">
+                            {JSON.stringify(ev.payload).slice(0, 120)}
+                          </p>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {detailTab === 'versions' && (
+            <div className="mt-4">
+              {loadingVersions ? (
+                <p className="text-sm text-pf-text-muted">Loading versions...</p>
+              ) : versions.length === 0 ? (
+                <div className="text-center py-8 text-pf-text-muted text-sm">
+                  <p>No saved versions yet.</p>
+                  <p className="text-xs mt-1">Versions are saved when you edit a strategy.</p>
+                </div>
+              ) : (
+                <ul className="space-y-2">
+                  {versions.map(v => (
+                    <li key={v.id} className="rounded-pf border border-pf-border bg-pf-surface p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-xs font-semibold text-pf-text">v{v.version}</span>
+                          <span className="text-[10px] text-pf-text-muted ml-2">
+                            {new Date(v.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={!!rollingBack}
+                          onClick={async () => {
+                            if (!confirm(`Roll back to version ${v.version}? This will replace the current strategy logic.`)) return;
+                            setRollingBack(v.id);
+                            try {
+                              const r = await fetch(
+                                `/api/v1/strategies/${strategy?.id}/versions/${v.id}/rollback`,
+                                { method: 'POST', credentials: 'include' }
+                              );
+                              if (r.ok) {
+                                alert(`Rolled back to v${v.version}`);
+                                window.location.reload();
+                              }
+                            } finally { setRollingBack(null); }
+                          }}
+                          className="text-xs px-2.5 py-1 rounded-pf border border-pf-border text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors disabled:opacity-40"
+                        >
+                          {rollingBack === v.id ? 'Rolling back...' : 'Rollback'}
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-pf-text-muted mt-1">
+                        {Array.isArray(v.triggers) ? v.triggers.length : 0} triggers &middot;{' '}
+                        {Array.isArray(v.conditions) ? v.conditions.length : 0} conditions &middot;{' '}
+                        {Array.isArray(v.actions) ? v.actions.length : 0} actions
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>

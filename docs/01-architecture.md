@@ -590,7 +590,7 @@ Safety blocks evaluate first, before any action can fire.
 
 ### WASM Tick Evaluator
 
-The CPU-intensive tick evaluation loop runs inside a Rust WASM module (`@polyforge/engine`) for zero GC pauses and deterministic latency. The module receives serialized block arrays and market context, evaluates the full pipeline (safety -> triggers -> conditions -> actions), and returns action intents. A TypeScript fallback is available when the WASM binary is not built. See `docs/20-rust-wasm-modules.md` for details.
+The CPU-intensive tick evaluation loop runs inside a Rust WASM module (`@polyforge/engine`) for zero GC pauses and deterministic latency. The module receives serialized block arrays and market context, evaluates the full pipeline (safety -> triggers -> conditions -> actions), and returns action intents. A TypeScript fallback is available when the WASM binary is not built. See `docs/15-rust-wasm-modules.md` for details.
 
 ### Execution Modes
 

@@ -141,6 +141,19 @@ function bookDepth(entries: OrderBookEntry[], index: number): number {
   return Math.round((cumSize / total) * 100);
 }
 
+function depthColor(pct: number, side: 'ask' | 'bid'): string {
+  // pct is 0-100
+  if (side === 'ask') {
+    if (pct > 66) return 'rgba(239,68,68,0.35)';  // deep red
+    if (pct > 33) return 'rgba(239,68,68,0.20)';  // medium red
+    return 'rgba(239,68,68,0.10)';                  // light red
+  } else {
+    if (pct > 66) return 'rgba(34,197,94,0.35)';  // deep green
+    if (pct > 33) return 'rgba(34,197,94,0.20)';  // medium green
+    return 'rgba(34,197,94,0.10)';                  // light green
+  }
+}
+
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
 function DetailSkeleton() {
@@ -209,6 +222,24 @@ export function Component() {
   const [myOrders, setMyOrders] = useState<Array<{ id: string; side: string; outcome: string; size: string; price: string; status: string }>>([]);
   const [loadingMyOrders, setLoadingMyOrders] = useState(false);
 
+  // Kelly sizer state
+  const [kellyConfidence, setKellyConfidence] = useState(65);
+  const [portfolioBalance, setPortfolioBalance] = useState<number>(1000);
+
+  // Price alerts state
+  const [alerts, setAlerts] = useState<Array<{id: string; direction: string; price: string; triggered: boolean}>>([]);
+  const [alertPrice, setAlertPrice] = useState('');
+  const [alertDir, setAlertDir] = useState<'above' | 'below'>('above');
+  const [savingAlert, setSavingAlert] = useState(false);
+
+  // LP Provide Liquidity state
+  const [lpExpanded, setLpExpanded] = useState(false);
+  const [lpTokenId, setLpTokenId] = useState('');
+  const [lpSpread, setLpSpread] = useState('0.02');
+  const [lpSize, setLpSize] = useState('10');
+  const [lpSubmitting, setLpSubmitting] = useState(false);
+  const [lpError, setLpError] = useState('');
+
   // Load market
   useEffect(() => {
     if (!id) return;
@@ -276,7 +307,7 @@ export function Component() {
   useEffect(() => {
     if (!market) return;
     let cancelled = false;
-    const yesToken = (market.tokens ?? []).find((t) => t.outcome === 'YES');
+    const yesToken = (market.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'YES');
     if (yesToken) {
       loadChart(yesToken.id, resolution);
       loadBook(yesToken.id);
@@ -287,7 +318,7 @@ export function Component() {
   // Auto-refresh order book every 30s
   useEffect(() => {
     if (!market) return;
-    const yesToken = (market.tokens ?? []).find((t) => t.outcome === 'YES');
+    const yesToken = (market.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'YES');
     if (!yesToken) return;
     const interval = setInterval(() => { loadBook(yesToken.id); }, 30_000);
     return () => clearInterval(interval);
@@ -298,7 +329,7 @@ export function Component() {
     if (!id) return;
     let cancelled = false;
     setLoadingNews(true);
-    fetch(`/api/v1/news/signals?market=${id}&limit=3`, { credentials: 'include' })
+    fetch(`/api/v1/news/signals?marketId=${id}&limit=3`, { credentials: 'include' })
       .then(r => r.json())
       .then((data: { data: RelatedNewsSignal[] }) => {
         if (!cancelled) { setRelatedNews(data?.data ?? []); setLoadingNews(false); }
@@ -310,7 +341,7 @@ export function Component() {
   // When resolution changes
   function onResolutionChange(res: Resolution) {
     setResolution(res);
-    const yesToken = (market?.tokens ?? []).find((t) => t.outcome === 'YES');
+    const yesToken = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'YES');
     if (yesToken) loadChart(yesToken.id, res);
   }
 
@@ -349,7 +380,7 @@ export function Component() {
   async function submitConditional() {
     if (!market || !condSize || !condTriggerPrice) return;
     setCondSubmitting(true);
-    const token = (market.tokens ?? []).find((t) => t.outcome === condOutcome);
+    const token = (market.tokens ?? []).find((t) => t.outcome?.toUpperCase() === condOutcome);
     if (!token) { setCondSubmitting(false); return; }
     try {
       const res = await fetch('/api/v1/orders/conditional', {
@@ -397,6 +428,24 @@ export function Component() {
 
   useEffect(() => { loadMyOrders(); }, [loadMyOrders]);
 
+  // Fetch portfolio balance for Kelly sizer
+  useEffect(() => {
+    fetch('/api/v1/portfolio', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.balance) setPortfolioBalance(parseFloat(d.balance)); })
+      .catch(() => {});
+  }, []);
+
+  // Load price alerts for this market
+  useEffect(() => {
+    if (!market) return;
+    fetch('/api/v1/alerts', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: any[]) => setAlerts(data))
+      .catch(() => {});
+  }, [market]);
+
+
   // Real-time order updates via WebSocket
   useEffect(() => {
     const handler = (msg: { type: string; orderId?: string }) => {
@@ -419,6 +468,47 @@ export function Component() {
       setTradePrice(token.price);
     }
   }, [market, tradeOutcome]);
+
+  // LP: pre-select first token when market loads
+  useEffect(() => {
+    if (!market || lpTokenId) return;
+    const first = (market.tokens ?? [])[0];
+    if (first) setLpTokenId(first.id);
+  }, [market, lpTokenId]);
+
+  const submitLp = async () => {
+    if (!lpTokenId || !lpSpread || !lpSize) return;
+    setLpSubmitting(true);
+    setLpError('');
+    const token = localStorage.getItem('access_token');
+    try {
+      const res = await fetch('/api/v1/lp/provide', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          tokenId: lpTokenId,
+          spread: parseFloat(lpSpread),
+          size: parseFloat(lpSize),
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error((d as { message?: string }).message || 'Failed to provide liquidity');
+      }
+      toast.success('Liquidity provided successfully');
+      setLpExpanded(false);
+      setLpSpread('0.02');
+      setLpSize('10');
+    } catch (e: unknown) {
+      setLpError(e instanceof Error ? e.message : 'Failed to provide liquidity');
+    } finally {
+      setLpSubmitting(false);
+    }
+  };
 
   const placeOrder = async () => {
     if (!tradeAmount || (!isMarketOrder && !tradePrice)) return;
@@ -471,8 +561,8 @@ export function Component() {
   const estCost = parseFloat(tradeAmount || '0');
   const estPayout = estShares * 1.0;
 
-  const yesPrice = (market?.tokens ?? []).find((t) => t.outcome === 'YES')?.price ?? null;
-  const noPrice = (market?.tokens ?? []).find((t) => t.outcome === 'NO')?.price ?? null;
+  const yesPrice = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'YES')?.price ?? null;
+  const noPrice = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'NO')?.price ?? null;
   const days = market ? daysUntil(market.endDate) : 0;
 
   return (
@@ -690,7 +780,7 @@ export function Component() {
                     <button
                       type="button"
                       onClick={() => {
-                        const yesToken = (market?.tokens ?? []).find((t) => t.outcome === 'YES');
+                        const yesToken = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'YES');
                         if (yesToken) loadChart(yesToken.id, resolution);
                       }}
                       className="mt-2 px-3 py-1 rounded-pf text-xs bg-pf-overlay hover:bg-pf-border transition-colors"
@@ -766,8 +856,8 @@ export function Component() {
                       .map((ask, idx, arr) => (
                         <div key={`ask-${idx}`} className="relative flex items-center h-6 px-2 text-xs">
                           <div
-                            className="absolute inset-y-0 right-0 bg-pf-danger/8 rounded-sm"
-                            style={{ width: `${bookDepth(orderBook.asks.slice(0, 8), arr.length - 1 - idx)}%` }}
+                            className="absolute inset-y-0 right-0 rounded-sm"
+                            style={{ width: `${bookDepth(orderBook.asks.slice(0, 8), arr.length - 1 - idx)}%`, backgroundColor: depthColor(bookDepth(orderBook.asks.slice(0, 8), arr.length - 1 - idx), 'ask') }}
                           />
                           <span className="relative font-mono text-pf-danger w-16">{ask.price}</span>
                           <span className="relative font-mono text-pf-text-muted ml-auto">{ask.size}</span>
@@ -786,8 +876,8 @@ export function Component() {
                     {orderBook.bids.slice(0, 8).map((bid, idx) => (
                       <div key={`bid-${idx}`} className="relative flex items-center h-6 px-2 text-xs">
                         <div
-                          className="absolute inset-y-0 right-0 bg-pf-success/8 rounded-sm"
-                          style={{ width: `${bookDepth(orderBook.bids.slice(0, 8), idx)}%` }}
+                          className="absolute inset-y-0 right-0 rounded-sm"
+                          style={{ width: `${bookDepth(orderBook.bids.slice(0, 8), idx)}%`, backgroundColor: depthColor(bookDepth(orderBook.bids.slice(0, 8), idx), 'bid') }}
                         />
                         <span className="relative font-mono text-pf-success w-16">{bid.price}</span>
                         <span className="relative font-mono text-pf-text-muted ml-auto">{bid.size}</span>
@@ -875,6 +965,40 @@ export function Component() {
                 />
                 <span className="text-xs text-pf-text-secondary">Market Order</span>
               </label>
+
+              {/* Kelly Position Sizer */}
+              <div className="mt-3">
+                <label className="block text-xs font-medium text-pf-text-secondary mb-1">
+                  Kelly Sizer <span className="text-pf-text-muted">(optional)</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    min="51"
+                    max="99"
+                    step="1"
+                    value={kellyConfidence}
+                    onChange={(e) => {
+                      const conf = parseInt(e.target.value) / 100;
+                      setKellyConfidence(parseInt(e.target.value));
+                      const price = parseFloat(tradePrice || '0.5');
+                      if (price <= 0 || price >= 1) return;
+                      const b = tradeSide === 'BUY' ? (1 - price) / price : price / (1 - price);
+                      const p = tradeSide === 'BUY' ? conf : 1 - conf;
+                      const q = 1 - p;
+                      const f = Math.max(0, (p * b - q) / b);
+                      // Assume $1000 bankroll (user's portfolio balance if available)
+                      const suggested = Math.round(f * (portfolioBalance || 1000));
+                      setTradeAmount(String(Math.min(suggested, portfolioBalance || 1000)));
+                    }}
+                    className="flex-1 h-1.5 rounded-full bg-pf-border accent-pf-cyan-500"
+                  />
+                  <span className="text-xs font-mono text-pf-cyan-400 w-8 text-right">{kellyConfidence}%</span>
+                </div>
+                <p className="text-[10px] text-pf-text-muted mt-0.5">
+                  Drag to set your confidence &rarr; Kelly suggests a size
+                </p>
+              </div>
 
               <div className="mt-3">
                 <label htmlFor="trade-amount" className="block text-xs font-medium text-pf-text-secondary mb-1">Amount</label>
@@ -976,6 +1100,178 @@ export function Component() {
                   </div>
                 )}
               </div>
+
+              {/* Price Alerts */}
+              <div className="mt-4 pt-4 border-t border-pf-border-subtle">
+                <p className="text-xs font-semibold text-pf-text-secondary mb-2 uppercase tracking-wide">Price Alerts</p>
+                <div className="flex gap-2 mb-2">
+                  <select
+                    value={alertDir}
+                    onChange={(e) => setAlertDir(e.target.value as 'above' | 'below')}
+                    className="h-8 px-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text focus:outline-none"
+                  >
+                    <option value="above">Above</option>
+                    <option value="below">Below</option>
+                  </select>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    max="0.99"
+                    value={alertPrice}
+                    onChange={(e) => setAlertPrice(e.target.value)}
+                    placeholder="0.75"
+                    className="flex-1 h-8 px-2 rounded-pf bg-pf-surface border border-pf-border text-xs font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    disabled={savingAlert || !alertPrice}
+                    onClick={async () => {
+                      const yesToken = (market?.tokens ?? []).find(t => t.outcome?.toUpperCase() === 'YES');
+                      if (!yesToken || !alertPrice) return;
+                      setSavingAlert(true);
+                      try {
+                        const r = await fetch('/api/v1/alerts', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          credentials: 'include',
+                          body: JSON.stringify({ tokenId: yesToken.id, direction: alertDir, price: parseFloat(alertPrice), persistent: false }),
+                        });
+                        if (r.ok) {
+                          const a = await r.json();
+                          setAlerts(prev => [a, ...prev]);
+                          setAlertPrice('');
+                        }
+                      } finally { setSavingAlert(false); }
+                    }}
+                    className="h-8 px-3 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-xs text-pf-cyan-400 hover:bg-pf-cyan-500/25 transition-colors disabled:opacity-40"
+                  >
+                    Set
+                  </button>
+                </div>
+                {alerts.length > 0 && (
+                  <ul className="space-y-1">
+                    {alerts.slice(0, 3).map(a => (
+                      <li key={a.id} className="flex items-center justify-between text-xs">
+                        <span className={`font-mono ${a.triggered ? 'text-pf-text-muted line-through' : 'text-pf-text'}`}>
+                          {a.direction === 'above' ? '▲' : '▼'} {a.price}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            await fetch(`/api/v1/alerts/${a.id}`, { method: 'DELETE', credentials: 'include' });
+                            setAlerts(prev => prev.filter(x => x.id !== a.id));
+                          }}
+                          className="text-pf-text-muted hover:text-pf-danger transition-colors ml-2"
+                        >
+                          &times;
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            {/* Provide Liquidity */}
+            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setLpExpanded((v) => !v)}
+                className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-pf-text hover:bg-pf-surface/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:rounded-pf"
+                aria-expanded={lpExpanded}
+              >
+                <div className="flex items-center gap-2">
+                  <Droplets className="size-4 text-pf-text-muted" aria-hidden="true" />
+                  Provide Liquidity
+                </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`text-pf-text-muted transition-transform duration-200 ${lpExpanded ? 'rotate-180' : ''}`}
+                  aria-hidden="true"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+
+              {lpExpanded && (
+                <div className="px-4 pb-4 space-y-3 border-t border-pf-border-subtle pt-3">
+                  {/* Token selector */}
+                  <div>
+                    <label htmlFor="lp-token" className="block text-xs font-medium text-pf-text-secondary mb-1">
+                      Token
+                    </label>
+                    <select
+                      id="lp-token"
+                      value={lpTokenId}
+                      onChange={(e) => setLpTokenId(e.target.value)}
+                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+                    >
+                      {(market?.tokens ?? []).map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.outcome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Spread input */}
+                  <div>
+                    <label htmlFor="lp-spread" className="block text-xs font-medium text-pf-text-secondary mb-1">
+                      Spread
+                    </label>
+                    <input
+                      id="lp-spread"
+                      type="number"
+                      step="0.001"
+                      min="0.001"
+                      max="0.5"
+                      value={lpSpread}
+                      onChange={(e) => setLpSpread(e.target.value)}
+                      placeholder="0.02"
+                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                    />
+                  </div>
+
+                  {/* Size input */}
+                  <div>
+                    <label htmlFor="lp-size" className="block text-xs font-medium text-pf-text-secondary mb-1">
+                      Size (USDC)
+                    </label>
+                    <input
+                      id="lp-size"
+                      type="number"
+                      step="1"
+                      min="1"
+                      value={lpSize}
+                      onChange={(e) => setLpSize(e.target.value)}
+                      placeholder="10"
+                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                    />
+                  </div>
+
+                  {lpError && (
+                    <p className="text-xs text-pf-danger">{lpError}</p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={submitLp}
+                    disabled={lpSubmitting || !lpTokenId || !lpSpread || !lpSize}
+                    className="w-full py-2.5 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-sm font-semibold text-pf-cyan-400 hover:bg-pf-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                  >
+                    {lpSubmitting ? 'Submitting...' : 'Submit'}
+                  </button>
+                </div>
+              )}
             </div>
             </div>{/* end right column wrapper */}
           </div>

@@ -23,9 +23,10 @@ export class PortfolioService {
     const markets = marketIds.length
       ? await this.prisma.market.findMany({
           where: { id: { in: marketIds } },
-          select: { id: true, title: true },
+          select: { id: true, title: true, category: true },
         })
       : [];
+    const marketMap = new Map(markets.map((m) => [m.id, m]));
     const marketTitleMap = new Map(markets.map((m) => [m.id, m.title]));
 
     // Batch fetch all prices in one Redis MGET instead of sequential GETs
@@ -58,6 +59,7 @@ export class PortfolioService {
           currentPrice: currentPrice.toFixed(6),
           unrealizedPnl: unrealizedPnl.toFixed(6),
           resolutionStatus: pos.resolutionStatus,
+          marketCategory: marketMap.get(pos.marketId)?.category ?? null,
         };
       });
 
@@ -66,6 +68,28 @@ export class PortfolioService {
       totalUnrealizedPnl: totalUnrealizedPnl.toFixed(6),
       totalRealizedPnl: totalRealizedPnl.toFixed(6),
     };
+  }
+
+  async exportCsv(userId: string): Promise<string> {
+    const positions = await this.prisma.position.findMany({
+      where: { userId },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    const header = 'Market ID,Outcome,Size,Avg Price,Unrealized P&L,Realized P&L,Status,Updated\n';
+    const rows = positions.map(p =>
+      [
+        `"${p.marketId}"`,
+        p.outcome ?? '',
+        p.size?.toString() ?? '',
+        p.avgPrice?.toString() ?? '',
+        p.unrealizedPnl?.toString() ?? '',
+        p.realizedPnl?.toString() ?? '',
+        p.resolutionStatus ?? '',
+        p.updatedAt.toISOString(),
+      ].join(',')
+    );
+    return header + rows.join('\n');
   }
 
   async getPnl(

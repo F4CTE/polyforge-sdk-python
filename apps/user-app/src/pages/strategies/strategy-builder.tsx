@@ -39,6 +39,53 @@ export function Component() {
   const [quickResult, setQuickResult] = useState<Record<string, unknown> | null>(null);
 
   const isEdit = !!id;
+  const isNewStrategy = !isEdit;
+
+  const [wizardStep, setWizardStep] = useState<'template' | 'builder'>('template');
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+
+  const TEMPLATES = [
+    {
+      id: 'momentum',
+      name: 'Simple Momentum',
+      description: 'Buys YES when price crosses above a threshold. Best for trending markets.',
+      icon: '📈',
+      trigger: 'Event',
+      difficulty: 'Beginner',
+    },
+    {
+      id: 'mean-reversion',
+      name: 'Mean Reversion',
+      description: 'Buys when price dips below the recent average. Profits from temporary overselling.',
+      icon: '↩️',
+      trigger: 'Tick',
+      difficulty: 'Beginner',
+    },
+    {
+      id: 'news-reactive',
+      name: 'News Reactive',
+      description: 'Trades on AI-detected high-confidence news signals.',
+      icon: '📰',
+      trigger: 'Event',
+      difficulty: 'Intermediate',
+    },
+    {
+      id: 'whale-follower',
+      name: 'Whale Follower',
+      description: 'Copies whale trades with configurable size and risk filters.',
+      icon: '🐋',
+      trigger: 'Event',
+      difficulty: 'Intermediate',
+    },
+    {
+      id: 'blank',
+      name: 'Start from Scratch',
+      description: 'Open the strategy builder with a blank canvas.',
+      icon: '⬜',
+      trigger: null,
+      difficulty: 'Advanced',
+    },
+  ] as const;
 
   // Count canvas issues: unwired trigger/action blocks + active blocks with empty required fields.
   const canvasIssues = useBuilderStore((s) => {
@@ -210,6 +257,52 @@ export function Component() {
       toast.error('Invalid strategy file');
     }
   }, [navigate]);
+
+  // ─── Template wizard (new strategy only) ─────────────────────────────
+
+  if (wizardStep === 'template' && isNewStrategy) {
+    return (
+      <div className="max-w-2xl mx-auto py-8 px-4">
+        <h1 className="text-xl font-bold text-pf-text mb-1">New Strategy</h1>
+        <p className="text-sm text-pf-text-secondary mb-6">Choose a starting point</p>
+        <div className="grid grid-cols-1 gap-3">
+          {TEMPLATES.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={async () => {
+                if (t.id !== 'blank') {
+                  // Load from template
+                  const r = await fetch(`/api/v1/strategies/templates`, { credentials: 'include' });
+                  // Find matching template and pre-fill
+                }
+                setSelectedTemplate(t.id);
+                setWizardStep('builder');
+              }}
+              className="flex items-center gap-4 p-4 rounded-pf border border-pf-border bg-pf-surface hover:border-pf-cyan-500/50 hover:bg-pf-surface-hover transition-all text-left group"
+            >
+              <span className="text-2xl">{t.icon}</span>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-pf-text group-hover:text-pf-cyan-400 transition-colors">{t.name}</span>
+                  {t.trigger && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-pf-surface-elevated border border-pf-border text-pf-text-muted">{t.trigger}</span>
+                  )}
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                    t.difficulty === 'Beginner' ? 'bg-green-500/10 border-green-500/30 text-green-400' :
+                    t.difficulty === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
+                    'bg-red-500/10 border-red-500/30 text-red-400'
+                  }`}>{t.difficulty}</span>
+                </div>
+                <p className="text-xs text-pf-text-muted mt-0.5">{t.description}</p>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-pf-text-muted group-hover:text-pf-cyan-400 flex-shrink-0 transition-colors"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   // ─── Loading state ────────────────────────────────────────────────────
 

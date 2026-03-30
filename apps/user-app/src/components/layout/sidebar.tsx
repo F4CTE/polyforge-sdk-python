@@ -17,6 +17,12 @@ import {
   ChevronRight,
   Settings,
   TrendingUp,
+  TrendingDown,
+  Store,
+  Layers,
+  Star,
+  Target,
+  Sparkles,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -36,11 +42,22 @@ const navSections: NavSection[] = [
     title: 'Trade',
     items: [
       { label: 'Markets', icon: BarChart3, route: '/markets' },
+      { label: 'Watchlist', icon: Star, route: '/watchlist' },
       { label: 'Strategies', icon: Zap, route: '/strategies' },
       { label: 'Portfolio', icon: Wallet, route: '/portfolio' },
       { label: 'Orders', icon: ClipboardList, route: '/orders' },
+      { label: 'Smart Orders', icon: Layers, route: '/orders/smart' },
       { label: 'Backtest', icon: FlaskConical, route: '/backtest' },
       { label: 'Copy Trading', icon: UserPlus, route: '/copy' },
+      { label: 'Arbitrage', icon: TrendingDown, route: '/arbitrage' },
+      { label: 'Marketplace', icon: Store, route: '/marketplace' },
+    ],
+  },
+  {
+    title: 'Analytics',
+    items: [
+      { label: 'Accuracy', icon: Target, route: '/accuracy' },
+      { label: 'AI Optimizer', icon: Sparkles, route: '/optimizer' },
     ],
   },
   {

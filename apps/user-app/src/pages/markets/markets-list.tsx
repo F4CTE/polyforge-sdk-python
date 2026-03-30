@@ -52,6 +52,14 @@ interface MarketsResponse {
 type SortOption = 'volume' | 'newest' | 'closing_soon' | 'liquidity';
 type ViewMode = 'cards' | 'table';
 
+interface MarketSentiment {
+  marketId: string;
+  score: number;
+  label: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  signalCount: number;
+  lastUpdated: string | null;
+}
+
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 const SORT_OPTIONS: { label: string; value: SortOption }[] = [
@@ -149,7 +157,39 @@ function CardSkeleton() {
 
 /* ─── Market Card ────────────────────────────────────────────────────── */
 
-const MarketCard = memo(function MarketCard({ market, featured }: { market: Market; featured?: boolean }) {
+function SentimentPill({ sentiment }: { sentiment: MarketSentiment | undefined }) {
+  if (!sentiment || sentiment.signalCount === 0) return null;
+  const styles: Record<MarketSentiment['label'], string> = {
+    BULLISH: 'bg-pf-success/15 text-pf-success',
+    BEARISH: 'bg-pf-danger/15 text-pf-danger',
+    NEUTRAL: 'bg-pf-overlay text-pf-text-muted',
+  };
+  return (
+    <span
+      className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${styles[sentiment.label]}`}
+      title={`Sentiment score: ${sentiment.score}`}
+      aria-label={`Market sentiment: ${sentiment.label}`}
+    >
+      {sentiment.label}
+    </span>
+  );
+}
+
+const MarketCard = memo(function MarketCard({
+  market,
+  featured,
+  isWatched,
+  isWatchLoading,
+  onToggleWatch,
+  sentiment,
+}: {
+  market: Market;
+  featured?: boolean;
+  isWatched: boolean;
+  isWatchLoading: boolean;
+  onToggleWatch: (marketId: string, e: React.MouseEvent) => void;
+  sentiment?: MarketSentiment;
+}) {
   const catColor = CATEGORY_COLORS[market.category];
 
   return (
@@ -178,6 +218,17 @@ const MarketCard = memo(function MarketCard({ market, featured }: { market: Mark
             </span>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={(e) => onToggleWatch(market.id, e)}
+          disabled={isWatchLoading}
+          className={`p-1.5 rounded-pf transition-colors ${isWatched ? 'text-amber-400 hover:text-amber-300' : 'text-pf-text-muted hover:text-pf-text'}`}
+          title={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={isWatched ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </button>
       </div>
 
       {/* Binary market */}
@@ -226,9 +277,12 @@ const MarketCard = memo(function MarketCard({ market, featured }: { market: Mark
 
       {/* Footer */}
       {market.tokens.length > 0 && (
-        <div className="flex items-center gap-1 mt-3 text-[11px] text-pf-text-muted">
-          <Zap className="size-3" aria-hidden="true" />
-          {market.tokens.length} outcomes
+        <div className="flex items-center justify-between gap-1 mt-3">
+          <div className="flex items-center gap-1 text-[11px] text-pf-text-muted">
+            <Zap className="size-3" aria-hidden="true" />
+            {market.tokens.length} outcomes
+          </div>
+          <SentimentPill sentiment={sentiment} />
         </div>
       )}
     </Link>
@@ -249,6 +303,9 @@ export function Component() {
   const [viewMode, setViewMode] = useState<ViewMode>(
     () => (localStorage.getItem('pf-markets-view') as ViewMode) || 'cards',
   );
+  const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set());
+  const [watchlistLoading, setWatchlistLoading] = useState<Set<string>>(new Set());
+  const [sentimentMap, setSentimentMap] = useState<Map<string, MarketSentiment>>(new Map());
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -284,6 +341,60 @@ export function Component() {
   useEffect(() => {
     load(page, search, sort, category);
   }, [page, search, sort, category, load]);
+
+  useEffect(() => {
+    fetch('/api/v1/watchlist', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : [])
+      .then((items: Array<{ id: string }>) => {
+        setWatchedIds(new Set(items.map((m: any) => m.id)));
+      })
+      .catch(() => {});
+  }, []);
+
+  // Batch-fetch sentiment for visible markets (first 20) after markets load
+  useEffect(() => {
+    if (markets.length === 0) return;
+    const ids = markets.slice(0, 20).map((m) => m.id);
+    Promise.allSettled(
+      ids.map((id) =>
+        fetch(`/api/v1/news/sentiment/${id}`, { credentials: 'include' })
+          .then((r) => (r.ok ? r.json() : null))
+      ),
+    ).then((results) => {
+      const next = new Map<string, MarketSentiment>();
+      results.forEach((r) => {
+        if (r.status === 'fulfilled' && r.value) {
+          const s = r.value as MarketSentiment;
+          next.set(s.marketId, s);
+        }
+      });
+      setSentimentMap(next);
+    });
+  }, [markets]);
+
+  const toggleWatch = async (marketId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (watchlistLoading.has(marketId)) return;
+    setWatchlistLoading(prev => new Set([...prev, marketId]));
+    try {
+      const isWatched = watchedIds.has(marketId);
+      if (isWatched) {
+        await fetch(`/api/v1/watchlist/${marketId}`, { method: 'DELETE', credentials: 'include' });
+        setWatchedIds(prev => { const next = new Set(prev); next.delete(marketId); return next; });
+      } else {
+        await fetch('/api/v1/watchlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ marketId }),
+        });
+        setWatchedIds(prev => new Set([...prev, marketId]));
+      }
+    } catch {} finally {
+      setWatchlistLoading(prev => { const next = new Set(prev); next.delete(marketId); return next; });
+    }
+  };
 
   function onSearchInput(value: string) {
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
@@ -418,13 +529,13 @@ export function Component() {
               {/* Featured */}
               {featured.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 stagger-children">
-                  {featured.map((m) => <MarketCard key={m.id} market={m} featured />)}
+                  {featured.map((m) => <MarketCard key={m.id} market={m} featured isWatched={watchedIds.has(m.id)} isWatchLoading={watchlistLoading.has(m.id)} onToggleWatch={toggleWatch} sentiment={sentimentMap.get(m.id)} />)}
                 </div>
               )}
               {/* Grid */}
               {grid.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
-                  {grid.map((m) => <MarketCard key={m.id} market={m} />)}
+                  {grid.map((m) => <MarketCard key={m.id} market={m} isWatched={watchedIds.has(m.id)} isWatchLoading={watchlistLoading.has(m.id)} onToggleWatch={toggleWatch} sentiment={sentimentMap.get(m.id)} />)}
                 </div>
               )}
             </>
@@ -452,6 +563,7 @@ export function Component() {
                     <th scope="col" className="px-4 py-3 font-medium text-right">NO</th>
                     <th scope="col" className="px-4 py-3 font-medium text-right">Vol 24h</th>
                     <th scope="col" className="px-4 py-3 font-medium text-right">Closes</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right w-10"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-pf-border-subtle">
@@ -483,6 +595,19 @@ export function Component() {
                           <span className={`font-mono text-xs ${isClosingSoon(market.endDate) ? 'text-pf-warning' : 'text-pf-text-secondary'}`}>
                             {daysUntil(market.endDate)}
                           </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            onClick={(e) => toggleWatch(market.id, e)}
+                            disabled={watchlistLoading.has(market.id)}
+                            className={`p-1.5 rounded-pf transition-colors ${watchedIds.has(market.id) ? 'text-amber-400 hover:text-amber-300' : 'text-pf-text-muted hover:text-pf-text'}`}
+                            title={watchedIds.has(market.id) ? 'Remove from watchlist' : 'Add to watchlist'}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={watchedIds.has(market.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                          </button>
                         </td>
                       </tr>
                     );

@@ -15,12 +15,16 @@ interface Position {
   id: string;
   tokenId: string;
   marketTitle: string;
+  marketId?: string;
   side: string;
   size: string;
   avgEntryPrice: string;
   currentPrice: string;
   unrealizedPnl: string;
+  realizedPnl?: string;
   resolutionStatus: string;
+  outcome?: string;
+  market?: { title?: string; category?: string | null } | null;
 }
 
 interface PortfolioResponse {
@@ -97,6 +101,24 @@ function formatTokenId(tokenId: string): string {
       return part.charAt(0).toUpperCase() + part.slice(1);
     })
     .join(' ');
+}
+
+function CategoryBadge({ category }: { category?: string | null }) {
+  if (!category) return null;
+  const colors: Record<string, string> = {
+    crypto: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+    politics: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+    sports: 'bg-green-500/15 text-green-400 border-green-500/30',
+    entertainment: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+    science: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
+  };
+  const key = category.toLowerCase();
+  const cls = colors[key] ?? 'bg-pf-surface text-pf-text-muted border-pf-border';
+  return (
+    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${cls}`}>
+      {category}
+    </span>
+  );
 }
 
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
@@ -199,6 +221,13 @@ export function Component() {
     setTab(t);
     if (t === 'paper' && !paper) loadPaper();
   }
+
+  const exportCsv = () => {
+    const link = document.createElement('a');
+    link.href = '/api/v1/portfolio/export/csv';
+    link.download = 'portfolio.csv';
+    link.click();
+  };
 
   async function closePosition(pos: Position) {
     setClosingPosition(prev => ({ ...prev, [pos.id]: true }));
@@ -311,29 +340,39 @@ export function Component() {
             Gasless
           </span>
         </div>
-        <div className="flex bg-pf-surface rounded-pf border border-pf-border-subtle" role="tablist" aria-label="Portfolio mode">
+        <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => handleTabChange('live')}
-            role="tab"
-            aria-selected={tab === 'live'}
-            className={`px-4 py-1.5 text-sm font-medium rounded-pf transition-colors ${
-              tab === 'live' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-secondary hover:text-pf-text'
-            }`}
+            onClick={exportCsv}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors"
           >
-            Live
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
           </button>
-          <button
-            type="button"
-            onClick={() => handleTabChange('paper')}
-            role="tab"
-            aria-selected={tab === 'paper'}
-            className={`px-4 py-1.5 text-sm font-medium rounded-pf transition-colors ${
-              tab === 'paper' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-secondary hover:text-pf-text'
-            }`}
-          >
-            Paper
-          </button>
+          <div className="flex bg-pf-surface rounded-pf border border-pf-border-subtle" role="tablist" aria-label="Portfolio mode">
+            <button
+              type="button"
+              onClick={() => handleTabChange('live')}
+              role="tab"
+              aria-selected={tab === 'live'}
+              className={`px-4 py-1.5 text-sm font-medium rounded-pf transition-colors ${
+                tab === 'live' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-secondary hover:text-pf-text'
+              }`}
+            >
+              Live
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange('paper')}
+              role="tab"
+              aria-selected={tab === 'paper'}
+              className={`px-4 py-1.5 text-sm font-medium rounded-pf transition-colors ${
+                tab === 'paper' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-secondary hover:text-pf-text'
+              }`}
+            >
+              Paper
+            </button>
+          </div>
         </div>
       </div>
 
@@ -509,6 +548,7 @@ export function Component() {
                       <tr key={pos.id} className="hover:bg-pf-surface/50 transition-colors">
                         <td className="px-4 py-3 max-w-[200px]">
                           <span className="text-pf-text line-clamp-1" title={pos.marketTitle}>{pos.marketTitle}</span>
+                          <CategoryBadge category={(pos as any).marketCategory} />
                         </td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
@@ -570,6 +610,45 @@ export function Component() {
               </div>
             )}
           </div>
+          {/* Resolved Positions */}
+          {(() => {
+            const resolved = (portfolio?.positions ?? []).filter(
+              p => p.resolutionStatus === 'RESOLVED'
+            );
+            if (resolved.length === 0) return null;
+            return (
+              <section className="mt-6">
+                <h2 className="text-base font-semibold text-pf-text mb-3">Resolved Positions</h2>
+                <div className="rounded-pf border border-pf-border overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-pf-border bg-pf-surface-elevated">
+                        <th className="text-left px-4 py-2.5 text-xs font-medium text-pf-text-muted">Market</th>
+                        <th className="text-right px-4 py-2.5 text-xs font-medium text-pf-text-muted">Outcome</th>
+                        <th className="text-right px-4 py-2.5 text-xs font-medium text-pf-text-muted">Realized P&L</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {resolved.map((pos, i) => {
+                        const pnl = parseFloat(pos.realizedPnl ?? pos.unrealizedPnl ?? '0');
+                        const isWin = pnl > 0;
+                        return (
+                          <tr key={i} className="border-b border-pf-border-subtle last:border-0">
+                            <td className="px-4 py-2.5 text-pf-text text-xs">{pos.market?.title ?? pos.marketTitle ?? pos.marketId}</td>
+                            <td className="px-4 py-2.5 text-right text-xs font-mono text-pf-text-secondary">{pos.outcome ?? '-'}</td>
+                            <td className={`px-4 py-2.5 text-right text-xs font-mono font-semibold ${isWin ? 'text-pf-success' : 'text-pf-danger'}`}>
+                              {isWin ? '+' : ''}{pnl.toFixed(2)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            );
+          })()}
+
           {/* Breakdown by market */}
           {!loadingPortfolio && (portfolio?.positions ?? []).length > 0 && (() => {
             const byMarket = (portfolio!.positions).reduce<Record<string, { title: string; pnl: number; count: number }>>((acc, pos) => {

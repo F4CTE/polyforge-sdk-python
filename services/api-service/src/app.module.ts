@@ -30,6 +30,11 @@ import { ActionsModule } from "./actions/actions.module";
 import { WebhooksModule } from "./webhooks/webhooks.module";
 import { AiModule } from "./ai/ai.module";
 import { ApiKeysModule } from "./api-keys/api-keys.module";
+import { ArbitrageModule } from "./arbitrage/arbitrage.module";
+import { MarketplaceModule } from "./marketplace/marketplace.module";
+import { WatchlistModule } from "./watchlist/watchlist.module";
+import { AccuracyModule } from "./accuracy/accuracy.module";
+import { LpModule } from "./lp/lp.module";
 
 @Module({
   imports: [
@@ -68,6 +73,11 @@ import { ApiKeysModule } from "./api-keys/api-keys.module";
     WebhooksModule,
     AiModule,
     ApiKeysModule,
+    ArbitrageModule,
+    MarketplaceModule,
+    WatchlistModule,
+    AccuracyModule,
+    LpModule,
   ],
   controllers: [HealthController, StatusController],
   providers: [{ provide: APP_GUARD, useClass: ApiKeyThrottlerGuard }],

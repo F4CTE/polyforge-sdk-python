@@ -5,6 +5,108 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.15.0] — 2026-03-30
+
+### Added
+- **Prediction Accuracy & Calibration** — new `/accuracy` page with Brier score, win rate, calibration scatter chart (Recharts, with diagonal perfect-calibration reference line), and per-category breakdown table; powered by `GET /api/v1/accuracy/me` which computes stats on-the-fly from resolved/redeemed positions
+- **AI Portfolio Optimizer** — new `/optimizer` page with AI-generated weekly portfolio review, score pill (green/yellow/red), bulleted suggestions list, and "Refresh Analysis" button; powered by `GET /api/v1/ai/portfolio-review` using LlmService with graceful fallback if LLM unavailable
+- **Sentiment Intelligence** — BULLISH / BEARISH / NEUTRAL pill badges on market cards (only shown when signal data exists); batch-fetches first 20 markets after load; powered by `GET /api/v1/news/sentiment/:marketId` aggregating last 7 days of NewsSignal records
+- **LP / Market Making** — expandable "Provide Liquidity" panel on market detail page; user picks token, spread (default 2%), and size (default 10 USDC); places two-sided quotes via `POST /api/v1/lp/provide` which publishes BUY + SELL intents to Redis stream and creates pending Order records
+- **Sidebar Analytics section** — "Accuracy" (Target icon) and "AI Optimizer" (Sparkles icon) nav links added under a new Analytics group
+
+### SDK
+- **MCP server**: 4 new tools — `get_accuracy`, `get_portfolio_review`, `get_market_sentiment`, `provide_liquidity`
+- **TypeScript SDK**: `AccuracyScore`, `PortfolioReview`, `MarketSentiment`, `ProvideLiquidityParams`, `LpPosition` types; `getAccuracy()`, `getPortfolioReview()`, `getMarketSentiment(marketId)`, `provideLiquidity(params)` methods
+- **Python SDK**: matching dataclasses and sync/async methods on both client classes
+- **Rust SDK**: matching structs (with camelCase serde renames) and async client methods
+
+---
+
+## [6.14.0] — 2026-03-30
+
+### Added
+- **Market Watchlist** — users can star any market from the markets list to add it to their personal watchlist; dedicated `/watchlist` page shows all watched markets with live price and volume; star toggle is instant with optimistic UI; `watchlist_items` table with cascade deletes
+  - `GET /api/v1/watchlist` — list all watched markets with full market data (title, category, tokens, volume)
+  - `POST /api/v1/watchlist` — add a market by ID; returns 404 if market doesn't exist
+  - `DELETE /api/v1/watchlist/:marketId` — remove from watchlist
+  - `GET /api/v1/watchlist/:marketId/status` — check if a specific market is watched
+- **Kelly Criterion Position Sizer** — confidence slider on market detail trade panel; user drags 51–99% to set their confidence level and the panel calculates a suggested USDC amount using the Kelly formula (`f = (p·b − q) / b`)
+- **Order Book Depth Heatmap** — ask rows and bid rows in the order book are colored by cumulative depth: deeper levels show stronger red/green backgrounds (`rgba(239,68,68,…)` and `rgba(34,197,94,…)`) proportional to their percentage of total book depth
+- **Price Alerts** — users can set price alerts on any market with an above/below direction; alerts are stored server-side and visible in a panel on the market detail page; existing alerts can be deleted
+- **CSV Export: Orders** — "Export CSV" button on the orders page downloads a complete order history as a CSV file (Market ID, Side, Outcome, Size, Price, Type, Status, Fill Price, Date)
+- **CSV Export: Portfolio** — "Export CSV" button on the portfolio page downloads all positions as a CSV file (Market ID, Outcome, Size, Avg Price, Unrealized P&L, Realized P&L, Status, Updated)
+- **Market Category Badges** — colored inline badges showing market category (Politics, Crypto, Sports, etc.) on order rows and portfolio positions; color-coded with distinct hues per category
+- **Portfolio Resolved Positions** — dedicated "Resolved Positions" section below open positions in the portfolio page; shows resolved markets separately from open ones
+- **Strategy Execution Log** — "Execution Log" tab on strategy detail page; streams real-time execution events from the strategy engine via SSE; displays a chronological event log with timestamps and event types
+- **Strategy Version History** — "Version History" tab on strategy detail page; lists all saved versions with timestamp and block count; "Rollback" button to revert the strategy to any previous version
+  - `GET /api/v1/strategies/:id/versions` — list all saved versions for a strategy
+  - `POST /api/v1/strategies/:id/versions/:versionId/rollback` — roll back strategy blocks to a specific version
+- **Strategy Template Wizard** — new strategy creation starts with a template chooser step offering 5 templates: Simple Momentum, Mean Reversion, News Reactive, Whale Follower, or Start from Scratch
+- **Backtest Compare Mode** — "Compare Runs" toggle on the backtest page; enables A/B selection of two historical runs for side-by-side metrics comparison (total P&L, win rate, max drawdown, Sharpe ratio, number of trades)
+- **Copy Trade Sizing Modes** — copy-trading setup now supports two sizing modes: fixed USDC amount per trade or percentage of whale's position size; configurable max-per-trade USDC cap regardless of mode
+- **Dark Mode Persistence** — theme preference (dark/light) is stored in `localStorage` and applied on initial load; dark mode is the default for new users
+
+### Fixed
+- **Watchlist POST 500 → 404** — FK constraint violations on unknown market IDs now return a proper 404 `MARKET_NOT_FOUND` instead of crashing with a 500 internal server error
+
+---
+
+## [6.13.1] — 2026-03-30
+
+### Fixed
+- **Market detail — token outcome case mismatch** — DB stores outcome values as `"Yes"` / `"No"` (title case) but frontend used strict `=== 'YES'` comparisons, causing the price chart, order book, and trade panel to silently fail (no token resolved → no price history request). Fixed all 7 occurrences in `market-detail.tsx` to use `?.toUpperCase() === 'YES'` / `=== 'NO'`
+- **Market detail — news signals wrong query param** — the signals fetch used `?market=${id}` but the `NewsService` DTO expected `?marketId=${id}`, resulting in a 400 on every market detail page load. Fixed to `?marketId=${id}`
+- **Orders list — `marketId` filter rejected by ValidationPipe** — the global `whitelist: true` ValidationPipe stripped `marketId` from order list requests (400 "property marketId should not exist") because the controller `OrderQueryDto` was missing the field. Added `@IsOptional() @IsString() marketId?: string` to both the controller DTO and the service interface
+- **Orders list — comma-separated `status` filter broken** — frontend sends `?status=PENDING,LIVE,SUBMITTED` but the service passed the raw string as a Prisma equality filter (`WHERE status = 'PENDING,LIVE,SUBMITTED'`), matching nothing. Fixed to split on comma and use `{ in: [...] }` when multiple values are present
+
+---
+
+## [6.13.0] — 2026-03-30
+
+### Added
+- **Strategy Marketplace** — two-sided marketplace for buying and selling trading strategies
+  - `MarketplaceListing` model: seller creates a listing for any owned strategy with title, description, price (USDC), and tags
+  - `MarketplacePurchase` model: buyer pays and receives a private forked copy of the strategy; one purchase per buyer per listing
+  - Platform fee: 20% platform cut on each sale, seller receives 80% net
+  - Ratings and reviews: buyers can rate (1–5) and leave a written review post-purchase; aggregate rating auto-recalculated on each rating event
+  - `GET /api/v1/marketplace` — browse active listings with sort (newest/popular/rating/price) and tag filter
+  - `GET /api/v1/marketplace/:id` — single listing detail with reviews
+  - `POST /api/v1/marketplace` — create a listing (strategy must be owned by seller)
+  - `PATCH /api/v1/marketplace/:id` — update title/description/price/status/tags
+  - `POST /api/v1/marketplace/:id/purchase` — purchase and fork strategy
+  - `POST /api/v1/marketplace/:id/rate` — rate and review after purchase
+  - `GET /api/v1/marketplace/my/listings` and `/my/purchases` — seller and buyer dashboards
+  - Frontend: `/marketplace` page with browse grid, sort/search controls, listing cards showing rating/fork/purchase counts, and My Purchases tab
+
+---
+
+## [6.12.0] — 2026-03-30
+
+### Added
+- **Smart Order Execution** — institutional-grade execution strategies: TWAP, DCA, Bracket, OCO
+  - `SmartOrder` Prisma model with state machine: `PENDING → ACTIVE → COMPLETED / CANCELLED / FAILED`
+  - `POST /api/v1/orders/smart` — create a smart order; BRACKET and OCO publish all legs immediately; TWAP/DCA schedule first slice
+  - `GET /api/v1/orders/smart` — list user's smart orders with child orders included
+  - `DELETE /api/v1/orders/smart/:id` — cancel a pending/active smart order and all child orders
+  - `SmartOrderService.executeSlices()` — `@Interval(30s)` scheduler for TWAP/DCA slice execution; updates progress and schedules next slice
+  - BRACKET: publishes 3 linked legs (ENTRY at GTC, TAKE_PROFIT and STOP_LOSS at opposing side) immediately on creation
+  - OCO: publishes 2 legs (LEG_A, LEG_B) with `ocoLeg` and `smartOrderId` metadata so order-service can cancel the counterpart on fill
+  - DTO validation: `@ValidateIf` ensures required fields per order type (slices/intervalMinutes for TWAP/DCA; entryPrice/takeProfitPrice/stopLossPrice for BRACKET; priceA/priceB for OCO)
+  - Frontend: `/orders/smart` page with expandable rows showing child order progress, status badges, slice counters, and cancel controls
+
+---
+
+## [6.11.0] — 2026-03-30
+
+### Added
+- **Merge Arbitrage Scanner** — real-time scanner for prediction markets where YES + NO prices sum to less than $1.00
+  - `ArbitrageService.getOpportunities()` — batch MGET from Redis price cache (`cache:price:{tokenId}`); falls back to DB snapshot price on cache miss; filters by configurable `minMargin` (default 0.5%)
+  - `GET /api/v1/arbitrage?minMargin=0.5` — returns opportunities sorted by margin descending with `{ marketId, yesTokenId, noTokenId, yesPrice, noPrice, sum, marginPct, costPerUnit, profitPerUnit }`
+  - Frontend: `/arbitrage` page with margin filter (0.5% / 1% / 2% / 5%), color-coded table (green ≥5%, amber ≥2%), one-click "Execute" button that places simultaneous YES + NO buy orders
+  - Sidebar: Arbitrage link added to the Trade section
+
+---
+
 ## [6.10.0] — 2026-03-30
 
 ### Added
