@@ -347,6 +347,12 @@ model UserLimit {
   maxOrderSizeUsdc      Decimal  @default(1000) @db.Decimal(20, 6)
   maxBacktestRunsPerDay Int      @default(10)
   circuitBreakerErrors  Int      @default(5)
+  // Drawdown circuit breaker
+  drawdownEnabled         Boolean  @default(false)
+  drawdownLookbackHours   Int      @default(24)
+  drawdownThresholdPct    Decimal  @default(0.1000) @db.Decimal(5, 4)
+  circuitBreakerTripped   Boolean  @default(false)
+  circuitBreakerTrippedAt DateTime?
   updatedAt             DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -76,6 +76,13 @@ export class TemplatesService {
           severity: "error",
         };
 
+      case "CIRCUIT_BREAKER_TRIGGERED":
+        return {
+          title: "Circuit Breaker Triggered",
+          body: `Your portfolio dropped ${data.drawdownPct ?? "?"}% within ${data.lookbackHours ?? "?"}h (threshold: ${data.thresholdPct ?? "?"}%). ${data.strategiesPaused ?? "0"} strategy/ies paused.`,
+          severity: "error",
+        };
+
       case "MARKET_RESOLVED":
         return {
           title: "Market Resolved",

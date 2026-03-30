@@ -6,6 +6,7 @@ import * as bcrypt from "bcrypt";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UpdatePasswordDto } from "./dto/update-password.dto";
 import { UpdateNotificationsDto } from "./dto/update-notifications.dto";
+import { UpdateRiskSettingsDto } from "./dto/update-risk-settings.dto";
 
 @Injectable()
 export class SettingsService {
@@ -121,6 +122,56 @@ export class SettingsService {
     }
 
     return { message: "Password updated" };
+  }
+
+  async getRiskSettings(userId: string): Promise<any> {
+    const limits = await this.prisma.userLimit.findUnique({ where: { userId } });
+    return {
+      drawdownEnabled: limits?.drawdownEnabled ?? false,
+      drawdownLookbackHours: limits?.drawdownLookbackHours ?? 24,
+      drawdownThresholdPct: parseFloat(String(limits?.drawdownThresholdPct ?? "0.1")),
+      circuitBreakerTripped: limits?.circuitBreakerTripped ?? false,
+      circuitBreakerTrippedAt: limits?.circuitBreakerTrippedAt ?? null,
+    };
+  }
+
+  async updateRiskSettings(userId: string, dto: UpdateRiskSettingsDto): Promise<any> {
+    const data: Record<string, unknown> = {};
+    if (dto.drawdownEnabled !== undefined) data.drawdownEnabled = dto.drawdownEnabled;
+    if (dto.drawdownLookbackHours !== undefined) data.drawdownLookbackHours = dto.drawdownLookbackHours;
+    if (dto.drawdownThresholdPct !== undefined) data.drawdownThresholdPct = dto.drawdownThresholdPct;
+
+    await this.prisma.userLimit.upsert({
+      where: { userId },
+      create: { userId, ...data },
+      update: data,
+    });
+
+    return this.getRiskSettings(userId);
+  }
+
+  async resetCircuitBreaker(userId: string): Promise<any> {
+    await this.prisma.userLimit.upsert({
+      where: { userId },
+      create: {
+        userId,
+        circuitBreakerTripped: false,
+        circuitBreakerTrippedAt: null,
+      },
+      update: {
+        circuitBreakerTripped: false,
+        circuitBreakerTrippedAt: null,
+      },
+    });
+
+    // Clear the Redis debounce key so the checker can re-trigger if needed
+    try {
+      await this.redis.getClient().del(`cb:tripped:${userId}`);
+    } catch (err) {
+      this.logger.error(`Failed to clear circuit breaker debounce key for ${userId}`, err);
+    }
+
+    return { reset: true };
   }
 
   async getGasUsage(userId: string): Promise<{

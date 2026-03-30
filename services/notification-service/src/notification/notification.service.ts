@@ -14,6 +14,7 @@ const EVENT_TO_PREF_FIELD: Record<string, keyof DispatchOptions | null> = {
   BACKTEST_COMPLETE: "onBacktestComplete",
   PRICE_ALERT: null, // price alerts are always dispatched (user created them explicitly)
   DAILY_LOSS_LIMIT: "onDailyLossLimit",
+  CIRCUIT_BREAKER_TRIGGERED: "onDailyLossLimit", // uses same opt-in as daily loss
   MARKET_RESOLVED: "onMarketResolved",
   SOMEONE_FORKED: "onSomeoneFelked",
   SOMEONE_FOLLOWED: "onSomeoneFollowed",

@@ -1,10 +1,11 @@
-import { Controller, Get, Patch, Body, UseGuards } from "@nestjs/common";
+import { Controller, Get, Patch, Post, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
 import { SettingsService } from "./settings.service";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UpdatePasswordDto } from "./dto/update-password.dto";
 import { UpdateNotificationsDto } from "./dto/update-notifications.dto";
+import { UpdateRiskSettingsDto } from "./dto/update-risk-settings.dto";
 
 @ApiTags("settings")
 @ApiBearerAuth("jwt")
@@ -45,5 +46,24 @@ export class SettingsController {
   @Get("gas")
   getGasUsage(@CurrentUser() user: any) {
     return this.settings.getGasUsage(user.sub);
+  }
+
+  @Get("risk")
+  getRiskSettings(@CurrentUser() user: any) {
+    return this.settings.getRiskSettings(user.sub);
+  }
+
+  @Patch("risk")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
+  updateRiskSettings(@CurrentUser() user: any, @Body() dto: UpdateRiskSettingsDto) {
+    return this.settings.updateRiskSettings(user.sub, dto);
+  }
+
+  @Post("risk/reset")
+  @UseGuards(ApiKeyScopeGuard)
+  @RequireScopes('WRITE')
+  resetCircuitBreaker(@CurrentUser() user: any) {
+    return this.settings.resetCircuitBreaker(user.sub);
   }
 }

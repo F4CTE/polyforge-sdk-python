@@ -4,7 +4,7 @@ import {
 } from 'recharts';
 import {
   Wallet, BarChart3,
-  RefreshCw, Loader2, AlertTriangle, Fuel, PieChart,
+  RefreshCw, Loader2, AlertTriangle, Fuel, PieChart, ShieldAlert,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
@@ -249,6 +249,21 @@ export function Component() {
     setRedeemingPosition(prev => ({ ...prev, [pos.id]: false }));
   }
 
+  const [circuitBreakerTripped, setCircuitBreakerTripped] = useState(false);
+  const [circuitBreakerTrippedAt, setCircuitBreakerTrippedAt] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/v1/settings/risk', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setCircuitBreakerTripped(data.circuitBreakerTripped ?? false);
+          setCircuitBreakerTrippedAt(data.circuitBreakerTrippedAt ?? null);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   async function resetPaper() {
@@ -321,6 +336,24 @@ export function Component() {
           </button>
         </div>
       </div>
+
+      {/* Circuit Breaker Banner */}
+      {circuitBreakerTripped && (
+        <div className="flex items-start gap-3 p-4 rounded-pf-lg bg-pf-danger/10 border border-pf-danger/30">
+          <ShieldAlert className="size-5 text-pf-danger shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-pf-danger">Circuit Breaker Active</p>
+            <p className="text-xs text-pf-text-secondary mt-0.5">
+              All strategies have been paused due to drawdown exceeding your risk threshold.
+              {circuitBreakerTrippedAt && (
+                <span> Triggered {new Date(circuitBreakerTrippedAt).toLocaleString()}.</span>
+              )}
+              {' '}
+              <a href="/settings?tab=risk" className="underline text-pf-danger hover:text-pf-danger/80">Reset in Settings &rarr;</a>
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ═══ LIVE TAB ═══ */}
       {tab === 'live' && (

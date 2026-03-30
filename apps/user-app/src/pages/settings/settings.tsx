@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
-  User, Bell, Lock, Shield, Key, Loader2, Check, Copy, Ban, Eye, EyeOff, Fuel, Trash2, AlertTriangle,
+  User, Bell, Lock, Shield, Key, Loader2, Check, Copy, Ban, Eye, EyeOff, Fuel, Trash2, AlertTriangle, ShieldAlert,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
-type Tab = 'profile' | 'notifications' | 'password' | '2fa' | 'apikeys' | 'gas';
+type Tab = 'profile' | 'notifications' | 'password' | '2fa' | 'apikeys' | 'gas' | 'risk';
 
 interface ApiKey {
   id: string;
@@ -45,6 +45,7 @@ const TABS: { label: string; value: Tab; icon: React.ReactNode }[] = [
   { label: '2FA', value: '2fa', icon: <Shield className="size-3.5" /> },
   { label: 'API Keys', value: 'apikeys', icon: <Key className="size-3.5" /> },
   { label: 'Gas Usage', value: 'gas', icon: <Fuel className="size-3.5" /> },
+  { label: 'Risk', value: 'risk', icon: <ShieldAlert className="size-3.5" /> },
 ];
 
 const NOTIF_ITEMS = [
@@ -124,6 +125,16 @@ export function Component() {
   const [gasUsage, setGasUsage] = useState<GasUsageData | null>(null);
   const [gasLoading, setGasLoading] = useState(false);
 
+  // Risk / Circuit Breaker
+  const [riskLoading, setRiskLoading] = useState(false);
+  const [riskSaving, setRiskSaving] = useState(false);
+  const [riskResetting, setRiskResetting] = useState(false);
+  const [drawdownEnabled, setDrawdownEnabled] = useState(false);
+  const [drawdownLookbackHours, setDrawdownLookbackHours] = useState(24);
+  const [drawdownThresholdPct, setDrawdownThresholdPct] = useState(10);
+  const [circuitBreakerTripped, setCircuitBreakerTripped] = useState(false);
+  const [circuitBreakerTrippedAt, setCircuitBreakerTrippedAt] = useState<string | null>(null);
+
   async function loadGasUsage() {
     setGasLoading(true);
     try {
@@ -133,10 +144,69 @@ export function Component() {
     setGasLoading(false);
   }
 
+  async function loadRiskSettings() {
+    setRiskLoading(true);
+    try {
+      const res = await fetch('/api/v1/settings/risk', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setDrawdownEnabled(data.drawdownEnabled ?? false);
+        setDrawdownLookbackHours(data.drawdownLookbackHours ?? 24);
+        setDrawdownThresholdPct(Math.round((data.drawdownThresholdPct ?? 0.1) * 100));
+        setCircuitBreakerTripped(data.circuitBreakerTripped ?? false);
+        setCircuitBreakerTrippedAt(data.circuitBreakerTrippedAt ?? null);
+      }
+    } catch { toast.error('Failed to load risk settings'); }
+    setRiskLoading(false);
+  }
+
+  async function saveRiskSettings() {
+    if (riskSaving) return;
+    setRiskSaving(true);
+    try {
+      const res = await fetch('/api/v1/settings/risk', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          drawdownEnabled,
+          drawdownLookbackHours,
+          drawdownThresholdPct: drawdownThresholdPct / 100,
+        }),
+      });
+      if (res.ok) {
+        toast.success('Risk settings saved');
+      } else {
+        toast.error('Failed to save risk settings');
+      }
+    } catch { toast.error('Failed to save risk settings'); }
+    setRiskSaving(false);
+  }
+
+  async function resetCircuitBreaker() {
+    if (riskResetting) return;
+    setRiskResetting(true);
+    try {
+      const res = await fetch('/api/v1/settings/risk/reset', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        setCircuitBreakerTripped(false);
+        setCircuitBreakerTrippedAt(null);
+        toast.success('Circuit breaker reset — strategies can resume trading');
+      } else {
+        toast.error('Failed to reset circuit breaker');
+      }
+    } catch { toast.error('Failed to reset circuit breaker'); }
+    setRiskResetting(false);
+  }
+
   function handleTab(t: Tab) {
     setActiveTab(t);
     if (t === 'apikeys' && apiKeys.length === 0) loadApiKeys();
     if (t === 'gas' && !gasUsage) loadGasUsage();
+    if (t === 'risk') loadRiskSettings();
   }
 
   // ── Profile ──
@@ -712,6 +782,124 @@ export function Component() {
               <p className="text-sm text-pf-text-muted">Unable to load gas usage data.</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ─── Risk Tab ─── */}
+      {activeTab === 'risk' && (
+        <div className="space-y-4">
+          {/* Circuit Breaker Tripped Banner */}
+          {circuitBreakerTripped && (
+            <div className="flex items-start gap-3 p-4 rounded-pf-lg bg-pf-danger/10 border border-pf-danger/30">
+              <ShieldAlert className="size-5 text-pf-danger shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-pf-danger">Circuit Breaker Tripped</p>
+                <p className="text-xs text-pf-text-secondary mt-0.5">
+                  All running strategies were paused due to drawdown exceeding your threshold.
+                  {circuitBreakerTrippedAt && (
+                    <span> Triggered {new Date(circuitBreakerTrippedAt).toLocaleString()}.</span>
+                  )}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={resetCircuitBreaker}
+                disabled={riskResetting}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-pf bg-pf-danger text-white hover:bg-pf-danger/80 disabled:opacity-50 transition-colors shrink-0"
+              >
+                {riskResetting ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3" />}
+                Reset
+              </button>
+            </div>
+          )}
+
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Drawdown Circuit Breaker</h2>
+              {riskLoading && <Loader2 className="size-4 animate-spin text-pf-text-muted" />}
+            </div>
+
+            <p className="text-xs text-pf-text-secondary -mt-2">
+              Automatically pauses all running strategies if your portfolio loses more than the
+              configured percentage within the lookback window.
+            </p>
+
+            {/* Enable toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-pf-text font-medium">Enable Circuit Breaker</p>
+                <p className="text-xs text-pf-text-muted mt-0.5">Pause all strategies when drawdown threshold is hit</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={drawdownEnabled}
+                onClick={() => setDrawdownEnabled(v => !v)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  drawdownEnabled ? 'bg-pf-cyan-500' : 'bg-pf-surface border border-pf-border'
+                }`}
+              >
+                <span className={`inline-block size-4 rounded-full bg-white shadow transition-transform ${
+                  drawdownEnabled ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
+            </div>
+
+            {/* Lookback window */}
+            <div>
+              <label htmlFor="settings-lookback" className="text-xs text-pf-text-secondary mb-1.5 block">
+                Lookback Window
+              </label>
+              <select
+                id="settings-lookback"
+                value={drawdownLookbackHours}
+                onChange={e => setDrawdownLookbackHours(Number(e.target.value))}
+                disabled={!drawdownEnabled}
+                className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors disabled:opacity-50"
+              >
+                <option value={1}>1 hour</option>
+                <option value={4}>4 hours</option>
+                <option value={8}>8 hours</option>
+                <option value={24}>24 hours</option>
+                <option value={168}>7 days</option>
+              </select>
+            </div>
+
+            {/* Threshold */}
+            <div>
+              <label htmlFor="settings-threshold" className="text-xs text-pf-text-secondary mb-1.5 block">
+                Loss Threshold: <span className="font-mono text-pf-danger">{drawdownThresholdPct}%</span>
+              </label>
+              <input
+                id="settings-threshold"
+                type="range"
+                min={1}
+                max={50}
+                step={1}
+                value={drawdownThresholdPct}
+                onChange={e => setDrawdownThresholdPct(Number(e.target.value))}
+                disabled={!drawdownEnabled}
+                className="w-full accent-pf-danger disabled:opacity-50"
+              />
+              <div className="flex justify-between text-[10px] text-pf-text-muted mt-1">
+                <span>1%</span>
+                <span>25%</span>
+                <span>50%</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-pf-border">
+              <button
+                type="button"
+                onClick={saveRiskSettings}
+                disabled={riskSaving}
+                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+              >
+                {riskSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                Save Risk Settings
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
