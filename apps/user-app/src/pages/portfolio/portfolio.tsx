@@ -8,7 +8,7 @@ import {
   RefreshCw, Loader2, AlertTriangle, Fuel, PieChart, ShieldAlert,
   Shield, TrendingDown, TrendingUp, Share2, Copy, Check, Download,
   X, ChevronDown, ChevronUp, Clock, CalendarDays, Receipt, FileText,
-  Target, Pencil, Trash2, Trophy,
+  Target, Pencil, Trash2, Trophy, ShieldCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
@@ -124,6 +124,20 @@ interface PortfolioGoal {
   startDate: string;
   endDate: string;
   startPnl: number;
+}
+
+interface RiskCell {
+  category: string; // 'politics' | 'sports' | 'crypto' | 'finance' | 'entertainment' | 'science'
+  outcome: 'YES' | 'NO';
+  totalValue: number; // USDC allocated
+  positionCount: number;
+  pnl: number; // unrealised P&L for this cell
+}
+
+interface RiskHeatmapData {
+  cells: RiskCell[];
+  totalValue: number;
+  maxCellValue: number;
 }
 
 type Tab = 'live' | 'paper';
@@ -435,6 +449,10 @@ export function Component() {
   const [heatmapData, setHeatmapData] = useState<DailyHeatmapEntry[]>([]);
   const [loadingHeatmap, setLoadingHeatmap] = useState(true);
 
+  // Risk Concentration Heatmap
+  const [riskHeatmap, setRiskHeatmap] = useState<RiskHeatmapData | null>(null);
+  const [loadingRiskHeatmap, setLoadingRiskHeatmap] = useState(true);
+
   // Tax Report
   const currentYear = new Date().getFullYear();
   const [taxYear, setTaxYear] = useState<number>(currentYear);
@@ -504,28 +522,32 @@ export function Component() {
     return () => { cancelled = true; };
   }, [loadPortfolio, loadChart, period]);
 
-  // Load daily P&L, risk settings, advanced stats, edge score, and heatmap in parallel on mount
+  // Load daily P&L, risk settings, advanced stats, edge score, heatmap, and risk heatmap in parallel on mount
   useEffect(() => {
     let cancelled = false;
     setLoadingDailyPnl(true);
     setLoadingHeatmap(true);
+    setLoadingRiskHeatmap(true);
     Promise.all([
       fetch('/api/v1/portfolio/pnl?period=today', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/users/me/risk-settings', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/portfolio/stats', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/scores/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/portfolio/daily-pnl?months=12', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
-    ]).then(([pnlData, riskData, statsData, scoreData, heatmapRes]) => {
+      fetch('/api/v1/portfolio/risk-heatmap', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+    ]).then(([pnlData, riskData, statsData, scoreData, heatmapRes, riskHeatmapRes]) => {
       if (cancelled) return;
       if (pnlData) setDailyPnl(pnlData);
       if (riskData) setUserRiskSettings(riskData);
       if (statsData) setPortfolioStats(statsData);
       if (scoreData?.score != null) setEdgeScore(typeof scoreData.score === 'number' ? scoreData.score : scoreData.score?.score ?? null);
       if (heatmapRes?.data) setHeatmapData(heatmapRes.data);
-    }).catch(() => {}).finally(() => {
+      if (riskHeatmapRes) setRiskHeatmap(riskHeatmapRes);
+    }).catch(() => toast.error('Failed to load portfolio data')).finally(() => {
       if (!cancelled) {
         setLoadingDailyPnl(false);
         setLoadingHeatmap(false);
+        setLoadingRiskHeatmap(false);
       }
     });
     return () => { cancelled = true; };
@@ -1998,6 +2020,243 @@ export function Component() {
               <HeatmapGrid data={heatmapData} />
             )}
           </div>
+
+          {/* ─── Risk Concentration Heatmap ─── */}
+          {(() => {
+            const RISK_CATEGORIES = ['Politics', 'Sports', 'Crypto', 'Finance', 'Entertainment', 'Science'];
+            const RISK_OUTCOMES: Array<'YES' | 'NO'> = ['YES', 'NO'];
+
+            function riskCellBg(ratio: number): string {
+              if (ratio === 0) return 'bg-pf-overlay/20';
+              if (ratio <= 0.25) return 'bg-pf-cyan-500/10';
+              if (ratio <= 0.50) return 'bg-pf-cyan-500/25';
+              if (ratio <= 0.75) return 'bg-pf-cyan-500/45';
+              return 'bg-pf-cyan-500/70';
+            }
+
+            function formatCellValue(v: number): string {
+              if (v >= 1000) return `$${(v / 1000).toFixed(1)}K`;
+              return `$${v.toFixed(2)}`;
+            }
+
+            if (loadingRiskHeatmap) {
+              return (
+                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <ShieldAlert className="size-4 text-pf-cyan-400" />
+                    <span className="text-sm font-semibold text-pf-text">Risk Concentration</span>
+                  </div>
+                  {/* 2×6 skeleton grid */}
+                  <div className="grid gap-2" style={{ gridTemplateColumns: 'auto repeat(6, 1fr)' }}>
+                    {/* header row spacer */}
+                    <div />
+                    {RISK_CATEGORIES.map(c => (
+                      <div key={c} className="h-4 bg-pf-overlay rounded animate-pulse" />
+                    ))}
+                    {RISK_OUTCOMES.map(o => (
+                      <>
+                        <div key={`lbl-${o}`} className="h-12 w-8 bg-pf-overlay rounded animate-pulse" />
+                        {RISK_CATEGORIES.map(c => (
+                          <div key={`${o}-${c}`} className="h-12 bg-pf-overlay rounded animate-pulse" />
+                        ))}
+                      </>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
+            // Empty state — no positions
+            if (!riskHeatmap || riskHeatmap.cells.length === 0) {
+              return (
+                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <ShieldAlert className="size-4 text-pf-cyan-400" />
+                    <span className="text-sm font-semibold text-pf-text">Risk Concentration</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center py-10 text-center">
+                    <ShieldCheck className="size-8 text-pf-text-muted mb-2" />
+                    <p className="text-sm font-medium text-pf-text">No open positions — nothing to analyse</p>
+                    <p className="text-xs text-pf-text-muted mt-1">Open some positions to see your risk concentration.</p>
+                  </div>
+                </div>
+              );
+            }
+
+            const { cells, totalValue, maxCellValue } = riskHeatmap;
+
+            // Build lookup: category+outcome → cell
+            const cellMap = new Map<string, RiskCell>();
+            cells.forEach(c => {
+              cellMap.set(`${c.category.toLowerCase()}|${c.outcome}`, c);
+            });
+
+            // Column totals per category
+            const colTotals = RISK_CATEGORIES.map(cat => {
+              return RISK_OUTCOMES.reduce((sum, outcome) => {
+                const key = `${cat.toLowerCase()}|${outcome}`;
+                return sum + (cellMap.get(key)?.totalValue ?? 0);
+              }, 0);
+            });
+            const maxColTotal = Math.max(...colTotals, 1);
+
+            // High-concentration warning: any single cell > 30% of total
+            const highConcentrationCells = cells.filter(c => totalValue > 0 && c.totalValue / totalValue > 0.3);
+
+            return (
+              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-1 flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="size-4 text-pf-cyan-400" />
+                    <div>
+                      <span className="text-sm font-semibold text-pf-text">Risk Concentration</span>
+                      <p className="text-[11px] text-pf-text-muted mt-0.5">Exposure by category and outcome</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* High-concentration warnings */}
+                {highConcentrationCells.map(c => {
+                  const pct = ((c.totalValue / totalValue) * 100).toFixed(1);
+                  return (
+                    <div
+                      key={`warn-${c.category}-${c.outcome}`}
+                      className="flex items-center gap-2 mt-3 px-3 py-2 rounded-pf bg-amber-500/10 border border-amber-500/30"
+                    >
+                      <AlertTriangle className="size-3.5 text-amber-400 shrink-0" />
+                      <p className="text-xs text-amber-300">
+                        High concentration in{' '}
+                        <span className="font-semibold capitalize">{c.category}</span>{' '}
+                        <span className="font-semibold">{c.outcome}</span>{' '}
+                        ({pct}% of portfolio)
+                      </p>
+                    </div>
+                  );
+                })}
+
+                {/* Grid */}
+                <div className="mt-4 overflow-x-auto">
+                  <div
+                    className="grid gap-1.5 min-w-max"
+                    style={{ gridTemplateColumns: `60px repeat(${RISK_CATEGORIES.length}, minmax(88px, 1fr))` }}
+                  >
+                    {/* Column headers */}
+                    <div />
+                    {RISK_CATEGORIES.map(cat => (
+                      <div key={cat} className="text-center text-[11px] font-medium text-pf-text-secondary pb-1 capitalize">
+                        {cat}
+                      </div>
+                    ))}
+
+                    {/* Data rows */}
+                    {RISK_OUTCOMES.map(outcome => (
+                      <>
+                        {/* Row label */}
+                        <div
+                          key={`row-lbl-${outcome}`}
+                          className="flex items-center justify-center"
+                        >
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                            outcome === 'YES'
+                              ? 'text-pf-success bg-pf-success/10'
+                              : 'text-pf-danger bg-pf-danger/10'
+                          }`}>
+                            {outcome}
+                          </span>
+                        </div>
+
+                        {/* Cells */}
+                        {RISK_CATEGORIES.map(cat => {
+                          const key = `${cat.toLowerCase()}|${outcome}`;
+                          const cell = cellMap.get(key);
+                          const ratio = cell && maxCellValue > 0 ? cell.totalValue / maxCellValue : 0;
+                          const bgClass = riskCellBg(ratio);
+
+                          if (!cell) {
+                            return (
+                              <div
+                                key={`${outcome}-${cat}`}
+                                className={`${bgClass} rounded-pf border border-pf-border-subtle flex items-center justify-center h-14`}
+                              >
+                                <span className="text-pf-text-muted text-sm">—</span>
+                              </div>
+                            );
+                          }
+
+                          const tooltipText = [
+                            `${cat} / ${outcome}`,
+                            `Value: ${formatCellValue(cell.totalValue)}`,
+                            `Positions: ${cell.positionCount}`,
+                            `P&L: ${cell.pnl >= 0 ? '+' : ''}$${cell.pnl.toFixed(2)}`,
+                          ].join('\n');
+
+                          return (
+                            <div
+                              key={`${outcome}-${cat}`}
+                              title={tooltipText}
+                              className={`${bgClass} rounded-pf border border-pf-border-subtle h-14 relative p-1.5 cursor-default transition-opacity hover:opacity-80`}
+                            >
+                              {/* Dollar value */}
+                              <p className="text-pf-text font-mono text-xs leading-tight">{formatCellValue(cell.totalValue)}</p>
+                              {/* Position count */}
+                              <p className="text-pf-text-muted text-[10px] leading-tight mt-0.5">{cell.positionCount} pos</p>
+                              {/* P&L badge bottom-right */}
+                              <span
+                                className={`absolute bottom-1 right-1.5 text-[9px] font-mono font-semibold ${
+                                  cell.pnl > 0 ? 'text-pf-success' : cell.pnl < 0 ? 'text-pf-danger' : 'text-pf-text-muted'
+                                }`}
+                              >
+                                {cell.pnl >= 0 ? '+' : ''}{cell.pnl.toFixed(2)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Summary row — column totals */}
+                <div className="mt-3 overflow-x-auto">
+                  <div
+                    className="grid gap-1.5 min-w-max"
+                    style={{ gridTemplateColumns: `60px repeat(${RISK_CATEGORIES.length}, minmax(88px, 1fr))` }}
+                  >
+                    <div className="text-[10px] text-pf-text-muted flex items-center justify-center">Total</div>
+                    {RISK_CATEGORIES.map((cat, i) => {
+                      const colTotal = colTotals[i];
+                      const pct = totalValue > 0 ? (colTotal / totalValue) * 100 : 0;
+                      return (
+                        <div key={cat} className="flex flex-col gap-0.5">
+                          <div className="h-1.5 rounded-full bg-pf-surface overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-pf-cyan-500/50 transition-all"
+                              style={{ width: `${(colTotal / maxColTotal) * 100}%` }}
+                            />
+                          </div>
+                          <p className="text-[10px] text-pf-text-muted font-mono text-center">
+                            {colTotal > 0 ? `${pct.toFixed(1)}%` : '—'}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Legend */}
+                <div className="flex items-center gap-1.5 mt-4 flex-wrap">
+                  <span className="text-[10px] text-pf-text-muted">Low</span>
+                  <div className="w-5 h-3 rounded-sm bg-pf-overlay/20 border border-pf-border-subtle" />
+                  <div className="w-5 h-3 rounded-sm bg-pf-cyan-500/10 border border-pf-border-subtle" />
+                  <div className="w-5 h-3 rounded-sm bg-pf-cyan-500/25 border border-pf-border-subtle" />
+                  <div className="w-5 h-3 rounded-sm bg-pf-cyan-500/45 border border-pf-border-subtle" />
+                  <div className="w-5 h-3 rounded-sm bg-pf-cyan-500/70 border border-pf-border-subtle" />
+                  <span className="text-[10px] text-pf-text-muted">High</span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Category Exposure */}
           {(portfolio?.positions ?? []).length > 0 && (() => {

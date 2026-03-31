@@ -36,6 +36,9 @@ import {
   Plus,
   Minus,
   Edit2,
+  Globe,
+  Lock,
+  TrendingUp,
 } from 'lucide-react';
 import { wsManager } from '@/lib/websocket';
 import { toast } from 'sonner';
@@ -271,6 +274,14 @@ export function Component() {
   const [listPrice, setListPrice] = useState('0');
   const [listTags, setListTags] = useState('');
   const [listSubmitting, setListSubmitting] = useState(false);
+
+  // Share panel state
+  const [showSharePanel, setShowSharePanel] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareCode, setShareCode] = useState<string | null>(null);
+  const [loadingShare, setLoadingShare] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [togglingVisibility, setTogglingVisibility] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -551,17 +562,71 @@ export function Component() {
     }
   }
 
-  function handleShare() {
+  async function openSharePanel() {
     if (!strategy) return;
-    const url = `${window.location.origin}/strategies/${strategy.id}`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(() => {
-        toast.success('Link copied to clipboard');
-      }).catch(() => {
-        prompt('Copy this link:', url);
+    // Determine if we're toggling off — capture current value before state update
+    const isCurrentlyOpen = showSharePanel;
+    setShowSharePanel(!isCurrentlyOpen);
+    // Only fetch share URL when opening and haven't fetched yet
+    if (isCurrentlyOpen || shareUrl) return;
+    setLoadingShare(true);
+    try {
+      const res = await fetch(`/api/v1/strategies/${strategy.id}/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
       });
-    } else {
-      prompt('Copy this link:', url);
+      if (res.ok) {
+        const data = await res.json();
+        setShareUrl(data.shareUrl ?? `${window.location.origin}/s/${data.shareCode}`);
+        setShareCode(data.shareCode ?? null);
+      } else {
+        // Fallback to strategy page URL
+        setShareUrl(`${window.location.origin}/strategies/${strategy.id}`);
+      }
+    } catch {
+      setShareUrl(`${window.location.origin}/strategies/${strategy.id}`);
+    } finally {
+      setLoadingShare(false);
+    }
+  }
+
+  async function copyShareUrl() {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopying(true);
+      toast.success('Link copied!');
+      setTimeout(() => setCopying(false), 2000);
+    } catch {
+      toast.error('Failed to copy link');
+    }
+  }
+
+  async function toggleVisibility() {
+    if (!strategy) return;
+    const nextPublic = strategy.visibility !== 'public';
+    setTogglingVisibility(true);
+    try {
+      const res = await fetch(`/api/v1/strategies/${strategy.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ isPublic: nextPublic }),
+      });
+      if (res.ok) {
+        setStrategy((prev) =>
+          prev ? { ...prev, visibility: nextPublic ? 'public' : 'private' } : prev,
+        );
+        toast.success(nextPublic ? 'Strategy is now public' : 'Strategy is now private');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error((err as any).message ?? 'Failed to update visibility');
+      }
+    } catch {
+      toast.error('Failed to update visibility');
+    } finally {
+      setTogglingVisibility(false);
     }
   }
 
@@ -773,9 +838,10 @@ export function Component() {
               </button>
               <button
                 type="button"
-                onClick={handleShare}
-                className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                onClick={openSharePanel}
+                className={`p-2 rounded-pf border transition-colors ${showSharePanel ? 'bg-pf-cyan-500/10 border-pf-cyan-500/40 text-pf-cyan-400' : 'bg-pf-elevated border-pf-border text-pf-text-secondary hover:border-pf-border-strong'}`}
                 aria-label="Share strategy"
+                aria-expanded={showSharePanel}
                 title="Share"
               >
                 <Share2 className="size-4" />
@@ -859,6 +925,152 @@ export function Component() {
               >
                 {listSubmitting ? 'Publishing...' : 'Publish to Marketplace'}
               </button>
+            </div>
+          )}
+
+          {/* Share Panel */}
+          {showSharePanel && (
+            <div className="bg-pf-elevated border border-pf-cyan-500/30 rounded-pf-lg p-4 space-y-4">
+              {/* Panel header */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-pf-text flex items-center gap-2">
+                  <Share2 className="size-4 text-pf-cyan-400" />
+                  Share Strategy
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowSharePanel(false)}
+                  className="text-pf-text-muted hover:text-pf-text transition-colors"
+                  aria-label="Close share panel"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              {/* Public link row */}
+              <div>
+                <p className="text-xs font-medium text-pf-text-secondary mb-1.5">Public link</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-9 flex items-center px-3 rounded-pf bg-pf-surface border border-pf-border overflow-hidden">
+                    {loadingShare ? (
+                      <span className="text-xs text-pf-text-muted animate-pulse">Generating link...</span>
+                    ) : (
+                      <span className="text-xs font-mono text-pf-text-secondary truncate">
+                        {shareUrl ?? '—'}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={copyShareUrl}
+                    disabled={!shareUrl || loadingShare}
+                    className="flex items-center gap-1.5 px-3 h-9 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors shrink-0"
+                  >
+                    {copying ? <Check className="size-3.5 text-pf-success" /> : <Copy className="size-3.5" />}
+                    {copying ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Share actions */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-pf-text-muted">Share on:</span>
+                <button
+                  type="button"
+                  disabled={!shareUrl || loadingShare}
+                  onClick={() => {
+                    if (!shareUrl) return;
+                    const text = `Check out my prediction market strategy "${strategy.name}" on PolyForge`;
+                    window.open(
+                      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`,
+                      '_blank',
+                      'noopener,noreferrer',
+                    );
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 transition-colors"
+                >
+                  <span className="font-bold text-sm leading-none">𝕏</span>
+                  Twitter
+                </button>
+                <button
+                  type="button"
+                  onClick={copyShareUrl}
+                  disabled={!shareUrl || loadingShare}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 transition-colors"
+                >
+                  {copying ? <Check className="size-3.5 text-pf-success" /> : <Copy className="size-3.5" />}
+                  Copy link
+                </button>
+              </div>
+
+              {/* Preview card */}
+              <div>
+                <p className="text-xs font-medium text-pf-text-secondary mb-1.5">Preview card</p>
+                <div className="border border-pf-border rounded-pf bg-pf-surface p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="size-4 text-pf-cyan-400 shrink-0" />
+                    <span className="text-sm font-semibold text-pf-text truncate">{strategy.name}</span>
+                  </div>
+                  <p className="text-xs text-pf-text-muted">
+                    by @{strategy.id.slice(0, 8)}
+                  </p>
+                  <div className="flex items-center gap-4 py-1.5 border-t border-b border-pf-border-subtle">
+                    {stratPnl && parseFloat(stratPnl.winRate) > 0 && (
+                      <div className="text-center">
+                        <p className="text-[10px] text-pf-text-muted">Win Rate</p>
+                        <p className="text-xs font-mono font-semibold text-pf-cyan-400">
+                          {(parseFloat(stratPnl.winRate) * 100).toFixed(0)}%
+                        </p>
+                      </div>
+                    )}
+                    {(strategy.totalPnl ?? null) !== null && (
+                      <div className="text-center">
+                        <p className="text-[10px] text-pf-text-muted">P&amp;L</p>
+                        <p className={`text-xs font-mono font-semibold ${(strategy.totalPnl ?? 0) >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                          {formatPnl(strategy.totalPnl ?? 0)}
+                        </p>
+                      </div>
+                    )}
+                    {recentOrderCount !== null && (
+                      <div className="text-center">
+                        <p className="text-[10px] text-pf-text-muted">Trades</p>
+                        <p className="text-xs font-mono font-semibold text-pf-text">{recentOrderCount}</p>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-pf-text-muted">PolyForge · polyforge.io</p>
+                </div>
+              </div>
+
+              {/* Visibility toggle */}
+              <div className="flex items-center gap-3 pt-1 border-t border-pf-border-subtle">
+                <div className="flex items-center gap-1.5">
+                  {strategy.visibility === 'public' ? (
+                    <Globe className="size-3.5 text-pf-success" />
+                  ) : (
+                    <Lock className="size-3.5 text-pf-text-muted" />
+                  )}
+                  <span className="text-xs text-pf-text-secondary">
+                    {strategy.visibility === 'public' ? 'Public' : 'Private'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleVisibility}
+                  disabled={togglingVisibility}
+                  className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium transition-colors disabled:opacity-40 ${
+                    strategy.visibility === 'public'
+                      ? 'bg-pf-surface border border-pf-border text-pf-text-secondary hover:border-pf-border-strong'
+                      : 'bg-pf-cyan-500 text-black hover:bg-pf-cyan-400'
+                  }`}
+                >
+                  {togglingVisibility
+                    ? 'Updating...'
+                    : strategy.visibility === 'public'
+                    ? 'Make Private'
+                    : 'Make Public'}
+                </button>
+              </div>
             </div>
           )}
 

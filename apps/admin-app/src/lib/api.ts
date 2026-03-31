@@ -471,10 +471,33 @@ export const adminApi = {
     ),
 
   // Sentiment Overview
-  sentimentOverview: (limit?: number) =>
+  sentimentOverview: (params?: QueryParams) =>
     request<Array<{ marketId: string; marketTitle: string; score: number; label: string; signalCount: number; bullishCount: number; bearishCount: number; lastUpdated: string }>>(
-      buildUrl(API_BASE, '/sentiment', limit ? { limit } : undefined)
+      buildUrl(API_BASE, '/sentiment', params)
     ),
+
+  sentimentSummary: () =>
+    request<{
+      totalMarkets: number;
+      bullishCount: number;
+      bearishCount: number;
+      neutralCount: number;
+      avgScore: number;
+      mostBullishCategory: string;
+      mostBearishCategory: string;
+      trendingTopics: string[];
+    }>(buildUrl('/api/admin', '/sentiment/summary')),
+
+  sentimentByCategory: () =>
+    request<{
+      data: Array<{
+        category: string;
+        bullishCount: number;
+        bearishCount: number;
+        neutralCount: number;
+        avgScore: number;
+      }>;
+    }>(buildUrl('/api/admin', '/sentiment/by-category')),
 
   // Admins
   listAdmins: () => request<AdminData[]>(buildUrl(API_BASE, '/admins')),
