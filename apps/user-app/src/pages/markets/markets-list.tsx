@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, memo } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
   Search,
@@ -18,6 +18,9 @@ import {
   Flame,
   Clock,
   Calendar,
+  SlidersHorizontal,
+  X,
+  ArrowUpDown,
 } from 'lucide-react';
 import { OnboardingDashboardChecklist } from '../../components/onboarding/onboarding-dashboard-checklist';
 
@@ -57,6 +60,63 @@ interface MarketsResponse {
 type SortOption = 'volume' | 'newest' | 'closing_soon' | 'liquidity';
 type ViewMode = 'cards' | 'table';
 type EndDateFilter = 'any' | 'today' | 'week' | 'month';
+
+/* ─── Advanced Search Types ──────────────────────────────────────────── */
+
+interface MarketSearchFilters {
+  query: string;
+  categories: string[];
+  endDateFrom?: string;
+  endDateTo?: string;
+  minVolume?: number;
+  maxVolume?: number;
+  minYesPrice?: number;
+  maxYesPrice?: number;
+  minLiquidity?: number;
+  status: 'active' | 'closed' | 'all';
+  sortBy: 'volume' | 'liquidity' | 'endDate' | 'newest' | 'yesPrice';
+  sortDir: 'asc' | 'desc';
+}
+
+const DEFAULT_ADVANCED_FILTERS: MarketSearchFilters = {
+  query: '',
+  categories: [],
+  endDateFrom: undefined,
+  endDateTo: undefined,
+  minVolume: undefined,
+  maxVolume: undefined,
+  minYesPrice: undefined,
+  maxYesPrice: undefined,
+  minLiquidity: undefined,
+  status: 'active',
+  sortBy: 'volume',
+  sortDir: 'desc',
+};
+
+const ADVANCED_SORT_OPTIONS: { label: string; value: MarketSearchFilters['sortBy'] }[] = [
+  { label: 'Volume', value: 'volume' },
+  { label: 'Liquidity', value: 'liquidity' },
+  { label: 'End Date', value: 'endDate' },
+  { label: 'Newest', value: 'newest' },
+  { label: 'YES Price', value: 'yesPrice' },
+];
+
+const SEARCH_CATEGORIES = ['Crypto', 'Politics', 'Sports', 'Finance', 'Technology', 'Economics', 'Entertainment', 'Other'];
+
+function countActiveFilters(f: MarketSearchFilters): number {
+  let n = 0;
+  if (f.categories.length > 0) n += f.categories.length;
+  if (f.endDateFrom) n++;
+  if (f.endDateTo) n++;
+  if (f.minVolume !== undefined) n++;
+  if (f.maxVolume !== undefined) n++;
+  if (f.minYesPrice !== undefined) n++;
+  if (f.maxYesPrice !== undefined) n++;
+  if (f.minLiquidity !== undefined) n++;
+  if (f.status !== 'active') n++;
+  if (f.sortBy !== 'volume' || f.sortDir !== 'desc') n++;
+  return n;
+}
 
 interface MarketSentiment {
   marketId: string;
@@ -361,6 +421,460 @@ function TrendingCard({ market }: { market: Market }) {
   );
 }
 
+/* ─── Advanced Search Modal ──────────────────────────────────────────── */
+
+function AdvancedSearchModal({
+  open,
+  onClose,
+  onFiltersChange,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onFiltersChange?: (filters: MarketSearchFilters) => void;
+}) {
+  const navigate = useNavigate();
+  const [filters, setFilters] = useState<MarketSearchFilters>(DEFAULT_ADVANCED_FILTERS);
+  const [results, setResults] = useState<Market[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchTotal, setSearchTotal] = useState<number | null>(null);
+  const [searchOffset, setSearchOffset] = useState(0);
+  const queryInputRef = useRef<HTMLInputElement>(null);
+  const LIMIT = 20;
+
+  // Auto-focus query input when opened
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => queryInputRef.current?.focus(), 50);
+    } else {
+      setFilters(DEFAULT_ADVANCED_FILTERS);
+      setResults([]);
+      setSearchTotal(null);
+      setSearchOffset(0);
+    }
+  }, [open]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
+  // Prevent body scroll
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  async function runSearch(offset = 0) {
+    setSearchLoading(true);
+    try {
+      const res = await fetch('/api/v1/markets/search', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...filters, offset, limit: LIMIT }),
+      });
+      if (!res.ok) throw new Error('Search failed');
+      const json: { data: Market[]; total: number } = await res.json();
+      if (offset === 0) {
+        setResults(json.data);
+      } else {
+        setResults((prev) => [...prev, ...json.data]);
+      }
+      setSearchTotal(json.total);
+      setSearchOffset(offset);
+    } catch {
+      toast.error('Advanced search failed. Please try again.');
+    } finally {
+      setSearchLoading(false);
+    }
+  }
+
+  function handleLoadMore() {
+    runSearch(searchOffset + LIMIT);
+  }
+
+  function handleReset() {
+    const reset = DEFAULT_ADVANCED_FILTERS;
+    setFilters(reset);
+    setResults([]);
+    setSearchTotal(null);
+    setSearchOffset(0);
+    onFiltersChange?.(reset);
+  }
+
+  function updateFilters(updater: (prev: MarketSearchFilters) => MarketSearchFilters) {
+    setFilters((prev) => {
+      const next = updater(prev);
+      onFiltersChange?.(next);
+      return next;
+    });
+  }
+
+  function toggleCategory(cat: string) {
+    updateFilters((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(cat)
+        ? prev.categories.filter((c) => c !== cat)
+        : [...prev.categories, cat],
+    }));
+  }
+
+  function handleResultClick(market: Market) {
+    onClose();
+    navigate(`/markets/${market.id}`);
+  }
+
+  if (!open) return null;
+
+  const activeFilterCount = countActiveFilters(filters);
+  const canLoadMore = searchTotal !== null && results.length < searchTotal;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Advanced Market Search"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 pb-6 bg-pf-surface/80 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="relative w-full max-w-2xl bg-pf-elevated border border-pf-border rounded-pf-lg shadow-pf-lg flex flex-col max-h-[calc(100vh-6rem)] overflow-hidden">
+
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-pf-border shrink-0">
+          <Search className="size-5 text-pf-cyan-400 shrink-0" aria-hidden="true" />
+          <h2 className="text-base font-semibold text-pf-text flex-1">Advanced Market Search</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close advanced search"
+            className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {/* Scrollable filter + results body */}
+        <div className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
+
+          {/* Query */}
+          <input
+            ref={queryInputRef}
+            type="text"
+            placeholder="Search by keyword, topic, or question..."
+            aria-label="Search query"
+            value={filters.query}
+            onChange={(e) => updateFilters((prev) => ({ ...prev, query: e.target.value }))}
+            onKeyDown={(e) => { if (e.key === 'Enter') runSearch(0); }}
+            className="w-full h-11 px-4 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors"
+          />
+
+          {/* Categories */}
+          <div>
+            <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide mb-2">Categories</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => updateFilters((prev) => ({ ...prev, categories: [] }))}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  filters.categories.length === 0
+                    ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
+                    : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                }`}
+              >
+                All
+              </button>
+              {SEARCH_CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => toggleCategory(cat)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    filters.categories.includes(cat)
+                      ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
+                      : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* End Date + YES Price Range */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* End date */}
+            <div className="bg-pf-surface border border-pf-border rounded-pf p-3 space-y-2">
+              <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide">End Date</p>
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <label className="block text-[10px] text-pf-text-muted mb-0.5">From</label>
+                  <input
+                    type="date"
+                    value={filters.endDateFrom ?? ''}
+                    onChange={(e) => updateFilters((prev) => ({ ...prev, endDateFrom: e.target.value || undefined }))}
+                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-[10px] text-pf-text-muted mb-0.5">To</label>
+                  <input
+                    type="date"
+                    value={filters.endDateTo ?? ''}
+                    onChange={(e) => updateFilters((prev) => ({ ...prev, endDateTo: e.target.value || undefined }))}
+                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* YES price range */}
+            <div className="bg-pf-surface border border-pf-border rounded-pf p-3 space-y-2">
+              <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide">YES Price Range</p>
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <label className="block text-[10px] text-pf-text-muted mb-0.5">Min</label>
+                  <input
+                    type="number"
+                    min={0.01}
+                    max={0.99}
+                    step={0.01}
+                    placeholder="0.01"
+                    value={filters.minYesPrice ?? ''}
+                    onChange={(e) => updateFilters((prev) => ({ ...prev, minYesPrice: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                  />
+                </div>
+                <span className="text-pf-text-muted text-xs mt-4">—</span>
+                <div className="flex-1">
+                  <label className="block text-[10px] text-pf-text-muted mb-0.5">Max</label>
+                  <input
+                    type="number"
+                    min={0.01}
+                    max={0.99}
+                    step={0.01}
+                    placeholder="0.99"
+                    value={filters.maxYesPrice ?? ''}
+                    onChange={(e) => updateFilters((prev) => ({ ...prev, maxYesPrice: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                  />
+                </div>
+              </div>
+              {(filters.minYesPrice !== undefined || filters.maxYesPrice !== undefined) && (
+                <p className="text-[11px] text-pf-cyan-400 font-mono">
+                  {filters.minYesPrice ?? '0.01'} — {filters.maxYesPrice ?? '0.99'}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Volume + Liquidity */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-pf-surface border border-pf-border rounded-pf p-3 space-y-2">
+              <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide">Volume (USDC)</p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  placeholder="Min"
+                  value={filters.minVolume ?? ''}
+                  onChange={(e) => updateFilters((prev) => ({ ...prev, minVolume: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                  className="flex-1 h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                />
+                <span className="text-pf-text-muted text-xs">—</span>
+                <input
+                  type="number"
+                  min={0}
+                  placeholder="Max"
+                  value={filters.maxVolume ?? ''}
+                  onChange={(e) => updateFilters((prev) => ({ ...prev, maxVolume: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                  className="flex-1 h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="bg-pf-surface border border-pf-border rounded-pf p-3 space-y-2">
+              <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide">Min Liquidity (USDC)</p>
+              <input
+                type="number"
+                min={0}
+                placeholder="e.g. 10000"
+                value={filters.minLiquidity ?? ''}
+                onChange={(e) => updateFilters((prev) => ({ ...prev, minLiquidity: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Status + Sort */}
+          <div className="flex flex-wrap items-start gap-6">
+            {/* Status */}
+            <div>
+              <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide mb-2">Status</p>
+              <div className="flex items-center gap-1.5">
+                {(['active', 'closed', 'all'] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => updateFilters((prev) => ({ ...prev, status: s }))}
+                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors capitalize ${
+                      filters.status === s
+                        ? s === 'active'
+                          ? 'bg-pf-success/15 text-pf-success border-pf-success/30'
+                          : s === 'closed'
+                          ? 'bg-pf-danger/15 text-pf-danger border-pf-danger/30'
+                          : 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
+                        : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                    }`}
+                  >
+                    {s === 'active' && filters.status === 'active' ? 'Active' : s.charAt(0).toUpperCase() + s.slice(1)}
+                    {s === 'active' && filters.status === 'active' && (
+                      <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-pf-success align-middle" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort */}
+            <div className="flex-1 min-w-[220px]">
+              <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide mb-2">Sort By</p>
+              <div className="flex flex-wrap gap-1.5">
+                {ADVANCED_SORT_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      updateFilters((prev) => ({
+                        ...prev,
+                        sortBy: opt.value,
+                        sortDir: prev.sortBy === opt.value && prev.sortDir === 'desc' ? 'asc' : 'desc',
+                      }));
+                    }}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                      filters.sortBy === opt.value
+                        ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
+                        : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                    }`}
+                  >
+                    {opt.label}
+                    {filters.sortBy === opt.value && (
+                      <ArrowUpDown className="size-3" aria-hidden="true" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <button
+              type="button"
+              onClick={handleReset}
+              className="px-4 py-2 rounded-pf text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay border border-pf-border hover:border-pf-border-strong transition-colors"
+            >
+              Reset Filters
+            </button>
+            <button
+              type="button"
+              onClick={() => runSearch(0)}
+              disabled={searchLoading}
+              className="flex items-center gap-2 px-5 py-2 rounded-pf bg-pf-cyan-500 hover:bg-pf-cyan-400 text-pf-bg text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {searchLoading ? (
+                <span className="inline-block w-4 h-4 border-2 border-pf-bg/30 border-t-pf-bg rounded-full animate-spin" aria-hidden="true" />
+              ) : (
+                <Search className="size-4" aria-hidden="true" />
+              )}
+              Search Markets
+            </button>
+          </div>
+
+          {/* Results */}
+          {searchTotal !== null && (
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-2 pb-1 border-b border-pf-border-subtle">
+                <p className="text-sm font-medium text-pf-text">
+                  Results{' '}
+                  <span className="text-pf-text-muted font-normal">({searchTotal.toLocaleString()} markets)</span>
+                </p>
+              </div>
+
+              {results.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <Search className="size-8 text-pf-text-muted mb-3" aria-hidden="true" />
+                  <p className="text-sm text-pf-text font-medium">No markets found</p>
+                  <p className="text-xs text-pf-text-muted mt-1">Try adjusting your filters</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-pf-border-subtle border border-pf-border rounded-pf overflow-hidden">
+                  {results.map((market) => {
+                    const catColor = CATEGORY_COLORS[market.category];
+                    const yesP = yesPercent(market);
+                    return (
+                      <button
+                        key={market.id}
+                        type="button"
+                        onClick={() => handleResultClick(market)}
+                        className="w-full flex items-center gap-3 px-4 py-3 bg-pf-surface hover:bg-pf-elevated transition-colors text-left group"
+                      >
+                        <div className={`w-8 h-8 rounded-pf-sm flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-pf-overlay'}`}>
+                          <span className={`text-xs font-bold ${catColor?.text ?? 'text-pf-text-muted'}`}>
+                            {market.title.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-pf-text group-hover:text-pf-cyan-400 transition-colors line-clamp-1 font-medium">
+                            {market.title}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}>
+                              {market.category}
+                            </span>
+                            <span className="text-[10px] text-pf-text-muted">{formatVolume(market.volume24h)} vol</span>
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          {yesP !== null ? (
+                            <span className="text-sm font-mono font-semibold text-pf-cyan-400">{yesP}¢</span>
+                          ) : (
+                            <span className="text-sm text-pf-text-muted">—</span>
+                          )}
+                          <p className="text-[10px] text-pf-text-muted mt-0.5">{daysUntil(market.endDate)}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {canLoadMore && (
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={searchLoading}
+                  className="w-full py-2 text-sm text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong rounded-pf transition-colors disabled:opacity-60"
+                >
+                  {searchLoading ? 'Loading...' : `Load more (${searchTotal - results.length} remaining)`}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Component ──────────────────────────────────────────────────────── */
 
 export function Component() {
@@ -381,6 +895,8 @@ export function Component() {
   const [endDateFilter, setEndDateFilter] = useState<EndDateFilter>('any');
   const [trendingMarkets, setTrendingMarkets] = useState<Market[]>([]);
   const [trendingLoading, setTrendingLoading] = useState(true);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<MarketSearchFilters>(DEFAULT_ADVANCED_FILTERS);
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -462,6 +978,18 @@ export function Component() {
     });
   }, [markets]);
 
+  // Ctrl+F / Cmd+F opens advanced search (page-scoped)
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setShowAdvancedSearch(true);
+      }
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, []);
+
   const toggleWatch = async (marketId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -538,16 +1066,38 @@ export function Component() {
       <hr className="border-pf-border-subtle" />
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" aria-hidden="true" />
-        <input
-          type="text"
-          placeholder="Search markets..."
-          aria-label="Search markets"
-          defaultValue=""
-          onChange={(e) => onSearchInput(e.target.value)}
-          className="w-full h-11 pl-11 pr-4 rounded-full bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors"
-        />
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" aria-hidden="true" />
+          <input
+            type="text"
+            placeholder="Search markets..."
+            aria-label="Search markets"
+            defaultValue=""
+            onChange={(e) => onSearchInput(e.target.value)}
+            className="w-full h-11 pl-11 pr-4 rounded-full bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors"
+          />
+        </div>
+        {/* Advanced search button */}
+        <button
+          type="button"
+          onClick={() => setShowAdvancedSearch(true)}
+          aria-label="Open advanced search"
+          title="Advanced Search (Ctrl+F)"
+          className={`relative flex items-center gap-1.5 h-11 px-4 rounded-full border text-sm font-medium transition-colors shrink-0 ${
+            countActiveFilters(advancedFilters) > 0
+              ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30 hover:bg-pf-cyan-500/20'
+              : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong hover:text-pf-text'
+          }`}
+        >
+          <SlidersHorizontal className="size-4" aria-hidden="true" />
+          <span>Advanced</span>
+          {countActiveFilters(advancedFilters) > 0 && (
+            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pf-cyan-500 text-pf-bg text-[10px] font-bold -mr-1">
+              {countActiveFilters(advancedFilters)}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* Category chips */}
@@ -786,6 +1336,13 @@ export function Component() {
           </button>
         </div>
       )}
+
+      {/* Advanced Search Modal */}
+      <AdvancedSearchModal
+        open={showAdvancedSearch}
+        onClose={() => setShowAdvancedSearch(false)}
+        onFiltersChange={setAdvancedFilters}
+      />
     </div>
   );
 }

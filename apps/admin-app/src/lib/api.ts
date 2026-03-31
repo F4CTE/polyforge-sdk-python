@@ -631,4 +631,31 @@ export const adminApi = {
     request<{ data: Array<{ cohort: string; size: number; retention: number[] }> }>(
       buildUrl(API_BASE, '/admin/retention/cohorts', { months }),
     ),
+
+  // Revenue Breakdown
+  revenueBreakdown: (period: '7d' | '30d' | '90d') =>
+    request<{
+      totalRevenue: number;
+      totalChange: number;
+      period: string;
+      sources: Array<{
+        source: 'marketplace_listings' | 'copy_fees' | 'strategy_sales' | 'subscription' | 'other';
+        label: string;
+        revenue: number;
+        pct: number;
+        change: number;
+        transactionCount: number;
+      }>;
+    }>(buildUrl('/api/admin', '/revenue/breakdown', { period })),
+
+  revenueTopUsers: (period: '7d' | '30d' | '90d', limit: number) =>
+    request<{
+      data: Array<{
+        userId: string;
+        username: string;
+        revenueGenerated: number;
+        tradeVolume: string;
+        primarySource: string;
+      }>;
+    }>(buildUrl('/api/admin', '/revenue/top-users', { period, limit })),
 };

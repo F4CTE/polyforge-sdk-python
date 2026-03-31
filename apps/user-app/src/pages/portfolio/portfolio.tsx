@@ -10,7 +10,9 @@ import {
   X, ChevronDown, ChevronUp, Clock, CalendarDays, Receipt, FileText,
   Target, Pencil, Trash2, Trophy, ShieldCheck,
   Lightbulb, Shuffle, CheckCircle2, SlidersHorizontal,
+  Wifi, WifiOff,
 } from 'lucide-react';
+import { wsManager } from '@/lib/websocket';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -164,6 +166,27 @@ interface AutoCloseRule {
   quantity?: number;
   status: 'active' | 'triggered' | 'cancelled';
   triggeredAt?: string;
+}
+
+interface PositionPriceUpdate {
+  type: 'POSITION_PRICE_UPDATE';
+  positionId: string;
+  marketId: string;
+  outcome: 'YES' | 'NO';
+  currentPrice: number;
+  previousPrice: number;
+  priceChangePct: number;
+  timestamp: string;
+}
+
+interface PortfolioPnlUpdate {
+  type: 'PORTFOLIO_PNL_UPDATE';
+  totalPnl: number;
+  totalPnlPct: number;
+  dayPnl: number;
+  dayPnlPct: number;
+  unrealisedPnl: number;
+  timestamp: string;
 }
 
 type Tab = 'live' | 'paper';
@@ -522,6 +545,68 @@ export function Component() {
   useEffect(() => {
     localStorage.setItem('pf-portfolio-goals', JSON.stringify(goals));
   }, [goals]);
+
+  // ── Live P&L via WebSocket ────────────────────────────────────────────
+  const [livePositionPrices, setLivePositionPrices] = useState<Record<string, number>>({});
+  const [livePnl, setLivePnl] = useState<{
+    totalPnl: number;
+    totalPnlPct: number;
+    dayPnl: number;
+    dayPnlPct: number;
+    unrealisedPnl: number;
+  } | null>(null);
+  const [wsConnected, setWsConnected] = useState(false);
+  // Flash state: set of positionIds whose price cell is flashing
+  const [flashingPrices, setFlashingPrices] = useState<Record<string, 'up' | 'down' | null>>({});
+  // Flash state for the header bar
+  const [pnlFlashing, setPnlFlashing] = useState(false);
+
+  useEffect(() => {
+    const handler = (msg: { type: string; [key: string]: unknown }) => {
+      if (msg.type === 'AUTH_OK') {
+        setWsConnected(true);
+      }
+      if (msg.type === 'POSITION_PRICE_UPDATE') {
+        const update = msg as unknown as PositionPriceUpdate;
+        setLivePositionPrices(prev => ({ ...prev, [update.positionId]: update.currentPrice }));
+        // Determine direction for flash colour
+        const direction: 'up' | 'down' = update.currentPrice >= update.previousPrice ? 'up' : 'down';
+        setFlashingPrices(prev => ({ ...prev, [update.positionId]: direction }));
+        setTimeout(() => {
+          setFlashingPrices(prev => ({ ...prev, [update.positionId]: null }));
+        }, 600);
+      }
+      if (msg.type === 'PORTFOLIO_PNL_UPDATE') {
+        const update = msg as unknown as PortfolioPnlUpdate;
+        setLivePnl({
+          totalPnl: update.totalPnl,
+          totalPnlPct: update.totalPnlPct,
+          dayPnl: update.dayPnl,
+          dayPnlPct: update.dayPnlPct,
+          unrealisedPnl: update.unrealisedPnl,
+        });
+        setPnlFlashing(true);
+        setTimeout(() => setPnlFlashing(false), 500);
+      }
+    };
+
+    // Track WS connection state via close/open events indirectly
+    // wsManager emits AUTH_OK on open+auth — treat any message as connected
+    const connCheck = () => setWsConnected(
+      (wsManager as unknown as { ws?: { readyState: number } }).ws?.readyState === WebSocket.OPEN
+    );
+    const connInterval = setInterval(connCheck, 3000);
+    connCheck();
+
+    wsManager.addListener(handler);
+    // Send a portfolio subscribe message in case the server supports it
+    (wsManager as unknown as { send?: (m: object) => void }).send?.({ type: 'SUBSCRIBE_PORTFOLIO_PNL' });
+
+    return () => {
+      wsManager.removeListener(handler);
+      clearInterval(connInterval);
+    };
+  }, []);
 
   const loadPortfolio = useCallback(async () => {
     setLoadingPortfolio(true);
@@ -958,6 +1043,20 @@ export function Component() {
           </span>
         </div>
         <div className="flex items-center gap-3">
+          {/* WS connection dot */}
+          <div className="flex items-center gap-1" title={wsConnected ? 'WebSocket connected — live prices active' : 'WebSocket offline'}>
+            {wsConnected ? (
+              <span className="relative flex size-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pf-success opacity-60" />
+                <span className="relative inline-flex rounded-full size-2 bg-pf-success" />
+              </span>
+            ) : (
+              <span className="inline-flex rounded-full size-2 bg-pf-text-muted" />
+            )}
+            <span className={`text-[10px] font-medium ${wsConnected ? 'text-pf-success' : 'text-pf-text-muted'}`}>
+              {wsConnected ? 'Live' : 'Offline'}
+            </span>
+          </div>
           <button
             type="button"
             onClick={exportCsv}
@@ -992,6 +1091,101 @@ export function Component() {
           </div>
         </div>
       </div>
+
+      {/* ── Live P&L Strip ─────────────────────────────────────────────── */}
+      {(() => {
+        // Use live data when available, fall back to API data
+        const totalPnlNum = livePnl != null
+          ? livePnl.totalPnl
+          : parseFloat(pnl?.totalPnl ?? '0');
+        const totalPnlPctNum = livePnl?.totalPnlPct ?? null;
+        const dayPnlNum = livePnl?.dayPnl ?? null;
+        const dayPnlPctNum = livePnl?.dayPnlPct ?? null;
+        const unrealisedNum = livePnl != null
+          ? livePnl.unrealisedPnl
+          : parseFloat(portfolio?.totalUnrealizedPnl ?? '0');
+
+        const fmtPnl = (n: number) => `${n >= 0 ? '+' : ''}$${Math.abs(n).toFixed(2)}`;
+        const fmtPct = (n: number) => `(${n >= 0 ? '+' : ''}${n.toFixed(1)}%)`;
+        const colorClass = (n: number) => n >= 0 ? 'text-pf-success' : 'text-pf-danger';
+
+        return (
+          <div
+            className={`flex flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-2.5 rounded-pf-lg border transition-colors ${
+              pnlFlashing
+                ? 'bg-pf-elevated/80 border-pf-border-hover'
+                : 'bg-pf-elevated border-pf-border'
+            }`}
+            aria-live="polite"
+            aria-label="Live portfolio P&L"
+          >
+            {/* Connection indicator */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {wsConnected ? (
+                <>
+                  <span className="relative flex size-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pf-success opacity-60" />
+                    <span className="relative inline-flex rounded-full size-2 bg-pf-success" />
+                  </span>
+                  <span className="text-xs font-medium text-pf-success">Live</span>
+                  <Wifi className="size-3 text-pf-success" />
+                </>
+              ) : (
+                <>
+                  <span className="inline-flex rounded-full size-2 bg-pf-text-muted" />
+                  <span className="text-xs font-medium text-pf-text-muted">Offline</span>
+                  <WifiOff className="size-3 text-pf-text-muted" />
+                </>
+              )}
+            </div>
+
+            <span className="w-px h-4 bg-pf-border shrink-0 hidden sm:block" />
+
+            {/* Total P&L */}
+            <div className="flex items-baseline gap-1.5 shrink-0">
+              <span className="text-xs text-pf-text-secondary">Total P&L</span>
+              <span className={`text-sm font-mono font-semibold ${colorClass(totalPnlNum)}`}>
+                {fmtPnl(totalPnlNum)}
+              </span>
+              {totalPnlPctNum != null && (
+                <span className={`text-xs font-mono ${colorClass(totalPnlPctNum)}`}>
+                  {fmtPct(totalPnlPctNum)}
+                </span>
+              )}
+              {totalPnlNum >= 0
+                ? <TrendingUp className="size-3 text-pf-success" />
+                : <TrendingDown className="size-3 text-pf-danger" />}
+            </div>
+
+            {dayPnlNum != null && (
+              <>
+                <span className="w-px h-4 bg-pf-border shrink-0 hidden sm:block" />
+                <div className="flex items-baseline gap-1.5 shrink-0">
+                  <span className="text-xs text-pf-text-secondary">Today</span>
+                  <span className={`text-sm font-mono font-semibold ${colorClass(dayPnlNum)}`}>
+                    {fmtPnl(dayPnlNum)}
+                  </span>
+                  {dayPnlPctNum != null && (
+                    <span className={`text-xs font-mono ${colorClass(dayPnlPctNum)}`}>
+                      {fmtPct(dayPnlPctNum)}
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
+
+            <span className="w-px h-4 bg-pf-border shrink-0 hidden sm:block" />
+
+            {/* Unrealised P&L */}
+            <div className="flex items-baseline gap-1.5 shrink-0">
+              <span className="text-xs text-pf-text-secondary">Unrealised</span>
+              <span className={`text-sm font-mono font-semibold ${colorClass(unrealisedNum)}`}>
+                {fmtPnl(unrealisedNum)}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Circuit Breaker Banner */}
       {circuitBreakerTripped && (
@@ -1813,8 +2007,52 @@ export function Component() {
                             <td className="px-4 py-3 text-right font-mono text-pf-text">
                               {parseFloat(pos.avgEntryPrice).toFixed(3)}
                             </td>
-                            <td className="px-4 py-3 text-right font-mono text-pf-cyan-400">
-                              {pos.currentPrice && parseFloat(pos.currentPrice) > 0 ? `$${parseFloat(pos.currentPrice).toFixed(3)}` : <span className="text-pf-text-muted">&mdash;</span>}
+                            <td className="px-4 py-3 text-right font-mono">
+                              {(() => {
+                                const livePrice = livePositionPrices[pos.id];
+                                const staticPrice = pos.currentPrice && parseFloat(pos.currentPrice) > 0
+                                  ? parseFloat(pos.currentPrice)
+                                  : null;
+                                const displayPrice = livePrice ?? staticPrice;
+                                const flash = flashingPrices[pos.id];
+
+                                if (displayPrice == null) {
+                                  return <span className="text-pf-text-muted">&mdash;</span>;
+                                }
+
+                                if (livePrice != null && flash != null) {
+                                  const isUp = flash === 'up';
+                                  return (
+                                    <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-mono font-medium transition-colors ${
+                                      isUp
+                                        ? 'bg-pf-success/10 text-pf-success'
+                                        : 'bg-pf-danger/10 text-pf-danger'
+                                    }`}>
+                                      {isUp
+                                        ? <TrendingUp className="size-3" />
+                                        : <TrendingDown className="size-3" />}
+                                      ${displayPrice.toFixed(3)}
+                                    </span>
+                                  );
+                                }
+
+                                if (livePrice != null) {
+                                  const prevStatic = staticPrice ?? livePrice;
+                                  const isUp = livePrice >= prevStatic;
+                                  return (
+                                    <span className={`inline-flex items-center gap-0.5 text-xs font-mono font-medium ${
+                                      isUp ? 'text-pf-success' : 'text-pf-danger'
+                                    }`}>
+                                      {isUp
+                                        ? <TrendingUp className="size-3" />
+                                        : <TrendingDown className="size-3" />}
+                                      ${displayPrice.toFixed(3)}
+                                    </span>
+                                  );
+                                }
+
+                                return <span className="text-pf-cyan-400">${displayPrice.toFixed(3)}</span>;
+                              })()}
                             </td>
                             <td className={`px-4 py-3 text-right font-mono ${pnlColor(pos.unrealizedPnl)}`}>
                               {formatPnl(pos.unrealizedPnl)}

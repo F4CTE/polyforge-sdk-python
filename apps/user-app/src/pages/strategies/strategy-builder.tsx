@@ -1,14 +1,809 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ReactFlowProvider } from '@xyflow/react';
-import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle, Target, RotateCcw, RotateCw } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle, Target, RotateCcw, RotateCw, LayoutTemplate, X, TrendingUp, RefreshCw, Calendar, Brain } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Node, Edge } from '@xyflow/react';
+import type { BlockNodeData } from '../../stores/builder-store';
+import { SECTION_COLUMNS } from '../../components/builder/block-definitions';
 
 import { StrategyCanvas } from '../../components/builder/strategy-canvas';
 import { BlockPalette } from '../../components/builder/block-palette';
 import { BuilderTutorial } from '../../components/builder/builder-tutorial';
 import { ExecutionPanel } from '../../components/builder/execution-panel';
 import { useBuilderStore } from '../../stores/builder-store';
+
+// ─── Strategy Template Library ───────────────────────────────────────────────
+
+type TemplateCategory = 'momentum' | 'mean-reversion' | 'event-based' | 'arbitrage' | 'sentiment';
+type TemplateDifficulty = 'beginner' | 'intermediate' | 'advanced';
+
+interface TemplateBlock {
+  id: string;
+  nodeType: 'blockNode' | 'logicNode';
+  type: string;
+  label: string;
+  section: 'safety' | 'triggers' | 'conditions' | 'actions' | 'logic';
+  color: string;
+  config: Record<string, string>;
+  fields: Array<{ key: string; label: string; type: string; placeholder: string; options?: string[]; wireable?: boolean }>;
+  position: { x: number; y: number };
+}
+
+interface TemplateEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string;
+  targetHandle?: string;
+}
+
+interface StrategyTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: TemplateCategory;
+  difficulty: TemplateDifficulty;
+  emoji: string;
+  estimatedWinRate: string;
+  blocks: TemplateBlock[];
+  edges: TemplateEdge[];
+}
+
+const SECTION_COLORS_STATIC: Record<string, string> = {
+  safety: '#EF4444',
+  triggers: '#F59E0B',
+  conditions: '#3B82F6',
+  actions: '#22C55E',
+  logic: '#3B82F6',
+};
+
+const STRATEGY_TEMPLATES: StrategyTemplate[] = [
+  {
+    id: 'momentum-basic',
+    name: 'Momentum Follower',
+    description: 'Buy YES when price rises more than 5% within a 1-hour window. Ideal for trending markets with clear directional momentum.',
+    category: 'momentum',
+    difficulty: 'beginner',
+    emoji: '🚀',
+    estimatedWinRate: '62-68%',
+    blocks: [
+      {
+        id: 'tmpl-mb-safety-1',
+        nodeType: 'blockNode',
+        type: 'stop_if_daily_loss',
+        label: 'Stop on Daily Loss',
+        section: 'safety',
+        color: SECTION_COLORS_STATIC.safety,
+        config: { maxLossUsdc: '150' },
+        fields: [{ key: 'maxLossUsdc', label: 'Max Loss (USDC)', type: 'number', placeholder: '200', wireable: true }],
+        position: { x: SECTION_COLUMNS.safety, y: 100 },
+      },
+      {
+        id: 'tmpl-mb-trigger-1',
+        nodeType: 'blockNode',
+        type: 'price_change_pct',
+        label: 'Price Change %',
+        section: 'triggers',
+        color: SECTION_COLORS_STATIC.triggers,
+        config: { marketSlot: '$MARKET_A', pct: '5', windowMs: '3600000' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'pct', label: 'Change %', type: 'number', placeholder: '5' },
+          { key: 'windowMs', label: 'Window (ms)', type: 'number', placeholder: '60000' },
+        ],
+        position: { x: SECTION_COLUMNS.triggers, y: 100 },
+      },
+      {
+        id: 'tmpl-mb-cond-1',
+        nodeType: 'blockNode',
+        type: 'min_liquidity',
+        label: 'Min Liquidity',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { minUsdc: '500' },
+        fields: [{ key: 'minUsdc', label: 'Min USDC', type: 'number', placeholder: '100' }],
+        position: { x: SECTION_COLUMNS.conditions, y: 100 },
+      },
+      {
+        id: 'tmpl-mb-cond-2',
+        nodeType: 'blockNode',
+        type: 'max_spread',
+        label: 'Max Spread',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { maxSpread: '0.05' },
+        fields: [{ key: 'maxSpread', label: 'Max Spread', type: 'number', placeholder: '0.04' }],
+        position: { x: SECTION_COLUMNS.conditions, y: 300 },
+      },
+      {
+        id: 'tmpl-mb-action-1',
+        nodeType: 'blockNode',
+        type: 'buy_yes',
+        label: 'Buy YES',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { marketSlot: '$MARKET_A', size: '50' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
+        ],
+        position: { x: SECTION_COLUMNS.actions, y: 100 },
+      },
+      {
+        id: 'tmpl-mb-action-2',
+        nodeType: 'blockNode',
+        type: 'set_take_profit',
+        label: 'Set Take Profit',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { pct: '25' },
+        fields: [{ key: 'pct', label: 'Take Profit (%)', type: 'number', placeholder: '20' }],
+        position: { x: SECTION_COLUMNS.actions, y: 300 },
+      },
+    ],
+    edges: [
+      { id: 'tmpl-mb-e1', source: 'tmpl-mb-trigger-1', target: 'tmpl-mb-cond-1' },
+      { id: 'tmpl-mb-e2', source: 'tmpl-mb-cond-1', target: 'tmpl-mb-cond-2' },
+      { id: 'tmpl-mb-e3', source: 'tmpl-mb-cond-2', target: 'tmpl-mb-action-1' },
+      { id: 'tmpl-mb-e4', source: 'tmpl-mb-action-1', target: 'tmpl-mb-action-2' },
+    ],
+  },
+  {
+    id: 'mean-reversion',
+    name: 'Mean Reversion',
+    description: 'Buy when price drops more than 15% below its 7-day average. Profits from temporary overselling and eventual price correction.',
+    category: 'mean-reversion',
+    difficulty: 'intermediate',
+    emoji: '📉',
+    estimatedWinRate: '58-65%',
+    blocks: [
+      {
+        id: 'tmpl-mr-safety-1',
+        nodeType: 'blockNode',
+        type: 'stop_if_daily_loss',
+        label: 'Stop on Daily Loss',
+        section: 'safety',
+        color: SECTION_COLORS_STATIC.safety,
+        config: { maxLossUsdc: '200' },
+        fields: [{ key: 'maxLossUsdc', label: 'Max Loss (USDC)', type: 'number', placeholder: '200', wireable: true }],
+        position: { x: SECTION_COLUMNS.safety, y: 100 },
+      },
+      {
+        id: 'tmpl-mr-safety-2',
+        nodeType: 'blockNode',
+        type: 'stop_if_drawdown',
+        label: 'Max Drawdown',
+        section: 'safety',
+        color: SECTION_COLORS_STATIC.safety,
+        config: { maxDrawdownPct: '15' },
+        fields: [{ key: 'maxDrawdownPct', label: 'Max Drawdown (%)', type: 'number', placeholder: '10' }],
+        position: { x: SECTION_COLUMNS.safety, y: 300 },
+      },
+      {
+        id: 'tmpl-mr-trigger-1',
+        nodeType: 'blockNode',
+        type: 'price_change_pct',
+        label: 'Price Change %',
+        section: 'triggers',
+        color: SECTION_COLORS_STATIC.triggers,
+        config: { marketSlot: '$MARKET_A', pct: '-15', windowMs: '604800000' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'pct', label: 'Change %', type: 'number', placeholder: '5' },
+          { key: 'windowMs', label: 'Window (ms)', type: 'number', placeholder: '60000' },
+        ],
+        position: { x: SECTION_COLUMNS.triggers, y: 100 },
+      },
+      {
+        id: 'tmpl-mr-cond-1',
+        nodeType: 'blockNode',
+        type: 'min_liquidity',
+        label: 'Min Liquidity',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { minUsdc: '1000' },
+        fields: [{ key: 'minUsdc', label: 'Min USDC', type: 'number', placeholder: '100' }],
+        position: { x: SECTION_COLUMNS.conditions, y: 100 },
+      },
+      {
+        id: 'tmpl-mr-cond-2',
+        nodeType: 'blockNode',
+        type: 'no_recent_bet',
+        label: 'No Recent Bet',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { windowMs: '86400000' },
+        fields: [{ key: 'windowMs', label: 'Window (ms)', type: 'number', placeholder: '300000' }],
+        position: { x: SECTION_COLUMNS.conditions, y: 300 },
+      },
+      {
+        id: 'tmpl-mr-action-1',
+        nodeType: 'blockNode',
+        type: 'buy_yes',
+        label: 'Buy YES',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { marketSlot: '$MARKET_A', size: '75' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
+        ],
+        position: { x: SECTION_COLUMNS.actions, y: 100 },
+      },
+      {
+        id: 'tmpl-mr-action-2',
+        nodeType: 'blockNode',
+        type: 'set_stop_loss',
+        label: 'Set Stop Loss',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { pct: '8' },
+        fields: [{ key: 'pct', label: 'Stop Loss (%)', type: 'number', placeholder: '10' }],
+        position: { x: SECTION_COLUMNS.actions, y: 300 },
+      },
+    ],
+    edges: [
+      { id: 'tmpl-mr-e1', source: 'tmpl-mr-trigger-1', target: 'tmpl-mr-cond-1' },
+      { id: 'tmpl-mr-e2', source: 'tmpl-mr-cond-1', target: 'tmpl-mr-cond-2' },
+      { id: 'tmpl-mr-e3', source: 'tmpl-mr-cond-2', target: 'tmpl-mr-action-1' },
+      { id: 'tmpl-mr-e4', source: 'tmpl-mr-action-1', target: 'tmpl-mr-action-2' },
+    ],
+  },
+  {
+    id: 'event-based',
+    name: 'Event Trader',
+    description: 'Enter a position 24 hours before a market closes, then exit at resolution. Captures the final price convergence as the outcome becomes clear.',
+    category: 'event-based',
+    difficulty: 'beginner',
+    emoji: '📅',
+    estimatedWinRate: '55-60%',
+    blocks: [
+      {
+        id: 'tmpl-ev-safety-1',
+        nodeType: 'blockNode',
+        type: 'max_daily_bets',
+        label: 'Max Daily Bets',
+        section: 'safety',
+        color: SECTION_COLORS_STATIC.safety,
+        config: { count: '3' },
+        fields: [{ key: 'count', label: 'Max bets per day', type: 'number', placeholder: '10' }],
+        position: { x: SECTION_COLUMNS.safety, y: 100 },
+      },
+      {
+        id: 'tmpl-ev-trigger-1',
+        nodeType: 'blockNode',
+        type: 'market_resolving',
+        label: 'Market Resolving',
+        section: 'triggers',
+        color: SECTION_COLORS_STATIC.triggers,
+        config: {},
+        fields: [],
+        position: { x: SECTION_COLUMNS.triggers, y: 100 },
+      },
+      {
+        id: 'tmpl-ev-cond-1',
+        nodeType: 'blockNode',
+        type: 'market_open',
+        label: 'Market Open',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: {},
+        fields: [],
+        position: { x: SECTION_COLUMNS.conditions, y: 100 },
+      },
+      {
+        id: 'tmpl-ev-cond-2',
+        nodeType: 'blockNode',
+        type: 'min_liquidity',
+        label: 'Min Liquidity',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { minUsdc: '2000' },
+        fields: [{ key: 'minUsdc', label: 'Min USDC', type: 'number', placeholder: '100' }],
+        position: { x: SECTION_COLUMNS.conditions, y: 300 },
+      },
+      {
+        id: 'tmpl-ev-action-1',
+        nodeType: 'blockNode',
+        type: 'buy_yes',
+        label: 'Buy YES',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { marketSlot: '$MARKET_A', size: '40' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
+        ],
+        position: { x: SECTION_COLUMNS.actions, y: 100 },
+      },
+      {
+        id: 'tmpl-ev-trigger-2',
+        nodeType: 'blockNode',
+        type: 'market_resolved',
+        label: 'Market Resolved',
+        section: 'triggers',
+        color: SECTION_COLORS_STATIC.triggers,
+        config: {},
+        fields: [],
+        position: { x: SECTION_COLUMNS.triggers, y: 300 },
+      },
+      {
+        id: 'tmpl-ev-action-2',
+        nodeType: 'blockNode',
+        type: 'close_position',
+        label: 'Close Position',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { marketSlot: '$MARKET_A' },
+        fields: [{ key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' }],
+        position: { x: SECTION_COLUMNS.actions, y: 300 },
+      },
+    ],
+    edges: [
+      { id: 'tmpl-ev-e1', source: 'tmpl-ev-trigger-1', target: 'tmpl-ev-cond-1' },
+      { id: 'tmpl-ev-e2', source: 'tmpl-ev-cond-1', target: 'tmpl-ev-cond-2' },
+      { id: 'tmpl-ev-e3', source: 'tmpl-ev-cond-2', target: 'tmpl-ev-action-1' },
+      { id: 'tmpl-ev-e4', source: 'tmpl-ev-trigger-2', target: 'tmpl-ev-action-2' },
+    ],
+  },
+  {
+    id: 'sentiment-driven',
+    name: 'Sentiment Rider',
+    description: 'Enter when community sentiment is strongly bullish: high YES volume with a spread tight enough to suggest conviction rather than speculation.',
+    category: 'sentiment',
+    difficulty: 'intermediate',
+    emoji: '🧠',
+    estimatedWinRate: '60-67%',
+    blocks: [
+      {
+        id: 'tmpl-sd-safety-1',
+        nodeType: 'blockNode',
+        type: 'stop_if_consecutive_losses',
+        label: 'Stop on Streak Losses',
+        section: 'safety',
+        color: SECTION_COLORS_STATIC.safety,
+        config: { count: '3' },
+        fields: [{ key: 'count', label: 'Max consecutive losses', type: 'number', placeholder: '3' }],
+        position: { x: SECTION_COLUMNS.safety, y: 100 },
+      },
+      {
+        id: 'tmpl-sd-trigger-1',
+        nodeType: 'blockNode',
+        type: 'volume_spike',
+        label: 'Volume Spike',
+        section: 'triggers',
+        color: SECTION_COLORS_STATIC.triggers,
+        config: { marketSlot: '$MARKET_A', multiplier: '2.5' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'multiplier', label: 'Multiplier', type: 'number', placeholder: '3' },
+        ],
+        position: { x: SECTION_COLUMNS.triggers, y: 100 },
+      },
+      {
+        id: 'tmpl-sd-cond-1',
+        nodeType: 'blockNode',
+        type: 'price_above',
+        label: 'Price Above',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { marketSlot: '$MARKET_A', threshold: '0.55' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'threshold', label: 'Threshold', type: 'number', placeholder: '0.60' },
+        ],
+        position: { x: SECTION_COLUMNS.conditions, y: 100 },
+      },
+      {
+        id: 'tmpl-sd-cond-2',
+        nodeType: 'blockNode',
+        type: 'max_spread',
+        label: 'Max Spread',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { maxSpread: '0.04' },
+        fields: [{ key: 'maxSpread', label: 'Max Spread', type: 'number', placeholder: '0.04' }],
+        position: { x: SECTION_COLUMNS.conditions, y: 300 },
+      },
+      {
+        id: 'tmpl-sd-cond-3',
+        nodeType: 'blockNode',
+        type: 'no_recent_bet',
+        label: 'No Recent Bet',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { windowMs: '3600000' },
+        fields: [{ key: 'windowMs', label: 'Window (ms)', type: 'number', placeholder: '300000' }],
+        position: { x: SECTION_COLUMNS.conditions, y: 500 },
+      },
+      {
+        id: 'tmpl-sd-action-1',
+        nodeType: 'blockNode',
+        type: 'buy_yes',
+        label: 'Buy YES',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { marketSlot: '$MARKET_A', size: '60' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
+        ],
+        position: { x: SECTION_COLUMNS.actions, y: 100 },
+      },
+      {
+        id: 'tmpl-sd-action-2',
+        nodeType: 'blockNode',
+        type: 'set_take_profit',
+        label: 'Set Take Profit',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { pct: '30' },
+        fields: [{ key: 'pct', label: 'Take Profit (%)', type: 'number', placeholder: '20' }],
+        position: { x: SECTION_COLUMNS.actions, y: 300 },
+      },
+    ],
+    edges: [
+      { id: 'tmpl-sd-e1', source: 'tmpl-sd-trigger-1', target: 'tmpl-sd-cond-1' },
+      { id: 'tmpl-sd-e2', source: 'tmpl-sd-cond-1', target: 'tmpl-sd-cond-2' },
+      { id: 'tmpl-sd-e3', source: 'tmpl-sd-cond-2', target: 'tmpl-sd-cond-3' },
+      { id: 'tmpl-sd-e4', source: 'tmpl-sd-cond-3', target: 'tmpl-sd-action-1' },
+      { id: 'tmpl-sd-e5', source: 'tmpl-sd-action-1', target: 'tmpl-sd-action-2' },
+    ],
+  },
+  {
+    id: 'momentum-advanced',
+    name: 'Multi-Signal Momentum',
+    description: 'Combines price movement, volume surge, and liquidity signals through an AND gate for high-confidence momentum entries with strict risk controls.',
+    category: 'momentum',
+    difficulty: 'advanced',
+    emoji: '⚡',
+    estimatedWinRate: '65-72%',
+    blocks: [
+      {
+        id: 'tmpl-ma-safety-1',
+        nodeType: 'blockNode',
+        type: 'stop_if_daily_loss',
+        label: 'Stop on Daily Loss',
+        section: 'safety',
+        color: SECTION_COLORS_STATIC.safety,
+        config: { maxLossUsdc: '300' },
+        fields: [{ key: 'maxLossUsdc', label: 'Max Loss (USDC)', type: 'number', placeholder: '200', wireable: true }],
+        position: { x: SECTION_COLUMNS.safety, y: 100 },
+      },
+      {
+        id: 'tmpl-ma-safety-2',
+        nodeType: 'blockNode',
+        type: 'stop_if_drawdown',
+        label: 'Max Drawdown',
+        section: 'safety',
+        color: SECTION_COLORS_STATIC.safety,
+        config: { maxDrawdownPct: '12' },
+        fields: [{ key: 'maxDrawdownPct', label: 'Max Drawdown (%)', type: 'number', placeholder: '10' }],
+        position: { x: SECTION_COLUMNS.safety, y: 300 },
+      },
+      {
+        id: 'tmpl-ma-trigger-1',
+        nodeType: 'blockNode',
+        type: 'price_change_pct',
+        label: 'Price Change %',
+        section: 'triggers',
+        color: SECTION_COLORS_STATIC.triggers,
+        config: { marketSlot: '$MARKET_A', pct: '7', windowMs: '1800000' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'pct', label: 'Change %', type: 'number', placeholder: '5' },
+          { key: 'windowMs', label: 'Window (ms)', type: 'number', placeholder: '60000' },
+        ],
+        position: { x: SECTION_COLUMNS.triggers, y: 100 },
+      },
+      {
+        id: 'tmpl-ma-trigger-2',
+        nodeType: 'blockNode',
+        type: 'volume_spike',
+        label: 'Volume Spike',
+        section: 'triggers',
+        color: SECTION_COLORS_STATIC.triggers,
+        config: { marketSlot: '$MARKET_A', multiplier: '3' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'multiplier', label: 'Multiplier', type: 'number', placeholder: '3' },
+        ],
+        position: { x: SECTION_COLUMNS.triggers, y: 300 },
+      },
+      {
+        id: 'tmpl-ma-logic-1',
+        nodeType: 'logicNode',
+        type: 'AND_GATE',
+        label: 'AND',
+        section: 'logic',
+        color: '#3B82F6',
+        config: {},
+        fields: [],
+        position: { x: 1050, y: 200 },
+      },
+      {
+        id: 'tmpl-ma-cond-1',
+        nodeType: 'blockNode',
+        type: 'liquidity_above',
+        label: 'Liquidity Above',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { marketSlot: '$MARKET_A', minLiquidity: '2000' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'minLiquidity', label: 'Min Liquidity (USDC)', type: 'number', placeholder: '1000' },
+        ],
+        position: { x: SECTION_COLUMNS.conditions, y: 100 },
+      },
+      {
+        id: 'tmpl-ma-cond-2',
+        nodeType: 'blockNode',
+        type: 'max_spread',
+        label: 'Max Spread',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { maxSpread: '0.03' },
+        fields: [{ key: 'maxSpread', label: 'Max Spread', type: 'number', placeholder: '0.04' }],
+        position: { x: SECTION_COLUMNS.conditions, y: 300 },
+      },
+      {
+        id: 'tmpl-ma-cond-3',
+        nodeType: 'blockNode',
+        type: 'no_recent_bet',
+        label: 'No Recent Bet',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { windowMs: '1800000' },
+        fields: [{ key: 'windowMs', label: 'Window (ms)', type: 'number', placeholder: '300000' }],
+        position: { x: SECTION_COLUMNS.conditions, y: 500 },
+      },
+      {
+        id: 'tmpl-ma-action-1',
+        nodeType: 'blockNode',
+        type: 'buy_yes',
+        label: 'Buy YES',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { marketSlot: '$MARKET_A', size: '100' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
+        ],
+        position: { x: SECTION_COLUMNS.actions, y: 100 },
+      },
+      {
+        id: 'tmpl-ma-action-2',
+        nodeType: 'blockNode',
+        type: 'set_stop_loss',
+        label: 'Set Stop Loss',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { pct: '8' },
+        fields: [{ key: 'pct', label: 'Stop Loss (%)', type: 'number', placeholder: '10' }],
+        position: { x: SECTION_COLUMNS.actions, y: 300 },
+      },
+      {
+        id: 'tmpl-ma-action-3',
+        nodeType: 'blockNode',
+        type: 'set_take_profit',
+        label: 'Set Take Profit',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { pct: '35' },
+        fields: [{ key: 'pct', label: 'Take Profit (%)', type: 'number', placeholder: '20' }],
+        position: { x: SECTION_COLUMNS.actions, y: 500 },
+      },
+    ],
+    edges: [
+      { id: 'tmpl-ma-e1', source: 'tmpl-ma-trigger-1', target: 'tmpl-ma-logic-1' },
+      { id: 'tmpl-ma-e2', source: 'tmpl-ma-trigger-2', target: 'tmpl-ma-logic-1' },
+      { id: 'tmpl-ma-e3', source: 'tmpl-ma-logic-1', target: 'tmpl-ma-cond-1' },
+      { id: 'tmpl-ma-e4', source: 'tmpl-ma-cond-1', target: 'tmpl-ma-cond-2' },
+      { id: 'tmpl-ma-e5', source: 'tmpl-ma-cond-2', target: 'tmpl-ma-cond-3' },
+      { id: 'tmpl-ma-e6', source: 'tmpl-ma-cond-3', target: 'tmpl-ma-action-1' },
+      { id: 'tmpl-ma-e7', source: 'tmpl-ma-action-1', target: 'tmpl-ma-action-2' },
+      { id: 'tmpl-ma-e8', source: 'tmpl-ma-action-2', target: 'tmpl-ma-action-3' },
+    ],
+  },
+  {
+    id: 'contrarian',
+    name: 'Contrarian',
+    description: 'Buy NO when the crowd overwhelmingly says YES. Exploits market overconfidence and herding behavior — typically when YES price exceeds 80%.',
+    category: 'sentiment',
+    difficulty: 'advanced',
+    emoji: '🔄',
+    estimatedWinRate: '52-58%',
+    blocks: [
+      {
+        id: 'tmpl-ct-safety-1',
+        nodeType: 'blockNode',
+        type: 'stop_if_daily_loss',
+        label: 'Stop on Daily Loss',
+        section: 'safety',
+        color: SECTION_COLORS_STATIC.safety,
+        config: { maxLossUsdc: '200' },
+        fields: [{ key: 'maxLossUsdc', label: 'Max Loss (USDC)', type: 'number', placeholder: '200', wireable: true }],
+        position: { x: SECTION_COLUMNS.safety, y: 100 },
+      },
+      {
+        id: 'tmpl-ct-safety-2',
+        nodeType: 'blockNode',
+        type: 'stop_if_consecutive_losses',
+        label: 'Stop on Streak Losses',
+        section: 'safety',
+        color: SECTION_COLORS_STATIC.safety,
+        config: { count: '4' },
+        fields: [{ key: 'count', label: 'Max consecutive losses', type: 'number', placeholder: '3' }],
+        position: { x: SECTION_COLUMNS.safety, y: 300 },
+      },
+      {
+        id: 'tmpl-ct-trigger-1',
+        nodeType: 'blockNode',
+        type: 'price_above',
+        label: 'Price Above',
+        section: 'triggers',
+        color: SECTION_COLORS_STATIC.triggers,
+        config: { marketSlot: '$MARKET_A', threshold: '0.80' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'threshold', label: 'Threshold', type: 'number', placeholder: '0.60' },
+        ],
+        position: { x: SECTION_COLUMNS.triggers, y: 100 },
+      },
+      {
+        id: 'tmpl-ct-trigger-2',
+        nodeType: 'blockNode',
+        type: 'volume_spike',
+        label: 'Volume Spike',
+        section: 'triggers',
+        color: SECTION_COLORS_STATIC.triggers,
+        config: { marketSlot: '$MARKET_A', multiplier: '2' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'multiplier', label: 'Multiplier', type: 'number', placeholder: '3' },
+        ],
+        position: { x: SECTION_COLUMNS.triggers, y: 300 },
+      },
+      {
+        id: 'tmpl-ct-logic-1',
+        nodeType: 'logicNode',
+        type: 'AND_GATE',
+        label: 'AND',
+        section: 'logic',
+        color: '#3B82F6',
+        config: {},
+        fields: [],
+        position: { x: 1050, y: 200 },
+      },
+      {
+        id: 'tmpl-ct-cond-1',
+        nodeType: 'blockNode',
+        type: 'max_price',
+        label: 'Max Price',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { marketSlot: '$MARKET_A', maxPrice: '0.92' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'maxPrice', label: 'Max Price', type: 'number', placeholder: '0.90' },
+        ],
+        position: { x: SECTION_COLUMNS.conditions, y: 100 },
+      },
+      {
+        id: 'tmpl-ct-cond-2',
+        nodeType: 'blockNode',
+        type: 'min_liquidity',
+        label: 'Min Liquidity',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { minUsdc: '3000' },
+        fields: [{ key: 'minUsdc', label: 'Min USDC', type: 'number', placeholder: '100' }],
+        position: { x: SECTION_COLUMNS.conditions, y: 300 },
+      },
+      {
+        id: 'tmpl-ct-cond-3',
+        nodeType: 'blockNode',
+        type: 'no_recent_bet',
+        label: 'No Recent Bet',
+        section: 'conditions',
+        color: SECTION_COLORS_STATIC.conditions,
+        config: { windowMs: '7200000' },
+        fields: [{ key: 'windowMs', label: 'Window (ms)', type: 'number', placeholder: '300000' }],
+        position: { x: SECTION_COLUMNS.conditions, y: 500 },
+      },
+      {
+        id: 'tmpl-ct-action-1',
+        nodeType: 'blockNode',
+        type: 'buy_no',
+        label: 'Buy NO',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { marketSlot: '$MARKET_A', size: '50' },
+        fields: [
+          { key: 'marketSlot', label: 'Market', type: 'market_slot', placeholder: '$MARKET_A' },
+          { key: 'size', label: 'Size (USDC)', type: 'number', placeholder: '50' },
+        ],
+        position: { x: SECTION_COLUMNS.actions, y: 100 },
+      },
+      {
+        id: 'tmpl-ct-action-2',
+        nodeType: 'blockNode',
+        type: 'set_stop_loss',
+        label: 'Set Stop Loss',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { pct: '10' },
+        fields: [{ key: 'pct', label: 'Stop Loss (%)', type: 'number', placeholder: '10' }],
+        position: { x: SECTION_COLUMNS.actions, y: 300 },
+      },
+      {
+        id: 'tmpl-ct-action-3',
+        nodeType: 'blockNode',
+        type: 'set_take_profit',
+        label: 'Set Take Profit',
+        section: 'actions',
+        color: SECTION_COLORS_STATIC.actions,
+        config: { pct: '40' },
+        fields: [{ key: 'pct', label: 'Take Profit (%)', type: 'number', placeholder: '20' }],
+        position: { x: SECTION_COLUMNS.actions, y: 500 },
+      },
+    ],
+    edges: [
+      { id: 'tmpl-ct-e1', source: 'tmpl-ct-trigger-1', target: 'tmpl-ct-logic-1' },
+      { id: 'tmpl-ct-e2', source: 'tmpl-ct-trigger-2', target: 'tmpl-ct-logic-1' },
+      { id: 'tmpl-ct-e3', source: 'tmpl-ct-logic-1', target: 'tmpl-ct-cond-1' },
+      { id: 'tmpl-ct-e4', source: 'tmpl-ct-cond-1', target: 'tmpl-ct-cond-2' },
+      { id: 'tmpl-ct-e5', source: 'tmpl-ct-cond-2', target: 'tmpl-ct-cond-3' },
+      { id: 'tmpl-ct-e6', source: 'tmpl-ct-cond-3', target: 'tmpl-ct-action-1' },
+      { id: 'tmpl-ct-e7', source: 'tmpl-ct-action-1', target: 'tmpl-ct-action-2' },
+      { id: 'tmpl-ct-e8', source: 'tmpl-ct-action-2', target: 'tmpl-ct-action-3' },
+    ],
+  },
+];
+
+const TEMPLATE_CATEGORY_LABELS: Record<string, string> = {
+  all: 'All',
+  momentum: 'Momentum',
+  'mean-reversion': 'Mean Reversion',
+  'event-based': 'Event',
+  sentiment: 'Sentiment',
+  arbitrage: 'Arbitrage',
+};
+
+function DifficultyDots({ difficulty }: { difficulty: TemplateDifficulty }) {
+  const filled = difficulty === 'beginner' ? 1 : difficulty === 'intermediate' ? 2 : 3;
+  return (
+    <span className="flex items-center gap-0.5" aria-label={`Difficulty: ${difficulty}`}>
+      {[1, 2, 3].map((i) => (
+        <span
+          key={i}
+          className={`inline-block size-1.5 rounded-full ${
+            i <= filled
+              ? difficulty === 'beginner'
+                ? 'bg-green-400'
+                : difficulty === 'intermediate'
+                ? 'bg-amber-400'
+                : 'bg-red-400'
+              : 'bg-pf-border'
+          }`}
+        />
+      ))}
+      <span className={`ml-1 text-[10px] capitalize ${
+        difficulty === 'beginner' ? 'text-green-400' :
+        difficulty === 'intermediate' ? 'text-amber-400' :
+        'text-red-400'
+      }`}>{difficulty}</span>
+    </span>
+  );
+}
+
+const TEMPLATE_CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  momentum: <TrendingUp className="size-3" />,
+  'mean-reversion': <RefreshCw className="size-3" />,
+  'event-based': <Calendar className="size-3" />,
+  sentiment: <Brain className="size-3" />,
+};
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -49,6 +844,14 @@ export function Component() {
 
   const [quickTesting, setQuickTesting] = useState(false);
   const [quickResult, setQuickResult] = useState<Record<string, unknown> | null>(null);
+
+  // Template library state
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [templateCategory, setTemplateCategory] = useState<string>('all');
+  const [confirmTemplate, setConfirmTemplate] = useState<StrategyTemplate | null>(null);
+
+  const setNodes = useBuilderStore((s) => s.setNodes);
+  const setEdges = useBuilderStore((s) => s.setEdges);
 
   const isEdit = !!id;
   const isNewStrategy = !isEdit;
@@ -229,6 +1032,36 @@ export function Component() {
     setQuickTesting(false);
   }, [strategyId]);
 
+  const loadTemplate = useCallback((template: StrategyTemplate) => {
+    const newNodes: Node<BlockNodeData>[] = template.blocks.map((b) => ({
+      id: b.id,
+      type: b.nodeType,
+      position: b.position,
+      data: {
+        type: b.type,
+        label: b.label,
+        section: b.section,
+        color: b.color,
+        config: b.config,
+        fields: b.fields,
+      } as BlockNodeData,
+    }));
+    const newEdges: Edge[] = template.edges.map((e) => ({
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      sourceHandle: e.sourceHandle ?? null,
+      targetHandle: e.targetHandle ?? null,
+      type: 'smoothstep',
+      animated: true,
+    }));
+    setNodes(newNodes);
+    setEdges(newEdges);
+    setConfirmTemplate(null);
+    setShowTemplates(false);
+    toast.success('Template loaded! Customize it to fit your strategy.');
+  }, [setNodes, setEdges]);
+
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     dragCounterRef.current++;
@@ -360,7 +1193,7 @@ export function Component() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="relative flex flex-col h-full overflow-hidden">
       {/* ─── Top bar ──────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-4 py-2.5 border-b border-pf-border-subtle bg-pf-elevated/50 shrink-0">
         <Link
@@ -437,6 +1270,21 @@ export function Component() {
             <HelpCircle className="size-4" />
           </button>
 
+          {/* Template library */}
+          <button
+            type="button"
+            onClick={() => { setShowTemplates(true); setTemplateCategory('all'); }}
+            className={`p-1.5 rounded-pf-sm transition-colors ${
+              showTemplates
+                ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
+                : 'text-pf-text-muted hover:text-pf-text-secondary hover:bg-pf-overlay'
+            }`}
+            aria-label="Open template library"
+            title="Strategy Templates"
+          >
+            <LayoutTemplate className="size-4" />
+          </button>
+
           <div className="w-px h-4 bg-pf-border-subtle" />
 
           {/* Undo */}
@@ -502,6 +1350,138 @@ export function Component() {
           </button>
         </div>
       </div>
+
+      {/* ─── Template Library Panel ─────────────────────────────────────── */}
+      {showTemplates && (
+        <div
+          className="absolute inset-0 z-50 flex flex-col bg-pf-surface/95 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Strategy Template Library"
+        >
+          {/* Panel header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-pf-border bg-pf-elevated shrink-0">
+            <div>
+              <h2 className="text-base font-semibold text-pf-text flex items-center gap-2">
+                <LayoutTemplate className="size-4 text-pf-cyan-400" aria-hidden="true" />
+                Strategy Templates
+              </h2>
+              <p className="text-xs text-pf-text-muted mt-0.5">Start faster with a pre-built strategy</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setShowTemplates(false); setConfirmTemplate(null); }}
+              className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+              aria-label="Close template library"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+
+          {/* Category filter tabs */}
+          <div className="flex items-center gap-1.5 px-6 py-3 border-b border-pf-border-subtle bg-pf-elevated/50 shrink-0 overflow-x-auto">
+            {(['all', 'momentum', 'mean-reversion', 'event-based', 'sentiment'] as const).map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setTemplateCategory(cat)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                  templateCategory === cat
+                    ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border border-pf-cyan-500/30'
+                    : 'text-pf-text-muted hover:text-pf-text-secondary hover:bg-pf-overlay border border-transparent'
+                }`}
+              >
+                {cat !== 'all' && (
+                  <span aria-hidden="true" className="opacity-70">{TEMPLATE_CATEGORY_ICONS[cat]}</span>
+                )}
+                {TEMPLATE_CATEGORY_LABELS[cat]}
+              </button>
+            ))}
+          </div>
+
+          {/* Template cards grid */}
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+              {STRATEGY_TEMPLATES
+                .filter((t) => templateCategory === 'all' || t.category === templateCategory)
+                .map((template) => (
+                  <div
+                    key={template.id}
+                    className="flex flex-col bg-pf-elevated border border-pf-border rounded-pf-lg p-4 hover:border-pf-border-strong transition-colors"
+                  >
+                    {/* Card header */}
+                    <div className="flex items-start gap-3 mb-3">
+                      <span className="text-2xl leading-none mt-0.5 shrink-0" aria-hidden="true">{template.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-pf-text truncate">{template.name}</h3>
+                        <DifficultyDots difficulty={template.difficulty} />
+                      </div>
+                    </div>
+
+                    {/* Win rate badge */}
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pf-surface border border-pf-border text-[10px] text-pf-text-muted">
+                        <Zap className="size-2.5 text-pf-warning" aria-hidden="true" />
+                        Win rate: {template.estimatedWinRate}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pf-surface border border-pf-border text-[10px] text-pf-text-muted capitalize">
+                        {TEMPLATE_CATEGORY_ICONS[template.category]}
+                        <span>{TEMPLATE_CATEGORY_LABELS[template.category]}</span>
+                      </span>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-xs text-pf-text-muted leading-relaxed flex-1 mb-4">{template.description}</p>
+
+                    {/* Block count summary */}
+                    <div className="text-[10px] text-pf-text-muted mb-3">
+                      {template.blocks.length} block{template.blocks.length !== 1 ? 's' : ''} &middot; {template.edges.length} connection{template.edges.length !== 1 ? 's' : ''}
+                    </div>
+
+                    {/* Confirmation inline or use button */}
+                    {confirmTemplate?.id === template.id ? (
+                      <div className="bg-pf-warning/8 border border-pf-warning/25 rounded-pf p-3">
+                        <p className="text-[11px] text-pf-warning mb-2 font-medium">This will replace your current canvas. Continue?</p>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setConfirmTemplate(null)}
+                            className="flex-1 px-2.5 py-1.5 rounded-pf-sm text-xs text-pf-text-muted hover:text-pf-text border border-pf-border hover:bg-pf-overlay transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => loadTemplate(template)}
+                            className="flex-1 px-2.5 py-1.5 rounded-pf-sm text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
+                          >
+                            Load Template
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmTemplate(template)}
+                        className="w-full px-3 py-1.5 rounded-pf-sm text-xs font-medium bg-pf-surface border border-pf-border text-pf-text-secondary hover:text-pf-text hover:border-pf-cyan-500/50 hover:bg-pf-cyan-500/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                      >
+                        Use Template
+                      </button>
+                    )}
+                  </div>
+                ))}
+            </div>
+
+            {/* Empty state */}
+            {STRATEGY_TEMPLATES.filter((t) => templateCategory === 'all' || t.category === templateCategory).length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <LayoutTemplate className="size-8 text-pf-text-muted mb-3 opacity-40" />
+                <p className="text-sm text-pf-text-muted">No templates in this category yet.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ─── Canvas + Panel ─────────────────────────────────────────────── */}
       <ReactFlowProvider>

@@ -6,6 +6,9 @@ import {
   TrendingUp,
   ChevronLeft,
   ChevronRight,
+  GitCompare,
+  X,
+  Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,6 +40,29 @@ interface CopyConfig {
   userId?: string;
 }
 
+interface TraderComparisonData {
+  userId: string;
+  username: string;
+  displayName?: string;
+  avatarInitials: string;
+  edgeScore: number;
+  winRate: number;
+  totalPnl: string;
+  avgTradesPerMonth: number;
+  maxDrawdown: string;
+  sharpeRatio?: number;
+  copyFee: number;
+  activeCopiers: number;
+  topCategories: string[];
+  pnlHistory: number[];
+  recentTrades: Array<{
+    marketTitle: string;
+    outcome: 'YES' | 'NO';
+    result: 'win' | 'loss';
+    pnl: string;
+  }>;
+}
+
 type Category = 'All' | 'Politics' | 'Sports' | 'Crypto' | 'Finance' | 'Entertainment';
 type WinRateFilter = 'Any' | '50' | '60' | '70' | '80';
 type MinTradesFilter = 'Any' | '10' | '25' | '50' | '100';
@@ -60,6 +86,8 @@ const MIN_TRADES_OPTIONS: { label: string; value: MinTradesFilter }[] = [
   { label: '50+', value: '50' },
   { label: '100+', value: '100' },
 ];
+
+const MAX_COMPARE = 3;
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
@@ -90,6 +118,59 @@ function initials(name: string): string {
     .join('');
 }
 
+/** Parse a numeric value out of a stat string for best/worst highlighting. */
+function statNumeric(value: string | number | undefined): number | null {
+  if (value === undefined || value === null) return null;
+  const str = String(value);
+  const n = parseFloat(str.replace(/[^0-9.-]/g, ''));
+  return isNaN(n) ? null : n;
+}
+
+/** Among a list of numbers, return the index of the max (or min if lowerIsBetter). */
+function bestIndex(values: (number | null)[], lowerIsBetter = false): number | null {
+  const defined = values.filter((v) => v !== null) as number[];
+  if (defined.length < 2) return null;
+  const target = lowerIsBetter ? Math.min(...defined) : Math.max(...defined);
+  return values.findIndex((v) => v === target);
+}
+
+function worstIndex(values: (number | null)[], lowerIsBetter = false): number | null {
+  const defined = values.filter((v) => v !== null) as number[];
+  if (defined.length < 2) return null;
+  const target = lowerIsBetter ? Math.max(...defined) : Math.min(...defined);
+  return values.findIndex((v) => v === target);
+}
+
+/** Build an inline SVG sparkline from an array of numbers. */
+function buildSparklinePath(data: number[], width: number, height: number): string {
+  if (data.length < 2) return '';
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const step = width / (data.length - 1);
+  const points = data.map((v, i) => {
+    const x = i * step;
+    const y = height - ((v - min) / range) * height;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  return `M ${points.join(' L ')}`;
+}
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  crypto: '₿',
+  politics: '🏛',
+  sports: '⚽',
+  finance: '📈',
+  entertainment: '🎬',
+  science: '🔬',
+  tech: '💻',
+  weather: '🌤',
+};
+
+function categoryEmoji(cat: string): string {
+  return CATEGORY_EMOJI[cat.toLowerCase()] ?? '🏷';
+}
+
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
 function CardSkeleton() {
@@ -117,22 +198,376 @@ function CardSkeleton() {
   );
 }
 
+/* ─── Comparison loading skeleton ────────────────────────────────────── */
+
+function ComparisonSkeleton({ count }: { count: number }) {
+  return (
+    <div className="space-y-4 animate-shimmer">
+      {/* Header row */}
+      <div className={`grid gap-4`} style={{ gridTemplateColumns: `180px repeat(${count}, 1fr)` }}>
+        <div />
+        {Array.from({ length: count }).map((_, i) => (
+          <div key={i} className="flex flex-col items-center gap-2">
+            <div className="size-12 rounded-full bg-pf-overlay" />
+            <div className="h-3.5 bg-pf-overlay rounded w-20" />
+            <div className="h-3 bg-pf-overlay rounded w-14" />
+          </div>
+        ))}
+      </div>
+      {/* Stat rows */}
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((r) => (
+        <div key={r} className="grid gap-4 border-t border-pf-border-subtle pt-3"
+          style={{ gridTemplateColumns: `180px repeat(${count}, 1fr)` }}>
+          <div className="h-3.5 bg-pf-overlay rounded w-28" />
+          {Array.from({ length: count }).map((_, i) => (
+            <div key={i} className="h-3.5 bg-pf-overlay rounded w-16 mx-auto" />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Mini Sparkline ─────────────────────────────────────────────────── */
+
+function MiniSparkline({ data }: { data: number[] }) {
+  const W = 48;
+  const H = 24;
+  if (!data || data.length < 2) {
+    return <div className="w-12 h-6 bg-pf-overlay rounded" />;
+  }
+  const path = buildSparklinePath(data, W, H);
+  const isUp = data[data.length - 1] >= data[0];
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
+      <path
+        d={path}
+        fill="none"
+        stroke={isUp ? 'var(--pf-success, #10b981)' : 'var(--pf-danger, #ef4444)'}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/* ─── ComparisonPanel ────────────────────────────────────────────────── */
+
+interface ComparisonPanelProps {
+  data: TraderComparisonData[];
+  loading: boolean;
+  onBack: () => void;
+}
+
+interface StatRow {
+  label: string;
+  key: keyof TraderComparisonData | string;
+  format: (t: TraderComparisonData) => string;
+  /** numeric raw value for highlighting */
+  raw: (t: TraderComparisonData) => number | null;
+  lowerIsBetter?: boolean;
+}
+
+const STAT_ROWS: StatRow[] = [
+  {
+    label: 'Edge Score',
+    key: 'edgeScore',
+    format: (t) => String(t.edgeScore),
+    raw: (t) => t.edgeScore,
+  },
+  {
+    label: 'Win Rate',
+    key: 'winRate',
+    format: (t) => `${t.winRate}%`,
+    raw: (t) => t.winRate,
+  },
+  {
+    label: 'Total P&L',
+    key: 'totalPnl',
+    format: (t) => t.totalPnl,
+    raw: (t) => statNumeric(t.totalPnl),
+  },
+  {
+    label: 'Avg Trades / mo',
+    key: 'avgTradesPerMonth',
+    format: (t) => String(t.avgTradesPerMonth),
+    raw: (t) => t.avgTradesPerMonth,
+  },
+  {
+    label: 'Max Drawdown',
+    key: 'maxDrawdown',
+    format: (t) => t.maxDrawdown,
+    raw: (t) => statNumeric(t.maxDrawdown),
+    lowerIsBetter: true,
+  },
+  {
+    label: 'Sharpe Ratio',
+    key: 'sharpeRatio',
+    format: (t) => (t.sharpeRatio !== undefined ? t.sharpeRatio.toFixed(2) : '—'),
+    raw: (t) => t.sharpeRatio ?? null,
+  },
+  {
+    label: 'Copy Fee',
+    key: 'copyFee',
+    format: (t) => `${t.copyFee}%`,
+    raw: (t) => t.copyFee,
+    lowerIsBetter: true,
+  },
+  {
+    label: 'Active Copiers',
+    key: 'activeCopiers',
+    format: (t) => t.activeCopiers.toLocaleString(),
+    raw: (t) => t.activeCopiers,
+  },
+];
+
+function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
+  const navigate = useNavigate();
+  const count = data.length || 2;
+
+  if (loading) {
+    return (
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors mb-2"
+        >
+          <ChevronLeft className="size-4" />
+          Back to traders
+        </button>
+        <ComparisonSkeleton count={count} />
+      </div>
+    );
+  }
+
+  if (data.length === 0) return null;
+
+  const colTemplate = `180px repeat(${data.length}, 1fr)`;
+
+  return (
+    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+      {/* Back button */}
+      <div className="px-6 pt-5 pb-3 border-b border-pf-border-subtle">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+        >
+          <ChevronLeft className="size-4" />
+          Back to traders
+        </button>
+      </div>
+
+      <div className="p-6 space-y-6 overflow-x-auto">
+        {/* ── Header: avatars + names ───────────────────────────────── */}
+        <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
+          <div className="flex items-end pb-1">
+            <span className="text-xs font-semibold text-pf-text-muted uppercase tracking-wider">
+              Trader
+            </span>
+          </div>
+          {data.map((t) => (
+            <div key={t.userId} className="flex flex-col items-center gap-2 text-center">
+              <div className="size-12 rounded-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-base font-bold select-none">
+                {t.avatarInitials}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-pf-text">
+                  {t.displayName ?? t.username}
+                </p>
+                <p className="text-xs text-pf-text-muted">@{t.username}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Stats table ───────────────────────────────────────────── */}
+        <div className="space-y-0 min-w-max">
+          {STAT_ROWS.map((row, ri) => {
+            const raws = data.map((t) => row.raw(t));
+            const bi = bestIndex(raws, row.lowerIsBetter);
+            const wi = worstIndex(raws, row.lowerIsBetter);
+            return (
+              <div
+                key={row.label}
+                className={`grid gap-4 py-3 ${ri > 0 ? 'border-t border-pf-border-subtle' : ''}`}
+                style={{ gridTemplateColumns: colTemplate }}
+              >
+                <span className="text-xs text-pf-text-secondary self-center">{row.label}</span>
+                {data.map((t, ci) => {
+                  const isBest = bi === ci;
+                  const isWorst = wi === ci;
+                  return (
+                    <div key={t.userId} className="flex items-center justify-center">
+                      <span
+                        className={`text-sm font-mono font-semibold px-2 py-0.5 rounded ${
+                          isBest
+                            ? 'bg-pf-success/10 text-pf-success'
+                            : isWorst
+                            ? 'bg-pf-danger/10 text-pf-danger'
+                            : 'text-pf-text'
+                        }`}
+                      >
+                        {row.format(t)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Sparkline row ─────────────────────────────────────────── */}
+        <div className="border-t border-pf-border pt-4">
+          <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
+            <span className="text-xs text-pf-text-secondary self-center">P&L Trend</span>
+            {data.map((t) => (
+              <div key={t.userId} className="flex items-center justify-center">
+                <MiniSparkline data={t.pnlHistory} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Top categories row ────────────────────────────────────── */}
+        <div className="border-t border-pf-border pt-4">
+          <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
+            <span className="text-xs text-pf-text-secondary self-center">Top Categories</span>
+            {data.map((t) => (
+              <div key={t.userId} className="flex flex-wrap justify-center gap-1">
+                {t.topCategories.slice(0, 4).map((cat) => (
+                  <span
+                    key={cat}
+                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] bg-pf-overlay text-pf-text-secondary border border-pf-border"
+                  >
+                    {categoryEmoji(cat)} {cat}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Recent trades ─────────────────────────────────────────── */}
+        <div className="border-t border-pf-border pt-4">
+          <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
+            <span className="text-xs text-pf-text-secondary self-start pt-1">Recent Trades</span>
+            {data.map((t) => (
+              <div key={t.userId} className="space-y-2">
+                {t.recentTrades.slice(0, 3).map((trade, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 bg-pf-overlay rounded-pf px-2.5 py-1.5"
+                  >
+                    <span
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                        trade.result === 'win'
+                          ? 'bg-pf-success/15 text-pf-success'
+                          : 'bg-pf-danger/15 text-pf-danger'
+                      }`}
+                    >
+                      {trade.result === 'win' ? 'WIN' : 'LOSS'}
+                    </span>
+                    <span className="text-[11px] text-pf-text-secondary truncate flex-1 max-w-[120px]">
+                      {trade.marketTitle}
+                    </span>
+                    <span
+                      className={`text-[11px] font-mono shrink-0 ${
+                        pnlIsPositive(trade.pnl) ? 'text-pf-success' : 'text-pf-danger'
+                      }`}
+                    >
+                      {trade.pnl}
+                    </span>
+                  </div>
+                ))}
+                {t.recentTrades.length === 0 && (
+                  <p className="text-xs text-pf-text-muted text-center py-1">No recent trades</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── CTA buttons ───────────────────────────────────────────── */}
+        <div className="border-t border-pf-border pt-5">
+          <div className="grid gap-4 min-w-max" style={{ gridTemplateColumns: colTemplate }}>
+            <div />
+            {data.map((t) => (
+              <div key={t.userId} className="flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/copy/setup/${t.userId}`)}
+                  className="w-full px-4 py-2 rounded-pf text-sm font-semibold bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
+                >
+                  Copy @{t.username}
+                </button>
+                <Link
+                  to={`/profile/${t.username}`}
+                  className="text-xs text-pf-text-secondary hover:text-pf-text transition-colors"
+                >
+                  View Profile
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Trader Card ────────────────────────────────────────────────────── */
 
 function TraderCardItem({
   trader,
   isCopying,
+  compareMode,
+  isSelected,
+  isDisabled,
+  onToggle,
 }: {
   trader: TraderCard;
   isCopying: boolean;
+  compareMode: boolean;
+  isSelected: boolean;
+  isDisabled: boolean;
+  onToggle: (id: string) => void;
 }) {
   const navigate = useNavigate();
   const positive = pnlIsPositive(trader.pnl);
 
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 hover:border-pf-border-strong transition-colors flex flex-col gap-3">
+    <div
+      className={`relative bg-pf-elevated border rounded-pf-lg p-4 hover:border-pf-border-strong transition-colors flex flex-col gap-3 ${
+        compareMode && isSelected
+          ? 'border-pf-cyan-500/50 ring-1 ring-pf-cyan-500/20'
+          : 'border-pf-border'
+      } ${compareMode && isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
+      role={compareMode ? 'checkbox' : undefined}
+      aria-checked={compareMode ? isSelected : undefined}
+      onClick={compareMode ? () => onToggle(trader.userId) : undefined}
+      style={{ cursor: compareMode ? 'pointer' : undefined }}
+    >
+      {/* Compare mode checkbox overlay */}
+      {compareMode && (
+        <div className="absolute top-3 left-3 z-10">
+          <div
+            className={`size-5 rounded border-2 flex items-center justify-center transition-colors ${
+              isSelected
+                ? 'bg-pf-cyan-500 border-pf-cyan-500'
+                : 'bg-pf-overlay border-pf-border-strong'
+            }`}
+          >
+            {isSelected && <Check className="size-3 text-black" strokeWidth={3} />}
+          </div>
+        </div>
+      )}
+
       {/* Avatar + name + rank */}
-      <div className="flex items-center gap-3">
+      <div className={`flex items-center gap-3 ${compareMode ? 'pl-7' : ''}`}>
         {trader.avatarUrl ? (
           <img
             src={trader.avatarUrl}
@@ -190,28 +625,30 @@ function TraderCardItem({
         </span>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-2 pt-1 border-t border-pf-border-subtle">
-        <Link
-          to={`/profile/${trader.username}`}
-          className="flex-1 text-center px-3 py-1.5 rounded-pf text-xs font-medium text-pf-text-secondary bg-pf-overlay hover:bg-pf-surface hover:text-pf-text transition-colors"
-        >
-          View Profile
-        </Link>
-        {isCopying ? (
-          <span className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-success/10 text-pf-success border border-pf-success/20 shrink-0">
-            Already Copying
-          </span>
-        ) : (
-          <button
-            type="button"
-            onClick={() => navigate(`/copy/new?address=${trader.username}`)}
-            className="px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors shrink-0"
+      {/* Actions — hidden in compare mode so card click does toggling */}
+      {!compareMode && (
+        <div className="flex items-center gap-2 pt-1 border-t border-pf-border-subtle">
+          <Link
+            to={`/profile/${trader.username}`}
+            className="flex-1 text-center px-3 py-1.5 rounded-pf text-xs font-medium text-pf-text-secondary bg-pf-overlay hover:bg-pf-surface hover:text-pf-text transition-colors"
           >
-            Copy Trade
-          </button>
-        )}
-      </div>
+            View Profile
+          </Link>
+          {isCopying ? (
+            <span className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-success/10 text-pf-success border border-pf-success/20 shrink-0">
+              Already Copying
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate(`/copy/new?address=${trader.username}`)}
+              className="px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors shrink-0"
+            >
+              Copy Trade
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -230,6 +667,13 @@ export function Component() {
   const [category, setCategory] = useState<Category>('All');
   const [winRate, setWinRate] = useState<WinRateFilter>('Any');
   const [minTrades, setMinTrades] = useState<MinTradesFilter>('Any');
+
+  /* Compare mode */
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [compareData, setCompareData] = useState<TraderComparisonData[]>([]);
+  const [loadingCompare, setLoadingCompare] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
 
   /* Fetch existing copy configs once to detect "already copying" */
   useEffect(() => {
@@ -300,88 +744,187 @@ export function Component() {
     return copiedUserIds.has(trader.userId) || copiedWallets.has(trader.username);
   }
 
+  /* ── Compare mode handlers ──────────────────────────────────────── */
+
+  function enterCompareMode() {
+    setCompareMode(true);
+    setSelectedIds([]);
+    setShowComparison(false);
+    setCompareData([]);
+  }
+
+  function exitCompareMode() {
+    setCompareMode(false);
+    setSelectedIds([]);
+    setShowComparison(false);
+    setCompareData([]);
+  }
+
+  function toggleSelection(userId: string) {
+    setSelectedIds((prev) => {
+      if (prev.includes(userId)) return prev.filter((id) => id !== userId);
+      if (prev.length >= MAX_COMPARE) return prev;
+      return [...prev, userId];
+    });
+  }
+
+  async function openComparison() {
+    if (selectedIds.length < 2) {
+      toast.error('Select at least 2 traders to compare');
+      return;
+    }
+    setLoadingCompare(true);
+    setShowComparison(true);
+    try {
+      const res = await fetch('/api/v1/copy/compare', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: selectedIds }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      setCompareData(json.data ?? []);
+    } catch {
+      toast.error('Failed to load comparison data');
+      setShowComparison(false);
+    } finally {
+      setLoadingCompare(false);
+    }
+  }
+
+  function handleBackFromComparison() {
+    setShowComparison(false);
+    setCompareData([]);
+  }
+
+  /* Selected trader name chips for the sticky bar */
+  const selectedTraders = traders.filter((t) => selectedIds.includes(t.userId));
+
   return (
     <div className="animate-fade-in p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-start gap-3">
-        <Users className="size-6 text-pf-cyan-400 mt-0.5 shrink-0" aria-hidden="true" />
-        <div>
-          <h1 className="text-2xl font-semibold text-pf-text">Discover Traders</h1>
-          <p className="text-sm text-pf-text-muted mt-0.5">Find top performers to copy</p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <Users className="size-6 text-pf-cyan-400 mt-0.5 shrink-0" aria-hidden="true" />
+          <div>
+            <h1 className="text-2xl font-semibold text-pf-text">Discover Traders</h1>
+            <p className="text-sm text-pf-text-muted mt-0.5">Find top performers to copy</p>
+          </div>
         </div>
+
+        {/* Compare toggle */}
+        {!compareMode ? (
+          <button
+            type="button"
+            onClick={enterCompareMode}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-pf text-sm font-medium border border-pf-border text-pf-text-secondary bg-pf-elevated hover:text-pf-text hover:border-pf-border-strong transition-colors shrink-0"
+          >
+            <GitCompare className="size-4" />
+            Compare
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={exitCompareMode}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-pf text-sm font-medium border border-pf-cyan-500/30 text-pf-cyan-400 bg-pf-cyan-500/10 hover:bg-pf-cyan-500/20 transition-colors shrink-0"
+          >
+            <X className="size-4" />
+            Exit Compare
+          </button>
+        )}
       </div>
 
-      {/* Filter bar */}
-      <div className="space-y-3">
-        {/* Search */}
-        <input
-          type="search"
-          placeholder="Search by username..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:max-w-sm px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors"
+      {/* Compare mode hint banner */}
+      {compareMode && !showComparison && (
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500/8 border border-pf-cyan-500/20 text-sm text-pf-cyan-400">
+          <GitCompare className="size-4 shrink-0" />
+          Select 2–3 traders to compare side by side. Click a card to select it.
+        </div>
+      )}
+
+      {/* Filter bar — hidden while showing comparison panel */}
+      {!showComparison && (
+        <div className="space-y-3">
+          {/* Search */}
+          <input
+            type="search"
+            placeholder="Search by username..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full sm:max-w-sm px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors"
+          />
+
+          {/* Category chips */}
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setCategory(cat)}
+                className={`px-3 py-1.5 text-sm rounded-full border transition-colors cursor-pointer ${
+                  category === cat
+                    ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
+                    : 'border-pf-border text-pf-text-secondary hover:text-pf-text'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Win Rate + Min Trades selects */}
+          <div className="flex flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-pf-text-secondary whitespace-nowrap" htmlFor="win-rate-filter">
+                Win Rate
+              </label>
+              <select
+                id="win-rate-filter"
+                value={winRate}
+                onChange={(e) => setWinRate(e.target.value as WinRateFilter)}
+                className="px-2.5 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus:outline-none focus:border-pf-cyan-500/50 transition-colors cursor-pointer"
+              >
+                {WIN_RATE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-pf-text-secondary whitespace-nowrap" htmlFor="min-trades-filter">
+                Min Trades
+              </label>
+              <select
+                id="min-trades-filter"
+                value={minTrades}
+                onChange={(e) => setMinTrades(e.target.value as MinTradesFilter)}
+                className="px-2.5 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus:outline-none focus:border-pf-cyan-500/50 transition-colors cursor-pointer"
+              >
+                {MIN_TRADES_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Comparison Panel */}
+      {showComparison && (
+        <ComparisonPanel
+          data={compareData}
+          loading={loadingCompare}
+          onBack={handleBackFromComparison}
         />
-
-        {/* Category chips */}
-        <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setCategory(cat)}
-              className={`px-3 py-1.5 text-sm rounded-full border transition-colors cursor-pointer ${
-                category === cat
-                  ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
-                  : 'border-pf-border text-pf-text-secondary hover:text-pf-text'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Win Rate + Min Trades selects */}
-        <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-pf-text-secondary whitespace-nowrap" htmlFor="win-rate-filter">
-              Win Rate
-            </label>
-            <select
-              id="win-rate-filter"
-              value={winRate}
-              onChange={(e) => setWinRate(e.target.value as WinRateFilter)}
-              className="px-2.5 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus:outline-none focus:border-pf-cyan-500/50 transition-colors cursor-pointer"
-            >
-              {WIN_RATE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-pf-text-secondary whitespace-nowrap" htmlFor="min-trades-filter">
-              Min Trades
-            </label>
-            <select
-              id="min-trades-filter"
-              value={minTrades}
-              onChange={(e) => setMinTrades(e.target.value as MinTradesFilter)}
-              className="px-2.5 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus:outline-none focus:border-pf-cyan-500/50 transition-colors cursor-pointer"
-            >
-              {MIN_TRADES_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Loading skeletons */}
-      {loading && (
+      {!showComparison && loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <CardSkeleton key={i} />
@@ -390,7 +933,7 @@ export function Component() {
       )}
 
       {/* Empty state */}
-      {!loading && visibleTraders.length === 0 && (
+      {!showComparison && !loading && visibleTraders.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Users className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
           <p className="text-pf-text font-medium">No traders found matching your filters</p>
@@ -401,20 +944,28 @@ export function Component() {
       )}
 
       {/* Trader cards grid */}
-      {!loading && visibleTraders.length > 0 && (
+      {!showComparison && !loading && visibleTraders.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 stagger-children">
-          {visibleTraders.map((trader) => (
-            <TraderCardItem
-              key={trader.userId}
-              trader={trader}
-              isCopying={isCopying(trader)}
-            />
-          ))}
+          {visibleTraders.map((trader) => {
+            const isSelected = selectedIds.includes(trader.userId);
+            const isDisabled = compareMode && !isSelected && selectedIds.length >= MAX_COMPARE;
+            return (
+              <TraderCardItem
+                key={trader.userId}
+                trader={trader}
+                isCopying={isCopying(trader)}
+                compareMode={compareMode}
+                isSelected={isSelected}
+                isDisabled={isDisabled}
+                onToggle={toggleSelection}
+              />
+            );
+          })}
         </div>
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {!showComparison && totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
           <button
             type="button"
@@ -437,6 +988,59 @@ export function Component() {
           >
             <ChevronRight className="size-4" />
           </button>
+        </div>
+      )}
+
+      {/* Spacer so last card row clears sticky bar */}
+      {compareMode && selectedIds.length >= 2 && !showComparison && <div className="h-20" />}
+
+      {/* Sticky bottom compare bar */}
+      {compareMode && selectedIds.length >= 2 && !showComparison && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-pf-border bg-pf-surface/95 backdrop-blur-sm px-4 py-3">
+          <div className="max-w-7xl mx-auto flex items-center gap-3 flex-wrap">
+            <span className="text-sm font-medium text-pf-text-secondary shrink-0">
+              Comparing {selectedIds.length} trader{selectedIds.length !== 1 ? 's' : ''}
+            </span>
+
+            {/* Trader chips */}
+            <div className="flex items-center gap-2 flex-1 flex-wrap">
+              {selectedTraders.map((t) => (
+                <span
+                  key={t.userId}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/25"
+                >
+                  @{t.username}
+                  <button
+                    type="button"
+                    onClick={() => toggleSelection(t.userId)}
+                    aria-label={`Remove ${t.username}`}
+                    className="text-pf-cyan-400/60 hover:text-pf-cyan-400 transition-colors"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedIds([])}
+                className="px-3 py-1.5 rounded-pf text-sm text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong bg-pf-elevated transition-colors"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={openComparison}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-pf text-sm font-semibold bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
+              >
+                <GitCompare className="size-4" />
+                Compare
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

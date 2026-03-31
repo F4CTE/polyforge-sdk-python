@@ -8,6 +8,19 @@ import {
   Ban,
   RotateCcw,
   UserCheck,
+  Clock,
+  LogIn,
+  LogOut,
+  TrendingUp,
+  Cpu,
+  Copy,
+  Settings,
+  Key,
+  Bell,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Search,
+  Filter,
 } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDate, formatDateTime } from '@/lib/utils';
@@ -63,7 +76,28 @@ interface StrategyCard {
   [key: string]: unknown;
 }
 
-type ActiveTab = 'overview' | 'orders' | 'strategies' | 'risk';
+type ActivityEventType =
+  | 'login' | 'logout'
+  | 'trade_placed' | 'trade_filled' | 'trade_cancelled'
+  | 'strategy_created' | 'strategy_published' | 'strategy_purchased'
+  | 'copy_started' | 'copy_stopped'
+  | 'settings_changed' | 'api_key_created' | 'api_key_revoked'
+  | 'alert_triggered' | 'withdrawal' | 'deposit';
+
+interface ActivityEvent {
+  id: string;
+  type: ActivityEventType;
+  description: string;
+  metadata?: Record<string, string | number>;
+  ipAddress?: string;
+  userAgent?: string;
+  timestamp: string;
+}
+
+type ActivityFilterGroup = 'all' | 'trades' | 'strategies' | 'auth' | 'settings';
+type ActivityDateRange = '7d' | '30d' | '90d' | 'all';
+
+type ActiveTab = 'overview' | 'orders' | 'strategies' | 'risk' | 'activity';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -88,6 +122,349 @@ function fmtWinRate(val?: number | string): string {
   if (val === undefined || val === null) return '—';
   if (typeof val === 'string') return val.includes('%') ? val : `${val}%`;
   return `${(val * 100).toFixed(1)}%`;
+}
+
+function relativeTime(isoString: string): string {
+  const diff = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return `${months}mo ago`;
+}
+
+// ─── Activity helpers ──────────────────────────────────────────────────────────
+
+const ACTIVITY_GROUP_MAP: Record<ActivityFilterGroup, ActivityEventType[]> = {
+  all: [],
+  trades: ['trade_placed', 'trade_filled', 'trade_cancelled'],
+  strategies: ['strategy_created', 'strategy_published', 'strategy_purchased', 'copy_started', 'copy_stopped'],
+  auth: ['login', 'logout'],
+  settings: ['settings_changed', 'api_key_created', 'api_key_revoked', 'alert_triggered', 'withdrawal', 'deposit'],
+};
+
+interface EventVisual {
+  Icon: React.ElementType;
+  dotClass: string;
+  iconClass: string;
+  badgeClass: string;
+  label: string;
+}
+
+function getEventVisual(type: ActivityEventType): EventVisual {
+  switch (type) {
+    case 'login':
+      return { Icon: LogIn,          dotClass: 'bg-pf-text-secondary',  iconClass: 'text-pf-text-secondary', badgeClass: 'bg-pf-text-secondary/10 text-pf-text-secondary', label: 'Login' };
+    case 'logout':
+      return { Icon: LogOut,         dotClass: 'bg-pf-text-secondary',  iconClass: 'text-pf-text-secondary', badgeClass: 'bg-pf-text-secondary/10 text-pf-text-secondary', label: 'Logout' };
+    case 'trade_placed':
+      return { Icon: TrendingUp,     dotClass: 'bg-pf-cyan-400',        iconClass: 'text-pf-cyan-400',       badgeClass: 'bg-pf-cyan-400/10 text-pf-cyan-400',            label: 'Trade Placed' };
+    case 'trade_filled':
+      return { Icon: TrendingUp,     dotClass: 'bg-pf-cyan-400',        iconClass: 'text-pf-cyan-400',       badgeClass: 'bg-pf-cyan-400/10 text-pf-cyan-400',            label: 'Trade Filled' };
+    case 'trade_cancelled':
+      return { Icon: TrendingUp,     dotClass: 'bg-pf-cyan-400',        iconClass: 'text-pf-cyan-400',       badgeClass: 'bg-pf-cyan-400/10 text-pf-cyan-400',            label: 'Trade Cancelled' };
+    case 'strategy_created':
+      return { Icon: Cpu,            dotClass: 'bg-pf-success',         iconClass: 'text-pf-success',        badgeClass: 'bg-pf-success/10 text-pf-success',              label: 'Strategy Created' };
+    case 'strategy_published':
+      return { Icon: Cpu,            dotClass: 'bg-pf-success',         iconClass: 'text-pf-success',        badgeClass: 'bg-pf-success/10 text-pf-success',              label: 'Strategy Published' };
+    case 'strategy_purchased':
+      return { Icon: Cpu,            dotClass: 'bg-pf-success',         iconClass: 'text-pf-success',        badgeClass: 'bg-pf-success/10 text-pf-success',              label: 'Strategy Purchased' };
+    case 'copy_started':
+      return { Icon: Copy,           dotClass: 'bg-pf-warning',         iconClass: 'text-pf-warning',        badgeClass: 'bg-pf-warning/10 text-pf-warning',              label: 'Copy Started' };
+    case 'copy_stopped':
+      return { Icon: Copy,           dotClass: 'bg-pf-warning',         iconClass: 'text-pf-warning',        badgeClass: 'bg-pf-warning/10 text-pf-warning',              label: 'Copy Stopped' };
+    case 'settings_changed':
+      return { Icon: Settings,       dotClass: 'bg-pf-text-muted',      iconClass: 'text-pf-text-muted',     badgeClass: 'bg-pf-base text-pf-text-muted',                 label: 'Settings Changed' };
+    case 'api_key_created':
+      return { Icon: Key,            dotClass: 'bg-pf-text-muted',      iconClass: 'text-pf-text-muted',     badgeClass: 'bg-pf-base text-pf-text-muted',                 label: 'API Key Created' };
+    case 'api_key_revoked':
+      return { Icon: Key,            dotClass: 'bg-pf-text-muted',      iconClass: 'text-pf-text-muted',     badgeClass: 'bg-pf-base text-pf-text-muted',                 label: 'API Key Revoked' };
+    case 'alert_triggered':
+      return { Icon: Bell,           dotClass: 'bg-pf-warning',         iconClass: 'text-pf-warning',        badgeClass: 'bg-pf-warning/10 text-pf-warning',              label: 'Alert Triggered' };
+    case 'withdrawal':
+      return { Icon: ArrowUpRight,   dotClass: 'bg-pf-danger',          iconClass: 'text-pf-danger',         badgeClass: 'bg-pf-danger/10 text-pf-danger',                label: 'Withdrawal' };
+    case 'deposit':
+      return { Icon: ArrowDownLeft,  dotClass: 'bg-pf-success',         iconClass: 'text-pf-success',        badgeClass: 'bg-pf-success/10 text-pf-success',              label: 'Deposit' };
+    default:
+      return { Icon: Clock,          dotClass: 'bg-pf-text-muted',      iconClass: 'text-pf-text-muted',     badgeClass: 'bg-pf-base text-pf-text-muted',                 label: String(type) };
+  }
+}
+
+// ─── Activity Timeline sub-component ──────────────────────────────────────────
+
+interface ActivityTimelineProps {
+  userId: string;
+}
+
+function ActivityTimeline({ userId }: ActivityTimelineProps) {
+  const [events, setEvents] = useState<ActivityEvent[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  const [search, setSearch] = useState('');
+  const [filterGroup, setFilterGroup] = useState<ActivityFilterGroup>('all');
+  const [dateRange, setDateRange] = useState<ActivityDateRange>('30d');
+
+  const limit = 30;
+
+  async function fetchActivity(nextPage: number, append = false) {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: String(nextPage),
+        limit: String(limit),
+      });
+      const res = await fetch(`/api/admin/users/${userId}/activity?${params}`, {
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to load activity');
+      const data = await res.json();
+      const incoming: ActivityEvent[] = Array.isArray(data) ? data : (data.data ?? []);
+      setTotal(data.total ?? incoming.length);
+      setEvents((prev) => (append ? [...prev, ...incoming] : incoming));
+      setPage(nextPage);
+    } catch {
+      toast.error('Failed to load activity');
+    } finally {
+      setLoading(false);
+      setLoaded(true);
+    }
+  }
+
+  useEffect(() => {
+    fetchActivity(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  // ── Client-side filtering ────────────────────────────────────────────────────
+
+  const now = Date.now();
+  const rangeMs: Record<ActivityDateRange, number> = {
+    '7d':  7  * 24 * 60 * 60 * 1000,
+    '30d': 30 * 24 * 60 * 60 * 1000,
+    '90d': 90 * 24 * 60 * 60 * 1000,
+    'all': Infinity,
+  };
+
+  const filtered = events.filter((ev) => {
+    if (dateRange !== 'all') {
+      const age = now - new Date(ev.timestamp).getTime();
+      if (age > rangeMs[dateRange]) return false;
+    }
+    if (filterGroup !== 'all') {
+      if (!ACTIVITY_GROUP_MAP[filterGroup].includes(ev.type)) return false;
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      if (!ev.description.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  const hasMore = events.length < total;
+
+  // ── Skeleton ─────────────────────────────────────────────────────────────────
+
+  if (!loaded && loading) {
+    return (
+      <div className="space-y-0" aria-busy="true" aria-label="Loading activity">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex gap-4 animate-pulse">
+            <div className="flex flex-col items-center">
+              <div className="w-3 h-3 rounded-full bg-pf-border mt-1 shrink-0" />
+              {i < 4 && <div className="w-px flex-1 bg-pf-border mt-1" />}
+            </div>
+            <div className="pb-6 flex-1 space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-24 bg-pf-elevated rounded-full" />
+                <div className="h-3 w-16 bg-pf-elevated rounded" />
+              </div>
+              <div className="h-4 bg-pf-elevated rounded w-3/4" />
+              <div className="h-3 bg-pf-elevated rounded w-1/3" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* ── Filter bar ──────────────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        {/* Search */}
+        <div className="relative flex-1">
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-pf-text-muted pointer-events-none"
+            aria-hidden="true"
+          />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search activity..."
+            className="w-full pl-8 pr-3 py-2 text-sm bg-pf-elevated border border-pf-border rounded-pf-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:ring-2 focus:ring-pf-cyan-500"
+            aria-label="Search activity by description"
+          />
+        </div>
+
+        {/* Event type group filter */}
+        <div className="relative">
+          <Filter
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-pf-text-muted pointer-events-none"
+            aria-hidden="true"
+          />
+          <select
+            value={filterGroup}
+            onChange={(e) => setFilterGroup(e.target.value as ActivityFilterGroup)}
+            className="pl-8 pr-8 py-2 text-sm bg-pf-elevated border border-pf-border rounded-pf-sm text-pf-text focus:outline-none focus:ring-2 focus:ring-pf-cyan-500 appearance-none cursor-pointer"
+            aria-label="Filter by event type"
+          >
+            <option value="all">All Events</option>
+            <option value="trades">Trades</option>
+            <option value="strategies">Strategies</option>
+            <option value="auth">Auth</option>
+            <option value="settings">Settings</option>
+          </select>
+          <ChevronRight
+            size={12}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 text-pf-text-muted pointer-events-none"
+            aria-hidden="true"
+          />
+        </div>
+
+        {/* Date range pills */}
+        <div
+          className="flex items-center gap-1 bg-pf-elevated border border-pf-border rounded-pf-sm p-1"
+          role="group"
+          aria-label="Date range filter"
+        >
+          {(['7d', '30d', '90d', 'all'] as ActivityDateRange[]).map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setDateRange(r)}
+              className={`px-2.5 py-1 text-xs font-medium rounded-pf-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
+                dateRange === r
+                  ? 'bg-pf-cyan-500 text-white'
+                  : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-base'
+              }`}
+            >
+              {r === 'all' ? 'All' : `Last ${r}`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Timeline ────────────────────────────────────────────────────────── */}
+      {filtered.length === 0 ? (
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-12 flex flex-col items-center gap-3 text-center">
+          <Clock size={32} className="text-pf-text-muted" aria-hidden="true" />
+          <p className="text-sm text-pf-text-secondary font-medium">No activity recorded for this user</p>
+          {(search || filterGroup !== 'all' || dateRange !== 'all') && (
+            <p className="text-xs text-pf-text-muted">Try adjusting your filters</p>
+          )}
+        </div>
+      ) : (
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+          <ul className="divide-y divide-pf-border" aria-label="Activity timeline">
+            {filtered.map((ev, idx) => {
+              const visual = getEventVisual(ev.type);
+              const { Icon, dotClass, iconClass, badgeClass, label } = visual;
+              const isLast = idx === filtered.length - 1;
+
+              return (
+                <li key={ev.id} className="flex gap-4 px-5 py-4">
+                  {/* Timeline connector */}
+                  <div className="flex flex-col items-center shrink-0 pt-0.5">
+                    <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotClass}`} aria-hidden="true" />
+                    {!isLast && (
+                      <span className="w-px flex-1 bg-pf-border mt-1.5" aria-hidden="true" />
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0 pb-0.5">
+                    {/* Header row: icon + badge + timestamp */}
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <Icon size={13} className={iconClass} aria-hidden="true" />
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${badgeClass}`}>
+                        {label}
+                      </span>
+                      <time
+                        dateTime={ev.timestamp}
+                        title={formatDateTime(ev.timestamp)}
+                        className="text-xs text-pf-text-muted ml-auto"
+                      >
+                        {relativeTime(ev.timestamp)}
+                      </time>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-sm text-pf-text leading-snug">{ev.description}</p>
+
+                    {/* IP + User Agent */}
+                    {(ev.ipAddress || ev.userAgent) && (
+                      <p className="text-xs text-pf-text-muted mt-1 truncate">
+                        {[ev.ipAddress, ev.userAgent].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+
+                    {/* Metadata chips */}
+                    {ev.metadata && Object.keys(ev.metadata).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {Object.entries(ev.metadata).map(([k, v]) => (
+                          <span
+                            key={k}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-sm bg-pf-base border border-pf-border text-xs text-pf-text-secondary"
+                          >
+                            <span className="text-pf-text-muted capitalize">
+                              {k.replace(/([A-Z])/g, ' $1').trim()}:
+                            </span>
+                            <span className="font-medium text-pf-text truncate max-w-[160px]">{String(v)}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* Load more */}
+          {hasMore && (
+            <div className="px-5 py-3 border-t border-pf-border flex items-center justify-between">
+              <span className="text-xs text-pf-text-muted">
+                Showing {events.length} of {total} events
+              </span>
+              <button
+                type="button"
+                onClick={() => fetchActivity(page + 1, true)}
+                disabled={loading}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base hover:text-pf-text disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+              >
+                {loading ? (
+                  <RotateCcw size={13} className="animate-spin" aria-hidden="true" />
+                ) : (
+                  <ChevronRight size={13} aria-hidden="true" />
+                )}
+                Load more
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
@@ -193,6 +570,7 @@ export function Component() {
     setActiveTab(tab);
     if (tab === 'orders' && !ordersLoaded) loadOrders(1);
     if (tab === 'strategies' && !strategiesLoaded) loadStrategies();
+    // activity tab self-loads via ActivityTimeline's own useEffect
   }
 
   function handleOrdersPage(next: number) {
@@ -299,6 +677,14 @@ export function Component() {
 
   const isSuspended = user.suspended || user.status?.toUpperCase() === 'SUSPENDED';
   const ordersPageCount = Math.ceil(ordersTotal / ordersLimit) || 1;
+
+  const tabs: { key: ActiveTab; label: string; Icon: React.ElementType }[] = [
+    { key: 'overview',   label: 'Overview',   Icon: ShieldCheck },
+    { key: 'orders',     label: 'Orders',     Icon: TrendingUp },
+    { key: 'strategies', label: 'Strategies', Icon: Cpu },
+    { key: 'risk',       label: 'Risk',       Icon: ShieldCheck },
+    { key: 'activity',   label: 'Activity',   Icon: Clock },
+  ];
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -422,21 +808,22 @@ export function Component() {
 
       {/* ── Section 2: Tabs ────────────────────────────────────────────────── */}
       <div>
-        <div className="flex gap-1 border-b border-pf-border mb-4" role="tablist" aria-label="User detail sections">
-          {(['overview', 'orders', 'strategies', 'risk'] as ActiveTab[]).map((tab) => (
+        <div className="flex gap-1 border-b border-pf-border mb-4 overflow-x-auto" role="tablist" aria-label="User detail sections">
+          {tabs.map(({ key, label, Icon }) => (
             <button
-              key={tab}
+              key={key}
               type="button"
               role="tab"
-              aria-selected={activeTab === tab}
-              onClick={() => handleTabChange(tab)}
-              className={`px-4 py-2 text-sm font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded-t-pf-sm -mb-px border-b-2 ${
-                activeTab === tab
+              aria-selected={activeTab === key}
+              onClick={() => handleTabChange(key)}
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded-t-pf-sm -mb-px border-b-2 shrink-0 ${
+                activeTab === key
                   ? 'border-pf-cyan-500 text-pf-cyan-500'
                   : 'border-transparent text-pf-text-secondary hover:text-pf-text'
               }`}
             >
-              {tab}
+              <Icon size={14} aria-hidden="true" />
+              {label}
             </button>
           ))}
         </div>
@@ -774,6 +1161,11 @@ export function Component() {
               <p className="text-sm text-pf-text-tertiary">No risk settings configured</p>
             )}
           </div>
+        )}
+
+        {/* ── Activity tab ──────────────────────────────────────────────────── */}
+        {activeTab === 'activity' && id && (
+          <ActivityTimeline userId={id} />
         )}
       </div>
     </div>
