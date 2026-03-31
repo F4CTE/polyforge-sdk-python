@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router';
 import {
   ArrowLeft, UserPlus, UserMinus, Settings, Loader2, User,
   TrendingUp, Award, Target, Flame, Hexagon, DollarSign, Users, Eye,
-  GitFork, Heart, BarChart2,
+  GitFork, Heart, BarChart2, Trophy, Lock, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -38,10 +38,30 @@ interface ScoreData {
 
 interface Badge {
   id: string;
-  type: string;
   name: string;
-  earnedAt: string;
+  description: string;
+  emoji: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  unlockedAt?: string; // ISO date if earned, undefined if not
 }
+
+const ALL_BADGES: Omit<Badge, 'unlockedAt'>[] = [
+  { id: 'first-trade',      name: 'First Trade',      emoji: '🎯', rarity: 'common',    description: 'Placed their first trade' },
+  { id: 'win-streak-5',     name: 'Hot Streak',        emoji: '🔥', rarity: 'common',    description: 'Won 5 trades in a row' },
+  { id: 'win-streak-10',    name: 'On Fire',           emoji: '⚡', rarity: 'rare',      description: 'Won 10 trades in a row' },
+  { id: 'top-100',          name: 'Top 100',           emoji: '🏆', rarity: 'rare',      description: 'Reached top 100 on leaderboard' },
+  { id: 'top-10',           name: 'Elite',             emoji: '💎', rarity: 'epic',      description: 'Reached top 10 on leaderboard' },
+  { id: 'profit-1k',        name: 'Four Figures',      emoji: '💰', rarity: 'common',    description: 'Earned $1,000 in total P&L' },
+  { id: 'profit-10k',       name: 'High Roller',       emoji: '🎰', rarity: 'rare',      description: 'Earned $10,000 in total P&L' },
+  { id: 'profit-100k',      name: 'Whale',             emoji: '🐋', rarity: 'legendary', description: 'Earned $100,000 in total P&L' },
+  { id: 'strategist',       name: 'Strategist',        emoji: '🧠', rarity: 'common',    description: 'Published a strategy to the marketplace' },
+  { id: 'popular-strategy', name: 'Crowd Favourite',   emoji: '⭐', rarity: 'rare',      description: 'Strategy purchased 10+ times' },
+  { id: 'century-trades',   name: 'Century Club',      emoji: '💯', rarity: 'common',    description: 'Completed 100 trades' },
+  { id: 'copy-master',      name: 'Copy Master',       emoji: '🔁', rarity: 'rare',      description: 'Has 10+ copy traders following' },
+  { id: 'perfect-week',     name: 'Perfect Week',      emoji: '📅', rarity: 'epic',      description: '100% win rate for a full week' },
+  { id: 'oracle',           name: 'Oracle',            emoji: '🔮', rarity: 'legendary', description: 'Predicted 20 markets correctly in a row' },
+  { id: 'early-adopter',    name: 'Early Adopter',     emoji: '🚀', rarity: 'epic',      description: 'Joined in the first month' },
+];
 
 interface PerfPoint {
   date: string;
@@ -96,6 +116,19 @@ const BADGE_ICONS: Record<string, React.ReactNode> = {
   WHALE_WATCHER: <Eye className="size-4" />,
 };
 
+function rarityCircleStyle(rarity: Badge['rarity']): string {
+  switch (rarity) {
+    case 'common':    return 'bg-pf-elevated border-pf-border';
+    case 'rare':      return 'bg-pf-cyan-500/10 border-pf-cyan-500/30';
+    case 'epic':      return 'bg-purple-500/10 border-purple-500/30';
+    case 'legendary': return 'bg-pf-warning/10 border-pf-warning/30';
+  }
+}
+
+function rarityLabel(rarity: Badge['rarity']): string {
+  return rarity.charAt(0).toUpperCase() + rarity.slice(1);
+}
+
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
@@ -146,6 +179,8 @@ export function Component() {
   const [followLoading, setFollowLoading] = useState(false);
   const [scoreData, setScoreData] = useState<ScoreData | null>(null);
   const [badges, setBadges] = useState<Badge[]>([]);
+  const [loadingBadges, setLoadingBadges] = useState(true);
+  const [showAllBadges, setShowAllBadges] = useState(false);
 
   // Performance chart state
   const [perfData, setPerfData] = useState<PerfPoint[]>([]);
@@ -167,14 +202,10 @@ export function Component() {
           const data = await res.json();
           setProfile(data);
 
-          // Fetch score and badges using the profile's userId if available
+          // Fetch score using the profile's userId if available
           if (data.userId) {
-            const [scoreRes, badgeRes] = await Promise.all([
-              fetch(`/api/v1/scores/${data.userId}`, { credentials: 'include' }),
-              fetch(`/api/v1/scores/${data.userId}/badges`, { credentials: 'include' }),
-            ]);
+            const scoreRes = await fetch(`/api/v1/scores/${data.userId}`, { credentials: 'include' });
             if (scoreRes.ok) setScoreData(await scoreRes.json());
-            if (badgeRes.ok) setBadges(await badgeRes.json());
           }
         }
       } catch { /* keep state */ }
@@ -219,6 +250,24 @@ export function Component() {
       })
       .catch(() => toast.error('Failed to load activity'))
       .finally(() => setActivityLoading(false));
+  }, [username]);
+
+  // Fetch achievement badges and merge with frontend constants
+  useEffect(() => {
+    if (!username) return;
+    setLoadingBadges(true);
+    fetch(`/api/v1/users/${username}/badges`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { data: { id: string; unlockedAt: string }[] } | null) => {
+        const unlockedMap = new Map((data?.data ?? []).map(b => [b.id, b.unlockedAt]));
+        const merged: Badge[] = ALL_BADGES.map(def => ({
+          ...def,
+          unlockedAt: unlockedMap.get(def.id),
+        }));
+        setBadges(merged);
+      })
+      .catch(() => toast.error('Failed to load badges'))
+      .finally(() => setLoadingBadges(false));
   }, [username]);
 
   const isOwn = me && profile && me.username === profile.username;
@@ -430,32 +479,104 @@ export function Component() {
         </div>
       )}
 
-      {/* Badges */}
-      {badges.length > 0 && (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Award className="size-4 text-pf-cyan-400" />
-            <h2 className="text-sm font-semibold text-pf-text">Badges</h2>
-            <span className="text-xs text-pf-text-muted ml-auto">{badges.length} earned</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {badges.map(badge => (
-              <div
-                key={badge.id}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border-subtle"
-              >
-                <span className="text-lg">{BADGE_ICONS[badge.type] ?? <Target className="size-4" />}</span>
-                <div className="min-w-0">
-                  <div className="text-xs font-medium text-pf-text truncate">{badge.name}</div>
-                  <div className="text-[10px] text-pf-text-muted">
-                    {new Date(badge.earnedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </div>
-                </div>
+      {/* ── Achievements ────────────────────────────────────────────────── */}
+      {(() => {
+        const unlockedBadges = badges.filter(b => b.unlockedAt !== undefined);
+        const lockedBadges   = badges.filter(b => b.unlockedAt === undefined);
+
+        // Rarity counts for unlocked badges
+        const rarityCounts = (['common', 'rare', 'epic', 'legendary'] as Badge['rarity'][]).map(r => ({
+          rarity: r,
+          count: unlockedBadges.filter(b => b.rarity === r).length,
+        }));
+
+        return (
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+            {/* Header row */}
+            <div className="flex items-center gap-2 mb-4">
+              <Award className="size-4 text-pf-cyan-400" />
+              <h2 className="text-sm font-semibold text-pf-text">Achievements</h2>
+              <span className="text-xs text-pf-text-muted">
+                ({unlockedBadges.length} / {badges.length})
+              </span>
+              {badges.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllBadges(v => !v)}
+                  className="ml-auto flex items-center gap-1 text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf"
+                >
+                  {showAllBadges ? (
+                    <><ChevronUp className="size-3.5" />Hide locked</>
+                  ) : (
+                    <><ChevronDown className="size-3.5" />Show all</>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* Badge chips */}
+            {loadingBadges ? (
+              /* Loading skeleton */
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="size-11 rounded-full bg-pf-overlay border border-pf-border animate-pulse"
+                  />
+                ))}
               </div>
-            ))}
+            ) : unlockedBadges.length === 0 && !showAllBadges ? (
+              /* Empty state */
+              <div className="flex flex-col items-center justify-center gap-2 py-6">
+                <Trophy className="size-7 text-pf-text-muted opacity-40" />
+                <p className="text-xs text-pf-text-muted">No badges yet</p>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {/* Unlocked badges */}
+                {unlockedBadges.map(badge => {
+                  const earnedDate = badge.unlockedAt
+                    ? new Date(badge.unlockedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                    : '';
+                  const tooltipText = `${badge.name} — ${badge.description}\nEarned: ${earnedDate}`;
+                  return (
+                    <div
+                      key={badge.id}
+                      title={tooltipText}
+                      className={`size-11 rounded-full border flex items-center justify-center text-xl shrink-0 cursor-default ${rarityCircleStyle(badge.rarity)}`}
+                      aria-label={`${badge.name}: ${badge.description}`}
+                    >
+                      {badge.emoji}
+                    </div>
+                  );
+                })}
+                {/* Locked badges (only when showAllBadges=true) */}
+                {showAllBadges && lockedBadges.map(badge => (
+                  <div
+                    key={badge.id}
+                    title={`${badge.name} — ${badge.description}\nNot yet unlocked`}
+                    className="size-11 rounded-full border border-pf-border bg-pf-overlay flex items-center justify-center shrink-0 opacity-50 cursor-default"
+                    aria-label={`${badge.name} (locked): ${badge.description}`}
+                  >
+                    <Lock className="size-4 text-pf-text-muted" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Rarity summary */}
+            {!loadingBadges && unlockedBadges.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
+                {rarityCounts.map(({ rarity, count }) => (
+                  <span key={rarity} className="text-[10px] text-pf-text-muted">
+                    {rarityLabel(rarity)}: {count}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── A. Performance (30d) Sparkline ─────────────────────────────── */}
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">

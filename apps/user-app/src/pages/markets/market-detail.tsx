@@ -38,6 +38,7 @@ import {
   Bar,
   CartesianGrid,
   Legend,
+  ReferenceLine,
 } from 'recharts';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -143,6 +144,12 @@ interface PriceAlert {
 
 type Resolution = '1m' | '1h' | '1d';
 
+interface DepthLevel {
+  price: number;
+  bidCumSize: number | null;
+  askCumSize: number | null;
+}
+
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 function formatVolume(vol: string): string {
@@ -202,6 +209,55 @@ function depthColor(pct: number, side: 'ask' | 'bid'): string {
   }
 }
 
+function buildDepthData(bids: OrderBookEntry[], asks: OrderBookEntry[]): DepthLevel[] {
+  // Sort bids descending by price, compute cumulative from best bid outward
+  const sortedBids = [...bids].sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+  // Sort asks ascending by price, compute cumulative from best ask outward
+  const sortedAsks = [...asks].sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+
+  // Build bid cumulative map: lower prices accumulate more depth
+  const bidPoints: { price: number; cumSize: number }[] = [];
+  let bidCum = 0;
+  for (const entry of sortedBids) {
+    bidCum += parseFloat(entry.size);
+    bidPoints.push({ price: parseFloat(entry.price), cumSize: bidCum });
+  }
+  // Bids display with the deepest cumulative at the lowest price — reverse so
+  // chart reads left-to-right (lowest price = max depth on bid side)
+  bidPoints.reverse();
+
+  // Build ask cumulative map: higher prices accumulate more depth
+  const askPoints: { price: number; cumSize: number }[] = [];
+  let askCum = 0;
+  for (const entry of sortedAsks) {
+    askCum += parseFloat(entry.size);
+    askPoints.push({ price: parseFloat(entry.price), cumSize: askCum });
+  }
+
+  // Merge all price points into a single sorted array
+  const priceSet = new Map<number, DepthLevel>();
+
+  for (const bp of bidPoints) {
+    priceSet.set(bp.price, { price: bp.price, bidCumSize: bp.cumSize, askCumSize: null });
+  }
+  for (const ap of askPoints) {
+    const existing = priceSet.get(ap.price);
+    if (existing) {
+      existing.askCumSize = ap.cumSize;
+    } else {
+      priceSet.set(ap.price, { price: ap.price, bidCumSize: null, askCumSize: ap.cumSize });
+    }
+  }
+
+  return Array.from(priceSet.values()).sort((a, b) => a.price - b.price);
+}
+
+function formatDepthSize(v: number): string {
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
+  return v.toFixed(0);
+}
+
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
 function DetailSkeleton() {
@@ -247,6 +303,7 @@ export function Component() {
 
   const [orderBook, setOrderBook] = useState<OrderBook | null>(null);
   const [loadingBook, setLoadingBook] = useState(true);
+  const [orderBookView, setOrderBookView] = useState<'table' | 'chart'>('table');
 
   const [showRunStrategy, setShowRunStrategy] = useState(false);
   const [strategyOptions, setStrategyOptions] = useState<StrategyOption[]>([]);
@@ -1138,6 +1195,33 @@ export function Component() {
                       spread {orderBook.spread}
                     </span>
                   )}
+                  {/* Table / Chart toggle */}
+                  <div className="flex rounded-pf-sm overflow-hidden border border-pf-border" role="group" aria-label="Order book view">
+                    <button
+                      type="button"
+                      onClick={() => setOrderBookView('table')}
+                      aria-pressed={orderBookView === 'table'}
+                      className={`px-2 py-0.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
+                        orderBookView === 'table'
+                          ? 'bg-pf-cyan-500/15 text-pf-cyan-400'
+                          : 'bg-transparent text-pf-text-muted hover:text-pf-text-secondary'
+                      }`}
+                    >
+                      Table
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOrderBookView('chart')}
+                      aria-pressed={orderBookView === 'chart'}
+                      className={`px-2 py-0.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 border-l border-pf-border ${
+                        orderBookView === 'chart'
+                          ? 'bg-pf-cyan-500/15 text-pf-cyan-400'
+                          : 'bg-transparent text-pf-text-muted hover:text-pf-text-secondary'
+                      }`}
+                    >
+                      Chart
+                    </button>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
@@ -1153,7 +1237,7 @@ export function Component() {
                 </div>
               </div>
 
-              {/* Bid/Ask depth ratio bar */}
+              {/* Bid/Ask depth ratio bar — shown in both views */}
               {orderBook && !loadingBook && (() => {
                 const totalBid = orderBook.bids.reduce((s, e) => s + parseFloat(e.size), 0);
                 const totalAsk = orderBook.asks.reduce((s, e) => s + parseFloat(e.size), 0);
@@ -1181,44 +1265,188 @@ export function Component() {
                   ))}
                 </div>
               ) : orderBook ? (
-                <div className="space-y-0">
-                  {/* Asks (reversed) */}
-                  <div className="space-y-px">
-                    {orderBook.asks
-                      .slice(0, 8)
-                      .reverse()
-                      .map((ask, idx, arr) => (
-                        <div key={`ask-${idx}`} className="relative flex items-center h-6 px-2 text-xs">
+                orderBookView === 'table' ? (
+                  /* ── Table view (existing) ── */
+                  <div className="space-y-0">
+                    {/* Asks (reversed) */}
+                    <div className="space-y-px">
+                      {orderBook.asks
+                        .slice(0, 8)
+                        .reverse()
+                        .map((ask, idx, arr) => (
+                          <div key={`ask-${idx}`} className="relative flex items-center h-6 px-2 text-xs">
+                            <div
+                              className="absolute inset-y-0 right-0 rounded-sm"
+                              style={{ width: `${bookDepth(orderBook.asks.slice(0, 8), arr.length - 1 - idx)}%`, backgroundColor: depthColor(bookDepth(orderBook.asks.slice(0, 8), arr.length - 1 - idx), 'ask') }}
+                            />
+                            <span className="relative font-mono text-pf-danger w-16">{ask.price}</span>
+                            <span className="relative font-mono text-pf-text-muted ml-auto">{ask.size}</span>
+                          </div>
+                        ))}
+                    </div>
+
+                    {/* Midpoint */}
+                    <div className="flex items-center gap-2 px-2 py-1.5 border-y border-pf-border-subtle my-1">
+                      <span className="font-mono text-sm text-pf-text font-medium">{orderBook.midpoint}</span>
+                      <span className="text-[11px] text-pf-text-muted">mid</span>
+                    </div>
+
+                    {/* Bids */}
+                    <div className="space-y-px">
+                      {orderBook.bids.slice(0, 8).map((bid, idx) => (
+                        <div key={`bid-${idx}`} className="relative flex items-center h-6 px-2 text-xs">
                           <div
                             className="absolute inset-y-0 right-0 rounded-sm"
-                            style={{ width: `${bookDepth(orderBook.asks.slice(0, 8), arr.length - 1 - idx)}%`, backgroundColor: depthColor(bookDepth(orderBook.asks.slice(0, 8), arr.length - 1 - idx), 'ask') }}
+                            style={{ width: `${bookDepth(orderBook.bids.slice(0, 8), idx)}%`, backgroundColor: depthColor(bookDepth(orderBook.bids.slice(0, 8), idx), 'bid') }}
                           />
-                          <span className="relative font-mono text-pf-danger w-16">{ask.price}</span>
-                          <span className="relative font-mono text-pf-text-muted ml-auto">{ask.size}</span>
+                          <span className="relative font-mono text-pf-success w-16">{bid.price}</span>
+                          <span className="relative font-mono text-pf-text-muted ml-auto">{bid.size}</span>
                         </div>
                       ))}
+                    </div>
                   </div>
-
-                  {/* Midpoint */}
-                  <div className="flex items-center gap-2 px-2 py-1.5 border-y border-pf-border-subtle my-1">
-                    <span className="font-mono text-sm text-pf-text font-medium">{orderBook.midpoint}</span>
-                    <span className="text-[11px] text-pf-text-muted">mid</span>
-                  </div>
-
-                  {/* Bids */}
-                  <div className="space-y-px">
-                    {orderBook.bids.slice(0, 8).map((bid, idx) => (
-                      <div key={`bid-${idx}`} className="relative flex items-center h-6 px-2 text-xs">
-                        <div
-                          className="absolute inset-y-0 right-0 rounded-sm"
-                          style={{ width: `${bookDepth(orderBook.bids.slice(0, 8), idx)}%`, backgroundColor: depthColor(bookDepth(orderBook.bids.slice(0, 8), idx), 'bid') }}
-                        />
-                        <span className="relative font-mono text-pf-success w-16">{bid.price}</span>
-                        <span className="relative font-mono text-pf-text-muted ml-auto">{bid.size}</span>
+                ) : (
+                  /* ── Depth chart view ── */
+                  (() => {
+                    const depthData = buildDepthData(orderBook.bids, orderBook.asks);
+                    const midPrice = parseFloat(orderBook.midpoint);
+                    const isEmpty = orderBook.bids.length === 0 && orderBook.asks.length === 0;
+                    if (isEmpty) {
+                      return (
+                        <div className="h-52 bg-pf-overlay rounded-pf animate-pulse" />
+                      );
+                    }
+                    return (
+                      <div className="h-52">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart
+                            data={depthData}
+                            margin={{ top: 4, right: 4, bottom: 0, left: 0 }}
+                          >
+                            <defs>
+                              <linearGradient id="bidDepthGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="var(--color-pf-success)" stopOpacity={0.25} />
+                                <stop offset="100%" stopColor="var(--color-pf-success)" stopOpacity={0.05} />
+                              </linearGradient>
+                              <linearGradient id="askDepthGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="var(--color-pf-danger)" stopOpacity={0.25} />
+                                <stop offset="100%" stopColor="var(--color-pf-danger)" stopOpacity={0.05} />
+                              </linearGradient>
+                            </defs>
+                            <XAxis
+                              dataKey="price"
+                              type="number"
+                              domain={[0, 1]}
+                              tick={{ fontSize: 10, fill: textMuted }}
+                              tickLine={false}
+                              axisLine={false}
+                              tickFormatter={(v: number) => v.toFixed(2)}
+                              interval="preserveStartEnd"
+                            />
+                            <YAxis
+                              tick={{ fontSize: 10, fill: textMuted }}
+                              tickLine={false}
+                              axisLine={false}
+                              tickFormatter={formatDepthSize}
+                              width={36}
+                            />
+                            <Tooltip
+                              content={({ active, payload }) => {
+                                if (!active || !payload?.length) return null;
+                                const d = payload[0]?.payload as DepthLevel;
+                                const bestBidPrice = orderBook.bids.length > 0
+                                  ? Math.max(...orderBook.bids.map(b => parseFloat(b.price)))
+                                  : null;
+                                const bestAskPrice = orderBook.asks.length > 0
+                                  ? Math.min(...orderBook.asks.map(a => parseFloat(a.price)))
+                                  : null;
+                                const spread = bestBidPrice !== null && bestAskPrice !== null
+                                  ? (bestAskPrice - bestBidPrice).toFixed(4)
+                                  : null;
+                                return (
+                                  <div className="bg-pf-surface border border-pf-border rounded px-3 py-2 text-xs shadow-pf-md">
+                                    <p className="text-pf-text-secondary mb-1 font-mono">
+                                      Price: {d.price.toFixed(4)}
+                                    </p>
+                                    {d.bidCumSize !== null && (
+                                      <p className="text-pf-success">
+                                        Bid depth: {formatDepthSize(d.bidCumSize)} USDC
+                                      </p>
+                                    )}
+                                    {d.askCumSize !== null && (
+                                      <p className="text-pf-danger">
+                                        Ask depth: {formatDepthSize(d.askCumSize)} USDC
+                                      </p>
+                                    )}
+                                    {spread !== null && Math.abs(d.price - midPrice) < 0.01 && (
+                                      <p className="text-pf-text-muted mt-0.5">
+                                        Spread: {spread}
+                                      </p>
+                                    )}
+                                  </div>
+                                );
+                              }}
+                            />
+                            {/* Bid area */}
+                            <Area
+                              type="stepAfter"
+                              dataKey="bidCumSize"
+                              stroke="var(--color-pf-success)"
+                              strokeWidth={1.5}
+                              fill="url(#bidDepthGrad)"
+                              dot={false}
+                              connectNulls={false}
+                              activeDot={{ r: 3, fill: 'var(--color-pf-success)', stroke: 'none' }}
+                              isAnimationActive={false}
+                            />
+                            {/* Ask area */}
+                            <Area
+                              type="stepBefore"
+                              dataKey="askCumSize"
+                              stroke="var(--color-pf-danger)"
+                              strokeWidth={1.5}
+                              fill="url(#askDepthGrad)"
+                              dot={false}
+                              connectNulls={false}
+                              activeDot={{ r: 3, fill: 'var(--color-pf-danger)', stroke: 'none' }}
+                              isAnimationActive={false}
+                            />
+                            {/* Mid-price reference line */}
+                            {!isNaN(midPrice) && (
+                              <ReferenceLine
+                                x={midPrice}
+                                stroke={textSecondary}
+                                strokeDasharray="3 3"
+                                strokeWidth={1}
+                                label={{
+                                  value: midPrice.toFixed(3),
+                                  position: 'top',
+                                  fontSize: 9,
+                                  fill: textSecondary,
+                                }}
+                              />
+                            )}
+                          </AreaChart>
+                        </ResponsiveContainer>
+                        {/* Legend */}
+                        <div className="flex items-center justify-center gap-4 mt-1">
+                          <div className="flex items-center gap-1">
+                            <span className="inline-block size-2 rounded-full bg-pf-success" aria-hidden="true" />
+                            <span className="text-[10px] text-pf-text-muted">Bids</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="inline-block size-2 rounded-full bg-pf-danger" aria-hidden="true" />
+                            <span className="text-[10px] text-pf-text-muted">Asks</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="inline-block w-3 border-t border-dashed border-pf-text-secondary" aria-hidden="true" />
+                            <span className="text-[10px] text-pf-text-muted">Mid</span>
+                          </div>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    );
+                  })()
+                )
               ) : (
                 <div className="py-8 text-center text-sm text-pf-text-muted">No book data</div>
               )}
