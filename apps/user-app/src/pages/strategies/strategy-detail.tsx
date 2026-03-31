@@ -166,6 +166,7 @@ export function Component() {
   const [loadingLog, setLoadingLog] = useState(false);
   const [loadingVersions, setLoadingVersions] = useState(false);
   const [rollingBack, setRollingBack] = useState<string | null>(null);
+  const [stratPnl, setStratPnl] = useState<{ totalPnl: string; winRate: string } | null>(null);
 
   // Marketplace listing state
   const [showListing, setShowListing] = useState(false);
@@ -243,6 +244,14 @@ export function Component() {
         .finally(() => setLoadingVersions(false));
     }
   }, [detailTab, strategy?.id]);
+
+  useEffect(() => {
+    if (!strategy) return;
+    fetch(`/api/v1/portfolio/pnl?strategyId=${strategy.id}`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setStratPnl({ totalPnl: data.totalPnl, winRate: data.winRate }); })
+      .catch(() => {});
+  }, [strategy?.id]);
 
   async function doAction(action: 'start' | 'stop' | 'pause' | 'resume', body?: object) {
     if (!strategy) return;
@@ -624,6 +633,26 @@ export function Component() {
               Updated {formatDate(strategy.updatedAt)}
             </span>
           </div>
+
+          {/* Strategy P&L summary */}
+          {stratPnl && parseFloat(stratPnl.totalPnl) !== 0 && (
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border">
+                <span className="text-xs text-pf-text-muted">Strategy P&L</span>
+                <span className={`text-sm font-mono font-semibold ${parseFloat(stratPnl.totalPnl) >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                  {parseFloat(stratPnl.totalPnl) >= 0 ? '+' : ''}${parseFloat(stratPnl.totalPnl).toFixed(2)}
+                </span>
+              </div>
+              {parseFloat(stratPnl.winRate) > 0 && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border">
+                  <span className="text-xs text-pf-text-muted">Win Rate</span>
+                  <span className="text-sm font-mono font-semibold text-pf-cyan-400">
+                    {(parseFloat(stratPnl.winRate) * 100).toFixed(1)}%
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Parent strategy link */}
           {parentStrategy && (

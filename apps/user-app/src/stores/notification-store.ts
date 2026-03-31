@@ -45,12 +45,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   bindWebSocket: (ws: WebSocketManager) => {
     const handler = (msg: Record<string, unknown>) => {
       if (msg.type !== 'NOTIFICATION') return;
+      const payload = (msg.data && typeof msg.data === 'object') ? msg.data as Record<string, unknown> : msg;
       get().addNotification({
-        id: (msg.id as string) ?? crypto.randomUUID(),
-        title: (msg.title as string) ?? 'Notification',
-        body: (msg.body as string) ?? '',
-        severity: (msg.severity as NotificationItem['severity']) ?? 'info',
-        timestamp: msg.ts ? Number(msg.ts) : Date.now(),
+        id: (payload.id as string) ?? (payload.alertId as string) ?? crypto.randomUUID(),
+        title: (payload.title as string) ?? (payload.type === 'PRICE_ALERT' ? 'Price Alert' : 'Notification'),
+        body: (payload.body as string) ?? (payload.message as string) ?? '',
+        severity: (payload.severity as NotificationItem['severity']) ?? 'info',
+        timestamp: payload.ts ? Number(payload.ts) : Date.now(),
       });
     };
     ws.addListener(handler);

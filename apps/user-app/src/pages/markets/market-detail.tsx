@@ -454,10 +454,11 @@ export function Component() {
 
   // Real-time order updates via WebSocket
   useEffect(() => {
-    const handler = (msg: { type: string; orderId?: string }) => {
+    const handler = (msg: { type: string; orderId?: string; data?: Record<string, unknown> }) => {
       if (!WebSocketManager.isOrderEvent(msg)) return;
       loadMyOrders();
-      const id = msg.orderId?.slice(0, 8);
+      const orderId = msg.orderId ?? (msg.data?.orderId as string | undefined);
+      const id = orderId?.slice(0, 8);
       if (msg.type === 'ORDER_FILLED') toast.success(`Order filled${id ? ` · ${id}…` : ''}`);
       if (msg.type === 'ORDER_CANCELLED') toast.info('Order cancelled');
       if (msg.type === 'ORDER_FAILED') toast.error('Order failed');
@@ -472,9 +473,12 @@ export function Component() {
     const tokenIds = (market.tokens ?? []).map((t) => t.id);
     if (tokenIds.length > 0) wsManager.subscribePrices(tokenIds);
 
-    const priceHandler = (msg: { type: string; tokenId?: string; price?: number }) => {
-      if (!WebSocketManager.isPriceUpdate(msg) || !msg.tokenId || msg.price === undefined) return;
-      setLivePrices((prev) => ({ ...prev, [msg.tokenId as string]: String(msg.price) }));
+    const priceHandler = (msg: { type: string; tokenId?: string; price?: number; data?: Record<string, unknown> }) => {
+      if (!WebSocketManager.isPriceUpdate(msg)) return;
+      const tokenId = msg.tokenId ?? (msg.data?.tokenId as string | undefined);
+      const price = msg.price ?? (msg.data?.price as number | undefined);
+      if (!tokenId || price === undefined) return;
+      setLivePrices((prev) => ({ ...prev, [tokenId]: String(price) }));
     };
     wsManager.addListener(priceHandler);
 

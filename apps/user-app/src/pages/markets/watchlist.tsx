@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
+import { wsManager } from '@/lib/websocket';
 
 interface WatchedMarket {
   id: string;
@@ -16,6 +17,8 @@ interface WatchedMarket {
 export function Component() {
   const [markets, setMarkets] = useState<WatchedMarket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [livePrices, setLivePrices] = useState<Record<string, number>>({});
+  const prevPrices = useRef<Record<string, number>>({});
 
   const fetchWatchlist = () => {
     setLoading(true);
@@ -33,9 +36,41 @@ export function Component() {
     setMarkets(prev => prev.filter(m => m.id !== marketId));
   };
 
-  const yesPrice = (m: WatchedMarket) => {
+  // Subscribe to live prices for all watchlisted tokens
+  useEffect(() => {
+    if (!markets.length) return;
+    const tokenIds: string[] = [];
+    markets.forEach(m => {
+      m.tokens?.forEach(t => tokenIds.push(t.id));
+    });
+    if (!tokenIds.length) return;
+    wsManager.subscribePrices(tokenIds);
+    const handler = (msg: Record<string, unknown>) => {
+      if (msg.type !== 'PRICE_UPDATE') return;
+      const d = (msg.data && typeof msg.data === 'object') ? msg.data as Record<string, unknown> : msg;
+      const tokenId = d.tokenId as string;
+      const price = typeof d.price === 'number' ? d.price : parseFloat(String(d.price ?? '0'));
+      if (!tokenId || isNaN(price)) return;
+      setLivePrices(prev => {
+        prevPrices.current[tokenId] = prev[tokenId] ?? price;
+        return { ...prev, [tokenId]: price };
+      });
+    };
+    wsManager.addListener(handler);
+    return () => {
+      wsManager.removeListener(handler);
+      wsManager.unsubscribePrices(tokenIds);
+    };
+  }, [markets]);
+
+  const yesPrice = (m: WatchedMarket): { price: number; live: boolean; prev: number | null } | null => {
     const yes = m.tokens?.find(t => t.outcome?.toUpperCase() === 'YES');
-    return yes ? parseFloat(yes.price) : null;
+    if (!yes) return null;
+    const live = livePrices[yes.id];
+    if (live !== undefined) {
+      return { price: live, live: true, prev: prevPrices.current[yes.id] ?? null };
+    }
+    return { price: parseFloat(yes.price), live: false, prev: null };
   };
 
   return (
@@ -67,7 +102,12 @@ export function Component() {
         ) : (
           <div className="space-y-2">
             {markets.map(m => {
-              const price = yesPrice(m);
+              const priceInfo = yesPrice(m);
+              const priceDelta = priceInfo?.live && priceInfo.prev !== null
+                ? priceInfo.price - priceInfo.prev
+                : null;
+              const deltaUp = priceDelta !== null && priceDelta > 0;
+              const deltaDown = priceDelta !== null && priceDelta < 0;
               return (
                 <div key={m.id} className="flex items-center gap-4 rounded-pf border border-pf-border bg-pf-surface p-3 hover:border-pf-border-hover transition-colors group">
                   <Link to={`/markets/${m.id}`} className="flex-1 min-w-0">
@@ -89,11 +129,35 @@ export function Component() {
                     </p>
                   </Link>
                   <div className="flex items-center gap-3 flex-shrink-0">
-                    {price !== null && (
+                    {priceInfo !== null && (
                       <div className="text-right">
-                        <p className="text-sm font-mono font-semibold text-pf-text">{(price * 100).toFixed(0)}¢</p>
-                        <p className="text-[10px] text-pf-text-muted">YES</p>
+                        <div className="flex items-center gap-1 justify-end">
+                          <p className={`text-sm font-mono font-semibold transition-colors ${
+                            deltaUp ? 'text-pf-success' : deltaDown ? 'text-pf-danger' : 'text-pf-text'
+                          }`}>
+                            {(priceInfo.price * 100).toFixed(0)}¢
+                          </p>
+                          {priceDelta !== null && Math.abs(priceDelta) >= 0.001 && (
+                            <span className={`text-[10px] font-mono px-1 py-0.5 rounded ${
+                              deltaUp ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
+                            }`}>
+                              {deltaUp ? '▲' : '▼'}{Math.abs(priceDelta * 100).toFixed(1)}¢
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-pf-text-muted">
+                          YES{priceInfo.live && <span className="ml-1 text-pf-cyan-400">●</span>}
+                        </p>
                       </div>
+                    )}
+                    {!m.closed && (
+                      <Link
+                        to={`/markets/${m.id}`}
+                        className="text-[11px] px-2 py-1 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors font-medium"
+                        title="Trade this market"
+                      >
+                        Trade
+                      </Link>
                     )}
                     <button
                       type="button"

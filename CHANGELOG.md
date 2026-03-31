@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.16.1] — 2026-03-31
+
+### Added
+- **Global ⌘K command palette** — `CommandPalette` component (which already searched markets + strategies) is now wired into `AppLayout`; a `useEffect` binds `⌘K` / `Ctrl+K` globally and toggles the palette; `setCmdOpen` is passed as `onClose`; the palette renders as a sibling to `OnboardingChecklist` and `TooltipTour`
+- **Watchlist live prices + change badges** — `watchlist.tsx` now subscribes to WebSocket `PRICE_UPDATE` events via `wsManager.subscribePrices()` for all watchlisted tokens; `livePrices` state and a `prevPrices` ref track current and previous values; YES price display switches to live value when available, turns green/red based on the tick direction, and shows a `▲`/`▼` delta badge (e.g. `▲0.3¢`); a live indicator dot (●) confirms real-time data; unsubscribes on unmount
+- **Watchlist Trade quick-link** — each non-closed market row now includes a "Trade" button linking to `/markets/{id}`, styled consistently with the design system
+- **WebSocket protocol fix** — `events.gateway.ts` `broadcast()` now emits `{ type: event, data, timestamp }` (was `{ event, data, timestamp }`), fixing silent failure of all real-time events in the client
+- **Notification store payload fix** — `bindWebSocket` in `notification-store.ts` reads notification fields from `msg.data` (where the gateway wraps the payload) rather than the top-level message
+
+### Fixed
+- Price ticks, order toasts, and `PRICE_ALERT` notifications all now reach the UI correctly following the gateway protocol fix
+
+---
+
 ## [6.16.0] — 2026-03-31
 
 ### Added

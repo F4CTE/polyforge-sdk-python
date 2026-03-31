@@ -3,12 +3,14 @@ import { Outlet } from 'react-router';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
+import { CommandPalette } from './command-palette';
 import { OnboardingChecklist } from '../onboarding/onboarding-checklist';
 import { TooltipTour } from '../onboarding/tooltip-tour';
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
@@ -21,6 +23,18 @@ export function AppLayout() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [mobileOpen, closeMobile]);
+
+  // ⌘K / Ctrl+K opens command palette
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCmdOpen((v) => !v);
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
     <div className="flex h-screen bg-pf-base text-pf-text overflow-hidden">
@@ -65,6 +79,9 @@ export function AppLayout() {
       {/* Onboarding overlays — only render for authenticated users */}
       <OnboardingChecklist />
       <TooltipTour />
+
+      {/* Global command palette */}
+      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
     </div>
   );
 }
