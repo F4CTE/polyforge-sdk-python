@@ -191,6 +191,7 @@ class PolyforgeClient:
                 "User-Agent": "polyforge-python/1.0.0",
             },
             timeout=timeout,
+            verify=True,
         )
 
     def __repr__(self) -> str:
@@ -702,6 +703,7 @@ class AsyncPolyforgeClient:
                 "User-Agent": "polyforge-python/1.0.0",
             },
             timeout=timeout,
+            verify=True,
         )
 
     def __repr__(self) -> str:
