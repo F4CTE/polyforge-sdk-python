@@ -1,9 +1,9 @@
 const steps = [
   {
     number: "01",
-    title: "Build",
+    title: "Connect Your Polymarket Account",
     description:
-      "Create strategies with our visual canvas builder. Drag blocks, set conditions, wire logic gates and variables. Use IF/THEN/ELSE, AND/OR gates, sub-strategies, and 50+ blocks to define your exact trading thesis.",
+      "Link your Polymarket wallet in one click. Your positions sync automatically.",
     visual: (
       <svg
         className="w-20 h-20"
@@ -66,9 +66,9 @@ const steps = [
   },
   {
     number: "02",
-    title: "Test",
+    title: "Choose Your Trading Style",
     description:
-      "Backtest against historical data. Paper trade with real-time prices. Analyze P&L curves, win rate, and Sharpe ratio. Export and share strategies with the .polyforge file format.",
+      "Build your own strategy, copy a top trader, or browse the marketplace for proven systems.",
     visual: (
       <svg
         className="w-20 h-20"
@@ -114,9 +114,9 @@ const steps = [
   },
   {
     number: "03",
-    title: "Deploy",
+    title: "Track, Optimize, Profit",
     description:
-      "Go live with one click. Set advanced orders like TP/SL and trailing stops, copy whale traders, or let AI signals guide your trades. Monitor everything from your dashboard or via the REST API.",
+      "Monitor live P&L, review AI insights, and refine your edge over time.",
     visual: (
       <svg
         className="w-20 h-20"
@@ -175,10 +175,10 @@ export function HowItWorks() {
             id="hiw-heading"
             className="text-[clamp(24px,4vw,34px)] font-bold text-pf-text mb-3.5"
           >
-            From idea to live in three steps
+            Get started in three steps
           </h2>
           <p className="text-[17px] text-pf-text-secondary">
-            No servers to manage, no code to write, no delay.
+            From connection to profit in minutes, not months.
           </p>
         </div>
 

@@ -1,8 +1,18 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { LineChart as LineChartIcon } from 'lucide-react';
+import {
+  LineChart as LineChartIcon,
+  Bot,
+  Sparkles,
+  RefreshCw,
+  Send,
+  AlertTriangle,
+  TrendingUp,
+  Shield,
+  Loader2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -43,6 +53,19 @@ interface ScoreData {
   consistency: string;
 }
 
+interface AiReviewData {
+  review: string;
+  keyInsights: string[];
+  riskFactors: string[];
+  opportunities: string[];
+  generatedAt: string;
+}
+
+interface AiQueryResult {
+  response: string;
+  model: string;
+}
+
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 const PERIODS: { label: string; value: Period }[] = [
@@ -68,6 +91,13 @@ function brierColor(score: number): string {
   if (score < 0.2) return 'text-pf-success';
   if (score < 0.3) return 'text-yellow-400';
   return 'text-pf-danger';
+}
+
+function minutesAgo(isoString: string): string {
+  const diff = Math.floor((Date.now() - new Date(isoString).getTime()) / 60000);
+  if (diff < 1) return 'just now';
+  if (diff === 1) return '1 minute ago';
+  return `${diff} minutes ago`;
 }
 
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
@@ -156,6 +186,17 @@ export function Component() {
   const [loadingAccuracy, setLoadingAccuracy] = useState(true);
   const [loadingScore, setLoadingScore] = useState(true);
 
+  // AI Portfolio Review state
+  const [aiReview, setAiReview] = useState<AiReviewData | null>(null);
+  const [loadingAiReview, setLoadingAiReview] = useState(true);
+  const [aiReviewError, setAiReviewError] = useState(false);
+
+  // Ask AI state
+  const [aiQuery, setAiQuery] = useState('');
+  const [aiAnswer, setAiAnswer] = useState<AiQueryResult | null>(null);
+  const [loadingAiQuery, setLoadingAiQuery] = useState(false);
+  const aiInputRef = useRef<HTMLInputElement>(null);
+
   const themeColors = useMemo(() => {
     const s = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
     return {
@@ -215,6 +256,44 @@ export function Component() {
     }
   }, []);
 
+  const loadAiReview = useCallback(async () => {
+    setLoadingAiReview(true);
+    setAiReviewError(false);
+    try {
+      const res = await fetch('/api/v1/ai/portfolio-review', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to load AI review');
+      setAiReview(await res.json());
+    } catch (e) {
+      setAiReviewError(true);
+      const msg = e instanceof Error ? e.message : 'Failed to load AI review';
+      toast.error(msg);
+    } finally {
+      setLoadingAiReview(false);
+    }
+  }, []);
+
+  const submitAiQuery = useCallback(async () => {
+    const query = aiQuery.trim();
+    if (!query) return;
+    setLoadingAiQuery(true);
+    try {
+      const res = await fetch('/api/v1/ai/query', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+      if (!res.ok) throw new Error('Failed to get AI response');
+      setAiAnswer(await res.json());
+      setAiQuery('');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to get AI response';
+      toast.error(msg);
+    } finally {
+      setLoadingAiQuery(false);
+    }
+  }, [aiQuery]);
+
   useEffect(() => {
     loadAccuracy();
     loadScore();
@@ -223,6 +302,10 @@ export function Component() {
   useEffect(() => {
     loadPnl(period);
   }, [loadPnl, period]);
+
+  useEffect(() => {
+    loadAiReview();
+  }, [loadAiReview]);
 
   const isLoading = loadingPnl || loadingAccuracy || loadingScore;
 
@@ -456,6 +539,177 @@ export function Component() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ─── AI Portfolio Review ────────────────────────────────────────── */}
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+        {/* Card header */}
+        <div className="px-6 py-4 border-b border-pf-border flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-4 text-pf-cyan-400" aria-hidden="true" />
+            <Bot className="size-4 text-pf-cyan-400" aria-hidden="true" />
+            <h2 className="text-sm font-medium text-pf-text">AI Portfolio Review</h2>
+          </div>
+          <div className="flex items-center gap-3">
+            {aiReview && (
+              <span className="text-xs text-pf-text-muted">
+                Last updated: {minutesAgo(aiReview.generatedAt)}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={loadAiReview}
+              disabled={loadingAiReview}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface border border-pf-border transition-colors disabled:opacity-50"
+              aria-label="Refresh AI review"
+            >
+              <RefreshCw className={`size-3.5 ${loadingAiReview ? 'animate-spin' : ''}`} aria-hidden="true" />
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        {/* Card body */}
+        <div className="p-6">
+          {loadingAiReview ? (
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-11/12" />
+              <Skeleton className="h-4 w-4/5" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-5/6" />
+                    <Skeleton className="h-3 w-4/5" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : aiReviewError || !aiReview ? (
+            <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
+              <AlertTriangle className="size-8 text-pf-danger opacity-60" aria-hidden="true" />
+              <p className="text-sm text-pf-text-secondary">Could not load AI review.</p>
+              <button
+                type="button"
+                onClick={loadAiReview}
+                className="px-4 py-2 rounded text-sm font-medium bg-pf-surface border border-pf-border text-pf-text-secondary hover:text-pf-text transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Review paragraph */}
+              <p className="text-sm text-pf-text-secondary leading-relaxed">{aiReview.review}</p>
+
+              {/* Three-column breakdown */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {/* Key Insights */}
+                <div>
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <TrendingUp className="size-3.5 text-pf-cyan-400" aria-hidden="true" />
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-pf-cyan-400">
+                      Key Insights
+                    </h3>
+                  </div>
+                  <ul className="space-y-2">
+                    {aiReview.keyInsights.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-xs text-pf-text-secondary">
+                        <span className="mt-1.5 size-1.5 rounded-full bg-pf-cyan-400 shrink-0" aria-hidden="true" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Risk Factors */}
+                <div>
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <Shield className="size-3.5 text-pf-danger" aria-hidden="true" />
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-pf-danger">
+                      Risk Factors
+                    </h3>
+                  </div>
+                  <ul className="space-y-2">
+                    {aiReview.riskFactors.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-xs text-pf-text-secondary">
+                        <span className="mt-1.5 size-1.5 rounded-full bg-pf-danger shrink-0" aria-hidden="true" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Opportunities */}
+                <div>
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <Sparkles className="size-3.5 text-pf-success" aria-hidden="true" />
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-pf-success">
+                      Opportunities
+                    </h3>
+                  </div>
+                  <ul className="space-y-2">
+                    {aiReview.opportunities.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-xs text-pf-text-secondary">
+                        <span className="mt-1.5 size-1.5 rounded-full bg-pf-success shrink-0" aria-hidden="true" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ─── Ask AI ─────────────────────────────────────────────────────── */}
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <Bot className="size-4 text-pf-cyan-400" aria-hidden="true" />
+          <h2 className="text-sm font-medium text-pf-text">Ask AI</h2>
+        </div>
+
+        {/* Input row */}
+        <div className="flex items-center gap-2">
+          <input
+            ref={aiInputRef}
+            type="text"
+            value={aiQuery}
+            onChange={(e) => setAiQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !loadingAiQuery) submitAiQuery();
+            }}
+            placeholder="Ask about your portfolio..."
+            className="flex-1 bg-pf-surface border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:ring-2 focus:ring-pf-cyan-400/40 transition"
+            disabled={loadingAiQuery}
+            aria-label="Ask AI a question about your portfolio"
+          />
+          <button
+            type="button"
+            onClick={submitAiQuery}
+            disabled={loadingAiQuery || !aiQuery.trim()}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium bg-pf-cyan-400/15 text-pf-cyan-400 border border-pf-cyan-400/30 hover:bg-pf-cyan-400/25 transition-colors disabled:opacity-50"
+            aria-label="Send question to AI"
+          >
+            {loadingAiQuery ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Send className="size-4" aria-hidden="true" />
+            )}
+            Send
+          </button>
+        </div>
+
+        {/* AI response */}
+        {aiAnswer && (
+          <div className="bg-pf-surface border border-pf-border rounded-pf-sm p-4 flex items-start gap-3">
+            <Bot className="size-4 text-pf-cyan-400 mt-0.5 shrink-0" aria-hidden="true" />
+            <p className="text-sm text-pf-text-secondary leading-relaxed">{aiAnswer.response}</p>
+          </div>
+        )}
       </div>
     </div>
   );

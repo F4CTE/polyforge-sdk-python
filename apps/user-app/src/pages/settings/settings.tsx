@@ -3,12 +3,13 @@ import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
   User, Bell, Lock, Shield, Key, Loader2, Check, Copy, Ban, Eye, EyeOff, Fuel, Trash2, AlertTriangle, ShieldAlert,
+  Webhook, Send, Plus,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
-type Tab = 'profile' | 'notifications' | 'password' | '2fa' | 'apikeys' | 'gas' | 'risk';
+type Tab = 'profile' | 'notifications' | 'password' | '2fa' | 'apikeys' | 'gas' | 'risk' | 'webhooks';
 
 interface ApiKey {
   id: string;
@@ -21,6 +22,16 @@ interface ApiKey {
   revoked: boolean;
   key?: string;
   token?: string;
+}
+
+interface WebhookEntry {
+  id: string;
+  url: string;
+  events: string[];
+  active: boolean;
+  createdAt: string;
+  lastTriggeredAt?: string;
+  failureCount: number;
 }
 
 interface GasUsageData {
@@ -47,6 +58,7 @@ const TABS: { label: string; value: Tab; icon: React.ReactNode }[] = [
   { label: 'API Keys', value: 'apikeys', icon: <Key className="size-3.5" /> },
   { label: 'Gas Usage', value: 'gas', icon: <Fuel className="size-3.5" /> },
   { label: 'Risk', value: 'risk', icon: <ShieldAlert className="size-3.5" /> },
+  { label: 'Webhooks', value: 'webhooks', icon: <Webhook className="size-3.5" /> },
 ];
 
 const NOTIF_ITEMS = [
@@ -126,6 +138,18 @@ export function Component() {
   const [gasUsage, setGasUsage] = useState<GasUsageData | null>(null);
   const [gasLoading, setGasLoading] = useState(false);
 
+  // Webhooks
+  const WEBHOOK_EVENTS = [
+    'ORDER_FILLED', 'STRATEGY_ERROR', 'WHALE_TRADE', 'NEWS_SIGNAL',
+    'BACKTEST_COMPLETE', 'DAILY_LOSS_LIMIT', 'MARKET_RESOLVED', 'PRICE_ALERT',
+  ] as const;
+  const [webhooks, setWebhooks] = useState<WebhookEntry[]>([]);
+  const [webhooksLoading, setWebhooksLoading] = useState(false);
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [webhookEvents, setWebhookEvents] = useState<string[]>([]);
+  const [webhookAdding, setWebhookAdding] = useState(false);
+  const [webhookTesting, setWebhookTesting] = useState<string | null>(null);
+
   // Risk / Circuit Breaker
   const [riskLoading, setRiskLoading] = useState(false);
   const [riskSaving, setRiskSaving] = useState(false);
@@ -203,11 +227,82 @@ export function Component() {
     setRiskResetting(false);
   }
 
+  async function loadWebhooks() {
+    setWebhooksLoading(true);
+    try {
+      const res = await fetch('/api/v1/webhooks', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setWebhooks(data.data ?? data);
+      }
+    } catch { toast.error('Failed to load webhooks'); }
+    setWebhooksLoading(false);
+  }
+
+  async function addWebhook() {
+    if (webhookAdding) return;
+    if (!webhookUrl.startsWith('https://')) {
+      toast.error('URL must start with https://');
+      return;
+    }
+    if (webhookEvents.length === 0) {
+      toast.error('Select at least one event');
+      return;
+    }
+    setWebhookAdding(true);
+    try {
+      const res = await fetch('/api/v1/webhooks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ url: webhookUrl, events: webhookEvents }),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setWebhooks(prev => [created, ...prev]);
+        setWebhookUrl('');
+        setWebhookEvents([]);
+        toast.success('Webhook added');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message ?? 'Failed to add webhook');
+      }
+    } catch { toast.error('Failed to add webhook'); }
+    setWebhookAdding(false);
+  }
+
+  async function deleteWebhook(id: string) {
+    try {
+      const res = await fetch(`/api/v1/webhooks/${id}`, { method: 'DELETE', credentials: 'include' });
+      if (res.ok) {
+        setWebhooks(prev => prev.filter(w => w.id !== id));
+        toast.success('Webhook deleted');
+      } else {
+        toast.error('Failed to delete webhook');
+      }
+    } catch { toast.error('Failed to delete webhook'); }
+  }
+
+  async function testWebhook(id: string) {
+    if (webhookTesting === id) return;
+    setWebhookTesting(id);
+    try {
+      const res = await fetch(`/api/v1/webhooks/${id}/test`, { method: 'POST', credentials: 'include' });
+      if (res.ok) {
+        toast.success('Test payload sent');
+      } else {
+        toast.error('Test delivery failed');
+      }
+    } catch { toast.error('Test delivery failed'); }
+    setWebhookTesting(null);
+  }
+
   function handleTab(t: Tab) {
     setActiveTab(t);
     if (t === 'apikeys' && apiKeys.length === 0) loadApiKeys();
     if (t === 'gas' && !gasUsage) loadGasUsage();
     if (t === 'risk') loadRiskSettings();
+    if (t === 'webhooks') loadWebhooks();
   }
 
   // ── Profile ──
@@ -1035,6 +1130,133 @@ export function Component() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {/* ─── Webhooks Tab ─── */}
+      {activeTab === 'webhooks' && (
+        <div className="space-y-4">
+          {/* Add Webhook Form */}
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
+            <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Add Webhook</h2>
+            <div>
+              <label htmlFor="webhook-url" className="text-xs text-pf-text-secondary mb-1.5 block">HTTPS URL</label>
+              <input
+                id="webhook-url"
+                type="url"
+                value={webhookUrl}
+                onChange={e => setWebhookUrl(e.target.value)}
+                placeholder="https://example.com/webhook"
+                className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+              />
+              {webhookUrl && !webhookUrl.startsWith('https://') && (
+                <span className="text-xs text-pf-danger mt-1 block">URL must start with https://</span>
+              )}
+            </div>
+            <div>
+              <div className="text-xs text-pf-text-secondary mb-2">Events (select at least 1)</div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {WEBHOOK_EVENTS.map(event => {
+                  const checked = webhookEvents.includes(event);
+                  return (
+                    <button
+                      key={event}
+                      type="button"
+                      onClick={() => setWebhookEvents(prev =>
+                        checked ? prev.filter(e => e !== event) : [...prev, event]
+                      )}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-pf text-xs font-medium border transition-colors text-left ${
+                        checked
+                          ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
+                          : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                      }`}
+                    >
+                      <span className={`size-3 rounded-sm border flex items-center justify-center shrink-0 ${checked ? 'bg-pf-cyan-500 border-pf-cyan-500' : 'border-pf-border'}`}>
+                        {checked && <Check className="size-2 text-black" />}
+                      </span>
+                      {event.replace(/_/g, ' ')}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={addWebhook}
+                disabled={webhookAdding || !webhookUrl || webhookEvents.length === 0}
+                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+              >
+                {webhookAdding ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+                Add Webhook
+              </button>
+            </div>
+          </div>
+
+          {/* Webhooks List */}
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-3">
+            <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Your Webhooks</h2>
+
+            {webhooksLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-14 rounded-pf bg-pf-surface animate-pulse" />
+                ))}
+              </div>
+            ) : webhooks.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 py-10 text-center">
+                <Webhook className="size-8 text-pf-text-muted" />
+                <div>
+                  <p className="text-sm font-medium text-pf-text">No webhooks yet</p>
+                  <p className="text-xs text-pf-text-muted mt-1">Add a webhook above to receive real-time event notifications</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {webhooks.map(wh => (
+                  <div key={wh.id} className="flex items-center gap-3 px-4 py-3 rounded-pf bg-pf-surface border border-pf-border">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-pf-text font-mono truncate" title={wh.url}>
+                        {wh.url.length > 50 ? `${wh.url.slice(0, 47)}…` : wh.url}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-overlay text-pf-text-secondary border border-pf-border">
+                          {wh.events.length} event{wh.events.length !== 1 ? 's' : ''}
+                        </span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${wh.active ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-overlay text-pf-text-muted'}`}>
+                          {wh.active ? 'Active' : 'Inactive'}
+                        </span>
+                        {wh.failureCount > 0 && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-danger/10 text-pf-danger">
+                            {wh.failureCount} failure{wh.failureCount !== 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => testWebhook(wh.id)}
+                        disabled={webhookTesting === wh.id}
+                        aria-label={`Test webhook ${wh.url}`}
+                        className="flex items-center gap-1 text-xs text-pf-text-secondary hover:text-pf-cyan-400 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                      >
+                        {webhookTesting === wh.id ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+                        Test
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteWebhook(wh.id)}
+                        aria-label={`Delete webhook ${wh.url}`}
+                        className="text-pf-danger hover:text-pf-danger/70 cursor-pointer transition-colors"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

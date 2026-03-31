@@ -1,5 +1,3 @@
-import { WaitlistForm } from "./waitlist-form";
-
 export function CtaBanner() {
   return (
     <section className="py-24" aria-labelledby="cta-heading">
@@ -21,28 +19,19 @@ export function CtaBanner() {
             id="cta-heading"
             className="relative text-[clamp(24px,4vw,36px)] font-bold text-pf-text mb-4"
           >
-            Your edge{" "}
-            <span className="bg-gradient-to-br from-pf-cyan-300 to-pf-cyan-500 bg-clip-text text-transparent">
-              starts here
-            </span>
+            Ready to gain your edge?
           </h2>
           <p className="relative text-base text-pf-text-secondary max-w-[480px] mx-auto mb-8 leading-relaxed">
-            Start building smarter strategies today. Visual builder, AI signals,
-            whale tracking, copy trading &mdash; all in one platform. No credit
-            card required.
+            Join thousands of traders who use PolyForge to make smarter
+            predictions.
           </p>
 
-          <WaitlistForm className="relative max-w-[480px] mx-auto" />
-
-          <p className="relative text-sm text-pf-text-muted mt-4">
-            Or{" "}
-            <a
-              href="/login"
-              className="text-pf-cyan-400 underline underline-offset-4 hover:text-pf-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
-            >
-              sign in to your existing account
-            </a>
-          </p>
+          <a
+            href="/signup"
+            className="relative inline-flex items-center justify-center px-8 py-3.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-[16px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
+          >
+            Get Started Free &rarr;
+          </a>
         </div>
       </div>
     </section>

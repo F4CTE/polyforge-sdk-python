@@ -3,13 +3,19 @@ import { Link, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import {
   ChevronLeft, ChevronRight, Newspaper, ChevronDown, ChevronUp,
-  ExternalLink, ArrowUpRight, ArrowDownRight,
+  ExternalLink, ArrowUpRight, ArrowDownRight, X, Search,
 } from 'lucide-react';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
 type Sentiment = 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
 type SentimentFilter = 'ALL' | Sentiment;
+
+interface MarketSearchResult {
+  id: string;
+  slug: string;
+  question: string;
+}
 
 interface NewsSignal {
   id: string;
@@ -151,13 +157,19 @@ export function Component() {
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  const [marketSearch, setMarketSearch] = useState('');
+  const [marketId, setMarketId] = useState<string | null>(null);
+  const [marketSearchResults, setMarketSearchResults] = useState<MarketSearchResult[]>([]);
+  const [selectedMarketName, setSelectedMarketName] = useState('');
+  const marketDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [topSignals, setTopSignals] = useState<TopSignal[]>([]);
   const [loadingSignals, setLoadingSignals] = useState(true);
 
   const refreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /* ─── Load articles ─── */
-  const loadArticles = useCallback(async (p: number, src: string, sent: SentimentFilter, minConf: number) => {
+  const loadArticles = useCallback(async (p: number, src: string, sent: SentimentFilter, minConf: number, mktId: string | null) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(p), limit: '10' });
@@ -165,6 +177,7 @@ export function Component() {
       if (sent !== 'ALL') params.set('sentiment', sent);
       if (minConf > 0) params.set('minConfidence', String(minConf));
       if (marketFilter) params.set('market', marketFilter);
+      if (mktId) params.set('marketId', mktId);
       const res = await fetch(`/api/v1/news?${params}`, { credentials: 'include' });
       if (res.ok) {
         const json: NewsFeedResponse = await res.json();
@@ -201,7 +214,7 @@ export function Component() {
     setLoadingSignals(false);
   }, []);
 
-  useEffect(() => { loadArticles(page, source, sentiment, minConfidence); }, [page, source, sentiment, minConfidence, loadArticles]);
+  useEffect(() => { loadArticles(page, source, sentiment, minConfidence, marketId); }, [page, source, sentiment, minConfidence, marketId, loadArticles]);
   useEffect(() => { loadTopSignals(); }, [loadTopSignals]);
 
   // Auto-refresh top signals every 30 seconds
@@ -209,6 +222,23 @@ export function Component() {
     refreshRef.current = setInterval(() => { loadTopSignals(); }, 30_000);
     return () => { if (refreshRef.current) clearInterval(refreshRef.current); };
   }, [loadTopSignals]);
+
+  // Debounced market search
+  useEffect(() => {
+    if (marketDebounceRef.current) clearTimeout(marketDebounceRef.current);
+    if (!marketSearch.trim()) { setMarketSearchResults([]); return; }
+    marketDebounceRef.current = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ q: marketSearch.trim(), limit: '10' });
+        const res = await fetch(`/api/v1/markets?${params}`, { credentials: 'include' });
+        if (res.ok) {
+          const json = await res.json();
+          setMarketSearchResults((json.data ?? json) as MarketSearchResult[]);
+        }
+      } catch { /* silent — search is best-effort */ }
+    }, 400);
+    return () => { if (marketDebounceRef.current) clearTimeout(marketDebounceRef.current); };
+  }, [marketSearch]);
 
   function changeSource(s: string) { setSource(s); setPage(1); }
   function changeSentiment(s: SentimentFilter) { setSentiment(s); setPage(1); }
@@ -226,6 +256,61 @@ export function Component() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
+        {/* Market search filter */}
+        <div className="relative">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-pf-sm border border-pf-border bg-pf-elevated focus-within:border-pf-cyan-500/50 transition-colors">
+            <Search className="size-3 text-pf-text-muted shrink-0" aria-hidden="true" />
+            <input
+              type="text"
+              value={marketSearch}
+              onChange={e => setMarketSearch(e.target.value)}
+              placeholder="Search markets..."
+              aria-label="Search markets to filter news"
+              className="text-xs bg-transparent text-pf-text-secondary placeholder:text-pf-text-muted outline-none w-36"
+            />
+          </div>
+
+          {/* Dropdown */}
+          {marketSearchResults.length > 0 && !marketId && (
+            <div className="absolute z-20 left-0 mt-1 w-72 bg-pf-elevated border border-pf-border rounded-pf-sm shadow-pf-lg overflow-hidden">
+              {marketSearchResults.map(m => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => {
+                    setMarketId(m.id);
+                    setSelectedMarketName(m.question.length > 50 ? m.question.slice(0, 50) + '…' : m.question);
+                    setMarketSearch('');
+                    setMarketSearchResults([]);
+                    setPage(1);
+                  }}
+                  className="w-full flex flex-col items-start px-3 py-2 hover:bg-pf-surface transition-colors text-left"
+                >
+                  <span className="text-[10px] font-mono text-pf-text-muted">{m.slug}</span>
+                  <span className="text-xs text-pf-text truncate w-full">
+                    {m.question.length > 60 ? m.question.slice(0, 60) + '…' : m.question}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Active market filter chip */}
+        {marketId && (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-pf-cyan-500/15 text-pf-cyan-400 border border-pf-cyan-500/30">
+            {selectedMarketName}
+            <button
+              type="button"
+              aria-label="Clear market filter"
+              onClick={() => { setMarketId(null); setSelectedMarketName(''); setPage(1); }}
+              className="hover:text-pf-cyan-300 transition-colors"
+            >
+              <X className="size-3" />
+            </button>
+          </span>
+        )}
+
         {/* Source dropdown */}
         <select
           value={source}

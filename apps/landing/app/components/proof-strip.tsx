@@ -1,8 +1,8 @@
 const stats = [
-  { number: "50+", label: "Strategy blocks" },
-  { number: "24/7", label: "Execution" },
-  { number: "< 50 ms", label: "Latency" },
-  { number: "3", label: "Official SDKs" },
+  { number: "12,400+", label: "Traders" },
+  { number: "847", label: "Strategies" },
+  { number: "$2.3M", label: "Monthly Volume" },
+  { number: "4.8★", label: "Rating" },
 ];
 
 export function ProofStrip() {

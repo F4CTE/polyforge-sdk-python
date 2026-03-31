@@ -17,6 +17,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   RefreshCw,
+  ExternalLink,
 } from 'lucide-react';
 import {
   XAxis,
@@ -92,6 +93,16 @@ interface RelatedNewsSignal {
   direction: 'BUY' | 'SELL';
   confidence: number;
   reasoning: string;
+}
+
+interface RelatedNewsArticle {
+  id: string;
+  title: string;
+  url: string;
+  source: string;
+  publishedAt: string;
+  sentiment: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
+  signals?: Array<{ marketId: string; direction: string; confidence: number }>;
 }
 
 type Resolution = '1m' | '1h' | '1d';
@@ -215,6 +226,9 @@ export function Component() {
 
   const [relatedNews, setRelatedNews] = useState<RelatedNewsSignal[]>([]);
   const [loadingNews, setLoadingNews] = useState(true);
+
+  const [relatedNewsArticles, setRelatedNewsArticles] = useState<RelatedNewsArticle[]>([]);
+  const [loadingNewsArticles, setLoadingNewsArticles] = useState(true);
 
   // Trade panel state
   const [tradeOutcome, setTradeOutcome] = useState<'YES' | 'NO'>('YES');
@@ -343,6 +357,20 @@ export function Component() {
       .catch(() => { if (!cancelled) setLoadingNews(false); });
     return () => { cancelled = true; };
   }, [id]);
+
+  // Load related news articles
+  useEffect(() => {
+    if (!market?.id) return;
+    let cancelled = false;
+    setLoadingNewsArticles(true);
+    fetch(`/api/v1/news?marketId=${market.id}&limit=5`, { credentials: 'include' })
+      .then(r => r.json())
+      .then((data: { data: RelatedNewsArticle[] }) => {
+        if (!cancelled) { setRelatedNewsArticles(data?.data ?? []); setLoadingNewsArticles(false); }
+      })
+      .catch(() => { if (!cancelled) { toast.error('Failed to load related news'); setLoadingNewsArticles(false); } });
+    return () => { cancelled = true; };
+  }, [market?.id]);
 
   // When resolution changes
   function onResolutionChange(res: Resolution) {
@@ -1359,63 +1387,73 @@ export function Component() {
           </div>
 
           {/* Related News */}
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4">
               <div className="flex items-center gap-2">
-                <Newspaper className="size-4 text-pf-text-muted" />
+                <Newspaper className="size-4 text-pf-text-muted" aria-hidden="true" />
                 <h2 className="text-sm font-medium text-pf-text">Related News</h2>
               </div>
               <Link
                 to={`/news?market=${id}`}
                 className="text-[11px] text-pf-text-muted hover:text-pf-cyan-400 transition-colors"
               >
-                See all news &rarr;
+                See all &rarr;
               </Link>
             </div>
 
-            {loadingNews ? (
-              <div className="space-y-2">
+            {loadingNewsArticles ? (
+              <div className="divide-y divide-pf-border">
                 {Array.from({ length: 3 }, (_, i) => (
-                  <div key={i} className="h-12 bg-pf-overlay rounded-pf-sm animate-pulse" />
+                  <div key={i} className="flex items-center gap-3 px-6 py-3 animate-pulse">
+                    <div className="size-2 rounded-full bg-pf-overlay shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 bg-pf-overlay rounded w-[80%]" />
+                      <div className="h-2.5 bg-pf-overlay rounded w-[50%]" />
+                    </div>
+                  </div>
                 ))}
               </div>
-            ) : relatedNews.length === 0 ? (
-              <div className="flex flex-col items-center py-6 text-center">
-                <Newspaper className="size-6 text-pf-text-muted mb-2" />
-                <p className="text-sm text-pf-text-muted">No news signals for this market yet.</p>
-              </div>
+            ) : relatedNewsArticles.length === 0 ? (
+              <p className="px-6 py-5 text-xs text-pf-text-muted text-center">No related news found</p>
             ) : (
-              <div className="space-y-2">
-                {relatedNews.map(signal => (
-                  <Link
-                    key={signal.id}
-                    to={`/news/${signal.articleId}`}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-pf-sm bg-pf-surface border border-pf-border-subtle hover:border-pf-border-strong transition-colors"
+              <div className="divide-y divide-pf-border">
+                {relatedNewsArticles.map(article => (
+                  <a
+                    key={article.id}
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-6 py-3 hover:bg-pf-surface transition-colors"
                   >
-                    <span className={`flex items-center gap-0.5 text-xs font-semibold shrink-0 ${
-                      signal.direction === 'BUY' ? 'text-pf-success' : 'text-pf-danger'
-                    }`}>
-                      {signal.direction === 'BUY'
-                        ? <ArrowUpRight className="size-3.5" />
-                        : <ArrowDownRight className="size-3.5" />
-                      }
-                      {signal.direction}
-                    </span>
-                    <span className="text-xs text-pf-text truncate flex-1">{signal.articleTitle}</span>
-                    <div className="flex items-center gap-1.5 min-w-[70px]">
-                      <div className={`h-1.5 rounded-full flex-1 ${
-                        signal.confidence > 70 ? 'bg-pf-success/15' : signal.confidence >= 40 ? 'bg-pf-warning/15' : 'bg-pf-danger/15'
-                      }`}>
-                        <div
-                          className={`h-full rounded-full ${
-                            signal.confidence > 70 ? 'bg-pf-success' : signal.confidence >= 40 ? 'bg-pf-warning' : 'bg-pf-danger'
-                          }`}
-                          style={{ width: `${signal.confidence}%` }}
-                        />
-                      </div>
-                      <span className="text-[10px] font-mono text-pf-text-muted w-7 text-right">{signal.confidence}%</span>
+                    {/* Sentiment dot */}
+                    <span
+                      className={`size-2 rounded-full shrink-0 ${
+                        article.sentiment === 'POSITIVE'
+                          ? 'bg-pf-success'
+                          : article.sentiment === 'NEGATIVE'
+                            ? 'bg-pf-danger'
+                            : 'bg-pf-text-muted'
+                      }`}
+                      aria-label={article.sentiment}
+                    />
+
+                    {/* Title + meta */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-pf-text truncate leading-snug">{article.title}</p>
+                      <p className="text-[11px] text-pf-text-muted mt-0.5">
+                        {article.source} &middot; {new Date(article.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </p>
                     </div>
-                  </Link>
+
+                    {/* Signal count badge */}
+                    {(article.signals?.length ?? 0) > 0 && (
+                      <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-pf-cyan-500/15 text-pf-cyan-400">
+                        {article.signals!.length} signal{article.signals!.length !== 1 ? 's' : ''}
+                      </span>
+                    )}
+
+                    <ExternalLink className="size-3 shrink-0 text-pf-text-muted opacity-50" aria-hidden="true" />
+                  </a>
                 ))}
               </div>
             )}

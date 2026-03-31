@@ -1,5 +1,3 @@
-import { WaitlistForm } from "./waitlist-form";
-
 const PARTICLES = [
   { w: 4, left: "15%", top: "20%", dur: "8s", delay: "0s" },
   { w: 3, left: "80%", top: "30%", dur: "10s", delay: "1s" },
@@ -52,28 +50,50 @@ export function Hero() {
           id="hero-heading"
           className="text-[clamp(40px,7vw,72px)] font-extrabold leading-[1.15] tracking-[-0.035em] text-pf-text mb-6"
         >
-          Automate your edge on
+          Trade Smarter. Copy the Best.
           <br />
           <span className="bg-gradient-to-br from-pf-cyan-300 to-pf-cyan-500 bg-clip-text text-transparent">
-            prediction markets
+            Win More.
           </span>
         </h1>
 
-        <p className="text-[clamp(16px,2vw,19px)] text-pf-text-secondary max-w-[560px] mx-auto mb-9 leading-relaxed">
-          Build automated trading strategies, copy whale traders, get AI-powered
-          signals, and deploy 24/7 &mdash; all without writing code.
+        <p className="text-[clamp(16px,2vw,19px)] text-pf-text-secondary max-w-[600px] mx-auto mb-9 leading-relaxed">
+          PolyForge is the prediction market platform where data-driven
+          strategies meet social trading. Build automated strategies, copy top
+          traders, and track every edge.
         </p>
 
-        <WaitlistForm className="max-w-[480px] mx-auto mb-4" />
-
-        <p className="mt-6">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
+          <a
+            href="/signup"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-[15px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
+          >
+            Start Trading Free
+          </a>
           <a
             href="#how-it-works"
-            className="text-[13px] text-pf-text-muted hover:text-pf-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-lg border border-cyan-500/40 hover:border-cyan-500/70 text-cyan-400 hover:text-cyan-300 font-semibold text-[15px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
           >
-            See how it works <span aria-hidden="true">&darr;</span>
+            See How It Works
           </a>
-        </p>
+        </div>
+
+        {/* Stat badges */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+          {[
+            "12,400+ Active Traders",
+            "$2.3M+ Volume This Month",
+            "94% Uptime",
+          ].map((badge) => (
+            <span
+              key={badge}
+              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-pf-text-secondary bg-pf-surface border border-pf-border-subtle rounded-full px-3.5 py-1.5"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" aria-hidden="true" />
+              {badge}
+            </span>
+          ))}
+        </div>
 
         {/* Hero strategy builder canvas */}
         <div className="max-w-[620px] mx-auto mt-6 bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden p-2 sm:p-4 shadow-pf-lg min-w-0">

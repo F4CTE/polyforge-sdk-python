@@ -1,13 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import {
-  ChevronLeft, ChevronRight, Compass, Heart, GitFork, TrendingUp,
+  ChevronLeft, ChevronRight, Compass, Heart, GitFork, TrendingUp, Tag,
 } from 'lucide-react';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
 type SortOption = 'popular' | 'newest' | 'top_pnl' | 'most_forked';
+type Category = 'politics' | 'sports' | 'crypto' | 'finance' | 'entertainment' | 'science' | 'weather';
 
 interface PublicStrategy {
   id: string;
@@ -16,6 +17,7 @@ interface PublicStrategy {
   execMode: string;
   tags: string[];
   likeCount: number;
+  isLiked?: boolean;
   forkCount: number;
   createdAt: string;
   author: {
@@ -41,6 +43,17 @@ const SORT_OPTIONS: { label: string; value: SortOption }[] = [
   { label: 'Newest', value: 'newest' },
   { label: 'Top P&L', value: 'top_pnl' },
   { label: 'Most Forked', value: 'most_forked' },
+];
+
+const CATEGORIES: { label: string; value: Category | null }[] = [
+  { label: 'All', value: null },
+  { label: 'Politics', value: 'politics' },
+  { label: 'Sports', value: 'sports' },
+  { label: 'Crypto', value: 'crypto' },
+  { label: 'Finance', value: 'finance' },
+  { label: 'Entertainment', value: 'entertainment' },
+  { label: 'Science', value: 'science' },
+  { label: 'Weather', value: 'weather' },
 ];
 
 function authorInitials(s: PublicStrategy): string {
@@ -84,28 +97,137 @@ export function Component() {
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<SortOption>('popular');
   const [searchQuery, setSearchQuery] = useState('');
+  const [category, setCategory] = useState<Category | null>(null);
+  const [tagFilter, setTagFilter] = useState('');
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
+  const [likingInFlight, setLikingInFlight] = useState<Set<string>>(new Set());
 
-  const load = useCallback(async (p: number, s: SortOption, q?: string) => {
+  // Debounce tag filter
+  const tagDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [debouncedTag, setDebouncedTag] = useState('');
+
+  useEffect(() => {
+    if (tagDebounceRef.current) clearTimeout(tagDebounceRef.current);
+    tagDebounceRef.current = setTimeout(() => {
+      setDebouncedTag(tagFilter);
+      setPage(1);
+    }, 400);
+    return () => {
+      if (tagDebounceRef.current) clearTimeout(tagDebounceRef.current);
+    };
+  }, [tagFilter]);
+
+  const load = useCallback(async (
+    p: number,
+    s: SortOption,
+    q?: string,
+    cat?: Category | null,
+    tag?: string,
+  ) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ sort: s, page: String(p), limit: '12' });
       if (q) params.set('search', q);
+      if (cat) params.set('category', cat);
+      if (tag) params.set('tag', tag);
       const res = await fetch(`/api/v1/discover?${params}`, { credentials: 'include' });
       if (res.ok) {
         const data: DiscoverResponse = await res.json();
         setStrategies(data.data);
         setTotal(data.total);
         setTotalPages(data.totalPages);
+
+        // Seed likedIds and likeCounts from fresh data
+        setLikedIds(prev => {
+          const next = new Set(prev);
+          data.data.forEach(st => {
+            if (st.isLiked) next.add(st.id);
+          });
+          return next;
+        });
+        setLikeCounts(prev => {
+          const next = { ...prev };
+          data.data.forEach(st => {
+            if (!(st.id in next)) next[st.id] = st.likeCount;
+          });
+          return next;
+        });
       }
     } catch { toast.error('Failed to load data'); }
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(page, sort, searchQuery); }, [page, sort, searchQuery, load]);
+  useEffect(() => {
+    load(page, sort, searchQuery, category, debouncedTag);
+  }, [page, sort, searchQuery, category, debouncedTag, load]);
 
   function changeSort(s: SortOption) {
     setSort(s);
     setPage(1);
+  }
+
+  function changeCategory(cat: Category | null) {
+    setCategory(cat);
+    setPage(1);
+  }
+
+  async function handleLike(e: React.MouseEvent, strategyId: string) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (likingInFlight.has(strategyId)) return;
+
+    const wasLiked = likedIds.has(strategyId);
+    const currentCount = likeCounts[strategyId] ?? 0;
+
+    // Optimistic update
+    setLikedIds(prev => {
+      const next = new Set(prev);
+      if (wasLiked) next.delete(strategyId);
+      else next.add(strategyId);
+      return next;
+    });
+    setLikeCounts(prev => ({
+      ...prev,
+      [strategyId]: wasLiked ? Math.max(0, currentCount - 1) : currentCount + 1,
+    }));
+    setLikingInFlight(prev => new Set(prev).add(strategyId));
+
+    try {
+      const method = wasLiked ? 'DELETE' : 'POST';
+      const res = await fetch(`/api/v1/marketplace/listings/${strategyId}/like`, {
+        method,
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        // Revert on failure
+        setLikedIds(prev => {
+          const next = new Set(prev);
+          if (wasLiked) next.add(strategyId);
+          else next.delete(strategyId);
+          return next;
+        });
+        setLikeCounts(prev => ({ ...prev, [strategyId]: currentCount }));
+        toast.error(wasLiked ? 'Failed to unlike' : 'Failed to like strategy');
+      }
+    } catch {
+      // Revert on error
+      setLikedIds(prev => {
+        const next = new Set(prev);
+        if (wasLiked) next.add(strategyId);
+        else next.delete(strategyId);
+        return next;
+      });
+      setLikeCounts(prev => ({ ...prev, [strategyId]: currentCount }));
+      toast.error('Network error');
+    } finally {
+      setLikingInFlight(prev => {
+        const next = new Set(prev);
+        next.delete(strategyId);
+        return next;
+      });
+    }
   }
 
   return (
@@ -116,17 +238,32 @@ export function Component() {
         {!loading && <span className="text-sm text-pf-text-muted">{total} strategies</span>}
       </div>
 
-      {/* Search bar */}
-      <div className="relative">
-        <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-        <input
-          type="text"
-          placeholder="Search strategies..."
-          aria-label="Search strategies"
-          value={searchQuery}
-          onChange={e => { setSearchQuery(e.target.value); }}
-          className="w-full pl-10 pr-4 py-2.5 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted"
-        />
+      {/* Search + Tag filter bar */}
+      <div className="flex gap-2">
+        {/* Search */}
+        <div className="relative flex-1">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+          <input
+            type="text"
+            placeholder="Search strategies..."
+            aria-label="Search strategies"
+            value={searchQuery}
+            onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
+            className="w-full pl-10 pr-4 py-2.5 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted"
+          />
+        </div>
+        {/* Tag filter */}
+        <div className="relative">
+          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-pf-text-muted" aria-hidden="true" />
+          <input
+            type="text"
+            placeholder="Filter by tag..."
+            aria-label="Filter by tag"
+            value={tagFilter}
+            onChange={e => setTagFilter(e.target.value)}
+            className="pl-8 pr-3 py-2.5 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted w-36"
+          />
+        </div>
       </div>
 
       {/* Sort tabs */}
@@ -147,6 +284,24 @@ export function Component() {
         ))}
       </div>
 
+      {/* Category filter chips */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {CATEGORIES.map(cat => (
+          <button
+            type="button"
+            key={cat.value ?? 'all'}
+            onClick={() => changeCategory(cat.value)}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors whitespace-nowrap ${
+              category === cat.value
+                ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
+                : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
       {/* Grid */}
       {loading && strategies.length === 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -161,6 +316,10 @@ export function Component() {
       ) : (
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children ${loading ? 'opacity-60' : ''}`}>
           {strategies.map(s => {
+            const isLiked = likedIds.has(s.id);
+            const likeCount = likeCounts[s.id] ?? s.likeCount;
+            const isLiking = likingInFlight.has(s.id);
+
             return (
               <Link
                 key={s.id}
@@ -185,10 +344,9 @@ export function Component() {
                   </a>
                   {s.author.score != null && s.author.score > 0 && (
                     <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
-                      s.author.score >= 80 ? 'text-pf-success bg-pf-success/10 border-pf-success/20' :
-                      s.author.score >= 60 ? 'text-pf-cyan-400 bg-pf-cyan-500/10 border-pf-cyan-500/20' :
+                      s.author.score >= 70 ? 'text-pf-success bg-pf-success/10 border-pf-success/20' :
                       s.author.score >= 40 ? 'text-pf-warning bg-pf-warning/10 border-pf-warning/20' :
-                      'text-pf-text-muted bg-pf-overlay border-pf-border'
+                      'text-pf-danger bg-pf-danger/10 border-pf-danger/20'
                     }`}>
                       <TrendingUp className="size-2.5" />
                       {s.author.score}
@@ -231,7 +389,26 @@ export function Component() {
 
                 {/* Footer stats */}
                 <div className="flex items-center gap-3 text-sm text-pf-text-muted pt-1">
-                  <span className="flex items-center gap-1"><Heart className="size-3.5" aria-hidden="true" /> {s.likeCount}</span>
+                  {/* Like button */}
+                  <button
+                    type="button"
+                    aria-label={isLiked ? 'Unlike strategy' : 'Like strategy'}
+                    aria-pressed={isLiked}
+                    disabled={isLiking}
+                    onClick={e => handleLike(e, s.id)}
+                    className={`flex items-center gap-1 transition-colors disabled:opacity-50 ${
+                      isLiked
+                        ? 'text-pf-danger hover:text-pf-danger/70'
+                        : 'hover:text-pf-danger'
+                    }`}
+                  >
+                    <Heart
+                      className="size-3.5"
+                      aria-hidden="true"
+                      fill={isLiked ? 'currentColor' : 'none'}
+                    />
+                    {likeCount}
+                  </button>
                   <span className="flex items-center gap-1"><GitFork className="size-3.5" aria-hidden="true" /> {s.forkCount}</span>
                   <span className="ml-auto text-[11px] text-pf-text-muted">&bull;</span>
                   <span className="font-mono text-[11px]">{formatDate(s.createdAt)}</span>

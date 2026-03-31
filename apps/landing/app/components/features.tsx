@@ -1,8 +1,8 @@
 const features = [
   {
-    title: "Visual Strategy Builder",
+    title: "Strategy Builder",
     description:
-      "Drag-and-drop canvas with 50+ blocks, logic gates, variables, and wiring. Build strategies like visual programs — no code required.",
+      "Build no-code automated trading strategies with our visual block editor. Set conditions, triggers, and position limits.",
     gradientClass: "from-pf-cyan-500/[0.04]",
     icon: (
       <svg
@@ -321,7 +321,7 @@ const features = [
   {
     title: "Copy Trading",
     description:
-      "Mirror whale traders automatically with three modes: percentage, fixed size, or full mirror. Built-in risk controls keep you in charge.",
+      "Follow top performers and mirror their trades automatically. Browse the leaderboard and copy with one click.",
     gradientClass: "from-pf-success/[0.03]",
     icon: (
       <svg
@@ -499,9 +499,9 @@ const features = [
     ),
   },
   {
-    title: "AI-Powered Signals",
+    title: "Backtesting",
     description:
-      "LLM-powered news pipeline analyzes breaking events, matches them to markets, and generates trade signals. AI finds the trades. You decide.",
+      "Test your strategies against historical market data before going live. See P&L curves and win rates.",
     gradientClass: "from-pf-purple-500/[0.04]",
     icon: (
       <svg
@@ -700,9 +700,9 @@ const features = [
     ),
   },
   {
-    title: "Advanced Orders",
+    title: "Smart Alerts",
     description:
-      "Take-profit, stop-loss, trailing stops, limit orders, and pegged orders. Set it and forget it — your positions are always protected.",
+      "Get notified on price movements, whale trades, and strategy signals via webhooks, email, or in-app alerts.",
     gradientClass: "from-pf-cyan-500/[0.03]",
     icon: (
       <svg
@@ -888,9 +888,9 @@ const features = [
     ),
   },
   {
-    title: "Whale Tracking",
+    title: "Strategy Marketplace",
     description:
-      "Real-time alerts when large trades happen. Follow wallets, analyze whale profiles, and see what the smart money is buying before the crowd.",
+      "Buy, sell, and fork proven strategies from top traders. Rate and review what you use.",
     gradientClass: "from-pf-gold-400/[0.03]",
     icon: (
       <svg
@@ -1110,9 +1110,9 @@ const features = [
     ),
   },
   {
-    title: "Developer API & SDKs",
+    title: "AI Portfolio Review",
     description:
-      "TypeScript, Python, and Rust SDKs with full API coverage. MCP server for Claude Desktop (23 tools). Live execution watching via SSE, webhooks, and natural language queries.",
+      "Get AI-powered insights on your portfolio, risk exposure, and trading opportunities.",
     gradientClass: "from-pf-purple-400/[0.04]",
     icon: (
       <svg
