@@ -119,11 +119,9 @@ export class AuthController {
     @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
-    const xff = request.headers['x-forwarded-for'];
-    const clientIp =
-      (typeof xff === 'string' ? xff.split(',')[0].trim() : undefined) ??
-      request.ip ??
-      'unknown';
+    // Use request.ip — nginx overwrites X-Forwarded-For with $remote_addr so
+    // this always reflects the real client IP rather than a spoofed header.
+    const clientIp = request.ip ?? 'unknown';
     // R5-05: Pass userAgent for login history recording
     const userAgent = (request.headers['user-agent'] as string) ?? 'unknown';
     const result = await this.authService.login({ ...dto, ip: clientIp, userAgent });

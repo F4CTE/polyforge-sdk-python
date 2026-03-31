@@ -8,7 +8,7 @@ COPY prisma/prisma.admin.config.ts ./prisma/prisma.admin.config.ts
 
 RUN npm install --save-dev prisma @prisma/client dotenv
 
-ENV ADMIN_DIRECT_DATABASE_URL="postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin"
+# ADMIN_DIRECT_DATABASE_URL must be injected at runtime via docker run -e or docker-compose
 
 RUN npx prisma generate \
       --schema ./prisma/schema.admin.prisma \
@@ -25,7 +25,7 @@ COPY prisma/migrations-admin          ./prisma/migrations-admin
 
 RUN chown -R migrate:migrate /app
 
-ENV ADMIN_DIRECT_DATABASE_URL="postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin"
+# ADMIN_DIRECT_DATABASE_URL must be injected at runtime via docker run -e or docker-compose
 
 USER migrate
 

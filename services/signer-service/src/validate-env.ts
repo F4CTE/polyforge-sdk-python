@@ -17,19 +17,18 @@ export function validateEnv(
 
   if (env.NODE_ENV === 'production') {
     const masterKey = env.MASTER_ENCRYPTION_KEY;
-    if (masterKey === '0'.repeat(64)) {
+    if (!masterKey || masterKey === '0'.repeat(64)) {
       throw new Error(
-        'MASTER_ENCRYPTION_KEY must not be all-zeros in production',
+        'CRITICAL: MASTER_ENCRYPTION_KEY must not be all-zeros or absent in production. ' +
+        'Generate with: openssl rand -hex 32',
       );
     }
 
-    // Reject default JWT secrets in production
-    if (
-      env.INTERNAL_JWT_SECRET?.startsWith('CHANGE_ME') ||
-      env.INTERNAL_JWT_SECRET?.startsWith('dev-')
-    ) {
+    const totpKey = env.TOTP_ENCRYPTION_KEY;
+    if (!totpKey || totpKey === '0'.repeat(64)) {
       throw new Error(
-        'INTERNAL_JWT_SECRET must be changed from default in production',
+        'CRITICAL: TOTP_ENCRYPTION_KEY must not be all-zeros or absent in production. ' +
+        'Generate with: openssl rand -hex 32',
       );
     }
 
@@ -39,6 +38,24 @@ export function validateEnv(
       throw new Error(
         'ENCRYPTION_KEY must not be all-zeros in production',
       );
+    }
+
+    // Reject default or weak JWT secrets across all services
+    const jwtSecrets = ['INTERNAL_JWT_SECRET', 'USER_JWT_SECRET', 'BOT_JWT_SECRET', 'ADMIN_JWT_SECRET'];
+    for (const secretKey of jwtSecrets) {
+      const val = env[secretKey];
+      if (!val) continue;
+      if (val.startsWith('CHANGE_ME') || val.startsWith('dev-') || val.includes('change-in-production')) {
+        throw new Error(
+          `${secretKey} must be changed from its default value in production. ` +
+          'Generate with: openssl rand -hex 32',
+        );
+      }
+      if (val.length < 32) {
+        throw new Error(
+          `${secretKey} must be at least 32 characters in production (got ${val.length})`,
+        );
+      }
     }
 
     // Reject mock CLOB API URL in production

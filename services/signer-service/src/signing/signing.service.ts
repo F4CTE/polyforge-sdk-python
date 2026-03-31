@@ -37,9 +37,6 @@ const FEE_RATE_CACHE_TTL = 300; // 5 minutes
 export class SigningService implements OnModuleInit {
   private readonly logger = new Logger(SigningService.name);
   private readonly chainId: number;
-  private readonly builderApiKey: string;
-  private readonly builderSecret: string;
-  private readonly builderPassphrase: string;
   private readonly isDev: boolean;
   private readonly clobApiUrl: string;
 
@@ -50,13 +47,18 @@ export class SigningService implements OnModuleInit {
     private readonly redis: RedisService,
   ) {
     this.chainId = parseInt(this.config.get<string>("CHAIN_ID") ?? "137", 10);
-    this.builderApiKey = this.config.get<string>("POLY_BUILDER_API_KEY") ?? "";
-    this.builderSecret = this.config.get<string>("POLY_BUILDER_SECRET") ?? "";
-    this.builderPassphrase =
-      this.config.get<string>("POLY_BUILDER_PASSPHRASE") ?? "";
     this.isDev = this.config.get<string>("NODE_ENV") !== "production";
     this.clobApiUrl =
       this.config.get<string>("CLOB_API_URL") ?? "https://clob.polymarket.com";
+  }
+
+  /** Read builder credentials on demand — never cached in class instance memory */
+  private getBuilderCredentials(): { apiKey: string; secret: string; passphrase: string } {
+    return {
+      apiKey: this.config.get<string>("POLY_BUILDER_API_KEY") ?? "",
+      secret: this.config.get<string>("POLY_BUILDER_SECRET") ?? "",
+      passphrase: this.config.get<string>("POLY_BUILDER_PASSPHRASE") ?? "",
+    };
   }
 
   onModuleInit() {
@@ -69,7 +71,8 @@ export class SigningService implements OnModuleInit {
       if (!this.clobApiUrl || this.clobApiUrl.includes("mock")) {
         throw new Error("Production requires real CLOB_API_URL");
       }
-      if (!this.builderApiKey || !this.builderSecret || !this.builderPassphrase) {
+      const { apiKey, secret, passphrase } = this.getBuilderCredentials();
+      if (!apiKey || !secret || !passphrase) {
         throw new Error(
           "Production requires POLY_BUILDER_API_KEY, POLY_BUILDER_SECRET, and POLY_BUILDER_PASSPHRASE",
         );
@@ -204,6 +207,8 @@ export class SigningService implements OnModuleInit {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { ClobClient } = require("@polymarket/clob-client");
 
+    const { apiKey: builderApiKey, secret: builderSecret, passphrase: builderPassphrase } = this.getBuilderCredentials();
+
     const client = new ClobClient(
       this.clobApiUrl,
       this.chainId,
@@ -217,9 +222,9 @@ export class SigningService implements OnModuleInit {
       creds.privateKey,
       creds.safeAddress ?? undefined,
       {
-        apiKey: this.builderApiKey,
-        secret: this.builderSecret,
-        passphrase: this.builderPassphrase,
+        apiKey: builderApiKey,
+        secret: builderSecret,
+        passphrase: builderPassphrase,
       },
     );
 
@@ -413,18 +418,19 @@ export class SigningService implements OnModuleInit {
   private buildBuilderHeaders(
     requestId: string,
   ): SignedOrder["builderHeaders"] {
+    const { apiKey, secret, passphrase } = this.getBuilderCredentials();
     const timestamp = String(Math.floor(Date.now() / 1000));
 
     const message = `${timestamp}${requestId}`;
     const signature = crypto
-      .createHmac("sha256", this.builderSecret)
+      .createHmac("sha256", secret)
       .update(message)
       .digest("hex");
 
     return {
-      POLY_BUILDER_API_KEY: this.builderApiKey,
+      POLY_BUILDER_API_KEY: apiKey,
       POLY_BUILDER_TIMESTAMP: timestamp,
-      POLY_BUILDER_PASSPHRASE: this.builderPassphrase,
+      POLY_BUILDER_PASSPHRASE: passphrase,
       POLY_BUILDER_SIGNATURE: signature,
     };
   }

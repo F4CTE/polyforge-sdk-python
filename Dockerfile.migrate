@@ -8,7 +8,7 @@ COPY prisma/prisma.config.ts   ./prisma/prisma.config.ts
 
 RUN npm install --save-dev prisma @prisma/client dotenv
 
-ENV DIRECT_DATABASE_URL="postgresql://poly:devpass@postgres:5432/polyforge"
+# DIRECT_DATABASE_URL must be injected at runtime via docker run -e or docker-compose
 
 RUN npx prisma generate \
       --schema ./prisma/schema.prisma \
@@ -28,7 +28,7 @@ COPY prisma/migrations                ./prisma/migrations
 
 RUN chown -R migrate:migrate /app
 
-ENV DIRECT_DATABASE_URL="postgresql://poly:devpass@postgres:5432/polyforge"
+# DIRECT_DATABASE_URL must be injected at runtime via docker run -e or docker-compose
 
 USER migrate
 

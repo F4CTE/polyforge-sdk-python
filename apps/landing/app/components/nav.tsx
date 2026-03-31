@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const MOBILE_NAV_LINKS = [
   { href: "#features", label: "Features" },
@@ -102,6 +102,8 @@ function ThemeToggle() {
 
 export function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
   const toggleMobile = useCallback(() => setMobileOpen((prev) => !prev), []);
@@ -118,6 +120,47 @@ export function Nav() {
         window.removeEventListener("keydown", handleEscape);
       };
     }
+  }, [mobileOpen]);
+
+  // Focus management: move focus into menu on open, return to button on close
+  useEffect(() => {
+    if (mobileOpen) {
+      const firstFocusable = menuRef.current?.querySelector<HTMLElement>(
+        'a[href], button, [tabindex]:not([tabindex="-1"])'
+      );
+      firstFocusable?.focus();
+    } else {
+      menuButtonRef.current?.focus();
+    }
+  }, [mobileOpen]);
+
+  // Focus trap: keep Tab within the open menu
+  useEffect(() => {
+    if (!mobileOpen || !menuRef.current) return;
+    function handleTab(e: KeyboardEvent) {
+      if (e.key !== "Tab" || !menuRef.current) return;
+      const focusable = Array.from(
+        menuRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => !el.hasAttribute("disabled"));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+    document.addEventListener("keydown", handleTab);
+    return () => document.removeEventListener("keydown", handleTab);
   }, [mobileOpen]);
 
   return (
@@ -185,6 +228,7 @@ export function Nav() {
         </div>
 
         <button
+          ref={menuButtonRef}
           type="button"
           className="flex md:hidden flex-col items-center justify-center gap-1.5 w-11 h-11 bg-transparent border-none cursor-pointer ml-auto hover:bg-pf-text/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -228,8 +272,10 @@ export function Nav() {
       </div>
 
       <div
+        ref={menuRef}
         id="mobile-nav-menu"
         role="navigation"
+        aria-modal={mobileOpen || undefined}
         aria-label="Mobile navigation"
         className={`${mobileOpen ? "flex" : "hidden"} md:hidden flex-col gap-1 px-6 pb-4 border-t border-pf-border-subtle`}
       >

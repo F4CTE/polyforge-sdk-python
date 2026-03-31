@@ -119,6 +119,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
   return (
     <aside
       aria-label="Admin sidebar"
+      style={{ borderTop: '3px solid var(--color-pf-danger)' }}
       className="flex flex-col h-full border-r border-pf-border bg-pf-surface"
     >
       {/* Brand */}
