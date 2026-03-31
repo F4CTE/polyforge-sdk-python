@@ -51,6 +51,7 @@ export const router = createBrowserRouter([
               { path: 'feed', lazy: () => import('./pages/feed/feed') },
               { path: 'leaderboard', lazy: () => import('./pages/leaderboard/leaderboard') },
               { path: 'analytics', lazy: () => import('./pages/analytics/analytics') },
+              { path: 'analytics/correlation', lazy: () => import('./pages/analytics/correlation') },
               { path: 'notifications', lazy: () => import('./pages/notifications/notifications') },
               { path: 'alerts', lazy: () => import('./pages/alerts/alerts') },
               { path: 'accuracy', lazy: () => import('./pages/accuracy/accuracy') },

@@ -30,6 +30,7 @@ import {
   Gift,
   Users,
   Library,
+  GitMerge,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -69,6 +70,7 @@ const navSections: NavSection[] = [
     items: [
       { label: 'Accuracy', icon: Target, route: '/accuracy' },
       { label: 'Analytics', icon: LineChart, route: '/analytics' },
+      { label: 'Correlation', icon: GitMerge, route: '/analytics/correlation' },
       { label: 'AI Optimizer', icon: Sparkles, route: '/optimizer' },
     ],
   },

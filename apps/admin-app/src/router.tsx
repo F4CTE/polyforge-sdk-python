@@ -31,6 +31,7 @@ export const router = createBrowserRouter([
           { path: 'tickets/:id', lazy: () => import('@/pages/tickets/ticket-detail') },
           { path: 'admins', lazy: () => import('@/pages/admins/admins') },
           { path: 'sentiment', lazy: () => import('@/pages/sentiment/sentiment') },
+          { path: 'abuse', lazy: () => import('@/pages/abuse/abuse') },
           { path: 'approvals', lazy: () => import('@/pages/approvals/approvals') },
           { path: 'listings', lazy: () => import('@/pages/listings/listings') },
           { path: 'revenue', lazy: () => import('@/pages/revenue/revenue') },

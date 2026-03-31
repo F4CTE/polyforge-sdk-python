@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import {
   ChevronLeft, ChevronRight, ClipboardList, X, Plus, Trash2, Download, Loader2,
+  BookOpen, Tag, Edit2, Search,
 } from 'lucide-react';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -62,7 +63,32 @@ interface ConditionalOrdersResponse {
   totalPages: number;
 }
 
-type ViewTab = 'orders' | 'conditional';
+type ViewTab = 'orders' | 'conditional' | 'journal';
+
+/* ─── Journal Types ──────────────────────────────────────────────────── */
+
+type JournalMood = 'confident' | 'uncertain' | 'fomo' | 'disciplined' | 'neutral';
+
+interface JournalEntry {
+  id: string;
+  orderId: string;
+  marketTitle: string;
+  outcome: 'YES' | 'NO';
+  side: 'BUY' | 'SELL';
+  price: number;
+  size: number;
+  pnl?: number;
+  note: string;
+  tags: string[];
+  mood: JournalMood;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface JournalResponse {
+  data: JournalEntry[];
+  total: number;
+}
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
@@ -100,6 +126,384 @@ const CONDITIONAL_STATUS_STYLES: Record<ConditionalOrderStatus, { text: string; 
   EXPIRED:   { text: 'text-pf-text-muted', bg: 'bg-pf-overlay' },
   FAILED:    { text: 'text-pf-danger', bg: 'bg-pf-danger/10' },
 };
+
+/* ─── Journal Constants ──────────────────────────────────────────────── */
+
+const MOOD_CONFIG: Record<JournalMood, { emoji: string; label: string }> = {
+  confident:   { emoji: '😊', label: 'Confident' },
+  uncertain:   { emoji: '🤔', label: 'Uncertain' },
+  fomo:        { emoji: '😰', label: 'FOMO' },
+  disciplined: { emoji: '🎯', label: 'Disciplined' },
+  neutral:     { emoji: '😐', label: 'Neutral' },
+};
+
+const MOOD_KEYS = Object.keys(MOOD_CONFIG) as JournalMood[];
+
+/* ─── Inline Journal Panel ───────────────────────────────────────────── */
+
+interface InlineJournalPanelProps {
+  order: Order;
+  entry: JournalEntry | null;
+  onClose: () => void;
+  onSaved: (entry: JournalEntry) => void;
+  onDeleted: (orderId: string) => void;
+}
+
+function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: InlineJournalPanelProps) {
+  const [note, setNote] = useState(entry?.note ?? '');
+  const [mood, setMood] = useState<JournalMood>(entry?.mood ?? 'neutral');
+  const [tags, setTags] = useState<string[]>(entry?.tags ?? []);
+  const [tagInput, setTagInput] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  function addTag() {
+    const t = tagInput.trim().toLowerCase();
+    if (t && !tags.includes(t)) setTags(prev => [...prev, t]);
+    setTagInput('');
+  }
+
+  function removeTag(t: string) {
+    setTags(prev => prev.filter(x => x !== t));
+  }
+
+  async function handleSave() {
+    if (!note.trim()) { toast.error('Note cannot be empty'); return; }
+    setSaving(true);
+    try {
+      const isNew = !entry;
+      const url = isNew ? '/api/v1/journal' : `/api/v1/journal/${entry.id}`;
+      const method = isNew ? 'POST' : 'PATCH';
+      const body = isNew
+        ? { orderId: order.id, note, tags, mood }
+        : { note, tags, mood };
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        const saved: JournalEntry = await res.json();
+        toast.success(isNew ? 'Journal note saved' : 'Journal note updated');
+        onSaved(saved);
+        onClose();
+      } else {
+        toast.error('Failed to save journal note');
+      }
+    } catch {
+      toast.error('Failed to save journal note');
+    }
+    setSaving(false);
+  }
+
+  async function handleDelete() {
+    if (!entry) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/v1/journal/${entry.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        toast.success('Journal note deleted');
+        onDeleted(order.id);
+        onClose();
+      } else {
+        toast.error('Failed to delete journal note');
+      }
+    } catch {
+      toast.error('Failed to delete journal note');
+    }
+    setDeleting(false);
+  }
+
+  return (
+    <tr>
+      <td colSpan={12} className="px-0 py-0">
+        <div className="mx-4 my-1 rounded-pf border border-pf-cyan-500/30 bg-pf-surface p-4 space-y-3">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BookOpen className="size-3.5 text-pf-cyan-400" />
+              <span className="text-sm font-medium text-pf-text">Journal Note</span>
+              {entry && <span className="text-[10px] text-pf-text-muted">Last updated {formatDate(entry.updatedAt)}</span>}
+            </div>
+            <button type="button" onClick={onClose} aria-label="Close journal panel" className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors">
+              <X className="size-3.5" />
+            </button>
+          </div>
+
+          {/* Textarea */}
+          <div>
+            <label className="block text-xs text-pf-text-secondary mb-1">How did this trade go?</label>
+            <textarea
+              ref={textareaRef}
+              rows={3}
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              placeholder="Record your reasoning, what you observed, or what you'd do differently..."
+              className="w-full px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 resize-none"
+            />
+          </div>
+
+          {/* Mood selector */}
+          <div>
+            <span className="block text-xs text-pf-text-secondary mb-2">Mood</span>
+            <div className="flex flex-wrap gap-1.5">
+              {MOOD_KEYS.map(m => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMood(m)}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    mood === m
+                      ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/40'
+                      : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                  }`}
+                >
+                  <span>{MOOD_CONFIG[m].emoji}</span>
+                  {MOOD_CONFIG[m].label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <span className="block text-xs text-pf-text-secondary mb-2">Tags</span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {tags.map(t => (
+                <span key={t} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/30">
+                  <Tag className="size-2.5" />
+                  {t}
+                  <button type="button" onClick={() => removeTag(t)} aria-label={`Remove tag ${t}`} className="hover:text-pf-danger transition-colors ml-0.5">
+                    <X className="size-2.5" />
+                  </button>
+                </span>
+              ))}
+              <div className="flex items-center gap-1">
+                <input
+                  value={tagInput}
+                  onChange={e => setTagInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
+                  placeholder="+ add tag"
+                  className="h-6 px-2 rounded-full bg-pf-elevated border border-pf-border text-[11px] text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 w-24"
+                />
+                <button type="button" onClick={addTag} className="text-[11px] text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors">Add</button>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 pt-1 border-t border-pf-border-subtle">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-cyan-500 text-black text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              {saving ? <Loader2 className="size-3 animate-spin" /> : null}
+              Save Note
+            </button>
+            {entry && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-danger/10 text-pf-danger text-xs font-medium border border-pf-danger/20 hover:bg-pf-danger/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                {deleting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+                Delete
+              </button>
+            )}
+          </div>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+/* ─── Journal Tab Content ────────────────────────────────────────────── */
+
+interface JournalTabProps {
+  entries: JournalEntry[];
+  loading: boolean;
+  onEdit: (entry: JournalEntry) => void;
+  onDelete: (entry: JournalEntry) => void;
+}
+
+function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; onEdit: () => void; onDelete: () => void }) {
+  const mood = MOOD_CONFIG[entry.mood];
+  return (
+    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 hover:border-pf-border-hover transition-colors">
+      {/* Top row */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-pf-text line-clamp-1">{entry.marketTitle || `Order ${entry.orderId.slice(0, 8)}`}</p>
+          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+            <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'}`}>
+              {entry.side}
+            </span>
+            <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'}`}>
+              {entry.outcome}
+            </span>
+            <span className="font-mono text-[10px] text-pf-text-muted">{entry.size} @ {entry.price}</span>
+            {entry.pnl !== undefined && (
+              <span className={`font-mono text-[10px] font-medium ${entry.pnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                {entry.pnl >= 0 ? '+' : ''}{entry.pnl.toFixed(2)} PnL
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <button type="button" onClick={onEdit} aria-label="Edit journal note" className="p-1.5 rounded text-pf-text-muted hover:text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors">
+            <Edit2 className="size-3.5" />
+          </button>
+          <button type="button" onClick={onDelete} aria-label="Delete journal note" className="p-1.5 rounded text-pf-text-muted hover:text-pf-danger hover:bg-pf-danger/10 transition-colors">
+            <Trash2 className="size-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Mood + note */}
+      <div className="flex items-start gap-2">
+        <span className="text-base shrink-0" title={mood.label}>{mood.emoji}</span>
+        <p className="text-xs text-pf-text-secondary line-clamp-2 leading-relaxed">{entry.note}</p>
+      </div>
+
+      {/* Tags + date */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex flex-wrap gap-1">
+          {entry.tags.map(t => (
+            <span key={t} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/20">
+              <Tag className="size-2" />{t}
+            </span>
+          ))}
+        </div>
+        <span className="font-mono text-[10px] text-pf-text-muted shrink-0">{formatDate(entry.createdAt)}</span>
+      </div>
+    </div>
+  );
+}
+
+function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
+  const [search, setSearch] = useState('');
+  const [moodFilter, setMoodFilter] = useState<JournalMood | 'ALL'>('ALL');
+  const [tagFilter, setTagFilter] = useState('');
+
+  const allTags = Array.from(new Set(entries.flatMap(e => e.tags))).sort();
+
+  const filtered = entries.filter(e => {
+    if (moodFilter !== 'ALL' && e.mood !== moodFilter) return false;
+    if (tagFilter && !e.tags.includes(tagFilter)) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return e.note.toLowerCase().includes(q) || e.marketTitle.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  return (
+    <div className="space-y-4">
+      {/* Search + filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-pf-text-muted pointer-events-none" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search notes or markets..."
+            className="w-full h-9 pl-8 pr-3 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+          />
+        </div>
+        {allTags.length > 0 && (
+          <select
+            value={tagFilter}
+            onChange={e => setTagFilter(e.target.value)}
+            className="h-9 px-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+          >
+            <option value="">All tags</option>
+            {allTags.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        )}
+      </div>
+
+      {/* Mood filter pills */}
+      <div className="flex flex-wrap gap-1.5">
+        <button
+          type="button"
+          onClick={() => setMoodFilter('ALL')}
+          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+            moodFilter === 'ALL'
+              ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
+              : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+          }`}
+        >
+          All moods
+        </button>
+        {MOOD_KEYS.map(m => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setMoodFilter(moodFilter === m ? 'ALL' : m)}
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+              moodFilter === m
+                ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
+                : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+            }`}
+          >
+            {MOOD_CONFIG[m].emoji} {MOOD_CONFIG[m].label}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      {loading ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-pulse">
+              <div className="h-3 bg-pf-overlay rounded w-3/4" />
+              <div className="h-3 bg-pf-overlay rounded w-1/2" />
+              <div className="h-8 bg-pf-overlay rounded" />
+              <div className="h-3 bg-pf-overlay rounded w-1/3" />
+            </div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <BookOpen className="size-10 text-pf-text-muted mb-3" />
+          <p className="text-sm font-medium text-pf-text">
+            {entries.length === 0 ? 'No journal entries yet' : 'No entries match your filters'}
+          </p>
+          <p className="text-xs text-pf-text-muted mt-1">
+            {entries.length === 0
+              ? 'Click the journal icon on any order to add your first note.'
+              : 'Try adjusting your search or filters.'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map(entry => (
+            <JournalEntryCard
+              key={entry.id}
+              entry={entry}
+              onEdit={() => onEdit(entry)}
+              onDelete={() => onDelete(entry)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Category Badge ─────────────────────────────────────────────────── */
 
 function CategoryBadge({ category }: { category?: string | null }) {
   if (!category) return null;
@@ -323,6 +727,15 @@ export function Component() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [exportingCsv, setExportingCsv] = useState(false);
 
+  // ── Journal state ──
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [journalLoading, setJournalLoading] = useState(false);
+  const [journalLoaded, setJournalLoaded] = useState(false);
+  // Map orderId -> JournalEntry for per-row lookup
+  const [journalByOrder, setJournalByOrder] = useState<Record<string, JournalEntry>>({});
+  // Which order row has its inline panel open (orderId)
+  const [openJournalOrderId, setOpenJournalOrderId] = useState<string | null>(null);
+
   // ── Load regular orders ──
   const load = useCallback(async (p: number, f: FilterStatus) => {
     setLoading(true);
@@ -356,6 +769,23 @@ export function Component() {
     setCondLoading(false);
   }, []);
 
+  // ── Load journal entries ──
+  const loadJournal = useCallback(async () => {
+    setJournalLoading(true);
+    try {
+      const res = await fetch('/api/v1/journal?page=1&limit=200', { credentials: 'include' });
+      if (res.ok) {
+        const data: JournalResponse = await res.json();
+        setJournalEntries(data.data);
+        const byOrder: Record<string, JournalEntry> = {};
+        data.data.forEach(e => { byOrder[e.orderId] = e; });
+        setJournalByOrder(byOrder);
+        setJournalLoaded(true);
+      }
+    } catch { toast.error('Failed to load journal'); }
+    setJournalLoading(false);
+  }, []);
+
   useEffect(() => {
     if (viewTab === 'orders') load(page, filter);
   }, [page, filter, load, viewTab]);
@@ -363,6 +793,41 @@ export function Component() {
   useEffect(() => {
     if (viewTab === 'conditional') loadConditional(condPage);
   }, [condPage, loadConditional, viewTab]);
+
+  useEffect(() => {
+    if (viewTab === 'journal' && !journalLoaded) loadJournal();
+  }, [viewTab, journalLoaded, loadJournal]);
+
+  // Pre-load journal map whenever orders tab is active (for per-row icon state)
+  useEffect(() => {
+    if (viewTab === 'orders' && !journalLoaded) loadJournal();
+  }, [viewTab, journalLoaded, loadJournal]);
+
+  function handleJournalSaved(entry: JournalEntry) {
+    setJournalByOrder(prev => ({ ...prev, [entry.orderId]: entry }));
+    setJournalEntries(prev => {
+      const idx = prev.findIndex(e => e.id === entry.id);
+      if (idx >= 0) { const next = [...prev]; next[idx] = entry; return next; }
+      return [entry, ...prev];
+    });
+  }
+
+  function handleJournalDeleted(orderId: string) {
+    setJournalByOrder(prev => { const next = { ...prev }; delete next[orderId]; return next; });
+    setJournalEntries(prev => prev.filter(e => e.orderId !== orderId));
+  }
+
+  async function deleteJournalEntry(entry: JournalEntry) {
+    try {
+      const res = await fetch(`/api/v1/journal/${entry.id}`, { method: 'DELETE', credentials: 'include' });
+      if (res.ok) {
+        toast.success('Journal note deleted');
+        handleJournalDeleted(entry.orderId);
+      } else {
+        toast.error('Failed to delete journal note');
+      }
+    } catch { toast.error('Failed to delete journal note'); }
+  }
 
   function downloadCsv(rows: Order[], filename: string) {
     const headers = ['Date', 'Market', 'Side', 'Outcome', 'Size', 'Price', 'Fill Price', 'Status', 'P&L', 'Strategy'];
@@ -473,6 +938,9 @@ export function Component() {
             </>
           )}
           {!condLoading && viewTab === 'conditional' && <span className="text-sm text-pf-text-muted">{condTotal} conditional</span>}
+          {viewTab === 'journal' && !journalLoading && (
+            <span className="text-sm text-pf-text-muted">{journalEntries.length} {journalEntries.length === 1 ? 'entry' : 'entries'}</span>
+          )}
         </div>
       </div>
 
@@ -499,6 +967,23 @@ export function Component() {
           }`}
         >
           Conditional
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={viewTab === 'journal'}
+          onClick={() => setViewTab('journal')}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-t text-sm font-medium transition-colors ${
+            viewTab === 'journal' ? 'text-pf-cyan-400 border-b-2 border-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'
+          }`}
+        >
+          <BookOpen className="size-3.5" />
+          Journal
+          {Object.keys(journalByOrder).length > 0 && (
+            <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-pf-cyan-500/20 text-pf-cyan-400 text-[10px] font-medium">
+              {Object.keys(journalByOrder).length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -540,21 +1025,21 @@ export function Component() {
                     <th scope="col" className="px-4 py-3 font-medium hidden md:table-cell">Type</th>
                     <th scope="col" className="px-4 py-3 font-medium">Status</th>
                     <th scope="col" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Date</th>
-                    <th scope="col" className="px-4 py-3 font-medium w-10"><span className="sr-only">Actions</span></th>
+                    <th scope="col" className="px-4 py-3 font-medium w-20"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-pf-border-subtle">
                   {loading ? (
                     Array.from({ length: 8 }, (_, i) => (
                       <tr key={i}>
-                        {Array.from({ length: 11 }, (_, j) => (
+                        {Array.from({ length: 12 }, (_, j) => (
                           <td key={j} className="px-4 py-3"><div className="h-3 bg-pf-overlay rounded animate-pulse" /></td>
                         ))}
                       </tr>
                     ))
                   ) : orders.length === 0 ? (
                     <tr>
-                      <td colSpan={11}>
+                      <td colSpan={12}>
                         <div className="flex flex-col items-center justify-center py-16 text-center">
                           <ClipboardList className="size-10 text-pf-text-muted mb-3" />
                           <p className="text-sm font-medium text-pf-text">No orders found</p>
@@ -563,15 +1048,17 @@ export function Component() {
                       </td>
                     </tr>
                   ) : (
-                    orders.map((order, i) => {
+                    orders.flatMap((order, i) => {
                       const ss = STATUS_STYLES[order.status] ?? STATUS_STYLES.PENDING;
-                      return (
+                      const hasNote = Boolean(journalByOrder[order.id]);
+                      const isJournalOpen = openJournalOrderId === order.id;
+                      const rows = [
                         <tr
                           key={order.id}
                           tabIndex={0}
                           onClick={() => setSelectedOrder(order)}
                           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedOrder(order); }}
-                          className="hover:bg-pf-surface/50 transition-colors cursor-pointer"
+                          className={`hover:bg-pf-surface/50 transition-colors cursor-pointer ${isJournalOpen ? 'bg-pf-surface/30' : ''}`}
                         >
                           <td className="px-4 py-3">
                             <span className="font-mono text-[11px] text-pf-text-muted">{(page - 1) * 25 + i + 1}</span>
@@ -612,20 +1099,48 @@ export function Component() {
                             <span className="font-mono text-[11px] text-pf-text-muted">{formatDate(order.createdAt)}</span>
                           </td>
                           <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                            {['PENDING', 'SUBMITTED', 'LIVE'].includes(order.status) && (
+                            <div className="flex items-center justify-end gap-0.5">
                               <button
                                 type="button"
-                                onClick={() => cancelOrder(order.id)}
-                                title="Cancel order"
-                                aria-label="Cancel order"
-                                className="p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40"
+                                onClick={() => setOpenJournalOrderId(isJournalOpen ? null : order.id)}
+                                title={hasNote ? 'Edit journal note' : 'Add journal note'}
+                                aria-label={hasNote ? 'Edit journal note' : 'Add journal note'}
+                                className={`p-1 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                  hasNote
+                                    ? 'text-pf-cyan-400 hover:text-pf-cyan-300'
+                                    : 'text-pf-text-muted hover:text-pf-cyan-400'
+                                }`}
                               >
-                                <Trash2 className="size-3.5" />
+                                <BookOpen className={`size-3.5 ${hasNote ? 'fill-pf-cyan-400/20' : ''}`} />
                               </button>
-                            )}
+                              {['PENDING', 'SUBMITTED', 'LIVE'].includes(order.status) && (
+                                <button
+                                  type="button"
+                                  onClick={() => cancelOrder(order.id)}
+                                  title="Cancel order"
+                                  aria-label="Cancel order"
+                                  className="p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                </button>
+                              )}
+                            </div>
                           </td>
-                        </tr>
-                      );
+                        </tr>,
+                      ];
+                      if (isJournalOpen) {
+                        rows.push(
+                          <InlineJournalPanel
+                            key={`journal-${order.id}`}
+                            order={order}
+                            entry={journalByOrder[order.id] ?? null}
+                            onClose={() => setOpenJournalOrderId(null)}
+                            onSaved={handleJournalSaved}
+                            onDeleted={handleJournalDeleted}
+                          />
+                        );
+                      }
+                      return rows;
                     })
                   )}
                 </tbody>
@@ -788,6 +1303,21 @@ export function Component() {
             </div>
           )}
         </>
+      )}
+
+      {/* ─── Journal Tab ─────────────────────────────────────── */}
+      {viewTab === 'journal' && (
+        <JournalTab
+          entries={journalEntries}
+          loading={journalLoading}
+          onEdit={(entry) => {
+            // Switch to orders tab and open inline panel for that order
+            // Build a synthetic order reference for edit — open inline panel via orderId
+            setOpenJournalOrderId(entry.orderId);
+            setViewTab('orders');
+          }}
+          onDelete={deleteJournalEntry}
+        />
       )}
 
       {/* Order detail dialog */}

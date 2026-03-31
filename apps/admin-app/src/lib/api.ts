@@ -393,6 +393,17 @@ export const adminApi = {
       body: JSON.stringify({ action, ...(adminNote ? { adminNote } : {}) }),
     }),
 
+  // Abuse Detection
+  abuseFlaggedStrategies: (params?: QueryParams) =>
+    request<{ data: import('@/pages/abuse/abuse').FlaggedStrategy[]; total: number }>(
+      buildUrl('/api/admin', '/abuse/strategies', params),
+    ),
+  abuseReview: (id: string, action: 'clear' | 'warn' | 'delist' | 'ban_author', note: string) =>
+    request<{ id: string; status: string }>(buildUrl('/api/admin', `/abuse/strategies/${id}/review`), {
+      method: 'POST',
+      body: JSON.stringify({ action, note }),
+    }),
+
   // Builder
   builderStats: () => request<BuilderStatsData>(buildUrl(API_BASE, '/builder/stats')),
 

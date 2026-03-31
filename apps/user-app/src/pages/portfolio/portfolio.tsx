@@ -9,6 +9,7 @@ import {
   Shield, TrendingDown, TrendingUp, Share2, Copy, Check, Download,
   X, ChevronDown, ChevronUp, Clock, CalendarDays, Receipt, FileText,
   Target, Pencil, Trash2, Trophy, ShieldCheck,
+  Lightbulb, Shuffle, CheckCircle2, SlidersHorizontal,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
@@ -134,10 +135,35 @@ interface RiskCell {
   pnl: number; // unrealised P&L for this cell
 }
 
+interface RebalanceSuggestion {
+  id: string;
+  type: 'reduce' | 'diversify' | 'close' | 'hedge';
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  affectedCategory?: string;
+  affectedOutcome?: 'YES' | 'NO';
+  currentPct: number;
+  targetPct: number;
+  estimatedImpact: string;
+}
+
 interface RiskHeatmapData {
   cells: RiskCell[];
   totalValue: number;
   maxCellValue: number;
+}
+
+interface AutoCloseRule {
+  id: string;
+  positionId: string;
+  marketId: string;
+  outcome: 'YES' | 'NO';
+  stopLoss?: number;
+  takeProfit?: number;
+  quantity?: number;
+  status: 'active' | 'triggered' | 'cancelled';
+  triggeredAt?: string;
 }
 
 type Tab = 'live' | 'paper';
@@ -437,6 +463,19 @@ export function Component() {
   const [closingId, setClosingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Auto-close rules
+  const [autoCloseRules, setAutoCloseRules] = useState<Record<string, AutoCloseRule>>({});
+  const [expandedAutoClose, setExpandedAutoClose] = useState<string | null>(null);
+  const [acLoading, setAcLoading] = useState<Record<string, boolean>>({});
+  const [acSubmitting, setAcSubmitting] = useState<Record<string, boolean>>({});
+  const [acSlEnabled, setAcSlEnabled] = useState<Record<string, boolean>>({});
+  const [acTpEnabled, setAcTpEnabled] = useState<Record<string, boolean>>({});
+  const [acSlPrice, setAcSlPrice] = useState<Record<string, string>>({});
+  const [acTpPrice, setAcTpPrice] = useState<Record<string, string>>({});
+  const [acQuantityAll, setAcQuantityAll] = useState<Record<string, boolean>>({});
+  const [acQuantity, setAcQuantity] = useState<Record<string, string>>({});
+  const [acErrors, setAcErrors] = useState<Record<string, string>>({});
+
   // Daily P&L widget
   const [dailyPnl, setDailyPnl] = useState<DailyPnlResponse | null>(null);
   const [userRiskSettings, setUserRiskSettings] = useState<UserRiskSettings | null>(null);
@@ -452,6 +491,13 @@ export function Component() {
   // Risk Concentration Heatmap
   const [riskHeatmap, setRiskHeatmap] = useState<RiskHeatmapData | null>(null);
   const [loadingRiskHeatmap, setLoadingRiskHeatmap] = useState(true);
+
+  // Rebalancing Suggestions
+  const [suggestions, setSuggestions] = useState<RebalanceSuggestion[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(true);
+  const [dismissedIds, setDismissedIds] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('pf-dismissed-suggestions') || '[]'); } catch { return []; }
+  });
 
   // Tax Report
   const currentYear = new Date().getFullYear();
@@ -484,6 +530,18 @@ export function Component() {
       if (res.ok) setPortfolio(await res.json());
     } catch { toast.error('Failed to load data'); }
     setLoadingPortfolio(false);
+  }, []);
+
+  const loadSuggestions = useCallback(async () => {
+    setLoadingSuggestions(true);
+    try {
+      const res = await fetch('/api/v1/portfolio/rebalance-suggestions', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setSuggestions(data.suggestions ?? []);
+      }
+    } catch { /* silently ignore — non-critical */ }
+    setLoadingSuggestions(false);
   }, []);
 
   const emptyPnl: PnlResponse = { snapshots: [], totalPnl: '0.00', winRate: '0' };
@@ -528,6 +586,7 @@ export function Component() {
     setLoadingDailyPnl(true);
     setLoadingHeatmap(true);
     setLoadingRiskHeatmap(true);
+    loadSuggestions();
     Promise.all([
       fetch('/api/v1/portfolio/pnl?period=today', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/users/me/risk-settings', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
@@ -551,7 +610,7 @@ export function Component() {
       }
     });
     return () => { cancelled = true; };
-  }, []);
+  }, [loadSuggestions]);
 
   // Tax report fetch — runs on mount and when taxYear changes
   useEffect(() => {
@@ -674,6 +733,136 @@ export function Component() {
     setRedeemingPosition(prev => ({ ...prev, [pos.id]: false }));
   }
 
+  async function loadAutoCloseRule(positionId: string) {
+    setAcLoading(prev => ({ ...prev, [positionId]: true }));
+    try {
+      const res = await fetch(`/api/v1/positions/${positionId}/auto-close`, { credentials: 'include' });
+      if (res.ok) {
+        const rule: AutoCloseRule | null = await res.json();
+        if (rule) {
+          setAutoCloseRules(prev => ({ ...prev, [positionId]: rule }));
+          setAcSlEnabled(prev => ({ ...prev, [positionId]: rule.stopLoss != null }));
+          setAcTpEnabled(prev => ({ ...prev, [positionId]: rule.takeProfit != null }));
+          setAcSlPrice(prev => ({ ...prev, [positionId]: rule.stopLoss != null ? String(rule.stopLoss) : '' }));
+          setAcTpPrice(prev => ({ ...prev, [positionId]: rule.takeProfit != null ? String(rule.takeProfit) : '' }));
+          setAcQuantityAll(prev => ({ ...prev, [positionId]: rule.quantity == null }));
+          setAcQuantity(prev => ({ ...prev, [positionId]: rule.quantity != null ? String(rule.quantity) : '' }));
+        } else {
+          setAcQuantityAll(prev => ({ ...prev, [positionId]: true }));
+        }
+      } else {
+        setAcQuantityAll(prev => ({ ...prev, [positionId]: true }));
+      }
+    } catch {
+      setAcQuantityAll(prev => ({ ...prev, [positionId]: true }));
+    }
+    setAcLoading(prev => ({ ...prev, [positionId]: false }));
+  }
+
+  function openAutoClosePanel(positionId: string) {
+    if (expandedAutoClose === positionId) {
+      setExpandedAutoClose(null);
+      return;
+    }
+    setExpandedAutoClose(positionId);
+    setAcErrors(prev => ({ ...prev, [positionId]: '' }));
+    if (!(positionId in autoCloseRules) && !acLoading[positionId]) {
+      loadAutoCloseRule(positionId);
+    }
+  }
+
+  async function saveAutoCloseRule(pos: Position) {
+    const positionId = pos.id;
+    const slEnabled = acSlEnabled[positionId] ?? false;
+    const tpEnabled = acTpEnabled[positionId] ?? false;
+    const slVal = parseFloat(acSlPrice[positionId] ?? '');
+    const tpVal = parseFloat(acTpPrice[positionId] ?? '');
+    const currentPrice = parseFloat(pos.currentPrice);
+
+    // Validation
+    if (!slEnabled && !tpEnabled) {
+      setAcErrors(prev => ({ ...prev, [positionId]: 'Enable at least one rule (stop-loss or take-profit).' }));
+      return;
+    }
+    if (slEnabled) {
+      if (Number.isNaN(slVal) || slVal < 0.01 || slVal > 0.99) {
+        setAcErrors(prev => ({ ...prev, [positionId]: 'Stop-loss must be between 0.01 and 0.99.' }));
+        return;
+      }
+      if (currentPrice > 0 && slVal >= currentPrice) {
+        setAcErrors(prev => ({ ...prev, [positionId]: `Stop-loss must be below the current price (${currentPrice.toFixed(3)}).` }));
+        return;
+      }
+    }
+    if (tpEnabled) {
+      if (Number.isNaN(tpVal) || tpVal < 0.01 || tpVal > 0.99) {
+        setAcErrors(prev => ({ ...prev, [positionId]: 'Take-profit must be between 0.01 and 0.99.' }));
+        return;
+      }
+      if (currentPrice > 0 && tpVal <= currentPrice) {
+        setAcErrors(prev => ({ ...prev, [positionId]: `Take-profit must be above the current price (${currentPrice.toFixed(3)}).` }));
+        return;
+      }
+    }
+    setAcErrors(prev => ({ ...prev, [positionId]: '' }));
+    setAcSubmitting(prev => ({ ...prev, [positionId]: true }));
+    try {
+      const quantityAll = acQuantityAll[positionId] ?? true;
+      const quantityStr = acQuantity[positionId] ?? '';
+      const quantityNum = !quantityAll && quantityStr ? parseFloat(quantityStr) : undefined;
+      const body: Record<string, number | undefined> = {};
+      if (slEnabled) body.stopLoss = slVal;
+      if (tpEnabled) body.takeProfit = tpVal;
+      if (quantityNum != null && !Number.isNaN(quantityNum)) body.quantity = quantityNum;
+      const res = await fetch(`/api/v1/positions/${positionId}/auto-close`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        const rule: AutoCloseRule = await res.json();
+        setAutoCloseRules(prev => ({ ...prev, [positionId]: rule }));
+        toast.success('Auto-close rule saved');
+        setExpandedAutoClose(null);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message ?? 'Failed to save rule');
+      }
+    } catch {
+      toast.error('Failed to save rule');
+    }
+    setAcSubmitting(prev => ({ ...prev, [positionId]: false }));
+  }
+
+  async function deleteAutoCloseRule(positionId: string) {
+    setAcSubmitting(prev => ({ ...prev, [positionId]: true }));
+    try {
+      const res = await fetch(`/api/v1/positions/${positionId}/auto-close`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        setAutoCloseRules(prev => {
+          const next = { ...prev };
+          delete next[positionId];
+          return next;
+        });
+        setAcSlEnabled(prev => ({ ...prev, [positionId]: false }));
+        setAcTpEnabled(prev => ({ ...prev, [positionId]: false }));
+        setAcSlPrice(prev => ({ ...prev, [positionId]: '' }));
+        setAcTpPrice(prev => ({ ...prev, [positionId]: '' }));
+        toast.success('Auto-close rule removed');
+        setExpandedAutoClose(null);
+      } else {
+        toast.error('Failed to remove rule');
+      }
+    } catch {
+      toast.error('Failed to remove rule');
+    }
+    setAcSubmitting(prev => ({ ...prev, [positionId]: false }));
+  }
+
   const [circuitBreakerTripped, setCircuitBreakerTripped] = useState(false);
   const [circuitBreakerTrippedAt, setCircuitBreakerTrippedAt] = useState<string | null>(null);
 
@@ -724,6 +913,13 @@ export function Component() {
   function handleDownloadCard() {
     handleCopyLink();
     toast.info('Use a screenshot to save the card');
+  }
+
+  function dismissSuggestion(id: string) {
+    const next = [...dismissedIds, id];
+    setDismissedIds(next);
+    try { localStorage.setItem('pf-dismissed-suggestions', JSON.stringify(next)); } catch { /* ignore */ }
+    toast('Suggestion dismissed');
   }
 
   // Chart data — memoized; show flat zero line when no snapshots
@@ -1572,6 +1768,10 @@ export function Component() {
                             return days > 0 ? `${days}d ${hours}h` : `${hours}h`;
                           })()
                         : null;
+                      const rule = autoCloseRules[pos.id];
+                      const hasRule = rule != null && rule.status === 'active';
+                      const isTriggered = rule?.status === 'triggered';
+                      const isAutoCloseExpanded = expandedAutoClose === pos.id;
                       return (
                         <>
                           <tr
@@ -1586,7 +1786,19 @@ export function Component() {
                                   : <ChevronDown className="size-3 text-pf-text-muted shrink-0" />}
                                 <span className="text-pf-text line-clamp-1" title={pos.marketTitle}>{pos.marketTitle}</span>
                               </div>
-                              <CategoryBadge category={(pos as any).marketCategory} />
+                              <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                                <CategoryBadge category={(pos as any).marketCategory} />
+                                {hasRule && rule.stopLoss != null && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-pf-danger/10 text-pf-danger border border-pf-danger/20">
+                                    SL: {rule.stopLoss.toFixed(2)}
+                                  </span>
+                                )}
+                                {hasRule && rule.takeProfit != null && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-pf-success/10 text-pf-success border border-pf-success/20">
+                                    TP: {rule.takeProfit.toFixed(2)}
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="px-4 py-3">
                               <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
@@ -1624,6 +1836,23 @@ export function Component() {
                                 {pos.resolutionStatus === 'UNRESOLVED' && (
                                   <button
                                     type="button"
+                                    title={isTriggered ? 'Rule triggered' : hasRule ? 'Edit auto-close rule' : 'Set auto-close'}
+                                    aria-label={isTriggered ? 'Rule triggered' : hasRule ? 'Edit auto-close rule' : 'Set auto-close'}
+                                    onClick={e => { e.stopPropagation(); openAutoClosePanel(pos.id); }}
+                                    className={`p-1 rounded transition-colors hover:bg-pf-surface ${
+                                      isTriggered
+                                        ? 'text-pf-success'
+                                        : hasRule
+                                          ? 'text-pf-cyan-400'
+                                          : 'text-pf-text-muted hover:text-pf-text'
+                                    }`}
+                                  >
+                                    <SlidersHorizontal className="size-3.5" />
+                                  </button>
+                                )}
+                                {pos.resolutionStatus === 'UNRESOLVED' && (
+                                  <button
+                                    type="button"
                                     onClick={e => { e.stopPropagation(); closePosition(pos); }}
                                     disabled={isClosing}
                                     className="inline-flex items-center gap-1 text-pf-danger border border-pf-danger/30 hover:bg-pf-danger/10 text-xs px-2 py-1 rounded disabled:opacity-50 transition-colors"
@@ -1647,6 +1876,199 @@ export function Component() {
                               </div>
                             </td>
                           </tr>
+                          {isAutoCloseExpanded && (
+                            <tr key={`${pos.id}-autoclose`}>
+                              <td colSpan={8}>
+                                <div className="px-4 py-4 bg-pf-surface border-t border-pf-border-subtle animate-fade-in">
+                                  {/* Panel header */}
+                                  <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                      <SlidersHorizontal className="size-4 text-pf-cyan-400" />
+                                      <span className="text-sm font-semibold text-pf-text">
+                                        Auto-Close Rules
+                                      </span>
+                                      <span className="text-xs text-pf-text-muted truncate max-w-[200px]" title={pos.marketTitle}>
+                                        — {pos.marketTitle}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      aria-label="Close auto-close panel"
+                                      onClick={e => { e.stopPropagation(); setExpandedAutoClose(null); }}
+                                      className="p-1 rounded text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors"
+                                    >
+                                      <X className="size-4" />
+                                    </button>
+                                  </div>
+
+                                  {acLoading[pos.id] ? (
+                                    <div className="flex items-center gap-2 py-4">
+                                      <Loader2 className="size-4 animate-spin text-pf-text-muted" />
+                                      <span className="text-sm text-pf-text-muted">Loading rule…</span>
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-4">
+                                      {/* Stop Loss */}
+                                      <div className="space-y-2">
+                                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                                          <input
+                                            type="checkbox"
+                                            checked={acSlEnabled[pos.id] ?? false}
+                                            onChange={e => {
+                                              e.stopPropagation();
+                                              setAcSlEnabled(prev => ({ ...prev, [pos.id]: e.target.checked }));
+                                            }}
+                                            onClick={e => e.stopPropagation()}
+                                            className="rounded border-pf-border accent-pf-cyan-400"
+                                          />
+                                          <span className="text-sm font-medium text-pf-text">Stop Loss</span>
+                                        </label>
+                                        {(acSlEnabled[pos.id] ?? false) && (
+                                          <div className="ml-6 space-y-1">
+                                            <p className="text-xs text-pf-text-secondary">Sell if YES price drops below:</p>
+                                            <div className="flex items-center gap-2">
+                                              <input
+                                                type="number"
+                                                min="0.01"
+                                                max="0.99"
+                                                step="0.01"
+                                                placeholder="0.00"
+                                                value={acSlPrice[pos.id] ?? ''}
+                                                onChange={e => { e.stopPropagation(); setAcSlPrice(prev => ({ ...prev, [pos.id]: e.target.value })); }}
+                                                onClick={e => e.stopPropagation()}
+                                                className="w-28 bg-pf-overlay border border-pf-border rounded-pf px-3 py-1.5 text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500"
+                                              />
+                                              <span className="text-xs text-pf-text-muted">(0.01 – 0.99)</span>
+                                            </div>
+                                            {currentPrice > 0 && (
+                                              <p className="text-xs text-pf-text-muted">Current price: <span className="font-mono text-pf-cyan-400">{currentPrice.toFixed(3)}</span></p>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* Take Profit */}
+                                      <div className="space-y-2">
+                                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                                          <input
+                                            type="checkbox"
+                                            checked={acTpEnabled[pos.id] ?? false}
+                                            onChange={e => {
+                                              e.stopPropagation();
+                                              setAcTpEnabled(prev => ({ ...prev, [pos.id]: e.target.checked }));
+                                            }}
+                                            onClick={e => e.stopPropagation()}
+                                            className="rounded border-pf-border accent-pf-cyan-400"
+                                          />
+                                          <span className="text-sm font-medium text-pf-text">Take Profit</span>
+                                        </label>
+                                        {(acTpEnabled[pos.id] ?? false) && (
+                                          <div className="ml-6 space-y-1">
+                                            <p className="text-xs text-pf-text-secondary">Sell if YES price rises above:</p>
+                                            <div className="flex items-center gap-2">
+                                              <input
+                                                type="number"
+                                                min="0.01"
+                                                max="0.99"
+                                                step="0.01"
+                                                placeholder="0.00"
+                                                value={acTpPrice[pos.id] ?? ''}
+                                                onChange={e => { e.stopPropagation(); setAcTpPrice(prev => ({ ...prev, [pos.id]: e.target.value })); }}
+                                                onClick={e => e.stopPropagation()}
+                                                className="w-28 bg-pf-overlay border border-pf-border rounded-pf px-3 py-1.5 text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500"
+                                              />
+                                              <span className="text-xs text-pf-text-muted">(0.01 – 0.99)</span>
+                                            </div>
+                                            {currentPrice > 0 && (
+                                              <p className="text-xs text-pf-text-muted">Current price: <span className="font-mono text-pf-cyan-400">{currentPrice.toFixed(3)}</span></p>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* Quantity */}
+                                      <div className="space-y-2">
+                                        <p className="text-sm font-medium text-pf-text">Quantity</p>
+                                        <div className="flex items-center gap-3 ml-0">
+                                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                                            <input
+                                              type="radio"
+                                              name={`ac-qty-${pos.id}`}
+                                              checked={acQuantityAll[pos.id] ?? true}
+                                              onChange={e => { e.stopPropagation(); setAcQuantityAll(prev => ({ ...prev, [pos.id]: true })); }}
+                                              onClick={e => e.stopPropagation()}
+                                              className="accent-pf-cyan-400"
+                                            />
+                                            <span className="text-sm text-pf-text">All shares</span>
+                                          </label>
+                                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                                            <input
+                                              type="radio"
+                                              name={`ac-qty-${pos.id}`}
+                                              checked={!(acQuantityAll[pos.id] ?? true)}
+                                              onChange={e => { e.stopPropagation(); setAcQuantityAll(prev => ({ ...prev, [pos.id]: false })); }}
+                                              onClick={e => e.stopPropagation()}
+                                              className="accent-pf-cyan-400"
+                                            />
+                                            <span className="text-sm text-pf-text">Partial</span>
+                                          </label>
+                                          {!(acQuantityAll[pos.id] ?? true) && (
+                                            <input
+                                              type="number"
+                                              min="0.01"
+                                              step="0.01"
+                                              placeholder="Amount"
+                                              value={acQuantity[pos.id] ?? ''}
+                                              onChange={e => { e.stopPropagation(); setAcQuantity(prev => ({ ...prev, [pos.id]: e.target.value })); }}
+                                              onClick={e => e.stopPropagation()}
+                                              className="w-28 bg-pf-overlay border border-pf-border rounded-pf px-3 py-1.5 text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500"
+                                            />
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {/* Error */}
+                                      {acErrors[pos.id] && (
+                                        <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-danger/10 border border-pf-danger/25">
+                                          <AlertTriangle className="size-3.5 text-pf-danger shrink-0" />
+                                          <p className="text-xs text-pf-danger">{acErrors[pos.id]}</p>
+                                        </div>
+                                      )}
+
+                                      {/* Actions */}
+                                      <div className="flex items-center gap-2 pt-1" onClick={e => e.stopPropagation()}>
+                                        <button
+                                          type="button"
+                                          disabled={acSubmitting[pos.id]}
+                                          onClick={e => { e.stopPropagation(); saveAutoCloseRule(pos); }}
+                                          className="flex items-center gap-1.5 px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-white text-xs font-semibold hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                          {acSubmitting[pos.id] && <Loader2 className="size-3 animate-spin" />}
+                                          Save Rules
+                                        </button>
+                                        {(autoCloseRules[pos.id] != null) && (
+                                          <button
+                                            type="button"
+                                            disabled={acSubmitting[pos.id]}
+                                            onClick={e => { e.stopPropagation(); deleteAutoCloseRule(pos.id); }}
+                                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-pf border border-pf-danger/30 text-pf-danger text-xs font-medium hover:bg-pf-danger/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                          >
+                                            Remove Rules
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      {/* Disclaimer */}
+                                      <div className="flex items-start gap-2 pt-1">
+                                        <AlertTriangle className="size-3.5 text-pf-text-muted shrink-0 mt-0.5" />
+                                        <p className="text-xs text-pf-text-muted">Rules execute as market orders on Polymarket</p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
                           {isExpanded && (
                             <tr key={`${pos.id}-detail`}>
                               <td colSpan={8}>
@@ -2254,6 +2676,155 @@ export function Component() {
                   <div className="w-5 h-3 rounded-sm bg-pf-cyan-500/70 border border-pf-border-subtle" />
                   <span className="text-[10px] text-pf-text-muted">High</span>
                 </div>
+              </div>
+            );
+          })()}
+
+          {/* ─── Rebalancing Suggestions ─── */}
+          {(() => {
+            const visibleSuggestions = suggestions.filter(s => !dismissedIds.includes(s.id));
+
+            function SuggestionTypeIcon({ type }: { type: RebalanceSuggestion['type'] }) {
+              if (type === 'reduce') return <TrendingDown className="size-3.5 shrink-0" />;
+              if (type === 'diversify') return <Shuffle className="size-3.5 shrink-0" />;
+              if (type === 'close') return <X className="size-3.5 shrink-0" />;
+              return <Shield className="size-3.5 shrink-0" />;
+            }
+
+            function PriorityBadge({ priority }: { priority: RebalanceSuggestion['priority'] }) {
+              const cls =
+                priority === 'high' ? 'bg-pf-danger/10 text-pf-danger' :
+                priority === 'medium' ? 'bg-pf-warning/10 text-pf-warning' :
+                'bg-pf-success/10 text-pf-success';
+              const label = priority === 'high' ? 'High' : priority === 'medium' ? 'Medium' : 'Low';
+              return (
+                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide ${cls}`}>
+                  {label}
+                </span>
+              );
+            }
+
+            function CurrentTargetBar({ currentPct, targetPct }: { currentPct: number; targetPct: number }) {
+              const barColor =
+                currentPct > targetPct * 1.5 ? 'bg-pf-danger' :
+                currentPct > targetPct ? 'bg-pf-warning' :
+                'bg-pf-success';
+              const clampedCurrent = Math.min(currentPct, 100);
+              const targetPos = Math.min(targetPct, 100);
+              return (
+                <div className="relative h-2 rounded-full bg-pf-surface overflow-visible mt-1">
+                  {/* filled bar */}
+                  <div
+                    className={`absolute inset-y-0 left-0 rounded-full ${barColor} transition-all`}
+                    style={{ width: `${clampedCurrent}%` }}
+                  />
+                  {/* target marker */}
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-pf-text rounded-full"
+                    style={{ left: `${targetPos}%` }}
+                    title={`Target: ${targetPct}%`}
+                  />
+                </div>
+              );
+            }
+
+            if (loadingSuggestions) {
+              return (
+                <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Lightbulb className="size-4 text-pf-warning" />
+                    <span className="text-sm font-semibold text-pf-text">Rebalancing Suggestions</span>
+                  </div>
+                  <div className="space-y-3">
+                    {[0, 1].map(i => (
+                      <div key={i} className="h-20 bg-pf-overlay rounded-pf animate-pulse" />
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                {/* Header */}
+                <div className="flex items-center gap-2 mb-4">
+                  <Lightbulb className="size-4 text-pf-warning" />
+                  <span className="text-sm font-semibold text-pf-text">Rebalancing Suggestions</span>
+                  {visibleSuggestions.length > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-pf-warning/15 text-pf-warning text-[10px] font-semibold">
+                      {visibleSuggestions.length}
+                    </span>
+                  )}
+                </div>
+
+                {visibleSuggestions.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <CheckCircle2 className="size-8 text-pf-success mb-2" />
+                    <p className="text-sm font-medium text-pf-text">Your portfolio looks well balanced</p>
+                    <p className="text-xs text-pf-text-muted mt-1">No rebalancing actions are needed right now.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {visibleSuggestions.map(s => (
+                      <div
+                        key={s.id}
+                        className="rounded-pf border border-pf-border bg-pf-surface p-3"
+                      >
+                        {/* Card header row */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <PriorityBadge priority={s.priority} />
+                            <span className={`
+                              ${s.priority === 'high' ? 'text-pf-danger' :
+                                s.priority === 'medium' ? 'text-pf-warning' :
+                                'text-pf-text-secondary'}
+                            `}>
+                              <SuggestionTypeIcon type={s.type} />
+                            </span>
+                            <p className="text-sm font-medium text-pf-text truncate">{s.title}</p>
+                          </div>
+                          <button
+                            type="button"
+                            aria-label="Dismiss suggestion"
+                            onClick={() => dismissSuggestion(s.id)}
+                            className="shrink-0 p-1 rounded text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors"
+                          >
+                            <X className="size-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Description */}
+                        <p className="text-xs text-pf-text-muted mt-1.5 leading-relaxed">{s.description}</p>
+
+                        {/* Current → Target bar */}
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-[11px] text-pf-text-secondary mb-1">
+                            <span>Current: <span className="font-mono font-semibold text-pf-text">{s.currentPct}%</span></span>
+                            <span className="text-pf-text-muted">→</span>
+                            <span>Target: <span className="font-mono font-semibold text-pf-text">{s.targetPct}%</span></span>
+                          </div>
+                          <CurrentTargetBar currentPct={s.currentPct} targetPct={s.targetPct} />
+                        </div>
+
+                        {/* Estimated impact */}
+                        <p className="text-[11px] text-pf-text-muted mt-2">
+                          <span className="text-pf-text-secondary font-medium">Impact: </span>
+                          {s.estimatedImpact}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Refresh link */}
+                <button
+                  type="button"
+                  onClick={loadSuggestions}
+                  className="flex items-center gap-1 mt-4 text-xs text-pf-text-muted hover:text-pf-text transition-colors"
+                >
+                  <RefreshCw className="size-3" />
+                  Refresh suggestions
+                </button>
               </div>
             );
           })()}

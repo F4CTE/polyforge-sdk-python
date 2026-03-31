@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, Fragment } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import {
@@ -9,6 +9,7 @@ import {
   Tag,
   TrendingUp,
   TrendingDown,
+  Zap,
 } from 'lucide-react';
 import { wsManager } from '@/lib/websocket';
 
@@ -29,6 +30,26 @@ interface WatchedMarket {
 
 type SortBy = 'name' | 'yesPrice' | 'change' | 'volume' | 'addedAt';
 type SortDir = 'asc' | 'desc';
+
+interface QuickOrderState {
+  marketId: string | null;
+  outcome: 'YES' | 'NO';
+  side: 'BUY' | 'SELL';
+  amount: string;
+  price: string;
+  orderType: 'market' | 'limit';
+  submitting: boolean;
+}
+
+const DEFAULT_QUICK_ORDER: QuickOrderState = {
+  marketId: null,
+  outcome: 'YES',
+  side: 'BUY',
+  amount: '',
+  price: '',
+  orderType: 'market',
+  submitting: false,
+};
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
@@ -105,6 +126,7 @@ export function Component() {
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [groupByCategory, setGroupByCategory] = useState(false);
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
+  const [quickOrder, setQuickOrder] = useState<QuickOrderState>(DEFAULT_QUICK_ORDER);
 
   const fetchWatchlist = () => {
     setLoading(true);
@@ -143,6 +165,61 @@ export function Component() {
         next.delete(marketId);
         return next;
       });
+    }
+  };
+
+  /* ── Quick Order handlers ──────────────────────────────────────────── */
+
+  const toggleQuickOrder = (marketId: string) => {
+    setQuickOrder(prev =>
+      prev.marketId === marketId
+        ? DEFAULT_QUICK_ORDER
+        : { ...DEFAULT_QUICK_ORDER, marketId },
+    );
+  };
+
+  const placeOrder = async () => {
+    if (!quickOrder.marketId) return;
+
+    const amt = parseFloat(quickOrder.amount);
+    if (isNaN(amt) || amt <= 0) return;
+
+    if (quickOrder.orderType === 'limit') {
+      const lp = parseFloat(quickOrder.price);
+      if (isNaN(lp) || lp < 0.01 || lp > 0.99) return;
+    }
+
+    setQuickOrder(prev => ({ ...prev, submitting: true }));
+
+    try {
+      const body: Record<string, unknown> = {
+        marketId: quickOrder.marketId,
+        outcome: quickOrder.outcome,
+        side: quickOrder.side,
+        amount: quickOrder.amount,
+        orderType: quickOrder.orderType,
+      };
+      if (quickOrder.orderType === 'limit') {
+        body.price = quickOrder.price;
+      }
+
+      const res = await fetch('/api/v1/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { message?: string }).message ?? 'Order failed');
+      }
+
+      toast.success('Order placed!');
+      setQuickOrder(DEFAULT_QUICK_ORDER);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Order failed — please try again');
+      setQuickOrder(prev => ({ ...prev, submitting: false }));
     }
   };
 
@@ -292,123 +369,182 @@ export function Component() {
         ? 'text-pf-danger'
         : 'text-pf-text-muted';
 
-    return (
-      <tr
-        key={m.id}
-        className="group hover:bg-pf-elevated/40 transition-colors border-b border-pf-border-subtle last:border-0"
-      >
-        {/* Market title */}
-        <td className="px-4 py-3 max-w-[260px]">
-          <Link
-            to={`/markets/${m.id}`}
-            className="text-sm text-pf-text font-medium hover:text-pf-cyan-400 transition-colors line-clamp-2 leading-snug"
-          >
-            {m.title}
-          </Link>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            {m.category && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded border border-pf-border bg-pf-surface-elevated text-pf-text-muted">
-                {m.category}
-              </span>
-            )}
-            <span
-              className={`text-[10px] ${m.closed ? 'text-pf-danger' : 'text-pf-success'}`}
-            >
-              {m.closed ? 'Closed' : 'Live'}
-            </span>
-          </div>
-        </td>
+    const isExpanded = quickOrder.marketId === m.id;
 
-        {/* YES Price */}
-        <td className="px-4 py-3 text-right">
-          {priceInfo !== null ? (
-            <div className="flex flex-col items-end gap-0.5">
-              <span
-                className={`text-sm font-mono font-semibold transition-colors ${
-                  deltaUp
-                    ? 'text-pf-success'
-                    : deltaDown
-                    ? 'text-pf-danger'
-                    : 'text-pf-text'
-                }`}
-              >
-                {(priceInfo.price * 100).toFixed(0)}¢
-              </span>
-              {priceDelta !== null && Math.abs(priceDelta) >= 0.001 && (
-                <span
-                  className={`text-[10px] font-mono px-1 py-0.5 rounded ${
-                    deltaUp
-                      ? 'bg-pf-success/10 text-pf-success'
-                      : 'bg-pf-danger/10 text-pf-danger'
-                  }`}
-                >
-                  {deltaUp ? '▲' : '▼'}
-                  {Math.abs(priceDelta * 100).toFixed(1)}¢
+    // ── Est. shares calculation ───────────────────────────────────────
+    const currentYesPrice = priceInfo?.price ?? null;
+    const currentNoPrice = noPriceVal;
+    const currentPrice =
+      quickOrder.outcome === 'YES' ? currentYesPrice : currentNoPrice;
+
+    let estShares: string | null = null;
+    const amtNum = parseFloat(quickOrder.amount);
+    if (!isNaN(amtNum) && amtNum > 0 && isExpanded) {
+      if (quickOrder.orderType === 'market' && currentPrice && currentPrice > 0) {
+        estShares = (amtNum / currentPrice).toFixed(1);
+      } else if (quickOrder.orderType === 'limit') {
+        const lp = parseFloat(quickOrder.price);
+        if (!isNaN(lp) && lp > 0) {
+          estShares = (amtNum / lp).toFixed(1);
+        }
+      }
+    }
+
+    // ── Validation ────────────────────────────────────────────────────
+    const amtError =
+      isExpanded && quickOrder.amount !== '' && (isNaN(amtNum) || amtNum <= 0)
+        ? 'Amount must be greater than 0'
+        : null;
+
+    const lpNum = parseFloat(quickOrder.price);
+    const priceError =
+      isExpanded &&
+      quickOrder.orderType === 'limit' &&
+      quickOrder.price !== '' &&
+      (isNaN(lpNum) || lpNum < 0.01 || lpNum > 0.99)
+        ? 'Limit price must be between 0.01 and 0.99'
+        : null;
+
+    const canSubmit =
+      !quickOrder.submitting &&
+      amtNum > 0 &&
+      !amtError &&
+      !priceError &&
+      (quickOrder.orderType === 'market' ||
+        (quickOrder.price !== '' && !priceError));
+
+    return (
+      <Fragment key={m.id}>
+        <tr
+          className={`group hover:bg-pf-elevated/40 transition-colors border-b ${
+            isExpanded ? 'border-pf-border' : 'border-pf-border-subtle last:border-0'
+          }`}
+        >
+          {/* Market title */}
+          <td className="px-4 py-3 max-w-[260px]">
+            <Link
+              to={`/markets/${m.id}`}
+              className="text-sm text-pf-text font-medium hover:text-pf-cyan-400 transition-colors line-clamp-2 leading-snug"
+            >
+              {m.title}
+            </Link>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {m.category && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded border border-pf-border bg-pf-surface-elevated text-pf-text-muted">
+                  {m.category}
                 </span>
               )}
-              {priceInfo.live && (
-                <span className="text-[9px] text-pf-cyan-400">● LIVE</span>
-              )}
-            </div>
-          ) : (
-            <span className="text-sm text-pf-text-muted">—</span>
-          )}
-        </td>
-
-        {/* NO Price */}
-        <td className="px-4 py-3 text-right">
-          {noPriceVal !== null ? (
-            <span className="text-sm font-mono text-pf-danger">
-              {(noPriceVal * 100).toFixed(0)}¢
-            </span>
-          ) : (
-            <span className="text-sm text-pf-text-muted">—</span>
-          )}
-        </td>
-
-        {/* 24h Change */}
-        <td className="px-4 py-3 text-right">
-          {change24h !== undefined && change24h !== null ? (
-            <span className={`text-sm font-mono font-medium flex items-center justify-end gap-1 ${changeColor}`}>
-              {change24h > 0 ? (
-                <TrendingUp className="size-3.5" />
-              ) : change24h < 0 ? (
-                <TrendingDown className="size-3.5" />
-              ) : null}
-              {change24h > 0 ? '+' : ''}
-              {(change24h * 100).toFixed(1)}%
-            </span>
-          ) : (
-            <span className="text-sm text-pf-text-muted">—</span>
-          )}
-        </td>
-
-        {/* 24h Volume */}
-        <td className="px-4 py-3 text-right">
-          <span className="text-sm font-mono text-pf-text">
-            {formatVolume(m.volume24h)}
-          </span>
-        </td>
-
-        {/* Added */}
-        <td className="px-4 py-3 text-right">
-          <span className="text-xs text-pf-text-muted">
-            {relativeDate(m.addedAt)}
-          </span>
-        </td>
-
-        {/* Remove */}
-        <td className="px-4 py-3 text-right">
-          <div className="flex items-center justify-end gap-2">
-            {!m.closed && (
-              <Link
-                to={`/markets/${m.id}`}
-                className="text-[11px] px-2 py-1 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors font-medium"
-                title="Trade this market"
+              <span
+                className={`text-[10px] ${m.closed ? 'text-pf-danger' : 'text-pf-success'}`}
               >
-                Trade
-              </Link>
+                {m.closed ? 'Closed' : 'Live'}
+              </span>
+            </div>
+          </td>
+
+          {/* YES Price */}
+          <td className="px-4 py-3 text-right">
+            {priceInfo !== null ? (
+              <div className="flex flex-col items-end gap-0.5">
+                <span
+                  className={`text-sm font-mono font-semibold transition-colors ${
+                    deltaUp
+                      ? 'text-pf-success'
+                      : deltaDown
+                      ? 'text-pf-danger'
+                      : 'text-pf-text'
+                  }`}
+                >
+                  {(priceInfo.price * 100).toFixed(0)}¢
+                </span>
+                {priceDelta !== null && Math.abs(priceDelta) >= 0.001 && (
+                  <span
+                    className={`text-[10px] font-mono px-1 py-0.5 rounded ${
+                      deltaUp
+                        ? 'bg-pf-success/10 text-pf-success'
+                        : 'bg-pf-danger/10 text-pf-danger'
+                    }`}
+                  >
+                    {deltaUp ? '▲' : '▼'}
+                    {Math.abs(priceDelta * 100).toFixed(1)}¢
+                  </span>
+                )}
+                {priceInfo.live && (
+                  <span className="text-[9px] text-pf-cyan-400">● LIVE</span>
+                )}
+              </div>
+            ) : (
+              <span className="text-sm text-pf-text-muted">—</span>
             )}
+          </td>
+
+          {/* NO Price */}
+          <td className="px-4 py-3 text-right">
+            {noPriceVal !== null ? (
+              <span className="text-sm font-mono text-pf-danger">
+                {(noPriceVal * 100).toFixed(0)}¢
+              </span>
+            ) : (
+              <span className="text-sm text-pf-text-muted">—</span>
+            )}
+          </td>
+
+          {/* 24h Change */}
+          <td className="px-4 py-3 text-right">
+            {change24h !== undefined && change24h !== null ? (
+              <span className={`text-sm font-mono font-medium flex items-center justify-end gap-1 ${changeColor}`}>
+                {change24h > 0 ? (
+                  <TrendingUp className="size-3.5" />
+                ) : change24h < 0 ? (
+                  <TrendingDown className="size-3.5" />
+                ) : null}
+                {change24h > 0 ? '+' : ''}
+                {(change24h * 100).toFixed(1)}%
+              </span>
+            ) : (
+              <span className="text-sm text-pf-text-muted">—</span>
+            )}
+          </td>
+
+          {/* 24h Volume */}
+          <td className="px-4 py-3 text-right">
+            <span className="text-sm font-mono text-pf-text">
+              {formatVolume(m.volume24h)}
+            </span>
+          </td>
+
+          {/* Added */}
+          <td className="px-4 py-3 text-right">
+            <span className="text-xs text-pf-text-muted">
+              {relativeDate(m.addedAt)}
+            </span>
+          </td>
+
+          {/* Quick-Trade trigger */}
+          <td className="px-4 py-3 text-right">
+            {!m.closed ? (
+              <button
+                type="button"
+                onClick={() => toggleQuickOrder(m.id)}
+                className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-pf-sm border font-medium transition-colors ${
+                  isExpanded
+                    ? 'bg-pf-cyan-500/10 text-pf-cyan-400 border-pf-cyan-500/40'
+                    : 'bg-transparent text-pf-text-muted border-pf-border hover:text-pf-cyan-400 hover:border-pf-cyan-500/40'
+                }`}
+                title="Quick trade this market"
+                aria-expanded={isExpanded}
+                aria-label={`Quick trade ${m.title}`}
+              >
+                <Zap className="size-3" />
+                Trade
+              </button>
+            ) : (
+              <span className="text-xs text-pf-text-muted">—</span>
+            )}
+          </td>
+
+          {/* Remove */}
+          <td className="px-4 py-3 text-right">
             <button
               type="button"
               onClick={() => removeFromWatchlist(m.id)}
@@ -419,9 +555,208 @@ export function Component() {
             >
               <X className="size-3.5" />
             </button>
-          </div>
-        </td>
-      </tr>
+          </td>
+        </tr>
+
+        {/* ── Inline Quick Order Panel ──────────────────────────────── */}
+        {isExpanded && (
+          <tr className="border-b border-pf-border-subtle last:border-0">
+            <td colSpan={8} className="px-0 py-0">
+              <div className="mx-4 my-3 rounded-pf-lg border border-pf-border bg-pf-surface p-4">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-pf-text uppercase tracking-wider flex items-center gap-1.5">
+                    <Zap className="size-3.5 text-pf-cyan-400" />
+                    Quick Order
+                    <span className="font-normal text-pf-text-muted normal-case tracking-normal truncate max-w-[320px]">
+                      — {m.title}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQuickOrder(DEFAULT_QUICK_ORDER)}
+                    className="p-1 rounded-pf text-pf-text-muted hover:text-pf-text transition-colors"
+                    aria-label="Close quick order panel"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {/* Left column: controls */}
+                  <div className="space-y-3">
+                    {/* Outcome + Side toggles */}
+                    <div className="flex items-center gap-4">
+                      {/* Outcome */}
+                      <div className="flex items-center gap-1">
+                        {(['YES', 'NO'] as const).map(o => (
+                          <button
+                            key={o}
+                            type="button"
+                            onClick={() =>
+                              setQuickOrder(prev => ({ ...prev, outcome: o }))
+                            }
+                            className={`px-3 py-1 rounded-pf-sm text-xs font-semibold transition-colors ${
+                              quickOrder.outcome === o
+                                ? o === 'YES'
+                                  ? 'bg-pf-success/20 text-pf-success border border-pf-success/40'
+                                  : 'bg-pf-danger/20 text-pf-danger border border-pf-danger/40'
+                                : 'bg-pf-surface-elevated text-pf-text-muted border border-pf-border hover:border-pf-border-hover'
+                            }`}
+                          >
+                            {o}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Side */}
+                      <div className="flex items-center gap-1">
+                        {(['BUY', 'SELL'] as const).map(s => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() =>
+                              setQuickOrder(prev => ({ ...prev, side: s }))
+                            }
+                            className={`px-3 py-1 rounded-pf-sm text-xs font-semibold transition-colors ${
+                              quickOrder.side === s
+                                ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
+                                : 'bg-pf-surface-elevated text-pf-text-muted border border-pf-border hover:border-pf-border-hover'
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Order type */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-pf-text-secondary">Order type:</span>
+                      {(['market', 'limit'] as const).map(t => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() =>
+                            setQuickOrder(prev => ({
+                              ...prev,
+                              orderType: t,
+                              price: '',
+                            }))
+                          }
+                          className={`px-2.5 py-0.5 rounded-pf-sm text-xs font-medium transition-colors capitalize ${
+                            quickOrder.orderType === t
+                              ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border border-pf-cyan-500/30'
+                              : 'bg-pf-surface-elevated text-pf-text-muted border border-pf-border hover:border-pf-border-hover'
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Amount input */}
+                    <div>
+                      <label className="text-xs text-pf-text-secondary block mb-1">
+                        Amount (USDC)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="0.00"
+                        value={quickOrder.amount}
+                        onChange={e =>
+                          setQuickOrder(prev => ({ ...prev, amount: e.target.value }))
+                        }
+                        className="w-full px-3 py-1.5 rounded-pf bg-pf-surface-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/60 focus:ring-1 focus:ring-pf-cyan-500/30 transition-colors"
+                      />
+                      {amtError && (
+                        <p className="mt-1 text-[11px] text-pf-danger">{amtError}</p>
+                      )}
+                    </div>
+
+                    {/* Limit price input */}
+                    {quickOrder.orderType === 'limit' && (
+                      <div>
+                        <label className="text-xs text-pf-text-secondary block mb-1">
+                          Limit price (0.01 – 0.99)
+                        </label>
+                        <input
+                          type="number"
+                          min="0.01"
+                          max="0.99"
+                          step="0.01"
+                          placeholder="0.50"
+                          value={quickOrder.price}
+                          onChange={e =>
+                            setQuickOrder(prev => ({ ...prev, price: e.target.value }))
+                          }
+                          className="w-full px-3 py-1.5 rounded-pf bg-pf-surface-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/60 focus:ring-1 focus:ring-pf-cyan-500/30 transition-colors"
+                        />
+                        {priceError && (
+                          <p className="mt-1 text-[11px] text-pf-danger">{priceError}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right column: summary + submit */}
+                  <div className="flex flex-col justify-between gap-3">
+                    {/* Market prices + est. shares */}
+                    <div className="rounded-pf bg-pf-surface-elevated border border-pf-border-subtle p-3 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-pf-text-muted">Current YES</span>
+                        <span className="font-mono text-pf-text">
+                          {currentYesPrice !== null
+                            ? `${(currentYesPrice * 100).toFixed(0)}¢`
+                            : '—'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-pf-text-muted">Current NO</span>
+                        <span className="font-mono text-pf-text">
+                          {currentNoPrice !== null
+                            ? `${(currentNoPrice * 100).toFixed(0)}¢`
+                            : '—'}
+                        </span>
+                      </div>
+                      {estShares !== null && (
+                        <div className="flex items-center justify-between text-xs pt-1 border-t border-pf-border-subtle">
+                          <span className="text-pf-text-muted">Est. shares</span>
+                          <span className="font-mono text-pf-text-muted">
+                            ~{estShares} shares
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Place Order button */}
+                    <button
+                      type="button"
+                      onClick={placeOrder}
+                      disabled={!canSubmit}
+                      className="w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-pf bg-pf-cyan-500 text-pf-bg font-semibold text-sm hover:bg-pf-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {quickOrder.submitting ? (
+                        <span className="flex items-center gap-1.5">
+                          <span className="size-3.5 rounded-full border-2 border-pf-bg/30 border-t-pf-bg animate-spin" />
+                          Placing...
+                        </span>
+                      ) : (
+                        <>
+                          <Zap className="size-3.5" />
+                          Place Order
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        )}
+      </Fragment>
     );
   };
 
@@ -477,7 +812,16 @@ export function Component() {
         />
         <th
           scope="col"
-          className="px-4 py-3 font-medium text-pf-text-secondary w-24"
+          className="px-4 py-3 font-medium text-pf-text-secondary text-right"
+        >
+          <span className="inline-flex items-center gap-1">
+            <Zap className="size-3 text-pf-text-muted" />
+            Trade
+          </span>
+        </th>
+        <th
+          scope="col"
+          className="px-4 py-3 font-medium text-pf-text-secondary w-10"
         />
       </tr>
     </thead>

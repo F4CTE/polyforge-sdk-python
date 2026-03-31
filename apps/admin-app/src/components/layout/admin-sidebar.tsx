@@ -13,6 +13,7 @@ import {
   TicketCheck,
   Mail,
   ShieldCheck,
+  ShieldAlert,
   PanelLeftClose,
   PanelLeftOpen,
   TrendingUp,
@@ -65,6 +66,7 @@ const navSections: NavSection[] = [
     items: [
       { label: 'Cache', path: '/cache', icon: <Database size={iconSize} aria-hidden="true" /> },
       { label: 'Reports', path: '/reports', icon: <Flag size={iconSize} aria-hidden="true" /> },
+      { label: 'Abuse Detection', path: '/abuse', icon: <ShieldAlert size={iconSize} aria-hidden="true" /> },
       { label: 'Logs', path: '/logs', icon: <ScrollText size={iconSize} aria-hidden="true" /> },
       { label: 'Health', path: '/health', icon: <Activity size={iconSize} aria-hidden="true" /> },
       { label: 'Sentiment', path: '/sentiment', icon: <TrendingUp size={iconSize} aria-hidden="true" /> },
