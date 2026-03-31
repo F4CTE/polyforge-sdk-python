@@ -28,6 +28,7 @@ import {
   BellRing,
   Rss,
   Gift,
+  Users,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -56,6 +57,7 @@ const navSections: NavSection[] = [
       { label: 'Smart Orders', icon: Layers, route: '/orders/smart' },
       { label: 'Backtest', icon: FlaskConical, route: '/backtest' },
       { label: 'Copy Trading', icon: UserPlus, route: '/copy' },
+      { label: 'Discover', icon: Users, route: '/copy/discover' },
       { label: 'Arbitrage', icon: TrendingDown, route: '/arbitrage' },
       { label: 'Marketplace', icon: Store, route: '/marketplace' },
     ],

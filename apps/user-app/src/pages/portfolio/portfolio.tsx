@@ -7,7 +7,7 @@ import {
   Wallet, BarChart3,
   RefreshCw, Loader2, AlertTriangle, Fuel, PieChart, ShieldAlert,
   Shield, TrendingDown, TrendingUp, Share2, Copy, Check, Download,
-  X, ChevronDown, ChevronUp, Clock,
+  X, ChevronDown, ChevronUp, Clock, CalendarDays,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
@@ -66,6 +66,11 @@ interface DailyPnlResponse {
   realizedPnl: string;
   unrealizedPnl: string;
   totalPnl: string;
+}
+
+interface DailyHeatmapEntry {
+  date: string; // "2025-01-15"
+  pnl: number;
 }
 
 interface UserRiskSettings {
@@ -174,6 +179,174 @@ function TableSkeleton() {
   );
 }
 
+/* ─── Heatmap ────────────────────────────────────────────────────────── */
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function dayColor(pnl: number): string {
+  if (pnl === 0) return 'bg-pf-overlay';
+  if (pnl > 0) {
+    if (pnl > 100) return 'bg-pf-success';
+    if (pnl > 25) return 'bg-pf-success/60';
+    return 'bg-pf-success/25';
+  } else {
+    if (pnl < -100) return 'bg-pf-danger';
+    if (pnl < -25) return 'bg-pf-danger/60';
+    return 'bg-pf-danger/25';
+  }
+}
+
+function formatDateLabel(dateStr: string, pnl: number): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  const month = MONTH_NAMES[d.getMonth()];
+  const day = d.getDate();
+  const sign = pnl > 0 ? '+' : '';
+  return `${month} ${day}: ${sign}$${Math.abs(pnl).toFixed(2)}`;
+}
+
+function HeatmapGrid({ data }: { data: DailyHeatmapEntry[] }) {
+  const pnlMap = new Map<string, number>(data.map(d => [d.date, d.pnl]));
+
+  const today = new Date();
+  // Start from the 1st of the month 11 months ago
+  const start = new Date(today.getFullYear(), today.getMonth() - 11, 1);
+
+  // Build month buckets: each bucket has weeks, each week has 7 day cells (null = padding)
+  interface DayCell { date: string; pnl: number } | null;
+  type WeekCol = (DayCell | null)[];
+
+  const months: { label: string; weeks: WeekCol[] }[] = [];
+
+  const cur = new Date(start);
+  while (cur <= today) {
+    const monthIdx = cur.getMonth();
+    const yearIdx = cur.getFullYear();
+    const monthLabel = MONTH_NAMES[monthIdx];
+
+    // Collect all days for this month up to today
+    const firstDay = new Date(yearIdx, monthIdx, 1);
+    const lastDay = new Date(yearIdx, monthIdx + 1, 0); // last day of month
+    const effectiveLastDay = lastDay > today ? today : lastDay;
+
+    // Day of week offset (Mon=0 ... Sun=6)
+    let startDow = firstDay.getDay(); // Sun=0..Sat=6
+    startDow = startDow === 0 ? 6 : startDow - 1; // convert to Mon=0..Sun=6
+
+    // Build flat list of cells for this month: leading nulls + day cells
+    const cells: (DayCell | null)[] = [];
+    for (let i = 0; i < startDow; i++) cells.push(null);
+
+    const d = new Date(firstDay);
+    while (d <= effectiveLastDay) {
+      const dateStr = d.toISOString().slice(0, 10);
+      cells.push({ date: dateStr, pnl: pnlMap.get(dateStr) ?? 0 });
+      d.setDate(d.getDate() + 1);
+    }
+
+    // Chunk into weeks of 7
+    const weeks: WeekCol[] = [];
+    for (let i = 0; i < cells.length; i += 7) {
+      weeks.push(cells.slice(i, i + 7));
+    }
+
+    months.push({ label: monthLabel, weeks });
+    // Advance to next month
+    cur.setMonth(cur.getMonth() + 1);
+    cur.setDate(1);
+  }
+
+  // Summary stats
+  let profitDays = 0;
+  let lossDays = 0;
+  let bestDay = -Infinity;
+  let worstDay = Infinity;
+  data.forEach(d => {
+    if (d.pnl > 0) { profitDays++; if (d.pnl > bestDay) bestDay = d.pnl; }
+    if (d.pnl < 0) { lossDays++; if (d.pnl < worstDay) worstDay = d.pnl; }
+  });
+  const hasBest = bestDay !== -Infinity;
+  const hasWorst = worstDay !== Infinity;
+
+  return (
+    <div>
+      {/* Heatmap scroll container */}
+      <div className="overflow-x-auto pb-2">
+        <div className="flex gap-3 min-w-max">
+          {/* Day-of-week labels column */}
+          <div className="flex flex-col justify-start pt-5 gap-0.5 shrink-0">
+            {DAY_LABELS.map(label => (
+              <div key={label} className="h-2.5 flex items-center">
+                <span className="text-[9px] text-pf-text-muted w-6 text-right pr-1 leading-none">{label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Month columns */}
+          {months.map((month, mi) => (
+            <div key={`${month.label}-${mi}`} className="flex flex-col gap-0.5">
+              {/* Month label */}
+              <div className="text-[10px] text-pf-text-muted mb-1 leading-none">{month.label}</div>
+              {/* Week columns rendered as rows of days */}
+              <div className="flex gap-0.5">
+                {month.weeks.map((week, wi) => (
+                  <div key={wi} className="flex flex-col gap-0.5">
+                    {week.map((cell, di) => (
+                      cell === null
+                        ? <div key={di} className="w-2.5 h-2.5" />
+                        : (
+                          <div
+                            key={di}
+                            className={`w-2.5 h-2.5 rounded-sm cursor-pointer ${dayColor(cell.pnl)}`}
+                            title={formatDateLabel(cell.date, cell.pnl)}
+                          />
+                        )
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Summary row */}
+      {data.length > 0 && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs">
+          <span className="text-pf-success">{profitDays} profit day{profitDays !== 1 ? 's' : ''}</span>
+          <span className="text-pf-text-muted">|</span>
+          <span className="text-pf-danger">{lossDays} loss day{lossDays !== 1 ? 's' : ''}</span>
+          {hasBest && (
+            <>
+              <span className="text-pf-text-muted">|</span>
+              <span className="text-pf-success">Best: +${bestDay.toFixed(2)}</span>
+            </>
+          )}
+          {hasWorst && (
+            <>
+              <span className="text-pf-text-muted">|</span>
+              <span className="text-pf-danger">Worst: -${Math.abs(worstDay).toFixed(2)}</span>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="flex items-center gap-1.5 mt-3">
+        <span className="text-[10px] text-pf-text-muted">Less</span>
+        <div className="w-2.5 h-2.5 rounded-sm bg-pf-overlay" title="No activity" />
+        <div className="w-2.5 h-2.5 rounded-sm bg-pf-danger" title="Loss > $100" />
+        <div className="w-2.5 h-2.5 rounded-sm bg-pf-danger/60" title="Loss $25–$100" />
+        <div className="w-2.5 h-2.5 rounded-sm bg-pf-danger/25" title="Loss < $25" />
+        <div className="w-2.5 h-2.5 rounded-sm bg-pf-success/25" title="Profit < $25" />
+        <div className="w-2.5 h-2.5 rounded-sm bg-pf-success/60" title="Profit $25–$100" />
+        <div className="w-2.5 h-2.5 rounded-sm bg-pf-success" title="Profit > $100" />
+        <span className="text-[10px] text-pf-text-muted">More</span>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Component ──────────────────────────────────────────────────────── */
 
 export function Component() {
@@ -221,6 +394,10 @@ export function Component() {
   // Advanced stats
   const [portfolioStats, setPortfolioStats] = useState<PortfolioStats | null>(null);
 
+  // Daily Returns heatmap
+  const [heatmapData, setHeatmapData] = useState<DailyHeatmapEntry[]>([]);
+  const [loadingHeatmap, setLoadingHeatmap] = useState(true);
+
   const loadPortfolio = useCallback(async () => {
     setLoadingPortfolio(true);
     try {
@@ -266,23 +443,29 @@ export function Component() {
     return () => { cancelled = true; };
   }, [loadPortfolio, loadChart, period]);
 
-  // Load daily P&L, risk settings, advanced stats, and edge score in parallel on mount
+  // Load daily P&L, risk settings, advanced stats, edge score, and heatmap in parallel on mount
   useEffect(() => {
     let cancelled = false;
     setLoadingDailyPnl(true);
+    setLoadingHeatmap(true);
     Promise.all([
       fetch('/api/v1/portfolio/pnl?period=today', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/users/me/risk-settings', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/portfolio/stats', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/scores/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
-    ]).then(([pnlData, riskData, statsData, scoreData]) => {
+      fetch('/api/v1/portfolio/daily-pnl?months=12', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+    ]).then(([pnlData, riskData, statsData, scoreData, heatmapRes]) => {
       if (cancelled) return;
       if (pnlData) setDailyPnl(pnlData);
       if (riskData) setUserRiskSettings(riskData);
       if (statsData) setPortfolioStats(statsData);
       if (scoreData?.score != null) setEdgeScore(typeof scoreData.score === 'number' ? scoreData.score : scoreData.score?.score ?? null);
+      if (heatmapRes?.data) setHeatmapData(heatmapRes.data);
     }).catch(() => {}).finally(() => {
-      if (!cancelled) setLoadingDailyPnl(false);
+      if (!cancelled) {
+        setLoadingDailyPnl(false);
+        setLoadingHeatmap(false);
+      }
     });
     return () => { cancelled = true; };
   }, []);
@@ -1289,6 +1472,21 @@ export function Component() {
               </div>
             );
           })()}
+
+          {/* ─── Daily Returns Heatmap ─── */}
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <CalendarDays className="size-4 text-pf-text-muted" />
+              <span className="text-sm font-medium text-pf-text">Daily Returns (12 months)</span>
+            </div>
+            {loadingHeatmap ? (
+              <div className="h-32 bg-pf-overlay rounded animate-pulse" />
+            ) : heatmapData.length === 0 ? (
+              <p className="text-sm text-pf-text-muted">No trading data yet</p>
+            ) : (
+              <HeatmapGrid data={heatmapData} />
+            )}
+          </div>
 
           {/* Category Exposure */}
           {(portfolio?.positions ?? []).length > 0 && (() => {

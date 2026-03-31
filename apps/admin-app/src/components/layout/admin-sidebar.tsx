@@ -42,6 +42,7 @@ const navSections: NavSection[] = [
     items: [
       { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={iconSize} aria-hidden="true" /> },
       { label: 'Revenue', path: '/revenue', icon: <DollarSign size={iconSize} aria-hidden="true" /> },
+      { label: 'Retention', path: '/retention', icon: <UserCheck size={iconSize} aria-hidden="true" /> },
     ],
   },
   {

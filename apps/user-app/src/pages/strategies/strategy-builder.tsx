@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ReactFlowProvider } from '@xyflow/react';
-import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle, Target } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle, Target, RotateCcw, RotateCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { StrategyCanvas } from '../../components/builder/strategy-canvas';
@@ -34,6 +34,11 @@ export function Component() {
   const loadStrategy = useBuilderStore((s) => s.loadStrategy);
   const save = useBuilderStore((s) => s.save);
   const reset = useBuilderStore((s) => s.reset);
+
+  const undo = useBuilderStore((s) => s.undo);
+  const redo = useBuilderStore((s) => s.redo);
+  const historyLength = useBuilderStore((s) => s._history.length);
+  const futureLength = useBuilderStore((s) => s._future.length);
 
   const marketId = useBuilderStore((s) => s.marketId);
   const setMarketId = useBuilderStore((s) => s.setMarketId);
@@ -152,6 +157,17 @@ export function Component() {
     }, 300);
     return () => clearTimeout(t);
   }, [marketSearch]);
+
+  // Undo/redo keyboard shortcuts
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      const mod = e.ctrlKey || e.metaKey;
+      if (mod && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+      if (mod && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [undo, redo]);
 
   useEffect(() => {
     if (!marketId) { setPinnedMarket(null); return; }
@@ -420,6 +436,34 @@ export function Component() {
           >
             <HelpCircle className="size-4" />
           </button>
+
+          <div className="w-px h-4 bg-pf-border-subtle" />
+
+          {/* Undo */}
+          <button
+            type="button"
+            onClick={undo}
+            disabled={historyLength === 0}
+            className="p-1.5 rounded text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            aria-label={`Undo (${historyLength} step${historyLength !== 1 ? 's' : ''})`}
+            title={`Undo (Ctrl+Z) — ${historyLength} step${historyLength !== 1 ? 's' : ''}`}
+          >
+            <RotateCcw className="size-3.5" />
+          </button>
+
+          {/* Redo */}
+          <button
+            type="button"
+            onClick={redo}
+            disabled={futureLength === 0}
+            className="p-1.5 rounded text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            aria-label={`Redo (${futureLength} step${futureLength !== 1 ? 's' : ''})`}
+            title={`Redo (Ctrl+Y) — ${futureLength} step${futureLength !== 1 ? 's' : ''}`}
+          >
+            <RotateCw className="size-3.5" />
+          </button>
+
+          <div className="w-px h-4 bg-pf-border-subtle" />
 
           <button
             type="button"

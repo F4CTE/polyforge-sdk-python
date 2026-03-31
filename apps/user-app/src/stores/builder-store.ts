@@ -60,6 +60,10 @@ interface BuilderState {
   nodes: Node<BlockNodeData>[];
   edges: Edge[];
 
+  // Undo/redo history (tracks nodes snapshots)
+  _history: Node<BlockNodeData>[][];
+  _future: Node<BlockNodeData>[][];
+
   // Strategy metadata
   strategyId: string | null;
   name: string;
@@ -91,6 +95,10 @@ interface BuilderState {
   addVariable: () => void;
   updateVariable: (nodeId: string, field: 'variableName' | 'expression', value: string) => void;
   removeVariable: (nodeId: string) => void;
+
+  // Undo/redo actions
+  undo: () => void;
+  redo: () => void;
 
   // Metadata actions
   setName: (name: string) => void;
@@ -130,6 +138,8 @@ function initialState() {
   return {
     nodes: [] as Node<BlockNodeData>[],
     edges: [] as Edge[],
+    _history: [] as Node<BlockNodeData>[][],
+    _future: [] as Node<BlockNodeData>[][],
     strategyId: null as string | null,
     name: '',
     description: '',
@@ -141,6 +151,14 @@ function initialState() {
     saving: false,
     loading: false,
     dirty: false,
+  };
+}
+
+/** Push current nodes snapshot onto history before a block mutation */
+function pushHistory(currentNodes: Node<BlockNodeData>[], state: { _history: Node<BlockNodeData>[][] }) {
+  return {
+    _history: [...state._history.slice(-49), currentNodes],
+    _future: [] as Node<BlockNodeData>[][],
   };
 }
 
@@ -179,8 +197,36 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
   // ─── Builder actions ─────────────────────────────────────────────────────
 
+  // ─── Undo / Redo ─────────────────────────────────────────────────────────
+
+  undo: () => {
+    const { nodes, _history, _future } = get();
+    if (_history.length === 0) return;
+    const prev = _history[_history.length - 1];
+    set({
+      nodes: prev,
+      _history: _history.slice(0, -1),
+      _future: [nodes, ..._future],
+      dirty: true,
+    });
+  },
+
+  redo: () => {
+    const { nodes, _history, _future } = get();
+    if (_future.length === 0) return;
+    const next = _future[0];
+    set({
+      nodes: next,
+      _history: [..._history, nodes],
+      _future: _future.slice(1),
+      dirty: true,
+    });
+  },
+
   addNode: (blockDef, section, position) => {
-    const { nodes } = get();
+    const state = get();
+    const { nodes } = state;
+    const historyUpdate = pushHistory(nodes, state);
 
     if (section === 'logic') {
       // Logic blocks use logicNode type
@@ -203,7 +249,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         },
       };
 
-      set({ nodes: [...nodes, newNode], dirty: true });
+      set({ ...historyUpdate, nodes: [...nodes, newNode], dirty: true });
       return;
     }
 
@@ -227,7 +273,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         },
       };
 
-      set({ nodes: [...nodes, newNode], dirty: true });
+      set({ ...historyUpdate, nodes: [...nodes, newNode], dirty: true });
       return;
     }
 
@@ -251,13 +297,15 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       },
     };
 
-    set({ nodes: [...nodes, newNode], dirty: true });
+    set({ ...historyUpdate, nodes: [...nodes, newNode], dirty: true });
   },
 
   removeNode: (nodeId) => {
+    const s = get();
     set({
-      nodes: get().nodes.filter((n) => n.id !== nodeId),
-      edges: get().edges.filter(
+      ...pushHistory(s.nodes, s),
+      nodes: s.nodes.filter((n) => n.id !== nodeId),
+      edges: s.edges.filter(
         (e) => e.source !== nodeId && e.target !== nodeId,
       ),
       dirty: true,
@@ -265,8 +313,10 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   },
 
   updateNodeConfig: (nodeId, key, value) => {
+    const s = get();
     set({
-      nodes: get().nodes.map((n) =>
+      ...pushHistory(s.nodes, s),
+      nodes: s.nodes.map((n) =>
         n.id === nodeId
           ? {
               ...n,
@@ -284,7 +334,9 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   // ─── Variable actions ──────────────────────────────────────────────────
 
   addVariable: () => {
-    const { nodes } = get();
+    const state = get();
+    const { nodes } = state;
+    const histUpdate = pushHistory(nodes, state);
     const variableNodes = nodes.filter((n) => n.type === 'variableNode');
 
     // Generate default name: var1, var2, ...
@@ -307,12 +359,14 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       } satisfies VariableNodeData,
     };
 
-    set({ nodes: [...nodes, newNode as Node<BlockNodeData>], dirty: true });
+    set({ ...histUpdate, nodes: [...nodes, newNode as Node<BlockNodeData>], dirty: true });
   },
 
   updateVariable: (nodeId, field, value) => {
+    const s = get();
     set({
-      nodes: get().nodes.map((n) =>
+      ...pushHistory(s.nodes, s),
+      nodes: s.nodes.map((n) =>
         n.id === nodeId
           ? {
               ...n,
@@ -325,9 +379,11 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   },
 
   removeVariable: (nodeId) => {
+    const s = get();
     set({
-      nodes: get().nodes.filter((n) => n.id !== nodeId),
-      edges: get().edges.filter(
+      ...pushHistory(s.nodes, s),
+      nodes: s.nodes.filter((n) => n.id !== nodeId),
+      edges: s.edges.filter(
         (e) => e.source !== nodeId && e.target !== nodeId,
       ),
       dirty: true,

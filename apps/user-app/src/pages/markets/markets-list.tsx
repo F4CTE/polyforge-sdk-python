@@ -15,6 +15,9 @@ import {
   Wallet,
   Cpu,
   LayoutGrid,
+  Flame,
+  Clock,
+  Calendar,
 } from 'lucide-react';
 import { OnboardingDashboardChecklist } from '../../components/onboarding/onboarding-dashboard-checklist';
 
@@ -53,6 +56,7 @@ interface MarketsResponse {
 
 type SortOption = 'volume' | 'newest' | 'closing_soon' | 'liquidity';
 type ViewMode = 'cards' | 'table';
+type EndDateFilter = 'any' | 'today' | 'week' | 'month';
 
 interface MarketSentiment {
   marketId: string;
@@ -298,6 +302,65 @@ const MarketCard = memo(function MarketCard({
   );
 });
 
+/* ─── Trending Card ──────────────────────────────────────────────────── */
+
+function TrendingCardSkeleton() {
+  return (
+    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
+      <div className="h-4 bg-pf-overlay rounded w-[90%]" />
+      <div className="h-3 bg-pf-overlay rounded w-[55%]" />
+      <div className="h-8 bg-pf-overlay rounded w-[40%]" />
+      <div className="flex items-center justify-between">
+        <div className="h-5 bg-pf-overlay rounded w-[30%]" />
+        <div className="h-5 bg-pf-overlay rounded w-[25%]" />
+      </div>
+    </div>
+  );
+}
+
+function TrendingCard({ market }: { market: Market }) {
+  const catColor = CATEGORY_COLORS[market.category];
+  const yesP = yesPercent(market);
+  const closing = daysUntil(market.endDate);
+  const closingSoon = isClosingSoon(market.endDate);
+
+  return (
+    <Link
+      to={`/markets/${market.slug || market.id}`}
+      className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 transition-all duration-200 hover:border-pf-cyan-500/30 hover:shadow-pf-sm hover:-translate-y-0.5"
+    >
+      {/* Question */}
+      <p className="text-sm font-medium text-pf-text leading-snug line-clamp-2 group-hover:text-pf-cyan-400 transition-colors">
+        {market.title}
+      </p>
+
+      {/* Category badge */}
+      <span
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}
+      >
+        {market.category}
+      </span>
+
+      {/* YES price */}
+      {yesP !== null && (
+        <div className="text-2xl font-bold text-pf-cyan-400">{yesP}¢</div>
+      )}
+
+      {/* Footer badges */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-pf-warning/10 text-pf-warning">
+          <TrendingUp className="size-3" aria-hidden="true" />
+          {formatVolume(market.volume24h)} vol
+        </span>
+        <span className={`inline-flex items-center gap-1 text-xs font-mono ${closingSoon ? 'text-pf-danger' : 'text-pf-text-secondary'}`}>
+          <Clock className="size-3" aria-hidden="true" />
+          {closing}
+        </span>
+      </div>
+    </Link>
+  );
+}
+
 /* ─── Component ──────────────────────────────────────────────────────── */
 
 export function Component() {
@@ -315,11 +378,14 @@ export function Component() {
   const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set());
   const [watchlistLoading, setWatchlistLoading] = useState<Set<string>>(new Set());
   const [sentimentMap, setSentimentMap] = useState<Map<string, MarketSentiment>>(new Map());
+  const [endDateFilter, setEndDateFilter] = useState<EndDateFilter>('any');
+  const [trendingMarkets, setTrendingMarkets] = useState<Market[]>([]);
+  const [trendingLoading, setTrendingLoading] = useState(true);
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(
-    async (p: number, s: string, so: SortOption, cat: string) => {
+    async (p: number, s: string, so: SortOption, cat: string, edf: EndDateFilter) => {
       setLoading(true);
       try {
         const params = new URLSearchParams();
@@ -328,6 +394,9 @@ export function Component() {
         if (s) params.set('search', s);
         params.set('sort', so);
         if (cat !== 'all') params.set('category', cat);
+        if (edf === 'today') params.set('endsBefore', new Date(Date.now() + 86400000).toISOString());
+        else if (edf === 'week') params.set('endsBefore', new Date(Date.now() + 7 * 86400000).toISOString());
+        else if (edf === 'month') params.set('endsBefore', new Date(Date.now() + 30 * 86400000).toISOString());
         const res = await fetch(`/api/v1/markets?${params}`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to load');
         const data: MarketsResponse = await res.json();
@@ -348,8 +417,20 @@ export function Component() {
   searchRef.current = search;
 
   useEffect(() => {
-    load(page, search, sort, category);
-  }, [page, search, sort, category, load]);
+    load(page, search, sort, category, endDateFilter);
+  }, [page, search, sort, category, endDateFilter, load]);
+
+  // Fetch trending markets once on mount — separate from main paginated fetch
+  useEffect(() => {
+    setTrendingLoading(true);
+    fetch('/api/v1/markets?sort=volume&limit=3', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: MarketsResponse | null) => {
+        if (data?.data) setTrendingMarkets(data.data);
+      })
+      .catch(() => {})
+      .finally(() => setTrendingLoading(false));
+  }, []);
 
   useEffect(() => {
     fetch('/api/v1/watchlist', { credentials: 'include' })
@@ -436,6 +517,26 @@ export function Component() {
         )}
       </div>
 
+      {/* Trending Now */}
+      {(trendingLoading || trendingMarkets.length > 0) && (
+        <div className="space-y-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Flame className="size-5 text-pf-warning" aria-hidden="true" />
+              <h2 className="text-base font-semibold text-pf-text">Trending Now</h2>
+            </div>
+            <p className="text-xs text-pf-text-muted mt-0.5">Highest volume in the last 24h</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {trendingLoading
+              ? [1, 2, 3].map((i) => <TrendingCardSkeleton key={i} />)
+              : trendingMarkets.map((m) => <TrendingCard key={m.id} market={m} />)}
+          </div>
+        </div>
+      )}
+
+      <hr className="border-pf-border-subtle" />
+
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" aria-hidden="true" />
@@ -496,6 +597,34 @@ export function Component() {
             >
               <List className="size-4" />
             </button>
+          </div>
+
+          {/* End date filter */}
+          <div className="flex items-center gap-1.5">
+            {(
+              [
+                { value: 'today', label: 'Ending Today', Icon: Clock },
+                { value: 'week', label: 'This Week', Icon: Calendar },
+                { value: 'month', label: 'This Month', Icon: Calendar },
+              ] as { value: EndDateFilter; label: string; Icon: typeof Clock }[]
+            ).map(({ value, label, Icon }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  setEndDateFilter(endDateFilter === value ? 'any' : value);
+                  setPage(1);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors whitespace-nowrap ${
+                  endDateFilter === value
+                    ? 'bg-pf-warning/15 text-pf-warning border-pf-warning/30'
+                    : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                }`}
+              >
+                <Icon className="size-3" aria-hidden="true" />
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Sort */}

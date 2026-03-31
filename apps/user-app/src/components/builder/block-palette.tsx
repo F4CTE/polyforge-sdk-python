@@ -12,6 +12,7 @@ import {
   Settings2,
   Variable,
   Plus,
+  Search,
 } from 'lucide-react';
 import {
   BLOCK_DEFS,
@@ -46,6 +47,7 @@ interface BlockPaletteProps {
 
 export function BlockPalette({ open, onClose }: BlockPaletteProps) {
   const [activeSection, setActiveSection] = useState<PaletteTab>('safety');
+  const [paletteSearch, setPaletteSearch] = useState('');
   const tabBarRef = useRef<HTMLDivElement>(null);
   const [tabsOverflow, setTabsOverflow] = useState(false);
   useEffect(() => {
@@ -305,30 +307,56 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
             </div>
           ) : (
             <div className="space-y-1">
-              {BLOCK_DEFS[activeSection as BlockSection].map((def) => (
-                <div
-                  key={def.type}
-                  draggable
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Add ${def.label} block`}
-                  onDragStart={(e) => onDragStart(e, def, activeSection as BlockSection)}
-                  onClick={() => onBlockClick(def)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onBlockClick(def); } }}
-                  className="group flex items-start gap-2 px-2.5 py-2 rounded-pf-sm cursor-pointer hover:bg-pf-overlay/60 transition-colors border border-transparent hover:border-pf-border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
-                >
-                  <GripVertical className="size-3 text-pf-text-muted/40 mt-0.5 shrink-0 cursor-grab group-hover:text-pf-text-muted" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-pf-text">{def.label}</span>
-                      <ChevronRight className="size-3 text-pf-text-muted/0 group-hover:text-pf-text-muted/60 transition-all" />
+              {/* Search input */}
+              <div className="relative mb-2">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-pf-text-muted" />
+                <input
+                  type="text"
+                  placeholder="Search blocks..."
+                  value={paletteSearch}
+                  onChange={e => setPaletteSearch(e.target.value)}
+                  className="w-full pl-7 pr-2 py-1.5 text-xs bg-pf-surface border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                />
+              </div>
+              {(() => {
+                const q = paletteSearch.toLowerCase();
+                const sectionLabel = SECTION_META[activeSection as BlockSection]?.label ?? '';
+                const filtered = BLOCK_DEFS[activeSection as BlockSection].filter(def =>
+                  !q ||
+                  def.label.toLowerCase().includes(q) ||
+                  def.description.toLowerCase().includes(q) ||
+                  sectionLabel.toLowerCase().includes(q)
+                );
+                if (filtered.length === 0) {
+                  return (
+                    <p className="text-[11px] text-pf-text-muted px-1 py-2">No blocks match</p>
+                  );
+                }
+                return filtered.map((def) => (
+                  <div
+                    key={def.type}
+                    draggable
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Add ${def.label} block`}
+                    onDragStart={(e) => onDragStart(e, def, activeSection as BlockSection)}
+                    onClick={() => onBlockClick(def)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onBlockClick(def); } }}
+                    className="group flex items-start gap-2 px-2.5 py-2 rounded-pf-sm cursor-pointer hover:bg-pf-overlay/60 transition-colors border border-transparent hover:border-pf-border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                  >
+                    <GripVertical className="size-3 text-pf-text-muted/40 mt-0.5 shrink-0 cursor-grab group-hover:text-pf-text-muted" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-pf-text">{def.label}</span>
+                        <ChevronRight className="size-3 text-pf-text-muted/0 group-hover:text-pf-text-muted/60 transition-all" />
+                      </div>
+                      <p className="text-[10px] text-pf-text-muted leading-snug mt-0.5">
+                        {def.description}
+                      </p>
                     </div>
-                    <p className="text-[10px] text-pf-text-muted leading-snug mt-0.5">
-                      {def.description}
-                    </p>
                   </div>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
           )}
         </div>

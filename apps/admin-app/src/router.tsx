@@ -32,6 +32,7 @@ export const router = createBrowserRouter([
           { path: 'approvals', lazy: () => import('@/pages/approvals/approvals') },
           { path: 'listings', lazy: () => import('@/pages/listings/listings') },
           { path: 'revenue', lazy: () => import('@/pages/revenue/revenue') },
+          { path: 'retention', lazy: () => import('@/pages/retention/retention') },
         ],
       },
     ],

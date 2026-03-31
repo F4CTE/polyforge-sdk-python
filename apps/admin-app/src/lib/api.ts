@@ -441,4 +441,27 @@ export const adminApi = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+
+  // Retention
+  retentionOverview: () =>
+    request<{
+      dau: number;
+      wau: number;
+      mau: number;
+      dauWauRatio: number;
+      wauMauRatio: number;
+      newUsersToday: number;
+      newUsersWeek: number;
+      churnRate: number;
+    }>(buildUrl(API_BASE, '/admin/retention/overview')),
+
+  retentionTrend: (days: number) =>
+    request<{ data: Array<{ date: string; dau: number; newUsers: number; returningUsers: number }> }>(
+      buildUrl(API_BASE, '/admin/retention/trend', { days }),
+    ),
+
+  retentionCohorts: (months: number) =>
+    request<{ data: Array<{ cohort: string; size: number; retention: number[] }> }>(
+      buildUrl(API_BASE, '/admin/retention/cohorts', { months }),
+    ),
 };

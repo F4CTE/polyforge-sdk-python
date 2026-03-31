@@ -39,6 +39,7 @@ export const router = createBrowserRouter([
               { path: 'orders/smart', lazy: () => import('./pages/orders/smart-orders') },
               { path: 'backtest', lazy: () => import('./pages/backtest/backtest') },
               { path: 'copy', lazy: () => import('./pages/copy/copy-list') },
+              { path: 'copy/discover', lazy: () => import('./pages/copy/copy-discover') },
               { path: 'copy/new', lazy: () => import('./pages/copy/copy-setup') },
               { path: 'copy/:id', lazy: () => import('./pages/copy/copy-detail') },
               { path: 'discover', lazy: () => import('./pages/discover/discover') },
