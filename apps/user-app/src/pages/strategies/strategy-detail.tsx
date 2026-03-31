@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import {
   ArrowLeft,
@@ -16,6 +16,9 @@ import {
   GitBranch,
   Store,
   X,
+  ClipboardList,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -70,6 +73,19 @@ interface LiveLogEntry {
   type: string;
   message: string;
   severity: 'info' | 'success' | 'warning' | 'error';
+}
+
+interface StratExecution {
+  id: string;
+  side: string;
+  outcome: string;
+  size: string;
+  price: string;
+  fillSize?: string;
+  fillPrice?: string;
+  status: string;
+  createdAt: string;
+  marketQuestion?: string;
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
@@ -160,7 +176,12 @@ export function Component() {
   const [parentStrategy, setParentStrategy] = useState<ParentStrategy | null>(null);
   const [recentOrderCount, setRecentOrderCount] = useState<number | null>(null);
   const [lastOrderAt, setLastOrderAt] = useState<string | null>(null);
-  const [detailTab, setDetailTab] = useState<'overview' | 'log' | 'versions'>('overview');
+  const [detailTab, setDetailTab] = useState<'overview' | 'log' | 'versions' | 'executions'>('overview');
+  const [executions, setExecutions] = useState<StratExecution[]>([]);
+  const [executionsLoading, setExecutionsLoading] = useState(false);
+  const [executionsPage, setExecutionsPage] = useState(1);
+  const [executionsTotalPages, setExecutionsTotalPages] = useState(1);
+  const [executionsFetched, setExecutionsFetched] = useState(false);
   const [execLog, setExecLog] = useState<Array<{id: string; eventType: string; payload: any; createdAt: string}>>([]);
   const [versions, setVersions] = useState<Array<{id: string; version: number; changedBy: string; createdAt: string; triggers: any; conditions: any; actions: any}>>([]);
   const [loadingLog, setLoadingLog] = useState(false);
@@ -252,6 +273,28 @@ export function Component() {
       .then(data => { if (data) setStratPnl({ totalPnl: data.totalPnl, winRate: data.winRate }); })
       .catch(() => {});
   }, [strategy?.id]);
+
+  const fetchExecutions = useCallback((page: number) => {
+    if (!strategy?.id) return;
+    setExecutionsLoading(true);
+    fetch(`/api/v1/orders?strategyId=${strategy.id}&limit=25&page=${page}`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(res => {
+        if (res) {
+          setExecutions(res.data ?? []);
+          setExecutionsTotalPages(res.totalPages ?? 1);
+          setExecutionsFetched(true);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setExecutionsLoading(false));
+  }, [strategy?.id]);
+
+  useEffect(() => {
+    if (detailTab === 'executions' && !executionsFetched) {
+      fetchExecutions(1);
+    }
+  }, [detailTab, executionsFetched, fetchExecutions]);
 
   async function doAction(action: 'start' | 'stop' | 'pause' | 'resume', body?: object) {
     if (!strategy) return;
@@ -750,6 +793,13 @@ export function Component() {
             >
               Version History
             </button>
+            <button
+              type="button"
+              onClick={() => setDetailTab('executions')}
+              className={`px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'executions' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
+            >
+              Executions
+            </button>
           </div>
 
           {/* Body grid */}
@@ -866,6 +916,109 @@ export function Component() {
                     </li>
                   ))}
                 </ul>
+              )}
+            </div>
+          )}
+
+          {detailTab === 'executions' && (
+            <div className="mt-4">
+              {executionsLoading ? (
+                <div className="space-y-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 px-3 py-3 rounded-pf bg-pf-surface border border-pf-border-subtle">
+                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-24" />
+                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-12" />
+                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-10" />
+                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-16" />
+                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-16" />
+                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-16" />
+                      <div className="h-3 bg-pf-overlay rounded animate-pulse w-20 ml-auto" />
+                    </div>
+                  ))}
+                </div>
+              ) : executions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center text-pf-text-muted gap-3">
+                  <ClipboardList className="size-8 opacity-40" aria-hidden="true" />
+                  <p className="text-sm font-medium text-pf-text">No executions yet</p>
+                  <p className="text-xs text-pf-text-muted">Orders placed by this strategy will appear here</p>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto rounded-pf border border-pf-border">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-pf-border bg-pf-surface">
+                          <th className="px-3 py-2.5 text-left font-medium text-pf-text-muted">Date</th>
+                          <th className="px-3 py-2.5 text-left font-medium text-pf-text-muted">Side</th>
+                          <th className="px-3 py-2.5 text-left font-medium text-pf-text-muted">Outcome</th>
+                          <th className="px-3 py-2.5 text-right font-medium text-pf-text-muted">Size</th>
+                          <th className="px-3 py-2.5 text-right font-medium text-pf-text-muted">Price</th>
+                          <th className="px-3 py-2.5 text-right font-medium text-pf-text-muted">Fill</th>
+                          <th className="px-3 py-2.5 text-left font-medium text-pf-text-muted">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-pf-border-subtle">
+                        {executions.map((ex) => {
+                          const statusBadge =
+                            ex.status === 'PENDING'   ? 'bg-pf-warning/10 text-pf-warning' :
+                            ex.status === 'CONFIRMED' ? 'bg-pf-success/10 text-pf-success' :
+                            ex.status === 'CANCELLED' ? 'bg-pf-overlay text-pf-text-muted' :
+                            ex.status === 'FAILED'    ? 'bg-pf-danger/10 text-pf-danger' :
+                            'bg-pf-overlay text-pf-text-muted';
+                          return (
+                            <tr key={ex.id} className="hover:bg-pf-surface/50 transition-colors">
+                              <td className="px-3 py-2.5 font-mono text-pf-text-secondary whitespace-nowrap">
+                                {new Date(ex.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              </td>
+                              <td className="px-3 py-2.5">
+                                <span className={`font-semibold ${ex.side === 'BUY' ? 'text-pf-success' : 'text-pf-danger'}`}>
+                                  {ex.side}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-pf-text font-mono">{ex.outcome}</td>
+                              <td className="px-3 py-2.5 text-right font-mono text-pf-text">{ex.size}</td>
+                              <td className="px-3 py-2.5 text-right font-mono text-pf-text">{ex.price}</td>
+                              <td className="px-3 py-2.5 text-right font-mono text-pf-text-secondary">
+                                {ex.fillSize ?? '—'}
+                                {ex.fillPrice ? ` @ ${ex.fillPrice}` : ''}
+                              </td>
+                              <td className="px-3 py-2.5">
+                                <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${statusBadge}`}>
+                                  {ex.status}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {executionsTotalPages > 1 && (
+                    <div className="flex items-center justify-end gap-2 mt-3">
+                      <button
+                        type="button"
+                        disabled={executionsPage === 1}
+                        onClick={() => { const p = executionsPage - 1; setExecutionsPage(p); fetchExecutions(p); }}
+                        className="p-1.5 rounded-pf border border-pf-border text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
+                        aria-label="Previous page"
+                      >
+                        <ChevronLeft className="size-4" />
+                      </button>
+                      <span className="text-xs text-pf-text-muted">
+                        {executionsPage} / {executionsTotalPages}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={executionsPage === executionsTotalPages}
+                        onClick={() => { const p = executionsPage + 1; setExecutionsPage(p); fetchExecutions(p); }}
+                        className="p-1.5 rounded-pf border border-pf-border text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
+                        aria-label="Next page"
+                      >
+                        <ChevronRight className="size-4" />
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}

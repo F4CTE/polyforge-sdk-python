@@ -101,4 +101,35 @@ export class BacktestsService {
     }
     return run;
   }
+
+  async findOrders(id: string, userId: string): Promise<any[]> {
+    const run = await this.prisma.backtestRun.findUnique({ where: { id } });
+    if (!run || run.userId !== userId) {
+      throw new NotFoundException({ code: 'NOT_FOUND', message: 'Backtest run not found' });
+    }
+    const orders = await this.prisma.backtestOrder.findMany({
+      where: { runId: id },
+      orderBy: { simulatedAt: 'asc' },
+      select: {
+        id: true,
+        tokenId: true,
+        side: true,
+        outcome: true,
+        size: true,
+        price: true,
+        fillPrice: true,
+        pnl: true,
+        equityCurve: true,
+        simulatedAt: true,
+      },
+    });
+    return orders.map((o: any) => ({
+      ...o,
+      size: o.size.toString(),
+      price: o.price.toString(),
+      fillPrice: o.fillPrice?.toString() ?? null,
+      pnl: o.pnl?.toString() ?? null,
+      equityCurve: o.equityCurve.toString(),
+    }));
+  }
 }

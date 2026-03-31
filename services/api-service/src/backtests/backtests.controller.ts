@@ -59,4 +59,9 @@ export class BacktestsController {
   findOne(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.backtests.findOne(id, user.sub);
   }
+
+  @Get(":id/orders")
+  findOrders(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.backtests.findOrders(id, user.sub);
+  }
 }

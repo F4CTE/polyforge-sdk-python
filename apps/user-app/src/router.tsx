@@ -50,6 +50,7 @@ export const router = createBrowserRouter([
               { path: 'leaderboard', lazy: () => import('./pages/leaderboard/leaderboard') },
               { path: 'analytics', lazy: () => import('./pages/analytics/analytics') },
               { path: 'notifications', lazy: () => import('./pages/notifications/notifications') },
+              { path: 'alerts', lazy: () => import('./pages/alerts/alerts') },
               { path: 'accuracy', lazy: () => import('./pages/accuracy/accuracy') },
               { path: 'optimizer', lazy: () => import('./pages/optimizer/optimizer') },
               { path: 'arbitrage', lazy: () => import('./pages/arbitrage/arbitrage') },

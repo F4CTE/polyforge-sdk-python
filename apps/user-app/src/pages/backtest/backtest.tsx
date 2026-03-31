@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
 import {
   Play, ChevronLeft, ChevronRight, History, X, AlertTriangle, XCircle, Loader2,
@@ -210,6 +211,23 @@ export function Component() {
     setSubmitting(false);
   }
 
+  // Equity curve state
+  const [equityData, setEquityData] = useState<Array<{equityCurve: string; simulatedAt: string}>>([]);
+  const [loadingEquity, setLoadingEquity] = useState(false);
+
+  useEffect(() => {
+    if (!selectedRun || selectedRun.status !== 'COMPLETED') {
+      setEquityData([]);
+      return;
+    }
+    setLoadingEquity(true);
+    fetch(`/api/v1/backtests/${selectedRun.id}/orders`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: Array<{equityCurve: string; simulatedAt: string}>) => { setEquityData(data); })
+      .catch(() => { setEquityData([]); })
+      .finally(() => { setLoadingEquity(false); });
+  }, [selectedRun?.id, selectedRun?.status]);
+
   // Compare mode state
   const [compareMode, setCompareMode] = useState(false);
   const [compareA, setCompareA] = useState<string | null>(null);
@@ -357,32 +375,58 @@ export function Component() {
           )}
 
           {selectedRun.status === 'COMPLETED' && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-pf-surface rounded-pf p-3">
-                <span className="text-xs text-pf-text-muted block">Total P&L</span>
-                <span className={`text-lg font-mono font-semibold ${pnlColor(selectedRun.totalPnl)}`}>
-                  {pnlSign(selectedRun.totalPnl)}
-                </span>
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-pf-surface rounded-pf p-3">
+                  <span className="text-xs text-pf-text-muted block">Total P&L</span>
+                  <span className={`text-lg font-mono font-semibold ${pnlColor(selectedRun.totalPnl)}`}>
+                    {pnlSign(selectedRun.totalPnl)}
+                  </span>
+                </div>
+                <div className="bg-pf-surface rounded-pf p-3">
+                  <span className="text-xs text-pf-text-muted block">Win Rate</span>
+                  <span className="text-lg font-mono font-semibold text-pf-text">{winRatePct(selectedRun.winRate)}</span>
+                </div>
+                <div className="bg-pf-surface rounded-pf p-3">
+                  <span className="text-xs text-pf-text-muted block">Orders Placed</span>
+                  <span className="text-lg font-mono font-semibold text-pf-text">{selectedRun.totalOrders ?? '\u2014'}</span>
+                </div>
+                <div className="bg-pf-surface rounded-pf p-3">
+                  <span className="text-xs text-pf-text-muted block">Orders Filled</span>
+                  <span className="text-lg font-mono font-semibold text-pf-text">{selectedRun.filledOrders ?? '\u2014'}</span>
+                </div>
+                {selectedRun.hasDataGaps && (
+                  <div className="col-span-full flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-warning/10 text-pf-warning text-xs">
+                    <AlertTriangle className="size-3.5 shrink-0" />
+                    Results may be affected by data gaps in the selected date range.
+                  </div>
+                )}
               </div>
-              <div className="bg-pf-surface rounded-pf p-3">
-                <span className="text-xs text-pf-text-muted block">Win Rate</span>
-                <span className="text-lg font-mono font-semibold text-pf-text">{winRatePct(selectedRun.winRate)}</span>
-              </div>
-              <div className="bg-pf-surface rounded-pf p-3">
-                <span className="text-xs text-pf-text-muted block">Orders Placed</span>
-                <span className="text-lg font-mono font-semibold text-pf-text">{selectedRun.totalOrders ?? '\u2014'}</span>
-              </div>
-              <div className="bg-pf-surface rounded-pf p-3">
-                <span className="text-xs text-pf-text-muted block">Orders Filled</span>
-                <span className="text-lg font-mono font-semibold text-pf-text">{selectedRun.filledOrders ?? '\u2014'}</span>
-              </div>
-              {selectedRun.hasDataGaps && (
-                <div className="col-span-full flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-warning/10 text-pf-warning text-xs">
-                  <AlertTriangle className="size-3.5 shrink-0" />
-                  Results may be affected by data gaps in the selected date range.
+              {equityData.length > 1 && (
+                <div className="mt-4">
+                  <div className="text-xs text-pf-text-muted mb-2 font-medium">Equity Curve</div>
+                  <div className="h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={equityData.map(p => ({ time: new Date(p.simulatedAt).toLocaleDateString(), value: parseFloat(p.equityCurve) }))}>
+                        <defs>
+                          <linearGradient id="btGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.2} />
+                            <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis dataKey="time" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                        <YAxis tick={{ fontSize: 9 }} tickLine={false} axisLine={false} width={45} tickFormatter={(v: number) => `$${v.toFixed(0)}`} />
+                        <Tooltip formatter={(v: number) => [`$${v.toFixed(2)}`, 'P&L']} contentStyle={{ background: '#0d1926', border: '1px solid #1a2f47', borderRadius: 6, fontSize: 11 }} />
+                        <Area type="monotone" dataKey="value" stroke="#22d3ee" strokeWidth={1.5} fill="url(#btGrad)" dot={false} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               )}
-            </div>
+              {loadingEquity && (
+                <div className="mt-4 h-40 bg-pf-overlay rounded-pf animate-pulse" />
+              )}
+            </>
           )}
 
           {selectedRun.status === 'FAILED' && (

@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.16.5] — 2026-03-31
+
+### Added
+- **Alerts management page** (`/alerts`) — create price alerts with market search, YES/NO token selector, direction (above/below), price threshold, and persistent toggle; active alerts list with ▲/▼ direction, price in ¢ format, Active/Triggered/Persistent badges, and per-alert delete; sidebar nav item (BellRing); router route added
+- **Strategy Executions tab** — strategy detail page now has an "Executions" tab alongside Overview; lazy-fetches `GET /api/v1/orders?strategyId={id}` showing date, side, outcome, size, price, fill, and status with pagination
+- **Backtest equity curve** — completed backtest detail panel now shows a recharts AreaChart of the equity curve over simulated time; backed by new `GET /api/v1/backtests/:id/orders` endpoint returning `BacktestOrder` records (equityCurve, simulatedAt, pnl, fill prices) serialized from Prisma Decimal
+
+---
+
 ## [6.16.4] — 2026-03-31
 
 ### Added
