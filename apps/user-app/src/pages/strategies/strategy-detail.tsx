@@ -39,6 +39,9 @@ import {
   Globe,
   Lock,
   TrendingUp,
+  Bell,
+  BellPlus,
+  Mail,
 } from 'lucide-react';
 import { wsManager } from '@/lib/websocket';
 import { toast } from 'sonner';
@@ -145,6 +148,27 @@ interface StrategyVersion {
 
 type LiveEventType = 'ORDER_PLACED' | 'ORDER_FILLED' | 'ORDER_REJECTED' | 'STRATEGY_ERROR';
 
+type StrategyAlertType =
+  | 'win_rate_below'
+  | 'loss_streak'
+  | 'daily_loss_limit'
+  | 'total_pnl_above'
+  | 'total_pnl_below'
+  | 'strategy_offline'
+  | 'trade_count_above';
+
+interface StrategyAlert {
+  id: string;
+  strategyId: string;
+  type: StrategyAlertType;
+  threshold: number;
+  notifyEmail: boolean;
+  notifyPush: boolean;
+  enabled: boolean;
+  triggeredAt?: string;
+  createdAt: string;
+}
+
 interface LiveEvent {
   id: string;
   type: LiveEventType;
@@ -233,6 +257,26 @@ const SECTION_STYLES: Record<string, string> = {
   action: 'bg-pf-success/10 text-pf-success border-pf-success/20',
 };
 
+const ALERT_TYPE_LABELS: Record<StrategyAlertType, string> = {
+  win_rate_below:    'Win Rate Below (%)',
+  loss_streak:       'Consecutive Losses (#)',
+  daily_loss_limit:  'Daily Loss Limit ($)',
+  total_pnl_above:   'Total P&L Above ($)',
+  total_pnl_below:   'Total P&L Below ($)',
+  strategy_offline:  'Strategy Goes Offline',
+  trade_count_above: 'Trade Count Above (#)',
+};
+
+const ALERT_TYPES_ORDERED: StrategyAlertType[] = [
+  'win_rate_below',
+  'loss_streak',
+  'daily_loss_limit',
+  'total_pnl_above',
+  'total_pnl_below',
+  'strategy_offline',
+  'trade_count_above',
+];
+
 /* ─── Component ──────────────────────────────────────────────────────── */
 
 export function Component() {
@@ -282,6 +326,19 @@ export function Component() {
   const [loadingShare, setLoadingShare] = useState(false);
   const [copying, setCopying] = useState(false);
   const [togglingVisibility, setTogglingVisibility] = useState(false);
+
+  // Alerts panel state
+  const [showAlertsPanel, setShowAlertsPanel] = useState(false);
+  const [strategyAlerts, setStrategyAlerts] = useState<StrategyAlert[]>([]);
+  const [loadingAlerts, setLoadingAlerts] = useState(false);
+  const [alertsFetched, setAlertsFetched] = useState(false);
+  const [showAlertForm, setShowAlertForm] = useState(false);
+  const [editingAlert, setEditingAlert] = useState<StrategyAlert | null>(null);
+  const [alertType, setAlertType] = useState<StrategyAlertType>('win_rate_below');
+  const [alertThreshold, setAlertThreshold] = useState('');
+  const [alertEmail, setAlertEmail] = useState(true);
+  const [alertPush, setAlertPush] = useState(true);
+  const [alertFormSaving, setAlertFormSaving] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -630,6 +687,153 @@ export function Component() {
     }
   }
 
+  async function fetchAlerts() {
+    if (!strategy) return;
+    setLoadingAlerts(true);
+    try {
+      const res = await fetch(`/api/v1/strategies/${strategy.id}/alerts`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setStrategyAlerts(data.data ?? []);
+      }
+    } catch {
+      toast.error('Failed to load alerts');
+    } finally {
+      setLoadingAlerts(false);
+      setAlertsFetched(true);
+    }
+  }
+
+  function openAlertsPanel() {
+    const isOpen = showAlertsPanel;
+    setShowAlertsPanel(!isOpen);
+    if (!isOpen && !alertsFetched) {
+      fetchAlerts();
+    }
+    if (isOpen) {
+      setShowAlertForm(false);
+      setEditingAlert(null);
+    }
+  }
+
+  function openAlertForm(alert?: StrategyAlert) {
+    if (alert) {
+      setEditingAlert(alert);
+      setAlertType(alert.type);
+      setAlertThreshold(alert.type === 'strategy_offline' ? '' : String(alert.threshold));
+      setAlertEmail(alert.notifyEmail);
+      setAlertPush(alert.notifyPush);
+    } else {
+      setEditingAlert(null);
+      setAlertType('win_rate_below');
+      setAlertThreshold('');
+      setAlertEmail(true);
+      setAlertPush(true);
+    }
+    setShowAlertForm(true);
+  }
+
+  function cancelAlertForm() {
+    setShowAlertForm(false);
+    setEditingAlert(null);
+  }
+
+  async function saveAlert() {
+    if (!strategy) return;
+    const thresholdVal = alertType === 'strategy_offline' ? 0 : parseFloat(alertThreshold);
+    if (alertType !== 'strategy_offline' && (isNaN(thresholdVal) || alertThreshold.trim() === '')) {
+      toast.error('Please enter a valid threshold value');
+      return;
+    }
+    setAlertFormSaving(true);
+    try {
+      if (editingAlert) {
+        const res = await fetch(`/api/v1/strategies/${strategy.id}/alerts/${editingAlert.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            threshold: thresholdVal,
+            notifyEmail: alertEmail,
+            notifyPush: alertPush,
+          }),
+        });
+        if (res.ok) {
+          const updated: StrategyAlert = await res.json();
+          setStrategyAlerts(prev => prev.map(a => a.id === updated.id ? updated : a));
+          toast.success('Alert updated');
+          cancelAlertForm();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          toast.error((err as any).message ?? 'Failed to update alert');
+        }
+      } else {
+        const res = await fetch(`/api/v1/strategies/${strategy.id}/alerts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            type: alertType,
+            threshold: thresholdVal,
+            notifyEmail: alertEmail,
+            notifyPush: alertPush,
+          }),
+        });
+        if (res.ok) {
+          const created: StrategyAlert = await res.json();
+          setStrategyAlerts(prev => [...prev, created]);
+          toast.success('Alert created');
+          cancelAlertForm();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          toast.error((err as any).message ?? 'Failed to create alert');
+        }
+      }
+    } catch {
+      toast.error(editingAlert ? 'Failed to update alert' : 'Failed to create alert');
+    } finally {
+      setAlertFormSaving(false);
+    }
+  }
+
+  async function toggleAlertEnabled(alert: StrategyAlert) {
+    if (!strategy) return;
+    try {
+      const res = await fetch(`/api/v1/strategies/${strategy.id}/alerts/${alert.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ enabled: !alert.enabled }),
+      });
+      if (res.ok) {
+        const updated: StrategyAlert = await res.json();
+        setStrategyAlerts(prev => prev.map(a => a.id === updated.id ? updated : a));
+      } else {
+        toast.error('Failed to update alert');
+      }
+    } catch {
+      toast.error('Failed to update alert');
+    }
+  }
+
+  async function deleteAlert(alertId: string) {
+    if (!strategy) return;
+    try {
+      const res = await fetch(`/api/v1/strategies/${strategy.id}/alerts/${alertId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        setStrategyAlerts(prev => prev.filter(a => a.id !== alertId));
+        toast.success('Alert removed');
+      } else {
+        toast.error('Failed to remove alert');
+      }
+    } catch {
+      toast.error('Failed to remove alert');
+    }
+  }
+
   async function submitListing() {
     if (!strategy || !listTitle) return;
     setListSubmitting(true);
@@ -835,6 +1039,21 @@ export function Component() {
                 title="Copy JSON"
               >
                 {copyJsonDone ? <Check className="size-4 text-pf-success" /> : <Copy className="size-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={openAlertsPanel}
+                className={`relative p-2 rounded-pf border transition-colors ${showAlertsPanel ? 'bg-pf-warning/10 border-pf-warning/40 text-pf-warning' : 'bg-pf-elevated border-pf-border text-pf-text-secondary hover:border-pf-border-strong'}`}
+                aria-label="Performance alerts"
+                aria-expanded={showAlertsPanel}
+                title="Performance Alerts"
+              >
+                <Bell className="size-4" />
+                {strategyAlerts.length > 0 && (
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-pf-warning text-black text-[9px] font-bold leading-none">
+                    {strategyAlerts.length > 9 ? '9+' : strategyAlerts.length}
+                  </span>
+                )}
               </button>
               <button
                 type="button"
@@ -1071,6 +1290,212 @@ export function Component() {
                     : 'Make Public'}
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Alerts Panel */}
+          {showAlertsPanel && (
+            <div className="bg-pf-elevated border border-pf-warning/30 rounded-pf-lg p-4 space-y-4">
+              {/* Panel header */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-pf-text flex items-center gap-2">
+                  <Bell className="size-4 text-pf-warning" />
+                  Performance Alerts
+                </span>
+                <button
+                  type="button"
+                  onClick={() => { setShowAlertsPanel(false); setShowAlertForm(false); setEditingAlert(null); }}
+                  className="text-pf-text-muted hover:text-pf-text transition-colors"
+                  aria-label="Close alerts panel"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+              <p className="text-xs text-pf-text-muted -mt-2">Get notified when your strategy hits key thresholds.</p>
+
+              {/* Add Alert button */}
+              {!showAlertForm && (
+                <button
+                  type="button"
+                  onClick={() => openAlertForm()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-warning/50 hover:text-pf-warning transition-colors"
+                >
+                  <BellPlus className="size-3.5" />
+                  Add Alert
+                </button>
+              )}
+
+              {/* Inline form */}
+              {showAlertForm && (
+                <div className="rounded-pf border border-pf-border bg-pf-surface p-3 space-y-3">
+                  <p className="text-xs font-semibold text-pf-text">
+                    {editingAlert ? 'Edit Alert' : 'New Alert'}
+                  </p>
+                  <div className="space-y-2">
+                    {/* Alert type */}
+                    <div>
+                      <label className="block text-xs font-medium text-pf-text-secondary mb-1">Alert type</label>
+                      <select
+                        value={alertType}
+                        onChange={(e) => {
+                          const t = e.target.value as StrategyAlertType;
+                          setAlertType(t);
+                          if (t === 'strategy_offline') setAlertThreshold('');
+                        }}
+                        disabled={!!editingAlert}
+                        className="w-full h-9 px-3 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-warning/50 disabled:opacity-60"
+                      >
+                        {ALERT_TYPES_ORDERED.map((t) => (
+                          <option key={t} value={t}>{ALERT_TYPE_LABELS[t]}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Threshold — hidden for strategy_offline */}
+                    {alertType !== 'strategy_offline' && (
+                      <div>
+                        <label className="block text-xs font-medium text-pf-text-secondary mb-1">Threshold</label>
+                        <input
+                          type="number"
+                          value={alertThreshold}
+                          onChange={(e) => setAlertThreshold(e.target.value)}
+                          placeholder="e.g. 50"
+                          min="0"
+                          step="any"
+                          className="w-full h-9 px-3 rounded-pf bg-pf-elevated border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-warning/50"
+                        />
+                      </div>
+                    )}
+
+                    {/* Notify via */}
+                    <div>
+                      <label className="block text-xs font-medium text-pf-text-secondary mb-1.5">Notify via</label>
+                      <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={alertEmail}
+                            onChange={(e) => setAlertEmail(e.target.checked)}
+                            className="w-3.5 h-3.5 accent-pf-warning rounded"
+                          />
+                          <Mail className="size-3.5 text-pf-text-secondary" />
+                          <span className="text-xs text-pf-text-secondary">Email</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={alertPush}
+                            onChange={(e) => setAlertPush(e.target.checked)}
+                            className="w-3.5 h-3.5 accent-pf-warning rounded"
+                          />
+                          <Bell className="size-3.5 text-pf-text-secondary" />
+                          <span className="text-xs text-pf-text-secondary">Push</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Form actions */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={saveAlert}
+                      disabled={alertFormSaving}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-warning text-black text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+                    >
+                      {alertFormSaving ? 'Saving...' : 'Save Alert'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelAlertForm}
+                      disabled={alertFormSaving}
+                      className="px-3 py-1.5 rounded-pf border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Alerts list */}
+              {loadingAlerts ? (
+                <div className="space-y-2">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="h-10 rounded-pf bg-pf-surface border border-pf-border animate-pulse" />
+                  ))}
+                </div>
+              ) : strategyAlerts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
+                  <Bell className="size-7 text-pf-text-muted opacity-30" aria-hidden="true" />
+                  <p className="text-sm text-pf-text-secondary">No alerts configured</p>
+                  <p className="text-xs text-pf-text-muted">Add an alert to get notified about strategy performance.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {strategyAlerts.map((alert) => (
+                    <div
+                      key={alert.id}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-pf border transition-colors ${alert.enabled ? 'border-pf-border bg-pf-surface' : 'border-pf-border-subtle bg-pf-surface/50 opacity-60'}`}
+                    >
+                      {/* Enabled toggle */}
+                      <button
+                        type="button"
+                        onClick={() => toggleAlertEnabled(alert)}
+                        aria-label={alert.enabled ? 'Disable alert' : 'Enable alert'}
+                        className={`shrink-0 w-8 h-5 rounded-full border transition-colors relative ${alert.enabled ? 'bg-pf-warning/20 border-pf-warning/40' : 'bg-pf-overlay border-pf-border'}`}
+                      >
+                        <span className={`absolute top-0.5 w-3 h-3 rounded-full transition-all ${alert.enabled ? 'left-4 bg-pf-warning' : 'left-0.5 bg-pf-text-muted'}`} />
+                      </button>
+
+                      {/* Label + threshold */}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-medium text-pf-text">
+                          {ALERT_TYPE_LABELS[alert.type]}
+                        </span>
+                        {alert.type !== 'strategy_offline' && (
+                          <span className="ml-1.5 text-xs font-mono text-pf-text-secondary">{alert.threshold}</span>
+                        )}
+                      </div>
+
+                      {/* Channel icons */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {alert.notifyEmail && <Mail className="size-3.5 text-pf-text-muted" aria-label="Email notifications" />}
+                        {alert.notifyPush && <Bell className="size-3.5 text-pf-text-muted" aria-label="Push notifications" />}
+                      </div>
+
+                      {/* Triggered badge */}
+                      {alert.triggeredAt && (
+                        <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-pf-warning/15 text-pf-warning text-[10px] font-semibold">
+                          <AlertTriangle className="size-2.5" aria-hidden="true" />
+                          Triggered
+                        </span>
+                      )}
+
+                      {/* Edit */}
+                      <button
+                        type="button"
+                        onClick={() => openAlertForm(alert)}
+                        className="shrink-0 p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
+                        aria-label="Edit alert"
+                        title="Edit"
+                      >
+                        <Edit2 className="size-3.5" />
+                      </button>
+
+                      {/* Delete */}
+                      <button
+                        type="button"
+                        onClick={() => deleteAlert(alert.id)}
+                        className="shrink-0 p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors"
+                        aria-label="Delete alert"
+                        title="Delete"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
