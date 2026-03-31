@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
   User, Bell, Lock, Shield, Key, Loader2, Check, Copy, Ban, Eye, EyeOff, Fuel, Trash2, AlertTriangle, ShieldAlert,
-  Webhook, Send, Plus,
+  Webhook, Send, Plus, ShieldCheck, ShieldOff, Download, KeyRound,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 
@@ -94,6 +94,15 @@ export function Component() {
     setAvatarUrl(user?.avatarUrl ?? '');
   }, [user]);
 
+  // Sync 2FA view with user.totpEnabled when in a stable state (disabled or enabled)
+  useEffect(() => {
+    setTwoFaView(prev => {
+      if (prev === 'setup' || prev === 'backup') return prev;
+      return user?.totpEnabled ? 'enabled' : 'disabled';
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.totpEnabled]);
+
   // Password
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -108,6 +117,23 @@ export function Component() {
   const [totpDisablePassword, setTotpDisablePassword] = useState('');
   const [totpSaving, setTotpSaving] = useState(false);
   const [totpLoading, setTotpLoading] = useState(false);
+  // New 2FA state machine
+  type TwoFaView = 'disabled' | 'setup' | 'backup' | 'enabled';
+  const [twoFaView, setTwoFaView] = useState<TwoFaView>(
+    () => (user?.totpEnabled ? 'enabled' : 'disabled')
+  );
+  const [twoFaSetupSecret, setTwoFaSetupSecret] = useState('');
+  const [twoFaQrCodeUrl, setTwoFaQrCodeUrl] = useState('');
+  const [twoFaVerifyToken, setTwoFaVerifyToken] = useState('');
+  const [twoFaBackupCodes, setTwoFaBackupCodes] = useState<string[]>([]);
+  const [twoFaVerifying, setTwoFaVerifying] = useState(false);
+  const [twoFaSetupLoading, setTwoFaSetupLoading] = useState(false);
+  const [twoFaDisableToken, setTwoFaDisableToken] = useState('');
+  const [twoFaDisabling, setTwoFaDisabling] = useState(false);
+  const [twoFaShowDisableForm, setTwoFaShowDisableForm] = useState(false);
+  const [twoFaRegenCodes, setTwoFaRegenCodes] = useState<string[]>([]);
+  const [twoFaRegenLoading, setTwoFaRegenLoading] = useState(false);
+  const [twoFaCopied, setTwoFaCopied] = useState(false);
 
   // Notifications — fetch from API on mount, fallback to defaults
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({
@@ -398,7 +424,7 @@ export function Component() {
     setPwSaving(false);
   }
 
-  // ── TOTP ──
+  // ── TOTP (legacy — kept for reference, superseded by new 2FA flow below) ──
   async function startTotpSetup() {
     setTotpLoading(true);
     try {
@@ -424,7 +450,6 @@ export function Component() {
       if (res.ok) {
         const data = await res.json();
         patchUser({ totpEnabled: true });
-        // Keep setupData so we can show the backup codes returned by confirm
         setTotpSetupData(prev => prev ? { ...prev, backupCodes: data.backupCodes ?? [] } : null);
         setTotpCode('');
         toast.success('Two-factor authentication enabled! Save your backup codes.');
@@ -456,6 +481,104 @@ export function Component() {
       }
     } catch { toast.error('Failed to disable 2FA'); }
     setTotpSaving(false);
+  }
+
+  // ── New 2FA TOTP flow ──
+  async function twoFaStartSetup() {
+    setTwoFaSetupLoading(true);
+    try {
+      const res = await fetch('/api/v1/auth/2fa/setup', { method: 'POST', credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setTwoFaSetupSecret(data.secret ?? '');
+        setTwoFaQrCodeUrl(data.qrCodeUrl ?? '');
+        setTwoFaBackupCodes(data.backupCodes ?? []);
+        setTwoFaVerifyToken('');
+        setTwoFaView('setup');
+      } else {
+        toast.error('Failed to start 2FA setup');
+      }
+    } catch { toast.error('Failed to start 2FA setup'); }
+    setTwoFaSetupLoading(false);
+  }
+
+  async function twoFaEnable() {
+    if (twoFaVerifying || twoFaVerifyToken.length !== 6) return;
+    setTwoFaVerifying(true);
+    try {
+      const res = await fetch('/api/v1/auth/2fa/enable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ token: twoFaVerifyToken }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        patchUser({ totpEnabled: true });
+        setTwoFaBackupCodes(data.backupCodes ?? twoFaBackupCodes);
+        setTwoFaVerifyToken('');
+        setTwoFaView('backup');
+      } else {
+        toast.error('Invalid code, try again');
+      }
+    } catch { toast.error('Failed to enable 2FA'); }
+    setTwoFaVerifying(false);
+  }
+
+  async function twoFaDisable() {
+    if (twoFaDisabling || twoFaDisableToken.length !== 6) return;
+    setTwoFaDisabling(true);
+    try {
+      const res = await fetch('/api/v1/auth/2fa/disable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ token: twoFaDisableToken }),
+      });
+      if (res.ok) {
+        patchUser({ totpEnabled: false });
+        setTwoFaDisableToken('');
+        setTwoFaShowDisableForm(false);
+        setTwoFaRegenCodes([]);
+        setTwoFaView('disabled');
+        toast.success('Two-factor authentication has been disabled');
+      } else {
+        toast.error('Invalid code, try again');
+      }
+    } catch { toast.error('Failed to disable 2FA'); }
+    setTwoFaDisabling(false);
+  }
+
+  async function twoFaRegenBackupCodes() {
+    setTwoFaRegenLoading(true);
+    try {
+      const res = await fetch('/api/v1/auth/2fa/backup-codes', { method: 'POST', credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setTwoFaRegenCodes(data.backupCodes ?? []);
+        toast.success('New backup codes generated');
+      } else {
+        toast.error('Failed to regenerate backup codes');
+      }
+    } catch { toast.error('Failed to regenerate backup codes'); }
+    setTwoFaRegenLoading(false);
+  }
+
+  function twoFaDownloadCodes(codes: string[], filename = 'polyforge-backup-codes.txt') {
+    const text = codes.join('\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function twoFaCopyAll(codes: string[]) {
+    navigator.clipboard.writeText(codes.join('\n'))
+      .then(() => { setTwoFaCopied(true); setTimeout(() => setTwoFaCopied(false), 2000); })
+      .catch(() => toast.error('Copy failed'));
   }
 
   // ── Notifications ──
@@ -777,78 +900,265 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
           <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Two-Factor Authentication (TOTP)</h2>
 
-          {user?.totpEnabled && totpSetupData && (totpSetupData.backupCodes ?? []).length > 0 ? (
-            /* Just confirmed — show backup codes before clearing */
-            <>
-              <p className="text-sm text-pf-success font-medium">2FA is now enabled!</p>
-              <div className="bg-pf-surface rounded-pf p-4 border border-pf-warning/30">
-                <div className="text-xs text-pf-warning mb-2 font-semibold uppercase tracking-wider">Save your backup codes — you won't see these again</div>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                  {(totpSetupData.backupCodes ?? []).map(code => (
-                    <span key={code} className="font-mono text-xs text-pf-text bg-pf-overlay px-2 py-1.5 rounded text-center border border-pf-border">{code}</span>
-                  ))}
+          {/* View A: 2FA Disabled */}
+          {twoFaView === 'disabled' && (
+            <div className="space-y-5">
+              <div className="flex items-start gap-4 p-4 rounded-pf bg-pf-surface border border-pf-border">
+                <Shield className="size-8 text-pf-text-muted shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-pf-text">Protect your account with an authenticator app</p>
+                  <p className="text-xs text-pf-text-secondary">
+                    Two-factor authentication adds a second layer of security. Each time you sign in,
+                    you'll need your password plus a 6-digit code from your authenticator app (e.g. Google
+                    Authenticator, Authy, 1Password).
+                  </p>
                 </div>
               </div>
-              <button type="button" onClick={() => setTotpSetupData(null)}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors">
-                <Check className="size-4" />
-                I've saved my backup codes
+              <button
+                type="button"
+                onClick={twoFaStartSetup}
+                disabled={twoFaSetupLoading}
+                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+              >
+                {twoFaSetupLoading ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
+                {twoFaSetupLoading ? 'Generating...' : 'Enable Two-Factor Authentication'}
               </button>
-            </>
-          ) : user?.totpEnabled ? (
-            <>
-              <p className="text-sm text-pf-text-secondary">
-                2FA is currently <strong className="text-pf-success">enabled</strong>.
-              </p>
-              <div>
-                <label htmlFor="settings-totp-disable-password" className="text-xs text-pf-text-secondary mb-1.5 block">Enter your password to disable 2FA</label>
-                <input id="settings-totp-disable-password" type="password" value={totpDisablePassword} onChange={e => setTotpDisablePassword(e.target.value)} placeholder="Your password"
-                  className="w-full max-w-[280px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
-              </div>
-              <button type="button" onClick={disableTotp} disabled={totpSaving || !totpDisablePassword}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger/10 text-pf-danger border border-pf-danger/20 text-sm font-medium hover:bg-pf-danger/20 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors">
-                {totpSaving ? <Loader2 className="size-4 animate-spin" /> : <Shield className="size-4" />}
-                Disable 2FA
-              </button>
-            </>
-          ) : totpSetupData ? (
-            <>
-              <p className="text-sm text-pf-text-secondary">Scan this QR code with your authenticator app, then enter the 6-digit code to confirm.</p>
-              <div className="flex justify-center py-4">
-                <img src={totpSetupData.qrCode} alt="TOTP QR Code" className="w-48 h-48 rounded-pf-lg bg-white p-2" />
-              </div>
-              <div>
-                <label htmlFor="settings-totp-code" className="text-xs text-pf-text-secondary mb-1.5 block">Verification Code</label>
-                <input id="settings-totp-code" value={totpCode} onChange={e => setTotpCode(e.target.value)} placeholder="6-digit code" maxLength={6}
-                  className="w-full max-w-[200px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
-              </div>
-              {(totpSetupData.backupCodes ?? []).length > 0 && (
-                <div className="bg-pf-surface rounded-pf p-4">
-                  <div className="text-xs text-pf-text-secondary mb-2 font-medium">Backup Codes (save these!)</div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {(totpSetupData.backupCodes ?? []).map(code => (
-                      <span key={code} className="font-mono text-xs text-pf-text bg-pf-overlay px-2 py-1 rounded text-center">{code}</span>
-                    ))}
+            </div>
+          )}
+
+          {/* View B: Setup Flow */}
+          {twoFaView === 'setup' && (
+            <div className="space-y-6">
+              {/* Step 1: QR Code */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pf-cyan-500 text-black text-xs font-bold">1</span>
+                  <h3 className="text-sm font-semibold text-pf-text">Scan QR Code</h3>
+                </div>
+                <p className="text-xs text-pf-text-secondary ml-7">
+                  Open your authenticator app and scan the QR code below, or enter the secret key manually.
+                </p>
+                <div className="ml-7 space-y-3">
+                  {twoFaQrCodeUrl.startsWith('data:') ? (
+                    <div className="inline-block bg-white p-3 rounded-pf-lg border border-pf-border">
+                      <img src={twoFaQrCodeUrl} alt="TOTP QR Code" className="w-44 h-44" />
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-pf-surface border border-pf-border rounded-pf text-xs text-pf-text-secondary">
+                      <p className="mb-1">Open your authenticator app and add account manually using:</p>
+                      <p className="font-mono text-pf-text break-all">{twoFaQrCodeUrl}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-pf-text-secondary mb-1">Or enter this secret manually:</p>
+                    <code className="block font-mono text-sm text-pf-text bg-pf-surface border border-pf-border rounded-pf px-3 py-2 tracking-widest break-all">
+                      {twoFaSetupSecret}
+                    </code>
                   </div>
                 </div>
-              )}
-              <button type="button" onClick={confirmTotp} disabled={totpSaving || !totpCode}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors">
-                {totpSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                Confirm & Enable 2FA
+              </div>
+
+              {/* Step 2: Verify */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pf-cyan-500 text-black text-xs font-bold">2</span>
+                  <h3 className="text-sm font-semibold text-pf-text">Enter verification code</h3>
+                </div>
+                <div className="ml-7 space-y-3">
+                  <input
+                    id="2fa-verify-token"
+                    type="text"
+                    inputMode="numeric"
+                    autoFocus
+                    maxLength={6}
+                    value={twoFaVerifyToken}
+                    onChange={e => setTwoFaVerifyToken(e.target.value.replace(/\D/g, ''))}
+                    placeholder="000000"
+                    className="w-40 h-12 text-2xl font-mono tracking-widest text-center rounded-pf bg-pf-surface border border-pf-border text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                  />
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={twoFaEnable}
+                      disabled={twoFaVerifying || twoFaVerifyToken.length !== 6}
+                      className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                    >
+                      {twoFaVerifying ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
+                      Verify & Enable
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setTwoFaView('disabled'); setTwoFaVerifyToken(''); setTwoFaSetupSecret(''); setTwoFaQrCodeUrl(''); }}
+                      className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors underline underline-offset-2"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* View C: Backup Codes (shown once after enable) */}
+          {twoFaView === 'backup' && (
+            <div className="space-y-5">
+              <div className="flex items-center gap-3 p-4 rounded-pf bg-pf-success/10 border border-pf-success/30">
+                <ShieldCheck className="size-5 text-pf-success shrink-0" />
+                <p className="text-sm font-medium text-pf-success">2FA enabled successfully!</p>
+              </div>
+              <div className="p-4 bg-pf-warning/5 border border-pf-warning/30 rounded-pf space-y-3">
+                <div className="flex items-start gap-2">
+                  <KeyRound className="size-4 text-pf-warning shrink-0 mt-0.5" />
+                  <p className="text-xs text-pf-warning font-medium">
+                    Save these backup codes somewhere safe. Each can only be used once. If you lose access to
+                    your authenticator, you can use a backup code to sign in.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {twoFaBackupCodes.map(code => (
+                    <span key={code} className="font-mono text-sm bg-pf-surface px-3 py-2 rounded border border-pf-border text-center text-pf-text">
+                      {code}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => twoFaDownloadCodes(twoFaBackupCodes)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-border-strong transition-colors"
+                  >
+                    <Download className="size-3.5" />
+                    Download Backup Codes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => twoFaCopyAll(twoFaBackupCodes)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-border-strong transition-colors"
+                  >
+                    {twoFaCopied ? <Check className="size-3.5 text-pf-success" /> : <Copy className="size-3.5" />}
+                    {twoFaCopied ? 'Copied!' : 'Copy All'}
+                  </button>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTwoFaView('enabled')}
+                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
+              >
+                <Check className="size-4" />
+                Done
               </button>
-            </>
-          ) : (
-            <>
-              <p className="text-sm text-pf-text-secondary">
-                2FA is currently <strong className="text-pf-text-muted">disabled</strong>. Add an extra layer of security to your account.
-              </p>
-              <button type="button" onClick={startTotpSetup} disabled={totpLoading}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm font-medium text-pf-text hover:border-pf-border-strong disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors">
-                {totpLoading ? <Loader2 className="size-4 animate-spin" /> : <Shield className="size-4" />}
-                {totpLoading ? 'Setting up...' : 'Enable 2FA'}
-              </button>
-            </>
+            </div>
+          )}
+
+          {/* View D: 2FA Enabled */}
+          {twoFaView === 'enabled' && (
+            <div className="space-y-5">
+              <div className="flex items-center gap-3 p-4 rounded-pf bg-pf-success/10 border border-pf-success/30">
+                <ShieldCheck className="size-5 text-pf-success shrink-0" />
+                <p className="text-sm font-medium text-pf-success">Two-factor authentication is active</p>
+              </div>
+
+              {/* Regenerate backup codes */}
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-pf-text">Backup Codes</p>
+                  <p className="text-xs text-pf-text-secondary mt-0.5">
+                    Generate a new set of backup codes. Your old codes will be invalidated immediately.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={twoFaRegenBackupCodes}
+                  disabled={twoFaRegenLoading}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-sm font-medium text-pf-text hover:border-pf-border-strong disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                >
+                  {twoFaRegenLoading ? <Loader2 className="size-4 animate-spin" /> : <KeyRound className="size-4" />}
+                  Regenerate Backup Codes
+                </button>
+
+                {twoFaRegenCodes.length > 0 && (
+                  <div className="p-4 bg-pf-warning/5 border border-pf-warning/30 rounded-pf space-y-3">
+                    <p className="text-xs text-pf-warning font-medium flex items-center gap-1.5">
+                      <KeyRound className="size-3.5" />
+                      New backup codes — save these now, they won't be shown again
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {twoFaRegenCodes.map(code => (
+                        <span key={code} className="font-mono text-sm bg-pf-surface px-3 py-2 rounded border border-pf-border text-center text-pf-text">
+                          {code}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => twoFaDownloadCodes(twoFaRegenCodes)}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-border-strong transition-colors"
+                      >
+                        <Download className="size-3.5" />
+                        Download
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => twoFaCopyAll(twoFaRegenCodes)}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-border-strong transition-colors"
+                      >
+                        {twoFaCopied ? <Check className="size-3.5 text-pf-success" /> : <Copy className="size-3.5" />}
+                        {twoFaCopied ? 'Copied!' : 'Copy All'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Disable 2FA */}
+              <div className="pt-4 border-t border-pf-border space-y-3">
+                {!twoFaShowDisableForm ? (
+                  <button
+                    type="button"
+                    onClick={() => setTwoFaShowDisableForm(true)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger/10 text-pf-danger border border-pf-danger/30 text-sm font-medium hover:bg-pf-danger/20 transition-colors"
+                  >
+                    <ShieldOff className="size-4" />
+                    Disable 2FA
+                  </button>
+                ) : (
+                  <div className="space-y-3 p-4 bg-pf-surface border border-pf-danger/20 rounded-pf">
+                    <p className="text-sm font-medium text-pf-text">Enter your current authenticator code to disable 2FA</p>
+                    <input
+                      id="2fa-disable-token"
+                      type="text"
+                      inputMode="numeric"
+                      autoFocus
+                      maxLength={6}
+                      value={twoFaDisableToken}
+                      onChange={e => setTwoFaDisableToken(e.target.value.replace(/\D/g, ''))}
+                      placeholder="000000"
+                      className="w-40 h-12 text-2xl font-mono tracking-widest text-center rounded-pf bg-pf-elevated border border-pf-border text-pf-text focus:outline-none focus:border-pf-danger/50 transition-colors"
+                    />
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={twoFaDisable}
+                        disabled={twoFaDisabling || twoFaDisableToken.length !== 6}
+                        className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger text-white text-sm font-medium hover:bg-pf-danger/80 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                      >
+                        {twoFaDisabling ? <Loader2 className="size-4 animate-spin" /> : <ShieldOff className="size-4" />}
+                        Confirm Disable
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setTwoFaShowDisableForm(false); setTwoFaDisableToken(''); }}
+                        className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       )}

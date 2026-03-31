@@ -207,30 +207,52 @@ export function Component() {
     }
   }
 
+  function validateImport(data: unknown): boolean {
+    if (!data || typeof data !== 'object') return false;
+    const d = data as Record<string, unknown>;
+    if (!d.strategy || typeof d.strategy !== 'object') return false;
+    const s = d.strategy as Record<string, unknown>;
+    return typeof s.name === 'string' && (Array.isArray(s.blocks) || (typeof s.blocks === 'object' && s.blocks !== null));
+  }
+
   function handleImport() {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.polyforge,.json';
+    input.accept = '.json';
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-        const res = await fetch('/api/v1/strategies/import', {
+        if (!validateImport(data)) {
+          toast.error('Invalid strategy file');
+          return;
+        }
+        const imported = (data as Record<string, unknown>).strategy as Record<string, unknown>;
+        const blocks = imported.blocks as Record<string, unknown> | unknown[] | undefined;
+        const body = {
+          name: `${imported.name as string} (imported)`,
+          description: (imported.description as string | undefined) ?? '',
+          blocks: Array.isArray(blocks)
+            ? blocks
+            : (blocks ?? {}),
+          settings: (imported.settings as Record<string, unknown> | undefined) ?? {},
+        };
+        const res = await fetch('/api/v1/strategies', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify(data),
+          body: JSON.stringify(body),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          toast.error(err.message ?? 'Failed to import strategy');
+          toast.error((err as Record<string, unknown>).message as string ?? 'Failed to import strategy');
           return;
         }
         const created = await res.json();
-        toast.success('Strategy imported successfully');
-        navigate(`/strategies/${created.id}`);
+        toast.success('Strategy imported');
+        navigate(`/strategies/${(created as Record<string, unknown>).id}`);
       } catch {
         toast.error('Invalid strategy file');
       }

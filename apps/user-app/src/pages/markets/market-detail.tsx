@@ -26,6 +26,11 @@ import {
   ResponsiveContainer,
   Area,
   AreaChart,
+  ComposedChart,
+  Line,
+  Bar,
+  CartesianGrid,
+  Legend,
 } from 'recharts';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -49,6 +54,13 @@ interface Market {
   volume24h: string;
   endDate: string;
   closed: boolean;
+}
+
+interface HistoryPoint {
+  timestamp: string;
+  yesPrice: number;
+  noPrice: number;
+  volume: number;
 }
 
 interface PriceCandle {
@@ -242,6 +254,11 @@ export function Component() {
   const [myOrders, setMyOrders] = useState<Array<{ id: string; side: string; outcome: string; size: string; price: string; status: string }>>([]);
   const [loadingMyOrders, setLoadingMyOrders] = useState(false);
 
+  // Price History chart state
+  const [historyPeriod, setHistoryPeriod] = useState<'7d' | '30d' | 'allTime'>('7d');
+  const [historyData, setHistoryData] = useState<HistoryPoint[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   // Kelly sizer state
   const [kellyConfidence, setKellyConfidence] = useState(65);
   const [portfolioBalance, setPortfolioBalance] = useState<number>(1000);
@@ -371,6 +388,25 @@ export function Component() {
       .catch(() => { if (!cancelled) { toast.error('Failed to load related news'); setLoadingNewsArticles(false); } });
     return () => { cancelled = true; };
   }, [market?.id]);
+
+  // Load price history for the new chart
+  useEffect(() => {
+    if (!market?.id) return;
+    let cancelled = false;
+    setLoadingHistory(true);
+    fetch(`/api/v1/markets/${market.id}/history?period=${historyPeriod}`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((result: { data: HistoryPoint[] }) => {
+        if (!cancelled) {
+          setHistoryData(result?.data ?? []);
+          setLoadingHistory(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) { setHistoryData([]); setLoadingHistory(false); }
+      });
+    return () => { cancelled = true; };
+  }, [market?.id, historyPeriod]);
 
   // When resolution changes
   function onResolutionChange(res: Resolution) {
@@ -771,6 +807,144 @@ export function Component() {
                 <span className="text-sm font-mono font-medium text-pf-text">{stat.value}</span>
               </div>
             ))}
+          </div>
+
+          {/* Price History Chart */}
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+            {/* Header row */}
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-pf-border">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-pf-text">Price History</span>
+                {yesPrice && (
+                  <span className="px-2 py-0.5 rounded-full bg-pf-success/10 border border-pf-success/20 text-[11px] font-mono text-pf-success">
+                    YES {yesPrice}
+                  </span>
+                )}
+                {noPrice && (
+                  <span className="px-2 py-0.5 rounded-full bg-pf-danger/10 border border-pf-danger/20 text-[11px] font-mono text-pf-danger">
+                    NO {noPrice}
+                  </span>
+                )}
+              </div>
+              {/* Period tabs */}
+              <div className="flex gap-1">
+                {(['7d', '30d', 'allTime'] as const).map((p) => (
+                  <button
+                    type="button"
+                    key={p}
+                    onClick={() => setHistoryPeriod(p)}
+                    aria-pressed={historyPeriod === p}
+                    className={`px-2.5 py-1 rounded-pf-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
+                      historyPeriod === p
+                        ? 'bg-pf-cyan-500/15 text-pf-cyan-400'
+                        : 'bg-pf-elevated text-pf-text-muted hover:text-pf-text-secondary'
+                    }`}
+                  >
+                    {p === 'allTime' ? 'All' : p}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Chart body */}
+            <div className="px-4 py-3">
+              {loadingHistory ? (
+                <div className="h-52 flex items-center justify-center">
+                  <div className="h-full w-full bg-pf-overlay rounded-pf animate-pulse" />
+                </div>
+              ) : historyData.length === 0 ? (
+                <div className="h-52 flex flex-col items-center justify-center text-pf-text-muted text-sm">
+                  <TrendingUp className="size-8 opacity-20 mb-2" />
+                  No price history available
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={208}>
+                  <ComposedChart data={historyData.map((d) => ({
+                    ...d,
+                    label: new Date(d.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={borderColor} strokeOpacity={0.4} vertical={false} />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 10, fill: textMuted }}
+                      tickLine={false}
+                      axisLine={false}
+                      interval="preserveStartEnd"
+                    />
+                    {/* Left Y-axis: prices 0–1 */}
+                    <YAxis
+                      yAxisId="price"
+                      domain={[0, 1]}
+                      tick={{ fontSize: 10, fill: textMuted }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(v: number) => v.toFixed(2)}
+                      width={36}
+                    />
+                    {/* Right Y-axis: volume */}
+                    <YAxis
+                      yAxisId="volume"
+                      orientation="right"
+                      tick={{ fontSize: 10, fill: textMuted }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(v: number) => v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${v.toFixed(0)}`}
+                      width={44}
+                    />
+                    <Tooltip
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload?.length) return null;
+                        const yes = payload.find((p) => p.dataKey === 'yesPrice')?.value as number | undefined;
+                        const no = payload.find((p) => p.dataKey === 'noPrice')?.value as number | undefined;
+                        const vol = payload.find((p) => p.dataKey === 'volume')?.value as number | undefined;
+                        return (
+                          <div className="bg-pf-surface border border-pf-border rounded px-3 py-2 text-xs">
+                            <p className="text-pf-text-secondary mb-1">{label}</p>
+                            {yes !== undefined && <p className="text-pf-cyan-400">YES: {Math.round(yes * 100)}¢</p>}
+                            {no !== undefined && <p className="text-pf-text-muted">NO: {Math.round(no * 100)}¢</p>}
+                            {vol !== undefined && (
+                              <p className="text-pf-text-secondary mt-0.5">
+                                Vol: ${vol >= 1000 ? `${(vol / 1000).toFixed(1)}K` : vol.toFixed(0)}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      }}
+                    />
+                    <Legend
+                      iconSize={8}
+                      wrapperStyle={{ fontSize: 10, color: textSecondary, paddingTop: 4 }}
+                      formatter={(value: string) => value === 'yesPrice' ? 'YES' : value === 'noPrice' ? 'NO' : 'Volume'}
+                    />
+                    {/* Volume bars */}
+                    <Bar yAxisId="volume" dataKey="volume" fill="#06b6d4" opacity={0.15} name="volume" />
+                    {/* YES price line */}
+                    <Line
+                      yAxisId="price"
+                      type="monotone"
+                      dataKey="yesPrice"
+                      stroke="#06b6d4"
+                      strokeWidth={1.5}
+                      dot={false}
+                      activeDot={{ r: 3, fill: '#06b6d4' }}
+                      name="yesPrice"
+                    />
+                    {/* NO price line */}
+                    <Line
+                      yAxisId="price"
+                      type="monotone"
+                      dataKey="noPrice"
+                      stroke="#6b7280"
+                      strokeWidth={1.5}
+                      strokeDasharray="4 2"
+                      dot={false}
+                      activeDot={{ r: 3, fill: '#6b7280' }}
+                      name="noPrice"
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              )}
+            </div>
           </div>
 
           {/* Chart + Order Book */}

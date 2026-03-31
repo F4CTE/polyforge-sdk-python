@@ -27,6 +27,7 @@ import {
   Bell,
   BellRing,
   Rss,
+  Gift,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -80,6 +81,10 @@ const navSections: NavSection[] = [
   {
     title: 'Developers',
     items: [{ label: 'API Docs', icon: Code, route: '/api-docs' }],
+  },
+  {
+    title: 'Referrals',
+    items: [{ label: 'Referrals', icon: Gift, route: '/referrals' }],
   },
   {
     title: 'Help',

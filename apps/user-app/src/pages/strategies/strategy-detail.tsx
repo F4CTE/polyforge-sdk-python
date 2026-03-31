@@ -20,6 +20,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Star,
+  Copy,
+  Check,
+  FileJson,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -209,6 +212,8 @@ export function Component() {
   const [rollingBack, setRollingBack] = useState<string | null>(null);
   const [stratPnl, setStratPnl] = useState<{ totalPnl: string; winRate: string } | null>(null);
 
+  const [copyJsonDone, setCopyJsonDone] = useState(false);
+
   // Marketplace listing state
   const [showListing, setShowListing] = useState(false);
   const [listTitle, setListTitle] = useState('');
@@ -367,6 +372,68 @@ export function Component() {
       toast.success('Strategy exported');
     } catch {
       toast.error('Failed to export strategy');
+    }
+  }
+
+  function exportStrategyJson(s: Strategy) {
+    const exportData = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      strategy: {
+        name: s.name,
+        description: s.description,
+        blocks: {
+          triggers: s.triggers,
+          conditions: s.conditions,
+          actions: s.actions,
+          safety: s.safety,
+        },
+        settings: {
+          execMode: s.execMode,
+          tickMs: s.tickMs,
+          visibility: s.visibility,
+          tags: s.tags,
+        },
+      },
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${s.name.replace(/\s+/g, '-').toLowerCase()}-strategy.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Strategy exported');
+  }
+
+  async function copyStrategyJson(s: Strategy) {
+    const exportData = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      strategy: {
+        name: s.name,
+        description: s.description,
+        blocks: {
+          triggers: s.triggers,
+          conditions: s.conditions,
+          actions: s.actions,
+          safety: s.safety,
+        },
+        settings: {
+          execMode: s.execMode,
+          tickMs: s.tickMs,
+          visibility: s.visibility,
+          tags: s.tags,
+        },
+      },
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(exportData, null, 2));
+      setCopyJsonDone(true);
+      toast.success('JSON copied to clipboard');
+      setTimeout(() => setCopyJsonDone(false), 2000);
+    } catch {
+      toast.error('Failed to copy to clipboard');
     }
   }
 
@@ -571,6 +638,24 @@ export function Component() {
                 title="Export strategy"
               >
                 <Download className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => exportStrategyJson(strategy)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                aria-label="Export strategy as JSON"
+                title="Export JSON"
+              >
+                <FileJson className="size-4" aria-hidden="true" /> Export JSON
+              </button>
+              <button
+                type="button"
+                onClick={() => copyStrategyJson(strategy)}
+                className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                aria-label="Copy strategy JSON to clipboard"
+                title="Copy JSON"
+              >
+                {copyJsonDone ? <Check className="size-4 text-pf-success" /> : <Copy className="size-4" />}
               </button>
               <button
                 type="button"

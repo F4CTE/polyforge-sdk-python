@@ -59,6 +59,7 @@ export const router = createBrowserRouter([
               { path: 'support', lazy: () => import('./pages/support/ticket-list') },
               { path: 'support/new', lazy: () => import('./pages/support/create-ticket') },
               { path: 'support/:id', lazy: () => import('./pages/support/ticket-detail') },
+              { path: 'referrals', lazy: () => import('./pages/referrals/referrals') },
             ],
           },
           { path: 'settings', lazy: () => import('./pages/settings/settings') },

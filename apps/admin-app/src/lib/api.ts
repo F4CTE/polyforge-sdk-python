@@ -130,11 +130,22 @@ interface CacheStatsData {
   [key: string]: unknown;
 }
 
-interface ReportData {
+export interface Report {
   id: string;
-  status: string;
-  [key: string]: unknown;
+  status: 'PENDING' | 'RESOLVED' | 'DISMISSED';
+  reason: string;
+  description?: string;
+  contentType: 'STRATEGY' | 'REVIEW' | 'USER' | 'COMMENT';
+  contentId: string;
+  contentPreview?: string;
+  reporter: { id: string; username: string; displayName: string | null };
+  reported: { id: string; username: string; displayName: string | null };
+  createdAt: string;
+  resolvedAt?: string;
+  adminNote?: string;
 }
+
+type ReportData = Report;
 
 interface BuilderStatsData {
   activeBuilders: number;
@@ -293,11 +304,11 @@ export const adminApi = {
 
   // Reports
   reports: (params?: QueryParams) =>
-    request<PaginatedResponse<ReportData>>(buildUrl(API_BASE, '/reports', params)),
-  resolveReport: (id: string, status: string, adminNote?: string) =>
-    request<ReportData>(buildUrl(API_BASE, `/reports/${id}`), {
+    request<PaginatedResponse<Report>>(buildUrl(API_BASE, '/reports', params)),
+  actionReport: (id: string, action: 'DISMISS' | 'REMOVE_CONTENT' | 'WARN_USER' | 'BAN_USER', adminNote?: string) =>
+    request<Report>(buildUrl(API_BASE, `/reports/${id}`), {
       method: 'PATCH',
-      body: JSON.stringify({ status, adminNote }),
+      body: JSON.stringify({ action, ...(adminNote ? { adminNote } : {}) }),
     }),
 
   // Builder
