@@ -576,6 +576,39 @@ export const adminApi = {
       method: 'DELETE',
     }),
 
+  // Segmentation
+  segments: () =>
+    request<{ data: Array<{
+      cohortId: string;
+      userCount: number;
+      pctOfTotal: number;
+      avgTradesPerMonth: number;
+      avgPnl: string;
+      retentionRate: number;
+      trend: 'up' | 'down' | 'stable';
+      trendPct: number;
+    }> }>(buildUrl('/api/admin', '/segments')),
+
+  segmentUsers: (cohortId: string, params?: QueryParams) =>
+    request<{
+      data: Array<{
+        id: string;
+        username: string;
+        email: string;
+        joinedAt: string;
+        lastActiveAt: string;
+        tradeCount: number;
+        totalVolume: string;
+      }>;
+      total: number;
+    }>(buildUrl('/api/admin', `/segments/${encodeURIComponent(cohortId)}/users`, params)),
+
+  broadcastToSegment: (cohortId: string, body: { messageId: string }) =>
+    request<void>(buildUrl('/api/admin', `/segments/${encodeURIComponent(cohortId)}/broadcast`), {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
   // Retention
   retentionOverview: () =>
     request<{

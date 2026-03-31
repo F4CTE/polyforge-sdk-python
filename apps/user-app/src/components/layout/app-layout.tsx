@@ -8,12 +8,22 @@ import { MobileBottomNav } from './mobile-bottom-nav';
 import { OnboardingChecklist } from '../onboarding/onboarding-checklist';
 import { TooltipTour } from '../onboarding/tooltip-tour';
 import { ShortcutsModal } from '../shortcuts/shortcuts-modal';
+import { OnboardingModal } from '../onboarding/onboarding-modal';
+
+const ONBOARDING_KEY = 'pf-onboarding-complete';
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem(ONBOARDING_KEY)) return;
+    const t = setTimeout(() => setShowOnboarding(true), 500);
+    return () => clearTimeout(t);
+  }, []);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
@@ -111,6 +121,9 @@ export function AppLayout() {
 
       {/* Keyboard shortcuts reference modal */}
       <ShortcutsModal open={showShortcuts} onClose={() => setShowShortcuts(false)} />
+
+      {/* Welcome onboarding modal — shown once to new users */}
+      <OnboardingModal open={showOnboarding} onClose={() => setShowOnboarding(false)} />
 
       {/* Mobile bottom navigation */}
       <MobileBottomNav />

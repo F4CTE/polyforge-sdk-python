@@ -22,6 +22,8 @@ import {
   BarChart2,
   Activity,
   Megaphone,
+  PieChart,
+  Settings2,
 } from 'lucide-react';
 import { useAdminAuthStore } from '@/stores/admin-auth-store';
 import { usePollingStore } from '@/stores/polling-store';
@@ -53,6 +55,7 @@ const navSections: NavSection[] = [
     title: 'Management',
     items: [
       { label: 'Users', path: '/users', icon: <Users size={iconSize} aria-hidden="true" /> },
+      { label: 'Segmentation', path: '/users/segmentation', icon: <PieChart size={iconSize} aria-hidden="true" /> },
       { label: 'Approvals', path: '/approvals', icon: <UserCheck size={iconSize} aria-hidden="true" /> },
       { label: 'Strategies', path: '/strategies', icon: <Blocks size={iconSize} aria-hidden="true" /> },
       { label: 'Listings', path: '/listings', icon: <ShoppingBag size={iconSize} aria-hidden="true" /> },
@@ -70,6 +73,7 @@ const navSections: NavSection[] = [
       { label: 'Logs', path: '/logs', icon: <ScrollText size={iconSize} aria-hidden="true" /> },
       { label: 'Health', path: '/health', icon: <Activity size={iconSize} aria-hidden="true" /> },
       { label: 'Sentiment', path: '/sentiment', icon: <TrendingUp size={iconSize} aria-hidden="true" /> },
+      { label: 'Platform Config', path: '/config', icon: <Settings2 size={iconSize} aria-hidden="true" /> },
     ],
   },
   {

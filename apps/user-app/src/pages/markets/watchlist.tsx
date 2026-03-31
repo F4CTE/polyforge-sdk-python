@@ -1,964 +1,1140 @@
-import { useState, useEffect, useRef, useMemo, Fragment } from 'react';
-import { Link } from 'react-router';
+import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
-  ChevronUp,
-  ChevronDown,
-  X,
-  LayoutList,
-  Tag,
+  Star,
   TrendingUp,
   TrendingDown,
+  ChevronDown,
+  ChevronUp,
   Zap,
+  X,
+  Plus,
+  Minus,
+  Bell,
+  BellRing,
+  BellOff,
+  Trash2,
+  AlertCircle,
+  Clock,
+  BarChart2,
+  ExternalLink,
 } from 'lucide-react';
-import { wsManager } from '@/lib/websocket';
 
-/* ─── Types ──────────────────────────────────────────────────────────── */
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
-interface WatchedMarket {
+interface WatchlistMarket {
   id: string;
   title: string;
-  category?: string;
-  image?: string;
-  closed: boolean;
-  volume24h: string;
-  tokens?: Array<{ id: string; outcome: string; price: string }>;
-  watchlistId: string;
-  addedAt: string;
-  priceChange24h?: number;
+  slug: string;
+  category: string;
+  yesPrice: number;
+  noPrice: number;
+  volume24h: number;
+  liquidity: number;
+  change24h: number;
+  expiryDate: string;
+  imageUrl?: string;
+  isStarred: boolean;
 }
 
-type SortBy = 'name' | 'yesPrice' | 'change' | 'volume' | 'addedAt';
-type SortDir = 'asc' | 'desc';
-
 interface QuickOrderState {
-  marketId: string | null;
   outcome: 'YES' | 'NO';
-  side: 'BUY' | 'SELL';
-  amount: string;
-  price: string;
-  orderType: 'market' | 'limit';
+  amount: number;
   submitting: boolean;
 }
 
-const DEFAULT_QUICK_ORDER: QuickOrderState = {
-  marketId: null,
-  outcome: 'YES',
-  side: 'BUY',
-  amount: '',
-  price: '',
-  orderType: 'market',
-  submitting: false,
-};
-
-/* ─── Helpers ────────────────────────────────────────────────────────── */
-
-function formatVolume(vol: string | number): string {
-  const v = typeof vol === 'string' ? parseFloat(vol) : vol;
-  if (isNaN(v)) return '—';
-  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `$${(v / 1_000).toFixed(1)}K`;
-  return `$${v.toFixed(0)}`;
+interface WatchlistAlert {
+  id: string;
+  marketId: string;
+  outcome: 'YES' | 'NO';
+  condition: 'above' | 'below';
+  threshold: number;
+  triggered: boolean;
+  createdAt: string;
 }
 
-function relativeDate(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const days = Math.floor(diff / 86_400_000);
-  if (days === 0) return 'Today';
-  if (days === 1) return '1 day ago';
-  if (days < 30) return `${days} days ago`;
-  const months = Math.floor(days / 30);
-  if (months === 1) return '1 month ago';
-  if (months < 12) return `${months} months ago`;
-  return `${Math.floor(months / 12)}y ago`;
+// ---------------------------------------------------------------------------
+// Mock data
+// ---------------------------------------------------------------------------
+
+const MOCK_MARKETS: WatchlistMarket[] = [
+  {
+    id: 'mkt-001',
+    title: 'Will the Fed cut rates in Q2 2026?',
+    slug: 'fed-cut-rates-q2-2026',
+    category: 'Economics',
+    yesPrice: 0.72,
+    noPrice: 0.28,
+    volume24h: 184500,
+    liquidity: 620000,
+    change24h: 0.043,
+    expiryDate: '2026-06-30',
+    isStarred: true,
+  },
+  {
+    id: 'mkt-002',
+    title: 'Will Bitcoin exceed $120k before July 2026?',
+    slug: 'bitcoin-120k-before-july-2026',
+    category: 'Crypto',
+    yesPrice: 0.48,
+    noPrice: 0.52,
+    volume24h: 396000,
+    liquidity: 1240000,
+    change24h: -0.021,
+    expiryDate: '2026-07-01',
+    isStarred: true,
+  },
+  {
+    id: 'mkt-003',
+    title: 'Will the S&P 500 close above 6,000 in April 2026?',
+    slug: 'sp500-6000-april-2026',
+    category: 'Finance',
+    yesPrice: 0.61,
+    noPrice: 0.39,
+    volume24h: 211000,
+    liquidity: 780000,
+    change24h: 0.015,
+    expiryDate: '2026-04-30',
+    isStarred: false,
+  },
+  {
+    id: 'mkt-004',
+    title: 'Will OpenAI release GPT-5 before May 2026?',
+    slug: 'openai-gpt5-before-may-2026',
+    category: 'AI',
+    yesPrice: 0.55,
+    noPrice: 0.45,
+    volume24h: 143000,
+    liquidity: 510000,
+    change24h: 0.072,
+    expiryDate: '2026-05-01',
+    isStarred: true,
+  },
+  {
+    id: 'mkt-005',
+    title: 'Will the US unemployment rate exceed 5% in 2026?',
+    slug: 'us-unemployment-5pct-2026',
+    category: 'Economics',
+    yesPrice: 0.33,
+    noPrice: 0.67,
+    volume24h: 87000,
+    liquidity: 290000,
+    change24h: -0.008,
+    expiryDate: '2026-12-31',
+    isStarred: false,
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function formatPrice(p: number) {
+  return (p * 100).toFixed(0) + '¢';
 }
 
-/* ─── Sortable column header ─────────────────────────────────────────── */
+function formatDollar(n: number) {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${n.toFixed(0)}`;
+}
 
-function SortHeader({
-  label,
-  col,
-  sortBy,
-  sortDir,
-  onSort,
-  className = '',
-}: {
-  label: string;
-  col: SortBy;
-  sortBy: SortBy;
-  sortDir: SortDir;
-  onSort: (col: SortBy) => void;
-  className?: string;
-}) {
-  const active = sortBy === col;
+function formatChange(c: number) {
+  const sign = c >= 0 ? '+' : '';
+  return `${sign}${(c * 100).toFixed(1)}pp`;
+}
+
+function formatThreshold(t: number) {
+  return t.toFixed(2);
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function activeAlertCount(alerts: WatchlistAlert[]) {
+  return alerts.filter((a) => !a.triggered).length;
+}
+
+function hasTriggeredAlert(alerts: WatchlistAlert[]) {
+  return alerts.some((a) => a.triggered);
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+function PriceBadge({ price, variant }: { price: number; variant: 'yes' | 'no' }) {
+  const base =
+    variant === 'yes'
+      ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
+      : 'bg-pf-danger/10 text-pf-danger border-pf-danger/20';
   return (
-    <th
-      scope="col"
-      className={`px-4 py-3 font-medium cursor-pointer select-none hover:text-pf-text transition-colors ${
-        active ? 'text-pf-cyan-400' : 'text-pf-text-secondary'
-      } ${className}`}
-      onClick={() => onSort(col)}
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-pf-sm border text-xs font-semibold tabular-nums ${base}`}
     >
-      <span className="inline-flex items-center gap-1">
-        {label}
-        {active ? (
-          sortDir === 'asc' ? (
-            <ChevronUp className="size-3" />
-          ) : (
-            <ChevronDown className="size-3" />
-          )
-        ) : (
-          <ChevronDown className="size-3 opacity-30" />
-        )}
-      </span>
-    </th>
+      {formatPrice(price)}
+    </span>
   );
 }
 
-/* ─── Component ──────────────────────────────────────────────────────── */
+function ChangeBadge({ change }: { change: number }) {
+  const positive = change >= 0;
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 text-xs font-medium tabular-nums ${
+        positive ? 'text-pf-success' : 'text-pf-danger'
+      }`}
+    >
+      {positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+      {formatChange(change)}
+    </span>
+  );
+}
+
+interface AlertBellProps {
+  alerts: WatchlistAlert[] | undefined;
+  loading: boolean;
+  onClick: () => void;
+  active: boolean;
+}
+
+function AlertBell({ alerts, loading, onClick, active }: AlertBellProps) {
+  const count = alerts ? activeAlertCount(alerts) : 0;
+  const triggered = alerts ? hasTriggeredAlert(alerts) : false;
+
+  let iconColor = 'text-pf-text-muted hover:text-pf-text-secondary';
+  let Icon = Bell;
+
+  if (active) {
+    iconColor = 'text-pf-cyan-400';
+    Icon = BellRing;
+  } else if (triggered) {
+    iconColor = 'text-pf-warning';
+    Icon = BellRing;
+  } else if (count > 0) {
+    iconColor = 'text-pf-cyan-400';
+    Icon = BellRing;
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={loading}
+      aria-label="Manage price alerts"
+      aria-pressed={active}
+      className={`relative inline-flex items-center justify-center w-7 h-7 rounded-pf-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${iconColor} ${
+        active ? 'bg-pf-cyan-400/10' : 'hover:bg-pf-surface'
+      } ${loading ? 'opacity-50 cursor-wait' : ''}`}
+    >
+      <Icon className="w-4 h-4" />
+      {count > 0 && !active && (
+        <span className="absolute -top-1 -right-1 flex items-center justify-center w-3.5 h-3.5 rounded-full bg-pf-cyan-500 text-[9px] font-bold text-black leading-none">
+          {count > 9 ? '9+' : count}
+        </span>
+      )}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 
 export function Component() {
-  const [markets, setMarkets] = useState<WatchedMarket[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [livePrices, setLivePrices] = useState<Record<string, number>>({});
-  const prevPrices = useRef<Record<string, number>>({});
-  const [sortBy, setSortBy] = useState<SortBy>('addedAt');
-  const [sortDir, setSortDir] = useState<SortDir>('desc');
-  const [groupByCategory, setGroupByCategory] = useState(false);
-  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
-  const [quickOrder, setQuickOrder] = useState<QuickOrderState>(DEFAULT_QUICK_ORDER);
+  const navigate = useNavigate();
 
-  const fetchWatchlist = () => {
-    setLoading(true);
-    fetch('/api/v1/watchlist', { credentials: 'include' })
-      .then(r => (r.ok ? r.json() : []))
-      .then(setMarkets)
-      .catch(() => setMarkets([]))
-      .finally(() => setLoading(false));
-  };
+  // ---- Watchlist state ---------------------------------------------------
+  const [markets, setMarkets] = useState<WatchlistMarket[]>(MOCK_MARKETS);
+  const [sortKey, setSortKey] = useState<keyof WatchlistMarket>('volume24h');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [filterCategory, setFilterCategory] = useState<string>('All');
 
-  useEffect(() => {
-    fetchWatchlist();
-  }, []);
+  // ---- Quick-order state (v6.28.0) ----------------------------------------
+  const [expandedQuickOrder, setExpandedQuickOrder] = useState<string | null>(null);
+  const [quickOrderState, setQuickOrderState] = useState<Record<string, QuickOrderState>>({});
 
-  /* ── Optimistic remove with toast ─────────────────────────────────── */
+  // ---- Alerts state (v6.29.0) ---------------------------------------------
+  const [expandedAlerts, setExpandedAlerts] = useState<string | null>(null);
+  const [alertsByMarket, setAlertsByMarket] = useState<Record<string, WatchlistAlert[]>>({});
+  const [loadingAlerts, setLoadingAlerts] = useState<Record<string, boolean>>({});
 
-  const removeFromWatchlist = async (marketId: string) => {
-    // Optimistic update
-    setMarkets(prev => prev.filter(m => m.id !== marketId));
-    setRemovingIds(prev => new Set([...prev, marketId]));
+  // Alert form fields
+  const [alertOutcome, setAlertOutcome] = useState<'YES' | 'NO'>('YES');
+  const [alertCondition, setAlertCondition] = useState<'above' | 'below'>('above');
+  const [alertThreshold, setAlertThreshold] = useState<number>(0.6);
+  const [addingAlert, setAddingAlert] = useState(false);
+  const [deletingAlertId, setDeletingAlertId] = useState<string | null>(null);
 
-    try {
-      const res = await fetch(`/api/v1/watchlist/${marketId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to remove');
-      toast.success('Market removed from watchlist');
-    } catch {
-      // Revert on failure
-      fetchWatchlist();
-      toast.error('Failed to remove market — please try again');
-    } finally {
-      setRemovingIds(prev => {
-        const next = new Set(prev);
-        next.delete(marketId);
-        return next;
-      });
-    }
-  };
+  // ---- Derived -------------------------------------------------------------
+  const categories = ['All', ...Array.from(new Set(MOCK_MARKETS.map((m) => m.category)))];
 
-  /* ── Quick Order handlers ──────────────────────────────────────────── */
-
-  const toggleQuickOrder = (marketId: string) => {
-    setQuickOrder(prev =>
-      prev.marketId === marketId
-        ? DEFAULT_QUICK_ORDER
-        : { ...DEFAULT_QUICK_ORDER, marketId },
-    );
-  };
-
-  const placeOrder = async () => {
-    if (!quickOrder.marketId) return;
-
-    const amt = parseFloat(quickOrder.amount);
-    if (isNaN(amt) || amt <= 0) return;
-
-    if (quickOrder.orderType === 'limit') {
-      const lp = parseFloat(quickOrder.price);
-      if (isNaN(lp) || lp < 0.01 || lp > 0.99) return;
-    }
-
-    setQuickOrder(prev => ({ ...prev, submitting: true }));
-
-    try {
-      const body: Record<string, unknown> = {
-        marketId: quickOrder.marketId,
-        outcome: quickOrder.outcome,
-        side: quickOrder.side,
-        amount: quickOrder.amount,
-        orderType: quickOrder.orderType,
-      };
-      if (quickOrder.orderType === 'limit') {
-        body.price = quickOrder.price;
+  const displayedMarkets = markets
+    .filter((m) => filterCategory === 'All' || m.category === filterCategory)
+    .sort((a, b) => {
+      const av = a[sortKey] as number | string | boolean;
+      const bv = b[sortKey] as number | string | boolean;
+      if (typeof av === 'number' && typeof bv === 'number') {
+        return sortDir === 'asc' ? av - bv : bv - av;
       }
-
-      const res = await fetch('/api/v1/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error((data as { message?: string }).message ?? 'Order failed');
-      }
-
-      toast.success('Order placed!');
-      setQuickOrder(DEFAULT_QUICK_ORDER);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Order failed — please try again');
-      setQuickOrder(prev => ({ ...prev, submitting: false }));
-    }
-  };
-
-  /* ── Live price WebSocket ──────────────────────────────────────────── */
-
-  useEffect(() => {
-    if (!markets.length) return;
-    const tokenIds: string[] = [];
-    markets.forEach(m => {
-      m.tokens?.forEach(t => tokenIds.push(t.id));
+      return 0;
     });
-    if (!tokenIds.length) return;
-    wsManager.subscribePrices(tokenIds);
-    const handler = (msg: Record<string, unknown>) => {
-      if (msg.type !== 'PRICE_UPDATE') return;
-      const d =
-        msg.data && typeof msg.data === 'object'
-          ? (msg.data as Record<string, unknown>)
-          : msg;
-      const tokenId = d.tokenId as string;
-      const price =
-        typeof d.price === 'number' ? d.price : parseFloat(String(d.price ?? '0'));
-      if (!tokenId || isNaN(price)) return;
-      setLivePrices(prev => {
-        prevPrices.current[tokenId] = prev[tokenId] ?? price;
-        return { ...prev, [tokenId]: price };
-      });
-    };
-    wsManager.addListener(handler);
-    return () => {
-      wsManager.removeListener(handler);
-      wsManager.unsubscribePrices(tokenIds);
-    };
-  }, [markets]);
 
-  /* ── Price helpers ─────────────────────────────────────────────────── */
-
-  const yesPrice = (
-    m: WatchedMarket,
-  ): { price: number; live: boolean; prev: number | null } | null => {
-    const yes = m.tokens?.find(t => t.outcome?.toUpperCase() === 'YES');
-    if (!yes) return null;
-    const live = livePrices[yes.id];
-    if (live !== undefined) {
-      return { price: live, live: true, prev: prevPrices.current[yes.id] ?? null };
-    }
-    return { price: parseFloat(yes.price), live: false, prev: null };
-  };
-
-  const noPrice = (m: WatchedMarket): number | null => {
-    const no = m.tokens?.find(t => t.outcome?.toUpperCase() === 'NO');
-    if (!no) return null;
-    const live = livePrices[no.id];
-    return live !== undefined ? live : parseFloat(no.price) || null;
-  };
-
-  /* ── Sort logic ────────────────────────────────────────────────────── */
-
-  const handleSort = (col: SortBy) => {
-    if (sortBy === col) {
-      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+  // ---- Handlers: watchlist ------------------------------------------------
+  const handleSort = (key: keyof WatchlistMarket) => {
+    if (key === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
     } else {
-      setSortBy(col);
+      setSortKey(key);
       setSortDir('desc');
     }
   };
 
-  const sorted = useMemo(() => {
-    const arr = [...markets];
-    arr.sort((a, b) => {
-      let av: number | string = 0;
-      let bv: number | string = 0;
-
-      switch (sortBy) {
-        case 'name':
-          av = a.title.toLowerCase();
-          bv = b.title.toLowerCase();
-          break;
-        case 'yesPrice': {
-          const ap = a.tokens?.find(t => t.outcome?.toUpperCase() === 'YES');
-          const bp = b.tokens?.find(t => t.outcome?.toUpperCase() === 'YES');
-          av = ap ? (livePrices[ap.id] ?? parseFloat(ap.price) ?? 0) : 0;
-          bv = bp ? (livePrices[bp.id] ?? parseFloat(bp.price) ?? 0) : 0;
-          break;
-        }
-        case 'change':
-          av = a.priceChange24h ?? 0;
-          bv = b.priceChange24h ?? 0;
-          break;
-        case 'volume':
-          av = parseFloat(a.volume24h ?? '0') || 0;
-          bv = parseFloat(b.volume24h ?? '0') || 0;
-          break;
-        case 'addedAt':
-          av = new Date(a.addedAt).getTime();
-          bv = new Date(b.addedAt).getTime();
-          break;
-      }
-
-      if (typeof av === 'string' && typeof bv === 'string') {
-        return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
-      }
-      return sortDir === 'asc'
-        ? (av as number) - (bv as number)
-        : (bv as number) - (av as number);
-    });
-    return arr;
-  }, [markets, sortBy, sortDir, livePrices]);
-
-  /* ── Summary bar stats ─────────────────────────────────────────────── */
-
-  const posCount = markets.filter(m => (m.priceChange24h ?? 0) > 0).length;
-  const negCount = markets.filter(m => (m.priceChange24h ?? 0) < 0).length;
-
-  /* ── Group-by-category ─────────────────────────────────────────────── */
-
-  const grouped = useMemo(() => {
-    if (!groupByCategory) return null;
-    const map = new Map<string, WatchedMarket[]>();
-    sorted.forEach(m => {
-      const cat = m.category ?? 'Uncategorized';
-      if (!map.has(cat)) map.set(cat, []);
-      map.get(cat)!.push(m);
-    });
-    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [groupByCategory, sorted]);
-
-  /* ── Row renderer ──────────────────────────────────────────────────── */
-
-  const renderRow = (m: WatchedMarket) => {
-    const priceInfo = yesPrice(m);
-    const noPriceVal = noPrice(m);
-    const priceDelta =
-      priceInfo?.live && priceInfo.prev !== null
-        ? priceInfo.price - priceInfo.prev
-        : null;
-    const deltaUp = priceDelta !== null && priceDelta > 0;
-    const deltaDown = priceDelta !== null && priceDelta < 0;
-
-    const change24h = m.priceChange24h;
-    const changeColor =
-      change24h === undefined || change24h === null
-        ? 'text-pf-text-muted'
-        : change24h > 0
-        ? 'text-pf-success'
-        : change24h < 0
-        ? 'text-pf-danger'
-        : 'text-pf-text-muted';
-
-    const isExpanded = quickOrder.marketId === m.id;
-
-    // ── Est. shares calculation ───────────────────────────────────────
-    const currentYesPrice = priceInfo?.price ?? null;
-    const currentNoPrice = noPriceVal;
-    const currentPrice =
-      quickOrder.outcome === 'YES' ? currentYesPrice : currentNoPrice;
-
-    let estShares: string | null = null;
-    const amtNum = parseFloat(quickOrder.amount);
-    if (!isNaN(amtNum) && amtNum > 0 && isExpanded) {
-      if (quickOrder.orderType === 'market' && currentPrice && currentPrice > 0) {
-        estShares = (amtNum / currentPrice).toFixed(1);
-      } else if (quickOrder.orderType === 'limit') {
-        const lp = parseFloat(quickOrder.price);
-        if (!isNaN(lp) && lp > 0) {
-          estShares = (amtNum / lp).toFixed(1);
-        }
-      }
-    }
-
-    // ── Validation ────────────────────────────────────────────────────
-    const amtError =
-      isExpanded && quickOrder.amount !== '' && (isNaN(amtNum) || amtNum <= 0)
-        ? 'Amount must be greater than 0'
-        : null;
-
-    const lpNum = parseFloat(quickOrder.price);
-    const priceError =
-      isExpanded &&
-      quickOrder.orderType === 'limit' &&
-      quickOrder.price !== '' &&
-      (isNaN(lpNum) || lpNum < 0.01 || lpNum > 0.99)
-        ? 'Limit price must be between 0.01 and 0.99'
-        : null;
-
-    const canSubmit =
-      !quickOrder.submitting &&
-      amtNum > 0 &&
-      !amtError &&
-      !priceError &&
-      (quickOrder.orderType === 'market' ||
-        (quickOrder.price !== '' && !priceError));
-
-    return (
-      <Fragment key={m.id}>
-        <tr
-          className={`group hover:bg-pf-elevated/40 transition-colors border-b ${
-            isExpanded ? 'border-pf-border' : 'border-pf-border-subtle last:border-0'
-          }`}
-        >
-          {/* Market title */}
-          <td className="px-4 py-3 max-w-[260px]">
-            <Link
-              to={`/markets/${m.id}`}
-              className="text-sm text-pf-text font-medium hover:text-pf-cyan-400 transition-colors line-clamp-2 leading-snug"
-            >
-              {m.title}
-            </Link>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              {m.category && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded border border-pf-border bg-pf-surface-elevated text-pf-text-muted">
-                  {m.category}
-                </span>
-              )}
-              <span
-                className={`text-[10px] ${m.closed ? 'text-pf-danger' : 'text-pf-success'}`}
-              >
-                {m.closed ? 'Closed' : 'Live'}
-              </span>
-            </div>
-          </td>
-
-          {/* YES Price */}
-          <td className="px-4 py-3 text-right">
-            {priceInfo !== null ? (
-              <div className="flex flex-col items-end gap-0.5">
-                <span
-                  className={`text-sm font-mono font-semibold transition-colors ${
-                    deltaUp
-                      ? 'text-pf-success'
-                      : deltaDown
-                      ? 'text-pf-danger'
-                      : 'text-pf-text'
-                  }`}
-                >
-                  {(priceInfo.price * 100).toFixed(0)}¢
-                </span>
-                {priceDelta !== null && Math.abs(priceDelta) >= 0.001 && (
-                  <span
-                    className={`text-[10px] font-mono px-1 py-0.5 rounded ${
-                      deltaUp
-                        ? 'bg-pf-success/10 text-pf-success'
-                        : 'bg-pf-danger/10 text-pf-danger'
-                    }`}
-                  >
-                    {deltaUp ? '▲' : '▼'}
-                    {Math.abs(priceDelta * 100).toFixed(1)}¢
-                  </span>
-                )}
-                {priceInfo.live && (
-                  <span className="text-[9px] text-pf-cyan-400">● LIVE</span>
-                )}
-              </div>
-            ) : (
-              <span className="text-sm text-pf-text-muted">—</span>
-            )}
-          </td>
-
-          {/* NO Price */}
-          <td className="px-4 py-3 text-right">
-            {noPriceVal !== null ? (
-              <span className="text-sm font-mono text-pf-danger">
-                {(noPriceVal * 100).toFixed(0)}¢
-              </span>
-            ) : (
-              <span className="text-sm text-pf-text-muted">—</span>
-            )}
-          </td>
-
-          {/* 24h Change */}
-          <td className="px-4 py-3 text-right">
-            {change24h !== undefined && change24h !== null ? (
-              <span className={`text-sm font-mono font-medium flex items-center justify-end gap-1 ${changeColor}`}>
-                {change24h > 0 ? (
-                  <TrendingUp className="size-3.5" />
-                ) : change24h < 0 ? (
-                  <TrendingDown className="size-3.5" />
-                ) : null}
-                {change24h > 0 ? '+' : ''}
-                {(change24h * 100).toFixed(1)}%
-              </span>
-            ) : (
-              <span className="text-sm text-pf-text-muted">—</span>
-            )}
-          </td>
-
-          {/* 24h Volume */}
-          <td className="px-4 py-3 text-right">
-            <span className="text-sm font-mono text-pf-text">
-              {formatVolume(m.volume24h)}
-            </span>
-          </td>
-
-          {/* Added */}
-          <td className="px-4 py-3 text-right">
-            <span className="text-xs text-pf-text-muted">
-              {relativeDate(m.addedAt)}
-            </span>
-          </td>
-
-          {/* Quick-Trade trigger */}
-          <td className="px-4 py-3 text-right">
-            {!m.closed ? (
-              <button
-                type="button"
-                onClick={() => toggleQuickOrder(m.id)}
-                className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-pf-sm border font-medium transition-colors ${
-                  isExpanded
-                    ? 'bg-pf-cyan-500/10 text-pf-cyan-400 border-pf-cyan-500/40'
-                    : 'bg-transparent text-pf-text-muted border-pf-border hover:text-pf-cyan-400 hover:border-pf-cyan-500/40'
-                }`}
-                title="Quick trade this market"
-                aria-expanded={isExpanded}
-                aria-label={`Quick trade ${m.title}`}
-              >
-                <Zap className="size-3" />
-                Trade
-              </button>
-            ) : (
-              <span className="text-xs text-pf-text-muted">—</span>
-            )}
-          </td>
-
-          {/* Remove */}
-          <td className="px-4 py-3 text-right">
-            <button
-              type="button"
-              onClick={() => removeFromWatchlist(m.id)}
-              disabled={removingIds.has(m.id)}
-              className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-danger transition-colors disabled:opacity-40"
-              title="Remove from watchlist"
-              aria-label={`Remove ${m.title} from watchlist`}
-            >
-              <X className="size-3.5" />
-            </button>
-          </td>
-        </tr>
-
-        {/* ── Inline Quick Order Panel ──────────────────────────────── */}
-        {isExpanded && (
-          <tr className="border-b border-pf-border-subtle last:border-0">
-            <td colSpan={8} className="px-0 py-0">
-              <div className="mx-4 my-3 rounded-pf-lg border border-pf-border bg-pf-surface p-4">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-pf-text uppercase tracking-wider flex items-center gap-1.5">
-                    <Zap className="size-3.5 text-pf-cyan-400" />
-                    Quick Order
-                    <span className="font-normal text-pf-text-muted normal-case tracking-normal truncate max-w-[320px]">
-                      — {m.title}
-                    </span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setQuickOrder(DEFAULT_QUICK_ORDER)}
-                    className="p-1 rounded-pf text-pf-text-muted hover:text-pf-text transition-colors"
-                    aria-label="Close quick order panel"
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {/* Left column: controls */}
-                  <div className="space-y-3">
-                    {/* Outcome + Side toggles */}
-                    <div className="flex items-center gap-4">
-                      {/* Outcome */}
-                      <div className="flex items-center gap-1">
-                        {(['YES', 'NO'] as const).map(o => (
-                          <button
-                            key={o}
-                            type="button"
-                            onClick={() =>
-                              setQuickOrder(prev => ({ ...prev, outcome: o }))
-                            }
-                            className={`px-3 py-1 rounded-pf-sm text-xs font-semibold transition-colors ${
-                              quickOrder.outcome === o
-                                ? o === 'YES'
-                                  ? 'bg-pf-success/20 text-pf-success border border-pf-success/40'
-                                  : 'bg-pf-danger/20 text-pf-danger border border-pf-danger/40'
-                                : 'bg-pf-surface-elevated text-pf-text-muted border border-pf-border hover:border-pf-border-hover'
-                            }`}
-                          >
-                            {o}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Side */}
-                      <div className="flex items-center gap-1">
-                        {(['BUY', 'SELL'] as const).map(s => (
-                          <button
-                            key={s}
-                            type="button"
-                            onClick={() =>
-                              setQuickOrder(prev => ({ ...prev, side: s }))
-                            }
-                            className={`px-3 py-1 rounded-pf-sm text-xs font-semibold transition-colors ${
-                              quickOrder.side === s
-                                ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
-                                : 'bg-pf-surface-elevated text-pf-text-muted border border-pf-border hover:border-pf-border-hover'
-                            }`}
-                          >
-                            {s}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Order type */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-pf-text-secondary">Order type:</span>
-                      {(['market', 'limit'] as const).map(t => (
-                        <button
-                          key={t}
-                          type="button"
-                          onClick={() =>
-                            setQuickOrder(prev => ({
-                              ...prev,
-                              orderType: t,
-                              price: '',
-                            }))
-                          }
-                          className={`px-2.5 py-0.5 rounded-pf-sm text-xs font-medium transition-colors capitalize ${
-                            quickOrder.orderType === t
-                              ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border border-pf-cyan-500/30'
-                              : 'bg-pf-surface-elevated text-pf-text-muted border border-pf-border hover:border-pf-border-hover'
-                          }`}
-                        >
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Amount input */}
-                    <div>
-                      <label className="text-xs text-pf-text-secondary block mb-1">
-                        Amount (USDC)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        placeholder="0.00"
-                        value={quickOrder.amount}
-                        onChange={e =>
-                          setQuickOrder(prev => ({ ...prev, amount: e.target.value }))
-                        }
-                        className="w-full px-3 py-1.5 rounded-pf bg-pf-surface-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/60 focus:ring-1 focus:ring-pf-cyan-500/30 transition-colors"
-                      />
-                      {amtError && (
-                        <p className="mt-1 text-[11px] text-pf-danger">{amtError}</p>
-                      )}
-                    </div>
-
-                    {/* Limit price input */}
-                    {quickOrder.orderType === 'limit' && (
-                      <div>
-                        <label className="text-xs text-pf-text-secondary block mb-1">
-                          Limit price (0.01 – 0.99)
-                        </label>
-                        <input
-                          type="number"
-                          min="0.01"
-                          max="0.99"
-                          step="0.01"
-                          placeholder="0.50"
-                          value={quickOrder.price}
-                          onChange={e =>
-                            setQuickOrder(prev => ({ ...prev, price: e.target.value }))
-                          }
-                          className="w-full px-3 py-1.5 rounded-pf bg-pf-surface-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/60 focus:ring-1 focus:ring-pf-cyan-500/30 transition-colors"
-                        />
-                        {priceError && (
-                          <p className="mt-1 text-[11px] text-pf-danger">{priceError}</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Right column: summary + submit */}
-                  <div className="flex flex-col justify-between gap-3">
-                    {/* Market prices + est. shares */}
-                    <div className="rounded-pf bg-pf-surface-elevated border border-pf-border-subtle p-3 space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-pf-text-muted">Current YES</span>
-                        <span className="font-mono text-pf-text">
-                          {currentYesPrice !== null
-                            ? `${(currentYesPrice * 100).toFixed(0)}¢`
-                            : '—'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-pf-text-muted">Current NO</span>
-                        <span className="font-mono text-pf-text">
-                          {currentNoPrice !== null
-                            ? `${(currentNoPrice * 100).toFixed(0)}¢`
-                            : '—'}
-                        </span>
-                      </div>
-                      {estShares !== null && (
-                        <div className="flex items-center justify-between text-xs pt-1 border-t border-pf-border-subtle">
-                          <span className="text-pf-text-muted">Est. shares</span>
-                          <span className="font-mono text-pf-text-muted">
-                            ~{estShares} shares
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Place Order button */}
-                    <button
-                      type="button"
-                      onClick={placeOrder}
-                      disabled={!canSubmit}
-                      className="w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-pf bg-pf-cyan-500 text-pf-bg font-semibold text-sm hover:bg-pf-cyan-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      {quickOrder.submitting ? (
-                        <span className="flex items-center gap-1.5">
-                          <span className="size-3.5 rounded-full border-2 border-pf-bg/30 border-t-pf-bg animate-spin" />
-                          Placing...
-                        </span>
-                      ) : (
-                        <>
-                          <Zap className="size-3.5" />
-                          Place Order
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-        )}
-      </Fragment>
-    );
+  const handleRemoveStar = (id: string) => {
+    setMarkets((prev) => prev.filter((m) => m.id !== id));
+    toast.success('Removed from watchlist');
   };
 
-  /* ── Table header shared ───────────────────────────────────────────── */
+  // ---- Handlers: quick-order (v6.28.0) ------------------------------------
+  const openQuickOrder = (marketId: string) => {
+    // Close alerts panel if open
+    if (expandedAlerts === marketId) {
+      setExpandedAlerts(null);
+    } else if (expandedAlerts !== null) {
+      setExpandedAlerts(null);
+    }
 
-  const tableHead = (
-    <thead>
-      <tr className="bg-pf-surface text-left text-xs uppercase tracking-wider">
-        <SortHeader
-          label="Market"
-          col="name"
-          sortBy={sortBy}
-          sortDir={sortDir}
-          onSort={handleSort}
-        />
-        <SortHeader
-          label="YES"
-          col="yesPrice"
-          sortBy={sortBy}
-          sortDir={sortDir}
-          onSort={handleSort}
-          className="text-right"
-        />
-        <th
-          scope="col"
-          className="px-4 py-3 font-medium text-pf-text-secondary text-right"
-        >
-          NO
-        </th>
-        <SortHeader
-          label="24h Change"
-          col="change"
-          sortBy={sortBy}
-          sortDir={sortDir}
-          onSort={handleSort}
-          className="text-right"
-        />
-        <SortHeader
-          label="24h Volume"
-          col="volume"
-          sortBy={sortBy}
-          sortDir={sortDir}
-          onSort={handleSort}
-          className="text-right"
-        />
-        <SortHeader
-          label="Added"
-          col="addedAt"
-          sortBy={sortBy}
-          sortDir={sortDir}
-          onSort={handleSort}
-          className="text-right"
-        />
-        <th
-          scope="col"
-          className="px-4 py-3 font-medium text-pf-text-secondary text-right"
-        >
-          <span className="inline-flex items-center gap-1">
-            <Zap className="size-3 text-pf-text-muted" />
-            Trade
-          </span>
-        </th>
-        <th
-          scope="col"
-          className="px-4 py-3 font-medium text-pf-text-secondary w-10"
-        />
-      </tr>
-    </thead>
+    setExpandedQuickOrder((prev) => (prev === marketId ? null : marketId));
+    if (!quickOrderState[marketId]) {
+      setQuickOrderState((prev) => ({
+        ...prev,
+        [marketId]: { outcome: 'YES', amount: 50, submitting: false },
+      }));
+    }
+  };
+
+  const updateQuickOrder = (marketId: string, patch: Partial<QuickOrderState>) => {
+    setQuickOrderState((prev) => ({
+      ...prev,
+      [marketId]: { ...prev[marketId], ...patch },
+    }));
+  };
+
+  const submitQuickOrder = async (market: WatchlistMarket) => {
+    const state = quickOrderState[market.id];
+    if (!state || state.submitting) return;
+
+    updateQuickOrder(market.id, { submitting: true });
+    try {
+      const res = await fetch(`/api/v1/markets/${market.id}/orders`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ outcome: state.outcome, amount: state.amount }),
+      });
+      if (!res.ok) throw new Error('Order failed');
+      toast.success(`Order placed — ${state.outcome} $${state.amount}`);
+      setExpandedQuickOrder(null);
+    } catch {
+      toast.error('Failed to place order. Please try again.');
+    } finally {
+      updateQuickOrder(market.id, { submitting: false });
+    }
+  };
+
+  // ---- Handlers: alerts (v6.29.0) -----------------------------------------
+  const openAlertsPanel = useCallback(
+    async (marketId: string) => {
+      // Close quick-order if open
+      if (expandedQuickOrder !== null) {
+        setExpandedQuickOrder(null);
+      }
+
+      // Toggle — close if already open
+      if (expandedAlerts === marketId) {
+        setExpandedAlerts(null);
+        return;
+      }
+
+      setExpandedAlerts(marketId);
+
+      // Reset form defaults
+      setAlertOutcome('YES');
+      setAlertCondition('above');
+      setAlertThreshold(0.6);
+
+      // Load lazily — skip if already cached
+      if (alertsByMarket[marketId] !== undefined) return;
+
+      setLoadingAlerts((prev) => ({ ...prev, [marketId]: true }));
+      try {
+        const res = await fetch(`/api/v1/markets/${marketId}/alerts`, {
+          credentials: 'include',
+        });
+        if (!res.ok) throw new Error('Failed to load alerts');
+        const json = await res.json();
+        setAlertsByMarket((prev) => ({ ...prev, [marketId]: json.data ?? [] }));
+      } catch {
+        toast.error('Could not load alerts for this market.');
+        setAlertsByMarket((prev) => ({ ...prev, [marketId]: [] }));
+      } finally {
+        setLoadingAlerts((prev) => ({ ...prev, [marketId]: false }));
+      }
+    },
+    [expandedAlerts, expandedQuickOrder, alertsByMarket],
   );
 
-  /* ── Render ────────────────────────────────────────────────────────── */
+  const handleAddAlert = async (marketId: string) => {
+    if (addingAlert) return;
+    if (alertThreshold <= 0 || alertThreshold >= 1) {
+      toast.error('Threshold must be between 0 and 1 (e.g. 0.65)');
+      return;
+    }
 
+    setAddingAlert(true);
+    try {
+      const res = await fetch(`/api/v1/markets/${marketId}/alerts`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          outcome: alertOutcome,
+          condition: alertCondition,
+          threshold: alertThreshold,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to create alert');
+      const json = await res.json();
+      const newAlert: WatchlistAlert = json.data;
+      setAlertsByMarket((prev) => ({
+        ...prev,
+        [marketId]: [...(prev[marketId] ?? []), newAlert],
+      }));
+      // Reset form
+      setAlertOutcome('YES');
+      setAlertCondition('above');
+      setAlertThreshold(0.6);
+      toast.success('Alert created');
+    } catch {
+      toast.error('Failed to create alert. Please try again.');
+    } finally {
+      setAddingAlert(false);
+    }
+  };
+
+  const handleDeleteAlert = async (marketId: string, alertId: string) => {
+    if (deletingAlertId) return;
+    setDeletingAlertId(alertId);
+    try {
+      const res = await fetch(`/api/v1/markets/${marketId}/alerts/${alertId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to delete alert');
+      setAlertsByMarket((prev) => ({
+        ...prev,
+        [marketId]: (prev[marketId] ?? []).filter((a) => a.id !== alertId),
+      }));
+      toast.success('Alert removed');
+    } catch {
+      toast.error('Failed to remove alert. Please try again.');
+    } finally {
+      setDeletingAlertId(null);
+    }
+  };
+
+  // ---- Sort indicator helper -----------------------------------------------
+  const SortIcon = ({ col }: { col: keyof WatchlistMarket }) =>
+    sortKey === col ? (
+      sortDir === 'desc' ? (
+        <ChevronDown className="w-3 h-3 ml-0.5 inline-block text-pf-cyan-400" />
+      ) : (
+        <ChevronUp className="w-3 h-3 ml-0.5 inline-block text-pf-cyan-400" />
+      )
+    ) : (
+      <ChevronDown className="w-3 h-3 ml-0.5 inline-block text-pf-text-muted opacity-40" />
+    );
+
+  // ---- Column count for colSpan --------------------------------------------
+  // Columns: Star | Market | Category | YES | NO | 24h | Volume | Liq | Alerts | Trade
+  const TOTAL_COLS = 10;
+
+  // ---- Render --------------------------------------------------------------
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Page header */}
-        <div className="flex items-center justify-between mb-4">
+    <div className="min-h-screen bg-pf-surface animate-fade-in">
+      {/* ------------------------------------------------------------------ */}
+      {/* Header                                                               */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="border-b border-pf-border bg-pf-elevated px-6 py-5">
+        <div className="max-w-screen-xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-xl font-bold text-pf-text">My Watchlist</h1>
-            <p className="text-sm text-pf-text-secondary mt-0.5">
-              {markets.length} {markets.length === 1 ? 'market' : 'markets'}
+            <h1 className="text-xl font-semibold text-pf-text flex items-center gap-2">
+              <Star className="w-5 h-5 text-pf-cyan-400" aria-hidden="true" />
+              Watchlist
+            </h1>
+            <p className="text-sm text-pf-text-muted mt-0.5">
+              {displayedMarkets.length} market{displayedMarkets.length !== 1 ? 's' : ''} tracked
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            {/* Group by category toggle */}
-            <button
-              type="button"
-              onClick={() => setGroupByCategory(g => !g)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf border text-xs font-medium transition-colors ${
-                groupByCategory
-                  ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                  : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-hover'
-              }`}
-              title="Toggle group by category"
-            >
-              <Tag className="size-3.5" />
-              Group by Category
-            </button>
-            <Link
-              to="/markets"
-              className="text-sm text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
-            >
-              Browse Markets →
-            </Link>
+
+          {/* Category filter pills */}
+          <div className="flex items-center gap-1.5 flex-wrap" role="group" aria-label="Filter by category">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setFilterCategory(cat)}
+                className={`px-3 py-1 text-xs font-medium rounded-pf-sm border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                  filterCategory === cat
+                    ? 'bg-pf-cyan-500 text-black border-pf-cyan-500'
+                    : 'bg-transparent text-pf-text-secondary border-pf-border hover:border-pf-border-strong hover:text-pf-text'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
         </div>
-
-        {/* Summary bar */}
-        {!loading && markets.length > 0 && (
-          <div className="flex items-center gap-4 mb-4 p-3 rounded-pf bg-pf-surface border border-pf-border-subtle text-xs text-pf-text-secondary">
-            <span className="flex items-center gap-1.5">
-              <LayoutList className="size-3.5 text-pf-text-muted" />
-              <span className="font-medium text-pf-text">{markets.length}</span> markets watched
-            </span>
-            <span className="text-pf-border">|</span>
-            <span className="flex items-center gap-1.5 text-pf-success">
-              <TrendingUp className="size-3.5" />
-              <span className="font-medium">{posCount}</span> with positive movement
-            </span>
-            <span className="text-pf-border">|</span>
-            <span className="flex items-center gap-1.5 text-pf-danger">
-              <TrendingDown className="size-3.5" />
-              <span className="font-medium">{negCount}</span> with negative movement
-            </span>
-          </div>
-        )}
-
-        {/* Loading state */}
-        {loading && (
-          <div className="text-center py-12 text-pf-text-muted text-sm">
-            Loading watchlist...
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!loading && markets.length === 0 && (
-          <div className="text-center py-12">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="40"
-              height="40"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-pf-text-muted mx-auto mb-3"
-            >
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-            <p className="text-pf-text-secondary text-sm">No markets in your watchlist</p>
-            <p className="text-pf-text-muted text-xs mt-1">Star any market to add it here</p>
-            <Link
-              to="/markets"
-              className="mt-4 inline-block text-sm text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
-            >
-              Browse Markets →
-            </Link>
-          </div>
-        )}
-
-        {/* Table — flat or grouped */}
-        {!loading && markets.length > 0 && (
-          <>
-            {/* Flat list */}
-            {!groupByCategory && (
-              <div className="border border-pf-border rounded-pf-lg overflow-hidden">
-                <table className="w-full text-sm" aria-label="Watchlist markets">
-                  {tableHead}
-                  <tbody>{sorted.map(renderRow)}</tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Grouped by category */}
-            {groupByCategory && grouped && (
-              <div className="space-y-6">
-                {grouped.map(([category, items]) => (
-                  <div key={category}>
-                    {/* Category section header */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <Tag className="size-3.5 text-pf-text-muted" />
-                      <span className="text-xs font-semibold text-pf-text-secondary uppercase tracking-wider">
-                        {category}
-                      </span>
-                      <span className="text-xs text-pf-text-muted">({items.length})</span>
-                      <div className="flex-1 h-px bg-pf-border-subtle ml-1" />
-                    </div>
-                    <div className="border border-pf-border rounded-pf-lg overflow-hidden">
-                      <table className="w-full text-sm" aria-label={`${category} markets`}>
-                        {tableHead}
-                        <tbody>{items.map(renderRow)}</tbody>
-                      </table>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
       </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Empty state                                                          */}
+      {/* ------------------------------------------------------------------ */}
+      {displayedMarkets.length === 0 && (
+        <div className="max-w-screen-xl mx-auto px-6 py-24 flex flex-col items-center gap-4 text-center">
+          <Star className="w-12 h-12 text-pf-text-muted opacity-30" aria-hidden="true" />
+          <p className="text-pf-text-secondary text-lg font-medium">No markets in your watchlist</p>
+          <p className="text-pf-text-muted text-sm max-w-xs">
+            Browse markets and tap the star icon to add them here for quick access.
+          </p>
+          <button
+            onClick={() => navigate('/markets')}
+            className="mt-2 px-4 py-2 bg-pf-cyan-500 text-black text-sm font-semibold rounded-pf hover:brightness-110 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          >
+            Browse Markets
+          </button>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Table                                                                */}
+      {/* ------------------------------------------------------------------ */}
+      {displayedMarkets.length > 0 && (
+        <div className="max-w-screen-xl mx-auto px-6 py-4 overflow-x-auto">
+          <table className="w-full border-collapse text-sm" aria-label="Watchlist markets">
+            {/* Head */}
+            <thead>
+              <tr className="border-b border-pf-border">
+                {/* Star */}
+                <th className="w-8 pb-2" aria-label="Remove from watchlist" />
+
+                {/* Market */}
+                <th className="text-left pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider">
+                  Market
+                </th>
+
+                {/* Category */}
+                <th className="text-left pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider hidden md:table-cell">
+                  Category
+                </th>
+
+                {/* YES */}
+                <th
+                  className="text-right pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider cursor-pointer select-none whitespace-nowrap"
+                  onClick={() => handleSort('yesPrice')}
+                  aria-sort={sortKey === 'yesPrice' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  YES <SortIcon col="yesPrice" />
+                </th>
+
+                {/* NO */}
+                <th
+                  className="text-right pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider cursor-pointer select-none whitespace-nowrap"
+                  onClick={() => handleSort('noPrice')}
+                  aria-sort={sortKey === 'noPrice' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  NO <SortIcon col="noPrice" />
+                </th>
+
+                {/* 24h */}
+                <th
+                  className="text-right pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden sm:table-cell"
+                  onClick={() => handleSort('change24h')}
+                  aria-sort={sortKey === 'change24h' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  24h <SortIcon col="change24h" />
+                </th>
+
+                {/* Volume */}
+                <th
+                  className="text-right pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden lg:table-cell"
+                  onClick={() => handleSort('volume24h')}
+                  aria-sort={sortKey === 'volume24h' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  Vol 24h <SortIcon col="volume24h" />
+                </th>
+
+                {/* Liquidity */}
+                <th
+                  className="text-right pb-2 pr-4 text-xs font-medium text-pf-text-muted uppercase tracking-wider cursor-pointer select-none whitespace-nowrap hidden xl:table-cell"
+                  onClick={() => handleSort('liquidity')}
+                  aria-sort={sortKey === 'liquidity' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  Liquidity <SortIcon col="liquidity" />
+                </th>
+
+                {/* Alerts — v6.29.0 */}
+                <th className="w-10 pb-2 text-center text-xs font-medium text-pf-text-muted uppercase tracking-wider">
+                  <Bell className="w-3.5 h-3.5 inline-block" aria-hidden="true" />
+                  <span className="sr-only">Alerts</span>
+                </th>
+
+                {/* Trade */}
+                <th className="w-20 pb-2 text-right text-xs font-medium text-pf-text-muted uppercase tracking-wider">
+                  Trade
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-pf-border/40">
+              {displayedMarkets.map((market) => {
+                const isQuickOrderOpen = expandedQuickOrder === market.id;
+                const isAlertsOpen = expandedAlerts === market.id;
+                const qo = quickOrderState[market.id];
+                const marketAlerts = alertsByMarket[market.id];
+                const alertsLoading = loadingAlerts[market.id] ?? false;
+
+                return (
+                  <>
+                    {/* -------------------------------------------------------- */}
+                    {/* Market row                                                */}
+                    {/* -------------------------------------------------------- */}
+                    <tr
+                      key={market.id}
+                      className={`group transition-colors duration-100 ${
+                        isQuickOrderOpen || isAlertsOpen
+                          ? 'bg-pf-elevated'
+                          : 'hover:bg-pf-elevated/60'
+                      }`}
+                    >
+                      {/* Star / remove */}
+                      <td className="py-3 pr-2 w-8">
+                        <button
+                          onClick={() => handleRemoveStar(market.id)}
+                          aria-label={`Remove ${market.title} from watchlist`}
+                          className="text-pf-cyan-400 hover:text-pf-warning transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                        >
+                          <Star className="w-4 h-4 fill-current" />
+                        </button>
+                      </td>
+
+                      {/* Title */}
+                      <td className="py-3 pr-4">
+                        <div className="flex flex-col gap-0.5">
+                          <button
+                            onClick={() => navigate(`/markets/${market.slug}`)}
+                            className="text-left text-pf-text font-medium hover:text-pf-cyan-400 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm leading-snug max-w-xs"
+                          >
+                            {market.title}
+                          </button>
+                          <span className="flex items-center gap-1 text-xs text-pf-text-muted">
+                            <Clock className="w-3 h-3" aria-hidden="true" />
+                            Expires {formatDate(market.expiryDate)}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Category */}
+                      <td className="py-3 pr-4 hidden md:table-cell">
+                        <span className="px-2 py-0.5 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text-secondary">
+                          {market.category}
+                        </span>
+                      </td>
+
+                      {/* YES price */}
+                      <td className="py-3 pr-4 text-right">
+                        <PriceBadge price={market.yesPrice} variant="yes" />
+                      </td>
+
+                      {/* NO price */}
+                      <td className="py-3 pr-4 text-right">
+                        <PriceBadge price={market.noPrice} variant="no" />
+                      </td>
+
+                      {/* 24h change */}
+                      <td className="py-3 pr-4 text-right hidden sm:table-cell">
+                        <ChangeBadge change={market.change24h} />
+                      </td>
+
+                      {/* Volume */}
+                      <td className="py-3 pr-4 text-right text-pf-text-secondary tabular-nums hidden lg:table-cell">
+                        {formatDollar(market.volume24h)}
+                      </td>
+
+                      {/* Liquidity */}
+                      <td className="py-3 pr-4 text-right text-pf-text-secondary tabular-nums hidden xl:table-cell">
+                        {formatDollar(market.liquidity)}
+                      </td>
+
+                      {/* Bell / Alerts — v6.29.0 */}
+                      <td className="py-3 pr-2 text-center w-10">
+                        <AlertBell
+                          alerts={marketAlerts}
+                          loading={alertsLoading}
+                          onClick={() => openAlertsPanel(market.id)}
+                          active={isAlertsOpen}
+                        />
+                      </td>
+
+                      {/* Trade / Quick-order button */}
+                      <td className="py-3 text-right w-20">
+                        <button
+                          onClick={() => openQuickOrder(market.id)}
+                          aria-pressed={isQuickOrderOpen}
+                          aria-label={`Quick order for ${market.title}`}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-pf text-xs font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                            isQuickOrderOpen
+                              ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
+                              : 'bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-cyan-500/60 hover:text-pf-cyan-400'
+                          }`}
+                        >
+                          <Zap className="w-3 h-3" aria-hidden="true" />
+                          Trade
+                        </button>
+                      </td>
+                    </tr>
+
+                    {/* -------------------------------------------------------- */}
+                    {/* Inline quick-order panel (v6.28.0)                       */}
+                    {/* -------------------------------------------------------- */}
+                    {isQuickOrderOpen && qo && (
+                      <tr key={`${market.id}-quickorder`} className="bg-pf-elevated">
+                        <td colSpan={TOTAL_COLS} className="px-4 pb-4 pt-0">
+                          <div className="border border-pf-border rounded-pf-lg p-4 bg-pf-surface">
+                            {/* Panel header */}
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-2">
+                                <Zap className="w-4 h-4 text-pf-cyan-400" aria-hidden="true" />
+                                <span className="text-sm font-semibold text-pf-text">Quick Order</span>
+                                <span className="text-xs text-pf-text-muted truncate max-w-xs hidden sm:block">
+                                  — {market.title}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => setExpandedQuickOrder(null)}
+                                aria-label="Close quick order panel"
+                                className="text-pf-text-muted hover:text-pf-text transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+
+                            <div className="flex flex-wrap items-end gap-4">
+                              {/* Outcome toggle */}
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs text-pf-text-muted font-medium">Outcome</label>
+                                <div
+                                  className="flex rounded-pf border border-pf-border overflow-hidden"
+                                  role="group"
+                                  aria-label="Select outcome"
+                                >
+                                  {(['YES', 'NO'] as const).map((o) => (
+                                    <button
+                                      key={o}
+                                      onClick={() => updateQuickOrder(market.id, { outcome: o })}
+                                      aria-pressed={qo.outcome === o}
+                                      className={`px-4 py-1.5 text-sm font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                        qo.outcome === o
+                                          ? o === 'YES'
+                                            ? 'bg-pf-success text-white'
+                                            : 'bg-pf-danger text-white'
+                                          : 'bg-pf-elevated text-pf-text-secondary hover:text-pf-text'
+                                      }`}
+                                    >
+                                      {o}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Amount */}
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs text-pf-text-muted font-medium">Amount (USDC)</label>
+                                <div className="flex items-center gap-1 border border-pf-border rounded-pf bg-pf-elevated px-1">
+                                  <button
+                                    onClick={() =>
+                                      updateQuickOrder(market.id, { amount: Math.max(1, qo.amount - 10) })
+                                    }
+                                    aria-label="Decrease amount"
+                                    className="p-1 text-pf-text-muted hover:text-pf-text transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                  >
+                                    <Minus className="w-3.5 h-3.5" />
+                                  </button>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    step={1}
+                                    value={qo.amount}
+                                    onChange={(e) =>
+                                      updateQuickOrder(market.id, {
+                                        amount: Math.max(1, Number(e.target.value)),
+                                      })
+                                    }
+                                    aria-label="Order amount in USDC"
+                                    className="w-16 text-center bg-transparent text-pf-text text-sm font-semibold tabular-nums py-1.5 focus:outline-none"
+                                  />
+                                  <button
+                                    onClick={() =>
+                                      updateQuickOrder(market.id, { amount: qo.amount + 10 })
+                                    }
+                                    aria-label="Increase amount"
+                                    className="p-1 text-pf-text-muted hover:text-pf-text transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Quick-amount presets */}
+                              <div className="flex items-end gap-1 pb-0.5">
+                                {[10, 25, 50, 100].map((preset) => (
+                                  <button
+                                    key={preset}
+                                    onClick={() => updateQuickOrder(market.id, { amount: preset })}
+                                    className={`px-2 py-1.5 text-xs font-medium rounded-pf-sm border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                      qo.amount === preset
+                                        ? 'bg-pf-cyan-500/20 border-pf-cyan-500/40 text-pf-cyan-400'
+                                        : 'bg-transparent border-pf-border text-pf-text-muted hover:text-pf-text hover:border-pf-border-strong'
+                                    }`}
+                                  >
+                                    ${preset}
+                                  </button>
+                                ))}
+                              </div>
+
+                              {/* Expected shares / price info */}
+                              <div className="flex flex-col gap-0.5 text-xs text-pf-text-muted ml-auto hidden sm:flex">
+                                <span>
+                                  Price:{' '}
+                                  <strong className="text-pf-text">
+                                    {formatPrice(qo.outcome === 'YES' ? market.yesPrice : market.noPrice)}
+                                  </strong>
+                                </span>
+                                <span>
+                                  Est. shares:{' '}
+                                  <strong className="text-pf-text tabular-nums">
+                                    {(
+                                      qo.amount /
+                                      (qo.outcome === 'YES' ? market.yesPrice : market.noPrice)
+                                    ).toFixed(1)}
+                                  </strong>
+                                </span>
+                              </div>
+
+                              {/* Submit */}
+                              <button
+                                onClick={() => submitQuickOrder(market)}
+                                disabled={qo.submitting}
+                                className="px-5 py-2 bg-pf-cyan-500 text-black text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
+                              >
+                                {qo.submitting ? 'Placing…' : `Buy ${qo.outcome}`}
+                              </button>
+
+                              {/* Full detail link */}
+                              <button
+                                onClick={() => navigate(`/markets/${market.slug}`)}
+                                className="inline-flex items-center gap-1 text-xs text-pf-text-muted hover:text-pf-cyan-400 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                                Full detail
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+
+                    {/* -------------------------------------------------------- */}
+                    {/* Inline alerts panel (v6.29.0)                            */}
+                    {/* -------------------------------------------------------- */}
+                    {isAlertsOpen && (
+                      <tr key={`${market.id}-alerts`} className="bg-pf-elevated">
+                        <td colSpan={TOTAL_COLS} className="px-4 pb-4 pt-0">
+                          <div className="border border-pf-border rounded-pf-lg p-4 bg-pf-surface">
+                            {/* Panel header */}
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-2">
+                                <Bell className="w-4 h-4 text-pf-cyan-400" aria-hidden="true" />
+                                <span className="text-sm font-semibold text-pf-text">Price Alerts</span>
+                                <span className="text-xs text-pf-text-muted truncate max-w-xs hidden sm:block">
+                                  — {market.title}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => setExpandedAlerts(null)}
+                                aria-label="Close price alerts panel"
+                                className="text-pf-text-muted hover:text-pf-text transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+
+                            {/* ---- Create new alert form ---- */}
+                            <div className="mb-4">
+                              <p className="text-xs font-medium text-pf-text-muted mb-2 uppercase tracking-wider">
+                                Set new alert
+                              </p>
+                              <div className="flex flex-wrap items-end gap-3">
+                                {/* Outcome toggle */}
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-xs text-pf-text-muted">Outcome</label>
+                                  <div
+                                    className="flex rounded-pf border border-pf-border overflow-hidden"
+                                    role="group"
+                                    aria-label="Alert outcome"
+                                  >
+                                    {(['YES', 'NO'] as const).map((o) => (
+                                      <button
+                                        key={o}
+                                        onClick={() => setAlertOutcome(o)}
+                                        aria-pressed={alertOutcome === o}
+                                        className={`px-4 py-1.5 text-sm font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                          alertOutcome === o
+                                            ? o === 'YES'
+                                              ? 'bg-pf-success text-white'
+                                              : 'bg-pf-danger text-white'
+                                            : 'bg-pf-elevated text-pf-text-secondary hover:text-pf-text'
+                                        }`}
+                                      >
+                                        {o}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Condition toggle */}
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-xs text-pf-text-muted">Condition</label>
+                                  <div
+                                    className="flex rounded-pf border border-pf-border overflow-hidden"
+                                    role="group"
+                                    aria-label="Alert condition"
+                                  >
+                                    {(['above', 'below'] as const).map((c) => (
+                                      <button
+                                        key={c}
+                                        onClick={() => setAlertCondition(c)}
+                                        aria-pressed={alertCondition === c}
+                                        className={`px-3 py-1.5 text-sm font-medium transition-colors duration-150 capitalize focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                          alertCondition === c
+                                            ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border-r border-pf-cyan-500/30'
+                                            : 'bg-pf-elevated text-pf-text-secondary hover:text-pf-text'
+                                        }`}
+                                      >
+                                        {c}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Threshold input */}
+                                <div className="flex flex-col gap-1">
+                                  <label
+                                    htmlFor={`alert-threshold-${market.id}`}
+                                    className="text-xs text-pf-text-muted"
+                                  >
+                                    Threshold (0–1)
+                                  </label>
+                                  <input
+                                    id={`alert-threshold-${market.id}`}
+                                    type="number"
+                                    min={0.01}
+                                    max={0.99}
+                                    step={0.01}
+                                    value={alertThreshold}
+                                    onChange={(e) => setAlertThreshold(Number(e.target.value))}
+                                    className="w-24 px-3 py-1.5 bg-pf-elevated border border-pf-border rounded-pf text-sm text-pf-text tabular-nums focus:outline-none focus:border-pf-cyan-500/60 focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors duration-150"
+                                  />
+                                </div>
+
+                                {/* Current price hint */}
+                                <div className="flex flex-col gap-0.5 text-xs text-pf-text-muted pb-0.5 hidden sm:flex">
+                                  <span>
+                                    Current YES:{' '}
+                                    <strong className="text-pf-success tabular-nums">
+                                      {market.yesPrice.toFixed(2)}
+                                    </strong>
+                                  </span>
+                                  <span>
+                                    Current NO:{' '}
+                                    <strong className="text-pf-danger tabular-nums">
+                                      {market.noPrice.toFixed(2)}
+                                    </strong>
+                                  </span>
+                                </div>
+
+                                {/* Add button */}
+                                <button
+                                  onClick={() => handleAddAlert(market.id)}
+                                  disabled={addingAlert}
+                                  className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-pf-cyan-500 text-black text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
+                                >
+                                  <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+                                  {addingAlert ? 'Adding…' : 'Add Alert'}
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Divider */}
+                            <div className="border-t border-pf-border/60 my-3" />
+
+                            {/* ---- Active alerts list ---- */}
+                            <div>
+                              <p className="text-xs font-medium text-pf-text-muted mb-2 uppercase tracking-wider">
+                                Active alerts
+                              </p>
+
+                              {/* Loading skeleton */}
+                              {alertsLoading && (
+                                <div className="flex flex-col gap-2">
+                                  {[1, 2].map((i) => (
+                                    <div
+                                      key={i}
+                                      className="h-8 rounded-pf bg-pf-elevated animate-shimmer"
+                                      aria-hidden="true"
+                                    />
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Empty */}
+                              {!alertsLoading && (!marketAlerts || marketAlerts.length === 0) && (
+                                <div className="flex items-center gap-2 py-3 text-sm text-pf-text-muted">
+                                  <BellOff className="w-4 h-4 opacity-50" aria-hidden="true" />
+                                  No alerts for this market
+                                </div>
+                              )}
+
+                              {/* Alert rows */}
+                              {!alertsLoading && marketAlerts && marketAlerts.length > 0 && (
+                                <ul className="flex flex-col gap-1.5" role="list" aria-label="Price alerts">
+                                  {marketAlerts.map((alert) => (
+                                    <li
+                                      key={alert.id}
+                                      className={`flex items-center justify-between gap-3 px-3 py-2 rounded-pf border text-sm ${
+                                        alert.triggered
+                                          ? 'border-pf-warning/30 bg-pf-warning/5'
+                                          : 'border-pf-border bg-pf-elevated'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        {/* Status dot */}
+                                        {alert.triggered ? (
+                                          <AlertCircle
+                                            className="w-3.5 h-3.5 text-pf-warning flex-shrink-0"
+                                            aria-hidden="true"
+                                          />
+                                        ) : (
+                                          <span
+                                            className="w-2 h-2 rounded-full bg-pf-success flex-shrink-0 animate-pulse-dot"
+                                            aria-hidden="true"
+                                          />
+                                        )}
+
+                                        {/* Alert description */}
+                                        <span className="text-pf-text truncate">
+                                          <span
+                                            className={`font-semibold ${
+                                              alert.outcome === 'YES' ? 'text-pf-success' : 'text-pf-danger'
+                                            }`}
+                                          >
+                                            {alert.outcome}
+                                          </span>{' '}
+                                          {alert.condition}{' '}
+                                          <span className="font-semibold tabular-nums text-pf-text">
+                                            {formatThreshold(alert.threshold)}
+                                          </span>
+                                        </span>
+
+                                        {/* Triggered badge */}
+                                        {alert.triggered && (
+                                          <span className="flex-shrink-0 px-1.5 py-0.5 rounded-pf-sm bg-pf-warning/15 border border-pf-warning/30 text-xs font-medium text-pf-warning">
+                                            Triggered
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {/* Delete */}
+                                      <button
+                                        onClick={() => handleDeleteAlert(market.id, alert.id)}
+                                        disabled={deletingAlertId === alert.id}
+                                        aria-label={`Delete alert: ${alert.outcome} ${alert.condition} ${alert.threshold}`}
+                                        className="flex-shrink-0 p-1 rounded-pf-sm text-pf-text-muted hover:text-pf-danger transition-colors duration-150 disabled:opacity-40 disabled:cursor-wait focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+
+                            {/* Footer link to full market detail */}
+                            <div className="mt-3 pt-3 border-t border-pf-border/40">
+                              <button
+                                onClick={() => navigate(`/markets/${market.slug}`)}
+                                className="inline-flex items-center gap-1 text-xs text-pf-text-muted hover:text-pf-cyan-400 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                              >
+                                <BarChart2 className="w-3 h-3" aria-hidden="true" />
+                                View full market &amp; alerts
+                                <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Footer stats bar                                                     */}
+      {/* ------------------------------------------------------------------ */}
+      {displayedMarkets.length > 0 && (
+        <div className="border-t border-pf-border bg-pf-elevated px-6 py-3 mt-4">
+          <div className="max-w-screen-xl mx-auto flex items-center gap-6 flex-wrap text-xs text-pf-text-muted">
+            <span>
+              <strong className="text-pf-text">{displayedMarkets.length}</strong> markets
+            </span>
+            <span>
+              Total volume 24h:{' '}
+              <strong className="text-pf-text tabular-nums">
+                {formatDollar(displayedMarkets.reduce((s, m) => s + m.volume24h, 0))}
+              </strong>
+            </span>
+            <span>
+              Total liquidity:{' '}
+              <strong className="text-pf-text tabular-nums">
+                {formatDollar(displayedMarkets.reduce((s, m) => s + m.liquidity, 0))}
+              </strong>
+            </span>
+            <span className="ml-auto text-pf-text-muted/60">
+              Prices refresh every 30 s
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
