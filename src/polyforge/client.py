@@ -233,8 +233,11 @@ class PolyforgeClient:
     def get_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, self._get(f"/api/v1/strategies/{strategy_id}"))
 
-    def create_strategy(self, name: str, description: str | None = None) -> Strategy:
-        return _parse(Strategy, self._post("/api/v1/strategies", json={"name": name, "description": description or ""}))
+    def create_strategy(self, name: str, description: str | None = None, market_id: str | None = None) -> Strategy:
+        body: dict[str, Any] = {"name": name, "description": description or ""}
+        if market_id is not None:
+            body["marketId"] = market_id
+        return _parse(Strategy, self._post("/api/v1/strategies", json=body))
 
     def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
         body: dict[str, Any] = {"description": description}
@@ -257,12 +260,14 @@ class PolyforgeClient:
     def export_strategy(self, strategy_id: str) -> dict:
         return self._get(f"/api/v1/strategies/{strategy_id}/export")
 
-    def update_strategy(self, strategy_id: str, name: str | None = None, description: str | None = None) -> Strategy:
+    def update_strategy(self, strategy_id: str, name: str | None = None, description: str | None = None, market_id: str | None = None) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
         if description is not None:
             body["description"] = description
+        if market_id is not None:
+            body["marketId"] = market_id
         return _parse(Strategy, self._patch(f"/api/v1/strategies/{strategy_id}", json=body))
 
     def delete_strategy(self, strategy_id: str) -> None:
@@ -723,8 +728,11 @@ class AsyncPolyforgeClient:
     async def get_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, await self._get(f"/api/v1/strategies/{strategy_id}"))
 
-    async def create_strategy(self, name: str, description: str | None = None) -> Strategy:
-        return _parse(Strategy, await self._post("/api/v1/strategies", json={"name": name, "description": description or ""}))
+    async def create_strategy(self, name: str, description: str | None = None, market_id: str | None = None) -> Strategy:
+        body: dict[str, Any] = {"name": name, "description": description or ""}
+        if market_id is not None:
+            body["marketId"] = market_id
+        return _parse(Strategy, await self._post("/api/v1/strategies", json=body))
 
     async def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
         body: dict[str, Any] = {"description": description}
@@ -747,12 +755,14 @@ class AsyncPolyforgeClient:
     async def export_strategy(self, strategy_id: str) -> dict:
         return await self._get(f"/api/v1/strategies/{strategy_id}/export")
 
-    async def update_strategy(self, strategy_id: str, name: str | None = None, description: str | None = None) -> Strategy:
+    async def update_strategy(self, strategy_id: str, name: str | None = None, description: str | None = None, market_id: str | None = None) -> Strategy:
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
         if description is not None:
             body["description"] = description
+        if market_id is not None:
+            body["marketId"] = market_id
         return _parse(Strategy, await self._patch(f"/api/v1/strategies/{strategy_id}", json=body))
 
     async def delete_strategy(self, strategy_id: str) -> None:
