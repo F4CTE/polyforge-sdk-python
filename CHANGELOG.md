@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.16.0] — 2026-03-31
+
+### Added
+- **Price alert notifications** — `AlertsService` now implements `OnModuleInit` and starts a 15-second interval that batch-fetches current Redis prices (`cache:price:{tokenId}`) and compares them against untriggered DB alerts; when a threshold is crossed, `EventsGateway.pushNotification()` broadcasts a `PRICE_ALERT` WebSocket event to the alert owner; triggered alerts are marked and non-persistent ones are deleted; `AlertsModule` now imports `EventsModule` and injects `RedisService` + `EventsGateway`
+- **Real-time price ticks on Market Detail** — `market-detail.tsx` subscribes to WebSocket price updates via `wsManager.subscribePrices()` after the market loads; a `PRICE_UPDATE` listener updates `livePrices` state keyed by tokenId; `yesPrice` / `noPrice` now prefer live values over static ones from the initial API response; unsubscribes on unmount
+- **Notification toasts** — a `NOTIFICATION` WebSocket listener in `market-detail.tsx` shows an `info` toast when a `PRICE_ALERT` notification fires, and removes the triggered alert from local state
+- **Wallet connection prompt in Trade Panel** — `market-detail.tsx` now imports `useAuthStore`; when `user?.polymarketConnected` is false, the trade form is replaced with a connect-wallet CTA linking to `/settings/trading-account`; the form only renders for connected users
+- **Marketplace listing UI on Strategy Detail** — a "List on Marketplace" button (Store icon) added to the strategy actions row; clicking opens an inline collapsible form with title, description, price (USDC), and comma-separated tags; submitting POSTs to `POST /api/v1/marketplace` and shows a success toast
+
+---
+
 ## [6.15.7] — 2026-03-31
 
 ### Changed

@@ -14,6 +14,8 @@ import {
   Download,
   Share2,
   GitBranch,
+  Store,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -165,6 +167,14 @@ export function Component() {
   const [loadingVersions, setLoadingVersions] = useState(false);
   const [rollingBack, setRollingBack] = useState<string | null>(null);
 
+  // Marketplace listing state
+  const [showListing, setShowListing] = useState(false);
+  const [listTitle, setListTitle] = useState('');
+  const [listDesc, setListDesc] = useState('');
+  const [listPrice, setListPrice] = useState('0');
+  const [listTags, setListTags] = useState('');
+  const [listSubmitting, setListSubmitting] = useState(false);
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
@@ -300,6 +310,43 @@ export function Component() {
     } else {
       prompt('Copy this link:', url);
     }
+  }
+
+  async function submitListing() {
+    if (!strategy || !listTitle) return;
+    setListSubmitting(true);
+    try {
+      const tags = listTags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+      const res = await fetch('/api/v1/marketplace', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          strategyId: strategy.id,
+          title: listTitle,
+          description: listDesc || undefined,
+          priceUsdc: parseFloat(listPrice) || 0,
+          tags,
+        }),
+      });
+      if (res.ok) {
+        toast.success('Strategy listed on Marketplace!');
+        setShowListing(false);
+        setListTitle('');
+        setListDesc('');
+        setListPrice('0');
+        setListTags('');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error((data as any).message ?? 'Failed to list strategy');
+      }
+    } catch {
+      toast.error('Failed to list strategy');
+    }
+    setListSubmitting(false);
   }
 
   const status = strategy?.status ?? 'IDLE';
@@ -462,8 +509,87 @@ export function Component() {
               >
                 <Share2 className="size-4" />
               </button>
+              <button
+                type="button"
+                onClick={() => { setListTitle(strategy.name); setShowListing((v) => !v); }}
+                className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-cyan-400 transition-colors"
+                aria-label="List on Marketplace"
+                title="List on Marketplace"
+              >
+                <Store className="size-4" />
+              </button>
             </div>
           </div>
+
+          {/* Marketplace listing form */}
+          {showListing && (
+            <div className="bg-pf-elevated border border-pf-cyan-500/30 rounded-pf-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-pf-text flex items-center gap-2">
+                  <Store className="size-4 text-pf-cyan-400" />
+                  List on Marketplace
+                </span>
+                <button type="button" onClick={() => setShowListing(false)} className="text-pf-text-muted hover:text-pf-text transition-colors">
+                  <X className="size-4" />
+                </button>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-xs font-medium text-pf-text-secondary mb-1">Listing Title *</label>
+                  <input
+                    type="text"
+                    value={listTitle}
+                    onChange={(e) => setListTitle(e.target.value)}
+                    placeholder="Strategy name for the marketplace"
+                    className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-pf-text-secondary mb-1">Description</label>
+                  <textarea
+                    value={listDesc}
+                    onChange={(e) => setListDesc(e.target.value)}
+                    rows={2}
+                    placeholder="Describe your strategy's edge..."
+                    className="w-full px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 resize-none"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-pf-text-secondary mb-1">Price (USDC)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={listPrice}
+                      onChange={(e) => setListPrice(e.target.value)}
+                      placeholder="0"
+                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+                    />
+                    <p className="text-[10px] text-pf-text-muted mt-0.5">0 = Free</p>
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-pf-text-secondary mb-1">Tags (comma-separated)</label>
+                    <input
+                      type="text"
+                      value={listTags}
+                      onChange={(e) => setListTags(e.target.value)}
+                      placeholder="momentum, political"
+                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                    />
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={submitListing}
+                disabled={listSubmitting || !listTitle}
+                className="w-full py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-semibold hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+              >
+                {listSubmitting ? 'Publishing...' : 'Publish to Marketplace'}
+              </button>
+            </div>
+          )}
 
           {/* Meta chips */}
           <div className="flex flex-wrap items-center gap-2">

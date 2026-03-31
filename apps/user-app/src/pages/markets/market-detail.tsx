@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { toast } from 'sonner';
 import { wsManager, WebSocketManager } from '@/lib/websocket';
+import { useAuthStore } from '@/stores/auth-store';
 import {
   ArrowLeft,
   Play,
@@ -171,6 +172,11 @@ function DetailSkeleton() {
 export function Component() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const isWalletConnected = user?.polymarketConnected === true;
+
+  // Live prices updated via WebSocket PRICE_UPDATE events
+  const [livePrices, setLivePrices] = useState<Record<string, string>>({});
 
   // Read CSS variables for Recharts (which needs raw color strings) — memoized to avoid layout thrashing
   const themeColors = useMemo(() => {
@@ -460,6 +466,41 @@ export function Component() {
     return () => wsManager.removeListener(handler);
   }, [loadMyOrders]);
 
+  // Real-time price updates via WebSocket
+  useEffect(() => {
+    if (!market) return;
+    const tokenIds = (market.tokens ?? []).map((t) => t.id);
+    if (tokenIds.length > 0) wsManager.subscribePrices(tokenIds);
+
+    const priceHandler = (msg: { type: string; tokenId?: string; price?: number }) => {
+      if (!WebSocketManager.isPriceUpdate(msg) || !msg.tokenId || msg.price === undefined) return;
+      setLivePrices((prev) => ({ ...prev, [msg.tokenId as string]: String(msg.price) }));
+    };
+    wsManager.addListener(priceHandler);
+
+    return () => {
+      wsManager.removeListener(priceHandler);
+      if (tokenIds.length > 0) wsManager.unsubscribePrices(tokenIds);
+    };
+  }, [market]);
+
+  // Price alert notifications via WebSocket
+  useEffect(() => {
+    const notifHandler = (msg: { type: string; data?: any }) => {
+      if (msg.type !== 'NOTIFICATION') return;
+      const payload = (msg as any).data ?? msg;
+      if (payload?.type === 'PRICE_ALERT') {
+        toast.info(payload.message ?? 'Price alert triggered', { duration: 6000 });
+        // Remove the triggered alert from local state
+        if (payload.alertId) {
+          setAlerts((prev) => prev.filter((a) => a.id !== payload.alertId));
+        }
+      }
+    };
+    wsManager.addListener(notifHandler);
+    return () => wsManager.removeListener(notifHandler);
+  }, []);
+
   // Trade panel: pre-fill price when market loads
   useEffect(() => {
     if (!market) return;
@@ -561,8 +602,10 @@ export function Component() {
   const estCost = parseFloat(tradeAmount || '0');
   const estPayout = estShares * 1.0;
 
-  const yesPrice = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'YES')?.price ?? null;
-  const noPrice = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'NO')?.price ?? null;
+  const yesToken = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'YES');
+  const noToken = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'NO');
+  const yesPrice = (yesToken && livePrices[yesToken.id]) ? livePrices[yesToken.id] : (yesToken?.price ?? null);
+  const noPrice = (noToken && livePrices[noToken.id]) ? livePrices[noToken.id] : (noToken?.price ?? null);
   const days = market ? daysUntil(market.endDate) : 0;
 
   return (
@@ -894,6 +937,24 @@ export function Component() {
             <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
               <span className="text-sm font-medium text-pf-text">Trade</span>
 
+              {/* Wallet not connected — prompt user */}
+              {!isWalletConnected && (
+                <div className="mt-3 flex flex-col items-center gap-2 py-5 px-3 rounded-pf bg-pf-overlay border border-pf-border text-center">
+                  <svg className="size-8 text-pf-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8L2 7h20l-6-4z"/><circle cx="16" cy="14" r="1" fill="currentColor" stroke="none"/></svg>
+                  <p className="text-sm font-medium text-pf-text">Connect your wallet to trade</p>
+                  <p className="text-xs text-pf-text-muted">Link your Polymarket account to place orders</p>
+                  <Link
+                    to="/settings/trading-account"
+                    className="mt-1 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-xs font-semibold hover:bg-pf-cyan-400 transition-colors"
+                  >
+                    Connect Wallet
+                  </Link>
+                </div>
+              )}
+
+              {/* Trade form — hidden when wallet not connected */}
+              {isWalletConnected && <>
+
               {/* Outcome toggle */}
               <div className="flex gap-1 mt-3">
                 {(['YES', 'NO'] as const).map((o) => (
@@ -1171,6 +1232,7 @@ export function Component() {
                   </ul>
                 )}
               </div>
+              </>}
             </div>
 
             {/* Provide Liquidity */}
