@@ -19,6 +19,7 @@ import {
   DollarSign,
   UserCheck,
   BarChart2,
+  Activity,
 } from 'lucide-react';
 import { useAdminAuthStore } from '@/stores/admin-auth-store';
 import { usePollingStore } from '@/stores/polling-store';
@@ -64,6 +65,7 @@ const navSections: NavSection[] = [
       { label: 'Cache', path: '/cache', icon: <Database size={iconSize} aria-hidden="true" /> },
       { label: 'Reports', path: '/reports', icon: <Flag size={iconSize} aria-hidden="true" /> },
       { label: 'Logs', path: '/logs', icon: <ScrollText size={iconSize} aria-hidden="true" /> },
+      { label: 'Health', path: '/health', icon: <Activity size={iconSize} aria-hidden="true" /> },
       { label: 'Sentiment', path: '/sentiment', icon: <TrendingUp size={iconSize} aria-hidden="true" /> },
     ],
   },

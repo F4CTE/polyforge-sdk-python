@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
-  ChevronLeft, ChevronRight, Compass, Heart, GitFork, TrendingUp, Tag, Star, Award,
+  ChevronLeft, ChevronRight, Compass, Heart, GitFork, TrendingUp, Tag, Star, Award, Library,
 } from 'lucide-react';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -104,8 +104,22 @@ function CardSkeleton() {
 
 /* ─── Component ──────────────────────────────────────────────────────── */
 
+interface Collection {
+  id: string;
+  title: string;
+  description: string;
+  emoji: string;
+  listingCount: number;
+  totalVolume: string;
+  avgWinRate: string;
+  createdAt: string;
+  coverListings: Array<{ id: string; title: string; seller: { username: string } }>;
+}
+
 export function Component() {
+  const navigate = useNavigate();
   const [featuredListings, setFeaturedListings] = useState<FeaturedListing[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
 
   const [strategies, setStrategies] = useState<PublicStrategy[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,6 +151,24 @@ export function Component() {
       }
     }
     loadFeatured();
+  }, []);
+
+  // Fetch collections strip on mount
+  useEffect(() => {
+    async function loadCollections() {
+      try {
+        const res = await fetch('/api/v1/marketplace/collections?limit=6', {
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const json = await res.json();
+          setCollections(Array.isArray(json) ? json : (json.data ?? []));
+        }
+      } catch {
+        // silently ignore — strip won't render
+      }
+    }
+    loadCollections();
   }, []);
 
   // Debounce tag filter
@@ -342,6 +374,36 @@ export function Component() {
           </div>
           {/* Separator before main grid */}
           <div className="border-t border-pf-border mt-6" />
+        </section>
+      )}
+
+      {/* Collections strip */}
+      {collections.length > 0 && (
+        <section aria-label="Strategy Collections">
+          <div className="flex items-center gap-2 mb-3">
+            <Library className="size-4 text-pf-cyan-400" aria-hidden="true" />
+            <span className="text-base font-semibold text-pf-text">Collections</span>
+            <Link
+              to="/collections"
+              className="ml-auto text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors flex items-center gap-0.5"
+            >
+              View all <ChevronRight className="size-3" aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+            {collections.map(col => (
+              <button
+                key={col.id}
+                type="button"
+                onClick={() => navigate(`/collections/${col.id}`)}
+                className="bg-pf-elevated border border-pf-border rounded-full px-3 py-1.5 text-sm flex items-center gap-1.5 whitespace-nowrap hover:border-pf-border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+              >
+                <span role="img" aria-label={col.title}>{col.emoji}</span>
+                <span className="text-pf-text font-medium">{col.title}</span>
+                <span className="text-pf-text-muted text-xs">{col.listingCount} strategies</span>
+              </button>
+            ))}
+          </div>
         </section>
       )}
 

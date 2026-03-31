@@ -7,11 +7,13 @@ import { CommandPalette } from './command-palette';
 import { MobileBottomNav } from './mobile-bottom-nav';
 import { OnboardingChecklist } from '../onboarding/onboarding-checklist';
 import { TooltipTour } from '../onboarding/tooltip-tour';
+import { ShortcutsModal } from '../shortcuts/shortcuts-modal';
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
@@ -35,6 +37,29 @@ export function AppLayout() {
     }
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  // ? key opens shortcuts modal (skip when typing in inputs)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key === '?') {
+        e.preventDefault();
+        setShowShortcuts((v) => !v);
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  // open-shortcuts custom event (fired by Topbar button)
+  useEffect(() => {
+    function onOpenShortcuts() {
+      setShowShortcuts(true);
+    }
+    window.addEventListener('open-shortcuts', onOpenShortcuts);
+    return () => window.removeEventListener('open-shortcuts', onOpenShortcuts);
   }, []);
 
   return (
@@ -83,6 +108,9 @@ export function AppLayout() {
 
       {/* Global command palette */}
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
+
+      {/* Keyboard shortcuts reference modal */}
+      <ShortcutsModal open={showShortcuts} onClose={() => setShowShortcuts(false)} />
 
       {/* Mobile bottom navigation */}
       <MobileBottomNav />

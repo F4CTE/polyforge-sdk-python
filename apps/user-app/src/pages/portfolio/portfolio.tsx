@@ -8,6 +8,7 @@ import {
   RefreshCw, Loader2, AlertTriangle, Fuel, PieChart, ShieldAlert,
   Shield, TrendingDown, TrendingUp, Share2, Copy, Check, Download,
   X, ChevronDown, ChevronUp, Clock, CalendarDays, Receipt, FileText,
+  Target, Pencil, Trash2, Trophy,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
@@ -114,6 +115,15 @@ interface TaxSummary {
   totalProceeds: number;
   totalCostBasis: number;
   tradeCount: number;
+}
+
+interface PortfolioGoal {
+  id: string;
+  label: string;
+  targetAmount: number;
+  startDate: string;
+  endDate: string;
+  startPnl: number;
 }
 
 type Tab = 'live' | 'paper';
@@ -433,6 +443,21 @@ export function Component() {
   const [loadingTax, setLoadingTax] = useState(true);
   const [exportingTax, setExportingTax] = useState(false);
   const [taxExpanded, setTaxExpanded] = useState(false);
+
+  // Goal Tracker
+  const [goals, setGoals] = useState<PortfolioGoal[]>(() => {
+    try { return JSON.parse(localStorage.getItem('pf-portfolio-goals') || '[]'); } catch { return []; }
+  });
+  const [activeGoalIdx, setActiveGoalIdx] = useState(0);
+  const [showGoalForm, setShowGoalForm] = useState(false);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
+  const [newGoalLabel, setNewGoalLabel] = useState('');
+  const [newGoalTarget, setNewGoalTarget] = useState('');
+  const [newGoalDeadline, setNewGoalDeadline] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem('pf-portfolio-goals', JSON.stringify(goals));
+  }, [goals]);
 
   const loadPortfolio = useCallback(async () => {
     setLoadingPortfolio(true);
@@ -953,6 +978,285 @@ export function Component() {
               This report is for informational purposes only. Consult a tax professional for advice.
             </p>
           </div>
+
+          {/* ─── Goal Tracker ─── */}
+          {(() => {
+            const currentTotalPnl = parseFloat(pnl?.totalPnl ?? '0');
+
+            function openNewGoalForm() {
+              setEditingGoalId(null);
+              setNewGoalLabel('');
+              setNewGoalTarget('');
+              setNewGoalDeadline('');
+              setShowGoalForm(true);
+            }
+
+            function openEditGoalForm(goal: PortfolioGoal) {
+              setEditingGoalId(goal.id);
+              setNewGoalLabel(goal.label);
+              setNewGoalTarget(String(goal.targetAmount));
+              setNewGoalDeadline(goal.endDate);
+              setShowGoalForm(true);
+            }
+
+            function saveGoal() {
+              const target = parseFloat(newGoalTarget);
+              if (!newGoalLabel.trim() || Number.isNaN(target) || target <= 0 || !newGoalDeadline) return;
+              if (editingGoalId) {
+                setGoals(prev => prev.map(g =>
+                  g.id === editingGoalId
+                    ? { ...g, label: newGoalLabel.trim(), targetAmount: target, endDate: newGoalDeadline }
+                    : g,
+                ));
+                toast.success('Goal updated!');
+              } else {
+                const newGoal: PortfolioGoal = {
+                  id: crypto.randomUUID(),
+                  label: newGoalLabel.trim(),
+                  targetAmount: target,
+                  startDate: new Date().toISOString(),
+                  endDate: newGoalDeadline,
+                  startPnl: currentTotalPnl,
+                };
+                setGoals(prev => [...prev, newGoal]);
+                setActiveGoalIdx(goals.length);
+                toast.success('Goal saved!');
+              }
+              setShowGoalForm(false);
+              setEditingGoalId(null);
+            }
+
+            function deleteGoal(id: string) {
+              setGoals(prev => prev.filter(g => g.id !== id));
+              setActiveGoalIdx(prev => Math.max(0, prev - 1));
+              toast.success('Goal deleted');
+            }
+
+            const activeGoal = goals[activeGoalIdx] ?? goals[0] ?? null;
+
+            return (
+              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <Target className="size-4 text-pf-cyan-400" />
+                    <span className="text-sm font-semibold text-pf-text">Goal Tracker</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {goals.length < 3 && !showGoalForm && (
+                      <button
+                        type="button"
+                        onClick={openNewGoalForm}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-xs font-medium text-pf-cyan-400 hover:bg-pf-cyan-500/25 transition-colors"
+                      >
+                        <Target className="size-3" />
+                        {goals.length === 0 ? 'Set Goal' : 'Add Another Goal'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tabs (multiple goals) */}
+                {goals.length > 1 && !showGoalForm && (
+                  <div className="flex gap-1 mb-4 overflow-x-auto pb-1">
+                    {goals.map((g, i) => (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => setActiveGoalIdx(i)}
+                        className={`px-3 py-1 rounded-pf text-xs font-medium whitespace-nowrap transition-colors ${
+                          i === activeGoalIdx
+                            ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
+                            : 'text-pf-text-secondary hover:text-pf-text border border-transparent'
+                        }`}
+                      >
+                        {g.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Inline form */}
+                {showGoalForm && (
+                  <div className="bg-pf-surface border border-pf-border rounded-pf-lg p-4 mb-4 space-y-3">
+                    <div>
+                      <label className="text-xs text-pf-text-secondary block mb-1">Goal name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. October target"
+                        value={newGoalLabel}
+                        onChange={e => setNewGoalLabel(e.target.value)}
+                        className="w-full bg-pf-overlay border border-pf-border rounded-pf px-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-pf-text-secondary block mb-1">Target amount (USDC profit)</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-pf-text-muted">$</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={newGoalTarget}
+                          onChange={e => setNewGoalTarget(e.target.value)}
+                          className="w-full bg-pf-overlay border border-pf-border rounded-pf pl-7 pr-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs text-pf-text-secondary block mb-1">Deadline</label>
+                      <input
+                        type="date"
+                        value={newGoalDeadline}
+                        onChange={e => setNewGoalDeadline(e.target.value)}
+                        className="w-full bg-pf-overlay border border-pf-border rounded-pf px-3 py-2 text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={saveGoal}
+                        disabled={!newGoalLabel.trim() || !newGoalTarget || !newGoalDeadline}
+                        className="px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-white text-xs font-semibold hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Save Goal
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowGoalForm(false); setEditingGoalId(null); }}
+                        className="px-4 py-1.5 rounded-pf border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Goal display */}
+                {!showGoalForm && activeGoal && (() => {
+                  const earned = currentTotalPnl - activeGoal.startPnl;
+                  const progress = Math.min(100, Math.max(0, (earned / activeGoal.targetAmount) * 100));
+
+                  const now = new Date();
+                  const start = new Date(activeGoal.startDate);
+                  const end = new Date(activeGoal.endDate + 'T23:59:59');
+                  const totalMs = end.getTime() - start.getTime();
+                  const elapsedMs = now.getTime() - start.getTime();
+                  const totalDays = Math.max(1, totalMs / 86400000);
+                  const daysElapsed = Math.max(0, elapsedMs / 86400000);
+                  const daysRemaining = Math.max(0, Math.ceil((end.getTime() - now.getTime()) / 86400000));
+                  const isExpired = now > end;
+                  const isAchieved = progress >= 100;
+
+                  // Color logic: on track if daysElapsed/totalDays >= (progress/100) * 0.9
+                  const paceFraction = totalDays > 0 ? daysElapsed / totalDays : 1;
+                  const onTrack = paceFraction >= (progress / 100) * 0.9;
+                  const barColor = earned < 0
+                    ? 'bg-pf-danger'
+                    : onTrack
+                      ? 'bg-pf-success'
+                      : 'bg-amber-400';
+
+                  const endLabel = (() => {
+                    const d = new Date(activeGoal.endDate + 'T00:00:00');
+                    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  })();
+
+                  const dailyRunRate = daysRemaining > 0
+                    ? (activeGoal.targetAmount - earned) / daysRemaining
+                    : null;
+
+                  return (
+                    <div>
+                      {/* Goal header row */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <p className="text-sm font-medium text-pf-text">{activeGoal.label}</p>
+                          <p className="text-xs text-pf-text-muted flex items-center gap-1 mt-0.5">
+                            <CalendarDays className="size-3" />
+                            Ends {endLabel}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                          <button
+                            type="button"
+                            aria-label="Edit goal"
+                            onClick={() => openEditGoalForm(activeGoal)}
+                            className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
+                          >
+                            <Pencil className="size-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Delete goal"
+                            onClick={() => deleteGoal(activeGoal.id)}
+                            className="p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Achievement banner */}
+                      {isAchieved && (
+                        <div className="flex items-center gap-2 bg-pf-success/10 border border-pf-success/30 rounded-pf p-2.5 mb-3">
+                          <Trophy className="size-4 text-pf-success shrink-0" />
+                          <span className="text-sm font-semibold text-pf-success">Goal achieved!</span>
+                        </div>
+                      )}
+
+                      {/* Earned / target */}
+                      <div className="mb-2">
+                        <span className={`text-2xl font-mono font-bold ${earned >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                          {earned >= 0 ? '+' : ''}{earned.toFixed(2)}
+                        </span>
+                        <span className="text-sm text-pf-text-muted font-mono ml-1">
+                          earned of ${activeGoal.targetAmount.toFixed(2)} target
+                        </span>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="h-2 rounded-full bg-pf-surface overflow-hidden mb-3">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-500 ${barColor}`}
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+
+                      {/* Footer stats */}
+                      <div className="flex items-center justify-between text-xs flex-wrap gap-y-1">
+                        {isExpired ? (
+                          <span className="text-pf-danger font-medium">Goal expired</span>
+                        ) : (
+                          <span className="text-pf-text-muted">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</span>
+                        )}
+                        {!isAchieved && dailyRunRate !== null && !isExpired && (
+                          <span className={`font-mono ${dailyRunRate > 0 ? 'text-pf-text-secondary' : 'text-pf-success'}`}>
+                            {dailyRunRate > 0
+                              ? `Need $${dailyRunRate.toFixed(2)}/day to hit target`
+                              : 'On track — no daily minimum needed'}
+                          </span>
+                        )}
+                        <span className={`font-mono font-semibold ${onTrack ? 'text-pf-success' : 'text-amber-400'}`}>
+                          {progress.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Empty state */}
+                {!showGoalForm && goals.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Target className="size-8 text-pf-text-muted mb-2" />
+                    <p className="text-sm font-medium text-pf-text">No goals set</p>
+                    <p className="text-xs text-pf-text-muted mt-1">Set a profit target to track your progress.</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* ─── Share Performance ─── */}
           <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">

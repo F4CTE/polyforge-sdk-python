@@ -29,6 +29,7 @@ import {
   Rss,
   Gift,
   Users,
+  Library,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -60,6 +61,7 @@ const navSections: NavSection[] = [
       { label: 'Discover', icon: Users, route: '/copy/discover' },
       { label: 'Arbitrage', icon: TrendingDown, route: '/arbitrage' },
       { label: 'Marketplace', icon: Store, route: '/marketplace' },
+      { label: 'Collections', icon: Library, route: '/collections' },
     ],
   },
   {

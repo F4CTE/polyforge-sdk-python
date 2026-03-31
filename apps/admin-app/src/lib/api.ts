@@ -84,6 +84,42 @@ interface HealthData {
   redis: { status: string; memoryUsageMb: number };
 }
 
+interface ServiceHealth {
+  name: string;
+  status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN';
+  latencyMs: number | null;
+  uptime: number | null;
+  version?: string;
+  lastChecked: string;
+  errorMessage?: string;
+}
+
+interface QueueHealth {
+  name: string;
+  depth: number;
+  processedPerMin: number;
+  consumerCount: number;
+  oldestMessageAge?: number;
+}
+
+interface DbHealth {
+  status: 'UP' | 'DOWN' | 'DEGRADED';
+  latencyMs: number | null;
+  activeConnections: number;
+  maxConnections: number;
+  pendingMigrations: number;
+  redisStatus: 'UP' | 'DOWN';
+  redisLatencyMs: number | null;
+  redisMemoryMb: number | null;
+}
+
+interface HealthStatusData {
+  services: ServiceHealth[];
+  queues: QueueHealth[];
+  database: DbHealth;
+  timestamp: string;
+}
+
 interface RateLimitsData {
   totalTrackedKeys: number;
   recent429Count: number;
@@ -244,6 +280,7 @@ export interface AdminMarket {
 export const adminApi = {
   // Dashboard
   health: () => request<HealthData>(buildUrl(API_BASE, '/dashboard')),
+  healthStatus: () => request<HealthStatusData>(buildUrl('/api/admin', '/health')),
   rateLimits: () => request<RateLimitsData>(buildUrl(API_BASE, '/dashboard/rate-limits')),
   config: () => request<{ inviteOnly: boolean }>(buildUrl(API_BASE, '/config')),
   setInviteOnly: (enabled: boolean) =>
@@ -459,6 +496,16 @@ export const adminApi = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+
+  // Collections
+  collections: (params?: QueryParams) =>
+    request<{ data: Array<{ id: string; title: string; description: string; emoji: string; listingCount: number; totalVolume: string; avgWinRate: string; createdAt: string }> }>(
+      buildUrl('/api/v1/marketplace', '/collections', params),
+    ),
+  collection: (id: string) =>
+    request<{ collection: { id: string; title: string; description: string; emoji: string; listingCount: number; totalVolume: string; avgWinRate: string; createdAt: string }; listings: Listing[] }>(
+      buildUrl('/api/v1/marketplace', `/collections/${id}`),
+    ),
 
   // Markets
   markets: (params?: QueryParams) =>

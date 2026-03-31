@@ -18,6 +18,10 @@ import {
   ArrowDownRight,
   RefreshCw,
   ExternalLink,
+  Users,
+  ThumbsUp,
+  ThumbsDown,
+  Edit2,
 } from 'lucide-react';
 import {
   XAxis,
@@ -115,6 +119,13 @@ interface RelatedNewsArticle {
   publishedAt: string;
   sentiment: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
   signals?: Array<{ marketId: string; direction: string; confidence: number }>;
+}
+
+interface SentimentData {
+  yesPercent: number;
+  noPercent: number;
+  totalVotes: number;
+  userVote: { direction: 'YES' | 'NO'; confidence: number } | null;
 }
 
 type Resolution = '1m' | '1h' | '1d';
@@ -276,6 +287,14 @@ export function Component() {
   const [lpSize, setLpSize] = useState('10');
   const [lpSubmitting, setLpSubmitting] = useState(false);
   const [lpError, setLpError] = useState('');
+
+  // Community Sentiment state
+  const [sentiment, setSentiment] = useState<SentimentData | null>(null);
+  const [loadingSentiment, setLoadingSentiment] = useState(true);
+  const [voting, setVoting] = useState(false);
+  const [selectedDir, setSelectedDir] = useState<'YES' | 'NO' | null>(null);
+  const [confidence, setConfidence] = useState(75);
+  const [editingVote, setEditingVote] = useState(false);
 
   // Load market
   useEffect(() => {
@@ -584,6 +603,48 @@ export function Component() {
     const first = (market.tokens ?? [])[0];
     if (first) setLpTokenId(first.id);
   }, [market, lpTokenId]);
+
+  // Load community sentiment
+  useEffect(() => {
+    if (!market?.id) return;
+    let cancelled = false;
+    setLoadingSentiment(true);
+    fetch(`/api/v1/markets/${market.id}/sentiment`, { credentials: 'include' })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: SentimentData | null) => {
+        if (!cancelled) {
+          setSentiment(data);
+          setLoadingSentiment(false);
+        }
+      })
+      .catch(() => { if (!cancelled) setLoadingSentiment(false); });
+    return () => { cancelled = true; };
+  }, [market?.id]);
+
+  const submitVote = async () => {
+    if (!market?.id || !selectedDir) return;
+    setVoting(true);
+    try {
+      const res = await fetch(`/api/v1/markets/${market.id}/sentiment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ direction: selectedDir, confidence }),
+      });
+      if (res.ok) {
+        const updated: SentimentData = await res.json();
+        setSentiment(updated);
+        setEditingVote(false);
+        toast.success('Vote recorded!');
+      } else {
+        toast.error('Failed to submit vote');
+      }
+    } catch {
+      toast.error('Failed to submit vote');
+    } finally {
+      setVoting(false);
+    }
+  };
 
   const submitLp = async () => {
     if (!lpTokenId || !lpSpread || !lpSize) return;
@@ -1539,6 +1600,159 @@ export function Component() {
                     {lpSubmitting ? 'Submitting...' : 'Submit'}
                   </button>
                 </div>
+              )}
+            </div>
+
+            {/* Community Sentiment */}
+            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Users className="size-4 text-pf-text-muted" aria-hidden="true" />
+                  <span className="text-sm font-medium text-pf-text">Community Sentiment</span>
+                </div>
+                {sentiment && sentiment.totalVotes > 0 && (
+                  <span className="text-[11px] text-pf-text-muted">{sentiment.totalVotes} votes</span>
+                )}
+              </div>
+
+              {/* Loading skeleton */}
+              {loadingSentiment ? (
+                <div className="space-y-3">
+                  <div className="h-4 bg-pf-overlay rounded-full animate-pulse" />
+                  <div className="flex gap-2">
+                    <div className="flex-1 h-10 bg-pf-overlay rounded-pf animate-pulse" />
+                    <div className="flex-1 h-10 bg-pf-overlay rounded-pf animate-pulse" />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Sentiment bar — shown when votes exist */}
+                  {sentiment && sentiment.totalVotes > 0 ? (
+                    <div className="mb-3">
+                      {/* Labels + bar */}
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="font-semibold text-pf-success">YES {sentiment.yesPercent}%</span>
+                        <span className="font-semibold text-pf-danger">{sentiment.noPercent}% NO</span>
+                      </div>
+                      <div className="h-4 rounded-full overflow-hidden flex">
+                        <div
+                          className="bg-pf-success transition-all duration-700 ease-out"
+                          style={{ width: `${sentiment.yesPercent}%` }}
+                          title={`YES ${sentiment.yesPercent}%`}
+                        />
+                        <div
+                          className="bg-pf-danger flex-1 transition-all duration-700 ease-out"
+                          title={`NO ${sentiment.noPercent}%`}
+                        />
+                      </div>
+                      <p className="text-[11px] text-pf-text-muted mt-1.5 text-center">
+                        {sentiment.yesPercent > 55
+                          ? 'Community leans YES'
+                          : sentiment.noPercent > 55
+                            ? 'Community leans NO'
+                            : 'Evenly split'}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-pf-text-muted text-center py-2 mb-3">
+                      Be the first to share your prediction
+                    </p>
+                  )}
+
+                  {/* Already voted — show their vote + edit link */}
+                  {sentiment?.userVote && !editingVote ? (
+                    <div className="rounded-pf bg-pf-surface border border-pf-border-subtle p-2.5 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        {sentiment.userVote.direction === 'YES'
+                          ? <ThumbsUp className="size-3.5 text-pf-success" />
+                          : <ThumbsDown className="size-3.5 text-pf-danger" />
+                        }
+                        <span className="text-xs text-pf-text-secondary">
+                          Your vote:{' '}
+                          <span className={sentiment.userVote.direction === 'YES' ? 'text-pf-success font-semibold' : 'text-pf-danger font-semibold'}>
+                            {sentiment.userVote.direction}
+                          </span>
+                          {' '}({sentiment.userVote.confidence}% confident)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedDir(sentiment.userVote!.direction);
+                          setConfidence(sentiment.userVote!.confidence);
+                          setEditingVote(true);
+                        }}
+                        className="flex items-center gap-1 text-[11px] text-pf-text-muted hover:text-pf-cyan-400 transition-colors"
+                      >
+                        <Edit2 className="size-3" /> Edit
+                      </button>
+                    </div>
+                  ) : (
+                    /* Vote form */
+                    <div className="space-y-3">
+                      <p className="text-xs font-medium text-pf-text-secondary">What's your read?</p>
+
+                      {/* YES / NO toggle */}
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedDir('YES')}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-pf border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success/40 ${
+                            selectedDir === 'YES'
+                              ? 'bg-pf-success/15 border-pf-success text-pf-success'
+                              : 'border-pf-success text-pf-success hover:bg-pf-success/10'
+                          }`}
+                        >
+                          <ThumbsUp className="size-3.5" /> YES
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedDir('NO')}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-pf border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 ${
+                            selectedDir === 'NO'
+                              ? 'bg-pf-danger/15 border-pf-danger text-pf-danger'
+                              : 'border-pf-danger text-pf-danger hover:bg-pf-danger/10'
+                          }`}
+                        >
+                          <ThumbsDown className="size-3.5" /> NO
+                        </button>
+                      </div>
+
+                      {/* Confidence slider */}
+                      {selectedDir && (
+                        <div>
+                          <div className="flex items-center justify-between text-xs mb-1">
+                            <span className="text-pf-text-secondary font-medium">How confident?</span>
+                            <span className="font-mono text-pf-cyan-400">{confidence}% confident</span>
+                          </div>
+                          <input
+                            type="range"
+                            min={50}
+                            max={99}
+                            step={1}
+                            value={confidence}
+                            onChange={(e) => setConfidence(parseInt(e.target.value))}
+                            className="w-full h-1.5 rounded-full bg-pf-border accent-pf-cyan-500"
+                          />
+                          <p className="text-[10px] text-pf-text-muted mt-0.5">
+                            {confidence <= 64 ? 'Just a guess' : confidence <= 79 ? 'Fairly confident' : 'Very confident'}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Submit */}
+                      <button
+                        type="button"
+                        disabled={!selectedDir || voting}
+                        onClick={submitVote}
+                        className="w-full py-2.5 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-sm font-semibold text-pf-cyan-400 hover:bg-pf-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                      >
+                        {voting ? 'Submitting...' : 'Submit Vote'}
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
             </div>{/* end right column wrapper */}

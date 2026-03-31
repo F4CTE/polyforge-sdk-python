@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Sun, Moon, Bell, ChevronDown, User, Settings, LogOut } from 'lucide-react';
+import { Sun, Moon, Bell, ChevronDown, User, Settings, LogOut, Keyboard } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { useNotificationStore } from '@/stores/notification-store';
@@ -61,6 +61,17 @@ export function Topbar() {
   return (
     <header className="flex items-center h-14 px-4 border-b border-pf-border bg-pf-surface">
       <div className="flex-1" />
+
+      {/* Keyboard shortcuts button */}
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new CustomEvent('open-shortcuts'))}
+        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-pf-sm text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+        aria-label="Keyboard shortcuts"
+        title="Keyboard shortcuts (?)"
+      >
+        <Keyboard size={18} />
+      </button>
 
       {/* Theme toggle */}
       <button

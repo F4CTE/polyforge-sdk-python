@@ -24,6 +24,7 @@ export const router = createBrowserRouter([
           { path: 'cache', lazy: () => import('@/pages/cache/cache') },
           { path: 'reports', lazy: () => import('@/pages/reports/reports') },
           { path: 'logs', lazy: () => import('@/pages/logs/logs') },
+          { path: 'health', lazy: () => import('./pages/health/health') },
           { path: 'builder', lazy: () => import('@/pages/builder/builder') },
           { path: 'invites', lazy: () => import('@/pages/invites/invites') },
           { path: 'tickets', lazy: () => import('@/pages/tickets/tickets') },
