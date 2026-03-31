@@ -488,7 +488,7 @@ export function Component() {
           {/* Table */}
           <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm" aria-label="Orders">
+              <table className="w-full min-w-[800px] text-sm" aria-label="Orders">
                 <thead>
                   <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                     <th scope="col" className="px-4 py-3 font-medium w-10">#</th>
@@ -497,11 +497,11 @@ export function Component() {
                     <th scope="col" className="px-4 py-3 font-medium">Outcome</th>
                     <th scope="col" className="px-4 py-3 font-medium text-right">Size</th>
                     <th scope="col" className="px-4 py-3 font-medium text-right">Price</th>
-                    <th scope="col" className="px-4 py-3 font-medium text-right">Filled / Total</th>
-                    <th scope="col" className="px-4 py-3 font-medium text-right">Avg Fill</th>
-                    <th scope="col" className="px-4 py-3 font-medium">Type</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right hidden md:table-cell">Filled / Total</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right hidden md:table-cell">Avg Fill</th>
+                    <th scope="col" className="px-4 py-3 font-medium hidden md:table-cell">Type</th>
                     <th scope="col" className="px-4 py-3 font-medium">Status</th>
-                    <th scope="col" className="px-4 py-3 font-medium text-right">Date</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Date</th>
                     <th scope="col" className="px-4 py-3 font-medium w-10"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
@@ -560,9 +560,9 @@ export function Component() {
                           </td>
                           <td className="px-4 py-3 text-right font-mono text-pf-text">{order.size}</td>
                           <td className="px-4 py-3 text-right font-mono text-pf-text">{order.price}</td>
-                          <td className="px-4 py-3 text-right font-mono text-pf-text-secondary">{fillRatio(order)}</td>
-                          <td className="px-4 py-3 text-right font-mono text-pf-text">{order.fillPrice ?? '\u2014'}</td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 text-right font-mono text-pf-text-secondary hidden md:table-cell">{fillRatio(order)}</td>
+                          <td className="px-4 py-3 text-right font-mono text-pf-text hidden md:table-cell">{order.fillPrice ?? '\u2014'}</td>
+                          <td className="px-4 py-3 hidden md:table-cell">
                             <span className="font-mono text-[11px] text-pf-text-muted">{order.orderType}</span>
                           </td>
                           <td className="px-4 py-3">
@@ -570,7 +570,7 @@ export function Component() {
                               {order.status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-right">
+                          <td className="px-4 py-3 text-right hidden sm:table-cell">
                             <span className="font-mono text-[11px] text-pf-text-muted">{formatDate(order.createdAt)}</span>
                           </td>
                           <td className="px-4 py-3" onClick={e => e.stopPropagation()}>

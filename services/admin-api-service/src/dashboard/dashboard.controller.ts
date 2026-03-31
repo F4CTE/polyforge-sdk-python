@@ -21,4 +21,9 @@ export class DashboardController {
   getPlatformStats() {
     return this.dashboard.getPlatformStats();
   }
+
+  @Get("marketplace-stats")
+  getMarketplaceStats() {
+    return this.dashboard.getMarketplaceStats();
+  }
 }

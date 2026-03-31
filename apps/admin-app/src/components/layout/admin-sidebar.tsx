@@ -15,6 +15,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   TrendingUp,
+  DollarSign,
+  UserCheck,
 } from 'lucide-react';
 import { useAdminAuthStore } from '@/stores/admin-auth-store';
 import { usePollingStore } from '@/stores/polling-store';
@@ -38,12 +40,14 @@ const navSections: NavSection[] = [
     title: 'Overview',
     items: [
       { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={iconSize} aria-hidden="true" /> },
+      { label: 'Revenue', path: '/revenue', icon: <DollarSign size={iconSize} aria-hidden="true" /> },
     ],
   },
   {
     title: 'Management',
     items: [
       { label: 'Users', path: '/users', icon: <Users size={iconSize} aria-hidden="true" /> },
+      { label: 'Approvals', path: '/approvals', icon: <UserCheck size={iconSize} aria-hidden="true" /> },
       { label: 'Strategies', path: '/strategies', icon: <Blocks size={iconSize} aria-hidden="true" /> },
       { label: 'Orders', path: '/orders', icon: <ShoppingCart size={iconSize} aria-hidden="true" /> },
       { label: 'Backtests', path: '/backtests', icon: <FlaskConical size={iconSize} aria-hidden="true" /> },

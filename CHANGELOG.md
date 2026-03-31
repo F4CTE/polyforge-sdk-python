@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.16.3] — 2026-03-31
+
+### Added
+- **Admin Revenue page** (`/revenue`) — marketplace earnings dashboard with stat cards (total revenue, platform fees, total purchases, active listings), top listings ranked by revenue, and a scrollable recent-purchases feed (last 30 days); backed by new `GET /dashboard/marketplace-stats` endpoint in `admin-api-service`
+- **Admin Approval Queue page** (`/approvals`) — lists users with `approved === false`; admins can approve or reject (with optional reason) directly from the table; calls `PATCH /users/:id/approve` and `PATCH /users/:id/reject`; removed users disappear from the list immediately
+- **Admin sidebar** — added Revenue (DollarSign) and Approvals (UserCheck) nav items under Overview and Management sections respectively; router updated with lazy routes for both pages
+- **Marketplace stats endpoint** — `DashboardService.getMarketplaceStats()` and `GET /dashboard/marketplace-stats` added to `admin-api-service`; queries `MarketplaceListing` and `MarketplacePurchase` tables for totals, top sellers, and recent transactions; `adminApi.marketplaceStats()` added to admin-app API client
+
+### Changed
+- **Mobile responsiveness** — market-detail header wraps on small screens; watchlist rows handle narrow viewports; orders table scrolls horizontally with sticky columns; leaderboard hides Score and Win Rate columns on mobile (`hidden sm:table-cell`)
+
+---
+
 ## [6.16.2] — 2026-03-31
 
 ### Added

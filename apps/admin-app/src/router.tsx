@@ -29,6 +29,8 @@ export const router = createBrowserRouter([
           { path: 'tickets/:id', lazy: () => import('@/pages/tickets/ticket-detail') },
           { path: 'admins', lazy: () => import('@/pages/admins/admins') },
           { path: 'sentiment', lazy: () => import('@/pages/sentiment/sentiment') },
+          { path: 'approvals', lazy: () => import('@/pages/approvals/approvals') },
+          { path: 'revenue', lazy: () => import('@/pages/revenue/revenue') },
         ],
       },
     ],

@@ -109,7 +109,7 @@ export function Component() {
               const deltaUp = priceDelta !== null && priceDelta > 0;
               const deltaDown = priceDelta !== null && priceDelta < 0;
               return (
-                <div key={m.id} className="flex items-center gap-4 rounded-pf border border-pf-border bg-pf-surface p-3 hover:border-pf-border-hover transition-colors group">
+                <div key={m.id} className="flex items-start sm:items-center gap-4 flex-wrap rounded-pf border border-pf-border bg-pf-surface p-3 hover:border-pf-border-hover transition-colors group">
                   <Link to={`/markets/${m.id}`} className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       {m.category && (
@@ -128,7 +128,7 @@ export function Component() {
                       Vol: ${parseFloat(m.volume24h ?? '0').toLocaleString(undefined, { maximumFractionDigits: 0 })} · Added {new Date(m.addedAt).toLocaleDateString()}
                     </p>
                   </Link>
-                  <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
                     {priceInfo !== null && (
                       <div className="text-right">
                         <div className="flex items-center gap-1 justify-end">

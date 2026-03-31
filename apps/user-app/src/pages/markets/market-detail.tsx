@@ -643,7 +643,7 @@ export function Component() {
       {!loadingMarket && market ? (
         <>
           {/* Market header */}
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 flex-wrap">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 rounded-full bg-pf-cyan-500/15 text-pf-cyan-400 text-xs font-medium">
@@ -667,7 +667,7 @@ export function Component() {
             </div>
 
             {/* Price pills + TP/SL + Run Strategy */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap sm:flex-shrink-0">
               <div className="flex gap-2">
                 <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-pf-success/10 border border-pf-success/20">
                   <span className="text-[10px] uppercase tracking-wide text-pf-success/70">YES</span>

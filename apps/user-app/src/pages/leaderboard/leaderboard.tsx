@@ -137,9 +137,9 @@ export function Component() {
               <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
                 <th scope="col" className="px-4 py-3 font-medium text-right w-16">Rank</th>
                 <th scope="col" className="px-4 py-3 font-medium">Trader</th>
-                <th scope="col" className="px-4 py-3 font-medium text-right">Score</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Score</th>
                 <th scope="col" className="px-4 py-3 font-medium text-right">P&L</th>
-                <th scope="col" className="px-4 py-3 font-medium text-right">Win Rate</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Win Rate</th>
                 <th scope="col" className="px-4 py-3 font-medium text-right">Trades</th>
               </tr>
             </thead>
@@ -200,7 +200,7 @@ export function Component() {
                       </Link>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-right hidden sm:table-cell">
                       {entry.score != null ? (
                         <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono font-bold ${
                           entry.score >= 80 ? 'text-pf-success bg-pf-success/10' :
@@ -218,7 +218,7 @@ export function Component() {
                     <td className={`px-4 py-3 text-right font-mono ${pnlColor(entry.pnl)}`}>
                       {pnlSign(entry.pnl)}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-pf-text-secondary">
+                    <td className="px-4 py-3 text-right font-mono text-pf-text-secondary hidden sm:table-cell">
                       {entry.winRate}%
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-pf-text-secondary">

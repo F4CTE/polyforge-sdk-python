@@ -343,6 +343,24 @@ export const adminApi = {
       buildUrl(API_BASE, '/dashboard/platform-stats')
     ),
 
+  marketplaceStats: () =>
+    request<{
+      totalListings: number;
+      activeListings: number;
+      totalPurchases: number;
+      totalRevenue: number;
+      platformFeeTotal: number;
+      topListings: Array<{
+        id: string; title: string; priceUsdc: string; purchaseCount: number;
+        forkCount: number; avgRating: string | null; ratingCount: number;
+        totalRevenue: string; seller: { username: string; displayName: string | null };
+      }>;
+      recentPurchases: Array<{
+        id: string; priceUsdc: string; platformFee: string; sellerNet: string;
+        createdAt: string; listing: { title: string };
+      }>;
+    }>(buildUrl(API_BASE, '/dashboard/marketplace-stats')),
+
   // User Accuracy
   userAccuracy: (userId: string) =>
     request<{ brierScore: number | null; totalPredictions: number; correctPredictions: number; winRate: string; calibration: unknown[]; byCategory: unknown }>(
