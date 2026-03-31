@@ -30,6 +30,12 @@ import {
   Wifi,
   WifiOff,
   Trash2,
+  History,
+  Clock,
+  RotateCcw,
+  Plus,
+  Minus,
+  Edit2,
 } from 'lucide-react';
 import { wsManager } from '@/lib/websocket';
 import { toast } from 'sonner';
@@ -117,6 +123,21 @@ interface ReviewsState {
   submitRating: number;
   submitComment: string;
   submitting: boolean;
+}
+
+interface StrategyVersion {
+  id: string;
+  version: number;
+  label: string;
+  createdAt: string;
+  changeNote?: string;
+  blockCount: number;
+  author: string;
+  changes?: {
+    added: number;
+    removed: number;
+    modified: number;
+  };
 }
 
 type LiveEventType = 'ORDER_PLACED' | 'ORDER_FILLED' | 'ORDER_REJECTED' | 'STRATEGY_ERROR';
@@ -234,7 +255,8 @@ export function Component() {
   const [executionsTotalPages, setExecutionsTotalPages] = useState(1);
   const [executionsFetched, setExecutionsFetched] = useState(false);
   const [execLog, setExecLog] = useState<Array<{id: string; eventType: string; payload: any; createdAt: string}>>([]);
-  const [versions, setVersions] = useState<Array<{id: string; version: number; changedBy: string; createdAt: string; triggers: any; conditions: any; actions: any}>>([]);
+  const [versions, setVersions] = useState<StrategyVersion[]>([]);
+  const [selectedVersion, setSelectedVersion] = useState<StrategyVersion | null>(null);
   const [loadingLog, setLoadingLog] = useState(false);
   const [loadingVersions, setLoadingVersions] = useState(false);
   const [rollingBack, setRollingBack] = useState<string | null>(null);
@@ -312,8 +334,11 @@ export function Component() {
     if (detailTab === 'versions') {
       setLoadingVersions(true);
       fetch(`/api/v1/strategies/${strategy.id}/versions`, { credentials: 'include' })
-        .then(r => r.ok ? r.json() : [])
-        .then(d => setVersions(Array.isArray(d) ? d : []))
+        .then(r => r.ok ? r.json() : { data: [] })
+        .then(d => {
+          const list: StrategyVersion[] = Array.isArray(d) ? d : (d.data ?? []);
+          setVersions(list);
+        })
         .catch(() => {})
         .finally(() => setLoadingVersions(false));
     }
@@ -983,9 +1008,10 @@ export function Component() {
             <button
               type="button"
               onClick={() => setDetailTab('versions')}
-              className={`px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'versions' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'versions' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
             >
-              Version History
+              <History className="size-3.5" aria-hidden="true" />
+              History
             </button>
             <button
               type="button"
@@ -1229,54 +1255,184 @@ export function Component() {
 
           {detailTab === 'versions' && (
             <div className="mt-4">
-              {loadingVersions ? (
-                <p className="text-sm text-pf-text-muted">Loading versions...</p>
-              ) : versions.length === 0 ? (
-                <div className="text-center py-8 text-pf-text-muted text-sm">
-                  <p>No saved versions yet.</p>
-                  <p className="text-xs mt-1">Versions are saved when you edit a strategy.</p>
-                </div>
-              ) : (
-                <ul className="space-y-2">
-                  {versions.map(v => (
-                    <li key={v.id} className="rounded-pf border border-pf-border bg-pf-surface p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-xs font-semibold text-pf-text">v{v.version}</span>
-                          <span className="text-[10px] text-pf-text-muted ml-2">
-                            {new Date(v.createdAt).toLocaleString()}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          disabled={!!rollingBack}
-                          onClick={async () => {
-                            if (!confirm(`Roll back to version ${v.version}? This will replace the current strategy logic.`)) return;
-                            setRollingBack(v.id);
-                            try {
-                              const r = await fetch(
-                                `/api/v1/strategies/${strategy?.id}/versions/${v.id}/rollback`,
-                                { method: 'POST', credentials: 'include' }
-                              );
-                              if (r.ok) {
-                                alert(`Rolled back to v${v.version}`);
-                                window.location.reload();
-                              }
-                            } finally { setRollingBack(null); }
-                          }}
-                          className="text-xs px-2.5 py-1 rounded-pf border border-pf-border text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors disabled:opacity-40"
-                        >
-                          {rollingBack === v.id ? 'Rolling back...' : 'Rollback'}
-                        </button>
+              {/* Panel header */}
+              <div className="flex items-center gap-2 mb-4">
+                <GitBranch className="size-4 text-pf-text-muted" aria-hidden="true" />
+                <h2 className="text-sm font-semibold text-pf-text">Version History</h2>
+                {versions.length > 0 && (
+                  <span className="ml-auto text-xs text-pf-text-muted">
+                    {versions.length} snapshot{versions.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+
+              {/* Loading skeleton */}
+              {loadingVersions && (
+                <div className="space-y-0 rounded-pf border border-pf-border overflow-hidden">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-start gap-4 px-5 py-4 border-b border-pf-border-subtle last:border-0 bg-pf-elevated animate-pulse">
+                      <div className="flex flex-col items-center gap-1 shrink-0 pt-0.5">
+                        <div className="size-3 rounded-full bg-pf-overlay" />
+                        {i < 3 && <div className="w-px h-10 bg-pf-overlay" />}
                       </div>
-                      <p className="text-[11px] text-pf-text-muted mt-1">
-                        {Array.isArray(v.triggers) ? v.triggers.length : 0} triggers &middot;{' '}
-                        {Array.isArray(v.conditions) ? v.conditions.length : 0} conditions &middot;{' '}
-                        {Array.isArray(v.actions) ? v.actions.length : 0} actions
-                      </p>
-                    </li>
+                      <div className="flex-1 space-y-2 pb-1">
+                        <div className="flex items-center gap-3">
+                          <div className="h-5 w-10 bg-pf-overlay rounded-pf-sm" />
+                          <div className="h-3 w-24 bg-pf-overlay rounded" />
+                          <div className="h-3 w-16 bg-pf-overlay rounded ml-auto" />
+                        </div>
+                        <div className="h-3 w-40 bg-pf-overlay rounded" />
+                        <div className="flex gap-2">
+                          <div className="h-4 w-14 bg-pf-overlay rounded-full" />
+                          <div className="h-4 w-14 bg-pf-overlay rounded-full" />
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
+              )}
+
+              {/* Empty state */}
+              {!loadingVersions && versions.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
+                  <Clock className="size-8 text-pf-text-muted opacity-40" aria-hidden="true" />
+                  <p className="text-sm font-medium text-pf-text">No version history yet</p>
+                  <p className="text-xs text-pf-text-muted">Save the strategy to create a snapshot</p>
+                </div>
+              )}
+
+              {/* Timeline list */}
+              {!loadingVersions && versions.length > 0 && (
+                <div className="rounded-pf border border-pf-border overflow-hidden bg-pf-elevated">
+                  {versions.map((v, idx) => {
+                    const isCurrent = idx === 0;
+                    const isRestoring = rollingBack === v.id;
+                    const isSelected = selectedVersion?.id === v.id;
+                    return (
+                      <div
+                        key={v.id}
+                        className={`relative flex items-start gap-4 px-5 py-4 border-b border-pf-border-subtle last:border-0 transition-colors ${isSelected ? 'bg-pf-cyan-500/5' : 'hover:bg-pf-surface/40'}`}
+                        onClick={() => setSelectedVersion(isSelected ? null : v)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedVersion(isSelected ? null : v); }}
+                        aria-pressed={isSelected}
+                        aria-label={`Version ${v.label}`}
+                      >
+                        {/* Timeline spine */}
+                        <div className="flex flex-col items-center shrink-0 pt-0.5" aria-hidden="true">
+                          <span className={`size-3 rounded-full border-2 ${isCurrent ? 'border-pf-cyan-400 bg-pf-cyan-400' : 'border-pf-border-strong bg-pf-surface'}`} />
+                          {idx < versions.length - 1 && (
+                            <span className="w-px flex-1 min-h-[2rem] bg-pf-border-subtle mt-1" />
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          {/* Top row: badge + date + current pill */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-sm text-xs font-bold tabular-nums ${isCurrent ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'bg-pf-overlay text-pf-text-muted'}`}>
+                              {v.label}
+                            </span>
+                            {isCurrent && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-pf-success/10 text-pf-success text-[10px] font-semibold uppercase tracking-wide">
+                                current
+                              </span>
+                            )}
+                            <span className="text-xs text-pf-text-muted">{formatDate(v.createdAt)}</span>
+                            <span className="text-[10px] text-pf-text-muted ml-auto">by {v.author}</span>
+                          </div>
+
+                          {/* Change note */}
+                          {v.changeNote && (
+                            <p className="text-xs italic text-pf-text-secondary leading-relaxed">
+                              "{v.changeNote}"
+                            </p>
+                          )}
+
+                          {/* Block count + change chips */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[11px] text-pf-text-muted">
+                              {v.blockCount} block{v.blockCount !== 1 ? 's' : ''}
+                            </span>
+                            {v.changes && (
+                              <>
+                                {v.changes.added > 0 && (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-pf-success/15 text-pf-success text-[10px] font-semibold">
+                                    <Plus className="size-2.5" aria-hidden="true" />
+                                    {v.changes.added} added
+                                  </span>
+                                )}
+                                {v.changes.removed > 0 && (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-pf-danger/15 text-pf-danger text-[10px] font-semibold">
+                                    <Minus className="size-2.5" aria-hidden="true" />
+                                    {v.changes.removed} removed
+                                  </span>
+                                )}
+                                {v.changes.modified > 0 && (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-pf-warning/15 text-pf-warning text-[10px] font-semibold">
+                                    <Edit2 className="size-2.5" aria-hidden="true" />
+                                    {v.changes.modified} modified
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </div>
+
+                          {/* Restore button for non-current versions */}
+                          {!isCurrent && (
+                            <div className="pt-1">
+                              <button
+                                type="button"
+                                disabled={!!rollingBack}
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  setRollingBack(v.id);
+                                  try {
+                                    const r = await fetch(
+                                      `/api/v1/strategies/${strategy?.id}/restore`,
+                                      {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        credentials: 'include',
+                                        body: JSON.stringify({ versionId: v.id }),
+                                      }
+                                    );
+                                    if (r.ok) {
+                                      toast.success(`Version restored! The strategy will use ${v.label} blocks.`);
+                                      setSelectedVersion(null);
+                                      // Re-fetch versions to reflect new current
+                                      setLoadingVersions(true);
+                                      fetch(`/api/v1/strategies/${strategy?.id}/versions`, { credentials: 'include' })
+                                        .then(res => res.ok ? res.json() : { data: [] })
+                                        .then(d => {
+                                          const list: StrategyVersion[] = Array.isArray(d) ? d : (d.data ?? []);
+                                          setVersions(list);
+                                        })
+                                        .catch(() => {})
+                                        .finally(() => setLoadingVersions(false));
+                                    } else {
+                                      const err = await r.json().catch(() => ({}));
+                                      toast.error((err as any).message ?? 'Failed to restore version');
+                                    }
+                                  } catch {
+                                    toast.error('Failed to restore version');
+                                  } finally {
+                                    setRollingBack(null);
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pf border border-pf-border text-xs text-pf-text-secondary hover:border-pf-cyan-500/50 hover:text-pf-cyan-400 disabled:opacity-40 transition-colors"
+                              >
+                                <RotateCcw className="size-3" aria-hidden="true" />
+                                {isRestoring ? 'Restoring...' : `Restore this version`}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}

@@ -13,10 +13,34 @@ import {
   TrendingUp,
   Check,
   X,
+  ChevronDown,
+  ChevronUp,
+  BarChart2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
+
+interface CopyAnalytics {
+  totalCopiedPnl: string;
+  bestPerformer: { username: string; pnl: string };
+  worstPerformer: { username: string; pnl: string };
+  avgCorrelation: number;
+  totalCopyTrades: number;
+  activeCopies: number;
+  traders: CopyTraderAnalytics[];
+}
+
+interface CopyTraderAnalytics {
+  username: string;
+  displayName?: string;
+  copiedPnl: string;
+  correlation: number;
+  maxDrawdown: string;
+  tradeCount: number;
+  winRate: number;
+  pnlHistory: number[];
+}
 
 type CopyStatus = 'ACTIVE' | 'PAUSED' | 'STOPPED';
 type CopyMode = 'PERCENTAGE' | 'FIXED' | 'MIRROR';
@@ -219,6 +243,259 @@ function MaxLossEditor({
   );
 }
 
+/* ─── MiniSparkline ──────────────────────────────────────────────────── */
+
+function MiniSparkline({ data }: { data: number[] }) {
+  if (!data || data.length < 2) return null;
+  const min = Math.min(...data), max = Math.max(...data), range = max - min || 1;
+  const w = 48, h = 20;
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
+  const isUp = data[data.length - 1] >= data[0];
+  return (
+    <svg width={w} height={h} className="overflow-visible" aria-hidden="true">
+      <polyline
+        points={pts}
+        fill="none"
+        stroke={isUp ? 'var(--color-pf-success)' : 'var(--color-pf-danger)'}
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/* ─── Analytics Panel ────────────────────────────────────────────────── */
+
+function CorrelationBar({ value }: { value: number }) {
+  const pct = Math.round(value * 100);
+  const color =
+    pct >= 70 ? 'bg-pf-success' : pct >= 40 ? 'bg-pf-warning' : 'bg-pf-danger';
+  const textColor =
+    pct >= 70 ? 'text-pf-success' : pct >= 40 ? 'text-pf-warning' : 'text-pf-danger';
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 group/corr cursor-default"
+      title="How closely your fills match the source trader"
+    >
+      <span className="w-16 h-1.5 bg-pf-surface rounded-full overflow-hidden">
+        <span
+          className={`block h-full rounded-full ${color}`}
+          style={{ width: `${pct}%` }}
+        />
+      </span>
+      <span className={`text-xs font-mono ${textColor}`}>{pct}%</span>
+    </span>
+  );
+}
+
+function AnalyticsSkeleton() {
+  return (
+    <div className="mt-3 overflow-x-auto">
+      <table className="w-full text-sm" aria-label="Copy trader analytics loading">
+        <thead>
+          <tr className="border-b border-pf-border text-left">
+            {['Trader', 'Copied P&L', 'Correlation', 'Max Drawdown', 'Win Rate', 'Trend'].map((h) => (
+              <th key={h} className="pb-2 pr-4 font-medium text-pf-text-muted text-xs whitespace-nowrap">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {[0, 1].map((i) => (
+            <tr key={i} className="border-b border-pf-border/40 animate-shimmer">
+              <td className="py-3 pr-4"><div className="h-4 w-28 bg-pf-overlay rounded" /></td>
+              <td className="py-3 pr-4"><div className="h-4 w-16 bg-pf-overlay rounded" /></td>
+              <td className="py-3 pr-4"><div className="h-4 w-20 bg-pf-overlay rounded" /></td>
+              <td className="py-3 pr-4"><div className="h-4 w-14 bg-pf-overlay rounded" /></td>
+              <td className="py-3 pr-4"><div className="h-4 w-12 bg-pf-overlay rounded" /></td>
+              <td className="py-3"><div className="h-5 w-12 bg-pf-overlay rounded" /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+interface AnalyticsPanelProps {
+  analytics: CopyAnalytics | null;
+  loading: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPanelProps) {
+  const pnlPositive = analytics
+    ? !analytics.totalCopiedPnl.startsWith('-')
+    : false;
+
+  return (
+    <div className="rounded-pf-lg border border-pf-border bg-pf-elevated overflow-hidden">
+      {/* Summary bar — always visible */}
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-sm text-left hover:bg-pf-surface/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
+        aria-expanded={expanded}
+        aria-controls="copy-analytics-expanded"
+      >
+        <span className="flex items-center gap-2 font-medium text-pf-text mr-auto">
+          <BarChart2 className="size-4 text-pf-cyan-400 shrink-0" aria-hidden="true" />
+          Copy Analytics
+        </span>
+
+        {loading && (
+          <span className="text-pf-text-muted text-xs animate-pulse">Loading…</span>
+        )}
+
+        {!loading && analytics && (
+          <>
+            <span className="flex items-center gap-1.5 text-pf-text-secondary">
+              Total P&amp;L:{' '}
+              <span className={`font-mono font-semibold ${pnlPositive ? 'text-pf-success' : 'text-pf-danger'}`}>
+                {analytics.totalCopiedPnl}
+              </span>
+            </span>
+            <span className="text-pf-border-strong hidden sm:inline">|</span>
+            <span className="text-pf-text-secondary">
+              Best:{' '}
+              <Link
+                to={`/profile/${analytics.bestPerformer.username}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-pf-success hover:underline font-medium"
+              >
+                @{analytics.bestPerformer.username}
+              </Link>{' '}
+              <span className="font-mono text-pf-success">{analytics.bestPerformer.pnl}</span>
+            </span>
+            <span className="text-pf-border-strong hidden sm:inline">|</span>
+            <span className="text-pf-text-secondary">
+              Worst:{' '}
+              <Link
+                to={`/profile/${analytics.worstPerformer.username}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-pf-danger hover:underline font-medium"
+              >
+                @{analytics.worstPerformer.username}
+              </Link>{' '}
+              <span className="font-mono text-pf-danger">{analytics.worstPerformer.pnl}</span>
+            </span>
+            <span className="text-pf-border-strong hidden sm:inline">|</span>
+            <span className="text-pf-text-secondary">
+              Active:{' '}
+              <span className="font-medium text-pf-text">{analytics.activeCopies}</span>
+            </span>
+          </>
+        )}
+
+        {!loading && !analytics && (
+          <span className="text-pf-text-muted text-xs">No analytics available</span>
+        )}
+
+        <span className="ml-auto text-pf-text-muted shrink-0">
+          {expanded
+            ? <ChevronUp className="size-4" aria-hidden="true" />
+            : <ChevronDown className="size-4" aria-hidden="true" />}
+        </span>
+      </button>
+
+      {/* Expanded section */}
+      {expanded && (
+        <div id="copy-analytics-expanded" className="border-t border-pf-border px-4 pb-4">
+          {loading && <AnalyticsSkeleton />}
+
+          {!loading && analytics && analytics.traders.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
+              <TrendingUp className="size-8 text-pf-text-muted" aria-hidden="true" />
+              <p className="text-sm text-pf-text-secondary">Start copying traders to see analytics</p>
+            </div>
+          )}
+
+          {!loading && !analytics && (
+            <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
+              <TrendingUp className="size-8 text-pf-text-muted" aria-hidden="true" />
+              <p className="text-sm text-pf-text-secondary">Start copying traders to see analytics</p>
+            </div>
+          )}
+
+          {!loading && analytics && analytics.traders.length > 0 && (
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-sm" aria-label="Per-trader copy analytics">
+                <thead>
+                  <tr className="border-b border-pf-border text-left">
+                    <th className="pb-2 pr-4 font-medium text-pf-text-muted text-xs whitespace-nowrap">Trader</th>
+                    <th className="pb-2 pr-4 font-medium text-pf-text-muted text-xs whitespace-nowrap">Copied P&amp;L</th>
+                    <th className="pb-2 pr-4 font-medium text-pf-text-muted text-xs whitespace-nowrap">Correlation</th>
+                    <th className="pb-2 pr-4 font-medium text-pf-text-muted text-xs whitespace-nowrap">Max Drawdown</th>
+                    <th className="pb-2 pr-4 font-medium text-pf-text-muted text-xs whitespace-nowrap">Win Rate</th>
+                    <th className="pb-2 font-medium text-pf-text-muted text-xs whitespace-nowrap">Trend</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analytics.traders.map((t) => {
+                    const pnlUp = !t.copiedPnl.startsWith('-');
+                    return (
+                      <tr
+                        key={t.username}
+                        className="border-b border-pf-border/40 last:border-0 hover:bg-pf-surface/30 transition-colors"
+                      >
+                        {/* Trader */}
+                        <td className="py-3 pr-4">
+                          <Link
+                            to={`/profile/${t.username}`}
+                            className="inline-flex items-center gap-2 group/trader"
+                          >
+                            <span
+                              className="size-7 rounded-full bg-pf-cyan-500/20 text-pf-cyan-400 text-[11px] font-semibold flex items-center justify-center shrink-0 uppercase"
+                              aria-hidden="true"
+                            >
+                              {(t.displayName ?? t.username).slice(0, 2)}
+                            </span>
+                            <span className="font-medium text-pf-text group-hover/trader:text-pf-cyan-400 transition-colors">
+                              @{t.username}
+                            </span>
+                          </Link>
+                        </td>
+
+                        {/* Copied P&L */}
+                        <td className="py-3 pr-4">
+                          <span className={`font-mono font-semibold ${pnlUp ? 'text-pf-success' : 'text-pf-danger'}`}>
+                            {t.copiedPnl}
+                          </span>
+                        </td>
+
+                        {/* Correlation */}
+                        <td className="py-3 pr-4">
+                          <CorrelationBar value={t.correlation} />
+                        </td>
+
+                        {/* Max Drawdown */}
+                        <td className="py-3 pr-4">
+                          <span className="font-mono text-pf-danger">{t.maxDrawdown}</span>
+                        </td>
+
+                        {/* Win Rate */}
+                        <td className="py-3 pr-4">
+                          <span className="font-mono text-pf-text-secondary">{t.winRate.toFixed(1)}%</span>
+                        </td>
+
+                        {/* Sparkline */}
+                        <td className="py-3">
+                          <MiniSparkline data={t.pnlHistory} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
 function CardSkeleton() {
@@ -251,6 +528,10 @@ export function Component() {
   const [totalPages, setTotalPages] = useState(0);
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
 
+  const [analytics, setAnalytics] = useState<CopyAnalytics | null>(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(true);
+  const [expandedAnalytics, setExpandedAnalytics] = useState(false);
+
   const load = useCallback((status?: FilterStatus, p?: number) => {
     setLoading(true);
     const params = new URLSearchParams({ limit: '20', page: String(p ?? page) });
@@ -274,6 +555,24 @@ export function Component() {
   }, [page, filter]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    setLoadingAnalytics(true);
+    fetch('/api/v1/copy/analytics', { credentials: 'include' })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data: CopyAnalytics) => {
+        setAnalytics(data);
+        setLoadingAnalytics(false);
+      })
+      .catch(() => {
+        toast.error('Failed to load copy analytics');
+        setAnalytics(null);
+        setLoadingAnalytics(false);
+      });
+  }, []);
 
   function onFilterChange(f: FilterStatus) {
     setFilter(f);
@@ -354,6 +653,14 @@ export function Component() {
           </Link>
         )}
       </div>
+
+      {/* Copy Analytics Panel */}
+      <AnalyticsPanel
+        analytics={analytics}
+        loading={loadingAnalytics}
+        expanded={expandedAnalytics}
+        onToggle={() => setExpandedAnalytics((v) => !v)}
+      />
 
       {/* Filter tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">

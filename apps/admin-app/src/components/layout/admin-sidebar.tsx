@@ -20,6 +20,7 @@ import {
   UserCheck,
   BarChart2,
   Activity,
+  Megaphone,
 } from 'lucide-react';
 import { useAdminAuthStore } from '@/stores/admin-auth-store';
 import { usePollingStore } from '@/stores/polling-store';
@@ -75,6 +76,7 @@ const navSections: NavSection[] = [
       { label: 'Builder', path: '/builder', icon: <Hammer size={iconSize} aria-hidden="true" /> },
       { label: 'Invites', path: '/invites', icon: <Mail size={iconSize} aria-hidden="true" /> },
       { label: 'Tickets', path: '/tickets', icon: <TicketCheck size={iconSize} aria-hidden="true" /> },
+      { label: 'Broadcasts', path: '/broadcasts', icon: <Megaphone size={iconSize} aria-hidden="true" /> },
     ],
   },
   {

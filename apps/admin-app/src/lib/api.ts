@@ -257,6 +257,17 @@ interface ApiKeyData {
   [key: string]: unknown;
 }
 
+interface BroadcastData {
+  id: string;
+  title: string;
+  message: string;
+  type: 'INFO' | 'WARNING' | 'SUCCESS' | 'PROMO';
+  targetAudience: 'ALL' | 'ACTIVE' | 'INACTIVE' | 'PREMIUM';
+  sentAt: string;
+  recipientCount: number;
+  sentBy: string;
+}
+
 export interface AdminMarket {
   id: string;
   slug: string;
@@ -516,6 +527,19 @@ export const adminApi = {
     request<AdminMarket>(buildUrl('/api/admin', `/markets/${id}`), {
       method: 'PATCH',
       body: JSON.stringify(data),
+    }),
+
+  // Broadcasts
+  broadcasts: (params?: QueryParams) =>
+    request<{ data: BroadcastData[]; total: number }>(buildUrl('/api/admin', '/broadcasts', params)),
+  sendBroadcast: (data: { title: string; message: string; type: string; targetAudience: string }) =>
+    request<BroadcastData>(buildUrl('/api/admin', '/broadcasts'), {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  deleteBroadcast: (id: string) =>
+    request<void>(buildUrl('/api/admin', `/broadcasts/${id}`), {
+      method: 'DELETE',
     }),
 
   // Retention

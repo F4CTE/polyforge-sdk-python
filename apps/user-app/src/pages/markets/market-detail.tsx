@@ -22,6 +22,9 @@ import {
   ThumbsUp,
   ThumbsDown,
   Edit2,
+  Bell,
+  BellPlus,
+  Trash2,
 } from 'lucide-react';
 import {
   XAxis,
@@ -126,6 +129,16 @@ interface SentimentData {
   noPercent: number;
   totalVotes: number;
   userVote: { direction: 'YES' | 'NO'; confidence: number } | null;
+}
+
+interface PriceAlert {
+  id: string;
+  marketId: string;
+  outcome: 'YES' | 'NO';
+  condition: 'above' | 'below';
+  threshold: number; // 0.01 – 0.99
+  triggered: boolean;
+  createdAt: string;
 }
 
 type Resolution = '1m' | '1h' | '1d';
@@ -275,9 +288,12 @@ export function Component() {
   const [portfolioBalance, setPortfolioBalance] = useState<number>(1000);
 
   // Price alerts state
-  const [alerts, setAlerts] = useState<Array<{id: string; direction: string; price: string; triggered: boolean}>>([]);
-  const [alertPrice, setAlertPrice] = useState('');
-  const [alertDir, setAlertDir] = useState<'above' | 'below'>('above');
+  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
+  const [loadingAlerts, setLoadingAlerts] = useState(false);
+  const [showAlertForm, setShowAlertForm] = useState(false);
+  const [alertOutcome, setAlertOutcome] = useState<'YES' | 'NO'>('YES');
+  const [alertCondition, setAlertCondition] = useState<'above' | 'below'>('above');
+  const [alertThreshold, setAlertThreshold] = useState(0.60);
   const [savingAlert, setSavingAlert] = useState(false);
 
   // LP Provide Liquidity state
@@ -526,13 +542,21 @@ export function Component() {
   }, []);
 
   // Load price alerts for this market
-  useEffect(() => {
-    if (!market) return;
-    fetch('/api/v1/alerts', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : [])
-      .then((data: any[]) => setAlerts(data))
-      .catch(() => {});
-  }, [market]);
+  const loadAlerts = useCallback(async () => {
+    if (!market?.id) return;
+    setLoadingAlerts(true);
+    try {
+      const r = await fetch(`/api/v1/markets/${market.id}/alerts`, { credentials: 'include' });
+      if (r.ok) {
+        const data: { data: PriceAlert[] } = await r.json();
+        setAlerts(data.data ?? []);
+      }
+    } catch {} finally {
+      setLoadingAlerts(false);
+    }
+  }, [market?.id]);
+
+  useEffect(() => { loadAlerts(); }, [loadAlerts]);
 
 
   // Real-time order updates via WebSocket
@@ -1429,76 +1453,6 @@ export function Component() {
                 )}
               </div>
 
-              {/* Price Alerts */}
-              <div className="mt-4 pt-4 border-t border-pf-border-subtle">
-                <p className="text-xs font-semibold text-pf-text-secondary mb-2 uppercase tracking-wide">Price Alerts</p>
-                <div className="flex gap-2 mb-2">
-                  <select
-                    value={alertDir}
-                    onChange={(e) => setAlertDir(e.target.value as 'above' | 'below')}
-                    className="h-8 px-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text focus:outline-none"
-                  >
-                    <option value="above">Above</option>
-                    <option value="below">Below</option>
-                  </select>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    max="0.99"
-                    value={alertPrice}
-                    onChange={(e) => setAlertPrice(e.target.value)}
-                    placeholder="0.75"
-                    className="flex-1 h-8 px-2 rounded-pf bg-pf-surface border border-pf-border text-xs font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    disabled={savingAlert || !alertPrice}
-                    onClick={async () => {
-                      const yesToken = (market?.tokens ?? []).find(t => t.outcome?.toUpperCase() === 'YES');
-                      if (!yesToken || !alertPrice) return;
-                      setSavingAlert(true);
-                      try {
-                        const r = await fetch('/api/v1/alerts', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          credentials: 'include',
-                          body: JSON.stringify({ tokenId: yesToken.id, direction: alertDir, price: parseFloat(alertPrice), persistent: false }),
-                        });
-                        if (r.ok) {
-                          const a = await r.json();
-                          setAlerts(prev => [a, ...prev]);
-                          setAlertPrice('');
-                        }
-                      } finally { setSavingAlert(false); }
-                    }}
-                    className="h-8 px-3 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-xs text-pf-cyan-400 hover:bg-pf-cyan-500/25 transition-colors disabled:opacity-40"
-                  >
-                    Set
-                  </button>
-                </div>
-                {alerts.length > 0 && (
-                  <ul className="space-y-1">
-                    {alerts.slice(0, 3).map(a => (
-                      <li key={a.id} className="flex items-center justify-between text-xs">
-                        <span className={`font-mono ${a.triggered ? 'text-pf-text-muted line-through' : 'text-pf-text'}`}>
-                          {a.direction === 'above' ? '▲' : '▼'} {a.price}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            await fetch(`/api/v1/alerts/${a.id}`, { method: 'DELETE', credentials: 'include' });
-                            setAlerts(prev => prev.filter(x => x.id !== a.id));
-                          }}
-                          className="text-pf-text-muted hover:text-pf-danger transition-colors ml-2"
-                        >
-                          &times;
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
               </>}
             </div>
 
@@ -1754,6 +1708,220 @@ export function Component() {
                   )}
                 </>
               )}
+            </div>
+
+            {/* Price Alerts Widget */}
+            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border">
+                <div className="flex items-center gap-2">
+                  <Bell className="size-4 text-pf-text-muted" aria-hidden="true" />
+                  <span className="text-sm font-medium text-pf-text">Price Alerts</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAlertForm((v) => !v)}
+                  aria-expanded={showAlertForm}
+                  aria-label={showAlertForm ? 'Cancel new alert' : 'Add price alert'}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-pf-sm text-xs font-medium bg-pf-cyan-500/10 border border-pf-cyan-500/25 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                >
+                  {showAlertForm ? (
+                    <X className="size-3" />
+                  ) : (
+                    <><BellPlus className="size-3" /> Add</>
+                  )}
+                </button>
+              </div>
+
+              {/* Inline form */}
+              {showAlertForm && (
+                <div className="px-4 pt-3 pb-2 border-b border-pf-border-subtle space-y-3">
+                  {/* Outcome toggle */}
+                  <div>
+                    <p className="text-xs font-medium text-pf-text-secondary mb-1.5">Outcome</p>
+                    <div className="flex gap-1.5">
+                      {(['YES', 'NO'] as const).map((o) => (
+                        <button
+                          type="button"
+                          key={o}
+                          onClick={() => setAlertOutcome(o)}
+                          className={`flex-1 py-1.5 rounded-pf-sm text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                            alertOutcome === o
+                              ? o === 'YES'
+                                ? 'bg-pf-success/10 text-pf-success border border-pf-success/30'
+                                : 'bg-pf-danger/10 text-pf-danger border border-pf-danger/30'
+                              : 'bg-pf-surface text-pf-text-muted border border-pf-border hover:border-pf-border-strong'
+                          }`}
+                        >
+                          {o}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Condition toggle */}
+                  <div>
+                    <p className="text-xs font-medium text-pf-text-secondary mb-1.5">Condition</p>
+                    <div className="flex gap-1.5">
+                      {(['above', 'below'] as const).map((c) => (
+                        <button
+                          type="button"
+                          key={c}
+                          onClick={() => setAlertCondition(c)}
+                          className={`flex-1 py-1.5 rounded-pf-sm text-xs font-semibold capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                            alertCondition === c
+                              ? 'bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/30'
+                              : 'bg-pf-surface text-pf-text-muted border border-pf-border hover:border-pf-border-strong'
+                          }`}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Threshold slider */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-xs font-medium text-pf-text-secondary">Threshold</p>
+                      <span className="font-mono text-xs text-pf-cyan-400">{alertThreshold.toFixed(2)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.01"
+                      max="0.99"
+                      step="0.01"
+                      value={alertThreshold}
+                      onChange={(e) => setAlertThreshold(parseFloat(e.target.value))}
+                      aria-label="Alert threshold"
+                      className="w-full h-1.5 rounded-full bg-pf-border accent-pf-cyan-500"
+                    />
+                    <div className="flex justify-between text-[10px] text-pf-text-muted mt-0.5">
+                      <span>0.01</span>
+                      <span>0.99</span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowAlertForm(false)}
+                      className="flex-1 py-2 rounded-pf-sm text-xs text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={savingAlert}
+                      onClick={async () => {
+                        if (!market?.id) return;
+                        setSavingAlert(true);
+                        try {
+                          const r = await fetch(`/api/v1/markets/${market.id}/alerts`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                              outcome: alertOutcome,
+                              condition: alertCondition,
+                              threshold: alertThreshold,
+                            }),
+                          });
+                          if (r.ok) {
+                            toast.success('Alert created');
+                            setShowAlertForm(false);
+                            setAlertOutcome('YES');
+                            setAlertCondition('above');
+                            setAlertThreshold(0.60);
+                            await loadAlerts();
+                          } else {
+                            toast.error('Failed to create alert');
+                          }
+                        } catch {
+                          toast.error('Failed to create alert');
+                        } finally {
+                          setSavingAlert(false);
+                        }
+                      }}
+                      className="flex-1 py-2 rounded-pf-sm text-xs font-semibold bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                    >
+                      {savingAlert ? 'Saving...' : 'Save Alert'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Alert list */}
+              <div className="px-4 py-3">
+                {loadingAlerts ? (
+                  <div className="space-y-2">
+                    {Array.from({ length: 2 }, (_, i) => (
+                      <div key={i} className="h-8 bg-pf-overlay rounded-pf-sm animate-pulse" />
+                    ))}
+                  </div>
+                ) : alerts.length === 0 ? (
+                  <div className="flex flex-col items-center py-4 text-center">
+                    <Bell className="size-6 text-pf-text-muted opacity-30 mb-2" aria-hidden="true" />
+                    <p className="text-xs text-pf-text-muted">No alerts set</p>
+                    <button
+                      type="button"
+                      onClick={() => setShowAlertForm(true)}
+                      className="mt-1.5 text-[11px] text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
+                    >
+                      Add your first alert
+                    </button>
+                  </div>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {alerts.map((alert) => (
+                      <li
+                        key={alert.id}
+                        className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-pf-sm bg-pf-surface border border-pf-border-subtle text-xs"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          {/* Outcome dot */}
+                          <span
+                            className={`size-1.5 rounded-full shrink-0 ${alert.outcome === 'YES' ? 'bg-pf-success' : 'bg-pf-danger'}`}
+                            aria-hidden="true"
+                          />
+                          <span className="font-mono text-pf-text truncate">
+                            {alert.outcome} {alert.condition} {alert.threshold.toFixed(2)}
+                          </span>
+                          {alert.triggered && (
+                            <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-pf-warning/15 text-pf-warning border border-pf-warning/20">
+                              Triggered
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          aria-label={`Delete alert: ${alert.outcome} ${alert.condition} ${alert.threshold.toFixed(2)}`}
+                          onClick={async () => {
+                            try {
+                              const r = await fetch(`/api/v1/markets/${market?.id}/alerts/${alert.id}`, {
+                                method: 'DELETE',
+                                credentials: 'include',
+                              });
+                              if (r.ok) {
+                                setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
+                                toast.success('Alert removed');
+                              } else {
+                                toast.error('Failed to remove alert');
+                              }
+                            } catch {
+                              toast.error('Failed to remove alert');
+                            }
+                          }}
+                          className="shrink-0 p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                        >
+                          <Trash2 className="size-3" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
             </div>{/* end right column wrapper */}
           </div>
