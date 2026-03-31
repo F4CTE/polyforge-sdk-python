@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.16.4] — 2026-03-31
+
+### Added
+- **Analytics page** (`/analytics`) — personal trading dashboard with 4 stat cards (Edge Score, Total P&L, Win Rate, Total Trades), full-width cumulative P&L equity curve (recharts AreaChart, green/red fill by profitability), category performance table (brier score color-coded), and score breakdown panel (Sharpe, Profit Factor, Consistency as proportional bars); fetches from `/portfolio/pnl`, `/accuracy`, and `/scores/me`
+- **Notifications page** (`/notifications`) — full notification history from the Zustand store with filter tabs (All / Unread / Info / Success / Warning / Error), "Mark all read" header button, relative timestamps ("2 min ago", "1 hr ago"), unread highlight (`bg-pf-cyan-500/5`), and per-item mark-read on click
+- **Portfolio P&L Breakdown section** — realized vs unrealized P&L side-by-side card added below the positions list, only shown when portfolio data is loaded
+- **Portfolio Category Exposure section** — groups open positions by market category, shows exposure (shares), position count, and a proportional fill bar per category; sorted by exposure descending
+- **Sidebar nav** — Analytics (LineChart) added to Analytics section; Notifications (Bell) added to Trade section
+- **Router** — `/analytics` and `/notifications` routes added under VerifiedGuard
+
+---
+
 ## [6.16.3] — 2026-03-31
 
 ### Added

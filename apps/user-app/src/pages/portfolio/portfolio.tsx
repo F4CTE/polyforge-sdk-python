@@ -649,6 +649,66 @@ export function Component() {
             );
           })()}
 
+          {/* P&L Breakdown — Realized vs Unrealized */}
+          {portfolio && (
+            <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+              <p className="text-xs text-pf-text-secondary uppercase tracking-wider mb-3">P&L Breakdown</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-pf-text-muted mb-1">Realized P&L</p>
+                  <span className={`text-xl font-mono font-semibold ${pnlColor(portfolio.totalRealizedPnl)}`}>
+                    {formatPnl(portfolio.totalRealizedPnl)}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-pf-text-muted mb-1">Unrealized P&L</p>
+                  <span className={`text-xl font-mono font-semibold ${pnlColor(portfolio.totalUnrealizedPnl)}`}>
+                    {formatPnl(portfolio.totalUnrealizedPnl)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Category Exposure */}
+          {(portfolio?.positions ?? []).length > 0 && (() => {
+            const byCategory = portfolio!.positions.reduce<Record<string, { count: number; exposure: number }>>((acc, pos) => {
+              const key = pos.market?.category ?? 'Uncategorized';
+              if (!acc[key]) acc[key] = { count: 0, exposure: 0 };
+              acc[key].count++;
+              acc[key].exposure += parseFloat(pos.size) || 0;
+              return acc;
+            }, {});
+            const entries = Object.entries(byCategory).sort((a, b) => b[1].exposure - a[1].exposure);
+            const totalExposure = entries.reduce((sum, [, v]) => sum + v.exposure, 0) || 1;
+            return (
+              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                <p className="text-xs text-pf-text-secondary uppercase tracking-wider mb-3">Category Exposure</p>
+                <div className="space-y-3">
+                  {entries.map(([category, { count, exposure }]) => {
+                    const barPct = Math.round((exposure / totalExposure) * 100);
+                    return (
+                      <div key={category}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm text-pf-text capitalize">{category}</span>
+                          <span className="text-xs text-pf-text-muted font-mono">
+                            {exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })} shares &middot; {count} position{count !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-pf-surface overflow-hidden">
+                          <div
+                            className="h-1.5 rounded-full bg-pf-cyan-500/60"
+                            style={{ width: `${barPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Breakdown by market */}
           {!loadingPortfolio && (portfolio?.positions ?? []).length > 0 && (() => {
             const byMarket = (portfolio!.positions).reduce<Record<string, { title: string; pnl: number; count: number }>>((acc, pos) => {

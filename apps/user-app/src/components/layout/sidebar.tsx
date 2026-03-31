@@ -23,6 +23,8 @@ import {
   Star,
   Target,
   Sparkles,
+  LineChart,
+  Bell,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -46,6 +48,7 @@ const navSections: NavSection[] = [
       { label: 'Strategies', icon: Zap, route: '/strategies' },
       { label: 'Portfolio', icon: Wallet, route: '/portfolio' },
       { label: 'Orders', icon: ClipboardList, route: '/orders' },
+      { label: 'Notifications', icon: Bell, route: '/notifications' },
       { label: 'Smart Orders', icon: Layers, route: '/orders/smart' },
       { label: 'Backtest', icon: FlaskConical, route: '/backtest' },
       { label: 'Copy Trading', icon: UserPlus, route: '/copy' },
@@ -57,6 +60,7 @@ const navSections: NavSection[] = [
     title: 'Analytics',
     items: [
       { label: 'Accuracy', icon: Target, route: '/accuracy' },
+      { label: 'Analytics', icon: LineChart, route: '/analytics' },
       { label: 'AI Optimizer', icon: Sparkles, route: '/optimizer' },
     ],
   },
