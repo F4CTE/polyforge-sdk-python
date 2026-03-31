@@ -7,7 +7,7 @@ import {
   Wallet, BarChart3,
   RefreshCw, Loader2, AlertTriangle, Fuel, PieChart, ShieldAlert,
   Shield, TrendingDown, TrendingUp, Share2, Copy, Check, Download,
-  X, ChevronDown, ChevronUp, Clock, CalendarDays,
+  X, ChevronDown, ChevronUp, Clock, CalendarDays, Receipt, FileText,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
@@ -87,6 +87,33 @@ interface PortfolioStats {
   longestLossStreak?: number | null;
   avgHoldTimeDays?: number | null;
   bestSingleTrade?: number | null;
+}
+
+interface TaxEntry {
+  id: string;
+  marketQuestion: string;
+  marketId: string;
+  outcome: 'YES' | 'NO';
+  side: 'BUY' | 'SELL';
+  openDate: string;
+  closeDate: string;
+  quantity: number;
+  costBasis: number;
+  proceeds: number;
+  realizedGain: number;
+  holdingDays: number;
+  type: 'SHORT_TERM' | 'LONG_TERM';
+}
+
+interface TaxSummary {
+  totalRealizedGain: number;
+  totalRealizedLoss: number;
+  netGain: number;
+  shortTermGain: number;
+  longTermGain: number;
+  totalProceeds: number;
+  totalCostBasis: number;
+  tradeCount: number;
 }
 
 type Tab = 'live' | 'paper';
@@ -398,6 +425,15 @@ export function Component() {
   const [heatmapData, setHeatmapData] = useState<DailyHeatmapEntry[]>([]);
   const [loadingHeatmap, setLoadingHeatmap] = useState(true);
 
+  // Tax Report
+  const currentYear = new Date().getFullYear();
+  const [taxYear, setTaxYear] = useState<number>(currentYear);
+  const [taxData, setTaxData] = useState<TaxEntry[]>([]);
+  const [taxSummary, setTaxSummary] = useState<TaxSummary | null>(null);
+  const [loadingTax, setLoadingTax] = useState(true);
+  const [exportingTax, setExportingTax] = useState(false);
+  const [taxExpanded, setTaxExpanded] = useState(false);
+
   const loadPortfolio = useCallback(async () => {
     setLoadingPortfolio(true);
     try {
@@ -469,6 +505,47 @@ export function Component() {
     });
     return () => { cancelled = true; };
   }, []);
+
+  // Tax report fetch — runs on mount and when taxYear changes
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingTax(true);
+    fetch(`/api/v1/portfolio/tax-report?year=${taxYear}`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(res => {
+        if (cancelled || !res) return;
+        setTaxData(res.data ?? []);
+        setTaxSummary(res.summary ?? null);
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoadingTax(false); });
+    return () => { cancelled = true; };
+  }, [taxYear]);
+
+  function downloadTaxCsv(entries: TaxEntry[], year: number) {
+    setExportingTax(true);
+    try {
+      const headers = ['Date Opened', 'Date Closed', 'Market', 'Outcome', 'Quantity', 'Cost Basis', 'Proceeds', 'Realized Gain/Loss', 'Hold Days', 'Term'];
+      const rows = entries.map(e => [
+        e.openDate, e.closeDate,
+        `"${e.marketQuestion.replace(/"/g, '""')}"`,
+        e.outcome, e.quantity,
+        e.costBasis.toFixed(2), e.proceeds.toFixed(2),
+        e.realizedGain.toFixed(2), e.holdingDays,
+        e.type === 'SHORT_TERM' ? 'Short-term' : 'Long-term',
+      ].join(','));
+      const csv = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `polyforge-tax-report-${year}.csv`; a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Downloaded ${entries.length} transactions`);
+    } catch {
+      toast.error('Failed to generate CSV');
+    }
+    setExportingTax(false);
+  }
 
   function setPeriod(p: Period) {
     setPeriodState(p);
@@ -745,6 +822,136 @@ export function Component() {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* ─── Tax Report ─── */}
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Receipt className="size-4 text-pf-cyan-400" />
+                <span className="text-sm font-semibold text-pf-text">Tax Report</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <select
+                  value={taxYear}
+                  onChange={e => setTaxYear(Number(e.target.value))}
+                  className="bg-pf-surface border border-pf-border rounded-pf px-2 py-1 text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500"
+                >
+                  {[currentYear - 2, currentYear - 1, currentYear].map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  disabled={exportingTax || taxData.length === 0}
+                  onClick={() => downloadTaxCsv(taxData, taxYear)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Download className="size-3.5" />
+                  {exportingTax ? 'Exporting…' : 'Download CSV'}
+                </button>
+              </div>
+            </div>
+
+            {/* Summary cards */}
+            {loadingTax ? (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-pf-overlay rounded-pf-lg animate-pulse" />)}
+              </div>
+            ) : taxSummary ? (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                {/* Net Realized Gain/Loss */}
+                <div className={`bg-pf-surface border border-pf-border rounded-pf-lg p-3 border-l-4 ${taxSummary.netGain >= 0 ? 'border-l-pf-success' : 'border-l-pf-danger'}`}>
+                  <span className="text-[10px] text-pf-text-secondary uppercase tracking-wider block mb-1">Net Realized Gain/Loss</span>
+                  <span className={`text-lg font-mono font-semibold ${taxSummary.netGain >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                    {taxSummary.netGain >= 0 ? '+' : ''}{taxSummary.netGain.toFixed(2)} USDC
+                  </span>
+                </div>
+                {/* Short-term Gains */}
+                <div className="bg-pf-surface border border-pf-border rounded-pf-lg p-3">
+                  <span className="text-[10px] text-pf-text-secondary uppercase tracking-wider block mb-1">Short-term Gains</span>
+                  <span className={`text-lg font-mono font-semibold ${taxSummary.shortTermGain >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                    {taxSummary.shortTermGain >= 0 ? '+' : ''}{taxSummary.shortTermGain.toFixed(2)} USDC
+                  </span>
+                </div>
+                {/* Long-term Gains */}
+                <div className="bg-pf-surface border border-pf-border rounded-pf-lg p-3">
+                  <span className="text-[10px] text-pf-text-secondary uppercase tracking-wider block mb-1">Long-term Gains</span>
+                  <span className={`text-lg font-mono font-semibold ${taxSummary.longTermGain >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                    {taxSummary.longTermGain >= 0 ? '+' : ''}{taxSummary.longTermGain.toFixed(2)} USDC
+                  </span>
+                </div>
+                {/* Total Trades */}
+                <div className="bg-pf-surface border border-pf-border rounded-pf-lg p-3">
+                  <span className="text-[10px] text-pf-text-secondary uppercase tracking-wider block mb-1">Total Trades</span>
+                  <span className="text-lg font-mono font-semibold text-pf-text">{taxSummary.tradeCount}</span>
+                </div>
+              </div>
+            ) : !loadingTax && (
+              <div className="flex flex-col items-center justify-center py-8 text-center mb-4">
+                <FileText className="size-8 text-pf-text-muted mb-2" />
+                <p className="text-sm font-medium text-pf-text">No tax data for {taxYear}</p>
+                <p className="text-xs text-pf-text-muted mt-1">Closed trades will appear here once available.</p>
+              </div>
+            )}
+
+            {/* Preview table */}
+            {!loadingTax && taxData.length > 0 && (() => {
+              const sorted = [...taxData].sort((a, b) => Math.abs(b.realizedGain) - Math.abs(a.realizedGain));
+              const preview = sorted.slice(0, 10);
+              const showToggle = taxData.length > 10;
+              return (
+                <div className="mb-3">
+                  <div className="overflow-x-auto rounded-pf border border-pf-border-subtle">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-pf-border-subtle bg-pf-overlay">
+                          <th className="px-3 py-2 text-left text-pf-text-secondary font-medium">Close Date</th>
+                          <th className="px-3 py-2 text-left text-pf-text-secondary font-medium">Market</th>
+                          <th className="px-3 py-2 text-right text-pf-text-secondary font-medium">Gain/Loss</th>
+                          <th className="px-3 py-2 text-center text-pf-text-secondary font-medium">Term</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(taxExpanded ? sorted : preview).map(entry => (
+                          <tr key={entry.id} className="border-b border-pf-border-subtle last:border-0 hover:bg-pf-overlay/50 transition-colors">
+                            <td className="px-3 py-2 font-mono text-pf-text-secondary whitespace-nowrap">{entry.closeDate}</td>
+                            <td className="px-3 py-2 text-pf-text max-w-[200px] truncate" title={entry.marketQuestion}>{entry.marketQuestion}</td>
+                            <td className={`px-3 py-2 text-right font-mono font-medium whitespace-nowrap ${entry.realizedGain >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                              {entry.realizedGain >= 0 ? '+' : ''}{entry.realizedGain.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${entry.type === 'SHORT_TERM' ? 'bg-amber-500/10 text-amber-400 border-amber-500/25' : 'bg-pf-success/10 text-pf-success border-pf-success/25'}`}>
+                                {entry.type === 'SHORT_TERM' ? 'Short' : 'Long'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {showToggle && (
+                    <button
+                      type="button"
+                      onClick={() => setTaxExpanded(prev => !prev)}
+                      className="flex items-center gap-1.5 mt-2 text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
+                    >
+                      {taxExpanded ? (
+                        <><ChevronUp className="size-3.5" /> Show fewer</>
+                      ) : (
+                        <><ChevronDown className="size-3.5" /> Show all {taxData.length} transactions</>
+                      )}
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Disclaimer */}
+            <p className="text-[10px] text-pf-text-muted mt-1">
+              This report is for informational purposes only. Consult a tax professional for advice.
+            </p>
           </div>
 
           {/* ─── Share Performance ─── */}

@@ -18,6 +18,7 @@ import {
   TrendingUp,
   DollarSign,
   UserCheck,
+  BarChart2,
 } from 'lucide-react';
 import { useAdminAuthStore } from '@/stores/admin-auth-store';
 import { usePollingStore } from '@/stores/polling-store';
@@ -53,6 +54,7 @@ const navSections: NavSection[] = [
       { label: 'Strategies', path: '/strategies', icon: <Blocks size={iconSize} aria-hidden="true" /> },
       { label: 'Listings', path: '/listings', icon: <ShoppingBag size={iconSize} aria-hidden="true" /> },
       { label: 'Orders', path: '/orders', icon: <ShoppingCart size={iconSize} aria-hidden="true" /> },
+      { label: 'Markets', path: '/markets', icon: <BarChart2 size={iconSize} aria-hidden="true" /> },
       { label: 'Backtests', path: '/backtests', icon: <FlaskConical size={iconSize} aria-hidden="true" /> },
     ],
   },

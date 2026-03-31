@@ -221,6 +221,24 @@ interface ApiKeyData {
   [key: string]: unknown;
 }
 
+export interface AdminMarket {
+  id: string;
+  slug: string;
+  question: string;
+  category: string;
+  status: 'ACTIVE' | 'RESOLVED' | 'DELISTED' | 'PENDING';
+  featured: boolean;
+  volume24h: string;
+  totalVolume: string;
+  participantCount: number;
+  yesPrice: string;
+  noPrice: string;
+  endDate: string;
+  createdAt: string;
+  resolvedAt?: string;
+  resolutionValue?: string;
+}
+
 // ─── Admin API ─────────────────────────────────────────────────────────────────
 
 export const adminApi = {
@@ -438,6 +456,17 @@ export const adminApi = {
     request<PaginatedResponse<Listing>>(buildUrl('/api/admin', '/listings', params)),
   reviewListing: (id: string, data: { status?: 'APPROVED' | 'REJECTED' | 'DELISTED'; adminNote?: string; featured?: boolean }) =>
     request<Listing>(buildUrl('/api/admin', `/listings/${id}`), {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  // Markets
+  markets: (params?: QueryParams) =>
+    request<{ data: AdminMarket[]; total: number; totalPages: number }>(
+      buildUrl('/api/admin', '/markets', params),
+    ),
+  updateMarket: (id: string, data: { featured?: boolean; status?: 'ACTIVE' | 'RESOLVED' | 'DELISTED' }) =>
+    request<AdminMarket>(buildUrl('/api/admin', `/markets/${id}`), {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),

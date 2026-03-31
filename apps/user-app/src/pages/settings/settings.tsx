@@ -4,12 +4,14 @@ import { toast } from 'sonner';
 import {
   User, Bell, Lock, Shield, Key, Loader2, Check, Copy, Ban, Eye, EyeOff, Fuel, Trash2, AlertTriangle, ShieldAlert,
   Webhook, Send, Plus, ShieldCheck, ShieldOff, Download, KeyRound, RotateCcw,
+  History, RefreshCw, ChevronDown, ChevronUp, X, Code,
+  Monitor, Smartphone, MapPin, LogOut,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
-type Tab = 'profile' | 'notifications' | 'password' | '2fa' | 'apikeys' | 'gas' | 'risk' | 'webhooks';
+type Tab = 'profile' | 'notifications' | 'password' | '2fa' | 'apikeys' | 'gas' | 'risk' | 'webhooks' | 'sessions';
 
 interface ApiKey {
   id: string;
@@ -45,6 +47,19 @@ interface WebhookEntry {
   failureCount: number;
 }
 
+interface WebhookDelivery {
+  id: string;
+  webhookId: string;
+  event: string;
+  statusCode: number | null;
+  success: boolean;
+  responseTimeMs: number | null;
+  requestBody: string;
+  responseBody: string | null;
+  attemptedAt: string;
+  error?: string;
+}
+
 interface GasUsageData {
   todayUsage: number;
   dailyLimit: number;
@@ -59,6 +74,16 @@ interface TotpSetupData {
   backupCodes?: string[]; // only returned by /confirm, not /setup
 }
 
+interface Session {
+  id: string;
+  deviceName: string;
+  ipAddress: string;
+  location?: string;
+  createdAt: string;
+  lastActiveAt: string;
+  isCurrent: boolean;
+}
+
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 const TABS: { label: string; value: Tab; icon: React.ReactNode }[] = [
@@ -70,6 +95,7 @@ const TABS: { label: string; value: Tab; icon: React.ReactNode }[] = [
   { label: 'Gas Usage', value: 'gas', icon: <Fuel className="size-3.5" /> },
   { label: 'Risk', value: 'risk', icon: <ShieldAlert className="size-3.5" /> },
   { label: 'Webhooks', value: 'webhooks', icon: <Webhook className="size-3.5" /> },
+  { label: 'Sessions', value: 'sessions', icon: <Monitor className="size-3.5" /> },
 ];
 
 interface NotificationPreference {
@@ -203,6 +229,16 @@ export function Component() {
   const [webhookEvents, setWebhookEvents] = useState<string[]>([]);
   const [webhookAdding, setWebhookAdding] = useState(false);
   const [webhookTesting, setWebhookTesting] = useState<string | null>(null);
+  const [expandedWebhookId, setExpandedWebhookId] = useState<string | null>(null);
+  const [deliveries, setDeliveries] = useState<Record<string, WebhookDelivery[]>>({});
+  const [loadingDeliveries, setLoadingDeliveries] = useState<Record<string, boolean>>({});
+  const [expandedDeliveryId, setExpandedDeliveryId] = useState<string | null>(null);
+
+  // Sessions
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
+  const [revokingAll, setRevokingAll] = useState(false);
 
   // Risk / Circuit Breaker
   const [riskLoading, setRiskLoading] = useState(false);
@@ -398,6 +434,126 @@ export function Component() {
     setWebhookTesting(null);
   }
 
+  async function loadDeliveries(id: string) {
+    setLoadingDeliveries(prev => ({ ...prev, [id]: true }));
+    try {
+      const res = await fetch(`/api/v1/webhooks/${id}/deliveries?limit=20`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setDeliveries(prev => ({ ...prev, [id]: data.data ?? data }));
+      } else {
+        toast.error('Failed to load deliveries');
+      }
+    } catch { toast.error('Failed to load deliveries'); }
+    setLoadingDeliveries(prev => ({ ...prev, [id]: false }));
+  }
+
+  async function retryDelivery(webhookId: string, deliveryId: string) {
+    try {
+      const res = await fetch(`/api/v1/webhooks/${webhookId}/deliveries/${deliveryId}/retry`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        toast.success('Retrying…');
+        await loadDeliveries(webhookId);
+      } else {
+        toast.error('Failed to retry delivery');
+      }
+    } catch { toast.error('Failed to retry delivery'); }
+  }
+
+  function toggleWebhookDeliveries(id: string) {
+    if (expandedWebhookId === id) {
+      setExpandedWebhookId(null);
+      setExpandedDeliveryId(null);
+    } else {
+      setExpandedWebhookId(id);
+      setExpandedDeliveryId(null);
+      if (!deliveries[id]) loadDeliveries(id);
+    }
+  }
+
+  function relativeTime(iso: string): string {
+    const diff = Date.now() - new Date(iso).getTime();
+    const s = Math.floor(diff / 1000);
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m} min ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  }
+
+  // ── Sessions ──
+  async function loadSessions() {
+    setSessionsLoading(true);
+    try {
+      const res = await fetch('/api/v1/auth/sessions', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        const list: Session[] = (data.data ?? []).map((s: Session) => ({
+          ...s,
+          isCurrent: s.id === data.current,
+        }));
+        list.sort((a, b) => {
+          if (a.isCurrent !== b.isCurrent) return a.isCurrent ? -1 : 1;
+          return new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime();
+        });
+        setSessions(list);
+      } else {
+        toast.error('Failed to load sessions');
+      }
+    } catch { toast.error('Failed to load sessions'); }
+    setSessionsLoading(false);
+  }
+
+  async function revokeSession(id: string) {
+    if (!window.confirm('Revoke this session? That device will be logged out.')) return;
+    setRevokingSessionId(id);
+    try {
+      const res = await fetch(`/api/v1/auth/sessions/${id}`, { method: 'DELETE', credentials: 'include' });
+      if (res.ok) {
+        setSessions(prev => prev.filter(s => s.id !== id));
+        toast.success('Session revoked');
+      } else {
+        toast.error('Failed to revoke session');
+      }
+    } catch { toast.error('Failed to revoke session'); }
+    setRevokingSessionId(null);
+  }
+
+  async function revokeAllSessions() {
+    if (!window.confirm('Revoke all other sessions? You will remain logged in on this device.')) return;
+    setRevokingAll(true);
+    try {
+      const res = await fetch('/api/v1/auth/sessions', { method: 'DELETE', credentials: 'include' });
+      if (res.ok) {
+        setSessions(prev => prev.filter(s => s.isCurrent));
+        toast.success('All other sessions revoked');
+      } else {
+        toast.error('Failed to revoke sessions');
+      }
+    } catch { toast.error('Failed to revoke sessions'); }
+    setRevokingAll(false);
+  }
+
+  function isMobileDevice(deviceName: string): boolean {
+    return /mobile|smartphone|iphone|android|ipad|tablet/i.test(deviceName);
+  }
+
+  function sessionRelativeTime(iso: string): string {
+    const diff = Date.now() - new Date(iso).getTime();
+    const s = Math.floor(diff / 1000);
+    if (s < 60) return `${s} seconds ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m} minute${m !== 1 ? 's' : ''} ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h} hour${h !== 1 ? 's' : ''} ago`;
+    const d = Math.floor(h / 24);
+    return `${d} day${d !== 1 ? 's' : ''} ago`;
+  }
+
   function handleTab(t: Tab) {
     setActiveTab(t);
     if (t === 'notifications') loadNotifPrefs();
@@ -405,6 +561,7 @@ export function Component() {
     if (t === 'gas' && !gasUsage) loadGasUsage();
     if (t === 'risk') { loadRiskSettings(); loadDailyLossSettings(); }
     if (t === 'webhooks') loadWebhooks();
+    if (t === 'sessions') loadSessions();
   }
 
   // ── Profile ──
@@ -1950,46 +2107,289 @@ export function Component() {
               </div>
             ) : (
               <div className="space-y-2">
-                {webhooks.map(wh => (
-                  <div key={wh.id} className="flex items-center gap-3 px-4 py-3 rounded-pf bg-pf-surface border border-pf-border">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm text-pf-text font-mono truncate" title={wh.url}>
-                        {wh.url.length > 50 ? `${wh.url.slice(0, 47)}…` : wh.url}
+                {webhooks.map(wh => {
+                  const whDeliveries = deliveries[wh.id] ?? [];
+                  const isExpanded = expandedWebhookId === wh.id;
+                  const isLoadingDel = loadingDeliveries[wh.id] ?? false;
+                  const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+                  const recentFailures = whDeliveries.filter(
+                    d => !d.success && new Date(d.attemptedAt).getTime() > oneDayAgo
+                  ).length;
+
+                  return (
+                    <div key={wh.id} className="rounded-pf border border-pf-border overflow-hidden">
+                      {/* Webhook row */}
+                      <div className="flex items-center gap-3 px-4 py-3 bg-pf-surface">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-pf-text font-mono truncate" title={wh.url}>
+                            {wh.url.length > 50 ? `${wh.url.slice(0, 47)}…` : wh.url}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-overlay text-pf-text-secondary border border-pf-border">
+                              {wh.events.length} event{wh.events.length !== 1 ? 's' : ''}
+                            </span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${wh.active ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-overlay text-pf-text-muted'}`}>
+                              {wh.active ? 'Active' : 'Inactive'}
+                            </span>
+                            {wh.failureCount > 0 && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-danger/10 text-pf-danger">
+                                {wh.failureCount} failure{wh.failureCount !== 1 ? 's' : ''}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {/* Deliveries button */}
+                          <button
+                            type="button"
+                            onClick={() => toggleWebhookDeliveries(wh.id)}
+                            aria-label={`${isExpanded ? 'Hide' : 'Show'} deliveries for ${wh.url}`}
+                            className="relative flex items-center gap-1 text-xs px-2 py-1 rounded border border-pf-border text-pf-text-secondary hover:text-pf-text transition-colors cursor-pointer"
+                          >
+                            <History className="size-3.5" />
+                            Deliveries
+                            {recentFailures > 0 && (
+                              <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-4 px-0.5 rounded-full bg-pf-danger text-white text-[9px] font-bold leading-none">
+                                {recentFailures}
+                              </span>
+                            )}
+                            {isExpanded ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => testWebhook(wh.id)}
+                            disabled={webhookTesting === wh.id}
+                            aria-label={`Test webhook ${wh.url}`}
+                            className="flex items-center gap-1 text-xs text-pf-text-secondary hover:text-pf-cyan-400 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                          >
+                            {webhookTesting === wh.id ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+                            Test
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteWebhook(wh.id)}
+                            aria-label={`Delete webhook ${wh.url}`}
+                            className="text-pf-danger hover:text-pf-danger/70 cursor-pointer transition-colors"
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-overlay text-pf-text-secondary border border-pf-border">
-                          {wh.events.length} event{wh.events.length !== 1 ? 's' : ''}
-                        </span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${wh.active ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-overlay text-pf-text-muted'}`}>
-                          {wh.active ? 'Active' : 'Inactive'}
-                        </span>
-                        {wh.failureCount > 0 && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-danger/10 text-pf-danger">
-                            {wh.failureCount} failure{wh.failureCount !== 1 ? 's' : ''}
+
+                      {/* Expandable deliveries panel */}
+                      {isExpanded && (
+                        <div className="bg-pf-surface/50 border-t border-pf-border-subtle rounded-b-pf-lg">
+                          {/* Panel header */}
+                          <div className="flex items-center justify-between px-4 py-2.5 border-b border-pf-border-subtle">
+                            <span className="text-xs font-semibold text-pf-text uppercase tracking-wider">Recent Deliveries</span>
+                            <button
+                              type="button"
+                              onClick={() => { setExpandedWebhookId(null); setExpandedDeliveryId(null); }}
+                              aria-label="Close deliveries"
+                              className="text-pf-text-muted hover:text-pf-text transition-colors cursor-pointer"
+                            >
+                              <X className="size-3.5" />
+                            </button>
+                          </div>
+
+                          {isLoadingDel ? (
+                            /* Skeleton rows */
+                            <div className="p-3 space-y-2">
+                              {[1, 2, 3, 4, 5].map(i => (
+                                <div key={i} className="h-8 rounded bg-pf-overlay animate-pulse" />
+                              ))}
+                            </div>
+                          ) : whDeliveries.length === 0 ? (
+                            <div className="py-8 text-center text-xs text-pf-text-muted">No deliveries yet</div>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs">
+                                <thead>
+                                  <tr className="text-pf-text-muted border-b border-pf-border-subtle">
+                                    <th className="text-left px-4 py-2 font-medium">Time</th>
+                                    <th className="text-left px-4 py-2 font-medium">Event</th>
+                                    <th className="text-left px-4 py-2 font-medium">Status</th>
+                                    <th className="text-left px-4 py-2 font-medium">Response Time</th>
+                                    <th className="text-left px-4 py-2 font-medium">Actions</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-pf-border-subtle">
+                                  {whDeliveries.map(del => {
+                                    const isDelExpanded = expandedDeliveryId === del.id;
+                                    const statusClass = del.statusCode == null
+                                      ? 'bg-pf-overlay text-pf-text-muted'
+                                      : del.statusCode >= 200 && del.statusCode < 300
+                                        ? 'bg-pf-success/10 text-pf-success'
+                                        : 'bg-pf-danger/10 text-pf-danger';
+
+                                    return (
+                                      <>
+                                        <tr key={del.id} className="hover:bg-pf-overlay/30 transition-colors">
+                                          <td className="px-4 py-2 text-pf-text-secondary whitespace-nowrap">
+                                            {relativeTime(del.attemptedAt)}
+                                          </td>
+                                          <td className="px-4 py-2">
+                                            <span className="px-1.5 py-0.5 rounded font-mono bg-pf-overlay text-pf-text-secondary border border-pf-border">
+                                              {del.event}
+                                            </span>
+                                          </td>
+                                          <td className="px-4 py-2">
+                                            <span className={`px-1.5 py-0.5 rounded font-medium ${statusClass}`}>
+                                              {del.statusCode ?? 'Failed'}
+                                            </span>
+                                          </td>
+                                          <td className="px-4 py-2 text-pf-text-secondary">
+                                            {del.responseTimeMs != null ? `${del.responseTimeMs}ms` : '—'}
+                                          </td>
+                                          <td className="px-4 py-2">
+                                            <div className="flex items-center gap-2">
+                                              <button
+                                                type="button"
+                                                onClick={() => setExpandedDeliveryId(isDelExpanded ? null : del.id)}
+                                                aria-label="View request/response"
+                                                className="flex items-center gap-1 text-pf-text-secondary hover:text-pf-text transition-colors cursor-pointer"
+                                              >
+                                                <Code className="size-3.5" />
+                                                View
+                                              </button>
+                                              {!del.success && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => retryDelivery(wh.id, del.id)}
+                                                  aria-label="Retry delivery"
+                                                  className="flex items-center gap-1 text-pf-text-secondary hover:text-pf-cyan-400 transition-colors cursor-pointer"
+                                                >
+                                                  <RefreshCw className="size-3.5" />
+                                                  Retry
+                                                </button>
+                                              )}
+                                            </div>
+                                          </td>
+                                        </tr>
+                                        {isDelExpanded && (
+                                          <tr key={`${del.id}-preview`}>
+                                            <td colSpan={5} className="px-4 pb-3 pt-1">
+                                              <pre className="bg-pf-overlay text-pf-text-secondary text-xs font-mono p-3 rounded overflow-x-auto max-h-48 whitespace-pre-wrap break-all">
+                                                <span className="text-pf-text-muted">-- Request Body --{'\n'}</span>
+                                                {(() => { try { return JSON.stringify(JSON.parse(del.requestBody), null, 2); } catch { return del.requestBody; } })()}
+                                                {del.responseBody != null && (
+                                                  <>
+                                                    {'\n'}<span className="text-pf-text-muted">-- Response Body --{'\n'}</span>
+                                                    {(() => { try { return JSON.stringify(JSON.parse(del.responseBody), null, 2); } catch { return del.responseBody; } })()}
+                                                  </>
+                                                )}
+                                              </pre>
+                                            </td>
+                                          </tr>
+                                        )}
+                                      </>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Sessions Tab ─── */}
+      {activeTab === 'sessions' && (
+        <div className="space-y-4">
+          {/* Header card */}
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="size-9 rounded-pf bg-pf-cyan-500/10 flex items-center justify-center">
+                  <Monitor className="size-4 text-pf-cyan-400" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-pf-text">Active Sessions</h2>
+                  <p className="text-xs text-pf-text-muted mt-0.5">
+                    {sessionsLoading ? 'Loading…' : `${sessions.length} session${sessions.length !== 1 ? 's' : ''} total`}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={revokeAllSessions}
+                disabled={revokingAll || sessions.filter(s => !s.isCurrent).length === 0}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-pf text-pf-danger border border-pf-danger/30 bg-pf-danger/5 text-xs font-medium hover:bg-pf-danger/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                {revokingAll ? <Loader2 className="size-3.5 animate-spin" /> : <LogOut className="size-3.5" />}
+                Revoke All Other Sessions
+              </button>
+            </div>
+          </div>
+
+          {/* Session list */}
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+            {sessionsLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="flex items-start gap-3 py-3 animate-pulse">
+                    <div className="size-9 rounded-pf bg-pf-overlay shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3.5 bg-pf-overlay rounded w-40" />
+                      <div className="h-3 bg-pf-overlay rounded w-28" />
+                      <div className="h-3 bg-pf-overlay rounded w-24" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 py-10 text-center">
+                <Monitor className="size-8 text-pf-text-muted" />
+                <p className="text-sm text-pf-text-muted">No other active sessions</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-pf-border-subtle">
+                {sessions.map(session => (
+                  <div key={session.id} className="flex items-start gap-3 py-3">
+                    <div className="size-9 rounded-pf bg-pf-overlay flex items-center justify-center shrink-0 mt-0.5">
+                      {isMobileDevice(session.deviceName)
+                        ? <Smartphone className="size-4 text-pf-text-secondary" />
+                        : <Monitor className="size-4 text-pf-text-secondary" />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium text-pf-text">{session.deviceName}</span>
+                        {session.isCurrent && (
+                          <span className="text-pf-success bg-pf-success/10 text-xs px-2 py-0.5 rounded-full">
+                            Current Session
                           </span>
                         )}
                       </div>
+                      <p className="text-xs text-pf-text-muted mt-0.5">{session.ipAddress}</p>
+                      {session.location && (
+                        <p className="flex items-center gap-1 text-xs text-pf-text-muted mt-0.5">
+                          <MapPin className="size-3 shrink-0" />
+                          {session.location}
+                        </p>
+                      )}
+                      <p className="text-xs text-pf-text-muted mt-0.5">
+                        Last active: {sessionRelativeTime(session.lastActiveAt)}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+                    {!session.isCurrent && (
                       <button
                         type="button"
-                        onClick={() => testWebhook(wh.id)}
-                        disabled={webhookTesting === wh.id}
-                        aria-label={`Test webhook ${wh.url}`}
-                        className="flex items-center gap-1 text-xs text-pf-text-secondary hover:text-pf-cyan-400 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                        onClick={() => revokeSession(session.id)}
+                        disabled={revokingSessionId === session.id}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-pf text-pf-danger border border-pf-danger/30 bg-pf-danger/5 text-xs font-medium hover:bg-pf-danger/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0 mt-0.5"
                       >
-                        {webhookTesting === wh.id ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-                        Test
+                        {revokingSessionId === session.id ? <Loader2 className="size-3 animate-spin" /> : <LogOut className="size-3" />}
+                        Revoke
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => deleteWebhook(wh.id)}
-                        aria-label={`Delete webhook ${wh.url}`}
-                        className="text-pf-danger hover:text-pf-danger/70 cursor-pointer transition-colors"
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
-                    </div>
+                    )}
                   </div>
                 ))}
               </div>

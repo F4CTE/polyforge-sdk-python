@@ -23,7 +23,15 @@ import {
   Copy,
   Check,
   FileJson,
+  ArrowUpRight,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Wifi,
+  WifiOff,
+  Trash2,
 } from 'lucide-react';
+import { wsManager } from '@/lib/websocket';
 import { toast } from 'sonner';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -109,6 +117,24 @@ interface ReviewsState {
   submitRating: number;
   submitComment: string;
   submitting: boolean;
+}
+
+type LiveEventType = 'ORDER_PLACED' | 'ORDER_FILLED' | 'ORDER_REJECTED' | 'STRATEGY_ERROR';
+
+interface LiveEvent {
+  id: string;
+  type: LiveEventType;
+  timestamp: string;
+  data: {
+    marketQuestion?: string;
+    side?: string;
+    outcome?: string;
+    size?: string | number;
+    price?: string | number;
+    fillPrice?: string | number;
+    errorMessage?: string;
+    [key: string]: unknown;
+  };
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
@@ -199,7 +225,9 @@ export function Component() {
   const [parentStrategy, setParentStrategy] = useState<ParentStrategy | null>(null);
   const [recentOrderCount, setRecentOrderCount] = useState<number | null>(null);
   const [lastOrderAt, setLastOrderAt] = useState<string | null>(null);
-  const [detailTab, setDetailTab] = useState<'overview' | 'log' | 'versions' | 'executions'>('overview');
+  const [detailTab, setDetailTab] = useState<'overview' | 'log' | 'versions' | 'executions' | 'live'>('overview');
+  const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([]);
+  const [wsConnected, setWsConnected] = useState(false);
   const [executions, setExecutions] = useState<StratExecution[]>([]);
   const [executionsLoading, setExecutionsLoading] = useState(false);
   const [executionsPage, setExecutionsPage] = useState(1);
@@ -320,6 +348,67 @@ export function Component() {
       fetchExecutions(1);
     }
   }, [detailTab, executionsFetched, fetchExecutions]);
+
+  // Live feed: initial load + WebSocket subscription
+  useEffect(() => {
+    if (detailTab !== 'live' || !strategy?.id) return;
+    if (strategy.status !== 'RUNNING' && strategy.status !== 'PAPER') return;
+
+    // Initial load of recent orders
+    fetch(`/api/v1/orders?strategyId=${strategy.id}&limit=20&sort=createdAt:desc`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(res => {
+        if (res?.data) {
+          const initial: LiveEvent[] = (res.data as StratExecution[]).map(ex => ({
+            id: ex.id,
+            type: (ex.status === 'CONFIRMED' ? 'ORDER_FILLED' : ex.status === 'FAILED' ? 'ORDER_REJECTED' : 'ORDER_PLACED') as LiveEventType,
+            timestamp: ex.createdAt,
+            data: {
+              marketQuestion: ex.marketQuestion,
+              side: ex.side,
+              outcome: ex.outcome,
+              size: ex.size,
+              price: ex.price,
+              fillPrice: ex.fillPrice,
+            },
+          }));
+          setLiveEvents(initial);
+        }
+      })
+      .catch(() => {});
+
+    // WebSocket: use wsManager listener pattern (same as market-detail.tsx)
+    const handleWsMessage = (msg: { type: string; [key: string]: unknown }) => {
+      const relevantTypes = new Set(['ORDER_PLACED', 'ORDER_FILLED', 'ORDER_REJECTED', 'STRATEGY_ERROR', 'AUTH_OK']);
+      if (!relevantTypes.has(msg.type)) return;
+      if (msg.type === 'AUTH_OK') {
+        setWsConnected(true);
+        wsManager.subscribeStrategy(strategy.id);
+        return;
+      }
+      const stratId = (msg.strategyId as string | undefined) ?? (msg.data as Record<string, unknown> | undefined)?.strategyId as string | undefined;
+      if (stratId && stratId !== strategy.id) return;
+
+      const newEvent: LiveEvent = {
+        id: `${msg.type}-${Date.now()}-${Math.random()}`,
+        type: msg.type as LiveEventType,
+        timestamp: (msg.timestamp as string | undefined) ?? new Date().toISOString(),
+        data: (msg.data as LiveEvent['data'] | undefined) ?? {},
+      };
+      setLiveEvents(prev => [newEvent, ...prev].slice(0, 50));
+    };
+
+    wsManager.addListener(handleWsMessage);
+    wsManager.connect();
+    wsManager.subscribeStrategy(strategy.id);
+    setWsConnected(true);
+
+    return () => {
+      wsManager.removeListener(handleWsMessage);
+      wsManager.unsubscribeStrategy(strategy.id);
+      setWsConnected(false);
+    };
+  }, [detailTab, strategy?.id, strategy?.status]);
 
   async function doAction(action: 'start' | 'stop' | 'pause' | 'resume', body?: object) {
     if (!strategy) return;
@@ -905,6 +994,16 @@ export function Component() {
             >
               Executions
             </button>
+            <button
+              type="button"
+              onClick={() => setDetailTab('live')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'live' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
+            >
+              {detailTab === 'live' && wsConnected
+                ? <span className="w-1.5 h-1.5 rounded-full bg-pf-success animate-pulse" />
+                : <Wifi className="size-3" />}
+              Live
+            </button>
           </div>
 
           {/* Body grid */}
@@ -1178,6 +1277,103 @@ export function Component() {
                     </li>
                   ))}
                 </ul>
+              )}
+            </div>
+          )}
+
+          {/* Live Execution Feed */}
+          {detailTab === 'live' && (
+            <div className="mt-4 space-y-3">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-pf-text">Live Execution Feed</span>
+                  {wsConnected ? (
+                    <span className="flex items-center gap-1.5 text-xs text-pf-success font-medium">
+                      <span className="animate-pulse bg-pf-success rounded-full w-2 h-2" />
+                      LIVE
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-xs text-pf-text-muted">
+                      <WifiOff className="size-3" />
+                      Disconnected
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setLiveEvents([])}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-pf border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors"
+                >
+                  <Trash2 className="size-3" />
+                  Clear
+                </button>
+              </div>
+
+              {/* Not running banner */}
+              {strategy.status !== 'RUNNING' && strategy.status !== 'PAPER' && (
+                <div className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-warning/10 border border-pf-warning/20 text-pf-warning text-xs">
+                  <AlertTriangle className="size-4 flex-shrink-0" />
+                  Strategy is not running — no live events
+                </div>
+              )}
+
+              {/* Events list */}
+              {liveEvents.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center text-pf-text-muted gap-3">
+                  <Wifi className="size-8 opacity-30" />
+                  <p className="text-sm font-medium text-pf-text">Waiting for executions...</p>
+                  <p className="text-xs text-pf-text-muted">The feed will populate as your strategy trades.</p>
+                </div>
+              ) : (
+                <div className="rounded-pf border border-pf-border bg-pf-elevated divide-y divide-pf-border-subtle">
+                  {liveEvents.map((ev) => {
+                    const iconProps =
+                      ev.type === 'ORDER_PLACED'   ? { Icon: ArrowUpRight,  color: 'text-pf-cyan-400' } :
+                      ev.type === 'ORDER_FILLED'   ? { Icon: CheckCircle2,  color: 'text-pf-success'  } :
+                      ev.type === 'ORDER_REJECTED' ? { Icon: XCircle,       color: 'text-pf-danger'   } :
+                                                     { Icon: AlertTriangle, color: 'text-pf-warning'  };
+                    const { Icon, color } = iconProps;
+                    return (
+                      <div key={ev.id} className="flex items-start gap-3 py-2.5 px-4 animate-fade-in last:border-0">
+                        <Icon className={`size-4 flex-shrink-0 mt-0.5 ${color}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-0.5">
+                            <span className={`text-xs font-bold ${color}`}>{ev.type.replace(/_/g, ' ')}</span>
+                            <span className="text-[10px] text-pf-text-muted flex-shrink-0">{relativeDate(ev.timestamp)}</span>
+                          </div>
+                          {ev.type === 'STRATEGY_ERROR' ? (
+                            <p className="text-xs text-pf-danger truncate">{ev.data.errorMessage ?? 'Unknown error'}</p>
+                          ) : (
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-pf-text-secondary">
+                              {ev.data.marketQuestion && (
+                                <span className="truncate max-w-[200px] text-pf-text-muted" title={ev.data.marketQuestion}>
+                                  {ev.data.marketQuestion}
+                                </span>
+                              )}
+                              {ev.data.side && (
+                                <span className={`font-semibold ${ev.data.side === 'BUY' ? 'text-pf-success' : 'text-pf-danger'}`}>
+                                  {ev.data.side}
+                                </span>
+                              )}
+                              {ev.data.outcome && (
+                                <span className="font-mono text-pf-text">{ev.data.outcome}</span>
+                              )}
+                              {ev.data.size !== undefined && (
+                                <span className="font-mono">sz {ev.data.size}</span>
+                              )}
+                              {ev.data.fillPrice !== undefined ? (
+                                <span className="font-mono">fill @ {ev.data.fillPrice}</span>
+                              ) : ev.data.price !== undefined ? (
+                                <span className="font-mono">@ {ev.data.price}</span>
+                              ) : null}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}

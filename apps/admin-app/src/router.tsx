@@ -19,6 +19,7 @@ export const router = createBrowserRouter([
           { path: 'users/:id', lazy: () => import('@/pages/users/user-detail') },
           { path: 'strategies', lazy: () => import('@/pages/strategies/strategies') },
           { path: 'orders', lazy: () => import('@/pages/orders/orders') },
+          { path: 'markets', lazy: () => import('./pages/markets/markets') },
           { path: 'backtests', lazy: () => import('@/pages/backtests/backtests') },
           { path: 'cache', lazy: () => import('@/pages/cache/cache') },
           { path: 'reports', lazy: () => import('@/pages/reports/reports') },
