@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json as _json
+import logging as _log
 from dataclasses import fields
 from typing import Any, AsyncIterator, Iterator, TypeVar, get_type_hints
 
@@ -141,6 +142,16 @@ def _raise_for_status(response: httpx.Response) -> None:
 def _strip_none(params: dict[str, Any]) -> dict[str, Any]:
     """Remove None values so they are not sent as query parameters."""
     return {k: v for k, v in params.items() if v is not None}
+
+
+def _validate_webhook_url(url: str) -> None:
+    """Validate webhook URL to prevent SSRF attacks."""
+    parsed = urlparse(url)
+    if parsed.scheme != "https":
+        raise ValueError("Webhook URL must use HTTPS")
+    blocked = {"127.0.0.1", "localhost", "0.0.0.0", "169.254.169.254"}
+    if parsed.hostname in blocked:
+        raise ValueError("Webhook URL cannot point to localhost or internal addresses")
 
 
 # ---------------------------------------------------------------------------
@@ -525,14 +536,18 @@ class PolyforgeClient:
                     continue
                 try:
                     payload = _json.loads(raw)
+                    # Validate expected fields before yielding
+                    if not isinstance(payload.get("type"), str):
+                        continue
                     yield StrategyEvent(
-                        type=payload.get("type", ""),
+                        type=payload["type"],
                         strategy_id=payload.get("strategyId", ""),
                         data=payload.get("data"),
                         timestamp=payload.get("timestamp", 0),
                     )
                 except _json.JSONDecodeError:
-                    pass  # skip malformed frame
+                    _log.warning("Malformed SSE event: failed to parse JSON")
+                    continue
 
     # -- Social & Signals --
 
@@ -565,6 +580,7 @@ class PolyforgeClient:
         return [_parse(Webhook, w) for w in items]
 
     def create_webhook(self, url: str, events: list[str]) -> Webhook:
+        _validate_webhook_url(url)
         return _parse(Webhook, self._post("/api/v1/webhooks", json={"url": url, "events": events}))
 
     # -- AI --
@@ -1024,14 +1040,18 @@ class AsyncPolyforgeClient:
                     continue
                 try:
                     payload = _json.loads(raw)
+                    # Validate expected fields before yielding
+                    if not isinstance(payload.get("type"), str):
+                        continue
                     yield StrategyEvent(
-                        type=payload.get("type", ""),
+                        type=payload["type"],
                         strategy_id=payload.get("strategyId", ""),
                         data=payload.get("data"),
                         timestamp=payload.get("timestamp", 0),
                     )
                 except _json.JSONDecodeError:
-                    pass  # skip malformed frame
+                    _log.warning("Malformed SSE event: failed to parse JSON")
+                    continue
 
     # -- Social & Signals --
 
@@ -1064,6 +1084,7 @@ class AsyncPolyforgeClient:
         return [_parse(Webhook, w) for w in items]
 
     async def create_webhook(self, url: str, events: list[str]) -> Webhook:
+        _validate_webhook_url(url)
         return _parse(Webhook, await self._post("/api/v1/webhooks", json={"url": url, "events": events}))
 
     # -- AI --
