@@ -167,7 +167,7 @@ export function Component() {
           </button>
         ))}
         <span className="ml-auto text-xs text-pf-text-muted">
-          {loading ? 'Scanning…' : `${opportunities.length} opportunity${opportunities.length !== 1 ? 'ies' : 'y'} found`}
+          {loading ? 'Scanning…' : `${opportunities.length} opportunit${opportunities.length !== 1 ? 'ies' : 'y'} found`}
         </span>
       </div>
 

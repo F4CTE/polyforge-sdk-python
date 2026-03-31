@@ -68,6 +68,7 @@ interface BuilderState {
   tickMs: number;
   visibility: string;
   tags: string;
+  marketId: string;
 
   // UI state
   saving: boolean;
@@ -98,6 +99,7 @@ interface BuilderState {
   setTickMs: (tickMs: number) => void;
   setVisibility: (visibility: string) => void;
   setTags: (tags: string) => void;
+  setMarketId: (marketId: string) => void;
 
   // Persistence
   save: () => Promise<Record<string, unknown>>;
@@ -135,6 +137,7 @@ function initialState() {
     tickMs: 1000,
     visibility: 'PRIVATE',
     tags: '',
+    marketId: '',
     saving: false,
     loading: false,
     dirty: false,
@@ -339,6 +342,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   setTickMs: (tickMs) => set({ tickMs, dirty: true }),
   setVisibility: (visibility) => set({ visibility, dirty: true }),
   setTags: (tags) => set({ tags, dirty: true }),
+  setMarketId: (marketId) => set({ marketId, dirty: true }),
 
   // ─── Load strategy ──────────────────────────────────────────────────────
 
@@ -508,6 +512,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         tickMs: (s.tickMs as number) ?? 1000,
         visibility: (s.visibility as string) ?? 'PRIVATE',
         tags: ((s.tags as string[]) ?? []).join(', '),
+        marketId: (s.marketId as string) ?? '',
         nodes,
         edges,
         loading: false,
@@ -597,6 +602,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         .filter(Boolean),
       variables,
       canvas: { positions, connections },
+      marketId: state.marketId || undefined,
     };
 
     try {

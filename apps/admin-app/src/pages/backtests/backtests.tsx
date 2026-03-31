@@ -43,7 +43,7 @@ export function Component() {
     setLoading(true);
     try {
       const res = await adminApi.backtests({ page, limit });
-      setBacktests((res.data ?? []) as unknown as BacktestRow[]);
+      setBacktests(((res.data ?? []) as any[]).map(b => ({ ...b, username: b.user?.username ?? b.username ?? '' })) as unknown as BacktestRow[]);
       setTotal(res.total ?? 0);
       setTotalPages(res.totalPages ?? 1);
     } catch {

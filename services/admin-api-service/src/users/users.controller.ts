@@ -41,10 +41,13 @@ export class UsersController {
     @Query("search") search?: string,
     @Query("status") status?: string,
     @Query("suspended") suspendedRaw?: string,
+    @Query("polymarketConnected") polymarketConnectedRaw?: string,
   ) {
     const suspended =
       suspendedRaw !== undefined ? suspendedRaw === "true" : undefined;
-    return this.users.findAll({ page, limit, search, status, suspended });
+    const polymarketConnected =
+      polymarketConnectedRaw !== undefined ? polymarketConnectedRaw === "true" : undefined;
+    return this.users.findAll({ page, limit, search, status, suspended, polymarketConnected });
   }
 
   @Get(":id")

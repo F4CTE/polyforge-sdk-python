@@ -39,13 +39,22 @@ export class WhalesController {
   }
 
   @Get(":address")
-  getProfile(@Param("address") address: string) {
-    return this.whales.getProfile(address);
+  getProfile(@CurrentUser() user: any, @Param("address") address: string) {
+    return this.whales.getProfile(address, user?.sub);
   }
 
   @Post(":address/follow")
   @HttpCode(HttpStatus.OK)
-  toggleFollow(
+  follow(
+    @CurrentUser() user: any,
+    @Param("address") address: string,
+  ) {
+    return this.whales.toggleFollow(user.sub, address);
+  }
+
+  @Post(":address/unfollow")
+  @HttpCode(HttpStatus.OK)
+  unfollow(
     @CurrentUser() user: any,
     @Param("address") address: string,
   ) {

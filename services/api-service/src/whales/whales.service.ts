@@ -78,8 +78,8 @@ export class WhalesService {
 
   // ─── Profile ───────────────────────────────────────────────────────────────
 
-  async getProfile(address: string) {
-    const [profile, recentTrades] = await Promise.all([
+  async getProfile(address: string, userId?: string) {
+    const [profile, alerts, followRecord] = await Promise.all([
       this.prisma.whaleProfile.findUnique({
         where: { walletAddress: address },
       }),
@@ -93,18 +93,48 @@ export class WhalesService {
           },
         },
       }),
+      userId
+        ? this.prisma.whaleFollow.findUnique({
+            where: { userId_walletAddress: { userId, walletAddress: address } },
+          })
+        : Promise.resolve(null),
     ]);
 
+    const stats = profile
+      ? {
+          totalVolume: profile.totalVolume?.toString() ?? "0",
+          totalPnl: profile.totalPnl?.toString() ?? "0",
+          tradeCount: profile.tradeCount ?? 0,
+          winRate: profile.winRate?.toString() ?? "0",
+        }
+      : null;
+
+    const recentTrades = alerts.map((a) => ({
+      id: a.id,
+      marketName: (a as any).market?.title ?? "Unknown Market",
+      side: a.side,
+      outcome: a.outcome,
+      size: a.size?.toString() ?? "0",
+      price: a.price?.toString() ?? "0",
+      timestamp: a.detectedAt.toISOString(),
+    }));
+
+    // Build sparkline: count alerts per day for last 30 days
+    const now = Date.now();
+    const dayCounts = new Array(30).fill(0);
+    for (const a of alerts) {
+      const daysAgo = Math.floor((now - a.detectedAt.getTime()) / 86400_000);
+      if (daysAgo >= 0 && daysAgo < 30) {
+        dayCounts[29 - daysAgo]++;
+      }
+    }
+
     return {
-      profile: profile ?? {
-        walletAddress: address,
-        totalVolume: "0",
-        totalPnl: "0",
-        tradeCount: 0,
-        winRate: "0",
-        lastTradeAt: null,
-      },
+      walletAddress: address,
+      stats,
       recentTrades,
+      sparkline: dayCounts,
+      isFollowing: !!followRecord,
     };
   }
 

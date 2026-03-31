@@ -6,6 +6,7 @@ import { paginate, PaginatedResponse } from "../common/dto/pagination.dto";
 export interface DiscoverQueryDto {
   sort?: string;
   category?: string;
+  search?: string;
   page?: number;
   limit?: number;
 }
@@ -34,6 +35,12 @@ export class DiscoverService {
     const where: any = {
       visibility: { in: ["PUBLIC", "UNLISTED"] },
       status: { not: "ARCHIVED" },
+      ...(query.search ? {
+        OR: [
+          { name: { contains: query.search, mode: "insensitive" } },
+          { description: { contains: query.search, mode: "insensitive" } },
+        ],
+      } : {}),
     };
 
     const orderBy =
@@ -58,6 +65,7 @@ export class DiscoverService {
               username: true,
               displayName: true,
               avatarUrl: true,
+              traderScore: { select: { score: true } },
             },
           },
         },
@@ -68,7 +76,8 @@ export class DiscoverService {
     // Remap `user` → `author` for the frontend and hide blocks for UNLISTED
     const result = strategies.map((s) => {
       const { user, ...rest } = s as any;
-      const mapped = { ...rest, author: user };
+      const { traderScore, ...userRest } = user ?? {};
+      const mapped = { ...rest, author: { ...userRest, score: traderScore?.score ?? null } };
       if (mapped.visibility === "UNLISTED") {
         return {
           ...mapped,
@@ -134,8 +143,9 @@ export class DiscoverService {
     // Enrich with trade counts and user profiles in parallel
     const userIds = rows.map((r) => r.userId);
     let userMap: Record<string, any> = {};
+    let winRateMap: Record<string, string> = {};
     if (userIds.length > 0) {
-      const [tradeCounts, users] = await Promise.all([
+      const [tradeCounts, users, resolvedPositions] = await Promise.all([
         this.prisma.order.groupBy({
           by: ['userId'],
           where: { userId: { in: userIds }, createdAt: { gte: since } },
@@ -145,10 +155,23 @@ export class DiscoverService {
           where: { id: { in: userIds } },
           select: { id: true, username: true, displayName: true, avatarUrl: true },
         }),
+        this.prisma.position.findMany({
+          where: { userId: { in: userIds }, resolutionStatus: 'RESOLVED' as any },
+          select: { userId: true, realizedPnl: true },
+        }),
       ]);
       const tradeMap = Object.fromEntries(tradeCounts.map(t => [t.userId, t._count]));
       rows.forEach(r => { r.tradeCount = tradeMap[r.userId] ?? 0; });
       userMap = Object.fromEntries(users.map((u) => [u.id, u]));
+      const posMap: Record<string, { total: number; wins: number }> = {};
+      for (const p of resolvedPositions) {
+        if (!posMap[p.userId]) posMap[p.userId] = { total: 0, wins: 0 };
+        posMap[p.userId].total++;
+        if (parseFloat(String(p.realizedPnl)) > 0) posMap[p.userId].wins++;
+      }
+      for (const [uid, stats] of Object.entries(posMap)) {
+        winRateMap[uid] = stats.total > 0 ? ((stats.wins / stats.total) * 100).toFixed(1) : '0';
+      }
     }
 
     const data = rows.map((r, i) => ({
@@ -158,7 +181,7 @@ export class DiscoverService {
       displayName: userMap[r.userId]?.displayName ?? "",
       avatarUrl: userMap[r.userId]?.avatarUrl ?? null,
       pnl: String(r.pnl ?? "0"),
-      winRate: "0",
+      winRate: winRateMap[r.userId] ?? '0',
       tradeCount: Number(r.tradeCount ?? 0),
     }));
 

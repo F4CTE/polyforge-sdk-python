@@ -173,7 +173,7 @@ export function Component() {
                     )}
                     {tab === 'logins' && (
                       <>
-                        <td className="px-4 py-3 text-pf-text">{log.username}</td>
+                        <td className="px-4 py-3 text-pf-text">{(log as any).user?.username ?? log.username ?? ''}</td>
                         <td className="px-4 py-3 font-mono text-xs text-pf-text-tertiary">{log.ip}</td>
                         <td className="px-4 py-3">
                           {log.success ? (

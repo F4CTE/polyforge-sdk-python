@@ -185,7 +185,21 @@ export function Component() {
     );
   }
 
-  const { stats, recentTrades, sparkline } = profile;
+  const { stats, recentTrades = [], sparkline = [] } = profile;
+  if (!stats) {
+    return (
+      <div className="animate-fade-in p-6 max-w-5xl mx-auto">
+        <Link to="/whales" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors mb-6">
+          <ArrowLeft className="size-4" /> Back to feed
+        </Link>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <Fish className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
+          <p className="text-pf-text font-medium">No stats available</p>
+          <p className="text-sm text-pf-text-muted mt-1">This whale has no recorded activity yet.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">

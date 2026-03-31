@@ -26,8 +26,9 @@ export class UsersService {
     search?: string;
     status?: string;
     suspended?: boolean;
+    polymarketConnected?: boolean;
   }) {
-    const { page, limit, search, status, suspended } = params;
+    const { page, limit, search, status, suspended, polymarketConnected } = params;
     const skip = (page - 1) * limit;
 
     const where: Prisma.UserWhereInput = {
@@ -43,6 +44,10 @@ export class UsersService {
 
     if (suspended !== undefined) {
       where.suspended = suspended;
+    }
+
+    if (polymarketConnected !== undefined) {
+      where.polymarketConnected = polymarketConnected;
     }
 
     const [users, total] = await Promise.all([

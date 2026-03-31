@@ -37,11 +37,20 @@ export class BacktestsService {
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
+        include: {
+          strategy: { select: { name: true } },
+        },
       }),
       this.prisma.backtestRun.count({ where }),
     ]);
 
-    return paginate(runs, total, page, limit);
+    const mapped = runs.map((r: any) => ({
+      ...r,
+      strategyName: r.strategy?.name ?? null,
+      strategy: undefined,
+    }));
+
+    return paginate(mapped, total, page, limit);
   }
 
   async create(userId: string, dto: CreateBacktestDto): Promise<any> {

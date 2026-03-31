@@ -71,18 +71,21 @@ export function Component() {
     if (botCodeLoading) return;
     setBotCodeLoading(true);
     try {
-      const res = await fetch('/auth/v1/bot-code', { method: 'POST', credentials: 'include' });
+      const res = await fetch('/auth/v1/bot-link', { method: 'POST', credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setBotCode(data.code);
-        setBotCodeExpiry(data.expiresAt);
+        const expiry = new Date(Date.now() + (data.expiresInSeconds ?? 300) * 1000);
+        setBotCodeExpiry(expiry.toLocaleTimeString());
+      } else {
+        toast.error('Failed to generate bot code');
       }
     } catch { toast.error('Failed to generate bot code'); }
     setBotCodeLoading(false);
   }
 
   function copyBotCode() {
-    if (botCode) navigator.clipboard.writeText(botCode);
+    if (botCode) navigator.clipboard.writeText(botCode).catch(() => toast.error('Copy failed'));
   }
 
   const canImport = privateKey && apiKey && apiSecret && apiPassphrase && !importing;

@@ -218,8 +218,8 @@ export function Component() {
     if (!strategy?.id) return;
     if (detailTab === 'log') {
       setLoadingLog(true);
-      fetch(`/api/v1/strategies/${strategy.id}/events?limit=50`, { credentials: 'include' })
-        .then(r => r.ok ? r.json() : { data: [] })
+      fetch(`/api/v1/strategies/${strategy.id}/event-log?limit=50`, { credentials: 'include' })
+        .then(r => r.ok ? r.json() : [])
         .then(d => setExecLog(Array.isArray(d) ? d : (d.data ?? [])))
         .catch(() => {})
         .finally(() => setLoadingLog(false));
@@ -291,11 +291,15 @@ export function Component() {
   function handleShare() {
     if (!strategy) return;
     const url = `${window.location.origin}/strategies/${strategy.id}`;
-    navigator.clipboard.writeText(url).then(() => {
-      toast.success('Link copied to clipboard');
-    }).catch(() => {
-      toast.error('Failed to copy link');
-    });
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        toast.success('Link copied to clipboard');
+      }).catch(() => {
+        prompt('Copy this link:', url);
+      });
+    } else {
+      prompt('Copy this link:', url);
+    }
   }
 
   const status = strategy?.status ?? 'IDLE';

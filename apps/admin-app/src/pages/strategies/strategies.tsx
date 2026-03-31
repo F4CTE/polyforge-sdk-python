@@ -112,7 +112,7 @@ export function Component() {
                 strategies.map((s) => (
                   <tr key={s.id} className="border-b border-pf-border last:border-0 hover:bg-pf-base transition-colors">
                     <td className="px-4 py-3 font-medium text-pf-text">{s.name}</td>
-                    <td className="px-4 py-3 text-pf-text-secondary">{s.username}</td>
+                    <td className="px-4 py-3 text-pf-text-secondary">{(s as any).user?.username ?? s.username ?? ''}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(s.status)}`}>
                         {s.status}

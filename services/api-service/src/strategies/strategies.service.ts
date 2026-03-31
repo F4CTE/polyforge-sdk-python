@@ -97,6 +97,7 @@ export class StrategiesService {
         safety: (dto.safety ?? []) as unknown as Prisma.InputJsonValue,
         tags: dto.tags ?? [],
         canvas: dto.canvas as unknown as Prisma.InputJsonValue | undefined,
+        ...(dto.marketId ? { marketId: dto.marketId } : {}),
         status: StrategyStatus.IDLE,
         version: 1,
         template: false,
@@ -168,6 +169,11 @@ export class StrategiesService {
     if (dto.tags !== undefined) data.tags = dto.tags;
     if (dto.canvas !== undefined)
       data.canvas = dto.canvas as unknown as Prisma.InputJsonValue;
+    if (dto.marketId !== undefined) {
+      data.market = dto.marketId
+        ? { connect: { id: dto.marketId } }
+        : { disconnect: true };
+    }
 
     return this.prisma.strategy.update({ where: { id }, data });
   }
@@ -869,6 +875,17 @@ export class StrategiesService {
       },
     });
     return { message: 'Rolled back successfully', version: version.version };
+  }
+
+  async listEventLog(strategyId: string, userId: string, limit = 50) {
+    await this.getOwned(strategyId, userId);
+    const events = await this.prisma.strategyEvent.findMany({
+      where: { strategyId },
+      orderBy: { createdAt: 'desc' },
+      take: Math.min(limit, 200),
+      select: { id: true, eventType: true, payload: true, createdAt: true },
+    });
+    return events;
   }
 
   private async getOwned(id: string, userId: string): Promise<Strategy> {

@@ -144,18 +144,16 @@ export function Component() {
         body: JSON.stringify({
           targetWallet: targetWallet.trim(),
           mode,
-          sizeValue: mode === 'MIRROR' ? 100 : sizeValue,
-          sizeMode: mode === 'MIRROR' ? 'fixed' : sizeMode,
-          sizePercent,
-          maxPerTrade,
-          maxExposure,
-          maxDailyLoss,
-          priceOffset,
+          sizeValue: String(mode === 'MIRROR' ? 100 : sizeValue),
+          maxExposure: String(maxExposure),
+          maxDailyLoss: String(maxDailyLoss),
+          priceOffset: String(priceOffset),
         }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        toast.error(err.message ?? 'Failed to create copy config');
+        const msg = Array.isArray(err.message) ? err.message[0] : (err.message ?? 'Failed to create copy config');
+        toast.error(msg);
         return;
       }
       const created = await res.json();

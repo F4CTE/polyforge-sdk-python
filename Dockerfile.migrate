@@ -17,10 +17,17 @@ RUN npx prisma generate \
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+# postgresql-client provides psql for post-migration SQL scripts
+RUN apk add --no-cache postgresql-client
+
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma       ./prisma
 COPY prisma/migrations                ./prisma/migrations
 
 ENV DIRECT_DATABASE_URL="postgresql://poly:devpass@postgres:5432/polyforge"
 
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema ./prisma/schema.prisma --config ./prisma/prisma.config.ts"]
+CMD ["sh", "-c", "\
+  node_modules/.bin/prisma migrate deploy --schema ./prisma/schema.prisma --config ./prisma/prisma.config.ts && \
+  psql \"$DIRECT_DATABASE_URL\" -c 'CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;' && \
+  psql \"$DIRECT_DATABASE_URL\" -f ./prisma/migrations/hypertables.sql \
+"]

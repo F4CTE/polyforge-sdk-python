@@ -52,8 +52,7 @@ function execLabel(mode: string): string {
   return map[mode] ?? mode;
 }
 
-// P&L data removed — synthetic financial metrics must not be shown to users.
-// TODO: Replace with real P&L from API when available.
+// Author score sourced from TraderScore table (0–100, computed from real trading activity).
 
 function formatDate(d: string): string {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });

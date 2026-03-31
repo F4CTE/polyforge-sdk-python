@@ -402,7 +402,8 @@ export function Component() {
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'live' }); }}
                           disabled={busy}
                           className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 text-[11px] font-medium hover:bg-pf-cyan-500/20 disabled:opacity-40 transition-colors"
-                          title="Start strategy"
+                          title="Start strategy (Live)"
+                          aria-label="Start strategy in live mode"
                         >
                           <Zap className="size-3" aria-hidden="true" /> Live
                         </button>
@@ -411,7 +412,8 @@ export function Component() {
                           onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'paper' }); }}
                           disabled={busy}
                           className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-overlay text-pf-text-secondary text-[11px] font-medium hover:bg-pf-border-subtle disabled:opacity-40 transition-colors"
-                          title="Start strategy"
+                          title="Start strategy (Paper)"
+                          aria-label="Start strategy in paper mode"
                         >
                           <FileText className="size-3" aria-hidden="true" /> Paper
                         </button>

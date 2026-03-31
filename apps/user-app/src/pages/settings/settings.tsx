@@ -20,6 +20,7 @@ interface ApiKey {
   expiresAt?: string | null;
   revoked: boolean;
   key?: string;
+  token?: string;
 }
 
 interface GasUsageData {
@@ -248,7 +249,8 @@ export function Component() {
         setConfirmPassword('');
         toast.success('Password changed');
       } else {
-        toast.error('Failed to change password');
+        const body = await res.json().catch(() => ({}));
+        toast.error(body.message ?? 'Failed to change password');
       }
     } catch { toast.error('Failed to change password'); }
     setPwSaving(false);
@@ -319,7 +321,7 @@ export function Component() {
     if (notifSaving) return;
     setNotifSaving(true);
     try {
-      const res = await fetch('/api/v1/profile/notifications', {
+      const res = await fetch('/api/v1/settings/notifications', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -387,7 +389,7 @@ export function Component() {
   }
 
   function copyKey(key: string) {
-    navigator.clipboard.writeText(key);
+    navigator.clipboard.writeText(key).then(() => toast.success('Copied!')).catch(() => toast.error('Copy failed'));
   }
 
   // Delete Account
@@ -940,15 +942,15 @@ export function Component() {
           </div>
 
           {/* Newly created key */}
-          {createdKey?.key && (
+          {(createdKey?.key || createdKey?.token) && (
             <div className="space-y-3">
               <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-warning/10 text-pf-warning text-xs" role="alert">
                 <Shield className="size-3.5 shrink-0" />
                 Copy this key now -- it won't be shown again!
               </div>
               <div className="flex items-center gap-2 bg-pf-surface rounded-pf p-3 border border-pf-border">
-                <code className="flex-1 text-xs font-mono text-pf-text break-all">{createdKey.key}</code>
-                <button type="button" onClick={() => copyKey(createdKey.key!)} aria-label="Copy API key" className="p-1.5 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text">
+                <code className="flex-1 text-xs font-mono text-pf-text break-all">{createdKey.token ?? createdKey.key}</code>
+                <button type="button" onClick={() => copyKey((createdKey.token ?? createdKey.key)!)} aria-label="Copy API key" className="p-1.5 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text">
                   <Copy className="size-3.5" />
                 </button>
               </div>

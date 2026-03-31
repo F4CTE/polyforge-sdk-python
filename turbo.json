@@ -10,8 +10,7 @@
     "build": {
       "dependsOn": ["^build", "generate"],
       "inputs": ["$TURBO_DEFAULT$"],
-      "outputs": ["dist/**"],
-      "excludePaths": ["packages/polyforge-crypto/**", "packages/polyforge-engine/**", "packages/polyforge-crypto-native/**"]
+      "outputs": ["dist/**"]
     },
     "build:wasm": {
       "outputs": ["pkg/**", "*.node"],

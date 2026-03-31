@@ -13,6 +13,10 @@ class DiscoverQueryDto extends PaginationDto {
   @IsOptional()
   @IsString()
   category?: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
 }
 
 class LeaderboardQueryDto extends PaginationDto {

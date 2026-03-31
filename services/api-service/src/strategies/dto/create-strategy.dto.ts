@@ -148,6 +148,11 @@ export class CreateStrategyDto {
   canvas?: Record<string, unknown>;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  marketId?: string;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => MarketSlotDto)

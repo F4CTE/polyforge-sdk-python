@@ -38,6 +38,7 @@ interface Market {
   volume24h: string;
   endDate: string;
   closed: boolean;
+  strategyCount?: number;
 }
 
 interface MarketsResponse {
@@ -131,8 +132,7 @@ function priceCents(market: Market, outcome: 'YES' | 'NO'): string {
   return Math.round(val * 100) + '\u00A2';
 }
 
-// strategyCount removed — synthetic data must not be shown to users.
-// TODO: Replace with real strategy count from API when available.
+// Strategy count not available — Strategy model has no direct marketId FK in current schema.
 
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
@@ -278,9 +278,17 @@ const MarketCard = memo(function MarketCard({
       {/* Footer */}
       {market.tokens.length > 0 && (
         <div className="flex items-center justify-between gap-1 mt-3">
-          <div className="flex items-center gap-1 text-[11px] text-pf-text-muted">
-            <Zap className="size-3" aria-hidden="true" />
-            {market.tokens.length} outcomes
+          <div className="flex items-center gap-2 text-[11px] text-pf-text-muted">
+            <span className="flex items-center gap-1">
+              <Zap className="size-3" aria-hidden="true" />
+              {market.tokens.length} outcomes
+            </span>
+            {(market.strategyCount ?? 0) > 0 && (
+              <span className="flex items-center gap-1 text-pf-cyan-400">
+                <Cpu className="size-3" aria-hidden="true" />
+                {market.strategyCount} {market.strategyCount === 1 ? 'strategy' : 'strategies'}
+              </span>
+            )}
           </div>
           <SentimentPill sentiment={sentiment} />
         </div>

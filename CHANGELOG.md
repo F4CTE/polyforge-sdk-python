@@ -5,6 +5,94 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.15.7] — 2026-03-31
+
+### Changed
+- **MCP server** — `create_strategy` tool gains optional `marketId` param; new `update_strategy` tool added (id required; name, description, marketId optional); `RouteConfig` method union extended to include `"PATCH"` so the update route dispatches correctly; total MCP tools: 23
+- **TypeScript SDK** — `UpdateStrategyParams` gains `marketId?: string`; `createStrategy()` params gains `marketId?: string`
+- **Python SDK** — both sync `PolyforgeClient` and async `AsyncPolyforgeClient`: `create_strategy()` and `update_strategy()` accept `market_id: str | None = None`; value sent as `marketId` in the request body
+- **Rust SDK** — `create_strategy()` gains `market_id: Option<&str>` (3rd param); `update_strategy()` gains `market_id: Option<&str>` (4th param); both insert `"marketId"` into the JSON body when `Some`
+
+---
+
+## [6.15.6] — 2026-03-31
+
+### Added
+- **Direct trading — end-to-end verified** — confirmed all layers are wired: `POST /api/v1/orders/place` and `DELETE /api/v1/orders/:id` in NestJS controller/service; `placeOrder()` / `cancelMyOrder()` in `market-detail.tsx`; `placeOrder()` / `cancelOrder()` in TypeScript, Python, and Rust SDKs; `place_order` / `cancel_order` tools in MCP server
+- **Strategy market picker** — users can now pin a strategy to a specific market from within the strategy builder sidebar:
+  - `CreateStrategyDto`: added `@IsOptional() @IsString() @MaxLength(255) marketId?: string`
+  - `strategies.service.ts`: `create()` passes `marketId` to Prisma; `update()` connects or disconnects the `market` relation based on whether `marketId` is provided or cleared
+  - `builder-store.ts`: `marketId` added to state, `setMarketId()` action, persisted in `loadStrategy()` and `save()` DTO
+  - `strategy-builder.tsx`: collapsible "Pinned Market" section in the left panel — debounced search input fetches `/api/v1/markets?search=…`, results list lets user pin a market; pinned state shows market title with an unpin (×) button
+
+---
+
+## [6.15.5] — 2026-03-31
+
+### Added
+- **Markets list strategy count** — `GET /api/v1/markets` now returns `strategyCount` per market via a correlated subquery (`SELECT COUNT(*)::int FROM strategies WHERE "marketId" = m.id`); market cards display a cyan strategy count badge (e.g. "2 strategies") when at least one strategy is linked to the market
+
+### Changed
+- **Prisma schema: `Strategy.marketId` FK** — added optional `marketId String?` foreign key on the `Strategy` model referencing `Market.id` with `onDelete: SetNull`; migration `20260331000000_add_strategy_market_id` applied; index `strategies_marketId_idx` created for join performance
+
+### QA Verified (v6.14–v6.15 features — full pass)
+- **Price Alerts panel** (market detail `/markets/:id`) — panel renders with Above/Below inputs, Set button, and existing alerts (×3 visible for market `1739838`); `GET /api/v1/alerts` returns 200 with 4 alerts
+- **Backtest Compare Mode** (`/backtest`) — "Compare Runs" toggles to "Exit Compare", COMPARE column with A/B selectors appears for all 12 runs; all interactions functional
+- **Strategy Version History** (`/strategies/:id` → Version History tab) — tab renders; empty state "No saved versions yet" shown correctly; `GET /api/v1/strategies/:id/versions` returns 200 with `[]`
+- **Landing page** (`http://127.0.0.1/`) — NextJS landing renders via nginx `location = /` proxy rule; title "Polyforge — Algorithmic Trading for Prediction Markets", hero section, feature mockup, and dashboard preview all visible
+
+---
+
+## [6.15.4] — 2026-03-31
+
+### Fixed
+- **Discover page author score always hidden** — `GET /api/v1/discover` selected `{ id, username, displayName, avatarUrl }` from the user relation but omitted `traderScore`; added `traderScore: { select: { score: true } }` to the Prisma include and mapped it to `author.score` in the response — score badges (0–100, colour-coded green/yellow/red) now render on strategy cards for authors who have a TraderScore record
+- **Markets list 500 regression** — a correlated subquery referencing `strategies.marketId` was added to the raw SQL, but the `Strategy` model has no `marketId` column (strategies are not directly FK-linked to markets in the current schema); reverted the subquery and noted the TODO as blocked on a schema change; markets list is fully restored to 200
+
+### QA Verified (v6.12–v6.13 features — first pass)
+- **Smart Orders** (`/orders/smart`) — page renders 4 type-info cards and correct empty state; `GET /api/v1/orders/smart` returns 200
+- **Arbitrage Scanner** (`/arbitrage`) — margin filter tabs, explanatory panel, and "0 opportunities" empty state all render correctly; `GET /api/v1/arbitrage?minMargin=0.5` returns 200
+- **Strategy Marketplace** (`/marketplace`) — Browse and My Purchases tabs both render; all three marketplace endpoints (`/marketplace`, `/marketplace/my/listings`, `/marketplace/my/purchases`) return 200
+- **Circuit Breaker** (Settings → Risk tab) — toggle, lookback window selector, threshold slider, and Save button all functional; `GET /api/v1/settings/risk` returns correct shape; `PATCH /api/v1/settings/risk` persists changes correctly
+
+---
+
+## [6.15.3] — 2026-03-31
+
+### Fixed
+
+**User App**
+- **Whale profile "No stats available"** — `GET /api/v1/whales/:address` returned `{ profile, recentTrades }` but the frontend expected `{ stats, recentTrades, sparkline, isFollowing }`; rewrote `getProfile()` in `whales.service.ts` to: rename `profile` → `stats`, map `recentTrades` field names (`marketName` from `market.title`, `timestamp` from `detectedAt`), compute a 30-day sparkline, and include `isFollowing` via a `WhaleFollow` DB lookup using the authenticated user's ID
+- **Whale `/unfollow` 404** — frontend called `POST /whales/:address/unfollow` when already following but only `/follow` existed (as a toggle); added `POST /:address/unfollow` controller route that also calls `toggleFollow()`
+- **Controller `getProfile` missing auth** — the `getProfile` endpoint did not inject `@CurrentUser()`; added it so `isFollowing` is correctly computed per user
+
+**Admin App**
+- **Admin Orders USER column blank** — orders list mapped `ordersRes.data` directly but each row has `user: { username }` nested; added `.map(o => ({ ...o, username: o.user?.username ?? '' }))` so the USERNAME cell renders correctly
+- **Admin Orders pagination broken** — backend returns `pages` but frontend read `totalPages`; added `?? res.pages` fallback
+- **Admin Backtests USER column blank** — same `user.username` nested → flat mismatch as Orders; applied identical `.map()` fix
+- **Admin User Detail Limits blank** — frontend accessed `limits.maxStrategies / maxOrdersPerMinute / maxPositionSizeUsdc / maxDailyLossUsdc` but the `UserLimit` schema fields are `maxRunningStrategies / maxOrdersPerDay / maxOrderSizeUsdc / maxBacktestRunsPerDay`; updated display to use correct DB field names with fallback
+- **Admin User Detail counts 0** — frontend expected `strategyCount` / `orderCount` at top level but API returns `_count: { strategies, orders }`; mapped `_count.strategies → strategyCount` and `_count.orders → orderCount` when setting state
+- **Admin User Detail API Keys "No API keys"** — `listApiKeys` returns a raw array, but frontend accessed `.data` (expecting paginated wrapper); added `Array.isArray(keysRes) ? keysRes : keysRes?.data ?? []` guard
+
+---
+
+## [6.15.2] — 2026-03-30
+
+### Fixed
+- **Execution log tab blank** — strategy-detail page fetched `/api/v1/strategies/:id/events` (SSE stream) expecting JSON; added new `GET /api/v1/strategies/:id/event-log` REST endpoint backed by the `StrategyEvent` Prisma table; frontend updated to use the correct path
+- **Leaderboard win rate always 0%** — discover service hardcoded `winRate: "0"`; now computes win rate from resolved `Position` records per user (winning = `realizedPnl > 0`)
+- **Telegram bot "Generate Code" 404** — frontend called `/auth/v1/bot-code` but the endpoint is at `/auth/v1/bot-link`; also fixed field mapping (`expiresInSeconds` → computed expiry display)
+- **Copy trading error not surfaced** — NestJS class-validator returns `message` as an array on 400 errors; toast now normalises array to first element so the error message is human-readable
+- **Clipboard copy silent in settings** — `copyKey` and `copyBotCode` had no `.catch()`; added error handling so failures surface as a toast
+- **Register page no password visibility toggle** — password and confirm-password fields now have Eye/EyeOff toggle buttons, matching the login page
+- **Admin strategies Owner column blank** — strategies service returns `user: { username }` nested but cell read `s.username` (flat); fixed to `(s as any).user?.username`
+- **Admin login logs User column blank** — same nested vs flat mismatch as strategies; fixed to `(log as any).user?.username`
+- **Admin Connected filter returned 0 results** — client-side filtered on first 20 users only; added `polymarketConnected` backend DB filter to `findAll` in admin users service and controller; frontend sends correct param
+- **Backtest list shows "Unnamed Strategy"** — backtest list query didn't join strategy name; added `include: { strategy: { select: { name: true } } }` and mapped `strategyName` to top-level field
+- **Password change error not shown** — settings page showed generic "Failed to change password" ignoring API error detail; now reads and displays `body.message`
+- **Whale following stats blank** — `getFollowing` returns `{ walletAddress, profile: { ... } }` nested but frontend read flat props; updated interface and rendering to use `profile?.totalVolume` with flat fallback
+- **Auth access token TTL** — changed from `5m` to `15m` to reduce friction from token expiry
+
 ## [6.15.1] — 2026-03-30
 
 ### Fixed

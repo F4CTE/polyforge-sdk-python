@@ -44,9 +44,9 @@ export function Component() {
         adminApi.orders({ page, limit, status: statusFilter || undefined }),
         adminApi.dlq(),
       ]);
-      setOrders((ordersRes.data ?? []) as unknown as OrderRow[]);
+      setOrders(((ordersRes.data ?? []) as any[]).map(o => ({ ...o, username: o.user?.username ?? o.username ?? '' })) as OrderRow[]);
       setTotal(ordersRes.total ?? 0);
-      setTotalPages(ordersRes.totalPages ?? 1);
+      setTotalPages(ordersRes.totalPages ?? (ordersRes as any).pages ?? 1);
       setDlqEntries((dlqRes?.data ?? []) as unknown as DlqEntry[]);
     } catch {
       setError(true);

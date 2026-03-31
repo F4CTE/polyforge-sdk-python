@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ReactFlowProvider } from '@xyflow/react';
-import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle, Target } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { StrategyCanvas } from '../../components/builder/strategy-canvas';
@@ -34,6 +34,13 @@ export function Component() {
   const loadStrategy = useBuilderStore((s) => s.loadStrategy);
   const save = useBuilderStore((s) => s.save);
   const reset = useBuilderStore((s) => s.reset);
+
+  const marketId = useBuilderStore((s) => s.marketId);
+  const setMarketId = useBuilderStore((s) => s.setMarketId);
+  const [marketSearch, setMarketSearch] = useState('');
+  const [marketResults, setMarketResults] = useState<Array<{id: string; title: string; category: string}>>([]);
+  const [marketPickerOpen, setMarketPickerOpen] = useState(false);
+  const [pinnedMarket, setPinnedMarket] = useState<{id: string; title: string} | null>(null);
 
   const [quickTesting, setQuickTesting] = useState(false);
   const [quickResult, setQuickResult] = useState<Record<string, unknown> | null>(null);
@@ -134,6 +141,25 @@ export function Component() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
+
+  useEffect(() => {
+    if (!marketSearch.trim() || marketSearch.length < 2) { setMarketResults([]); return; }
+    const t = setTimeout(() => {
+      fetch(`/api/v1/markets?search=${encodeURIComponent(marketSearch)}&limit=8`, { credentials: 'include' })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => setMarketResults(d?.data ?? []))
+        .catch(() => {});
+    }, 300);
+    return () => clearTimeout(t);
+  }, [marketSearch]);
+
+  useEffect(() => {
+    if (!marketId) { setPinnedMarket(null); return; }
+    fetch(`/api/v1/markets/${marketId}`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setPinnedMarket({ id: d.id, title: d.title }); })
+      .catch(() => {});
+  }, [marketId]);
 
   const onSave = useCallback(async () => {
     try {
@@ -515,6 +541,59 @@ export function Component() {
             {/* Side panel — always mounted, collapsed via width to prevent React Flow reflow issues */}
             <div className={`transition-all duration-200 overflow-hidden ${panelOpen ? 'w-80' : 'w-0'}`}>
               <BlockPalette open={panelOpen} onClose={() => setPanelOpen(false)} />
+              {/* Market Picker */}
+              <div className="border-t border-pf-border mt-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setMarketPickerOpen(p => !p)}
+                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-pf-text-secondary hover:text-pf-text transition-colors"
+                >
+                  <Target className="size-3.5 text-pf-cyan-400" aria-hidden="true" />
+                  Pinned Market
+                  {pinnedMarket && <span className="ml-auto text-[10px] bg-pf-cyan-500/15 text-pf-cyan-400 px-1.5 py-0.5 rounded-full truncate max-w-[90px]">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
+                </button>
+                {marketPickerOpen && (
+                  <div className="px-2 pb-2 space-y-1.5">
+                    {pinnedMarket ? (
+                      <div className="flex items-center gap-1.5 bg-pf-elevated border border-pf-cyan-500/25 rounded-pf p-2">
+                        <span className="text-[11px] text-pf-text flex-1 truncate">{pinnedMarket.title}</span>
+                        <button
+                          type="button"
+                          onClick={() => { setMarketId(''); setPinnedMarket(null); }}
+                          className="text-pf-text-muted hover:text-pf-danger transition-colors"
+                          title="Unpin market"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          placeholder="Search markets…"
+                          value={marketSearch}
+                          onChange={e => setMarketSearch(e.target.value)}
+                          className="w-full px-2 py-1.5 text-xs rounded-pf bg-pf-elevated border border-pf-border text-pf-text placeholder:text-pf-text-muted focus:border-pf-cyan-500/50 focus:outline-none"
+                        />
+                        {marketResults.length > 0 && (
+                          <div className="max-h-40 overflow-y-auto space-y-0.5">
+                            {marketResults.map(m => (
+                              <button
+                                key={m.id}
+                                type="button"
+                                onClick={() => { setMarketId(m.id); setPinnedMarket({ id: m.id, title: m.title }); setMarketSearch(''); setMarketResults([]); }}
+                                className="w-full text-left px-2 py-1.5 text-[11px] rounded-pf hover:bg-pf-overlay text-pf-text transition-colors truncate"
+                              >
+                                {m.title}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

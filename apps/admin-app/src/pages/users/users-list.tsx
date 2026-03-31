@@ -83,15 +83,18 @@ export function Component() {
       // Map status filter to backend-supported query params
       if (statusFilter === 'SUSPENDED') {
         params.suspended = true;
+      } else if (statusFilter === 'CONNECTED') {
+        params.polymarketConnected = true;
       }
       const res = await adminApi.users(params);
       let data = (res.data ?? []) as unknown as UserRow[];
-      if (statusFilter && statusFilter !== 'SUSPENDED') {
+      if (statusFilter && statusFilter !== 'SUSPENDED' && statusFilter !== 'CONNECTED') {
         data = data.filter((u) => computeUserStatus(u) === statusFilter);
       }
       setUsers(data);
-      setTotal(statusFilter && statusFilter !== 'SUSPENDED' ? data.length : (res.total ?? 0));
-      setTotalPages(statusFilter && statusFilter !== 'SUSPENDED' ? 1 : (res.totalPages ?? 1));
+      const clientFiltered = statusFilter && statusFilter !== 'SUSPENDED' && statusFilter !== 'CONNECTED';
+      setTotal(clientFiltered ? data.length : (res.total ?? 0));
+      setTotalPages(clientFiltered ? 1 : (res.totalPages ?? 1));
     } catch {
       setError(true);
       toast.error('Failed to load users');

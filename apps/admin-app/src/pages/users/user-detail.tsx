@@ -68,8 +68,10 @@ export function Component() {
           adminApi.user(id!),
           adminApi.userApiKeys(id!),
         ]);
-        setUser(userRes as unknown as UserDetail);
-        setApiKeys((keysRes?.data ?? []) as unknown as ApiKeyView[]);
+        const u = userRes as any;
+        setUser({ ...u, strategyCount: u._count?.strategies ?? u.strategyCount ?? 0, orderCount: u._count?.orders ?? u.orderCount ?? 0 } as unknown as UserDetail);
+        const keysData = Array.isArray(keysRes) ? keysRes : (keysRes?.data ?? []);
+        setApiKeys(keysData as unknown as ApiKeyView[]);
       } catch {
         toast.error('Failed to load user');
       } finally {
@@ -232,19 +234,19 @@ export function Component() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
               <div>
                 <div className="text-pf-text-tertiary text-xs">Max Strategies</div>
-                <div className="text-pf-text font-medium">{user.limits.maxStrategies}</div>
+                <div className="text-pf-text font-medium">{(user.limits as any).maxRunningStrategies ?? (user.limits as any).maxStrategies ?? '—'}</div>
               </div>
               <div>
-                <div className="text-pf-text-tertiary text-xs">Orders/min</div>
-                <div className="text-pf-text font-medium">{user.limits.maxOrdersPerMinute}</div>
+                <div className="text-pf-text-tertiary text-xs">Orders/day</div>
+                <div className="text-pf-text font-medium">{(user.limits as any).maxOrdersPerDay ?? (user.limits as any).maxOrdersPerMinute ?? '—'}</div>
               </div>
               <div>
-                <div className="text-pf-text-tertiary text-xs">Max Position</div>
-                <div className="text-pf-text font-medium">${user.limits.maxPositionSizeUsdc}</div>
+                <div className="text-pf-text-tertiary text-xs">Max Order Size</div>
+                <div className="text-pf-text font-medium">${(user.limits as any).maxOrderSizeUsdc ?? (user.limits as any).maxPositionSizeUsdc ?? '—'}</div>
               </div>
               <div>
-                <div className="text-pf-text-tertiary text-xs">Daily Loss Limit</div>
-                <div className="text-pf-text font-medium">${user.limits.maxDailyLossUsdc}</div>
+                <div className="text-pf-text-tertiary text-xs">Max Backtests/day</div>
+                <div className="text-pf-text font-medium">{(user.limits as any).maxBacktestRunsPerDay ?? '—'}</div>
               </div>
             </div>
           </div>

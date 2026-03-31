@@ -90,6 +90,16 @@ export class StrategiesController {
     return this.strategies.remove(id, user.sub);
   }
 
+  @Get(":id/event-log")
+  listEventLog(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: any,
+    @Query("limit") limitRaw?: string,
+  ) {
+    const limit = limitRaw ? Math.min(parseInt(limitRaw, 10) || 50, 200) : 50;
+    return this.strategies.listEventLog(id, user.sub, limit);
+  }
+
   /**
    * SSE stream of execution events for a running strategy.
    *

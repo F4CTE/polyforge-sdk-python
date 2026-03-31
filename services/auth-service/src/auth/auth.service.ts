@@ -18,8 +18,8 @@ import { randomUUID, createHash } from 'crypto';
 const INVITE_KEY = (code: string) => `invite:${code.toUpperCase()}`;
 
 const REFRESH_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
-// R5-02: Reduced from 15m to 5m to limit window of compromised tokens after password change
-const ACCESS_TOKEN_EXPIRY = '5m';
+// R5-02: 15m — balances security with UX (silent refresh should handle rotation transparently)
+const ACCESS_TOKEN_EXPIRY = '15m';
 
 /** Redis key for a single refresh token: refresh:{userId}:{sha256(token)} */
 const REFRESH_KEY = (userId: string, tokenHash: string) =>

@@ -116,6 +116,7 @@ export class MarketsService implements OnModuleInit {
         m.id, m.slug, m.title, m.description, m.category, m.image,
         m."seriesSlug", m."endDate", m.closed, m."negRisk",
         m.volume24h, m."firstSeenAt", m."lastUpdatedAt",
+        (SELECT COUNT(*)::int FROM strategies s2 WHERE s2."marketId" = m.id) AS "strategyCount",
         COALESCE(
           json_agg(
             json_build_object(

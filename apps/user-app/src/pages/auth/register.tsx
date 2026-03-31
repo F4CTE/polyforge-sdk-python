@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { Mail, Lock, User, KeyRound, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, KeyRound, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { AuthBackground } from '@/components/auth-background';
 
@@ -34,6 +34,8 @@ export function Component() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   function fieldError(field: string): string {
     if (!touched[field]) return '';
@@ -189,7 +191,7 @@ export function Component() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -199,6 +201,9 @@ export function Component() {
                   aria-describedby={fieldError('password') ? 'register-password-error' : 'register-password-requirements'}
                   className={inputClass}
                 />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text transition-colors">
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
               </div>
               {fieldError('password') && <p id="register-password-error" role="alert" className="mt-1 text-xs text-pf-danger">{fieldError('password')}</p>}
               {touched.password && password && (
@@ -218,7 +223,7 @@ export function Component() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
                 <input
                   id="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -228,6 +233,9 @@ export function Component() {
                   aria-describedby={fieldError('confirmPassword') ? 'register-confirm-password-error' : undefined}
                   className={inputClass}
                 />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text transition-colors">
+                  {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
               </div>
               {fieldError('confirmPassword') && <p id="register-confirm-password-error" role="alert" className="mt-1 text-xs text-pf-danger">{fieldError('confirmPassword')}</p>}
             </div>

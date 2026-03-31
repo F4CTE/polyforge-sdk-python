@@ -7,9 +7,14 @@ import { ArrowLeft, Fish, UserMinus } from 'lucide-react';
 
 interface FollowedWallet {
   walletAddress: string;
-  totalVolume: string;
-  totalPnl: string;
-  tradeCount: number;
+  totalVolume?: string;
+  totalPnl?: string;
+  tradeCount?: number;
+  profile?: {
+    totalVolume?: string;
+    totalPnl?: string;
+    tradeCount?: number;
+  };
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
@@ -136,9 +141,9 @@ export function Component() {
               </div>
 
               <div className="flex items-center gap-4 text-xs text-pf-text-secondary">
-                <span>Volume: <span className="font-mono text-pf-text">{wallet.totalVolume}</span></span>
-                <span>P&L: <span className={`font-mono ${pnlColor(wallet.totalPnl)}`}>{pnlSign(wallet.totalPnl)}</span></span>
-                <span>Trades: <span className="font-mono text-pf-text">{wallet.tradeCount}</span></span>
+                <span>Volume: <span className="font-mono text-pf-text">{wallet.profile?.totalVolume ?? wallet.totalVolume ?? '—'}</span></span>
+                <span>P&L: <span className={`font-mono ${pnlColor(wallet.profile?.totalPnl ?? wallet.totalPnl ?? '0')}`}>{pnlSign(wallet.profile?.totalPnl ?? wallet.totalPnl ?? '0')}</span></span>
+                <span>Trades: <span className="font-mono text-pf-text">{wallet.profile?.tradeCount ?? wallet.tradeCount ?? 0}</span></span>
               </div>
             </div>
           ))}
