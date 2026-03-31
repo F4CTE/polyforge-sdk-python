@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Trophy, TrendingUp } from 'lucide-react';
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
 type Period = '7d' | '30d' | 'allTime';
+type Category = 'politics' | 'sports' | 'crypto' | 'finance' | 'entertainment' | 'science' | null;
 
 interface LeaderboardEntry {
   userId: string;
@@ -17,6 +18,7 @@ interface LeaderboardEntry {
   winRate: string;
   tradeCount: number;
   score?: number;
+  pnlHistory?: number[];
 }
 
 interface LeaderboardResponse {
@@ -33,6 +35,24 @@ const PERIODS: { label: string; value: Period }[] = [
   { label: '7 Days', value: '7d' },
   { label: '30 Days', value: '30d' },
   { label: 'All Time', value: 'allTime' },
+];
+
+const CATEGORIES: { label: string; value: Category }[] = [
+  { label: 'All', value: null },
+  { label: 'Politics', value: 'politics' },
+  { label: 'Sports', value: 'sports' },
+  { label: 'Crypto', value: 'crypto' },
+  { label: 'Finance', value: 'finance' },
+  { label: 'Entertainment', value: 'entertainment' },
+  { label: 'Science', value: 'science' },
+];
+
+const MIN_TRADES_OPTIONS: { label: string; value: number }[] = [
+  { label: 'Any trades', value: 0 },
+  { label: '5+ trades', value: 5 },
+  { label: '10+ trades', value: 10 },
+  { label: '25+ trades', value: 25 },
+  { label: '50+ trades', value: 50 },
 ];
 
 function pnlColor(pnl: string): string {
@@ -66,6 +86,30 @@ function userInitials(e: LeaderboardEntry): string {
   return (e.displayName ?? e.username).slice(0, 2).toUpperCase();
 }
 
+/* ─── MiniSparkline ──────────────────────────────────────────────────── */
+
+function MiniSparkline({ data }: { data: number[] }) {
+  if (!data || data.length < 2) return null;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const w = 48, h = 20;
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
+  const isUp = data[data.length - 1] >= data[0];
+  return (
+    <svg width={w} height={h} className="overflow-visible">
+      <polyline
+        points={pts}
+        fill="none"
+        stroke={isUp ? 'var(--color-pf-success)' : 'var(--color-pf-danger)'}
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 /* ─── Component ──────────────────────────────────────────────────────── */
 
 export function Component() {
@@ -75,11 +119,16 @@ export function Component() {
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
   const [period, setPeriod] = useState<Period>('7d');
+  const [category, setCategory] = useState<Category>(null);
+  const [minTrades, setMinTrades] = useState<number>(0);
 
-  const load = useCallback(async (p: number, per: Period) => {
+  const load = useCallback(async (p: number, per: Period, cat: Category, mt: number) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/leaderboard?period=${per}&page=${p}`, { credentials: 'include' });
+      const params = new URLSearchParams({ period: per, page: String(p) });
+      if (cat) params.set('category', cat);
+      if (mt > 0) params.set('minTrades', String(mt));
+      const res = await fetch(`/api/v1/leaderboard?${params.toString()}`, { credentials: 'include' });
       if (res.ok) {
         const data: LeaderboardResponse = await res.json();
         setEntries(data.data);
@@ -96,10 +145,20 @@ export function Component() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(page, period); }, [page, period, load]);
+  useEffect(() => { load(page, period, category, minTrades); }, [page, period, category, minTrades, load]);
 
   function changePeriod(p: Period) {
     setPeriod(p);
+    setPage(1);
+  }
+
+  function changeCategory(cat: Category) {
+    setCategory(cat);
+    setPage(1);
+  }
+
+  function changeMinTrades(mt: number) {
+    setMinTrades(mt);
     setPage(1);
   }
 
@@ -129,6 +188,38 @@ export function Component() {
         ))}
       </div>
 
+      {/* Category chips */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {CATEGORIES.map(cat => (
+          <button
+            type="button"
+            key={String(cat.value)}
+            onClick={() => changeCategory(cat.value)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+              category === cat.value
+                ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
+                : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Filter bar */}
+      <div className="flex items-center gap-3">
+        <select
+          value={minTrades}
+          onChange={e => changeMinTrades(Number(e.target.value))}
+          className="bg-pf-elevated border border-pf-border rounded-pf text-xs text-pf-text-secondary px-2 py-1.5"
+          aria-label="Minimum trades filter"
+        >
+          {MIN_TRADES_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Table */}
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
@@ -140,6 +231,7 @@ export function Component() {
                 <th scope="col" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Score</th>
                 <th scope="col" className="px-4 py-3 font-medium text-right">P&L</th>
                 <th scope="col" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Win Rate</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Trend</th>
                 <th scope="col" className="px-4 py-3 font-medium text-right">Trades</th>
               </tr>
             </thead>
@@ -147,14 +239,14 @@ export function Component() {
               {loading && entries.length === 0 ? (
                 Array.from({ length: 10 }, (_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 6 }, (_, j) => (
+                    {Array.from({ length: 7 }, (_, j) => (
                       <td key={j} className="px-4 py-3"><div className="h-3 bg-pf-overlay rounded animate-pulse" /></td>
                     ))}
                   </tr>
                 ))
               ) : entries.length === 0 ? (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={7}>
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                       <Trophy className="size-10 text-pf-text-muted mb-3" />
                       <p className="text-sm font-medium text-pf-text">No leaderboard data yet</p>
@@ -194,9 +286,9 @@ export function Component() {
                       <Link
                         to={`/copy/new?address=${encodeURIComponent(entry.username)}`}
                         title="Copy trade this trader"
-                        className="shrink-0 text-[10px] px-1.5 py-0.5 rounded border border-pf-cyan-500/30 bg-pf-cyan-500/8 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors"
+                        className="shrink-0 text-[10px] px-2 py-1 rounded border border-pf-cyan-500/30 bg-pf-cyan-500/8 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors font-medium"
                       >
-                        Copy
+                        Copy Trade
                       </Link>
                       </div>
                     </td>
@@ -220,6 +312,15 @@ export function Component() {
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-pf-text-secondary hidden sm:table-cell">
                       {entry.winRate}%
+                    </td>
+                    <td className="px-4 py-3 text-right hidden sm:table-cell">
+                      {entry.pnlHistory && entry.pnlHistory.length >= 2 ? (
+                        <div className="flex justify-end">
+                          <MiniSparkline data={entry.pnlHistory} />
+                        </div>
+                      ) : (
+                        <span className="text-xs text-pf-text-muted">&mdash;</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-pf-text-secondary">
                       {entry.tradeCount}

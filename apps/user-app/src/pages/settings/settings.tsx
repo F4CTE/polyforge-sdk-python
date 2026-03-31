@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
   User, Bell, Lock, Shield, Key, Loader2, Check, Copy, Ban, Eye, EyeOff, Fuel, Trash2, AlertTriangle, ShieldAlert,
-  Webhook, Send, Plus, ShieldCheck, ShieldOff, Download, KeyRound,
+  Webhook, Send, Plus, ShieldCheck, ShieldOff, Download, KeyRound, RotateCcw,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 
@@ -14,15 +14,26 @@ type Tab = 'profile' | 'notifications' | 'password' | '2fa' | 'apikeys' | 'gas' 
 interface ApiKey {
   id: string;
   name: string;
-  prefix: string;
+  prefix: string;       // legacy field kept for compatibility
+  keyPrefix: string;    // e.g. "pfk_live_abc123..."
   scopes: string[];
   createdAt: string;
   lastUsedAt: string | null;
   expiresAt?: string | null;
+  usageCount: number;
+  active: boolean;
   revoked: boolean;
   key?: string;
   token?: string;
+  secret?: string;
 }
+
+const SCOPES = [
+  { value: 'READ',     label: 'Read',     desc: 'View portfolio, orders, strategies' },
+  { value: 'TRADE',    label: 'Trade',    desc: 'Place and cancel orders' },
+  { value: 'STRATEGY', label: 'Strategy', desc: 'Create and manage strategies' },
+  { value: 'WEBHOOK',  label: 'Webhook',  desc: 'Manage webhooks' },
+] as const;
 
 interface WebhookEntry {
   id: string;
@@ -168,10 +179,14 @@ export function Component() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [apiKeysLoading, setApiKeysLoading] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
-  const [newKeyScopes, setNewKeyScopes] = useState({ read: true, write: false, trade: false });
+  const [newKeyScopes, setNewKeyScopes] = useState<Set<string>>(new Set(['READ']));
   const [newKeyExpiration, setNewKeyExpiration] = useState('');
   const [createdKey, setCreatedKey] = useState<ApiKey | null>(null);
   const [apiKeysCreating, setApiKeysCreating] = useState(false);
+  const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
+  const [rotatingKeyId, setRotatingKeyId] = useState<string | null>(null);
+  const [rotatedSecret, setRotatedSecret] = useState<{ id: string; secret: string } | null>(null);
+  const [secretCopied, setSecretCopied] = useState(false);
 
   // Gas Usage
   const [gasUsage, setGasUsage] = useState<GasUsageData | null>(null);
@@ -656,12 +671,9 @@ export function Component() {
   }
 
   async function createApiKey() {
-    if (apiKeysCreating || !newKeyName.trim()) return;
+    if (apiKeysCreating || !newKeyName.trim() || newKeyScopes.size === 0) return;
     setApiKeysCreating(true);
-    const scopes: string[] = [];
-    if (newKeyScopes.read) scopes.push('READ');
-    if (newKeyScopes.write) scopes.push('WRITE');
-    if (newKeyScopes.trade) scopes.push('TRADE');
+    const scopes = Array.from(newKeyScopes);
     try {
       const body: Record<string, unknown> = { name: newKeyName.trim(), scopes };
       if (newKeyExpiration) body.expiresAt = new Date(newKeyExpiration).toISOString();
@@ -674,9 +686,11 @@ export function Component() {
       if (res.ok) {
         const created = await res.json();
         setCreatedKey(created);
+        setRotatedSecret(null);
+        setSecretCopied(false);
         setApiKeys(prev => [created, ...prev]);
         setNewKeyName('');
-        setNewKeyScopes({ read: true, write: false, trade: false });
+        setNewKeyScopes(new Set(['READ']));
         setNewKeyExpiration('');
         toast.success('API key created');
       } else {
@@ -691,14 +705,63 @@ export function Component() {
     try {
       const res = await fetch(`/api/v1/api-keys/${id}`, { method: 'DELETE', credentials: 'include' });
       if (res.ok) {
-        setApiKeys(prev => prev.map(k => k.id === id ? { ...k, revoked: true } : k));
+        setApiKeys(prev => prev.map(k => k.id === id ? { ...k, revoked: true, active: false } : k));
         toast.success('API key revoked');
       }
     } catch { toast.error('Failed to revoke API key'); }
   }
 
+  async function rotateApiKey(id: string) {
+    if (!window.confirm('Rotate this API key? The current secret will be invalidated.')) return;
+    setRotatingKeyId(id);
+    try {
+      const res = await fetch(`/api/v1/api-keys/${id}/rotate`, { method: 'POST', credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setRotatedSecret({ id, secret: data.secret });
+        setCreatedKey(null);
+        setSecretCopied(false);
+        toast.warning("Save the new secret — it won't be shown again");
+      } else {
+        toast.error('Failed to rotate API key');
+      }
+    } catch { toast.error('Failed to rotate API key'); }
+    setRotatingKeyId(null);
+  }
+
+  function copyKeyPrefix(id: string, prefix: string) {
+    navigator.clipboard.writeText(prefix)
+      .then(() => {
+        setCopiedKeyId(id);
+        setTimeout(() => setCopiedKeyId(null), 2000);
+      })
+      .catch(() => toast.error('Copy failed'));
+  }
+
+  function copySecret(secret: string) {
+    navigator.clipboard.writeText(secret)
+      .then(() => setSecretCopied(true))
+      .catch(() => toast.error('Copy failed'));
+  }
+
   function copyKey(key: string) {
     navigator.clipboard.writeText(key).then(() => toast.success('Copied!')).catch(() => toast.error('Copy failed'));
+  }
+
+  function daysAgo(dateStr: string | null): string {
+    if (!dateStr) return 'Never used';
+    const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return '1 day ago';
+    return `${diff} days ago`;
+  }
+
+  function scopeBadgeClass(scope: string): string {
+    if (scope === 'READ') return 'bg-pf-info/10 text-pf-info';
+    if (scope === 'TRADE') return 'bg-pf-warning/10 text-pf-warning';
+    if (scope === 'STRATEGY') return 'bg-pf-success/10 text-pf-success';
+    if (scope === 'WEBHOOK') return 'bg-pf-cyan-500/10 text-pf-cyan-400';
+    return 'bg-pf-overlay text-pf-text-secondary';
   }
 
   // Delete Account
@@ -1597,45 +1660,97 @@ export function Component() {
                 className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
             <div>
-              <span className="text-xs text-pf-text-secondary mb-1.5 block" id="settings-scopes-label">Scopes</span>
-              <div className="flex gap-4 mt-1" role="group" aria-labelledby="settings-scopes-label">
-                {(['read', 'write', 'trade'] as const).map(scope => (
-                  <label key={scope} className="flex items-center gap-1.5 cursor-pointer text-sm text-pf-text-secondary">
-                    <input type="checkbox" checked={newKeyScopes[scope]}
-                      onChange={e => setNewKeyScopes(prev => ({ ...prev, [scope]: e.target.checked }))}
-                      className="rounded border-pf-border" />
-                    {scope.toUpperCase()}
-                  </label>
-                ))}
+              <span className="text-xs text-pf-text-secondary mb-2 block" id="settings-scopes-label">
+                Scopes <span className="text-pf-danger">*</span>
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="group" aria-labelledby="settings-scopes-label">
+                {SCOPES.map(scope => {
+                  const checked = newKeyScopes.has(scope.value);
+                  return (
+                    <label key={scope.value} className={`flex items-start gap-2.5 p-2.5 rounded-pf border cursor-pointer transition-colors ${
+                      checked ? 'border-pf-cyan-500/50 bg-pf-cyan-500/5' : 'border-pf-border bg-pf-surface hover:border-pf-border-muted'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={e => setNewKeyScopes(prev => {
+                          const next = new Set(prev);
+                          if (e.target.checked) next.add(scope.value); else next.delete(scope.value);
+                          return next;
+                        })}
+                        className="mt-0.5 rounded border-pf-border shrink-0"
+                      />
+                      <div>
+                        <span className={`text-xs font-medium block ${scopeBadgeClass(scope.value).split(' ')[1]}`}>{scope.label}</span>
+                        <span className="text-[11px] text-pf-text-muted">{scope.desc}</span>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
+              {newKeyScopes.size === 0 && (
+                <p className="text-[11px] text-pf-danger mt-1">Select at least one scope.</p>
+              )}
             </div>
             <div>
               <label htmlFor="settings-key-expiration" className="text-xs text-pf-text-secondary mb-1.5 block">Expiration (optional)</label>
               <input id="settings-key-expiration" type="date" lang="en" value={newKeyExpiration} onChange={e => setNewKeyExpiration(e.target.value)}
                 className="w-full max-w-[220px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
             </div>
-            <button type="button" onClick={createApiKey} disabled={apiKeysCreating || !newKeyName.trim()}
+            <button type="button" onClick={createApiKey} disabled={apiKeysCreating || !newKeyName.trim() || newKeyScopes.size === 0}
               className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors">
               {apiKeysCreating ? <Loader2 className="size-4 animate-spin" /> : <Key className="size-4" />}
               Generate API Key
             </button>
           </div>
 
-          {/* Newly created key */}
-          {(createdKey?.key || createdKey?.token) && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-warning/10 text-pf-warning text-xs" role="alert">
-                <Shield className="size-3.5 shrink-0" />
-                Copy this key now -- it won't be shown again!
+          {/* One-time secret display — key creation */}
+          {(createdKey?.secret || createdKey?.key || createdKey?.token) && (
+            <div className="space-y-2">
+              <div className="bg-pf-warning/10 border border-pf-warning/30 rounded-pf p-3 space-y-2">
+                <p className="text-xs text-pf-warning font-medium flex items-center gap-1.5">
+                  <Shield className="size-3.5 shrink-0" />
+                  Copy this secret now — it won&apos;t be shown again
+                </p>
+                <code className="block font-mono text-sm text-pf-warning break-all">
+                  {createdKey.secret ?? createdKey.token ?? createdKey.key}
+                </code>
+                <div className="flex items-center gap-2 pt-1">
+                  <button type="button"
+                    onClick={() => copyKey((createdKey.secret ?? createdKey.token ?? createdKey.key)!)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-warning/20 text-pf-warning text-xs font-medium hover:bg-pf-warning/30 transition-colors">
+                    <Copy className="size-3" /> Copy Secret
+                  </button>
+                  <button type="button" onClick={() => setCreatedKey(null)}
+                    className="px-3 py-1.5 rounded-pf text-xs text-pf-text-muted border border-pf-border hover:text-pf-text transition-colors">
+                    Done
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 bg-pf-surface rounded-pf p-3 border border-pf-border">
-                <code className="flex-1 text-xs font-mono text-pf-text break-all">{createdKey.token ?? createdKey.key}</code>
-                <button type="button" onClick={() => copyKey((createdKey.token ?? createdKey.key)!)} aria-label="Copy API key" className="p-1.5 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text">
-                  <Copy className="size-3.5" />
-                </button>
+            </div>
+          )}
+
+          {/* One-time secret display — key rotation */}
+          {rotatedSecret && (
+            <div className="space-y-2">
+              <div className="bg-pf-warning/10 border border-pf-warning/30 rounded-pf p-3 space-y-2">
+                <p className="text-xs text-pf-warning font-medium flex items-center gap-1.5">
+                  <RotateCcw className="size-3.5 shrink-0" />
+                  New secret — copy it now, it won&apos;t be shown again
+                </p>
+                <code className="block font-mono text-sm text-pf-warning break-all">{rotatedSecret.secret}</code>
+                <div className="flex items-center gap-2 pt-1">
+                  <button type="button"
+                    onClick={() => copySecret(rotatedSecret.secret)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-warning/20 text-pf-warning text-xs font-medium hover:bg-pf-warning/30 transition-colors">
+                    {secretCopied ? <><Check className="size-3" /> Copied!</> : <><Copy className="size-3" /> Copy Secret</>}
+                  </button>
+                  <button type="button" onClick={() => { setRotatedSecret(null); setSecretCopied(false); }}
+                    className="px-3 py-1.5 rounded-pf text-xs text-pf-text-muted border border-pf-border hover:text-pf-text transition-colors">
+                    Done
+                  </button>
+                </div>
               </div>
-              <button type="button" onClick={() => setCreatedKey(null)}
-                className="text-xs text-pf-text-muted hover:text-pf-text transition-colors">Got it</button>
             </div>
           )}
 
@@ -1645,7 +1760,7 @@ export function Component() {
             {apiKeysLoading ? (
               <div className="space-y-2">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="h-10 bg-pf-overlay rounded animate-pulse" />
+                  <div key={i} className="h-14 bg-pf-overlay rounded animate-pulse" />
                 ))}
               </div>
             ) : apiKeys.length === 0 ? (
@@ -1658,61 +1773,96 @@ export function Component() {
                 <table className="w-full text-sm" aria-label="API keys">
                   <thead>
                     <tr className="text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border-subtle">
-                      <th scope="col" className="pb-2 font-medium">Name</th>
-                      <th scope="col" className="pb-2 font-medium">Key Prefix</th>
-                      <th scope="col" className="pb-2 font-medium">Scopes</th>
-                      <th scope="col" className="pb-2 font-medium">Created</th>
-                      <th scope="col" className="pb-2 font-medium">Last Used</th>
-                      <th scope="col" className="pb-2 font-medium hidden sm:table-cell">Expires</th>
-                      <th scope="col" className="pb-2 font-medium">Status</th>
+                      <th scope="col" className="pb-2 pr-4 font-medium">Name</th>
+                      <th scope="col" className="pb-2 pr-4 font-medium">Key Prefix</th>
+                      <th scope="col" className="pb-2 pr-4 font-medium">Scopes</th>
+                      <th scope="col" className="pb-2 pr-4 font-medium">Created</th>
+                      <th scope="col" className="pb-2 pr-4 font-medium">Last Used</th>
+                      <th scope="col" className="pb-2 pr-4 font-medium hidden sm:table-cell">Expires</th>
+                      <th scope="col" className="pb-2 pr-4 font-medium">Status</th>
                       <th scope="col" className="pb-2 font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-pf-border-subtle">
-                    {apiKeys.map(key => (
-                      <tr key={key.id}>
-                        <td className="py-2 text-pf-text">{key.name}</td>
-                        <td className="py-2 font-mono text-xs text-pf-text-secondary">{key.prefix}...</td>
-                        <td className="py-2">
-                          <div className="flex gap-1">
-                            {key.scopes.map(scope => (
-                              <span key={scope} className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                                scope === 'READ' ? 'bg-pf-success/10 text-pf-success' :
-                                scope === 'WRITE' ? 'bg-pf-info/10 text-pf-info' :
-                                'bg-pf-warning/10 text-pf-warning'
-                              }`}>{scope}</span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="py-2 font-mono text-xs text-pf-text-muted">{formatDate(key.createdAt)}</td>
-                        <td className="py-2 font-mono text-xs text-pf-text-muted">{key.lastUsedAt ? formatDate(key.lastUsedAt) : '\u2014'}</td>
-                        <td className="py-2 font-mono text-xs text-pf-text-muted hidden sm:table-cell">
-                          {key.expiresAt ? (
-                            <span className={new Date(key.expiresAt) < new Date() ? 'text-pf-danger' : ''}>
-                              {formatDate(key.expiresAt)}
-                            </span>
-                          ) : '\u2014'}
-                        </td>
-                        <td className="py-2">
-                          {key.revoked ? (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-danger/10 text-pf-danger">Revoked</span>
-                          ) : (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-success/10 text-pf-success">Active</span>
-                          )}
-                        </td>
-                        <td className="py-2">
-                          <button
-                            type="button"
-                            onClick={() => revokeApiKey(key.id)}
-                            disabled={key.revoked}
-                            aria-label={`Revoke API key ${key.name}`}
-                            className="flex items-center gap-1 text-xs text-pf-danger hover:text-pf-danger disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-colors"
-                          >
-                            <Ban className="size-3" /> Revoke
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {apiKeys.map(key => {
+                      const displayPrefix = key.keyPrefix ?? (key.prefix ? `${key.prefix}...` : '—');
+                      return (
+                        <tr key={key.id} className="align-top">
+                          <td className="py-3 pr-4 text-pf-text font-medium">{key.name}</td>
+                          <td className="py-3 pr-4">
+                            <div className="flex items-center gap-1.5">
+                              <code className="font-mono text-xs text-pf-text-secondary">{displayPrefix}</code>
+                              <button
+                                type="button"
+                                onClick={() => copyKeyPrefix(key.id, displayPrefix)}
+                                aria-label={`Copy key prefix for ${key.name}`}
+                                className="p-1 rounded hover:bg-pf-overlay transition-colors text-pf-text-muted hover:text-pf-text shrink-0"
+                              >
+                                {copiedKeyId === key.id
+                                  ? <Check className="size-3 text-pf-success" />
+                                  : <Copy className="size-3" />}
+                              </button>
+                            </div>
+                          </td>
+                          <td className="py-3 pr-4">
+                            <div className="flex flex-wrap gap-1">
+                              {key.scopes.map(scope => (
+                                <span key={scope} className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${scopeBadgeClass(scope)}`}>
+                                  {scope}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="py-3 pr-4 font-mono text-xs text-pf-text-muted whitespace-nowrap">{formatDate(key.createdAt)}</td>
+                          <td className="py-3 pr-4 text-xs text-pf-text-muted whitespace-nowrap">
+                            <div>{daysAgo(key.lastUsedAt)}</div>
+                            {typeof key.usageCount === 'number' && (
+                              <div className="text-[10px] text-pf-text-muted">{key.usageCount.toLocaleString()} requests</div>
+                            )}
+                          </td>
+                          <td className="py-3 pr-4 font-mono text-xs text-pf-text-muted hidden sm:table-cell whitespace-nowrap">
+                            {key.expiresAt ? (
+                              <span className={new Date(key.expiresAt) < new Date() ? 'text-pf-danger' : ''}>
+                                {formatDate(key.expiresAt)}
+                              </span>
+                            ) : '\u2014'}
+                          </td>
+                          <td className="py-3 pr-4">
+                            {key.revoked || key.active === false ? (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-danger/10 text-pf-danger">Revoked</span>
+                            ) : (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-success/10 text-pf-success">Active</span>
+                            )}
+                          </td>
+                          <td className="py-3">
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => rotateApiKey(key.id)}
+                                disabled={key.revoked || key.active === false || rotatingKeyId === key.id}
+                                aria-label={`Rotate API key ${key.name}`}
+                                title="Rotate key"
+                                className="p-1.5 rounded hover:bg-pf-overlay text-pf-text-muted hover:text-pf-text disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                              >
+                                {rotatingKeyId === key.id
+                                  ? <Loader2 className="size-3.5 animate-spin" />
+                                  : <RotateCcw className="size-3.5" />}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => revokeApiKey(key.id)}
+                                disabled={key.revoked || key.active === false}
+                                aria-label={`Revoke API key ${key.name}`}
+                                title="Revoke key"
+                                className="p-1.5 rounded hover:bg-pf-danger/10 text-pf-text-muted hover:text-pf-danger disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

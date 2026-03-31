@@ -7,6 +7,7 @@ import {
   Wallet, BarChart3,
   RefreshCw, Loader2, AlertTriangle, Fuel, PieChart, ShieldAlert,
   Shield, TrendingDown, TrendingUp, Share2, Copy, Check, Download,
+  X, ChevronDown, ChevronUp, Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
@@ -27,6 +28,7 @@ interface Position {
   realizedPnl?: string;
   resolutionStatus: string;
   outcome?: string;
+  openedAt?: string;
   market?: { title?: string; category?: string | null } | null;
 }
 
@@ -208,6 +210,8 @@ export function Component() {
   const [closingPosition, setClosingPosition] = useState<Record<string, boolean | undefined>>({});
   const [redeemingPosition, setRedeemingPosition] = useState<Record<string, boolean | undefined>>({});
   const [resettingPaper, setResettingPaper] = useState(false);
+  const [closingId, setClosingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Daily P&L widget
   const [dailyPnl, setDailyPnl] = useState<DailyPnlResponse | null>(null);
@@ -301,15 +305,28 @@ export function Component() {
   };
 
   async function closePosition(pos: Position) {
+    const confirmed = window.confirm('Close this position? This will place a market sell order.');
+    if (!confirmed) return;
+    setClosingId(pos.id);
     setClosingPosition(prev => ({ ...prev, [pos.id]: true }));
     try {
-      const res = await fetch('/api/v1/orders/close-position', {
+      const res = await fetch('/api/v1/orders/place', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ tokenId: pos.tokenId }),
+        body: JSON.stringify({
+          tokenId: pos.tokenId,
+          side: pos.side === 'BUY' ? 'SELL' : 'BUY',
+          outcome: pos.outcome,
+          size: pos.size,
+          orderType: 'FOK',
+          price: pos.currentPrice && parseFloat(pos.currentPrice) > 0
+            ? parseFloat(pos.currentPrice)
+            : 0.5,
+        }),
       });
       if (res.ok) {
+        toast.success('Close order placed');
         loadPortfolio();
       } else if (res.status === 451) {
         toast.error('Trading is not available in your region');
@@ -318,10 +335,11 @@ export function Component() {
         if (err.code === 'GEO_BLOCKED') {
           toast.error('Trading is not available in your region');
         } else {
-          toast.error(err.message ?? 'Failed to close position');
+          toast.error(err.message ?? 'Failed to place close order');
         }
       }
-    } catch { toast.error('Failed to close position'); }
+    } catch { toast.error('Failed to place close order'); }
+    setClosingId(null);
     setClosingPosition(prev => ({ ...prev, [pos.id]: false }));
   }
 
@@ -817,67 +835,153 @@ export function Component() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-pf-border-subtle">
-                    {portfolio!.positions.map(pos => (
-                      <tr key={pos.id} className="hover:bg-pf-surface/50 transition-colors">
-                        <td className="px-4 py-3 max-w-[200px]">
-                          <span className="text-pf-text line-clamp-1" title={pos.marketTitle}>{pos.marketTitle}</span>
-                          <CategoryBadge category={(pos as any).marketCategory} />
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-                            pos.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
-                          }`}>
-                            {pos.side}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono text-pf-text">
-                          {parseFloat(pos.size).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono text-pf-text">
-                          {parseFloat(pos.avgEntryPrice).toFixed(3)}
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono text-pf-cyan-400">
-                          {pos.currentPrice && parseFloat(pos.currentPrice) > 0 ? `$${parseFloat(pos.currentPrice).toFixed(3)}` : <span className="text-pf-text-muted">&mdash;</span>}
-                        </td>
-                        <td className={`px-4 py-3 text-right font-mono ${pnlColor(pos.unrealizedPnl)}`}>
-                          {formatPnl(pos.unrealizedPnl)}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <span
-                            className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-                              pos.resolutionStatus === 'UNRESOLVED'
-                                ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
-                                : 'bg-pf-overlay text-pf-text-muted'
-                            }`}
-                            {...(pos.resolutionStatus === 'UNRESOLVED' ? { title: 'Market has not yet resolved — position is still active' } : {})}
+                    {portfolio!.positions.map(pos => {
+                      const isExpanded = expandedId === pos.id;
+                      const isClosing = closingId === pos.id;
+                      const pnlNum = parseFloat(pos.unrealizedPnl);
+                      const entryPrice = parseFloat(pos.avgEntryPrice);
+                      const currentPrice = parseFloat(pos.currentPrice);
+                      const size = parseFloat(pos.size);
+                      const maxGain = pos.side === 'BUY'
+                        ? ((1 - entryPrice) * size).toFixed(2)
+                        : (entryPrice * size).toFixed(2);
+                      const maxLoss = pos.side === 'BUY'
+                        ? (entryPrice * size).toFixed(2)
+                        : ((1 - entryPrice) * size).toFixed(2);
+                      const timeHeld = pos.openedAt
+                        ? (() => {
+                            const ms = Date.now() - new Date(pos.openedAt).getTime();
+                            const days = Math.floor(ms / 86400000);
+                            const hours = Math.floor((ms % 86400000) / 3600000);
+                            return days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+                          })()
+                        : null;
+                      return (
+                        <>
+                          <tr
+                            key={pos.id}
+                            className="hover:bg-pf-surface/50 transition-colors cursor-pointer"
+                            onClick={() => setExpandedId(isExpanded ? null : pos.id)}
                           >
-                            {pos.resolutionStatus === 'UNRESOLVED' ? 'OPEN' : pos.resolutionStatus}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
-                          {pos.resolutionStatus === 'UNRESOLVED' && (
-                            <button
-                              type="button"
-                              onClick={() => closePosition(pos)}
-                              disabled={closingPosition[pos.id]}
-                              className="text-xs text-pf-danger hover:text-pf-danger disabled:opacity-50 transition-colors"
-                            >
-                              {closingPosition[pos.id] ? <Loader2 className="size-3 animate-spin" /> : 'Close'}
-                            </button>
+                            <td className="px-4 py-3 max-w-[200px]">
+                              <div className="flex items-center gap-1.5">
+                                {isExpanded
+                                  ? <ChevronUp className="size-3 text-pf-text-muted shrink-0" />
+                                  : <ChevronDown className="size-3 text-pf-text-muted shrink-0" />}
+                                <span className="text-pf-text line-clamp-1" title={pos.marketTitle}>{pos.marketTitle}</span>
+                              </div>
+                              <CategoryBadge category={(pos as any).marketCategory} />
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                                pos.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
+                              }`}>
+                                {pos.side}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono text-pf-text">
+                              {parseFloat(pos.size).toLocaleString()}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono text-pf-text">
+                              {parseFloat(pos.avgEntryPrice).toFixed(3)}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono text-pf-cyan-400">
+                              {pos.currentPrice && parseFloat(pos.currentPrice) > 0 ? `$${parseFloat(pos.currentPrice).toFixed(3)}` : <span className="text-pf-text-muted">&mdash;</span>}
+                            </td>
+                            <td className={`px-4 py-3 text-right font-mono ${pnlColor(pos.unrealizedPnl)}`}>
+                              {formatPnl(pos.unrealizedPnl)}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <span
+                                className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                                  pos.resolutionStatus === 'UNRESOLVED'
+                                    ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
+                                    : 'bg-pf-overlay text-pf-text-muted'
+                                }`}
+                                {...(pos.resolutionStatus === 'UNRESOLVED' ? { title: 'Market has not yet resolved — position is still active' } : {})}
+                              >
+                                {pos.resolutionStatus === 'UNRESOLVED' ? 'OPEN' : pos.resolutionStatus}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                {pos.resolutionStatus === 'UNRESOLVED' && (
+                                  <button
+                                    type="button"
+                                    onClick={e => { e.stopPropagation(); closePosition(pos); }}
+                                    disabled={isClosing}
+                                    className="inline-flex items-center gap-1 text-pf-danger border border-pf-danger/30 hover:bg-pf-danger/10 text-xs px-2 py-1 rounded disabled:opacity-50 transition-colors"
+                                  >
+                                    {isClosing
+                                      ? <Loader2 className="size-3 animate-spin" />
+                                      : <X className="size-3" />}
+                                    Close
+                                  </button>
+                                )}
+                                {pos.resolutionStatus === 'RESOLVED' && (
+                                  <button
+                                    type="button"
+                                    onClick={e => { e.stopPropagation(); redeemPosition(pos); }}
+                                    disabled={redeemingPosition[pos.id]}
+                                    className="text-xs text-pf-success hover:text-pf-success disabled:opacity-50 transition-colors"
+                                  >
+                                    {redeemingPosition[pos.id] ? <Loader2 className="size-3 animate-spin" /> : 'Redeem'}
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                          {isExpanded && (
+                            <tr key={`${pos.id}-detail`}>
+                              <td colSpan={8}>
+                                <div className="px-4 py-3 bg-pf-surface/50 border-t border-pf-border-subtle animate-fade-in">
+                                  <div className="flex flex-wrap items-start gap-6">
+                                    {/* P&L prominent display */}
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] text-pf-text-muted uppercase tracking-wider mb-0.5">Unrealized P&L</span>
+                                      <span className={`text-2xl font-mono font-bold ${pnlNum >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                                        {formatPnl(pos.unrealizedPnl)}
+                                      </span>
+                                      <span className="text-[10px] text-pf-text-muted mt-1 italic">Unrealized P&L updates are estimated</span>
+                                    </div>
+
+                                    {/* Detail stats */}
+                                    <div className="flex flex-wrap gap-4 text-xs">
+                                      <div>
+                                        <p className="text-pf-text-muted mb-0.5">Entry Price</p>
+                                        <p className="font-mono text-pf-text">{entryPrice.toFixed(3)}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-pf-text-muted mb-0.5">Current Price</p>
+                                        <p className="font-mono text-pf-cyan-400">
+                                          {currentPrice > 0 ? currentPrice.toFixed(3) : '—'}
+                                        </p>
+                                      </div>
+                                      {timeHeld && (
+                                        <div>
+                                          <p className="text-pf-text-muted mb-0.5 flex items-center gap-1">
+                                            <Clock className="size-3" /> Time Held
+                                          </p>
+                                          <p className="font-mono text-pf-text">{timeHeld}</p>
+                                        </div>
+                                      )}
+                                      <div>
+                                        <p className="text-pf-text-muted mb-0.5">Max Gain</p>
+                                        <p className="font-mono text-pf-success">+${maxGain}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-pf-text-muted mb-0.5">Max Loss</p>
+                                        <p className="font-mono text-pf-danger">-${maxLoss}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
                           )}
-                          {pos.resolutionStatus === 'RESOLVED' && (
-                            <button
-                              type="button"
-                              onClick={() => redeemPosition(pos)}
-                              disabled={redeemingPosition[pos.id]}
-                              className="text-xs text-pf-success hover:text-pf-success disabled:opacity-50 transition-colors"
-                            >
-                              {redeemingPosition[pos.id] ? <Loader2 className="size-3 animate-spin" /> : 'Redeem'}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                        </>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

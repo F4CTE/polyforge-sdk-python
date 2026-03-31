@@ -4,6 +4,7 @@ import { Menu } from 'lucide-react';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
 import { CommandPalette } from './command-palette';
+import { MobileBottomNav } from './mobile-bottom-nav';
 import { OnboardingChecklist } from '../onboarding/onboarding-checklist';
 import { TooltipTour } from '../onboarding/tooltip-tour';
 
@@ -71,7 +72,7 @@ export function AppLayout() {
             <Topbar />
           </div>
         </div>
-        <main className="flex-1 overflow-y-auto" id="main-content">
+        <main className="flex-1 overflow-y-auto pb-16 sm:pb-0" id="main-content">
           <Outlet />
         </main>
       </div>
@@ -82,6 +83,9 @@ export function AppLayout() {
 
       {/* Global command palette */}
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
+
+      {/* Mobile bottom navigation */}
+      <MobileBottomNav />
     </div>
   );
 }
