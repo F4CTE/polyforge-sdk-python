@@ -44,14 +44,21 @@ export class CredentialsService {
     // Generate per-user DEK
     const { dek, encryptedDek, dekIv } = this.encryption.generateDek();
 
-    // Encrypt each field separately (fresh IV per field)
-    const pkEnc = this.encryption.encryptField(privateKey, dek);
-    const akEnc = this.encryption.encryptField(apiKey, dek);
-    const asEnc = this.encryption.encryptField(apiSecret, dek);
-    const apEnc = this.encryption.encryptField(apiPassphrase, dek);
-
-    // Zero out plaintext DEK from memory (best-effort in JS)
-    dek.fill(0);
+    // Encrypt each field separately (fresh IV per field).
+    // try/finally guarantees DEK is zeroed even if an encryptField call throws.
+    let pkEnc: ReturnType<typeof this.encryption.encryptField>;
+    let akEnc: ReturnType<typeof this.encryption.encryptField>;
+    let asEnc: ReturnType<typeof this.encryption.encryptField>;
+    let apEnc: ReturnType<typeof this.encryption.encryptField>;
+    try {
+      pkEnc = this.encryption.encryptField(privateKey, dek);
+      akEnc = this.encryption.encryptField(apiKey, dek);
+      asEnc = this.encryption.encryptField(apiSecret, dek);
+      apEnc = this.encryption.encryptField(apiPassphrase, dek);
+    } finally {
+      // Zero out plaintext DEK from memory (best-effort in JS)
+      dek.fill(0);
+    }
 
     await this.prisma.userCredential.upsert({
       where: { userId },
@@ -132,38 +139,39 @@ export class CredentialsService {
 
     const dek = this.encryption.decryptDek(row.encryptedDek, row.dekIv);
 
-    const result = {
-      privateKey: this.encryption.decryptField(
-        row.privateKeyCt,
-        row.privateKeyIv,
-        row.privateKeyTag,
-        dek,
-      ),
-      apiKey: this.encryption.decryptField(
-        row.apiKeyCt,
-        row.apiKeyIv,
-        row.apiKeyTag,
-        dek,
-      ),
-      apiSecret: this.encryption.decryptField(
-        row.apiSecretCt,
-        row.apiSecretIv,
-        row.apiSecretTag,
-        dek,
-      ),
-      apiPassphrase: this.encryption.decryptField(
-        row.apiPassphraseCt,
-        row.apiPassphraseIv,
-        row.apiPassphraseTag,
-        dek,
-      ),
-      safeAddress: row.safeAddress,
-      sigType: row.sigType,
-    };
-
-    // Zero out DEK from memory (best-effort in JS)
-    dek.fill(0);
-
-    return result;
+    // try/finally guarantees DEK is zeroed even if a decryptField call throws.
+    try {
+      return {
+        privateKey: this.encryption.decryptField(
+          row.privateKeyCt,
+          row.privateKeyIv,
+          row.privateKeyTag,
+          dek,
+        ),
+        apiKey: this.encryption.decryptField(
+          row.apiKeyCt,
+          row.apiKeyIv,
+          row.apiKeyTag,
+          dek,
+        ),
+        apiSecret: this.encryption.decryptField(
+          row.apiSecretCt,
+          row.apiSecretIv,
+          row.apiSecretTag,
+          dek,
+        ),
+        apiPassphrase: this.encryption.decryptField(
+          row.apiPassphraseCt,
+          row.apiPassphraseIv,
+          row.apiPassphraseTag,
+          dek,
+        ),
+        safeAddress: row.safeAddress,
+        sigType: row.sigType,
+      };
+    } finally {
+      // Zero out DEK from memory (best-effort in JS)
+      dek.fill(0);
+    }
   }
 }
