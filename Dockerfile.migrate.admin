@@ -17,10 +17,16 @@ RUN npx prisma generate \
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+RUN addgroup --system migrate && adduser --system --ingroup migrate migrate
+
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma       ./prisma
 COPY prisma/migrations-admin          ./prisma/migrations-admin
 
+RUN chown -R migrate:migrate /app
+
 ENV ADMIN_DIRECT_DATABASE_URL="postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin"
+
+USER migrate
 
 CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema ./prisma/schema.admin.prisma --config ./prisma/prisma.admin.config.ts"]

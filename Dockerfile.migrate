@@ -20,11 +20,17 @@ WORKDIR /app
 # postgresql-client provides psql for post-migration SQL scripts
 RUN apk add --no-cache postgresql-client
 
+RUN addgroup --system migrate && adduser --system --ingroup migrate migrate
+
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma       ./prisma
 COPY prisma/migrations                ./prisma/migrations
 
+RUN chown -R migrate:migrate /app
+
 ENV DIRECT_DATABASE_URL="postgresql://poly:devpass@postgres:5432/polyforge"
+
+USER migrate
 
 CMD ["sh", "-c", "\
   node_modules/.bin/prisma migrate deploy --schema ./prisma/schema.prisma --config ./prisma/prisma.config.ts && \
