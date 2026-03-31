@@ -250,6 +250,11 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify({}),
     }),
+  setFeatured: (id: string, featured: boolean) =>
+    request<StrategyData>(buildUrl('/api/admin', `/strategies/${id}`), {
+      method: 'PATCH',
+      body: JSON.stringify({ featured }),
+    }),
 
   // Orders
   orders: (params?: QueryParams) =>

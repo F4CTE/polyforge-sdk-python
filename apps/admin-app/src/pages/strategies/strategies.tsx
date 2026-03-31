@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight, Square, Zap, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Square, Zap, AlertCircle, Star } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDate } from '@/lib/utils';
 
@@ -12,6 +12,7 @@ interface StrategyRow {
   execMode: string;
   visibility: string;
   createdAt: string;
+  featured?: boolean;
   [key: string]: unknown;
 }
 
@@ -58,6 +59,24 @@ export function Component() {
     }
   }
 
+  async function handleToggleFeatured(strategyId: string, currentFeatured: boolean) {
+    const nextFeatured = !currentFeatured;
+    // Optimistic update
+    setStrategies((s) =>
+      s.map((st) => (st.id === strategyId ? { ...st, featured: nextFeatured } : st)),
+    );
+    try {
+      await adminApi.setFeatured(strategyId, nextFeatured);
+      toast.success(nextFeatured ? 'Strategy featured' : 'Feature removed');
+    } catch {
+      // Revert on failure
+      setStrategies((s) =>
+        s.map((st) => (st.id === strategyId ? { ...st, featured: currentFeatured } : st)),
+      );
+      toast.error('Failed to update featured status');
+    }
+  }
+
   return (
     <div className="animate-fade-in space-y-6">
       <h2 className="text-lg font-semibold text-pf-text">
@@ -86,6 +105,7 @@ export function Component() {
                 <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Exec Mode</th>
                 <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Visibility</th>
                 <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Created</th>
+                <th scope="col" className="text-center px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Featured</th>
                 <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -93,7 +113,7 @@ export function Component() {
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: 8 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 bg-pf-surface rounded animate-pulse" />
                       </td>
@@ -102,7 +122,7 @@ export function Component() {
                 ))
               ) : strategies.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12">
+                  <td colSpan={8} className="text-center py-12">
                     <Zap className="mx-auto mb-3 text-pf-text-tertiary opacity-40" size={40} aria-hidden="true" />
                     <p className="text-pf-text-secondary font-medium">No strategies found</p>
                     <p className="text-pf-text-tertiary text-xs mt-1">User strategies will appear here</p>
@@ -121,6 +141,21 @@ export function Component() {
                     <td className="px-4 py-3 text-pf-text-secondary capitalize">{s.execMode}</td>
                     <td className="px-4 py-3 text-pf-text-secondary">{s.visibility}</td>
                     <td className="px-4 py-3 text-pf-text-tertiary">{formatDate(s.createdAt)}</td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleFeatured(s.id, !!s.featured)}
+                        aria-label={s.featured ? `Remove featured from ${s.name}` : `Feature strategy ${s.name}`}
+                        aria-pressed={!!s.featured}
+                        className="inline-flex items-center justify-center p-1 rounded transition-colors hover:bg-pf-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-warning/40"
+                      >
+                        <Star
+                          size={16}
+                          aria-hidden="true"
+                          className={s.featured ? 'text-pf-warning fill-pf-warning' : 'text-pf-text-muted'}
+                        />
+                      </button>
+                    </td>
                     <td className="px-4 py-3 text-right">
                       {(s.status === 'RUNNING' || s.status === 'PAPER') && (
                         <button type="button"

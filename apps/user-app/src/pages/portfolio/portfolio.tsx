@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart as RechartsPieChart, Pie, Cell, Legend,
 } from 'recharts';
 import {
   Wallet, BarChart3,
   RefreshCw, Loader2, AlertTriangle, Fuel, PieChart, ShieldAlert,
-  Shield, TrendingDown,
+  Shield, TrendingDown, TrendingUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
@@ -71,6 +72,15 @@ interface UserRiskSettings {
   enabled: boolean;
 }
 
+interface PortfolioStats {
+  sharpeRatio?: number | null;
+  maxDrawdown?: number | null;
+  longestWinStreak?: number | null;
+  longestLossStreak?: number | null;
+  avgHoldTimeDays?: number | null;
+  bestSingleTrade?: number | null;
+}
+
 type Tab = 'live' | 'paper';
 type Period = '7d' | '30d' | '90d' | 'allTime';
 
@@ -82,6 +92,16 @@ const PERIODS: { label: string; value: Period }[] = [
   { label: '90d', value: '90d' },
   { label: 'All', value: 'allTime' },
 ];
+
+const CATEGORY_COLORS: Record<string, string> = {
+  Politics: '#06b6d4',
+  Sports: '#22c55e',
+  Crypto: '#f59e0b',
+  Finance: '#8b5cf6',
+  Entertainment: '#ec4899',
+  Science: '#3b82f6',
+  Other: '#6b7280',
+};
 
 function pnlColor(val: string): string {
   const n = parseFloat(val);
@@ -186,6 +206,9 @@ export function Component() {
   const [userRiskSettings, setUserRiskSettings] = useState<UserRiskSettings | null>(null);
   const [loadingDailyPnl, setLoadingDailyPnl] = useState(true);
 
+  // Advanced stats
+  const [portfolioStats, setPortfolioStats] = useState<PortfolioStats | null>(null);
+
   const loadPortfolio = useCallback(async () => {
     setLoadingPortfolio(true);
     try {
@@ -231,17 +254,19 @@ export function Component() {
     return () => { cancelled = true; };
   }, [loadPortfolio, loadChart, period]);
 
-  // Load daily P&L and risk settings in parallel on mount
+  // Load daily P&L, risk settings, and advanced stats in parallel on mount
   useEffect(() => {
     let cancelled = false;
     setLoadingDailyPnl(true);
     Promise.all([
       fetch('/api/v1/portfolio/pnl?period=today', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/users/me/risk-settings', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
-    ]).then(([pnlData, riskData]) => {
+      fetch('/api/v1/portfolio/stats', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+    ]).then(([pnlData, riskData, statsData]) => {
       if (cancelled) return;
       if (pnlData) setDailyPnl(pnlData);
       if (riskData) setUserRiskSettings(riskData);
+      if (statsData) setPortfolioStats(statsData);
     }).catch(() => {}).finally(() => {
       if (!cancelled) setLoadingDailyPnl(false);
     });
@@ -782,6 +807,249 @@ export function Component() {
               </div>
             </div>
           )}
+
+          {/* ─── Position Allocation ─── */}
+          {(portfolio?.positions ?? []).length > 0 && (() => {
+            // Build allocation data grouped by market category
+            const allocationMap = portfolio!.positions.reduce<Record<string, number>>((acc, pos) => {
+              const raw = (pos as any).marketCategory ?? pos.market?.category ?? 'Other';
+              const key = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+              const normalized = Object.keys(CATEGORY_COLORS).find(
+                k => k.toLowerCase() === key.toLowerCase()
+              ) ?? 'Other';
+              acc[normalized] = (acc[normalized] ?? 0) + (parseFloat(pos.size) || 0);
+              return acc;
+            }, {});
+            const allocationData = Object.entries(allocationMap)
+              .filter(([, v]) => v > 0)
+              .map(([name, value]) => ({ name, value }))
+              .sort((a, b) => b.value - a.value);
+            const totalAllocation = allocationData.reduce((s, d) => s + d.value, 0) || 1;
+
+            // Top 5 positions sorted by size desc
+            const topPositions = [...portfolio!.positions]
+              .sort((a, b) => parseFloat(b.size) - parseFloat(a.size))
+              .slice(0, 5);
+
+            const CustomTooltip = ({ active, payload }: any) => {
+              if (!active || !payload?.length) return null;
+              const { name, value } = payload[0].payload;
+              const pct = ((value / totalAllocation) * 100).toFixed(1);
+              return (
+                <div className="bg-pf-surface border border-pf-border rounded-pf px-3 py-2 text-xs font-mono shadow-pf">
+                  <p className="text-pf-text font-medium">{name}</p>
+                  <p className="text-pf-text-secondary">${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} ({pct}%)</p>
+                </div>
+              );
+            };
+
+            return (
+              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                {/* Section header */}
+                <div className="flex items-center gap-2 mb-4">
+                  <PieChart className="size-4 text-pf-text-muted" />
+                  <span className="text-sm font-medium text-pf-text">Position Allocation</span>
+                </div>
+
+                {/* Donut + legend */}
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  {/* Donut chart */}
+                  <div className="h-48 w-full sm:w-64 shrink-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsPieChart>
+                        <Pie
+                          data={allocationData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={80}
+                          dataKey="value"
+                          strokeWidth={2}
+                          stroke="transparent"
+                        >
+                          {allocationData.map((entry) => (
+                            <Cell
+                              key={entry.name}
+                              fill={CATEGORY_COLORS[entry.name] ?? CATEGORY_COLORS.Other}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                      </RechartsPieChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Legend list */}
+                  <div className="flex-1 space-y-2 min-w-0">
+                    {allocationData.map((entry) => {
+                      const color = CATEGORY_COLORS[entry.name] ?? CATEGORY_COLORS.Other;
+                      const pct = ((entry.value / totalAllocation) * 100).toFixed(1);
+                      return (
+                        <div key={entry.name} className="flex items-center gap-2">
+                          <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                          <span className="flex-1 text-sm text-pf-text capitalize truncate">{entry.name}</span>
+                          <span className="text-xs font-mono text-pf-text-secondary shrink-0">
+                            ${entry.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-xs font-mono text-pf-text-muted w-12 text-right shrink-0">{pct}%</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Largest Positions table */}
+                <div className="mt-5">
+                  <p className="text-xs text-pf-text-secondary uppercase tracking-wider mb-2">Largest Positions</p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs" aria-label="Largest positions">
+                      <thead>
+                        <tr className="text-left text-pf-text-muted border-b border-pf-border-subtle">
+                          <th className="pb-2 font-medium pr-3">Market</th>
+                          <th className="pb-2 font-medium pr-3">Category</th>
+                          <th className="pb-2 font-medium pr-3">Side</th>
+                          <th className="pb-2 font-medium pr-3">Outcome</th>
+                          <th className="pb-2 font-medium text-right pr-3">Size (USDC)</th>
+                          <th className="pb-2 font-medium text-right pr-3">Current Price</th>
+                          <th className="pb-2 font-medium text-right">Unreal. P&L</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-pf-border-subtle">
+                        {topPositions.map((pos) => {
+                          const category = (pos as any).marketCategory ?? pos.market?.category ?? null;
+                          const categoryNorm = category
+                            ? category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()
+                            : null;
+                          const dotColor = categoryNorm
+                            ? CATEGORY_COLORS[categoryNorm] ?? CATEGORY_COLORS.Other
+                            : CATEGORY_COLORS.Other;
+                          return (
+                            <tr key={pos.id} className="hover:bg-pf-surface/40 transition-colors">
+                              <td className="py-2 pr-3 max-w-[140px]">
+                                <span className="truncate block text-pf-text" title={pos.marketTitle}>{pos.marketTitle}</span>
+                              </td>
+                              <td className="py-2 pr-3">
+                                {categoryNorm ? (
+                                  <span className="inline-flex items-center gap-1">
+                                    <span className="size-1.5 rounded-full" style={{ backgroundColor: dotColor }} />
+                                    <span className="text-pf-text-secondary">{categoryNorm}</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-pf-text-muted">—</span>
+                                )}
+                              </td>
+                              <td className="py-2 pr-3">
+                                <span className={`inline-flex px-1.5 py-0.5 rounded font-medium ${
+                                  pos.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
+                                }`}>
+                                  {pos.side}
+                                </span>
+                              </td>
+                              <td className="py-2 pr-3 text-pf-text-secondary font-mono">{pos.outcome ?? '—'}</td>
+                              <td className="py-2 pr-3 text-right font-mono text-pf-text">
+                                {parseFloat(pos.size).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                              </td>
+                              <td className="py-2 pr-3 text-right font-mono text-pf-cyan-400">
+                                {pos.currentPrice && parseFloat(pos.currentPrice) > 0
+                                  ? `$${parseFloat(pos.currentPrice).toFixed(3)}`
+                                  : <span className="text-pf-text-muted">—</span>}
+                              </td>
+                              <td className={`py-2 text-right font-mono font-medium ${pnlColor(pos.unrealizedPnl)}`}>
+                                {formatPnl(pos.unrealizedPnl)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ─── Advanced Statistics ─── */}
+          {(() => {
+            // Compute client-side fallbacks from positions when API stats are absent
+            const positions = portfolio?.positions ?? [];
+            const unrealizedPnls = positions.map(p => parseFloat(p.unrealizedPnl || '0'));
+            const bestSingleTradeFallback = unrealizedPnls.length > 0
+              ? Math.max(...unrealizedPnls)
+              : null;
+
+            const stats = portfolioStats;
+            const sharpe = stats?.sharpeRatio ?? null;
+            const maxDrawdown = stats?.maxDrawdown ?? null;
+            const winStreak = stats?.longestWinStreak ?? null;
+            const lossStreak = stats?.longestLossStreak ?? null;
+            const avgHold = stats?.avgHoldTimeDays ?? null;
+            const bestTrade = stats?.bestSingleTrade ?? (bestSingleTradeFallback !== null && bestSingleTradeFallback > 0 ? bestSingleTradeFallback : null);
+
+            const statItems: { label: string; value: React.ReactNode; tooltip?: string }[] = [
+              {
+                label: 'Sharpe Ratio',
+                tooltip: 'Risk-adjusted return (higher is better)',
+                value: sharpe != null
+                  ? <span className={sharpe >= 1 ? 'text-pf-success' : sharpe >= 0 ? 'text-pf-text' : 'text-pf-danger'}>{sharpe.toFixed(2)}</span>
+                  : <span className="text-pf-text-muted">—</span>,
+              },
+              {
+                label: 'Max Drawdown',
+                value: maxDrawdown != null
+                  ? <span className="text-pf-danger">-${Math.abs(maxDrawdown).toFixed(2)}</span>
+                  : <span className="text-pf-text-muted">—</span>,
+              },
+              {
+                label: 'Longest Win Streak',
+                value: winStreak != null
+                  ? <span className="text-pf-success">{winStreak} trade{winStreak !== 1 ? 's' : ''}</span>
+                  : <span className="text-pf-text-muted">—</span>,
+              },
+              {
+                label: 'Longest Loss Streak',
+                value: lossStreak != null
+                  ? <span className="text-pf-danger">{lossStreak} trade{lossStreak !== 1 ? 's' : ''}</span>
+                  : <span className="text-pf-text-muted">—</span>,
+              },
+              {
+                label: 'Avg Hold Time',
+                value: avgHold != null
+                  ? <span className="text-pf-text">{avgHold.toFixed(1)} days</span>
+                  : <span className="text-pf-text-muted">—</span>,
+              },
+              {
+                label: 'Best Single Trade',
+                value: bestTrade != null
+                  ? <span className="text-pf-success">+${bestTrade.toFixed(2)}</span>
+                  : <span className="text-pf-text-muted">—</span>,
+              },
+            ];
+
+            return (
+              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingUp className="size-4 text-pf-text-muted" />
+                  <span className="text-sm font-medium text-pf-text">Advanced Statistics</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {statItems.map((item) => (
+                    <div key={item.label} className="bg-pf-surface rounded-pf p-3">
+                      <p
+                        className="text-xs text-pf-text-muted uppercase tracking-wider mb-1"
+                        title={item.tooltip}
+                      >
+                        {item.label}
+                        {item.tooltip && (
+                          <span className="ml-1 text-pf-text-muted cursor-help" title={item.tooltip}>ⓘ</span>
+                        )}
+                      </p>
+                      <div className="text-lg font-mono font-bold leading-tight">{item.value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Category Exposure */}
           {(portfolio?.positions ?? []).length > 0 && (() => {

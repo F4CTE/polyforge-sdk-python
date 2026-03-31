@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router';
 import { toast } from 'sonner';
 import { Search, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Check, X, Wifi, Shield, Users, AlertCircle, EyeOff } from 'lucide-react';
 import { adminApi } from '@/lib/api';
@@ -257,7 +257,13 @@ export function Component() {
                     className="border-b border-pf-border last:border-0 hover:bg-pf-base focus-visible:bg-pf-cyan-500/5 cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3 font-medium text-pf-text">
-                      {user.username ?? ''}
+                      <Link
+                        to={`/users/${user.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="hover:text-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500 rounded"
+                      >
+                        {user.username ?? ''}
+                      </Link>
                       {user.suspended && (
                         <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium text-pf-danger bg-pf-danger/10">
                           SUSPENDED

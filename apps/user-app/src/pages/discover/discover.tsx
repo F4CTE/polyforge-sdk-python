@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import {
-  ChevronLeft, ChevronRight, Compass, Heart, GitFork, TrendingUp, Tag,
+  ChevronLeft, ChevronRight, Compass, Heart, GitFork, TrendingUp, Tag, Star, Award,
 } from 'lucide-react';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -25,6 +25,21 @@ interface PublicStrategy {
     displayName?: string;
     avatarUrl?: string;
     score?: number;
+  };
+}
+
+interface FeaturedListing {
+  id: string;
+  title: string;
+  description?: string;
+  priceUsdc: string;
+  winRate?: number;
+  tradeCount?: number;
+  forkCount: number;
+  likeCount: number;
+  seller: {
+    username: string;
+    displayName?: string;
   };
 }
 
@@ -90,6 +105,8 @@ function CardSkeleton() {
 /* ─── Component ──────────────────────────────────────────────────────── */
 
 export function Component() {
+  const [featuredListings, setFeaturedListings] = useState<FeaturedListing[]>([]);
+
   const [strategies, setStrategies] = useState<PublicStrategy[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -102,6 +119,25 @@ export function Component() {
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
   const [likingInFlight, setLikingInFlight] = useState<Set<string>>(new Set());
+
+  // Fetch featured listings once on mount
+  useEffect(() => {
+    async function loadFeatured() {
+      try {
+        const res = await fetch('/api/v1/marketplace/listings?featured=true&limit=3', {
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const items: FeaturedListing[] = Array.isArray(json) ? json : (json.data ?? []);
+          setFeaturedListings(items.slice(0, 3));
+        }
+      } catch {
+        // silently ignore — featured section simply won't render
+      }
+    }
+    loadFeatured();
+  }, []);
 
   // Debounce tag filter
   const tagDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -237,6 +273,77 @@ export function Component() {
         <h1 className="text-2xl font-semibold text-pf-text">Discover</h1>
         {!loading && <span className="text-sm text-pf-text-muted">{total} strategies</span>}
       </div>
+
+      {/* Featured Strategies */}
+      {featuredListings.length > 0 && (
+        <section aria-label="Featured Strategies">
+          <div className="flex items-center gap-2 mb-3">
+            <Star className="size-4 text-pf-warning fill-pf-warning" aria-hidden="true" />
+            <span className="text-base font-semibold text-pf-text">Featured</span>
+            <Award className="size-3.5 text-pf-warning ml-0.5" aria-hidden="true" />
+            <span className="text-xs text-pf-text-muted ml-1">Hand-picked by the PolyForge team</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {featuredListings.map(f => (
+              <Link
+                key={f.id}
+                to={`/marketplace/${f.id}`}
+                className="group block bg-pf-elevated border border-pf-warning/40 rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-warning/60 hover:shadow-pf-sm hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-warning"
+              >
+                {/* FEATURED badge + seller */}
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="bg-pf-warning/15 text-pf-warning text-[10px] font-bold px-1.5 py-0.5 rounded">
+                    FEATURED
+                  </span>
+                  <span className="text-xs text-pf-text-secondary ml-auto truncate">
+                    {f.seller.displayName ?? f.seller.username}
+                  </span>
+                </div>
+
+                {/* Title */}
+                <div className="text-sm font-semibold text-pf-text group-hover:text-pf-warning transition-colors mb-1 truncate">
+                  {f.title}
+                </div>
+
+                {/* Description */}
+                {f.description && (
+                  <div className="text-xs text-pf-text-muted line-clamp-2 mb-3">{f.description}</div>
+                )}
+
+                {/* Stats row */}
+                <div className="flex flex-wrap gap-2 text-[11px] text-pf-text-secondary mb-3">
+                  {f.winRate != null && (
+                    <span className="flex items-center gap-0.5">
+                      <TrendingUp className="size-3" aria-hidden="true" />
+                      {f.winRate}% win rate
+                    </span>
+                  )}
+                  {f.tradeCount != null && (
+                    <span>{f.tradeCount} trades</span>
+                  )}
+                  <span className="ml-auto font-semibold text-pf-text">
+                    {Number(f.priceUsdc) === 0 ? 'Free' : `$${Number(f.priceUsdc).toFixed(2)}`}
+                  </span>
+                </div>
+
+                {/* Separator */}
+                <div className="border-t border-pf-border-subtle my-2" />
+
+                {/* Footer: forks / likes + CTA */}
+                <div className="flex items-center gap-3 text-xs text-pf-text-muted">
+                  <span className="flex items-center gap-1"><GitFork className="size-3" aria-hidden="true" /> {f.forkCount}</span>
+                  <span className="flex items-center gap-1"><Heart className="size-3" aria-hidden="true" /> {f.likeCount}</span>
+                  <span className="ml-auto border border-pf-cyan-500/40 text-pf-cyan-400 text-[10px] font-medium px-2 py-0.5 rounded hover:bg-pf-cyan-500/10 transition-colors">
+                    View Strategy
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+          {/* Separator before main grid */}
+          <div className="border-t border-pf-border mt-6" />
+        </section>
+      )}
 
       {/* Search + Tag filter bar */}
       <div className="flex gap-2">
