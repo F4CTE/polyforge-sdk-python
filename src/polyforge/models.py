@@ -234,6 +234,13 @@ class Webhook:
     enabled: bool = True
     created_at: str = ""
 
+    def __repr__(self) -> str:
+        return (
+            f"Webhook(id={self.id!r}, url={self.url!r}, "
+            f"secret='***', events={self.events!r}, "
+            f"enabled={self.enabled!r})"
+        )
+
 
 # ---------------------------------------------------------------------------
 # AI

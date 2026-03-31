@@ -6,6 +6,8 @@ import json as _json
 from dataclasses import fields
 from typing import Any, AsyncIterator, Iterator, TypeVar, get_type_hints
 
+from urllib.parse import urlparse
+
 import httpx
 
 from polyforge.errors import (
@@ -159,10 +161,17 @@ class PolyforgeClient:
     def __init__(
         self,
         api_key: str,
-        api_url: str = "http://localhost:3002",
+        api_url: str = "https://localhost:3002",
         timeout: float = 15.0,
     ) -> None:
+        self._api_key = api_key
         self._api_url = api_url.rstrip("/")
+
+        # Reject non-HTTPS URLs for non-localhost hosts
+        parsed = urlparse(self._api_url)
+        if parsed.scheme != "https" and parsed.hostname not in ("localhost", "127.0.0.1"):
+            raise ValueError("Non-localhost API URLs must use HTTPS")
+
         self._client = httpx.Client(
             base_url=self._api_url,
             headers={
@@ -172,6 +181,10 @@ class PolyforgeClient:
             },
             timeout=timeout,
         )
+
+    def __repr__(self) -> str:
+        masked = self._api_key[:6] + "***" if len(self._api_key) > 6 else "***"
+        return f"PolyforgeClient(api_key='{masked}', base_url='{self._api_url}')"
 
     # -- helpers --
 
@@ -654,10 +667,17 @@ class AsyncPolyforgeClient:
     def __init__(
         self,
         api_key: str,
-        api_url: str = "http://localhost:3002",
+        api_url: str = "https://localhost:3002",
         timeout: float = 15.0,
     ) -> None:
+        self._api_key = api_key
         self._api_url = api_url.rstrip("/")
+
+        # Reject non-HTTPS URLs for non-localhost hosts
+        parsed = urlparse(self._api_url)
+        if parsed.scheme != "https" and parsed.hostname not in ("localhost", "127.0.0.1"):
+            raise ValueError("Non-localhost API URLs must use HTTPS")
+
         self._client = httpx.AsyncClient(
             base_url=self._api_url,
             headers={
@@ -667,6 +687,10 @@ class AsyncPolyforgeClient:
             },
             timeout=timeout,
         )
+
+    def __repr__(self) -> str:
+        masked = self._api_key[:6] + "***" if len(self._api_key) > 6 else "***"
+        return f"AsyncPolyforgeClient(api_key='{masked}', base_url='{self._api_url}')"
 
     # -- helpers --
 
