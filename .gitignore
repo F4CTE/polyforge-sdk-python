@@ -82,6 +82,12 @@ packages/*/src/*.js
 packages/*/src/*.js.map
 packages/*/src/*.d.ts
 
+# Compiled TS artifacts in services/*/src (should be in dist/)
+services/*/src/**/*.js
+services/*/src/**/*.js.map
+services/*/src/**/*.d.ts
+services/*/src/**/*.d.ts.map
+
 # Compiled TS artifacts emitted into apps src directories
 apps/*/src/**/*.js
 apps/*/src/**/*.js.map
