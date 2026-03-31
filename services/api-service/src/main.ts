@@ -145,10 +145,17 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
 
+  // ENABLE_SWAGGER: dedicated opt-in flag (defaults to true in non-production).
+  // Avoids relying solely on NODE_ENV for a security-sensitive control.
+  const enableSwagger =
+    process.env.ENABLE_SWAGGER !== undefined
+      ? process.env.ENABLE_SWAGGER === "true"
+      : process.env.NODE_ENV !== "production";
+
   // Write swagger.json alongside the compiled output — consumed by
   // Postman, SDK generators, and the admin builder stats page.
   const outPath = path.join(__dirname, "..", "swagger.json");
-  if (process.env.NODE_ENV !== "production") {
+  if (enableSwagger) {
     fs.writeFileSync(outPath, JSON.stringify(document, null, 2), "utf8");
   }
 
@@ -170,8 +177,8 @@ async function bootstrap() {
 
   const fastify = app.getHttpAdapter().getInstance();
 
-  // Gate all Swagger/OpenAPI docs behind non-production environment
-  if (process.env.NODE_ENV !== "production") {
+  // Gate all Swagger/OpenAPI docs behind the dedicated ENABLE_SWAGGER flag
+  if (enableSwagger) {
     fastify.get("/api/v1/docs/openapi.json", (_req: any, reply: any) => {
       reply.type("application/json").send(document);
     });
