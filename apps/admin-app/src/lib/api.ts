@@ -130,6 +130,23 @@ interface CacheStatsData {
   [key: string]: unknown;
 }
 
+export interface Listing {
+  id: string;
+  title: string;
+  description: string;
+  priceUsdc: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'DELISTED';
+  featured: boolean;
+  seller: { id: string; username: string; displayName: string | null };
+  strategy: { id: string; name: string; winRate?: string; tradeCount?: number };
+  createdAt: string;
+  reviewedAt?: string;
+  adminNote?: string;
+  purchaseCount: number;
+  forkCount: number;
+  avgRating?: string;
+}
+
 export interface Report {
   id: string;
   status: 'PENDING' | 'RESOLVED' | 'DISMISSED';
@@ -284,11 +301,10 @@ export const adminApi = {
 
   // Backtests
   backtests: (params?: QueryParams) =>
-    request<PaginatedResponse<BacktestData>>(buildUrl(API_BASE, '/backtests', params)),
+    request<PaginatedResponse<BacktestData>>(buildUrl('/api/admin', '/backtests', params)),
   cancelBacktest: (id: string) =>
-    request<BacktestData>(buildUrl(API_BASE, `/backtests/${id}/cancel`), {
-      method: 'POST',
-      body: JSON.stringify({}),
+    request<void>(buildUrl('/api/admin', `/backtests/${id}`), {
+      method: 'DELETE',
     }),
 
   // Cache
@@ -359,6 +375,11 @@ export const adminApi = {
       buildUrl(API_BASE, '/dashboard/platform-stats')
     ),
 
+  monthlyRevenue: (months: number) =>
+    request<{ data: Array<{ month: string; revenue: number; fees: number; purchases: number }> }>(
+      buildUrl(API_BASE, '/admin/revenue/monthly', { months }),
+    ),
+
   marketplaceStats: () =>
     request<{
       totalListings: number;
@@ -410,5 +431,14 @@ export const adminApi = {
     request<AdminData>(buildUrl(API_BASE, `/admins/${id}`), {
       method: 'DELETE',
       ...(password ? { body: JSON.stringify({ password }) } : {}),
+    }),
+
+  // Listings
+  listings: (params?: QueryParams) =>
+    request<PaginatedResponse<Listing>>(buildUrl('/api/admin', '/listings', params)),
+  reviewListing: (id: string, data: { status?: 'APPROVED' | 'REJECTED' | 'DELISTED'; adminNote?: string; featured?: boolean }) =>
+    request<Listing>(buildUrl('/api/admin', `/listings/${id}`), {
+      method: 'PATCH',
+      body: JSON.stringify(data),
     }),
 };

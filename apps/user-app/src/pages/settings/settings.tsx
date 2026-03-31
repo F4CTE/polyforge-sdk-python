@@ -61,15 +61,38 @@ const TABS: { label: string; value: Tab; icon: React.ReactNode }[] = [
   { label: 'Webhooks', value: 'webhooks', icon: <Webhook className="size-3.5" /> },
 ];
 
-const NOTIF_ITEMS = [
-  { key: 'orderFilled', label: 'Order Filled', desc: 'When one of your orders is matched and filled' },
-  { key: 'strategyError', label: 'Strategy Error', desc: 'When a strategy encounters a runtime error' },
-  { key: 'backtestComplete', label: 'Backtest Complete', desc: 'When a backtest run finishes' },
-  { key: 'priceAlert', label: 'Price Alert', desc: 'When a watched market crosses your price target' },
-  { key: 'dailyLossLimit', label: 'Daily Loss Limit', desc: 'When you approach your configured daily loss limit' },
-  { key: 'marketResolved', label: 'Market Resolved', desc: 'When a market you hold positions in resolves' },
-  { key: 'follow', label: 'New Follower', desc: 'When someone follows your profile' },
+interface NotificationPreference {
+  event: string;
+  inApp: boolean;
+  email: boolean;
+  push: boolean;
+}
+
+type EmailDigest = 'INSTANT' | 'DAILY' | 'WEEKLY' | 'NONE';
+
+const NOTIFICATION_EVENTS = [
+  { event: 'ORDER_FILLED', label: 'Order Filled', desc: 'When your order is matched and filled', category: 'Trading' },
+  { event: 'ORDER_REJECTED', label: 'Order Rejected', desc: 'When an order fails or is rejected', category: 'Trading' },
+  { event: 'POSITION_CLOSED', label: 'Position Closed', desc: 'When a market resolves and your position closes', category: 'Trading' },
+  { event: 'STRATEGY_ERROR', label: 'Strategy Error', desc: 'When a strategy encounters an error', category: 'Strategies' },
+  { event: 'STRATEGY_PAUSED', label: 'Strategy Paused', desc: 'When a strategy is automatically paused', category: 'Strategies' },
+  { event: 'BACKTEST_COMPLETE', label: 'Backtest Complete', desc: 'When a backtest finishes running', category: 'Strategies' },
+  { event: 'PRICE_ALERT', label: 'Price Alert', desc: 'When a market hits your set price target', category: 'Alerts' },
+  { event: 'WHALE_TRADE', label: 'Whale Trade', desc: 'Large trades detected in watched markets', category: 'Alerts' },
+  { event: 'MARKET_RESOLVED', label: 'Market Resolved', desc: 'When a market you traded resolves', category: 'Markets' },
+  { event: 'NEWS_SIGNAL', label: 'News Signal', desc: 'News articles matching your markets', category: 'Markets' },
+  { event: 'COPY_TRADE', label: 'Copy Trade Executed', desc: 'When a copy trade is placed on your behalf', category: 'Copy Trading' },
+  { event: 'DAILY_LOSS_LIMIT', label: 'Daily Loss Limit Hit', desc: 'When your daily loss limit is reached', category: 'Risk' },
+  { event: 'FOLLOWER_NEW', label: 'New Follower', desc: 'When someone follows your profile', category: 'Social' },
+  { event: 'REVIEW_RECEIVED', label: 'Strategy Review', desc: 'When someone reviews your marketplace strategy', category: 'Social' },
 ] as const;
+
+const EMAIL_DIGEST_OPTIONS: { value: EmailDigest; label: string }[] = [
+  { value: 'INSTANT', label: 'Instant' },
+  { value: 'DAILY', label: 'Daily' },
+  { value: 'WEEKLY', label: 'Weekly' },
+  { value: 'NONE', label: 'None' },
+];
 
 function formatDate(d: string): string {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -135,21 +158,11 @@ export function Component() {
   const [twoFaRegenLoading, setTwoFaRegenLoading] = useState(false);
   const [twoFaCopied, setTwoFaCopied] = useState(false);
 
-  // Notifications — fetch from API on mount, fallback to defaults
-  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({
-    orderFilled: true, strategyError: true, backtestComplete: true, priceAlert: false,
-    dailyLossLimit: true, marketResolved: false, follow: true,
-  });
+  // Notifications — granular per-event preferences
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPreference[]>([]);
+  const [emailDigest, setEmailDigest] = useState<EmailDigest>('DAILY');
   const [notifSaving, setNotifSaving] = useState(false);
-  const [notifLoading, setNotifLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/v1/settings/notifications', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setNotifPrefs(prev => ({ ...prev, ...data })); })
-      .catch(() => {})
-      .finally(() => setNotifLoading(false));
-  }, []);
+  const [notifLoading, setNotifLoading] = useState(false);
 
   // API Keys
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
@@ -372,6 +385,7 @@ export function Component() {
 
   function handleTab(t: Tab) {
     setActiveTab(t);
+    if (t === 'notifications') loadNotifPrefs();
     if (t === 'apikeys' && apiKeys.length === 0) loadApiKeys();
     if (t === 'gas' && !gasUsage) loadGasUsage();
     if (t === 'risk') { loadRiskSettings(); loadDailyLossSettings(); }
@@ -582,15 +596,45 @@ export function Component() {
   }
 
   // ── Notifications ──
+  function buildDefaultPrefs(): NotificationPreference[] {
+    return NOTIFICATION_EVENTS.map(e => ({ event: e.event, inApp: true, email: false, push: false }));
+  }
+
+  async function loadNotifPrefs() {
+    setNotifLoading(true);
+    try {
+      const res = await fetch('/api/v1/users/me/notification-preferences', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        const apiPrefs: NotificationPreference[] = data.preferences ?? [];
+        const merged = NOTIFICATION_EVENTS.map(e => {
+          const found = apiPrefs.find(p => p.event === e.event);
+          return found ?? { event: e.event, inApp: true, email: false, push: false };
+        });
+        setNotifPrefs(merged);
+        setEmailDigest(data.emailDigest ?? 'DAILY');
+      } else {
+        setNotifPrefs(buildDefaultPrefs());
+      }
+    } catch {
+      setNotifPrefs(buildDefaultPrefs());
+    }
+    setNotifLoading(false);
+  }
+
+  function toggleNotifField(event: string, field: 'inApp' | 'email' | 'push') {
+    setNotifPrefs(prev => prev.map(p => p.event === event ? { ...p, [field]: !p[field] } : p));
+  }
+
   async function saveNotifications() {
     if (notifSaving) return;
     setNotifSaving(true);
     try {
-      const res = await fetch('/api/v1/settings/notifications', {
-        method: 'PATCH',
+      const res = await fetch('/api/v1/users/me/notification-preferences', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(notifPrefs),
+        body: JSON.stringify({ preferences: notifPrefs, emailDigest }),
       });
       if (res.ok) {
         toast.success('Notification preferences saved');
@@ -823,28 +867,107 @@ export function Component() {
 
       {/* ─── Notifications Tab ─── */}
       {activeTab === 'notifications' && (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-1">
-          <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider mb-4">Email & In-App Notifications</h2>
-          {NOTIF_ITEMS.map(item => (
-            <div key={item.key} className="flex items-center justify-between py-3 border-b border-pf-border-subtle last:border-0">
-              <div>
-                <div className="text-sm font-medium text-pf-text">{item.label}</div>
-                <div className="text-xs text-pf-text-secondary mt-0.5">{item.desc}</div>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={notifPrefs[item.key]}
-                aria-label={`${item.label} notifications`}
-                onClick={() => setNotifPrefs(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
-                className={`relative w-10 h-5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated transition-colors ${notifPrefs[item.key] ? 'bg-pf-cyan-500' : 'bg-pf-overlay'}`}
-              >
-                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${notifPrefs[item.key] ? 'translate-x-5' : 'translate-x-0.5'}`} />
-              </button>
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-6">
+          <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Notification Preferences</h2>
+
+          {/* Email Digest Frequency */}
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-pf-text-secondary uppercase tracking-wider">Email Digest Frequency</div>
+            <p className="text-xs text-pf-text-muted">How often to receive email summaries of your activity</p>
+            <div className="flex gap-2 flex-wrap mt-2">
+              {EMAIL_DIGEST_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setEmailDigest(opt.value)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                    emailDigest === opt.value
+                      ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
+                      : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
-          ))}
-          <div className="flex justify-end pt-4">
-            <button type="button" onClick={saveNotifications} disabled={notifSaving}
+          </div>
+
+          <div className="border-t border-pf-border" />
+
+          {/* Per-event preferences */}
+          {notifLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between py-3 animate-pulse">
+                  <div className="space-y-1.5">
+                    <div className="h-3.5 w-32 rounded bg-pf-overlay" />
+                    <div className="h-3 w-52 rounded bg-pf-overlay/60" />
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="h-6 w-14 rounded-full bg-pf-overlay" />
+                    <div className="h-6 w-14 rounded-full bg-pf-overlay" />
+                    <div className="h-6 w-14 rounded-full bg-pf-overlay" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Column headers */}
+              <div className="flex items-center justify-between pb-1">
+                <div />
+                <div className="flex gap-2 text-[10px] font-medium text-pf-text-muted uppercase tracking-wider">
+                  <span className="w-14 text-center">In-App</span>
+                  <span className="w-14 text-center">Email</span>
+                  <span className="w-14 text-center">Push</span>
+                </div>
+              </div>
+              {(['Trading', 'Strategies', 'Alerts', 'Markets', 'Copy Trading', 'Risk', 'Social'] as const).map(category => {
+                const events = NOTIFICATION_EVENTS.filter(e => e.category === category);
+                if (events.length === 0) return null;
+                return (
+                  <div key={category} className="space-y-1">
+                    <div className="text-[10px] font-semibold text-pf-text-muted uppercase tracking-widest pb-1 border-b border-pf-border-subtle">
+                      {category}
+                    </div>
+                    {events.map(evtDef => {
+                      const pref = notifPrefs.find(p => p.event === evtDef.event) ?? { event: evtDef.event, inApp: true, email: false, push: false };
+                      return (
+                        <div key={evtDef.event} className="flex items-center justify-between py-2.5">
+                          <div className="flex-1 pr-4">
+                            <div className="text-sm font-medium text-pf-text">{evtDef.label}</div>
+                            <div className="text-xs text-pf-text-muted mt-0.5">{evtDef.desc}</div>
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                            {(['inApp', 'email', 'push'] as const).map(field => (
+                              <button
+                                key={field}
+                                type="button"
+                                role="switch"
+                                aria-checked={pref[field]}
+                                aria-label={`${evtDef.label} ${field} notification`}
+                                onClick={() => toggleNotifField(evtDef.event, field)}
+                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium w-14 transition-colors ${
+                                  pref[field]
+                                    ? 'bg-pf-cyan-500 text-white'
+                                    : 'bg-pf-overlay text-pf-text-muted'
+                                }`}
+                              >
+                                {pref[field] ? 'On' : 'Off'}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="flex justify-end pt-2 border-t border-pf-border">
+            <button type="button" onClick={saveNotifications} disabled={notifSaving || notifLoading}
               className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors">
               {notifSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Save Preferences

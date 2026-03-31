@@ -6,10 +6,11 @@ import {
 import {
   Wallet, BarChart3,
   RefreshCw, Loader2, AlertTriangle, Fuel, PieChart, ShieldAlert,
-  Shield, TrendingDown, TrendingUp,
+  Shield, TrendingDown, TrendingUp, Share2, Copy, Check, Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
+import { useAuthStore } from '@/stores/auth-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -176,6 +177,13 @@ function TableSkeleton() {
 export function Component() {
   // Memoize CSS variable reads — avoids layout-triggering getComputedStyle on every render
   const { isDark } = useThemeStore();
+  const { user } = useAuthStore();
+  const username = user?.username ?? '';
+
+  // Share card state
+  const [edgeScore, setEdgeScore] = useState<number | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+
   const themeColors = useMemo(() => {
     const s = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
     return {
@@ -254,7 +262,7 @@ export function Component() {
     return () => { cancelled = true; };
   }, [loadPortfolio, loadChart, period]);
 
-  // Load daily P&L, risk settings, and advanced stats in parallel on mount
+  // Load daily P&L, risk settings, advanced stats, and edge score in parallel on mount
   useEffect(() => {
     let cancelled = false;
     setLoadingDailyPnl(true);
@@ -262,11 +270,13 @@ export function Component() {
       fetch('/api/v1/portfolio/pnl?period=today', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/users/me/risk-settings', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch('/api/v1/portfolio/stats', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
-    ]).then(([pnlData, riskData, statsData]) => {
+      fetch('/api/v1/scores/me', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+    ]).then(([pnlData, riskData, statsData, scoreData]) => {
       if (cancelled) return;
       if (pnlData) setDailyPnl(pnlData);
       if (riskData) setUserRiskSettings(riskData);
       if (statsData) setPortfolioStats(statsData);
+      if (scoreData?.score != null) setEdgeScore(typeof scoreData.score === 'number' ? scoreData.score : scoreData.score?.score ?? null);
     }).catch(() => {}).finally(() => {
       if (!cancelled) setLoadingDailyPnl(false);
     });
@@ -364,6 +374,31 @@ export function Component() {
       if (res.ok) setPaper({ pnl: '0', positions: [], orderCount: 0 });
     } catch { toast.error('Failed to reset paper account'); }
     setResettingPaper(false);
+  }
+
+  // Share card helpers
+  function handleCopyLink() {
+    const url = `https://polyforge.io/u/${username}/performance`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success('Link copied!');
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }).catch(() => toast.error('Failed to copy link'));
+  }
+
+  function handleShareOnX() {
+    const totalPnlNum = parseFloat(pnl?.totalPnl ?? '0');
+    const winRateNum = Math.round(parseFloat(pnl?.winRate ?? '0') * 100);
+    const pnlFormatted = totalPnlNum >= 0 ? `+$${totalPnlNum.toFixed(2)}` : `-$${Math.abs(totalPnlNum).toFixed(2)}`;
+    const text = encodeURIComponent(
+      `Check out my trading performance on @PolyForge! ${pnlFormatted} P&L with ${winRateNum}% win rate. polyforge.io/u/${username}/performance`
+    );
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank', 'noopener,noreferrer');
+  }
+
+  function handleDownloadCard() {
+    handleCopyLink();
+    toast.info('Use a screenshot to save the card');
   }
 
   // Chart data — memoized; show flat zero line when no snapshots
@@ -509,6 +544,106 @@ export function Component() {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* ─── Share Performance ─── */}
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Share2 className="size-4 text-pf-cyan-400" />
+              <span className="text-sm font-semibold text-pf-text">Share Performance</span>
+            </div>
+
+            {/* Preview card */}
+            <div
+              id="share-card"
+              className="bg-gradient-to-br from-pf-surface to-pf-elevated border border-pf-cyan-500/30 rounded-pf-lg p-5 mb-4"
+            >
+              {/* Top row: logo + username */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M12 2L21.5 7.5V16.5L12 22L2.5 16.5V7.5L12 2Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinejoin="round"
+                      className="text-pf-cyan-400"
+                    />
+                    <path
+                      d="M12 6L18 9.5V16.5L12 20L6 16.5V9.5L12 6Z"
+                      fill="currentColor"
+                      className="text-pf-cyan-500/20"
+                    />
+                  </svg>
+                  <span className="text-sm font-bold text-pf-text tracking-wide">PolyForge</span>
+                </div>
+                {username && (
+                  <span className="text-xs font-mono text-pf-text-muted">@{username}</span>
+                )}
+              </div>
+
+              {/* Stats row */}
+              <div className="grid grid-cols-3 gap-4 mb-5">
+                <div className="text-center">
+                  <p className="text-[10px] text-pf-text-muted uppercase tracking-wider mb-1">Total P&L</p>
+                  <p className={`text-lg font-mono font-bold ${pnlColor(pnl?.totalPnl ?? '0')}`}>
+                    {formatPnl(pnl?.totalPnl ?? '0')}
+                  </p>
+                </div>
+                <div className="text-center border-x border-pf-border-subtle">
+                  <p className="text-[10px] text-pf-text-muted uppercase tracking-wider mb-1">Win Rate</p>
+                  <p className="text-lg font-mono font-bold text-pf-cyan-400">
+                    {winRatePct(pnl?.winRate ?? '0')}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] text-pf-text-muted uppercase tracking-wider mb-1">Edge Score</p>
+                  <p className="text-lg font-mono font-bold text-pf-text">
+                    {edgeScore != null ? edgeScore : '—'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Tagline + footer */}
+              <div className="border-t border-pf-border-subtle pt-3 flex items-end justify-between">
+                <p className="text-xs text-pf-text-secondary italic">"Trading smarter on Polymarket"</p>
+                <p className="text-[10px] font-mono text-pf-text-muted">polyforge.io</p>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors"
+              >
+                {linkCopied ? (
+                  <Check className="size-3.5 text-pf-success" />
+                ) : (
+                  <Copy className="size-3.5" />
+                )}
+                {linkCopied ? 'Copied!' : 'Copy Share Link'}
+              </button>
+              <button
+                type="button"
+                onClick={handleShareOnX}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63Zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+                Share on X
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadCard}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors"
+              >
+                <Download className="size-3.5" />
+                Download Card
+              </button>
+            </div>
           </div>
 
           {/* ─── Daily P&L Widget ─── */}
