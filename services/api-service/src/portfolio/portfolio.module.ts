@@ -4,9 +4,10 @@ import { PortfolioController } from "./portfolio.controller";
 import { PortfolioService } from "./portfolio.service";
 import { PositionReconcilerService } from "./position-reconciler.service";
 import { DrawdownCircuitBreakerService } from "./drawdown-circuit-breaker.service";
+import { EventsModule } from "../gateway/events.module";
 
 @Module({
-  imports: [ScheduleModule.forRoot()],
+  imports: [ScheduleModule.forRoot(), EventsModule],
   controllers: [PortfolioController],
   providers: [PortfolioService, PositionReconcilerService, DrawdownCircuitBreakerService],
 })

@@ -3,6 +3,7 @@ import { Cron } from "@nestjs/schedule";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
+import { EventsGateway } from "../gateway/events.gateway";
 
 @Injectable()
 export class PositionReconcilerService {
@@ -12,6 +13,7 @@ export class PositionReconcilerService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly config: ConfigService,
+    private readonly gateway: EventsGateway,
   ) {}
 
   @Cron("*/5 * * * *")
@@ -101,6 +103,16 @@ export class PositionReconcilerService {
         await this.prisma.position.update({
           where: { id: local.id },
           data: { resolutionStatus: "RESOLVED" as any, size: 0 },
+        });
+        // Notify user via WebSocket
+        this.gateway.pushNotification(userId, {
+          type: "MARKET_RESOLVED",
+          positionId: local.id,
+          tokenId: local.tokenId,
+          marketId: local.marketId,
+          outcome: local.outcome,
+          realizedPnl: polyPos.realizedPnl ?? "0",
+          message: `Market resolved — your ${local.outcome} position has settled. P&L: ${polyPos.realizedPnl ?? "0"} USDC`,
         });
       }
     }

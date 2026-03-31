@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.16.2] — 2026-03-31
+
+### Added
+- **Cancel order button on Orders page** — each PENDING/SUBMITTED/LIVE order row in `/orders` now has an inline `Trash2` cancel button; calls `DELETE /api/v1/orders/:id`, updates the row status to CANCELLED optimistically
+- **Market resolution notifications** — `PositionReconcilerService` now injects `EventsGateway`; when a position is marked `RESOLVED` (size → 0), it pushes a `MARKET_RESOLVED` WebSocket notification to the user with P&L and outcome details; the notification bell picks it up automatically via the existing `bindWebSocket` handler; `PortfolioModule` imports `EventsModule` to enable this
+- **Leaderboard Copy Trade button** — each trader row in `/leaderboard` now has a "Copy" quick-link that navigates to `/copy/new?address={username}`, allowing one-click copy trade setup from the leaderboard
+
+### Fixed
+- Regular orders table was missing cancel action for cancellable statuses; colSpan updated from 11 → 12 to match new column count
+
+---
+
 ## [6.16.1] — 2026-03-31
 
 ### Added

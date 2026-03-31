@@ -175,6 +175,7 @@ export function Component() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
                       <Link to={`/profile/${entry.username}`} className="flex items-center gap-3 hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors">
                         {entry.avatarUrl ? (
                           <img src={entry.avatarUrl} alt={`${entry.displayName ?? entry.username} avatar`} className="size-8 rounded-full object-cover" width={32} height={32} loading="lazy" />
@@ -190,6 +191,14 @@ export function Component() {
                           )}
                         </div>
                       </Link>
+                      <Link
+                        to={`/copy/new?address=${encodeURIComponent(entry.username)}`}
+                        title="Copy trade this trader"
+                        className="shrink-0 text-[10px] px-1.5 py-0.5 rounded border border-pf-cyan-500/30 bg-pf-cyan-500/8 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors"
+                      >
+                        Copy
+                      </Link>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-right">
                       {entry.score != null ? (

@@ -375,6 +375,22 @@ export function Component() {
     setPage(1);
   }
 
+  async function cancelOrder(id: string) {
+    try {
+      const res = await fetch(`/api/v1/orders/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        toast.success('Order cancelled');
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, status: 'CANCELLED' } : o));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error((err as { message?: string }).message ?? 'Failed to cancel order');
+      }
+    } catch { toast.error('Failed to cancel order'); }
+  }
+
   async function cancelConditional(id: string) {
     try {
       const res = await fetch(`/api/v1/orders/conditional/${id}`, {
@@ -486,6 +502,7 @@ export function Component() {
                     <th scope="col" className="px-4 py-3 font-medium">Type</th>
                     <th scope="col" className="px-4 py-3 font-medium">Status</th>
                     <th scope="col" className="px-4 py-3 font-medium text-right">Date</th>
+                    <th scope="col" className="px-4 py-3 font-medium w-10"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-pf-border-subtle">
@@ -555,6 +572,19 @@ export function Component() {
                           </td>
                           <td className="px-4 py-3 text-right">
                             <span className="font-mono text-[11px] text-pf-text-muted">{formatDate(order.createdAt)}</span>
+                          </td>
+                          <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                            {['PENDING', 'SUBMITTED', 'LIVE'].includes(order.status) && (
+                              <button
+                                type="button"
+                                onClick={() => cancelOrder(order.id)}
+                                title="Cancel order"
+                                aria-label="Cancel order"
+                                className="p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
