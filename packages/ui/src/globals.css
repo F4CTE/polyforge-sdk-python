@@ -22,28 +22,28 @@
   --color-pf-bg: #020817;
 
   /* Cyan accent */
-  --color-pf-cyan-300: #67E8F9;
-  --color-pf-cyan-400: #22D3EE;
-  --color-pf-cyan-500: #06B6D4;
-  --color-pf-cyan-600: #0891B2;
+  --color-pf-cyan-300: #67e8f9;
+  --color-pf-cyan-400: #22d3ee;
+  --color-pf-cyan-500: #06b6d4;
+  --color-pf-cyan-600: #0891b2;
 
   /* Gold accent */
-  --color-pf-gold-300: #FCD34D;
-  --color-pf-gold-400: #FBBF24;
-  --color-pf-gold-500: #F59E0B;
-  --color-pf-gold-600: #D97706;
+  --color-pf-gold-300: #fcd34d;
+  --color-pf-gold-400: #fbbf24;
+  --color-pf-gold-500: #f59e0b;
+  --color-pf-gold-600: #d97706;
 
   /* Purple accent */
-  --color-pf-purple-300: #C4B5FD;
-  --color-pf-purple-400: #A78BFA;
-  --color-pf-purple-500: #8B5CF6;
-  --color-pf-purple-600: #7C3AED;
+  --color-pf-purple-300: #c4b5fd;
+  --color-pf-purple-400: #a78bfa;
+  --color-pf-purple-500: #8b5cf6;
+  --color-pf-purple-600: #7c3aed;
 
   /* Semantic */
-  --color-pf-success: #10B981;
-  --color-pf-danger: #EF4444;
-  --color-pf-warning: #F59E0B;
-  --color-pf-info: #3B82F6;
+  --color-pf-success: #10b981;
+  --color-pf-danger: #ef4444;
+  --color-pf-warning: #f59e0b;
+  --color-pf-info: #3b82f6;
 
   /* Shadows — minimal for shadcn dark */
   --shadow-pf-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -58,8 +58,9 @@
   --radius-pf-lg: 12px;
 
   /* Font families */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   /* Spacing scale */
   --spacing-pf-1: 4px;
@@ -115,91 +116,169 @@ body {
 
 /* Light theme scrollbars */
 .light ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--color-pf-border);
 }
 
 .light ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--color-pf-border-strong);
 }
 
 .light * {
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-color: var(--color-pf-border) transparent;
 }
 
 /* ─── Animations ───────────────────────────────────────────────────── */
 
 /* Page transition */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Scale in (for modals, popovers) */
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Slide in from right (panels, drawers) */
 @keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(16px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* Slide in from left */
 @keyframes slide-in-left {
-  from { opacity: 0; transform: translateX(-16px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* Slide up (toasts, dropdowns) */
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Pulse (live indicators) */
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 /* Skeleton shimmer */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 /* Utility classes */
-.animate-fade-in { animation: fade-in 0.3s ease-out both; }
-.animate-scale-in { animation: scale-in 0.2s ease-out both; }
-.animate-slide-right { animation: slide-in-right 0.3s ease-out both; }
-.animate-slide-left { animation: slide-in-left 0.3s ease-out both; }
-.animate-slide-up { animation: slide-up 0.2s ease-out both; }
-.animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out both;
+}
+.animate-slide-right {
+  animation: slide-in-right 0.3s ease-out both;
+}
+.animate-slide-left {
+  animation: slide-in-left 0.3s ease-out both;
+}
+.animate-slide-up {
+  animation: slide-up 0.2s ease-out both;
+}
+.animate-pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent 25%, var(--color-pf-overlay) 50%, transparent 75%);
+  background: linear-gradient(
+    90deg,
+    transparent 25%,
+    var(--color-pf-overlay) 50%,
+    transparent 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
 /* Stagger children */
-.stagger-children > * { animation: fade-in 0.3s ease-out both; }
-.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
-.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
-.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
-.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
-.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
-.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
-.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
-.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+.stagger-children > * {
+  animation: fade-in 0.3s ease-out both;
+}
+.stagger-children > *:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.stagger-children > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.stagger-children > *:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.stagger-children > *:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.stagger-children > *:nth-child(5) {
+  animation-delay: 0.25s;
+}
+.stagger-children > *:nth-child(6) {
+  animation-delay: 0.3s;
+}
+.stagger-children > *:nth-child(7) {
+  animation-delay: 0.35s;
+}
+.stagger-children > *:nth-child(8) {
+  animation-delay: 0.4s;
+}
 
 /* Transition utilities */
-.transition-smooth { transition: all 0.2s ease; }
+.transition-smooth {
+  transition: all 0.2s ease;
+}
 
 /* ─── Reduced motion ─────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -229,16 +308,16 @@ body {
 
   /* Cyan overrides — REQUIRED: dark-mode cyan (#06B6D4) fails on light backgrounds (~3.3:1).
      Use darker shades that pass 4.5:1 WCAG AA on white. */
-  --color-pf-cyan-300: #22D3EE;   /* decorative only — do not use for text */
-  --color-pf-cyan-400: #0891B2;   /* cyan-600 — 4.6:1 on white ✓ */
-  --color-pf-cyan-500: #0e7490;   /* cyan-700 — 6.4:1 on white ✓ */
-  --color-pf-cyan-600: #155e75;   /* cyan-800 */
+  --color-pf-cyan-300: #22d3ee; /* decorative only — do not use for text */
+  --color-pf-cyan-400: #0891b2; /* cyan-600 — 4.6:1 on white ✓ */
+  --color-pf-cyan-500: #0e7490; /* cyan-700 — 6.4:1 on white ✓ */
+  --color-pf-cyan-600: #155e75; /* cyan-800 */
 
   /* Semantic color overrides — darker variants for AA compliance on light surfaces */
-  --color-pf-success: #059669;    /* emerald-600 — 5.1:1 on white ✓ (was #10B981 = 3.5:1 ✗) */
-  --color-pf-danger: #dc2626;     /* red-600 — 5.6:1 on white ✓ (was #EF4444 = 4.6:1 ~) */
-  --color-pf-warning: #d97706;    /* amber-600 — 4.5:1 on white ✓ (was #F59E0B = 2.9:1 ✗) */
-  --color-pf-info: #2563eb;       /* blue-600 — 6.0:1 on white ✓ (was #3B82F6 = 4.5:1 ~) */
+  --color-pf-success: #059669; /* emerald-600 — 5.1:1 on white ✓ (was #10B981 = 3.5:1 ✗) */
+  --color-pf-danger: #dc2626; /* red-600 — 5.6:1 on white ✓ (was #EF4444 = 4.6:1 ~) */
+  --color-pf-warning: #d97706; /* amber-600 — 4.5:1 on white ✓ (was #F59E0B = 2.9:1 ✗) */
+  --color-pf-info: #2563eb; /* blue-600 — 6.0:1 on white ✓ (was #3B82F6 = 4.5:1 ~) */
 
   /* Shadows — lighter for light mode */
   --shadow-pf-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
