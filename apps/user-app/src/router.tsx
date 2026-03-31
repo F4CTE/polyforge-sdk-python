@@ -47,6 +47,7 @@ export const router = createBrowserRouter([
               { path: 'whales', lazy: () => import('./pages/whales/whale-feed') },
               { path: 'whales/following', lazy: () => import('./pages/whales/whale-following') },
               { path: 'whales/:address', lazy: () => import('./pages/whales/whale-profile') },
+              { path: 'feed', lazy: () => import('./pages/feed/feed') },
               { path: 'leaderboard', lazy: () => import('./pages/leaderboard/leaderboard') },
               { path: 'analytics', lazy: () => import('./pages/analytics/analytics') },
               { path: 'notifications', lazy: () => import('./pages/notifications/notifications') },

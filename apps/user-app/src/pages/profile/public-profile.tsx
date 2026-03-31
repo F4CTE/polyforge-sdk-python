@@ -4,6 +4,7 @@ import {
   ArrowLeft, UserPlus, UserMinus, Settings, Loader2, User,
   TrendingUp, Award, Target, Flame, Hexagon, DollarSign, Users, Eye,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuthStore } from '../../stores/auth-store';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -103,17 +104,37 @@ export function Component() {
 
   async function toggleFollow() {
     if (!profile || followLoading) return;
+    // Optimistic update
+    const wasFollowing = profile.isFollowing;
+    setProfile(prev => prev ? {
+      ...prev,
+      isFollowing: !wasFollowing,
+      followersCount: wasFollowing ? prev.followersCount - 1 : prev.followersCount + 1,
+    } : prev);
     setFollowLoading(true);
     try {
-      const res = await fetch(`/api/v1/profile/${profile.username}/follow`, {
-        method: 'POST',
+      const res = await fetch(`/api/v1/users/${profile.username}/follow`, {
+        method: wasFollowing ? 'DELETE' : 'POST',
         credentials: 'include',
       });
-      if (res.ok) {
-        const data = await res.json();
-        setProfile(prev => prev ? { ...prev, isFollowing: data.following, followersCount: data.followersCount } : prev);
+      if (!res.ok) {
+        // Revert on failure
+        setProfile(prev => prev ? {
+          ...prev,
+          isFollowing: wasFollowing,
+          followersCount: wasFollowing ? prev.followersCount + 1 : prev.followersCount - 1,
+        } : prev);
+        toast.error('Failed to update follow status');
       }
-    } catch { /* keep state */ }
+    } catch {
+      // Revert on error
+      setProfile(prev => prev ? {
+        ...prev,
+        isFollowing: wasFollowing,
+        followersCount: wasFollowing ? prev.followersCount + 1 : prev.followersCount - 1,
+      } : prev);
+      toast.error('Failed to update follow status');
+    }
     setFollowLoading(false);
   }
 
@@ -173,25 +194,36 @@ export function Component() {
             Edit Profile
           </Link>
         ) : (
-          <button
-            type="button"
-            onClick={toggleFollow}
-            disabled={followLoading}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors ${
-              profile.isFollowing
-                ? 'bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong'
-                : 'bg-pf-cyan-500 text-black hover:bg-pf-cyan-400'
-            }`}
-          >
-            {followLoading ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : profile.isFollowing ? (
-              <UserMinus className="size-3.5" />
-            ) : (
-              <UserPlus className="size-3.5" />
-            )}
-            {profile.isFollowing ? 'Unfollow' : 'Follow'}
-          </button>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-pf-text-muted">
+              {profile.followersCount.toLocaleString()} follower{profile.followersCount !== 1 ? 's' : ''}
+            </span>
+            <button
+              type="button"
+              onClick={toggleFollow}
+              disabled={followLoading}
+              aria-label={profile.isFollowing ? 'Unfollow this user' : 'Follow this user'}
+              className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+                profile.isFollowing
+                  ? 'bg-pf-elevated text-pf-text-secondary border border-pf-border hover:border-pf-danger hover:text-pf-danger'
+                  : 'bg-pf-cyan-500/15 text-pf-cyan-400 border border-pf-cyan-500/30 hover:bg-pf-cyan-500/25'
+              }`}
+            >
+              {followLoading ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : profile.isFollowing ? (
+                <UserMinus className="size-3.5" />
+              ) : (
+                <UserPlus className="size-3.5" />
+              )}
+              {profile.isFollowing ? (
+                <span>
+                  <span className="group-hover:hidden">Following</span>
+                  <span className="hidden group-hover:inline">Unfollow</span>
+                </span>
+              ) : 'Follow'}
+            </button>
+          </div>
         )}
       </div>
 

@@ -64,6 +64,11 @@ export function Component() {
   const searchRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Mark onboarding alert step as visited
+  useEffect(() => {
+    try { localStorage.setItem('pf-onboarding-alert-visited', 'true'); } catch { /* ignore */ }
+  }, []);
+
   // Fetch existing alerts
   useEffect(() => {
     fetch('/api/v1/alerts', { credentials: 'include' })

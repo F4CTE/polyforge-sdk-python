@@ -26,6 +26,7 @@ import {
   LineChart,
   Bell,
   BellRing,
+  Rss,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -69,6 +70,7 @@ const navSections: NavSection[] = [
   {
     title: 'Social',
     items: [
+      { label: 'Feed', icon: Rss, route: '/feed' },
       { label: 'Discover', icon: Compass, route: '/discover' },
       { label: 'News', icon: Newspaper, route: '/news' },
       { label: 'Whales', icon: Fish, route: '/whales' },

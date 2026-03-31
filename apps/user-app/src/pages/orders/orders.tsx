@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
-  ChevronLeft, ChevronRight, ClipboardList, X, Plus, Trash2,
+  ChevronLeft, ChevronRight, ClipboardList, X, Plus, Trash2, Download, Loader2,
 } from 'lucide-react';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -321,6 +321,7 @@ export function Component() {
   const [condTotalPages, setCondTotalPages] = useState(0);
   const [condPage, setCondPage] = useState(1);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [exportingCsv, setExportingCsv] = useState(false);
 
   // ── Load regular orders ──
   const load = useCallback(async (p: number, f: FilterStatus) => {
@@ -363,12 +364,46 @@ export function Component() {
     if (viewTab === 'conditional') loadConditional(condPage);
   }, [condPage, loadConditional, viewTab]);
 
-  const exportCsv = () => {
-    const link = document.createElement('a');
-    link.href = '/api/v1/orders/export/csv';
-    link.download = 'orders.csv';
-    link.click();
-  };
+  function downloadCsv(rows: Order[], filename: string) {
+    const headers = ['Date', 'Market', 'Side', 'Outcome', 'Size', 'Price', 'Fill Price', 'Status', 'P&L', 'Strategy'];
+    const lines = rows.map(o => [
+      new Date(o.createdAt).toISOString(),
+      o.marketQuestion ?? o.marketId ?? '',
+      o.side,
+      o.outcome,
+      o.size,
+      o.price ?? '',
+      o.fillPrice ?? '',
+      o.status,
+      '',
+      '',
+    ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
+    const csv = [headers.join(','), ...lines].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const exportCsv = useCallback(async () => {
+    setExportingCsv(true);
+    try {
+      const params = new URLSearchParams({ limit: '1000' });
+      if (filter !== 'ALL') params.set('status', filter);
+      const res = await fetch(`/api/v1/orders?${params}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch orders for export');
+      const data: OrdersResponse = await res.json();
+      const date = new Date().toISOString().slice(0, 10);
+      downloadCsv(data.data, `polyforge-trades-${date}.csv`);
+      toast.success(`Downloaded ${data.data.length} trades`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Export failed';
+      toast.error(msg);
+    } finally {
+      setExportingCsv(false);
+    }
+  }, [filter]);
 
   function changeFilter(f: FilterStatus) {
     setFilter(f);
@@ -427,9 +462,12 @@ export function Component() {
               <button
                 type="button"
                 onClick={exportCsv}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors"
+                disabled={exportingCsv}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors disabled:opacity-50"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                {exportingCsv
+                  ? <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+                  : <Download className="size-3" aria-hidden="true" />}
                 Export CSV
               </button>
             </>

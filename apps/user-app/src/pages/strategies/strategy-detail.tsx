@@ -19,6 +19,7 @@ import {
   ClipboardList,
   ChevronLeft,
   ChevronRight,
+  Star,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -86,6 +87,25 @@ interface StratExecution {
   status: string;
   createdAt: string;
   marketQuestion?: string;
+}
+
+interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  author: { username: string; displayName: string | null; avatarUrl?: string };
+}
+
+interface ReviewsState {
+  data: Review[];
+  total: number;
+  totalPages: number;
+  page: number;
+  loading: boolean;
+  submitRating: number;
+  submitComment: string;
+  submitting: boolean;
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
@@ -1076,7 +1096,339 @@ export function Component() {
               )}
             </div>
           )}
+
+          {/* Reviews & Ratings */}
+          <ReviewsSection listingId={strategy.id} />
         </>
+      )}
+    </div>
+  );
+}
+
+/* ─── Reviews & Ratings Section ─────────────────────────────────────────── */
+
+function relativeDate(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.floor(months / 12)}y ago`;
+}
+
+function StarRow({
+  rating,
+  interactive,
+  hovered,
+  onHover,
+  onClick,
+}: {
+  rating: number;
+  interactive?: boolean;
+  hovered?: number;
+  onHover?: (n: number) => void;
+  onClick?: (n: number) => void;
+}) {
+  const display = hovered ?? rating;
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => {
+        const filled = n <= display;
+        return (
+          <button
+            key={n}
+            type="button"
+            disabled={!interactive}
+            aria-label={`Rate ${n} star${n !== 1 ? 's' : ''}`}
+            onMouseEnter={() => onHover?.(n)}
+            onMouseLeave={() => onHover?.(0)}
+            onClick={() => onClick?.(n)}
+            className={interactive ? 'cursor-pointer focus:outline-none' : 'cursor-default pointer-events-none'}
+          >
+            <Star
+              className={`size-4 transition-colors ${
+                filled
+                  ? 'text-pf-warning fill-pf-warning'
+                  : 'text-pf-text-muted fill-none'
+              }`}
+            />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ReviewsSection({ listingId }: { listingId: string }) {
+  const [state, setState] = useState<ReviewsState>({
+    data: [],
+    total: 0,
+    totalPages: 1,
+    page: 1,
+    loading: true,
+    submitRating: 0,
+    submitComment: '',
+    submitting: false,
+  });
+  const [hovered, setHovered] = useState(0);
+
+  const fetchReviews = useCallback(async (page: number) => {
+    setState(prev => ({ ...prev, loading: true }));
+    try {
+      const res = await fetch(
+        `/api/v1/marketplace/listings/${listingId}/reviews?page=${page}&limit=10`,
+        { credentials: 'include' },
+      );
+      if (res.ok) {
+        const json = await res.json();
+        setState(prev => ({
+          ...prev,
+          data: json.data ?? [],
+          total: json.total ?? 0,
+          totalPages: json.totalPages ?? 1,
+          page,
+          loading: false,
+        }));
+      } else {
+        setState(prev => ({ ...prev, loading: false }));
+      }
+    } catch {
+      setState(prev => ({ ...prev, loading: false }));
+    }
+  }, [listingId]);
+
+  useEffect(() => { fetchReviews(1); }, [fetchReviews]);
+
+  async function submitReview() {
+    const { submitRating, submitComment } = state;
+    if (submitRating === 0) { toast.error('Please select a star rating'); return; }
+    if (submitComment.trim().length < 10) { toast.error('Comment must be at least 10 characters'); return; }
+    if (submitComment.trim().length > 500) { toast.error('Comment must be 500 characters or fewer'); return; }
+
+    setState(prev => ({ ...prev, submitting: true }));
+    try {
+      const res = await fetch(`/api/v1/marketplace/listings/${listingId}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ rating: submitRating, comment: submitComment.trim() }),
+      });
+      if (res.ok) {
+        toast.success('Review submitted!');
+        setState(prev => ({ ...prev, submitRating: 0, submitComment: '', submitting: false }));
+        setHovered(0);
+        fetchReviews(1);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error((err as any).message ?? 'Failed to submit review');
+        setState(prev => ({ ...prev, submitting: false }));
+      }
+    } catch {
+      toast.error('Failed to submit review');
+      setState(prev => ({ ...prev, submitting: false }));
+    }
+  }
+
+  // Compute star breakdown from loaded reviews
+  const starCounts = [5, 4, 3, 2, 1].map((star) => ({
+    star,
+    count: state.data.filter((r) => r.rating === star).length,
+  }));
+  const avgRating =
+    state.data.length > 0
+      ? state.data.reduce((sum, r) => sum + r.rating, 0) / state.data.length
+      : 0;
+  const maxStarCount = Math.max(...starCounts.map((s) => s.count), 1);
+
+  return (
+    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 space-y-6">
+      <h2 className="text-base font-semibold text-pf-text flex items-center gap-2">
+        <Star className="size-4 text-pf-warning fill-pf-warning" />
+        Reviews &amp; Ratings
+      </h2>
+
+      {/* Rating Summary */}
+      {state.total > 0 && (
+        <div className="flex flex-col sm:flex-row gap-6">
+          {/* Average */}
+          <div className="flex flex-col items-center justify-center min-w-[100px]">
+            <span className="text-4xl font-bold text-pf-text font-mono">
+              {avgRating.toFixed(1)}
+            </span>
+            <StarRow rating={Math.round(avgRating)} />
+            <span className="text-xs text-pf-text-muted mt-1">
+              {state.total} review{state.total !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          {/* Bar breakdown */}
+          <div className="flex-1 space-y-1.5">
+            {starCounts.map(({ star, count }) => (
+              <div key={star} className="flex items-center gap-2">
+                <span className="text-xs text-pf-text-muted w-4 text-right shrink-0">{star}</span>
+                <Star className="size-3 text-pf-warning fill-pf-warning shrink-0" />
+                <div className="flex-1 h-2 bg-pf-surface rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-pf-warning rounded-full transition-all duration-300"
+                    style={{ width: `${(count / maxStarCount) * 100}%` }}
+                  />
+                </div>
+                <span className="text-xs text-pf-text-muted w-6 text-right shrink-0">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Write a Review */}
+      <div className="border border-pf-border rounded-pf-lg p-4 space-y-3 bg-pf-surface">
+        <p className="text-sm font-medium text-pf-text">Write a Review</p>
+
+        {/* Star selector */}
+        <div className="flex items-center gap-2">
+          <StarRow
+            rating={state.submitRating}
+            interactive
+            hovered={hovered}
+            onHover={(n) => setHovered(n)}
+            onClick={(n) =>
+              setState(prev => ({ ...prev, submitRating: n }))
+            }
+          />
+          {state.submitRating > 0 && (
+            <span className="text-xs text-pf-text-muted">
+              {['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][state.submitRating]}
+            </span>
+          )}
+        </div>
+
+        {/* Comment */}
+        <textarea
+          value={state.submitComment}
+          onChange={(e) =>
+            setState(prev => ({ ...prev, submitComment: e.target.value }))
+          }
+          placeholder="Share your experience..."
+          rows={3}
+          maxLength={500}
+          className="w-full px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 resize-none"
+        />
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-pf-text-muted">
+            {state.submitComment.length}/500
+          </span>
+          <button
+            type="button"
+            onClick={submitReview}
+            disabled={state.submitting}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+          >
+            {state.submitting ? 'Submitting...' : 'Submit Review'}
+          </button>
+        </div>
+      </div>
+
+      {/* Review List */}
+      {state.loading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex gap-3 animate-pulse">
+              <div className="size-8 rounded-full bg-pf-overlay shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 bg-pf-overlay rounded w-[30%]" />
+                <div className="h-3 bg-pf-overlay rounded w-[80%]" />
+                <div className="h-3 bg-pf-overlay rounded w-[60%]" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : state.data.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <Star className="size-8 text-pf-text-muted mb-2 opacity-40" />
+          <p className="text-sm text-pf-text-secondary">Be the first to review this strategy</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {state.data.map((review) => {
+            const initials = (review.author.displayName ?? review.author.username)
+              .slice(0, 2)
+              .toUpperCase();
+            return (
+              <div
+                key={review.id}
+                className="flex gap-3 pb-4 border-b border-pf-border last:border-b-0 last:pb-0"
+              >
+                {/* Avatar */}
+                {review.author.avatarUrl ? (
+                  <img
+                    src={review.author.avatarUrl}
+                    alt={`${review.author.displayName ?? review.author.username} avatar`}
+                    className="size-8 rounded-full object-cover shrink-0"
+                    width={32}
+                    height={32}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="size-8 rounded-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-[10px] font-bold text-pf-cyan-400 shrink-0">
+                    {initials}
+                  </div>
+                )}
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <span className="text-sm font-medium text-pf-text">
+                      {review.author.displayName ?? review.author.username}
+                    </span>
+                    <span className="text-xs text-pf-text-muted">
+                      @{review.author.username}
+                    </span>
+                    <span className="text-xs text-pf-text-muted ml-auto shrink-0">
+                      {relativeDate(review.createdAt)}
+                    </span>
+                  </div>
+                  <StarRow rating={review.rating} />
+                  <p className="text-sm text-pf-text-secondary mt-1.5 leading-relaxed">
+                    {review.comment}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {state.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 pt-1">
+          <button
+            type="button"
+            onClick={() => fetchReviews(state.page - 1)}
+            disabled={state.page === 1 || state.loading}
+            aria-label="Previous reviews page"
+            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <span className="text-sm font-mono text-pf-text-secondary">
+            Page {state.page} of {state.totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => fetchReviews(state.page + 1)}
+            disabled={state.page === state.totalPages || state.loading}
+            aria-label="Next reviews page"
+            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronRight className="size-4" />
+          </button>
+        </div>
       )}
     </div>
   );

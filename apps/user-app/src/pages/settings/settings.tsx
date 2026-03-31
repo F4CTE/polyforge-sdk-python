@@ -160,6 +160,14 @@ export function Component() {
   const [circuitBreakerTripped, setCircuitBreakerTripped] = useState(false);
   const [circuitBreakerTrippedAt, setCircuitBreakerTrippedAt] = useState<string | null>(null);
 
+  // Daily Loss Limit (user risk settings)
+  const [dlEnabled, setDlEnabled] = useState(false);
+  const [dlLimit, setDlLimit] = useState<string>('');
+  const [dlMaxPositionSize, setDlMaxPositionSize] = useState<string>('');
+  const [dlMaxOpenPositions, setDlMaxOpenPositions] = useState<string>('');
+  const [dlLoading, setDlLoading] = useState(false);
+  const [dlSaving, setDlSaving] = useState(false);
+
   async function loadGasUsage() {
     setGasLoading(true);
     try {
@@ -225,6 +233,45 @@ export function Component() {
       }
     } catch { toast.error('Failed to reset circuit breaker'); }
     setRiskResetting(false);
+  }
+
+  async function loadDailyLossSettings() {
+    setDlLoading(true);
+    try {
+      const res = await fetch('/api/v1/users/me/risk-settings', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setDlEnabled(data.enabled ?? false);
+        setDlLimit(data.dailyLossLimit != null ? String(data.dailyLossLimit) : '');
+        setDlMaxPositionSize(data.maxPositionSize != null ? String(data.maxPositionSize) : '');
+        setDlMaxOpenPositions(data.maxOpenPositions != null ? String(data.maxOpenPositions) : '');
+      }
+    } catch { toast.error('Failed to load daily loss settings'); }
+    setDlLoading(false);
+  }
+
+  async function saveDailyLossSettings() {
+    if (dlSaving) return;
+    setDlSaving(true);
+    try {
+      const res = await fetch('/api/v1/users/me/risk-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          enabled: dlEnabled,
+          dailyLossLimit: dlLimit !== '' ? parseFloat(dlLimit) : null,
+          maxPositionSize: dlMaxPositionSize !== '' ? parseFloat(dlMaxPositionSize) : null,
+          maxOpenPositions: dlMaxOpenPositions !== '' ? parseInt(dlMaxOpenPositions, 10) : null,
+        }),
+      });
+      if (res.ok) {
+        toast.success('Risk settings saved');
+      } else {
+        toast.error('Failed to save risk settings');
+      }
+    } catch { toast.error('Failed to save risk settings'); }
+    setDlSaving(false);
   }
 
   async function loadWebhooks() {
@@ -301,7 +348,7 @@ export function Component() {
     setActiveTab(t);
     if (t === 'apikeys' && apiKeys.length === 0) loadApiKeys();
     if (t === 'gas' && !gasUsage) loadGasUsage();
-    if (t === 'risk') loadRiskSettings();
+    if (t === 'risk') { loadRiskSettings(); loadDailyLossSettings(); }
     if (t === 'webhooks') loadWebhooks();
   }
 
@@ -993,6 +1040,111 @@ export function Component() {
                 className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
               >
                 {riskSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                Save Risk Settings
+              </button>
+            </div>
+          </div>
+
+          {/* Daily Loss Limit card */}
+          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Daily Loss Limit</h2>
+              {dlLoading && <Loader2 className="size-4 animate-spin text-pf-text-muted" />}
+            </div>
+
+            <p className="text-xs text-pf-text-secondary -mt-2">
+              Set a hard cap on how much you can lose in a single trading day. When hit, all new trades are paused automatically.
+            </p>
+
+            {/* Enable risk controls toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-pf-text font-medium">Enable Risk Controls</p>
+                <p className="text-xs text-pf-text-muted mt-0.5">When off, all limits below are ignored</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={dlEnabled}
+                onClick={() => setDlEnabled(v => !v)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  dlEnabled ? 'bg-pf-cyan-500' : 'bg-pf-surface border border-pf-border'
+                }`}
+              >
+                <span className={`inline-block size-4 rounded-full bg-white shadow transition-transform ${
+                  dlEnabled ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
+            </div>
+
+            {/* Daily Loss Limit input */}
+            <div>
+              <label htmlFor="settings-dl-limit" className="text-xs text-pf-text-secondary mb-1.5 block">
+                Daily Loss Limit (USDC)
+              </label>
+              <input
+                id="settings-dl-limit"
+                type="number"
+                min={0}
+                step={0.01}
+                placeholder="100.00"
+                value={dlLimit}
+                onChange={e => setDlLimit(e.target.value)}
+                disabled={!dlEnabled}
+                className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors disabled:opacity-50"
+              />
+              <p className="text-xs text-pf-text-muted mt-1.5">
+                Trading is paused automatically if your daily P&amp;L drops below this threshold.
+              </p>
+            </div>
+
+            {/* Max Position Size input */}
+            <div>
+              <label htmlFor="settings-dl-position" className="text-xs text-pf-text-secondary mb-1.5 block">
+                Max Position Size (USDC)
+              </label>
+              <input
+                id="settings-dl-position"
+                type="number"
+                min={0}
+                step={0.01}
+                placeholder="500.00"
+                value={dlMaxPositionSize}
+                onChange={e => setDlMaxPositionSize(e.target.value)}
+                disabled={!dlEnabled}
+                className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors disabled:opacity-50"
+              />
+              <p className="text-xs text-pf-text-muted mt-1.5">Maximum size for any single position.</p>
+            </div>
+
+            {/* Max Open Positions input */}
+            <div>
+              <label htmlFor="settings-dl-open" className="text-xs text-pf-text-secondary mb-1.5 block">
+                Max Open Positions
+              </label>
+              <input
+                id="settings-dl-open"
+                type="number"
+                min={1}
+                max={50}
+                step={1}
+                placeholder="10"
+                value={dlMaxOpenPositions}
+                onChange={e => setDlMaxOpenPositions(e.target.value)}
+                disabled={!dlEnabled}
+                className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors disabled:opacity-50"
+              />
+              <p className="text-xs text-pf-text-muted mt-1.5">Maximum number of concurrent open positions (1–50).</p>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-pf-border">
+              <button
+                type="button"
+                onClick={saveDailyLossSettings}
+                disabled={dlSaving || dlLoading}
+                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+              >
+                {dlSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                 Save Risk Settings
               </button>
             </div>

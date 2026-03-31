@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Shield,
   Loader2,
+  Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -197,6 +198,9 @@ export function Component() {
   const [loadingAiQuery, setLoadingAiQuery] = useState(false);
   const aiInputRef = useRef<HTMLInputElement>(null);
 
+  // CSV export state
+  const [exportingCsv, setExportingCsv] = useState(false);
+
   const themeColors = useMemo(() => {
     const s = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
     return {
@@ -294,6 +298,42 @@ export function Component() {
     }
   }, [aiQuery]);
 
+  const exportCsv = useCallback(async () => {
+    setExportingCsv(true);
+    try {
+      const res = await fetch('/api/v1/orders?limit=1000', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch orders for export');
+      const data = await res.json() as { data: Array<Record<string, unknown>> };
+      const rows = data.data;
+      const headers = ['Date', 'Market', 'Side', 'Outcome', 'Size', 'Price', 'Fill Price', 'Status', 'P&L', 'Strategy'];
+      const lines = rows.map(o => [
+        o.createdAt ? new Date(o.createdAt as string).toISOString() : '',
+        (o.marketQuestion as string) ?? (o.marketId as string) ?? '',
+        o.side ?? '',
+        o.outcome ?? '',
+        o.size ?? '',
+        o.price ?? '',
+        o.fillPrice ?? '',
+        o.status ?? '',
+        '',
+        '',
+      ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
+      const csv = [headers.join(','), ...lines].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = new Date().toISOString().slice(0, 10);
+      a.href = url; a.download = `polyforge-analytics-${date}.csv`; a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Downloaded ${rows.length} trades`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Export failed';
+      toast.error(msg);
+    } finally {
+      setExportingCsv(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadAccuracy();
     loadScore();
@@ -342,26 +382,42 @@ export function Component() {
           <h1 className="text-2xl font-semibold text-pf-text">Analytics</h1>
         </div>
 
-        {/* Period selector */}
-        <div
-          className="flex items-center gap-1 bg-pf-elevated border border-pf-border rounded-pf-sm p-1"
-          role="group"
-          aria-label="Select period"
-        >
-          {PERIODS.map((p) => (
-            <button
-              key={p.value}
-              type="button"
-              onClick={() => setPeriod(p.value)}
-              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-400/40 ${
-                period === p.value
-                  ? 'bg-pf-cyan-400/15 text-pf-cyan-400'
-                  : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface'
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          {/* Export CSV */}
+          <button
+            type="button"
+            onClick={exportCsv}
+            disabled={exportingCsv}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors disabled:opacity-50"
+            aria-label="Export analytics as CSV"
+          >
+            {exportingCsv
+              ? <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+              : <Download className="size-3" aria-hidden="true" />}
+            Export CSV
+          </button>
+
+          {/* Period selector */}
+          <div
+            className="flex items-center gap-1 bg-pf-elevated border border-pf-border rounded-pf-sm p-1"
+            role="group"
+            aria-label="Select period"
+          >
+            {PERIODS.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setPeriod(p.value)}
+                className={`px-3 py-1.5 rounded text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-400/40 ${
+                  period === p.value
+                    ? 'bg-pf-cyan-400/15 text-pf-cyan-400'
+                    : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

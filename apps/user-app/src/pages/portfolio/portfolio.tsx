@@ -5,6 +5,7 @@ import {
 import {
   Wallet, BarChart3,
   RefreshCw, Loader2, AlertTriangle, Fuel, PieChart, ShieldAlert,
+  Shield, TrendingDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
@@ -55,6 +56,19 @@ interface PaperSummary {
   pnl: string;
   positions: PaperPosition[];
   orderCount: number;
+}
+
+interface DailyPnlResponse {
+  realizedPnl: string;
+  unrealizedPnl: string;
+  totalPnl: string;
+}
+
+interface UserRiskSettings {
+  dailyLossLimit: number | null;
+  maxPositionSize: number | null;
+  maxOpenPositions: number | null;
+  enabled: boolean;
 }
 
 type Tab = 'live' | 'paper';
@@ -167,6 +181,11 @@ export function Component() {
   const [redeemingPosition, setRedeemingPosition] = useState<Record<string, boolean | undefined>>({});
   const [resettingPaper, setResettingPaper] = useState(false);
 
+  // Daily P&L widget
+  const [dailyPnl, setDailyPnl] = useState<DailyPnlResponse | null>(null);
+  const [userRiskSettings, setUserRiskSettings] = useState<UserRiskSettings | null>(null);
+  const [loadingDailyPnl, setLoadingDailyPnl] = useState(true);
+
   const loadPortfolio = useCallback(async () => {
     setLoadingPortfolio(true);
     try {
@@ -211,6 +230,23 @@ export function Component() {
     }
     return () => { cancelled = true; };
   }, [loadPortfolio, loadChart, period]);
+
+  // Load daily P&L and risk settings in parallel on mount
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingDailyPnl(true);
+    Promise.all([
+      fetch('/api/v1/portfolio/pnl?period=today', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+      fetch('/api/v1/users/me/risk-settings', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+    ]).then(([pnlData, riskData]) => {
+      if (cancelled) return;
+      if (pnlData) setDailyPnl(pnlData);
+      if (riskData) setUserRiskSettings(riskData);
+    }).catch(() => {}).finally(() => {
+      if (!cancelled) setLoadingDailyPnl(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   function setPeriod(p: Period) {
     setPeriodState(p);
@@ -449,6 +485,83 @@ export function Component() {
               </div>
             )}
           </div>
+
+          {/* ─── Daily P&L Widget ─── */}
+          {(() => {
+            const totalPnl = dailyPnl ? parseFloat(dailyPnl.totalPnl) : 0;
+            const limit = userRiskSettings?.enabled ? (userRiskSettings?.dailyLossLimit ?? null) : null;
+            const progress = limit != null && limit > 0
+              ? Math.min(100, (Math.abs(Math.min(0, totalPnl)) / limit) * 100)
+              : 0;
+            const progressColor = progress >= 80
+              ? 'bg-pf-danger'
+              : progress >= 50
+                ? 'bg-amber-400'
+                : 'bg-pf-success';
+            const limitHit = progress >= 100;
+            const remaining = limit != null ? limit - Math.abs(Math.min(0, totalPnl)) : 0;
+            return (
+              <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+                {/* Header */}
+                <div className="flex items-center gap-2 mb-3">
+                  <Shield className="size-4 text-pf-text-muted" />
+                  <span className="text-sm font-medium text-pf-text">Today's P&L</span>
+                </div>
+
+                {loadingDailyPnl ? (
+                  <div className="space-y-2">
+                    <div className="h-8 bg-pf-overlay rounded animate-pulse w-32" />
+                    <div className="h-3 bg-pf-overlay rounded animate-pulse w-full" />
+                    <div className="h-3 bg-pf-overlay rounded animate-pulse w-2/3" />
+                  </div>
+                ) : (
+                  <>
+                    {/* Large P&L number */}
+                    <p className={`text-3xl font-mono font-semibold mb-3 ${totalPnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+                      {totalPnl >= 0 ? '+' : ''}{totalPnl.toFixed(2)} USDC
+                    </p>
+
+                    {/* Limit hit banner */}
+                    {limitHit && (
+                      <div className="flex items-center gap-2 p-3 rounded-pf bg-pf-danger/10 border border-pf-danger/30 mb-3">
+                        <AlertTriangle className="size-4 text-pf-danger shrink-0" />
+                        <p className="text-xs font-medium text-pf-danger">Daily loss limit reached — trading paused</p>
+                      </div>
+                    )}
+
+                    {/* Progress bar (only if limit is configured and enabled) */}
+                    {limit != null && (
+                      <div className="space-y-1.5">
+                        <div className="bg-pf-surface rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${progressColor}`}
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-pf-text-muted">
+                          <span className="flex items-center gap-1">
+                            <TrendingDown className="size-3" />
+                            Loss limit: ${limit.toFixed(2)}
+                          </span>
+                          <span>{remaining > 0 ? `$${remaining.toFixed(2)} remaining` : 'Limit reached'}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* No limit set — offer link */}
+                    {limit == null && (
+                      <p className="text-xs text-pf-text-muted">
+                        No daily loss limit set.{' '}
+                        <a href="/settings?tab=risk" className="underline text-pf-cyan-400 hover:text-pf-cyan-300">
+                          Set a loss limit
+                        </a>
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })()}
 
           {/* P&L Chart */}
           <div className="bg-pf-elevated border border-pf-border rounded-pf-lg">
