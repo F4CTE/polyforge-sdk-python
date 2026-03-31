@@ -5,6 +5,174 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.32.0] — 2026-03-31
+
+### Added
+- **Strategy marketplace reviews moderation** (`/reports` → Reviews tab) — admin can browse all user-submitted strategy reviews with star display, verified-purchase badge, and report-count badge; filter by status (Pending / Approved / Rejected / Flagged), minimum report count, and free-text search; approve, reject, or flag each review inline with a flag-reason textarea; summary stats row shows total pending, total flagged, avg rating, and reviews this week
+- **Admin API** — `strategyReviews()`, `reviewStats()`, `reviewAction()` methods added to `adminApi`; `StrategyReview` interface exported from `api.ts`
+
+---
+
+## [6.31.0] — 2026-03-31
+
+### Added
+- **Strategy performance alerts panel** — strategy detail page gains a Bell button that opens an inline alerts panel; 7 configurable alert types (drawdown threshold, win-rate drop, daily loss limit, inactivity, P&L target reached, strategy paused, strategy error); per-alert email and push toggles; alerts are persisted to localStorage and shown as a badge on the Bell when active
+- **Social feed reactions & comment threads** — feed posts now support 5 emoji reactions (👍 🔥 🤔 😮 💎) with optimistic count updates; each post has an expandable comment thread with threaded replies, relative timestamps, and author avatars; "Share to Profile" action reposts a market or strategy card to the user's feed
+
+---
+
+## [6.30.0] — 2026-03-31
+
+### Added
+- **Live P&L WebSocket strip** — portfolio page subscribes to `PRICE_UPDATE` via `wsManager`; open positions show real-time unrealized P&L with green/red flash animations and a ▲/▼ ticker; total portfolio value updates live
+- **Admin user activity timeline** — user detail page gains an Activity tab with 16 event types (orders, logins, strategy changes, marketplace actions, etc.) rendered as a color-coded vertical timeline with category filters and date-range picker
+- **Strategy template library** — strategy builder gains a Templates button that opens a 6-template library (Momentum, Mean Reversion, Arbitrage, Sentiment, Calendar, Breakout) with category filter; selecting a template replaces the canvas with a confirm dialog
+- **Advanced market search modal** — markets list gains a Ctrl+F shortcut that opens a full-screen search modal with multi-filter support (category, status, volume range, probability range) and instant inline results
+- **Trader comparison panel** — copy-discover page gains a Compare button that places up to 3 traders side-by-side showing Edge Score, Win Rate, Avg Return, Max Drawdown, Active Followers, and a 30-day P&L sparkline
+- **Admin revenue breakdown** — revenue page adds a donut chart by source (marketplace, copy fees, strategy sales, subscription), period-over-period comparison cards, and a top revenue-generating users table
+
+---
+
+## [6.29.0] — 2026-03-31
+
+### Added
+- **Welcome onboarding modal** — shown once to new users (500 ms delay, keyed to `pf-onboarding-complete` in localStorage); 4-step carousel covering strategy builder, copy trading, marketplace, and analytics; "Skip" and "Get Started" actions mark it complete
+- **User segmentation dashboard** (`/users/segmentation`) — 8 cohorts (power traders, copy traders, marketplace sellers, inactive, high-value, new this week, at-risk, verified); cohort drill-down table; one-click broadcast to segment
+- **Watchlist price alerts inline panel** — each watchlist row gains an alert bell that expands an inline form to set YES/NO above/below threshold alerts; active alert count badge per row
+- **Platform config page** (`/config`) — 5 collapsible sections (Marketplace, Copy Trading, Risk Controls, Notifications, Feature Flags); live toggle for maintenance mode; save/discard with optimistic feedback; backed by `adminApi.getConfig()` / `adminApi.updateConfig()`
+- **Admin sidebar** — Platform Config (Settings2) nav item added under System section
+
+---
+
+## [6.28.0] — 2026-03-31
+
+### Added
+- **Portfolio rebalancing suggestions** — portfolio page shows AI-generated suggestions (priority-tagged Critical/High/Medium) to rebalance positions toward target allocations; each suggestion is dismissable and shows current vs target exposure
+- **Trading journal** — orders page gains a Journal tab; users can tag any order with a mood (Confident, Uncertain, FOMO, Disciplined, Revenge) and add a free-text note; journal entries are filterable by mood and searchable; inline panel opens on row click
+- **Category correlation heatmap** (`/analytics/correlation`) — new page showing pairwise correlation between market categories based on the user's position history; recharts heatmap with color scale from −1 (red) to +1 (green)
+- **Abuse detection dashboard** (`/abuse`) — admin page listing flagged users/strategies with severity scores; actions: clear flag, warn user, delist strategy, ban user; filter by type (spam, manipulation, wash trading)
+- **Quick-order inline panel on watchlist** — each watchlist row gains a Trade button that expands an inline BUY/SELL panel without leaving the page; amount input, YES/NO toggle, and Place Order CTA
+- **Auto-close rules per position** — portfolio positions gain a Rules button for configuring stop-loss and take-profit thresholds; rules are stored in localStorage and shown as badges on the position row
+
+---
+
+## [6.27.0] — 2026-03-31
+
+### Added
+- **Portfolio risk concentration heatmap** — portfolio page adds a heatmap section showing category × outcome (YES/NO) exposure as color-coded cells; identifies over-concentration at a glance
+- **Admin sentiment dashboard** (`/sentiment`) — summary stat cards (avg sentiment, positive/negative/neutral counts), stacked bar chart over time, trending topics list, and a sortable review table with sentiment scores
+- **Strategy sharing panel** — strategy detail page gains a Share tab with a preview card (name, stats, QR-code placeholder), public URL copy button, Twitter/X share link, and a visibility toggle (Public/Unlisted/Private)
+
+---
+
+## [6.26.0] — 2026-03-31
+
+### Added
+- **Notifications centre redesign** — semantic tabs (Trades / System / Alerts); merges WebSocket store with API history; per-notification delete; "Load more" pagination; unread dot badge per tab
+- **Order book depth chart** — market detail order book gains a Table/Chart toggle; Chart mode renders a recharts AreaChart showing cumulative bid/ask depth curves
+- **Strategy comparison mode** — strategies list gains multi-select checkboxes (up to 4); a Compare drawer opens showing a recharts LineChart of cumulative P&L and a side-by-side stats table (Win Rate, Avg Return, Max Drawdown, Trade Count)
+- **Achievement badges on public profiles** — 15 badges across 4 rarity tiers (Common, Uncommon, Rare, Legendary) based on trading milestones; displayed as a badge wall on the public profile page
+
+---
+
+## [6.25.0] — 2026-03-31
+
+### Added
+- **Price alerts widget on market detail** — YES/NO token selector, above/below direction, threshold price slider (1¢–99¢); active alerts listed below with delete; backed by `POST /api/v1/alerts` and `GET /api/v1/alerts?marketId=`
+- **Strategy version history tab** — strategy detail page gains a History tab showing a vertical timeline of saved versions (name, block count, timestamp); "Restore" button replaces the canvas with a confirmation step
+- **Copy trading analytics panel** — copy-list page gains an Analytics drawer per trader showing position correlation bar, max drawdown vs own drawdown, and a 30-day P&L sparkline comparison
+- **Admin broadcast composer** (`/broadcasts`) — rich compose panel (title, body, audience selector, schedule toggle); sent broadcast history table with status badges (Sent / Scheduled / Failed) and recipient counts
+
+---
+
+## [6.24.0] — 2026-03-31
+
+### Added
+- **System health dashboard** (`/health`) — admin page with service status cards (API, Order Service, Signer, Redis, DB), Redis stream lag gauges, DB connection pool stats, and auto-refresh every 30 s
+- **Community sentiment poll on market detail** — YES/NO vote buttons with live tally bars and a confidence slider (1–5); results stored in localStorage per market; shows community split percentage
+- **Collections** (`/collections`, `/collections/:id`) — browse curated market collections with category filter; collection detail shows member markets with probability badges and volume; backed by mock data with easy API swap-in
+- **Collections strip on Discover** — horizontal scrollable collections strip added above the trending markets section on the Discover page
+- **Portfolio goal tracker** — portfolio page gains a Goals widget; up to 3 goals (target value, deadline, label); progress bar per goal; localStorage-persisted; add/dismiss controls
+- **Keyboard shortcuts modal** — `?` key (outside inputs) opens a reference modal listing all keyboard shortcuts grouped by section; also triggerable from a Topbar button via `open-shortcuts` custom event
+
+---
+
+## [6.23.0] — 2026-03-31
+
+### Added
+- **Webhook event history** — settings page webhooks tab now shows a log of recent delivery attempts per endpoint (status code, response time, payload preview, retry button)
+- **Session management** — settings security tab lists active sessions (device, IP, last seen); users can revoke individual sessions or "Sign out all other devices"
+- **Strategy live feed** — strategy detail page gains a Live tab showing real-time order events via WebSocket (`wsManager`); each event shows side, outcome, size, price, and fill status with color-coded badges
+- **Admin markets page** (`/markets`) — table of all Polymarket markets indexed by PolyForge with sync status, volume, and category; search and category filter; "Refresh cache" action per market
+- **Tax report export** — portfolio page gains a Tax Report button that downloads a CSV of all realized positions for the selected year (P&L, entry/exit dates, cost basis)
+
+---
+
+## [6.22.0] — 2026-03-31
+
+### Added
+- **Strategy builder undo/redo** — builder canvas gains undo (Ctrl+Z) and redo (Ctrl+Shift+Z / Ctrl+Y) with a 50-step history stack; history is cleared on strategy load
+- **Trending markets strip** — markets list page gains a horizontally scrollable trending row (sorted by 24 h volume) above the main table; each card shows probability, volume, and a mini sparkline
+- **Copy discover page enhancements** — trader cards gain 7-day return sparklines, a "Risk" badge (Low/Medium/High based on drawdown), and follower count; sort by Edge Score, Return, or Followers
+- **Portfolio exposure heatmap** — portfolio page adds a category exposure heatmap (recharts treemap) showing relative position sizes by market category
+- **Admin retention dashboard** (`/retention`) — cohort retention table (weekly cohorts × weeks retained), DAU/WAU/MAU trend chart, churn rate card, and re-engagement action button
+
+---
+
+## [6.21.0] — 2026-03-31
+
+### Added
+- **Leaderboard filters** — filter by time period (7d / 30d / All Time) and trader type (All / Copy-Only / Strategy-Only); sort by Edge Score, P&L, or Win Rate
+- **Public profile performance charts** — public profile page gains a cumulative P&L equity curve (recharts AreaChart) and a category win-rate bar chart
+- **Position close flow** — portfolio positions gain a Close button that opens an inline confirmation with estimated proceeds and a confirm/cancel step; calls `POST /api/v1/orders` with a closing order
+- **Mobile bottom navigation** — `MobileBottomNav` component added with 5 tabs (Home, Markets, Portfolio, Strategies, Profile); visible only on small screens; active tab highlighted
+- **API key rotation** — settings API keys tab gains a "Rotate" button per key; rotation shows a one-time reveal dialog for the new secret; old key is revoked immediately
+
+---
+
+## [6.20.0] — 2026-03-31
+
+### Added
+- **Admin backtests page** (`/backtests`) — table of all user backtests with strategy name, date range, total return, Sharpe ratio, and status; expand row to see trade log; export CSV action
+- **Listing moderation** — admin listings page gains Approve / Reject / Feature actions per marketplace listing; reject opens a reason textarea; featured listings get a star badge
+- **Email notification preferences** — settings notifications tab splits into Email and Push sections; granular toggles per event type (fills, alerts, strategy events, marketing); backed by `PATCH /api/v1/users/me/preferences`
+- **Revenue chart on admin dashboard** — admin dashboard gains a 30-day revenue trend AreaChart (recharts) showing daily platform fee income
+- **Portfolio share card** — portfolio page gains a "Share" button that generates a PNG-style card (Canvas API) showing username, total value, top positions, and P&L; downloadable and shareable
+
+---
+
+## [6.19.0] — 2026-03-31
+
+### Added
+- **2FA TOTP setup flow** — settings security tab gains a "Enable 2FA" button; shows QR code (otpauth URI), manual entry key, and a 6-digit verify step; on success, recovery codes are shown once; backed by `POST /api/v1/auth/totp/setup` and `POST /api/v1/auth/totp/verify`
+- **Admin reports queue** (`/reports`) — lists user-submitted abuse reports with category (spam, manipulation, inappropriate), reporter, target, and timestamp; actions: dismiss, escalate, ban target user
+- **Market probability chart** — market detail page gains a 30-day probability history chart (recharts AreaChart) showing YES price over time; fetched from `GET /api/v1/markets/:id/history`
+- **Strategy import/export** — strategy detail gains Export (downloads JSON of blocks + config) and Import (file picker, validates schema, loads into builder) buttons
+
+---
+
+## [6.18.0] — 2026-03-31
+
+### Added
+- **Admin user detail page** (`/users/:id`) — profile header (avatar initials, email, role, join date, status badge), stat cards (portfolio value, total orders, strategies, P&L), tabbed layout: Overview (recent orders + open positions), Strategies list, and Actions (approve/suspend/ban with reason)
+- **Copy trading UX improvements** — copy-list page adds pause/resume toggle per followed trader; pause stops new orders without unfollowing; status badge updates optimistically
+- **Portfolio allocation chart** — portfolio page gains a recharts PieChart showing allocation by market category; legend with percentage labels
+- **Watchlist enhancements** — watchlist table adds 24 h volume column, category badge, and a probability change delta (▲/▼ vs 24 h ago) with color coding
+- **Featured strategies section** — marketplace page gains a "Featured" carousel above the listing grid; featured items have a gold star badge and are sorted by admin-curated rank
+
+---
+
+## [6.17.0] — 2026-03-31
+
+### Added
+- **Strategy marketplace reviews** — strategy detail and marketplace listing pages show star ratings (1–5) and written reviews; users can submit one review per purchased strategy; reviews show verified-purchase badge; average rating displayed on listing card
+- **Follow system** — public profiles gain Follow/Unfollow button; followers/following counts shown in profile header; `GET /api/v1/users/:id/followers` and `POST /api/v1/users/:id/follow` endpoints
+- **Risk limits settings** — settings page gains a Risk tab with daily loss limit (% of portfolio), max position size (% of portfolio), and max open positions; saved to user preferences; enforced client-side with warnings
+- **CSV export for orders** — orders page gains an Export CSV button that downloads all filtered orders as a CSV file (date, market, side, outcome, size, price, status, P&L)
+- **Onboarding checklist widget** — persistent floating checklist for new users with 6 tasks (connect wallet, browse markets, create strategy, make first trade, follow a trader, list a strategy); progress ring; dismissable after all complete
+
+---
+
 ## [6.16.5] — 2026-03-31
 
 ### Added
