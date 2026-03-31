@@ -1,452 +1,794 @@
-import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
+'use client';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Flag,
-  ChevronLeft,
-  ChevronRight,
-  Ban,
   AlertTriangle,
-  CheckCircle,
-  Trash2,
+  Check,
+  ExternalLink,
+  Flag,
+  MessageSquare,
+  Search,
+  Star,
+  X,
 } from 'lucide-react';
-import { adminApi, type Report } from '@/lib/api';
-import { formatDateTime } from '@/lib/utils';
+import { toast } from 'sonner';
+import { adminApi } from '@/lib/api';
 
-type StatusFilter = 'PENDING' | 'RESOLVED' | 'DISMISSED' | '';
-type ReportAction = 'DISMISS' | 'REMOVE_CONTENT' | 'WARN_USER' | 'BAN_USER';
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
-const CONTENT_TYPE_BADGE: Record<Report['contentType'], string> = {
-  STRATEGY: 'bg-blue-500/10 text-blue-400',
-  REVIEW: 'bg-purple-500/10 text-purple-400',
-  USER: 'bg-orange-500/10 text-orange-400',
-  COMMENT: 'bg-pf-elevated text-pf-text-secondary',
-};
-
-const STATUS_BADGE: Record<Report['status'], string> = {
-  PENDING: 'text-pf-warning bg-pf-warning/10',
-  RESOLVED: 'text-pf-success bg-pf-success/10',
-  DISMISSED: 'text-pf-text-secondary bg-pf-elevated',
-};
-
-interface SummaryStats {
-  totalPending: number;
-  resolvedToday: number;
-  bannedUsers: number;
-  removedContent: number;
+interface StrategyReview {
+  id: string;
+  strategyId: string;
+  strategyName: string;
+  authorId: string;
+  authorUsername: string;
+  rating: number; // 1–5
+  title?: string;
+  body: string;
+  status: 'pending' | 'approved' | 'rejected' | 'flagged';
+  flagReason?: string;
+  reportCount: number;
+  createdAt: string;
+  verifiedPurchase: boolean;
 }
 
-const TABS: { label: string; value: StatusFilter }[] = [
-  { label: 'Pending', value: 'PENDING' },
-  { label: 'Resolved', value: 'RESOLVED' },
-  { label: 'Dismissed', value: 'DISMISSED' },
-  { label: 'All', value: '' },
-];
+type ReviewStatus = 'pending' | 'approved' | 'rejected' | 'flagged';
+type ReviewAction = 'approve' | 'reject' | 'flag';
+type MinReports = 0 | 1 | 3 | 5;
 
-export function Component() {
-  const [reports, setReports] = useState<Report[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('PENDING');
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [stats, setStats] = useState<SummaryStats>({
-    totalPending: 0,
-    resolvedToday: 0,
-    bannedUsers: 0,
-    removedContent: 0,
-  });
-  const [actingOn, setActingOn] = useState<string | null>(null);
-  const limit = 20;
+interface ReviewsState {
+  data: StrategyReview[];
+  total: number;
+}
 
-  const loadReports = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await adminApi.reports({
-        status: statusFilter || undefined,
-        page,
-        limit,
-      });
-      const data = (res.data ?? []) as Report[];
-      setReports(data);
-      setTotal(res.total ?? 0);
-      setTotalPages(res.totalPages ?? Math.max(1, Math.ceil((res.total ?? 0) / limit)));
-    } catch {
-      toast.error('Failed to load reports');
-    } finally {
-      setLoading(false);
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function formatRelativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
+function StarDisplay({ rating }: { rating: number }) {
+  return (
+    <span className="inline-flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <span
+          key={i}
+          className={i < rating ? 'text-pf-warning' : 'text-pf-text-muted'}
+          aria-hidden
+        >
+          {i < rating ? '★' : '☆'}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Status badge
+// ---------------------------------------------------------------------------
+
+const STATUS_BADGE: Record<
+  ReviewStatus,
+  { label: string; className: string }
+> = {
+  pending: {
+    label: 'Pending',
+    className: 'bg-pf-warning/15 text-pf-warning border border-pf-warning/30',
+  },
+  approved: {
+    label: 'Approved',
+    className: 'bg-pf-success/15 text-pf-success border border-pf-success/30',
+  },
+  rejected: {
+    label: 'Rejected',
+    className: 'bg-pf-border/20 text-pf-text-muted border border-pf-border',
+  },
+  flagged: {
+    label: 'Flagged',
+    className: 'bg-pf-danger/15 text-pf-danger border border-pf-danger/30',
+  },
+};
+
+function StatusBadge({ status }: { status: ReviewStatus }) {
+  const { label, className } = STATUS_BADGE[status];
+  return (
+    <span
+      className={[
+        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+        className,
+      ].join(' ')}
+    >
+      {label}
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Card border per status
+// ---------------------------------------------------------------------------
+
+const CARD_BORDER: Record<ReviewStatus, string> = {
+  pending: 'border-pf-warning/30',
+  approved: 'border-pf-success/30',
+  rejected: 'border-pf-border opacity-60',
+  flagged: 'border-pf-danger/30',
+};
+
+// ---------------------------------------------------------------------------
+// Review card
+// ---------------------------------------------------------------------------
+
+interface ReviewCardProps {
+  review: StrategyReview;
+  onAction: (id: string, action: ReviewAction, reason?: string) => Promise<void>;
+}
+
+function ReviewCard({ review, onAction }: ReviewCardProps) {
+  const [flagging, setFlagging] = useState(false);
+  const [flagReason, setFlagReason] = useState('');
+  const [acting, setActing] = useState<ReviewAction | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleAction = useCallback(
+    async (action: ReviewAction, reason?: string) => {
+      setActing(action);
+      try {
+        await onAction(review.id, action, reason);
+      } finally {
+        setActing(null);
+      }
+    },
+    [onAction, review.id],
+  );
+
+  const handleApprove = () => {
+    setFlagging(false);
+    handleAction('approve');
+  };
+
+  const handleReject = () => {
+    setFlagging(false);
+    handleAction('reject');
+  };
+
+  const handleFlagToggle = () => {
+    setFlagging((prev) => !prev);
+    setFlagReason('');
+    setTimeout(() => textareaRef.current?.focus(), 0);
+  };
+
+  const handleFlagSubmit = () => {
+    if (!flagReason.trim()) {
+      toast.error('Flag reason is required');
+      textareaRef.current?.focus();
+      return;
     }
-  }, [statusFilter, page]);
+    handleAction('flag', flagReason.trim()).then(() => {
+      setFlagging(false);
+      setFlagReason('');
+    });
+  };
 
-  // Load summary stats from the PENDING list independently
-  const loadStats = useCallback(async () => {
-    try {
-      const [pendingRes, resolvedRes] = await Promise.all([
-        adminApi.reports({ status: 'PENDING', page: 1, limit: 1 }),
-        adminApi.reports({ status: 'RESOLVED', page: 1, limit: 100 }),
-      ]);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const resolvedData = (resolvedRes.data ?? []) as Report[];
-      const resolvedToday = resolvedData.filter(
-        (r) => r.resolvedAt && new Date(r.resolvedAt) >= today,
-      ).length;
-      const bannedUsers = resolvedData.filter((r) => r.adminNote?.includes('BAN_USER')).length;
-      const removedContent = resolvedData.filter((r) =>
-        r.adminNote?.includes('REMOVE_CONTENT'),
-      ).length;
-      setStats({
-        totalPending: pendingRes.total ?? 0,
-        resolvedToday,
-        bannedUsers,
-        removedContent,
-      });
-    } catch {
-      // stats are non-critical, silently fail
-    }
-  }, []);
-
-  useEffect(() => {
-    loadReports();
-  }, [loadReports]);
-
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
-
-  async function handleAction(report: Report, action: ReportAction) {
-    const isDestructive = action === 'REMOVE_CONTENT' || action === 'BAN_USER';
-    const actionLabel =
-      action === 'DISMISS'
-        ? 'Dismiss'
-        : action === 'REMOVE_CONTENT'
-          ? 'Remove content'
-          : action === 'WARN_USER'
-            ? 'Warn user'
-            : 'Ban user';
-
-    if (isDestructive) {
-      const confirmed = window.confirm(
-        `Are you sure you want to "${actionLabel}" for report by @${report.reporter.username}?`,
-      );
-      if (!confirmed) return;
-    }
-
-    // Optimistic update
-    setActingOn(report.id);
-    const optimisticStatus: Report['status'] =
-      action === 'DISMISS' ? 'DISMISSED' : 'RESOLVED';
-    setReports((prev) =>
-      prev.map((r) =>
-        r.id === report.id ? { ...r, status: optimisticStatus } : r,
-      ),
-    );
-
-    try {
-      await adminApi.actionReport(report.id, action);
-      toast.success(`${actionLabel} applied successfully`);
-      loadStats();
-    } catch {
-      // Revert optimistic update
-      setReports((prev) =>
-        prev.map((r) => (r.id === report.id ? report : r)),
-      );
-      toast.error(`Failed to apply action`);
-    } finally {
-      setActingOn(null);
-    }
-  }
-
-  function handleTabChange(value: StatusFilter) {
-    setStatusFilter(value);
-    setPage(1);
-  }
+  const busy = acting !== null;
 
   return (
-    <div className="animate-fade-in space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <h2 className="text-lg font-semibold text-pf-text">Reports</h2>
-        <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-pf-warning/10 text-pf-warning">
-          {stats.totalPending} pending
+    <article
+      className={[
+        'rounded-pf-lg border bg-pf-elevated p-5 space-y-3 transition-opacity',
+        CARD_BORDER[review.status],
+        busy ? 'opacity-70 pointer-events-none' : '',
+      ].join(' ')}
+    >
+      {/* Top row: rating, strategy, author, time */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <StarDisplay rating={review.rating} />
+        <span className="text-xs text-pf-text-muted">({review.rating}/5)</span>
+        <span className="text-sm font-medium text-pf-text">
+          Strategy:{' '}
+          <span className="text-pf-cyan-400">&ldquo;{review.strategyName}&rdquo;</span>
+        </span>
+        <span className="text-xs text-pf-text-muted">
+          @{review.authorUsername}
+        </span>
+        <span className="ml-auto text-xs text-pf-text-muted tabular-nums">
+          {formatRelativeTime(review.createdAt)}
         </span>
       </div>
 
-      {/* Summary stats bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-sm px-4 py-3">
-          <p className="text-xs text-pf-text-tertiary mb-1">Total Pending</p>
-          <p className="text-xl font-semibold text-pf-warning">{stats.totalPending}</p>
-        </div>
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-sm px-4 py-3">
-          <p className="text-xs text-pf-text-tertiary mb-1">Resolved Today</p>
-          <p className="text-xl font-semibold text-pf-success">{stats.resolvedToday}</p>
-        </div>
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-sm px-4 py-3">
-          <p className="text-xs text-pf-text-tertiary mb-1">Banned Users</p>
-          <p className="text-xl font-semibold text-pf-danger">{stats.bannedUsers}</p>
-        </div>
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-sm px-4 py-3">
-          <p className="text-xs text-pf-text-tertiary mb-1">Removed Content</p>
-          <p className="text-xl font-semibold text-pf-text">{stats.removedContent}</p>
-        </div>
-      </div>
+      {/* Badges row */}
+      <div className="flex flex-wrap items-center gap-2">
+        <StatusBadge status={review.status} />
 
-      {/* Status filter tabs */}
-      <div className="flex gap-1 border-b border-pf-border">
-        {TABS.map((tab) => (
-          <button
-            key={tab.value}
-            type="button"
-            onClick={() => handleTabChange(tab.value)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
-              statusFilter === tab.value
-                ? 'border-pf-cyan-500 text-pf-cyan-500'
-                : 'border-transparent text-pf-text-secondary hover:text-pf-text'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Table */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <caption className="sr-only">Content reports moderation queue</caption>
-            <thead>
-              <tr className="border-b border-pf-border">
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider whitespace-nowrap">
-                  Reported At
-                </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
-                  Type
-                </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
-                  Reporter
-                </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider whitespace-nowrap">
-                  Reported User
-                </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
-                  Reason
-                </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider whitespace-nowrap">
-                  Content Preview
-                </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
-                  Status
-                </th>
-                <th scope="col" className="text-right px-4 py-3 text-xs font-medium text-pf-text-tertiary uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} {...(i === 0 ? { role: 'status' as const, 'aria-live': 'polite' as const, 'aria-label': 'Loading reports' } : {})}>
-                    {Array.from({ length: 8 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-pf-surface rounded animate-pulse" />
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : reports.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="text-center py-16">
-                    <Flag className="mx-auto mb-3 text-pf-text-tertiary opacity-40" size={40} aria-hidden="true" />
-                    <p className="text-pf-text-secondary font-medium">No reports</p>
-                    <p className="text-pf-text-tertiary text-xs mt-1">
-                      {statusFilter ? `No ${statusFilter.toLowerCase()} reports` : 'All clear'}
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                reports.map((r) => {
-                  const isActing = actingOn === r.id;
-                  const truncatedReason =
-                    r.reason.length > 60 ? r.reason.slice(0, 57) + '…' : r.reason;
-                  const truncatedPreview = r.contentPreview
-                    ? r.contentPreview.length > 60
-                      ? r.contentPreview.slice(0, 57) + '…'
-                      : r.contentPreview
-                    : null;
-
-                  return (
-                    <tr
-                      key={r.id}
-                      className={`border-b border-pf-border last:border-0 transition-colors ${
-                        isActing ? 'opacity-50' : 'hover:bg-pf-base'
-                      }`}
-                    >
-                      {/* Reported At */}
-                      <td className="px-4 py-3 text-pf-text-tertiary text-xs whitespace-nowrap">
-                        {formatDateTime(r.createdAt)}
-                      </td>
-
-                      {/* Type badge */}
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${CONTENT_TYPE_BADGE[r.contentType]}`}
-                        >
-                          {r.contentType}
-                        </span>
-                      </td>
-
-                      {/* Reporter */}
-                      <td className="px-4 py-3 text-pf-text-secondary text-xs">
-                        <span title={r.reporter.displayName ?? r.reporter.username}>
-                          @{r.reporter.username}
-                        </span>
-                      </td>
-
-                      {/* Reported User */}
-                      <td className="px-4 py-3 text-pf-text-secondary text-xs">
-                        <span title={r.reported.displayName ?? r.reported.username}>
-                          @{r.reported.username}
-                        </span>
-                      </td>
-
-                      {/* Reason */}
-                      <td
-                        className="px-4 py-3 text-pf-text-secondary text-xs max-w-[160px] truncate"
-                        title={r.reason}
-                      >
-                        {truncatedReason}
-                      </td>
-
-                      {/* Content Preview */}
-                      <td className="px-4 py-3 text-xs max-w-[180px]">
-                        {truncatedPreview ? (
-                          <span
-                            className="font-mono text-pf-text-secondary truncate block"
-                            title={r.contentPreview}
-                          >
-                            {truncatedPreview}
-                          </span>
-                        ) : (
-                          <span className="text-pf-text-tertiary italic">—</span>
-                        )}
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_BADGE[r.status]}`}
-                        >
-                          {r.status}
-                        </span>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-4 py-3">
-                        {r.status === 'PENDING' ? (
-                          <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                            {/* Dismiss */}
-                            <button
-                              type="button"
-                              disabled={isActing}
-                              onClick={() => handleAction(r, 'DISMISS')}
-                              title="Dismiss report"
-                              aria-label={`Dismiss report from @${r.reporter.username}`}
-                              className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-elevated border border-pf-border text-pf-text-secondary hover:bg-pf-base hover:text-pf-text disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
-                            >
-                              <CheckCircle size={11} aria-hidden="true" />
-                              Dismiss
-                            </button>
-
-                            {/* Remove Content */}
-                            <button
-                              type="button"
-                              disabled={isActing}
-                              onClick={() => handleAction(r, 'REMOVE_CONTENT')}
-                              title="Remove reported content"
-                              aria-label={`Remove content reported by @${r.reporter.username}`}
-                              className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
-                            >
-                              <Trash2 size={11} aria-hidden="true" />
-                              Remove
-                            </button>
-
-                            {/* Warn User */}
-                            <button
-                              type="button"
-                              disabled={isActing}
-                              onClick={() => handleAction(r, 'WARN_USER')}
-                              title="Warn reported user"
-                              aria-label={`Warn @${r.reported.username}`}
-                              className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-warning/10 text-pf-warning hover:bg-pf-warning/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-warning"
-                            >
-                              <AlertTriangle size={11} aria-hidden="true" />
-                              Warn
-                            </button>
-
-                            {/* Ban User */}
-                            <button
-                              type="button"
-                              disabled={isActing}
-                              onClick={() => handleAction(r, 'BAN_USER')}
-                              title="Ban reported user"
-                              aria-label={`Ban @${r.reported.username}`}
-                              className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded border border-pf-danger text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
-                            >
-                              <Ban size={11} aria-hidden="true" />
-                              Ban
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="text-right">
-                            {r.resolvedAt && (
-                              <span className="text-xs text-pf-text-tertiary">
-                                {formatDateTime(r.resolvedAt)}
-                              </span>
-                            )}
-                            {r.adminNote && (
-                              <p className="text-xs text-pf-text-tertiary mt-0.5 italic max-w-[160px] truncate" title={r.adminNote}>
-                                {r.adminNote}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-pf-border">
-            <span className="text-xs text-pf-text-tertiary">
-              Page {page} of {totalPages}
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                aria-label="Previous page"
-                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                aria-label="Next page"
-                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
+        {review.verifiedPurchase && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-pf-success/30 bg-pf-success/10 px-2 py-0.5 text-xs font-medium text-pf-success">
+            <Check className="h-3 w-3" aria-hidden />
+            Verified Purchase
+          </span>
         )}
+
+        {review.reportCount > 0 && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-pf-danger/30 bg-pf-danger/10 px-2 py-0.5 text-xs font-medium text-pf-danger">
+            <AlertTriangle className="h-3 w-3" aria-hidden />
+            {review.reportCount} {review.reportCount === 1 ? 'report' : 'reports'}
+          </span>
+        )}
+
+        {review.status === 'flagged' && review.flagReason && (
+          <span className="text-xs text-pf-text-muted italic">
+            Reason: {review.flagReason}
+          </span>
+        )}
+      </div>
+
+      {/* Review content */}
+      <div className="space-y-1">
+        {review.title && (
+          <p className="text-sm font-semibold text-pf-text">&ldquo;{review.title}&rdquo;</p>
+        )}
+        <p className="text-sm text-pf-text-secondary leading-relaxed">{review.body}</p>
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        <button
+          type="button"
+          onClick={handleApprove}
+          disabled={busy}
+          className={[
+            'inline-flex items-center gap-1.5 rounded-pf-sm border px-3 py-1.5 text-xs font-medium transition-colors',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+            review.status === 'approved'
+              ? 'border-pf-success/40 bg-pf-success/10 text-pf-success'
+              : 'border-pf-border bg-pf-surface text-pf-text-secondary hover:border-pf-success/40 hover:text-pf-success',
+          ].join(' ')}
+          aria-pressed={review.status === 'approved'}
+        >
+          <Check className="h-3.5 w-3.5" aria-hidden />
+          Approve
+        </button>
+
+        <button
+          type="button"
+          onClick={handleReject}
+          disabled={busy}
+          className={[
+            'inline-flex items-center gap-1.5 rounded-pf-sm border px-3 py-1.5 text-xs font-medium transition-colors',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+            review.status === 'rejected'
+              ? 'border-pf-border/60 bg-pf-border/10 text-pf-text-muted'
+              : 'border-pf-border bg-pf-surface text-pf-text-secondary hover:border-pf-danger/40 hover:text-pf-danger',
+          ].join(' ')}
+          aria-pressed={review.status === 'rejected'}
+        >
+          <X className="h-3.5 w-3.5" aria-hidden />
+          Reject
+        </button>
+
+        <button
+          type="button"
+          onClick={handleFlagToggle}
+          disabled={busy}
+          className={[
+            'inline-flex items-center gap-1.5 rounded-pf-sm border px-3 py-1.5 text-xs font-medium transition-colors',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+            review.status === 'flagged' || flagging
+              ? 'border-pf-danger/40 bg-pf-danger/10 text-pf-danger'
+              : 'border-pf-border bg-pf-surface text-pf-text-secondary hover:border-pf-danger/40 hover:text-pf-danger',
+          ].join(' ')}
+          aria-pressed={flagging}
+          aria-expanded={flagging}
+        >
+          <Flag className="h-3.5 w-3.5" aria-hidden />
+          Flag
+        </button>
+
+        <a
+          href={`/strategies/${review.strategyId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={[
+            'ml-auto inline-flex items-center gap-1.5 rounded-pf-sm border border-pf-border px-3 py-1.5 text-xs font-medium text-pf-text-secondary',
+            'hover:text-pf-cyan-400 hover:border-pf-cyan-400/40 transition-colors',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+          ].join(' ')}
+        >
+          <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+          View Strategy
+        </a>
+      </div>
+
+      {/* Inline flag reason textarea */}
+      {flagging && (
+        <div className="space-y-2 rounded-pf-sm border border-pf-danger/30 bg-pf-danger/5 p-3">
+          <label
+            htmlFor={`flag-reason-${review.id}`}
+            className="block text-xs font-medium text-pf-danger"
+          >
+            Flag reason <span aria-hidden>*</span>
+          </label>
+          <textarea
+            id={`flag-reason-${review.id}`}
+            ref={textareaRef}
+            value={flagReason}
+            onChange={(e) => setFlagReason(e.target.value)}
+            rows={3}
+            placeholder="Describe the policy violation or reason for flagging…"
+            className={[
+              'w-full resize-y rounded-pf-sm border border-pf-border bg-pf-surface px-3 py-2',
+              'text-xs text-pf-text placeholder:text-pf-text-muted',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+            ].join(' ')}
+          />
+          <div className="flex items-center gap-2 justify-end">
+            <button
+              type="button"
+              onClick={() => { setFlagging(false); setFlagReason(''); }}
+              className="rounded-pf-sm border border-pf-border px-3 py-1.5 text-xs font-medium text-pf-text-secondary hover:border-pf-border-strong transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleFlagSubmit}
+              disabled={!flagReason.trim() || busy}
+              className={[
+                'inline-flex items-center gap-1.5 rounded-pf-sm px-3 py-1.5 text-xs font-semibold transition-all',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+                flagReason.trim()
+                  ? 'bg-pf-danger text-white hover:brightness-110'
+                  : 'bg-pf-elevated border border-pf-border text-pf-text-muted cursor-not-allowed opacity-50',
+              ].join(' ')}
+            >
+              <Flag className="h-3 w-3" aria-hidden />
+              Submit Flag
+            </button>
+          </div>
+        </div>
+      )}
+    </article>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton cards
+// ---------------------------------------------------------------------------
+
+function ReviewCardSkeleton() {
+  return (
+    <div className="rounded-pf-lg border border-pf-border bg-pf-elevated p-5 space-y-3 animate-shimmer">
+      <div className="flex items-center gap-3">
+        <div className="h-4 w-24 rounded-pf-sm bg-pf-border" />
+        <div className="h-4 w-40 rounded-pf-sm bg-pf-border" />
+        <div className="ml-auto h-3 w-16 rounded-pf-sm bg-pf-border" />
+      </div>
+      <div className="flex gap-2">
+        <div className="h-5 w-16 rounded-full bg-pf-border" />
+        <div className="h-5 w-24 rounded-full bg-pf-border" />
+      </div>
+      <div className="space-y-2">
+        <div className="h-3.5 w-3/4 rounded-pf-sm bg-pf-border" />
+        <div className="h-3 w-full rounded-pf-sm bg-pf-border" />
+        <div className="h-3 w-5/6 rounded-pf-sm bg-pf-border" />
+      </div>
+      <div className="flex gap-2 pt-1">
+        <div className="h-7 w-20 rounded-pf-sm bg-pf-border" />
+        <div className="h-7 w-20 rounded-pf-sm bg-pf-border" />
+        <div className="h-7 w-16 rounded-pf-sm bg-pf-border" />
+        <div className="ml-auto h-7 w-28 rounded-pf-sm bg-pf-border" />
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Summary stats
+// ---------------------------------------------------------------------------
+
+interface ReviewSummaryStats {
+  totalPending: number;
+  totalFlagged: number;
+  avgRating: number;
+  totalThisWeek: number;
+}
+
+interface StatTileProps {
+  label: string;
+  value: string | number;
+  accent?: boolean;
+  danger?: boolean;
+}
+
+function StatTile({ label, value, accent, danger }: StatTileProps) {
+  const valueClass = danger
+    ? 'text-pf-danger'
+    : accent
+      ? 'text-pf-warning'
+      : 'text-pf-text';
+
+  return (
+    <div className="rounded-pf-lg border border-pf-border bg-pf-elevated px-4 py-3 space-y-0.5">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-pf-text-muted">
+        {label}
+      </p>
+      <p className={['text-2xl font-bold tabular-nums', valueClass].join(' ')}>{value}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Empty state
+// ---------------------------------------------------------------------------
+
+function EmptyState({ status }: { status: ReviewStatus }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 rounded-pf-lg border border-pf-border bg-pf-elevated py-16 text-center">
+      <MessageSquare className="h-10 w-10 text-pf-text-muted" aria-hidden />
+      <p className="text-sm font-medium text-pf-text-secondary">
+        No {status} reviews
+      </p>
+      <p className="text-xs text-pf-text-muted max-w-xs">
+        {status === 'pending'
+          ? 'All reviews have been moderated.'
+          : `There are currently no ${status} reviews to display.`}
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Reviews tab
+// ---------------------------------------------------------------------------
+
+const STATUS_TABS: Array<{ value: ReviewStatus; label: string }> = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'rejected', label: 'Rejected' },
+  { value: 'flagged', label: 'Flagged' },
+];
+
+const MIN_REPORTS_OPTIONS: Array<{ value: MinReports; label: string }> = [
+  { value: 0, label: 'All reports' },
+  { value: 1, label: 'Reported 1+' },
+  { value: 3, label: 'Reported 3+' },
+  { value: 5, label: 'Reported 5+' },
+];
+
+const PAGE_SIZE = 10;
+
+function ReviewsTab() {
+  const [status, setStatus] = useState<ReviewStatus>('pending');
+  const [minReports, setMinReports] = useState<MinReports>(0);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
+
+  const [reviews, setReviews] = useState<StrategyReview[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const [stats, setStats] = useState<ReviewSummaryStats | null>(null);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+    setReviews([]);
+  }, [status, minReports, debouncedSearch]);
+
+  // Fetch reviews
+  useEffect(() => {
+    let cancelled = false;
+    const isFirstPage = page === 1;
+
+    if (isFirstPage) setLoading(true);
+    else setLoadingMore(true);
+
+    adminApi
+      .strategyReviews({
+        status,
+        page,
+        limit: PAGE_SIZE,
+        minReports: minReports > 0 ? minReports : undefined,
+        search: debouncedSearch || undefined,
+      })
+      .then((result: ReviewsState) => {
+        if (cancelled) return;
+        setReviews((prev) =>
+          isFirstPage ? result.data : [...prev, ...result.data],
+        );
+        setTotal(result.total);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('Failed to load reviews');
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, [status, minReports, debouncedSearch, page]);
+
+  // Fetch summary stats once on mount
+  useEffect(() => {
+    let cancelled = false;
+    adminApi
+      .reviewStats()
+      .then((s: ReviewSummaryStats) => {
+        if (!cancelled) setStats(s);
+      })
+      .catch(() => {
+        // stats are non-critical — silently skip
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const hasMore = reviews.length < total;
+
+  const handleAction = useCallback(
+    async (id: string, action: ReviewAction, reason?: string) => {
+      await adminApi.reviewAction(id, action, reason);
+
+      const label =
+        action === 'approve'
+          ? 'Review approved'
+          : action === 'reject'
+            ? 'Review rejected'
+            : 'Review flagged';
+      toast.success(label);
+
+      // Update card in place
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.id === id
+            ? {
+                ...r,
+                status:
+                  action === 'approve'
+                    ? 'approved'
+                    : action === 'reject'
+                      ? 'rejected'
+                      : 'flagged',
+                flagReason: action === 'flag' ? reason : r.flagReason,
+              }
+            : r,
+        ),
+      );
+    },
+    [],
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Summary stats */}
+      {stats && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatTile label="Pending" value={stats.totalPending} accent />
+          <StatTile label="Flagged" value={stats.totalFlagged} danger />
+          <StatTile
+            label="Avg Rating"
+            value={`${stats.avgRating.toFixed(1)} ★`}
+          />
+          <StatTile label="This Week" value={stats.totalThisWeek} />
+        </div>
+      )}
+
+      {/* Filter bar */}
+      <div className="space-y-3">
+        {/* Status pills */}
+        <div
+          role="tablist"
+          aria-label="Filter by review status"
+          className="flex flex-wrap gap-1.5"
+        >
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              role="tab"
+              aria-selected={status === tab.value}
+              type="button"
+              onClick={() => setStatus(tab.value)}
+              className={[
+                'rounded-pf-sm px-3 py-1.5 text-xs font-medium transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+                status === tab.value
+                  ? 'bg-pf-elevated border border-pf-border text-pf-text'
+                  : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated/50',
+              ].join(' ')}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Secondary filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Min reports dropdown */}
+          <select
+            value={minReports}
+            onChange={(e) => setMinReports(Number(e.target.value) as MinReports)}
+            aria-label="Minimum report count filter"
+            className={[
+              'rounded-pf-sm border border-pf-border bg-pf-surface px-3 py-1.5 text-xs text-pf-text',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+            ].join(' ')}
+          >
+            {MIN_REPORTS_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          {/* Search */}
+          <div className="relative flex-1 min-w-[180px] max-w-xs">
+            <Search
+              className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-pf-text-muted"
+              aria-hidden
+            />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search strategy or author…"
+              aria-label="Search reviews by strategy name or author"
+              className={[
+                'w-full rounded-pf-sm border border-pf-border bg-pf-surface py-1.5 pl-8 pr-3 text-xs text-pf-text',
+                'placeholder:text-pf-text-muted',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+              ].join(' ')}
+            />
+          </div>
+
+          {total > 0 && (
+            <span className="ml-auto text-xs text-pf-text-muted tabular-nums">
+              {total} result{total !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Review list */}
+      <div role="feed" aria-label="Strategy reviews" aria-busy={loading} className="space-y-3">
+        {loading &&
+          Array.from({ length: 3 }).map((_, i) => <ReviewCardSkeleton key={i} />)}
+
+        {!loading &&
+          reviews.length > 0 &&
+          reviews.map((review) => (
+            <ReviewCard key={review.id} review={review} onAction={handleAction} />
+          ))}
+
+        {!loading && reviews.length === 0 && <EmptyState status={status} />}
+      </div>
+
+      {/* Load more */}
+      {!loading && hasMore && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => setPage((p) => p + 1)}
+            disabled={loadingMore}
+            className={[
+              'rounded-pf px-5 py-2 text-sm font-medium transition-all',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+              loadingMore
+                ? 'bg-pf-elevated border border-pf-border text-pf-text-muted cursor-not-allowed'
+                : 'bg-pf-elevated border border-pf-border text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong',
+            ].join(' ')}
+          >
+            {loadingMore ? 'Loading…' : `Load more (${total - reviews.length} remaining)`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Tab definitions (extensible — add more moderation tabs here later)
+// ---------------------------------------------------------------------------
+
+type TabId = 'reviews';
+
+interface Tab {
+  id: TabId;
+  label: string;
+  icon: React.ReactNode;
+}
+
+const TABS: Tab[] = [
+  {
+    id: 'reviews',
+    label: 'Reviews',
+    icon: <Star className="h-4 w-4" aria-hidden />,
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Main page component
+// ---------------------------------------------------------------------------
+
+export function Component() {
+  const [activeTab, setActiveTab] = useState<TabId>('reviews');
+
+  return (
+    <div className="min-h-screen bg-pf-surface animate-fade-in">
+      <div className="mx-auto max-w-4xl px-4 py-8 space-y-6">
+
+        {/* Page header */}
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-pf-lg bg-pf-elevated border border-pf-border">
+            <MessageSquare className="h-5 w-5 text-pf-cyan-400" aria-hidden />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-pf-text leading-tight">
+              Content Moderation
+            </h1>
+            <p className="text-xs text-pf-text-muted mt-0.5">
+              Moderate strategy marketplace reviews and ratings
+            </p>
+          </div>
+        </div>
+
+        {/* Tab bar */}
+        <div
+          role="tablist"
+          aria-label="Moderation sections"
+          className="flex gap-1 border-b border-pf-border"
+        >
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              role="tab"
+              id={`tab-${tab.id}`}
+              aria-selected={activeTab === tab.id}
+              aria-controls={`tabpanel-${tab.id}`}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={[
+                'inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors -mb-px border-b-2',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-t-pf-sm',
+                activeTab === tab.id
+                  ? 'border-pf-cyan-400 text-pf-text'
+                  : 'border-transparent text-pf-text-secondary hover:text-pf-text hover:border-pf-border',
+              ].join(' ')}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab panels */}
+        <div
+          role="tabpanel"
+          id="tabpanel-reviews"
+          aria-labelledby="tab-reviews"
+          hidden={activeTab !== 'reviews'}
+        >
+          {activeTab === 'reviews' && <ReviewsTab />}
+        </div>
+
       </div>
     </div>
   );

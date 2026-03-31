@@ -75,6 +75,24 @@ export const authApi = {
   logout: () => request<void>(`${AUTH_BASE}/logout`, { method: 'POST' }),
 };
 
+// ─── Strategy Review Types ────────────────────────────────────────────────────
+
+export interface StrategyReview {
+  id: string;
+  strategyId: string;
+  strategyName: string;
+  authorId: string;
+  authorUsername: string;
+  rating: number;
+  title?: string;
+  body: string;
+  status: 'pending' | 'approved' | 'rejected' | 'flagged';
+  flagReason?: string;
+  reportCount: number;
+  createdAt: string;
+  verifiedPurchase: boolean;
+}
+
 // ─── API Response Types ────────────────────────────────────────────────────────
 
 interface HealthData {
@@ -658,4 +676,36 @@ export const adminApi = {
         primarySource: string;
       }>;
     }>(buildUrl('/api/admin', '/revenue/top-users', { period, limit })),
+
+  // ---- Strategy Reviews -------------------------------------------------------
+
+  strategyReviews: (params?: {
+    status?: string;
+    page?: number;
+    limit?: number;
+    minReports?: number;
+    search?: string;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params?.status) qs.set('status', params.status);
+    if (params?.page != null) qs.set('page', String(params.page));
+    if (params?.limit != null) qs.set('limit', String(params.limit));
+    if (params?.minReports != null) qs.set('minReports', String(params.minReports));
+    if (params?.search) qs.set('search', params.search);
+    const query = qs.toString();
+    return request<{ data: StrategyReview[]; total: number }>(
+      `/api/admin/reviews/strategies${query ? `?${query}` : ''}`,
+    );
+  },
+
+  reviewStats: () =>
+    request<{ totalPending: number; totalFlagged: number; avgRating: number; totalThisWeek: number }>(
+      '/api/admin/reviews/strategies/stats',
+    ),
+
+  reviewAction: (id: string, action: 'approve' | 'reject' | 'flag', reason?: string) =>
+    request<void>(`/api/admin/reviews/strategies/${id}/action`, {
+      method: 'POST',
+      body: JSON.stringify({ action, ...(reason ? { reason } : {}) }),
+    }),
 };
