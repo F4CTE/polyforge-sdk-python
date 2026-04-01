@@ -1,6 +1,6 @@
 # Dockerfile.migrate — User DB migrations (Prisma 7)
 
-FROM node:20-alpine AS builder
+FROM node:20-alpine@sha256:f598378b5240225e6beab68fa9f356db1fb8efe55173e6d4d8153113bb8f333c AS builder
 WORKDIR /app
 
 COPY prisma/schema.prisma      ./prisma/schema.prisma
@@ -14,7 +14,7 @@ RUN npx prisma generate \
       --schema ./prisma/schema.prisma \
       --config ./prisma/prisma.config.ts
 
-FROM node:20-alpine AS runner
+FROM node:20-alpine@sha256:f598378b5240225e6beab68fa9f356db1fb8efe55173e6d4d8153113bb8f333c AS runner
 WORKDIR /app
 
 # postgresql-client provides psql for post-migration SQL scripts

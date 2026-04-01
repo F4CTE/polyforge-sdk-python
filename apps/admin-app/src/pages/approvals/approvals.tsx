@@ -133,7 +133,7 @@ export function Component() {
                         onClick={() => approve(u.id)}
                         disabled={acting === u.id}
                         title="Approve"
-                        className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 text-xs font-medium transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 text-xs font-medium transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success/40"
                       >
                         <Check className="size-3" /> Approve
                       </button>
@@ -142,7 +142,7 @@ export function Component() {
                         onClick={() => reject(u.id)}
                         disabled={acting === u.id}
                         title="Reject"
-                        className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 text-xs font-medium transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 text-xs font-medium transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40"
                       >
                         <X className="size-3" /> Reject
                       </button>
@@ -157,13 +157,13 @@ export function Component() {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4">
-          <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+          <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page"
+            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
             <ChevronLeft className="size-4" />
           </button>
           <span className="text-sm font-mono text-pf-text-secondary">{page} / {totalPages}</span>
-          <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+          <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page"
+            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
             <ChevronRight className="size-4" />
           </button>
         </div>

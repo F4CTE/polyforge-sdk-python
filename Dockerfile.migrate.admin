@@ -1,6 +1,6 @@
 # Dockerfile.migrate.admin — Admin DB migrations (Prisma 7)
 
-FROM node:20-alpine AS builder
+FROM node:20-alpine@sha256:f598378b5240225e6beab68fa9f356db1fb8efe55173e6d4d8153113bb8f333c AS builder
 WORKDIR /app
 
 COPY prisma/schema.admin.prisma    ./prisma/schema.admin.prisma
@@ -14,7 +14,7 @@ RUN npx prisma generate \
       --schema ./prisma/schema.admin.prisma \
       --config ./prisma/prisma.admin.config.ts
 
-FROM node:20-alpine AS runner
+FROM node:20-alpine@sha256:f598378b5240225e6beab68fa9f356db1fb8efe55173e6d4d8153113bb8f333c AS runner
 WORKDIR /app
 
 RUN addgroup --system migrate && adduser --system --ingroup migrate migrate

@@ -1,5 +1,5 @@
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine AS builder
+FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b AS builder
 RUN corepack enable
 WORKDIR /app
 
@@ -24,7 +24,7 @@ RUN pnpm --filter @polyforge/user-app build
 
 # Runtime
 # NOTE: Production should pin to a specific digest, e.g. nginx:1.27-alpine@sha256:...
-FROM nginx:1.27-alpine
+FROM nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
 # Use pre-built dist if available (for dev), otherwise use builder stage
 COPY --from=builder /app/apps/user-app/dist /usr/share/nginx/html
 COPY apps/user-app/nginx.conf /etc/nginx/conf.d/default.conf

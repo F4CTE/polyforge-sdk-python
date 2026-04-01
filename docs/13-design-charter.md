@@ -64,42 +64,49 @@ Polyforge est un outil professionnel pour traders sérieux. L'interface doit ins
 
 ### Palette principale
 
+> **Note (v3.0+):** Le projet utilise Tailwind v4 avec un bloc `@theme` dans `packages/ui/src/globals.css`. Les noms de variables CSS ont changé : préfixe `--color-pf-*` (au lieu de `--pf-bg-*`). La palette de base est désormais **shadcn/slate** (Tailwind slate-950/900/800) — voir section §32.
+
 ```
 ─────────────────────────────────────────────────────────────
-BACKGROUNDS
+BACKGROUNDS  (implémentation réelle — shadcn slate)
 ─────────────────────────────────────────────────────────────
---pf-bg-base       #080C14    Fond principal — bleu-nuit très profond
---pf-bg-surface    #0D1421    Cartes, panneaux, sidebar
---pf-bg-elevated   #111D2E    Modals, dropdowns, tooltips
---pf-bg-overlay    #162030    Hover state sur les surfaces
+--color-pf-base       #020817    Fond principal (slate-950)
+--color-pf-surface    #0f172a    Cartes, panneaux, sidebar (slate-900)
+--color-pf-elevated   #0f172a    Modals, dropdowns (slate-900, distincts par border)
+--color-pf-overlay    #1e293b    Hover state sur les surfaces (slate-800)
+--color-pf-bg         #020817    Alias de pf-base
 
 ─────────────────────────────────────────────────────────────
-BORDERS
+BORDERS  (shadcn slate)
 ─────────────────────────────────────────────────────────────
---pf-border-subtle  #1A2840   Séparateurs discrets (tables, sections)
---pf-border-default #1E3350   Bordures standard (inputs, cartes)
---pf-border-strong  #264060   Bordures actives ou focus
+--color-pf-border-subtle  #1e293b   Séparateurs discrets (slate-800)
+--color-pf-border         #1e293b   Bordures standard
+--color-pf-border-strong  #334155   Bordures actives ou focus (slate-700)
 
 ─────────────────────────────────────────────────────────────
-TEXTE
+TEXTE  (shadcn slate)
 ─────────────────────────────────────────────────────────────
---pf-text-primary   #E8EDF5   Titres, labels principaux
---pf-text-secondary #7A94B4   Labels secondaires, descriptions
---pf-text-muted     #445E7A   Placeholders, métadonnées
---pf-text-disabled  #2A3D52   Contenu désactivé
+--color-pf-text           #f8fafc   Titres, labels principaux (slate-50)
+--color-pf-text-secondary #94a3b8   Labels secondaires (slate-400)
+--color-pf-text-muted     #64748b   Placeholders, métadonnées (slate-500)
+--color-pf-text-tertiary  #64748b   Identique à muted
+--color-pf-text-disabled  #475569   Contenu désactivé (slate-600)
 
 ─────────────────────────────────────────────────────────────
 ACCENT — CYAN (couleur signature Polyforge)
 ─────────────────────────────────────────────────────────────
---pf-cyan-50        #ECFEFF
---pf-cyan-100       #CFFAFE
---pf-cyan-200       #A5F3FC
---pf-cyan-300       #67E8F9
---pf-cyan-400       #22D3EE
---pf-cyan-500       #06B6D4   ← Accent principal
---pf-cyan-600       #0891B2   ← Hover / pressed
---pf-cyan-700       #0E7490   ← Active states
---pf-cyan-glow      rgba(6,182,212,0.15)  ← Halos, glows subtils
+--color-pf-cyan-50        #ecfeff
+--color-pf-cyan-100       #cffafe
+--color-pf-cyan-200       #a5f3fc
+--color-pf-cyan-300       #67e8f9
+--color-pf-cyan-400       #22d3ee
+--color-pf-cyan-500       #06b6d4   ← Accent principal (dark mode)
+--color-pf-cyan-600       #0891b2   ← Hover / pressed
+--color-pf-cyan-700       #0e7490   ← Active states / light mode accent
+--color-pf-cyan-glow      rgba(6,182,212,0.15)  ← Halos, glows subtils
+
+Light mode : --color-pf-cyan-400 → #0891b2 (cyan-600, 4.6:1 AA ✓)
+             --color-pf-cyan-500 → #0e7490 (cyan-700, 6.4:1 AA ✓)
 
 ─────────────────────────────────────────────────────────────
 ACCENT — GOLD (financial data, trust, premium)
@@ -122,23 +129,32 @@ ACCENT — PURPLE (premium features, tech, AI)
 ─────────────────────────────────────────────────────────────
 SÉMANTIQUE
 ─────────────────────────────────────────────────────────────
---pf-success        #10B981   Profit, confirmer, connecté
---pf-success-bg     rgba(16,185,129,0.08)
---pf-danger         #EF4444   Perte, erreur, déconnecter
---pf-danger-bg      rgba(239,68,68,0.08)
---pf-warning        #F59E0B   Alerte, attention, en attente
---pf-warning-bg     rgba(245,158,11,0.08)
---pf-info           #3B82F6   Information neutre
---pf-info-bg        rgba(59,130,246,0.08)
+--color-pf-success        #10b981   Profit, confirmer, connecté
+--color-pf-success-bg     rgba(16,185,129,0.1)
+--color-pf-danger         #ef4444   Perte, erreur, déconnecter
+--color-pf-danger-bg      rgba(239,68,68,0.1)
+--color-pf-warning        #f59e0b   Alerte, attention, en attente
+--color-pf-warning-bg     rgba(245,158,11,0.1)
+--color-pf-info           #3b82f6   Information neutre
+--color-pf-info-bg        rgba(59,130,246,0.1)
+
+Light mode : les couleurs sémantiques passent sur des variantes plus sombres
+pour respecter WCAG AA (4.5:1) sur fond clair :
+  success → #059669 (5.1:1), danger → #dc2626 (5.6:1)
+  warning → #d97706 (4.5:1), info   → #2563eb (6.0:1)
 
 ─────────────────────────────────────────────────────────────
-DONNÉES FINANCIÈRES
+STATUS
 ─────────────────────────────────────────────────────────────
---pf-pnl-positive   #10B981   P&L positif (vert)
---pf-pnl-negative   #EF4444   P&L négatif (rouge)
---pf-pnl-neutral    #7A94B4   P&L à zéro / non calculé
---pf-price-yes      #06B6D4   Prix token YES
---pf-price-no       #7A94B4   Prix token NO
+--color-pf-status-active    #22c55e
+--color-pf-status-active-bg rgba(34,197,94,0.1)
+
+─────────────────────────────────────────────────────────────
+DONNÉES FINANCIÈRES (P&L)
+─────────────────────────────────────────────────────────────
+--color-pf-pnl-positive   #10b981   P&L positif (vert)
+--color-pf-pnl-negative   #ef4444   P&L négatif (rouge)
+--color-pf-pnl-neutral    #64748b   P&L à zéro / non calculé
 ```
 
 ### Règles d'utilisation des couleurs
@@ -155,24 +171,28 @@ DONNÉES FINANCIÈRES
 4 niveaux de profondeur + un glow pour les accents :
 
 ```
---pf-shadow-xs    0 1px 2px rgba(0,0,0,0.2)                                        Éléments plats (topbar, cartes au repos)
---pf-shadow-sm    0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.15)            Sidebar, cartes légèrement élevées
---pf-shadow-md    0 4px 12px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.15)          Cartes en hover, panneaux flottants
---pf-shadow-lg    0 8px 24px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.2)            Dialogs, modals
---pf-shadow-glow  0 0 20px rgba(6,182,212,0.15)                                     Glow accent cyan
+--shadow-pf-xs    0 1px 2px rgba(0,0,0,0.3)                  Éléments plats
+--shadow-pf-sm    0 1px 3px rgba(0,0,0,0.3)                  Sidebar, cartes légèrement élevées
+--shadow-pf-md    0 4px 6px rgba(0,0,0,0.3)                  Cartes en hover, panneaux flottants
+--shadow-pf-lg    0 10px 15px rgba(0,0,0,0.3)                Dialogs, modals
+-- (hover glow)   0 0 20px color-mix(in srgb, --color-pf-cyan-500 30%, transparent)
 ```
+
+Light mode : opacités réduites (0.05 à 0.12) — voir `globals.css` `.light` block.
 
 En light theme, les ombres utilisent des opacités réduites (0.05 à 0.12).
 
 ### Button hierarchy
 
 ```
-Primary     — fond cyan-500, texte sombre (#080C14), font-weight 600, shadow-xs → shadow-sm au hover
-Secondary   — transparent, bordure border-default, texte secondaire
-Ghost/Text  — transparent, pas de bordure, texte secondaire
-Danger      — fond danger (#EF4444), texte blanc, glow rouge au hover
-Success     — fond success (#10B981), texte blanc
+Primary     — bg-pf-cyan-500 text-black font-semibold, hover:bg-pf-cyan-400 + glow
+Secondary   — transparent border border-pf-border-subtle text-pf-text-secondary, hover:bg-pf-elevated
+Ghost/Text  — transparent, pas de bordure, text-pf-text-secondary
+Danger      — bg-pf-danger/10 text-pf-danger, hover:bg-pf-danger/20
+Success     — bg-pf-success/10 text-pf-success, hover:bg-pf-success/20
 ```
+
+Tous les boutons incluent `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40` pour l'accessibilité clavier.
 
 Tous les boutons utilisent `font-family: 'Inter'`, `border-radius: 8px`, `transition: all 0.15s ease`.
 
@@ -269,29 +289,31 @@ Fallback système     : 'Inter', -apple-system, BlinkMacSystemFont, system-ui, s
 
 ### Unité de base : 4px
 
+> **Note (v3.0+):** Les tokens de spacing utilisent désormais le préfixe `--spacing-pf-*` (Tailwind v4). `--spacing-pf-5` vaut **24px** (aligné sur la grille 4px × 6), pas 20px.
+
 Tous les spacings sont des multiples de 4px.
 
 ```
---pf-space-1     4px
---pf-space-2     8px
---pf-space-3    12px
---pf-space-4    16px
---pf-space-5    20px
---pf-space-6    24px
---pf-space-8    32px
---pf-space-10   40px
---pf-space-12   48px
---pf-space-16   64px
+--spacing-pf-1    4px
+--spacing-pf-2    8px
+--spacing-pf-3   12px
+--spacing-pf-4   16px
+--spacing-pf-5   24px   ← 6 × 4px (pas 20px)
+--spacing-pf-6   32px
+--spacing-pf-7   40px
+--spacing-pf-8   48px
+--spacing-pf-9   56px
+--spacing-pf-10  64px
 ```
 
 ### Border radius
 
 ```
---pf-radius-sm    4px    Badges, tags, petits éléments
---pf-radius-md    6px    Boutons, inputs
---pf-radius-lg    8px    Cartes, panneaux
---pf-radius-xl   12px   Modals
---pf-radius-full 9999px Avatars, indicateurs ronds
+--radius-pf-sm    6px     Badges, tags, inputs
+--radius-pf       8px     Boutons standard
+--radius-pf-md   10px     Cartes légères
+--radius-pf-lg   12px     Cartes, panneaux, modals
+--radius-pf-full 9999px   Avatars, indicateurs ronds
 ```
 
 ### Layout

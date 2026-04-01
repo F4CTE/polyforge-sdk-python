@@ -15,6 +15,11 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  manifest: "/manifest.json",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    apple: "/apple-touch-icon.png",
+  },
   title: "Polyforge — Algorithmic Trading for Prediction Markets",
   description:
     "Build, backtest, and deploy automated trading strategies on prediction markets. Visual strategy builder, AI-powered signals, whale tracking, copy trading, advanced orders, and developer API.",

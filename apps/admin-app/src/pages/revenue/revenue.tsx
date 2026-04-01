@@ -191,7 +191,7 @@ function PeriodPills({ periods, active, onChange }: PeriodPillProps) {
           key={p.value}
           type="button"
           onClick={() => onChange(p.value)}
-          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
             active === p.value
               ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
               : 'text-pf-text-muted hover:text-pf-text border border-transparent'
@@ -625,7 +625,7 @@ export function Component() {
                   key={p}
                   type="button"
                   onClick={() => setMonthlyPeriod(p)}
-                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                     monthlyPeriod === p
                       ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
                       : 'text-pf-text-muted hover:text-pf-text border border-transparent'

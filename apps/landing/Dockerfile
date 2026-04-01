@@ -1,5 +1,5 @@
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine AS builder
+FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b AS builder
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/ui/package.json packages/ui/
@@ -11,7 +11,7 @@ COPY apps/landing/ apps/landing/
 RUN pnpm --filter @polyforge/landing build
 
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine
+FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b
 WORKDIR /app
 COPY --from=builder /app/apps/landing/.next/standalone ./
 COPY --from=builder /app/apps/landing/.next/static ./apps/landing/.next/static
