@@ -314,7 +314,7 @@ function HeatmapGrid({ data }: { data: DailyHeatmapEntry[] }) {
   const start = new Date(today.getFullYear(), today.getMonth() - 11, 1);
 
   // Build month buckets: each bucket has weeks, each week has 7 day cells (null = padding)
-  interface DayCell { date: string; pnl: number } | null;
+  type DayCell = { date: string; pnl: number } | null;
   type WeekCol = (DayCell | null)[];
 
   const months: { label: string; weeks: WeekCol[] }[] = [];
