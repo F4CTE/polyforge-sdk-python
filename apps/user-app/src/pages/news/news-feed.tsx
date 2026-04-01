@@ -5,6 +5,7 @@ import {
   ChevronLeft, ChevronRight, Newspaper, ChevronDown, ChevronUp,
   ExternalLink, ArrowUpRight, ArrowDownRight, X, Search,
 } from 'lucide-react';
+import { Button, Input, Select } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -260,7 +261,7 @@ export function Component() {
         <div className="relative">
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-pf-sm border border-pf-border bg-pf-elevated focus-within:border-pf-cyan-500/50 transition-colors">
             <Search className="size-3 text-pf-text-muted shrink-0" aria-hidden="true" />
-            <input
+            <Input
               type="text"
               value={marketSearch}
               onChange={e => setMarketSearch(e.target.value)}
@@ -274,9 +275,10 @@ export function Component() {
           {marketSearchResults.length > 0 && !marketId && (
             <div className="absolute z-20 left-0 mt-1 w-72 bg-pf-elevated border border-pf-border rounded-pf-sm shadow-pf-lg overflow-hidden">
               {marketSearchResults.map(m => (
-                <button
+                <Button
                   key={m.id}
                   type="button"
+                  variant="ghost"
                   onClick={() => {
                     setMarketId(m.id);
                     setSelectedMarketName(m.question.length > 50 ? m.question.slice(0, 50) + '…' : m.question);
@@ -290,7 +292,7 @@ export function Component() {
                   <span className="text-xs text-pf-text truncate w-full">
                     {m.question.length > 60 ? m.question.slice(0, 60) + '…' : m.question}
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -300,19 +302,20 @@ export function Component() {
         {marketId && (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-pf-cyan-500/15 text-pf-cyan-400 border border-pf-cyan-500/30">
             {selectedMarketName}
-            <button
+            <Button
               type="button"
+              variant="ghost"
               aria-label="Clear market filter"
               onClick={() => { setMarketId(null); setSelectedMarketName(''); setPage(1); }}
               className="hover:text-pf-cyan-300 transition-colors"
             >
               <X className="size-3" />
-            </button>
+            </Button>
           </span>
         )}
 
         {/* Source dropdown */}
-        <select
+        <Select
           value={source}
           onChange={e => changeSource(e.target.value)}
           aria-label="Filter by news source"
@@ -321,13 +324,14 @@ export function Component() {
           {SOURCES.map(s => (
             <option key={s} value={s}>{s}</option>
           ))}
-        </select>
+        </Select>
 
         {/* Sentiment tabs */}
         <div className="flex gap-1.5">
           {SENTIMENT_TABS.map(tab => (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               key={tab.value}
               onClick={() => changeSentiment(tab.value)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
@@ -337,7 +341,7 @@ export function Component() {
               }`}
             >
               {tab.label}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -417,14 +421,15 @@ export function Component() {
                     {/* Expand/collapse signals */}
                     {signals.length > 0 && (
                       <>
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           onClick={() => setExpandedId(expanded ? null : article.id)}
                           className="flex items-center gap-1 mt-3 text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
                         >
                           {expanded ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
                           {expanded ? 'Hide signals' : `Show ${signals.length} signal${signals.length !== 1 ? 's' : ''}`}
-                        </button>
+                        </Button>
 
                         {expanded && (
                           <div className="mt-3 space-y-2 border-t border-pf-border-subtle pt-3">
@@ -497,25 +502,29 @@ export function Component() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
                 aria-label="Previous page"
                 className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="size-4" />
-              </button>
+              </Button>
               <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 aria-label="Next page"
                 className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight className="size-4" />
-              </button>
+              </Button>
             </div>
           )}
         </div>

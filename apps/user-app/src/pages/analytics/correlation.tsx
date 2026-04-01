@@ -3,12 +3,12 @@ import { Link } from 'react-router';
 import {
   GitMerge,
   Grid3x3,
-  ChevronDown,
   Info,
   TrendingUp,
   TrendingDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Select } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -578,26 +578,20 @@ function CategorySelect({
       <label htmlFor={id} className="text-xs font-medium text-pf-text-secondary">
         {label}
       </label>
-      <div className="relative">
-        <select
-          id={id}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          className="w-full appearance-none bg-pf-surface border border-pf-border rounded-pf-sm px-3 py-2 pr-8 text-sm text-pf-text focus:outline-none focus:ring-2 focus:ring-pf-cyan-400/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <option value="">Select category…</option>
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted pointer-events-none"
-          aria-hidden="true"
-        />
-      </div>
+      <Select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        className="w-full appearance-none bg-pf-surface border border-pf-border rounded-pf-sm px-3 py-2 pr-8 text-sm text-pf-text focus:outline-none focus:ring-2 focus:ring-pf-cyan-400/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <option value="">Select category…</option>
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </Select>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   Layers, Loader2, RefreshCw, X, ChevronDown, ChevronRight,
   Clock, CheckCircle, XCircle, AlertTriangle, Plus,
 } from 'lucide-react';
+import { Button } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -131,15 +132,16 @@ export function Component() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={load}
             disabled={loading}
             className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors disabled:opacity-50"
           >
             {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
             Refresh
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -176,8 +178,9 @@ export function Component() {
             <div key={so.id} className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
               {/* Row */}
               <div className="flex items-center gap-4 px-4 py-3">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setExpanded(expanded === so.id ? null : so.id)}
                   className="shrink-0 text-pf-text-muted hover:text-pf-text"
                   aria-label="Toggle details"
@@ -185,7 +188,7 @@ export function Component() {
                   {expanded === so.id
                     ? <ChevronDown className="size-4" />
                     : <ChevronRight className="size-4" />}
-                </button>
+                </Button>
 
                 {/* Type badge */}
                 <span className="shrink-0 px-2 py-0.5 rounded text-xs font-semibold bg-pf-surface border border-pf-border text-pf-text-secondary">
@@ -213,8 +216,9 @@ export function Component() {
                 <span className="text-xs text-pf-text-muted shrink-0">{formatDate(so.createdAt)}</span>
 
                 {['PENDING', 'ACTIVE'].includes(so.status) && (
-                  <button
+                  <Button
                     type="button"
+                    variant="danger"
                     onClick={() => cancel(so.id)}
                     disabled={cancelling === so.id}
                     className="shrink-0 p-1.5 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-50 transition-colors"
@@ -224,7 +228,7 @@ export function Component() {
                     {cancelling === so.id
                       ? <Loader2 className="size-4 animate-spin" />
                       : <X className="size-4" />}
-                  </button>
+                  </Button>
                 )}
               </div>
 

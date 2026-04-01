@@ -11,6 +11,7 @@ import {
   Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button, Input, Select } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -329,14 +330,15 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
   if (loading) {
     return (
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={onBack}
           className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors mb-2"
         >
           <ChevronLeft className="size-4" />
           Back to traders
-        </button>
+        </Button>
         <ComparisonSkeleton count={count} />
       </div>
     );
@@ -350,14 +352,15 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
     <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
       {/* Back button */}
       <div className="px-6 pt-5 pb-3 border-b border-pf-border-subtle">
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={onBack}
           className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
         >
           <ChevronLeft className="size-4" />
           Back to traders
-        </button>
+        </Button>
       </div>
 
       <div className="p-6 space-y-6 overflow-x-auto">
@@ -497,13 +500,13 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
             <div />
             {data.map((t) => (
               <div key={t.userId} className="flex flex-col items-center gap-2">
-                <button
+                <Button
                   type="button"
                   onClick={() => navigate(`/copy/setup/${t.userId}`)}
                   className="w-full px-4 py-2 rounded-pf text-sm font-semibold bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
                 >
                   Copy @{t.username}
-                </button>
+                </Button>
                 <Link
                   to={`/profile/${t.username}`}
                   className="text-xs text-pf-text-secondary hover:text-pf-text transition-colors"
@@ -639,13 +642,13 @@ function TraderCardItem({
               Already Copying
             </span>
           ) : (
-            <button
+            <Button
               type="button"
               onClick={() => navigate(`/copy/new?address=${trader.username}`)}
               className="px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors shrink-0"
             >
               Copy Trade
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -815,23 +818,25 @@ export function Component() {
 
         {/* Compare toggle */}
         {!compareMode ? (
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={enterCompareMode}
             className="flex items-center gap-2 px-3 py-1.5 rounded-pf text-sm font-medium border border-pf-border text-pf-text-secondary bg-pf-elevated hover:text-pf-text hover:border-pf-border-strong transition-colors shrink-0"
           >
             <GitCompare className="size-4" />
             Compare
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={exitCompareMode}
             className="flex items-center gap-2 px-3 py-1.5 rounded-pf text-sm font-medium border border-pf-cyan-500/30 text-pf-cyan-400 bg-pf-cyan-500/10 hover:bg-pf-cyan-500/20 transition-colors shrink-0"
           >
             <X className="size-4" />
             Exit Compare
-          </button>
+          </Button>
         )}
       </div>
 
@@ -847,7 +852,7 @@ export function Component() {
       {!showComparison && (
         <div className="space-y-3">
           {/* Search */}
-          <input
+          <Input
             type="search"
             placeholder="Search by username..."
             value={search}
@@ -858,9 +863,10 @@ export function Component() {
           {/* Category chips */}
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((cat) => (
-              <button
+              <Button
                 key={cat}
                 type="button"
+                variant="ghost"
                 onClick={() => setCategory(cat)}
                 className={`px-3 py-1.5 text-sm rounded-full border transition-colors cursor-pointer ${
                   category === cat
@@ -869,7 +875,7 @@ export function Component() {
                 }`}
               >
                 {cat}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -879,7 +885,7 @@ export function Component() {
               <label className="text-xs text-pf-text-secondary whitespace-nowrap" htmlFor="win-rate-filter">
                 Win Rate
               </label>
-              <select
+              <Select
                 id="win-rate-filter"
                 value={winRate}
                 onChange={(e) => setWinRate(e.target.value as WinRateFilter)}
@@ -890,14 +896,14 @@ export function Component() {
                     {o.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div className="flex items-center gap-2">
               <label className="text-xs text-pf-text-secondary whitespace-nowrap" htmlFor="min-trades-filter">
                 Min Trades
               </label>
-              <select
+              <Select
                 id="min-trades-filter"
                 value={minTrades}
                 onChange={(e) => setMinTrades(e.target.value as MinTradesFilter)}
@@ -908,7 +914,7 @@ export function Component() {
                     {o.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
         </div>
@@ -967,27 +973,31 @@ export function Component() {
       {/* Pagination */}
       {!showComparison && totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => onPageChange(Math.max(1, page - 1))}
             disabled={page === 1}
             aria-label="Previous page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
-          </button>
+          </Button>
           <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">
             Page {page} of {totalPages}
           </span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => onPageChange(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
             aria-label="Next page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
-          </button>
+          </Button>
         </div>
       )}
 
@@ -1010,35 +1020,38 @@ export function Component() {
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/25"
                 >
                   @{t.username}
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => toggleSelection(t.userId)}
                     aria-label={`Remove ${t.username}`}
                     className="text-pf-cyan-400/60 hover:text-pf-cyan-400 transition-colors"
                   >
                     <X className="size-3" />
-                  </button>
+                  </Button>
                 </span>
               ))}
             </div>
 
             {/* Actions */}
             <div className="flex items-center gap-2 shrink-0">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setSelectedIds([])}
                 className="px-3 py-1.5 rounded-pf text-sm text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong bg-pf-elevated transition-colors"
               >
                 Clear
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={openComparison}
                 className="flex items-center gap-2 px-4 py-1.5 rounded-pf text-sm font-semibold bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
               >
                 <GitCompare className="size-4" />
                 Compare
-              </button>
+              </Button>
             </div>
           </div>
         </div>

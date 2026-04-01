@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import {
   ChevronLeft, ChevronRight, Fish, Copy, Search, UserPlus, UserCheck,
 } from 'lucide-react';
+import { Button, Input, Select } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -212,8 +213,9 @@ export function Component() {
         {/* Min size dropdown */}
         <div className="flex gap-1.5">
           {MIN_SIZES.map(s => (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               key={s.value}
               onClick={() => changeMinSize(s.value)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
@@ -223,12 +225,12 @@ export function Component() {
               }`}
             >
               {s.label}
-            </button>
+            </Button>
           ))}
         </div>
 
         {/* Category select */}
-        <select
+        <Select
           value={category}
           onChange={e => changeCategory(e.target.value)}
           aria-label="Filter by category"
@@ -240,12 +242,12 @@ export function Component() {
           <option value="sports">Sports</option>
           <option value="entertainment">Entertainment</option>
           <option value="science">Science</option>
-        </select>
+        </Select>
 
         {/* Wallet search */}
         <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-pf-text-muted" />
-          <input
+          <Input
             type="text"
             placeholder="Search wallet..."
             aria-label="Search wallet address"
@@ -285,15 +287,16 @@ export function Component() {
                   >
                     {truncateAddress(trade.walletAddress)}
                   </Link>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => copyToClipboard(trade.walletAddress)}
                     className="text-pf-text-muted hover:text-pf-text transition-colors"
                     title="Copy address"
                     aria-label="Copy wallet address"
                   >
                     <Copy className="size-3.5" />
-                  </button>
+                  </Button>
                 </div>
                 <span className="text-[11px] text-pf-text-muted">{timeAgo(trade.timestamp)}</span>
               </div>
@@ -336,8 +339,9 @@ export function Component() {
 
               {/* Action buttons */}
               <div className="flex items-center gap-2 pt-1">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => toggleFollow(trade.walletAddress)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border cursor-pointer transition-colors ${
                     followingSet.has(trade.walletAddress)
@@ -350,7 +354,7 @@ export function Component() {
                   ) : (
                     <><UserPlus className="size-3.5" /> Follow</>
                   )}
-                </button>
+                </Button>
                 <Link
                   to={`/copy/new?wallet=${trade.walletAddress}`}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border border-pf-success/30 text-pf-success hover:bg-pf-success/10 transition-colors"
@@ -366,25 +370,29 @@ export function Component() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
-          </button>
+          </Button>
           <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
-          </button>
+          </Button>
         </div>
       )}
     </div>

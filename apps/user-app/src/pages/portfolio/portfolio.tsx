@@ -16,6 +16,7 @@ import { wsManager } from '@/lib/websocket';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { Button, Input, Select } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -1057,17 +1058,19 @@ export function Component() {
               {wsConnected ? 'Live' : 'Offline'}
             </span>
           </div>
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={exportCsv}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export CSV
-          </button>
+          </Button>
           <div className="flex bg-pf-surface rounded-pf border border-pf-border-subtle" role="tablist" aria-label="Portfolio mode">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => handleTabChange('live')}
               role="tab"
               aria-selected={tab === 'live'}
@@ -1076,9 +1079,10 @@ export function Component() {
               }`}
             >
               Live
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => handleTabChange('paper')}
               role="tab"
               aria-selected={tab === 'paper'}
@@ -1087,7 +1091,7 @@ export function Component() {
               }`}
             >
               Paper
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -1249,14 +1253,13 @@ export function Component() {
                 <AlertTriangle className="mx-auto mb-3 text-pf-danger opacity-60" size={32} />
                 <p className="text-sm font-medium text-pf-text mb-1">Failed to load portfolio</p>
                 <p className="text-xs text-pf-text-muted mb-4">Something went wrong while fetching your data.</p>
-                <button
+                <Button
                  type="button"
-                  
                   onClick={loadPortfolio}
                   className="px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
                 >
                   Retry
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -1270,7 +1273,7 @@ export function Component() {
                 <span className="text-sm font-semibold text-pf-text">Tax Report</span>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <select
+                <Select
                   value={taxYear}
                   onChange={e => setTaxYear(Number(e.target.value))}
                   className="bg-pf-surface border border-pf-border rounded-pf px-2 py-1 text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500"
@@ -1278,16 +1281,17 @@ export function Component() {
                   {[currentYear - 2, currentYear - 1, currentYear].map(y => (
                     <option key={y} value={y}>{y}</option>
                   ))}
-                </select>
-                <button
+                </Select>
+                <Button
                   type="button"
+                  variant="secondary"
                   disabled={exportingTax || taxData.length === 0}
                   onClick={() => downloadTaxCsv(taxData, taxYear)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Download className="size-3.5" />
                   {exportingTax ? 'Exporting…' : 'Download CSV'}
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -1369,8 +1373,9 @@ export function Component() {
                     </table>
                   </div>
                   {showToggle && (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => setTaxExpanded(prev => !prev)}
                       className="flex items-center gap-1.5 mt-2 text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
                     >
@@ -1379,7 +1384,7 @@ export function Component() {
                       ) : (
                         <><ChevronDown className="size-3.5" /> Show all {taxData.length} transactions</>
                       )}
-                    </button>
+                    </Button>
                   )}
                 </div>
               );
@@ -1456,14 +1461,15 @@ export function Component() {
                   </div>
                   <div className="flex items-center gap-2">
                     {goals.length < 3 && !showGoalForm && (
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={openNewGoalForm}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-xs font-medium text-pf-cyan-400 hover:bg-pf-cyan-500/25 transition-colors"
                       >
                         <Target className="size-3" />
                         {goals.length === 0 ? 'Set Goal' : 'Add Another Goal'}
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -1472,9 +1478,10 @@ export function Component() {
                 {goals.length > 1 && !showGoalForm && (
                   <div className="flex gap-1 mb-4 overflow-x-auto pb-1">
                     {goals.map((g, i) => (
-                      <button
+                      <Button
                         key={g.id}
                         type="button"
+                        variant="ghost"
                         onClick={() => setActiveGoalIdx(i)}
                         className={`px-3 py-1 rounded-pf text-xs font-medium whitespace-nowrap transition-colors ${
                           i === activeGoalIdx
@@ -1483,7 +1490,7 @@ export function Component() {
                         }`}
                       >
                         {g.label}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}
@@ -1493,7 +1500,7 @@ export function Component() {
                   <div className="bg-pf-surface border border-pf-border rounded-pf-lg p-4 mb-4 space-y-3">
                     <div>
                       <label className="text-xs text-pf-text-secondary block mb-1">Goal name</label>
-                      <input
+                      <Input
                         type="text"
                         placeholder="e.g. October target"
                         value={newGoalLabel}
@@ -1505,7 +1512,7 @@ export function Component() {
                       <label className="text-xs text-pf-text-secondary block mb-1">Target amount (USDC profit)</label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-pf-text-muted">$</span>
-                        <input
+                        <Input
                           type="number"
                           min="0"
                           step="0.01"
@@ -1526,21 +1533,22 @@ export function Component() {
                       />
                     </div>
                     <div className="flex gap-2 pt-1">
-                      <button
+                      <Button
                         type="button"
                         onClick={saveGoal}
                         disabled={!newGoalLabel.trim() || !newGoalTarget || !newGoalDeadline}
                         className="px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-white text-xs font-semibold hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       >
                         Save Goal
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="secondary"
                         onClick={() => { setShowGoalForm(false); setEditingGoalId(null); }}
                         className="px-4 py-1.5 rounded-pf border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text transition-colors"
                       >
                         Cancel
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -1591,22 +1599,26 @@ export function Component() {
                           </p>
                         </div>
                         <div className="flex items-center gap-1.5 ml-2 shrink-0">
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             aria-label="Edit goal"
                             onClick={() => openEditGoalForm(activeGoal)}
                             className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
                           >
                             <Pencil className="size-3.5" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             aria-label="Delete goal"
                             onClick={() => deleteGoal(activeGoal.id)}
                             className="p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors"
                           >
                             <Trash2 className="size-3.5" />
-                          </button>
+                          </Button>
                         </div>
                       </div>
 
@@ -1737,8 +1749,9 @@ export function Component() {
 
             {/* Action buttons */}
             <div className="flex flex-wrap gap-2">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={handleCopyLink}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors"
               >
@@ -1748,9 +1761,10 @@ export function Component() {
                   <Copy className="size-3.5" />
                 )}
                 {linkCopied ? 'Copied!' : 'Copy Share Link'}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={handleShareOnX}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors"
               >
@@ -1758,15 +1772,16 @@ export function Component() {
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63Zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>
                 Share on X
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={handleDownloadCard}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors"
               >
                 <Download className="size-3.5" />
                 Download Card
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -1853,8 +1868,9 @@ export function Component() {
               <span className="text-sm font-medium text-pf-text">P&L Over Time</span>
               <div className="flex gap-1">
                 {PERIODS.map(p => (
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     key={p.value}
                     onClick={() => setPeriod(p.value)}
                     className={`px-2.5 py-1 text-xs font-medium rounded-pf transition-colors ${
@@ -1864,7 +1880,7 @@ export function Component() {
                     }`}
                   >
                     {p.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -2072,8 +2088,10 @@ export function Component() {
                             <td className="px-4 py-3 text-right">
                               <div className="flex items-center justify-end gap-2">
                                 {pos.resolutionStatus === 'UNRESOLVED' && (
-                                  <button
+                                  <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="icon"
                                     title={isTriggered ? 'Rule triggered' : hasRule ? 'Edit auto-close rule' : 'Set auto-close'}
                                     aria-label={isTriggered ? 'Rule triggered' : hasRule ? 'Edit auto-close rule' : 'Set auto-close'}
                                     onClick={e => { e.stopPropagation(); openAutoClosePanel(pos.id); }}
@@ -2086,11 +2104,12 @@ export function Component() {
                                     }`}
                                   >
                                     <SlidersHorizontal className="size-3.5" />
-                                  </button>
+                                  </Button>
                                 )}
                                 {pos.resolutionStatus === 'UNRESOLVED' && (
-                                  <button
+                                  <Button
                                     type="button"
+                                    variant="danger"
                                     onClick={e => { e.stopPropagation(); closePosition(pos); }}
                                     disabled={isClosing}
                                     className="inline-flex items-center gap-1 text-pf-danger border border-pf-danger/30 hover:bg-pf-danger/10 text-xs px-2 py-1 rounded disabled:opacity-50 transition-colors"
@@ -2099,17 +2118,18 @@ export function Component() {
                                       ? <Loader2 className="size-3 animate-spin" />
                                       : <X className="size-3" />}
                                     Close
-                                  </button>
+                                  </Button>
                                 )}
                                 {pos.resolutionStatus === 'RESOLVED' && (
-                                  <button
+                                  <Button
                                     type="button"
+                                    variant="ghost"
                                     onClick={e => { e.stopPropagation(); redeemPosition(pos); }}
                                     disabled={redeemingPosition[pos.id]}
                                     className="text-xs text-pf-success hover:text-pf-success disabled:opacity-50 transition-colors"
                                   >
                                     {redeemingPosition[pos.id] ? <Loader2 className="size-3 animate-spin" /> : 'Redeem'}
-                                  </button>
+                                  </Button>
                                 )}
                               </div>
                             </td>
@@ -2129,14 +2149,16 @@ export function Component() {
                                         — {pos.marketTitle}
                                       </span>
                                     </div>
-                                    <button
+                                    <Button
                                       type="button"
+                                      variant="ghost"
+                                      size="icon"
                                       aria-label="Close auto-close panel"
                                       onClick={e => { e.stopPropagation(); setExpandedAutoClose(null); }}
                                       className="p-1 rounded text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors"
                                     >
                                       <X className="size-4" />
-                                    </button>
+                                    </Button>
                                   </div>
 
                                   {acLoading[pos.id] ? (
@@ -2165,7 +2187,7 @@ export function Component() {
                                           <div className="ml-6 space-y-1">
                                             <p className="text-xs text-pf-text-secondary">Sell if YES price drops below:</p>
                                             <div className="flex items-center gap-2">
-                                              <input
+                                              <Input
                                                 type="number"
                                                 min="0.01"
                                                 max="0.99"
@@ -2204,7 +2226,7 @@ export function Component() {
                                           <div className="ml-6 space-y-1">
                                             <p className="text-xs text-pf-text-secondary">Sell if YES price rises above:</p>
                                             <div className="flex items-center gap-2">
-                                              <input
+                                              <Input
                                                 type="number"
                                                 min="0.01"
                                                 max="0.99"
@@ -2251,7 +2273,7 @@ export function Component() {
                                             <span className="text-sm text-pf-text">Partial</span>
                                           </label>
                                           {!(acQuantityAll[pos.id] ?? true) && (
-                                            <input
+                                            <Input
                                               type="number"
                                               min="0.01"
                                               step="0.01"
@@ -2275,7 +2297,7 @@ export function Component() {
 
                                       {/* Actions */}
                                       <div className="flex items-center gap-2 pt-1" onClick={e => e.stopPropagation()}>
-                                        <button
+                                        <Button
                                           type="button"
                                           disabled={acSubmitting[pos.id]}
                                           onClick={e => { e.stopPropagation(); saveAutoCloseRule(pos); }}
@@ -2283,16 +2305,17 @@ export function Component() {
                                         >
                                           {acSubmitting[pos.id] && <Loader2 className="size-3 animate-spin" />}
                                           Save Rules
-                                        </button>
+                                        </Button>
                                         {(autoCloseRules[pos.id] != null) && (
-                                          <button
+                                          <Button
                                             type="button"
+                                            variant="danger"
                                             disabled={acSubmitting[pos.id]}
                                             onClick={e => { e.stopPropagation(); deleteAutoCloseRule(pos.id); }}
                                             className="flex items-center gap-1.5 px-4 py-1.5 rounded-pf border border-pf-danger/30 text-pf-danger text-xs font-medium hover:bg-pf-danger/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                           >
                                             Remove Rules
-                                          </button>
+                                          </Button>
                                         )}
                                       </div>
 
@@ -3021,14 +3044,16 @@ export function Component() {
                             </span>
                             <p className="text-sm font-medium text-pf-text truncate">{s.title}</p>
                           </div>
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             aria-label="Dismiss suggestion"
                             onClick={() => dismissSuggestion(s.id)}
                             className="shrink-0 p-1 rounded text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors"
                           >
                             <X className="size-3.5" />
-                          </button>
+                          </Button>
                         </div>
 
                         {/* Description */}
@@ -3055,14 +3080,15 @@ export function Component() {
                 )}
 
                 {/* Refresh link */}
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={loadSuggestions}
                   className="flex items-center gap-1 mt-4 text-xs text-pf-text-muted hover:text-pf-text transition-colors"
                 >
                   <RefreshCw className="size-3" />
                   Refresh suggestions
-                </button>
+                </Button>
               </div>
             );
           })()}
@@ -3182,15 +3208,16 @@ export function Component() {
                   <span className="block mt-1 text-xl font-mono font-semibold text-pf-text">{paper.orderCount}</span>
                 </div>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 flex items-end justify-end">
-                  <button
+                  <Button
                     type="button"
+                    variant="danger"
                     onClick={() => setShowResetConfirm(true)}
                     disabled={resettingPaper}
                     className="flex items-center gap-1.5 text-xs text-pf-danger hover:text-pf-danger disabled:opacity-50 transition-colors"
                   >
                     <RefreshCw className={`size-3.5 ${resettingPaper ? 'animate-spin' : ''}`} />
                     Reset Paper Account
-                  </button>
+                  </Button>
                   {showResetConfirm && (
                     <div role="presentation" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowResetConfirm(false)} onKeyDown={(e) => { if (e.key === 'Escape') setShowResetConfirm(false); }}>
                       <div role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 max-w-sm mx-4 shadow-pf-lg" onClick={(e) => e.stopPropagation()}>
@@ -3200,8 +3227,8 @@ export function Component() {
                         </div>
                         <p className="text-sm text-pf-text-secondary mb-4">This will delete all paper positions and orders. This cannot be undone.</p>
                         <div className="flex justify-end gap-2">
-                          <button type="button" onClick={() => setShowResetConfirm(false)} className="px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface cursor-pointer transition-colors">Cancel</button>
-                          <button type="button" onClick={resetPaper} className="px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/90 cursor-pointer transition-colors">Reset</button>
+                          <Button type="button" variant="secondary" onClick={() => setShowResetConfirm(false)} className="px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface cursor-pointer transition-colors">Cancel</Button>
+                          <Button type="button" variant="danger" onClick={resetPaper} className="px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/90 cursor-pointer transition-colors">Reset</Button>
                         </div>
                       </div>
                     </div>

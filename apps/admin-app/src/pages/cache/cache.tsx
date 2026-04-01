@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { Button, Input } from '@polyforge/ui';
 import { Database, Trash2, RefreshCw, Activity, AlertCircle } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 
@@ -102,30 +103,33 @@ export function Component() {
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1 bg-pf-surface border border-pf-border rounded-pf-sm p-0.5">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setTab('cache')}
             className={`px-3 py-1.5 text-sm rounded transition-colors ${tab === 'cache' ? 'bg-pf-elevated text-pf-text font-medium' : 'text-pf-text-secondary hover:text-pf-text'}`}
           >
             Cache
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setTab('streams')}
             className={`px-3 py-1.5 text-sm rounded transition-colors ${tab === 'streams' ? 'bg-pf-elevated text-pf-text font-medium' : 'text-pf-text-secondary hover:text-pf-text'}`}
           >
             Streams
-          </button>
+          </Button>
         </div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={tab === 'cache' ? loadStats : loadStreams}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated transition-colors"
           aria-label="Refresh"
         >
           <RefreshCw size={14} aria-hidden="true" />
           Refresh
-        </button>
+        </Button>
       </div>
 
       {/* ═══ CACHE TAB ═══ */}
@@ -161,7 +165,7 @@ export function Component() {
             </div>
             <div className="flex gap-3">
               <label htmlFor="cache-pattern" className="sr-only">Cache key pattern</label>
-              <input
+              <Input
                 id="cache-pattern"
                 type="text"
                 value={pattern}
@@ -169,14 +173,15 @@ export function Component() {
                 placeholder="e.g. user:*, strategy:abc*"
                 className="flex-1 px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500 font-mono"
               />
-              <button
+              <Button
                 type="button"
+                variant="danger"
                 onClick={handleFlush}
                 disabled={flushing || !pattern.trim()}
-                className="px-4 py-2 text-sm rounded-pf-sm bg-pf-warning text-white hover:bg-pf-warning/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-warning"
+                className="px-4 py-2 text-sm rounded-pf-sm bg-pf-warning text-white hover:bg-pf-warning/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {flushing ? 'Flushing...' : 'Flush'}
-              </button>
+              </Button>
             </div>
           </div>
 

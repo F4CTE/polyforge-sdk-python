@@ -6,6 +6,7 @@ import { X, Download, Key } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { Badge } from './api-docs-primitives';
 import { ENDPOINT_SECTIONS, NAV_GROUPS } from './api-docs-nav';
+import { Button, Input } from '@polyforge/ui';
 
 interface DocsSidebarProps {
   activeId: string;
@@ -67,7 +68,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
 
       {/* Search */}
       <div className="px-3 py-2 shrink-0 relative">
-        <input
+        <Input
           ref={searchRef}
           type="text"
           value={searchQuery}
@@ -76,14 +77,16 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
           className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-1.5 text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500 focus:ring-1 focus:ring-pf-cyan-500/50 pr-8"
         />
         {searchQuery && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => setSearchQuery('')}
             aria-label="Clear search"
             className="absolute right-5 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text cursor-pointer"
           >
             <X size={13} />
-          </button>
+          </Button>
         )}
       </div>
 
@@ -101,8 +104,9 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
             )}
             <div className="space-y-px">
               {g.items.map(item => (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   key={item.id}
                   onClick={() => onNavigate(item.id)}
                   className={`w-full text-left px-2.5 py-2 rounded-pf-sm text-sm transition-colors duration-150 cursor-pointer ${
@@ -112,7 +116,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
                   }`}
                 >
                   {item.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -126,15 +130,16 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
             </p>
             <div className="space-y-px">
               {matchingEndpoints.map(({ sectionId, ep }) => (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   key={`${ep.method}-${ep.path}`}
                   onClick={() => onNavigate(sectionId)}
                   className="w-full text-left px-2.5 py-2 rounded-pf-sm text-xs transition-colors duration-150 cursor-pointer text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated"
                 >
                   <span className="font-mono text-pf-cyan-400 mr-1">{ep.method}</span>
                   {ep.summary}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

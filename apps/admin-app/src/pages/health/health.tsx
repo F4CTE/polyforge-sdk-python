@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Button } from '@polyforge/ui';
 import {
   Activity,
   CheckCircle2,
@@ -322,15 +323,16 @@ export function Component() {
             <Loader2 size={16} className="animate-spin text-pf-text-tertiary shrink-0" />
           )}
         </div>
-        <button
+        <Button
           type="button"
+          variant="default"
           onClick={() => fetchHealth(true)}
           disabled={refreshing}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-pf-border bg-pf-surface text-sm text-pf-text hover:bg-pf-elevated transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-pf-border bg-pf-surface text-sm text-pf-text hover:bg-pf-elevated transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
           Refresh Now
-        </button>
+        </Button>
       </div>
 
       {/* Error state */}

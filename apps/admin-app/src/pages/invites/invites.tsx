@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { toast } from 'sonner';
+import { Button, Input } from '@polyforge/ui';
 import { Mail, Plus, Trash2, Copy, KeyRound } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 
@@ -79,7 +80,7 @@ export function Component() {
         <form onSubmit={handleGenerate} className="flex flex-wrap items-end gap-4">
           <div>
             <label htmlFor="invite-count" className="block text-xs text-pf-text-tertiary mb-1">Count</label>
-            <input
+            <Input
               id="invite-count"
               type="number"
               min={1}
@@ -91,7 +92,7 @@ export function Component() {
           </div>
           <div>
             <label htmlFor="invite-max-uses" className="block text-xs text-pf-text-tertiary mb-1">Max Uses</label>
-            <input
+            <Input
               id="invite-max-uses"
               type="number"
               min={1}
@@ -103,7 +104,7 @@ export function Component() {
           </div>
           <div>
             <label htmlFor="invite-ttl" className="block text-xs text-pf-text-tertiary mb-1">TTL (days)</label>
-            <input
+            <Input
               id="invite-ttl"
               type="number"
               min={1}
@@ -113,13 +114,14 @@ export function Component() {
               className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
             />
           </div>
-          <button
+          <Button
             type="submit"
+            variant="default"
             disabled={generating}
-            className="px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+            className="px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
           >
             {generating ? 'Generating...' : 'Generate'}
-          </button>
+          </Button>
         </form>
 
         {/* Generated Codes */}
@@ -130,14 +132,16 @@ export function Component() {
               {generatedCodes.map((code) => (
                 <div key={code} className="flex items-center gap-2">
                   <code className="text-sm font-mono text-pf-cyan-500">{code}</code>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => copyCode(code)}
-                    className="p-1 rounded hover:bg-pf-elevated text-pf-text-tertiary hover:text-pf-cyan-400 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                    className="p-1 rounded hover:bg-pf-elevated text-pf-text-tertiary hover:text-pf-cyan-400 transition-colors"
                     aria-label={`Copy code ${code}`}
                   >
                     <Copy size={12} />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -183,14 +187,16 @@ export function Component() {
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-2">
                         <code className="text-sm font-mono text-pf-text">{inv.code}</code>
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => copyCode(inv.code)}
-                          className="p-1 rounded hover:bg-pf-base text-pf-text-tertiary hover:text-pf-cyan-400 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                          className="p-1 rounded hover:bg-pf-base text-pf-text-tertiary hover:text-pf-cyan-400 transition-colors"
                           aria-label={`Copy code ${inv.code}`}
                         >
                           <Copy size={12} />
-                        </button>
+                        </Button>
                       </div>
                     </td>
                     <td className="px-3 py-2.5 text-right text-pf-text-secondary">
@@ -202,19 +208,21 @@ export function Component() {
                     <td className="px-3 py-2.5 text-right">
                       {confirmRevokeCode === inv.code ? (
                         <div className="flex items-center justify-end gap-1.5 text-xs">
-                          <button type="button" onClick={() => handleDelete(inv.code)} className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger">Revoke</button>
-                          <button type="button" onClick={() => setConfirmRevokeCode(null)} className="px-2 py-0.5 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500">Cancel</button>
+                          <Button type="button" variant="danger" onClick={() => handleDelete(inv.code)} className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors">Revoke</Button>
+                          <Button type="button" variant="secondary" onClick={() => setConfirmRevokeCode(null)} className="px-2 py-0.5 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base transition-colors">Cancel</Button>
                         </div>
                       ) : (
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => setConfirmRevokeCode(inv.code)}
-                          className="p-1 rounded hover:bg-pf-danger/10 text-pf-text-tertiary hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
+                          className="p-1 rounded hover:bg-pf-danger/10 text-pf-text-tertiary hover:text-pf-danger transition-colors"
                           aria-label="Revoke invite"
                           title="Revoke invite"
                         >
                           <Trash2 size={14} />
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>

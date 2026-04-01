@@ -11,6 +11,7 @@ import {
   Rocket,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button, Input } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -192,8 +193,9 @@ export function Component() {
       <div className="flex items-center gap-2">
         {STEPS.map((label, i) => (
           <div key={label} className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => i < step && setStep(i)}
               disabled={i > step}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
@@ -208,7 +210,7 @@ export function Component() {
                 {i + 1}
               </span>
               {label}
-            </button>
+            </Button>
             {i < STEPS.length - 1 && (
               <ChevronRight className="size-3 text-pf-text-muted shrink-0" />
             )}
@@ -222,7 +224,7 @@ export function Component() {
         {step === 0 && (
           <>
             <h2 className="text-sm font-medium text-pf-text">Target Wallet Address</h2>
-            <input
+            <Input
               id="target-wallet"
               type="text"
               placeholder="0x... paste wallet address"
@@ -239,8 +241,9 @@ export function Component() {
                     <div className="h-8 w-32 bg-pf-overlay rounded-pf-sm animate-pulse" />
                   ) : (
                     followedWhales.map((w) => (
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         key={w.walletAddress}
                         onClick={() => setTargetWallet(w.walletAddress)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-mono border transition-colors ${
@@ -250,7 +253,7 @@ export function Component() {
                         }`}
                       >
                         {truncateAddress(w.walletAddress)}
-                      </button>
+                      </Button>
                     ))
                   )}
                 </div>
@@ -268,8 +271,9 @@ export function Component() {
                 const Icon = opt.icon;
                 const selected = mode === opt.value;
                 return (
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     key={opt.value}
                     onClick={() => setMode(opt.value)}
                     className={`flex flex-col items-start gap-2 p-4 rounded-pf-lg border text-left transition-all duration-150 ${
@@ -291,7 +295,7 @@ export function Component() {
                     <span className="text-[11px] text-pf-text-secondary leading-snug">
                       {opt.description}
                     </span>
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -313,20 +317,22 @@ export function Component() {
               <div className="space-y-3">
                 {/* Size mode toggle */}
                 <div className="flex rounded-pf border border-pf-border overflow-hidden w-fit mb-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => setSizeMode('fixed')}
                     className={`px-3 py-1.5 text-xs transition-colors ${sizeMode === 'fixed' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
                   >
                     Fixed $
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => setSizeMode('percent')}
                     className={`px-3 py-1.5 text-xs border-l border-pf-border transition-colors ${sizeMode === 'percent' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
                   >
                     % of Whale
-                  </button>
+                  </Button>
                 </div>
 
                 {sizeMode === 'percent' ? (
@@ -360,7 +366,7 @@ export function Component() {
                       className="w-full accent-[var(--color-pf-cyan-500)]"
                     />
                     <div className="flex items-center gap-3">
-                      <input
+                      <Input
                         type="number"
                         min={0}
                         value={sizeValue}
@@ -379,7 +385,7 @@ export function Component() {
                   <label className="block text-xs font-medium text-pf-text-secondary mb-1">
                     Max per Trade (USDC cap)
                   </label>
-                  <input
+                  <Input
                     type="number"
                     min="1"
                     step="1"
@@ -414,7 +420,7 @@ export function Component() {
                   className="w-full accent-[var(--color-pf-cyan-500)]"
                 />
                 <div className="flex items-center gap-3">
-                  <input
+                  <Input
                     id="copy-max-exposure"
                     type="number"
                     min={0}
@@ -440,7 +446,7 @@ export function Component() {
                   className="w-full accent-[var(--color-pf-cyan-500)]"
                 />
                 <div className="flex items-center gap-3">
-                  <input
+                  <Input
                     id="copy-max-daily-loss"
                     type="number"
                     min={0}
@@ -466,7 +472,7 @@ export function Component() {
                   className="w-full accent-[var(--color-pf-cyan-500)]"
                 />
                 <div className="flex items-center gap-3">
-                  <input
+                  <Input
                     id="copy-price-offset"
                     type="number"
                     min={-5}
@@ -529,25 +535,26 @@ export function Component() {
 
       {/* Navigation buttons */}
       <div className="flex items-center justify-between">
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={prevStep}
           disabled={step === 0}
           className="flex items-center gap-1.5 px-4 py-2.5 rounded-pf text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft className="size-4" /> Back
-        </button>
+        </Button>
         {step < STEPS.length - 1 ? (
-          <button
+          <Button
             type="button"
             onClick={nextStep}
             disabled={!canAdvance()}
             className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Next <ChevronRight className="size-4" />
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
             type="button"
             onClick={handleSubmit}
             disabled={submitting || !isFormValid}
@@ -555,7 +562,7 @@ export function Component() {
           >
             <Rocket className="size-4" />
             {submitting ? 'Starting...' : 'Start Copying'}
-          </button>
+          </Button>
         )}
       </div>
     </div>

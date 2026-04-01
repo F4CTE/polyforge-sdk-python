@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Button } from '@polyforge/ui';
 import { ChevronLeft, ChevronRight, ScrollText } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
@@ -68,21 +69,22 @@ export function Component() {
       {/* Tabs */}
       <div className="flex gap-1 bg-pf-elevated border border-pf-border rounded-pf-lg p-1 w-fit" role="tablist" aria-label="Log type">
         {tabs.map((t) => (
-          <button type="button"
+          <Button type="button"
             key={t.key}
             id={`tab-${t.key}`}
+            variant="ghost"
             onClick={() => changeTab(t.key)}
             role="tab"
             aria-selected={tab === t.key}
             aria-controls={`tabpanel-${t.key}`}
-            className={`px-4 py-1.5 text-sm rounded-pf-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
+            className={`px-4 py-1.5 text-sm rounded-pf-sm transition-colors ${
               tab === t.key
                 ? 'bg-pf-cyan-500/10 text-pf-cyan-500 font-medium'
                 : 'text-pf-text-secondary hover:text-pf-text'
             }`}
           >
             {t.label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -196,12 +198,12 @@ export function Component() {
           <div className="flex items-center justify-between px-4 py-3 border-t border-pf-border">
             <span className="text-xs text-pf-text-tertiary">Page {page} of {totalPages}</span>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page" className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
+              <Button type="button" variant="ghost" size="icon-sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">
                 <ChevronLeft size={16} />
-              </button>
-              <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page" className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
+              </Button>
+              <Button type="button" variant="ghost" size="icon-sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page">
                 <ChevronRight size={16} />
-              </button>
+              </Button>
             </div>
           </div>
         )}

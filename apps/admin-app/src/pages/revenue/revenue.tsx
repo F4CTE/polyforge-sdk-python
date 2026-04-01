@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { Button } from '@polyforge/ui';
 import {
   DollarSign, TrendingUp, TrendingDown, BarChart2,
   PieChart as PieChartIcon, Users, ShoppingBag, GitFork, Star, RefreshCw,
@@ -187,18 +188,19 @@ function PeriodPills({ periods, active, onChange }: PeriodPillProps) {
   return (
     <div className="flex gap-1">
       {periods.map(p => (
-        <button
+        <Button
           key={p.value}
           type="button"
+          variant="ghost"
           onClick={() => onChange(p.value)}
-          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
             active === p.value
               ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
               : 'text-pf-text-muted hover:text-pf-text border border-transparent'
           }`}
         >
           {p.label}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -401,15 +403,16 @@ export function Component() {
         </div>
         <div className="flex items-center gap-3">
           <PeriodPills periods={PERIODS} active={period} onChange={setPeriod} />
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={refreshAll}
             disabled={loading || loadingBreakdown}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:ring-offset-2"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`size-4 ${loading || loadingBreakdown ? 'animate-spin' : ''}`} />
             Refresh
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -621,29 +624,31 @@ export function Component() {
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
               {([6, 12] as const).map(p => (
-                <button
+                <Button
                   key={p}
                   type="button"
+                  variant="ghost"
                   onClick={() => setMonthlyPeriod(p)}
-                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                     monthlyPeriod === p
                       ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
                       : 'text-pf-text-muted hover:text-pf-text border border-transparent'
                   }`}
                 >
                   {p} months
-                </button>
+                </Button>
               ))}
             </div>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => loadMonthly(monthlyPeriod)}
               disabled={loadingMonthly}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-pf-text-secondary hover:text-pf-text border border-pf-border bg-pf-base transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:ring-offset-2"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-pf-text-secondary hover:text-pf-text border border-pf-border bg-pf-base transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`size-3 ${loadingMonthly ? 'animate-spin' : ''}`} />
               Refresh
-            </button>
+            </Button>
           </div>
         </div>
         <div className="px-4 py-4">
@@ -819,15 +824,16 @@ export function Component() {
             <h2 className="text-sm font-semibold text-pf-text">Top Revenue-Generating Users</h2>
             <span className="text-xs text-pf-text-muted">fees paid to platform</span>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => loadTopUsers(period)}
             disabled={loadingTopUsers}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-pf-text-secondary hover:text-pf-text border border-pf-border bg-pf-base transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:ring-offset-2"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-pf-text-secondary hover:text-pf-text border border-pf-border bg-pf-base transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`size-3 ${loadingTopUsers ? 'animate-spin' : ''}`} />
             Refresh
-          </button>
+          </Button>
         </div>
 
         <div className="overflow-x-auto">

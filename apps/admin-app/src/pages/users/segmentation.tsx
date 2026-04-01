@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Link } from 'react-router';
+import { Button } from '@polyforge/ui';
 import {
   Zap,
   Copy,
@@ -186,21 +187,23 @@ function BroadcastDialog({ cohortId, cohortLabel, userCount, onClose }: Broadcas
           <span className="text-pf-cyan-400">{cohortLabel}</span> users?
         </p>
         <div className="flex gap-3 justify-end pt-1">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={onClose}
-            className="px-4 py-2 rounded-pf text-sm text-pf-text-secondary hover:bg-pf-overlay border border-pf-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+            className="px-4 py-2 rounded-pf text-sm text-pf-text-secondary hover:bg-pf-overlay border border-pf-border transition-colors"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="default"
             onClick={handleConfirm}
             disabled={loading}
-            className="px-4 py-2 rounded-pf text-sm font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+            className="px-4 py-2 rounded-pf text-sm font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Sending…' : 'Confirm'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -275,20 +278,22 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
 
       {/* Actions */}
       <div className="flex gap-2 mt-auto">
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => onViewUsers(definition.id)}
-          className="flex-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 hover:bg-pf-cyan-500/20 border border-pf-cyan-400/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          className="flex-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 hover:bg-pf-cyan-500/20 border border-pf-cyan-400/20 transition-colors"
         >
           View Users
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => onBroadcast(definition.id)}
-          className="flex-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-overlay text-pf-text-secondary hover:text-pf-text hover:bg-pf-border border border-pf-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          className="flex-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-overlay text-pf-text-secondary hover:text-pf-text hover:bg-pf-border border border-pf-border transition-colors"
         >
           Send Broadcast
-        </button>
+        </Button>
       </div>
     </article>
   );
@@ -362,14 +367,15 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
   return (
     <section className="space-y-5 animate-fade-in" aria-label={`${definition?.label ?? cohortId} drill-down`}>
       {/* Back */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+        className="inline-flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors rounded-pf-sm"
       >
         <ChevronLeft size={16} aria-hidden="true" />
         All Cohorts
-      </button>
+      </Button>
 
       {/* Cohort header */}
       {definition && (
@@ -415,15 +421,16 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
           <span className="text-sm font-medium text-pf-text">
             {total > 0 ? `${total.toLocaleString()} users` : 'Users'}
           </span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={handleExportCsv}
             disabled={users.length === 0}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium text-pf-text-secondary hover:text-pf-text bg-pf-overlay hover:bg-pf-border border border-pf-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium text-pf-text-secondary hover:text-pf-text bg-pf-overlay hover:bg-pf-border border border-pf-border transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Download size={13} aria-hidden="true" />
             Export CSV
-          </button>
+          </Button>
         </div>
 
         <div className="overflow-x-auto">
@@ -497,22 +504,24 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
               Page {page} of {totalPages}
             </span>
             <div className="flex gap-1">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page <= 1}
-                className="px-3 py-1.5 rounded-pf-sm text-xs text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay border border-pf-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                className="px-3 py-1.5 rounded-pf-sm text-xs text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay border border-pf-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page >= totalPages}
-                className="px-3 py-1.5 rounded-pf-sm text-xs text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay border border-pf-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                className="px-3 py-1.5 rounded-pf-sm text-xs text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay border border-pf-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Next
-              </button>
+              </Button>
             </div>
           </div>
         )}

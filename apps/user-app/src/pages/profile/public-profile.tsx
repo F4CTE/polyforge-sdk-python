@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
+import { Button } from '@polyforge/ui';
 import {
   ArrowLeft, UserPlus, UserMinus, Settings, Loader2, User,
   TrendingUp, Award, Target, Flame, Hexagon, DollarSign, Users, Eye,
@@ -350,9 +351,9 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors" aria-label="Go back">
+          <Button type="button" variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Go back">
             <ArrowLeft className="size-4" aria-hidden="true" />
-          </button>
+          </Button>
           <h1 className="text-2xl font-semibold text-pf-text">{profile.displayName ?? profile.username}</h1>
           {/* Inline score badge */}
           {scoreData?.score && (
@@ -373,8 +374,9 @@ export function Component() {
             <span className="text-xs text-pf-text-muted">
               {profile.followersCount.toLocaleString()} follower{profile.followersCount !== 1 ? 's' : ''}
             </span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={toggleFollow}
               disabled={followLoading}
               aria-label={profile.isFollowing ? 'Unfollow this user' : 'Follow this user'}
@@ -397,7 +399,7 @@ export function Component() {
                   <span className="hidden group-hover:inline">Unfollow</span>
                 </span>
               ) : 'Follow'}
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -500,8 +502,9 @@ export function Component() {
                 ({unlockedBadges.length} / {badges.length})
               </span>
               {badges.length > 0 && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setShowAllBadges(v => !v)}
                   className="ml-auto flex items-center gap-1 text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf"
                 >
@@ -510,7 +513,7 @@ export function Component() {
                   ) : (
                     <><ChevronDown className="size-3.5" />Show all</>
                   )}
-                </button>
+                </Button>
               )}
             </div>
 

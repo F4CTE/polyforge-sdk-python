@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Copy, Check } from 'lucide-react';
 import type { EndpointField } from './api-docs-endpoints';
+import { Button } from '@polyforge/ui';
 
 export type Lang = 'curl' | 'ts' | 'py' | 'rust';
 
@@ -63,8 +64,10 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
           <span className="text-[11px] font-mono text-pf-text-muted">
             {LANG_LABELS[lang as Lang] ?? lang}
           </span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={handleCopy}
             aria-label="Copy code"
             className="flex items-center gap-1 text-[11px] text-pf-text-muted hover:text-pf-text transition-colors cursor-pointer"
@@ -73,7 +76,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
               ? <><Check size={12} className="text-pf-success" /><span className="text-pf-success">Copied</span></>
               : <><Copy size={12} /><span>Copy</span></>
             }
-          </button>
+          </Button>
         </div>
       )}
       <pre className="bg-pf-base px-4 py-3.5 text-[11.5px] font-mono text-pf-text overflow-x-auto whitespace-pre leading-relaxed">
@@ -151,8 +154,9 @@ export function LangTabs({
   return (
     <div className="flex flex-wrap gap-1.5 mb-3">
       {available.map(l => (
-        <button
+        <Button
           type="button"
+          variant="ghost"
           key={l}
           onClick={() => setLang(l)}
           className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
@@ -162,7 +166,7 @@ export function LangTabs({
           }`}
         >
           {LANG_LABELS[l]}
-        </button>
+        </Button>
       ))}
     </div>
   );

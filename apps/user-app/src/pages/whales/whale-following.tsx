@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { ArrowLeft, Fish, UserMinus } from 'lucide-react';
+import { Button } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -130,14 +131,15 @@ export function Component() {
                 >
                   {truncateAddress(wallet.walletAddress)}
                 </Link>
-                <button
+                <Button
                   type="button"
+                  variant="danger"
                   onClick={() => unfollow(wallet.walletAddress)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border border-pf-danger/30 text-pf-danger hover:bg-pf-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 transition-colors"
                   aria-label={`Unfollow wallet ${truncateAddress(wallet.walletAddress)}`}
                 >
                   <UserMinus className="size-3.5" /> Unfollow
-                </button>
+                </Button>
               </div>
 
               <div className="flex items-center gap-4 text-xs text-pf-text-secondary">

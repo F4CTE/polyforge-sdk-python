@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Button, Textarea } from '@polyforge/ui';
 import {
   ShoppingBag,
   ChevronLeft,
@@ -98,20 +99,22 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
       {/* Title row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => onToggleFeatured(listing.id, listing.featured)}
             disabled={isBusy}
             aria-label={listing.featured ? `Remove featured from ${listing.title}` : `Feature listing ${listing.title}`}
             aria-pressed={listing.featured}
-            className="shrink-0 p-0.5 rounded transition-colors hover:bg-pf-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-warning/40 disabled:opacity-50"
+            className="shrink-0 p-0.5 rounded transition-colors hover:bg-pf-base disabled:opacity-50"
           >
             <Star
               size={15}
               aria-hidden="true"
               className={listing.featured ? 'text-pf-warning fill-pf-warning' : 'text-pf-text-muted'}
             />
-          </button>
+          </Button>
           <span className="font-semibold text-pf-text truncate">{listing.title}</span>
         </div>
         <span className="shrink-0 text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 px-2 py-0.5 rounded-full whitespace-nowrap">
@@ -157,28 +160,30 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
       {listing.status === 'PENDING' && (
         <div className="space-y-2 pt-1">
           <div className="flex gap-2">
-            <button
+            <Button
               type="button"
+              variant="success"
               disabled={isBusy}
               onClick={() => onApprove(listing.id)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success/40"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 transition-colors disabled:opacity-50"
             >
               <Check size={13} aria-hidden="true" />
               Approve
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="danger"
               disabled={isBusy}
               onClick={() => setRejectOpen((o) => !o)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm border border-pf-danger/40 text-pf-danger hover:bg-pf-danger/10 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm border border-pf-danger/40 text-pf-danger hover:bg-pf-danger/10 transition-colors disabled:opacity-50"
             >
               <X size={13} aria-hidden="true" />
               Reject
-            </button>
+            </Button>
           </div>
           {rejectOpen && (
             <div className="space-y-2">
-              <textarea
+              <Textarea
                 value={adminNote}
                 onChange={(e) => setAdminNote(e.target.value)}
                 placeholder="Reason for rejection (optional)"
@@ -186,21 +191,23 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
                 className="w-full text-xs bg-pf-base border border-pf-border rounded-pf-sm px-2 py-1.5 text-pf-text placeholder:text-pf-text-muted resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-danger/40"
               />
               <div className="flex gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="danger"
                   disabled={isBusy}
                   onClick={handleRejectConfirm}
-                  className="px-3 py-1 text-xs rounded-pf-sm bg-pf-danger text-white hover:opacity-90 transition-opacity disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40"
+                  className="px-3 py-1 text-xs rounded-pf-sm bg-pf-danger text-white hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   Confirm Reject
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => { setRejectOpen(false); setAdminNote(''); }}
-                  className="px-3 py-1 text-xs rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                  className="px-3 py-1 text-xs rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base transition-colors"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -209,15 +216,16 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
 
       {listing.status === 'APPROVED' && (
         <div className="pt-1">
-          <button
+          <Button
             type="button"
+            variant="danger"
             disabled={isBusy}
             onClick={() => onDelist(listing.id)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm border border-pf-danger/40 text-pf-danger hover:bg-pf-danger/10 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm border border-pf-danger/40 text-pf-danger hover:bg-pf-danger/10 transition-colors disabled:opacity-50"
           >
             <X size={13} aria-hidden="true" />
             Delist
-          </button>
+          </Button>
         </div>
       )}
     </div>
@@ -337,27 +345,29 @@ export function Component() {
             </span>
           )}
         </div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => load(true)}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text transition-colors disabled:opacity-50"
         >
           <RefreshCw size={13} aria-hidden="true" className={loading ? 'animate-spin' : ''} />
           Refresh
-        </button>
+        </Button>
       </div>
 
       {/* Status filter tabs */}
       <div className="flex gap-1 border-b border-pf-border" role="tablist" aria-label="Filter by status">
         {STATUS_TABS.map((tab) => (
-          <button
+          <Button
             key={tab.value}
             type="button"
+            variant="ghost"
             role="tab"
             aria-selected={statusFilter === tab.value}
             onClick={() => handleTabChange(tab.value)}
-            className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded-t-sm ${
+            className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors rounded-t-sm ${
               statusFilter === tab.value
                 ? 'border-pf-cyan-500 text-pf-cyan-400'
                 : 'border-transparent text-pf-text-secondary hover:text-pf-text'
@@ -369,7 +379,7 @@ export function Component() {
                 {pendingCount}
               </span>
             )}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -416,24 +426,28 @@ export function Component() {
         <div className="flex items-center justify-between pt-2">
           <span className="text-xs text-pf-text-tertiary">Page {page} of {totalPages}</span>
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
               aria-label="Previous page"
-              className="p-1.5 rounded hover:bg-pf-elevated text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+              className="p-1.5 rounded hover:bg-pf-elevated text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={16} />
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               aria-label="Next page"
-              className="p-1.5 rounded hover:bg-pf-elevated text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+              className="p-1.5 rounded hover:bg-pf-elevated text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={16} />
-            </button>
+            </Button>
           </div>
         </div>
       )}

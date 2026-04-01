@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Button, Input } from '@polyforge/ui';
 import {
   AlertTriangle,
   Check,
@@ -319,20 +320,22 @@ function MaintenanceConfirmBox({ onConfirm, onCancel }: MaintenanceConfirmProps)
         </div>
       </div>
       <div className="flex items-center gap-2 justify-end">
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={onCancel}
-          className="rounded-pf-sm px-3 py-1.5 text-xs font-medium text-pf-text-secondary border border-pf-border hover:border-pf-border-strong transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          className="rounded-pf-sm px-3 py-1.5 text-xs font-medium text-pf-text-secondary border border-pf-border hover:border-pf-border-strong transition-colors"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="danger"
           onClick={onConfirm}
-          className="rounded-pf-sm px-3 py-1.5 text-xs font-medium text-white bg-pf-danger hover:brightness-110 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          className="rounded-pf-sm px-3 py-1.5 text-xs font-medium text-white bg-pf-danger hover:brightness-110 transition-all"
         >
           Yes, enable maintenance
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -489,13 +492,13 @@ export function Component() {
             </div>
           </div>
 
-          <button
+          <Button
             type="button"
+            variant="default"
             onClick={handleSave}
             disabled={!dirty || saving}
             className={[
               'inline-flex items-center gap-2 rounded-pf px-4 py-2 text-sm font-semibold transition-all',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
               dirty && !saving
                 ? 'bg-pf-cyan-500 text-black hover:brightness-110 cursor-pointer'
                 : 'bg-pf-elevated border border-pf-border text-pf-text-muted cursor-not-allowed opacity-50',
@@ -503,7 +506,7 @@ export function Component() {
           >
             <Save className="h-4 w-4" aria-hidden />
             {saving ? 'Saving…' : 'Save All Changes'}
-          </button>
+          </Button>
         </div>
 
         {/* Unsaved changes banner */}

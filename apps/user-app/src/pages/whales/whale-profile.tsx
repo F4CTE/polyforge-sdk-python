@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import {
   ArrowLeft, Copy, Fish, UserPlus, UserCheck, AlertCircle,
 } from 'lucide-react';
+import { Button } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -177,9 +178,9 @@ export function Component() {
           <AlertCircle className="size-10 text-pf-danger mb-4" />
           <p className="text-pf-text font-medium">Something went wrong</p>
           <p className="text-sm text-pf-text-muted mt-1">Failed to load whale profile. Please try again.</p>
-          <button type="button" onClick={load} className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-pf-elevated border border-pf-border text-pf-text hover:border-pf-border-strong transition-colors">
+          <Button type="button" onClick={load} className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-pf-elevated border border-pf-border text-pf-text hover:border-pf-border-strong transition-colors">
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -217,20 +218,22 @@ export function Component() {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm text-pf-text break-all">{address}</span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => copyToClipboard(address ?? '')}
                 className="p-2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors shrink-0"
                 aria-label="Copy wallet address"
                 title="Copy address"
               >
                 <Copy className="size-4" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <Button
             type="button"
             onClick={toggleFollow}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors ${
@@ -240,7 +243,7 @@ export function Component() {
             }`}
           >
             {following ? <><UserCheck className="size-4" /> Following</> : <><UserPlus className="size-4" /> Follow</>}
-          </button>
+          </Button>
           <Link
             to={`/copy/new?wallet=${address}`}
             className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-success/30 text-pf-success hover:bg-pf-success/10 transition-colors"

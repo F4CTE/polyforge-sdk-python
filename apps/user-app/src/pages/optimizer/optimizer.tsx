@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Sparkles, RefreshCw } from 'lucide-react';
+import { Button } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -113,7 +114,7 @@ export function Component() {
           <Sparkles className="size-5 text-pf-text-muted" aria-hidden="true" />
           <h1 className="text-2xl font-semibold text-pf-text">AI Portfolio Optimizer</h1>
         </div>
-        <button
+        <Button
           type="button"
           onClick={load}
           disabled={loading}
@@ -122,7 +123,7 @@ export function Component() {
         >
           <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
           Refresh Analysis
-        </button>
+        </Button>
       </div>
 
       {loading && <ReviewSkeleton />}
@@ -132,13 +133,13 @@ export function Component() {
           <Sparkles className="size-10 text-pf-text-muted mb-4 opacity-40" aria-hidden="true" />
           <p className="text-pf-text font-medium">Failed to load review</p>
           <p className="text-sm text-pf-text-muted mt-1">{error}</p>
-          <button
+          <Button
             type="button"
             onClick={load}
             className="mt-4 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text hover:border-pf-border-strong transition-colors"
           >
             Try Again
-          </button>
+          </Button>
         </div>
       )}
 

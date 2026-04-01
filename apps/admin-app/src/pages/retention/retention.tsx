@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Button } from '@polyforge/ui';
 import { Users, TrendingUp, RefreshCw } from 'lucide-react';
 import {
   ComposedChart,
@@ -293,15 +294,16 @@ export function Component() {
             <p className="text-xs text-pf-text-tertiary">DAU, WAU, MAU and cohort analysis</p>
           </div>
         </div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={handleRefresh}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors"
           aria-label="Refresh retention data"
         >
           <RefreshCw size={14} aria-hidden="true" />
           Refresh
-        </button>
+        </Button>
       </div>
 
       {/* Section 1: Overview stat cards */}
@@ -317,13 +319,14 @@ export function Component() {
       ) : overviewError ? (
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 text-center">
           <p className="text-sm text-pf-text-secondary">Overview data unavailable</p>
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={loadOverviewAndCohorts}
-            className="text-pf-cyan-400 hover:text-pf-cyan-300 text-xs mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded"
+            className="text-pf-cyan-400 hover:text-pf-cyan-300 text-xs mt-2"
           >
             Retry
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -371,13 +374,14 @@ export function Component() {
           </div>
           <div className="text-center py-8">
             <p className="text-sm text-pf-text-secondary">Trend data unavailable</p>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => loadTrend(trendDays)}
-              className="text-pf-cyan-400 hover:text-pf-cyan-300 text-xs mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded"
+              className="text-pf-cyan-400 hover:text-pf-cyan-300 text-xs mt-2"
             >
               Retry
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
@@ -390,11 +394,12 @@ export function Component() {
             {/* Period selector chips */}
             <div className="flex items-center gap-1" role="group" aria-label="Select trend period">
               {PERIOD_OPTIONS.map((opt) => (
-                <button
+                <Button
                   key={opt.value}
                   type="button"
+                  variant="ghost"
                   onClick={() => setTrendDays(opt.value)}
-                  className={`px-2.5 py-1 rounded-pf-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
+                  className={`px-2.5 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
                     trendDays === opt.value
                       ? 'bg-pf-cyan-500/20 text-pf-cyan-500 border border-pf-cyan-500/40'
                       : 'border border-pf-border text-pf-text-secondary hover:text-pf-text hover:bg-pf-base'
@@ -402,7 +407,7 @@ export function Component() {
                   aria-pressed={trendDays === opt.value}
                 >
                   {opt.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -466,13 +471,14 @@ export function Component() {
           </div>
           <div className="text-center py-8">
             <p className="text-sm text-pf-text-secondary">Cohort data unavailable</p>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={loadOverviewAndCohorts}
-              className="text-pf-cyan-400 hover:text-pf-cyan-300 text-xs mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded"
+              className="text-pf-cyan-400 hover:text-pf-cyan-300 text-xs mt-2"
             >
               Retry
-            </button>
+            </Button>
           </div>
         </div>
       ) : (

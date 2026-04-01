@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { Button, Input } from '@polyforge/ui';
 import { ShieldCheck } from 'lucide-react';
 import { useAdminAuthStore } from '@/stores/admin-auth-store';
 
@@ -75,7 +76,7 @@ export function Component() {
             <label htmlFor="email" className="block text-xs font-medium text-pf-text-secondary mb-1.5">
               Email
             </label>
-            <input
+            <Input
               id="email"
               type="email"
               autoComplete="email"
@@ -92,7 +93,7 @@ export function Component() {
             <label htmlFor="password" className="block text-xs font-medium text-pf-text-secondary mb-1.5">
               Password
             </label>
-            <input
+            <Input
               id="password"
               type="password"
               autoComplete="current-password"
@@ -109,7 +110,7 @@ export function Component() {
               <label htmlFor="totp" className="block text-xs font-medium text-pf-text-secondary mb-1.5">
                 2FA Code
               </label>
-              <input
+              <Input
                 id="totp"
                 type="text"
                 inputMode="numeric"
@@ -126,13 +127,14 @@ export function Component() {
             </div>
           )}
 
-          <button
+          <Button
             type="submit"
+            variant="default"
             disabled={loading || (totpRequired && totpCode.length < 6)}
-            className="w-full py-2 px-4 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+            className="w-full py-2 px-4 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Signing in...' : totpRequired ? 'Verify & Sign In' : 'Sign In'}
-          </button>
+          </Button>
 
           <p className="text-sm text-center text-pf-warning">
             This endpoint is rate limited. Too many failed attempts will result in a temporary lockout.

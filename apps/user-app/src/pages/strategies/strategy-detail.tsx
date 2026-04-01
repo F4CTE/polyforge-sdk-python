@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 import { wsManager } from '@/lib/websocket';
 import { toast } from 'sonner';
+import { Button, Input, Select, Textarea } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -901,13 +902,14 @@ export function Component() {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="text-pf-text font-medium text-lg">Strategy not found</p>
           <p className="text-sm text-pf-text-muted mt-1">This strategy may have been deleted or the link is invalid.</p>
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => navigate('/strategies')}
             className="mt-4 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text hover:border-pf-border-strong transition-colors"
           >
             Back to Strategies
-          </button>
+          </Button>
         </div>
       )}
 
@@ -915,13 +917,14 @@ export function Component() {
       {!loading && loadError && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="text-pf-text font-medium">{loadError}</p>
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => navigate('/strategies')}
             className="mt-4 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text hover:border-pf-border-strong transition-colors"
           >
             Back to Strategies
-          </button>
+          </Button>
         </div>
       )}
 
@@ -947,62 +950,66 @@ export function Component() {
             <div className="flex items-center gap-2 shrink-0">
               {isIdle(status) && (
                 <>
-                  <button
+                  <Button
                     type="button"
                     onClick={() => doAction('start', { mode: 'live' })}
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
                   >
                     <Zap className="size-3.5" /> Start Live
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="secondary"
                     onClick={() => doAction('start', { mode: 'paper' })}
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
                   >
                     <FileText className="size-3.5" /> Start Paper
-                  </button>
+                  </Button>
                 </>
               )}
               {isActive(status) && (
                 <>
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
                     onClick={() => doAction('pause')}
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
                   >
                     <Pause className="size-3.5" /> Pause
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="danger"
                     onClick={() => doAction('stop')}
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors text-sm"
                   >
                     <Square className="size-3.5" /> Stop
-                  </button>
+                  </Button>
                 </>
               )}
               {isPaused(status) && (
                 <>
-                  <button
+                  <Button
                     type="button"
                     onClick={() => doAction('resume')}
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
                   >
                     <Play className="size-3.5" /> Resume
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="danger"
                     onClick={() => doAction('stop')}
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors text-sm"
                   >
                     <Square className="size-3.5" /> Stop
-                  </button>
+                  </Button>
                 </>
               )}
               <Link
@@ -1013,35 +1020,42 @@ export function Component() {
               >
                 <Pencil className="size-4" />
               </Link>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={handleExport}
                 className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
                 aria-label="Export strategy"
                 title="Export strategy"
               >
                 <Download className="size-4" />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => exportStrategyJson(strategy)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong transition-colors"
                 aria-label="Export strategy as JSON"
                 title="Export JSON"
               >
                 <FileJson className="size-4" aria-hidden="true" /> Export JSON
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => copyStrategyJson(strategy)}
                 className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong transition-colors"
                 aria-label="Copy strategy JSON to clipboard"
                 title="Copy JSON"
               >
                 {copyJsonDone ? <Check className="size-4 text-pf-success" /> : <Copy className="size-4" />}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={openAlertsPanel}
                 className={`relative p-2 rounded-pf border transition-colors ${showAlertsPanel ? 'bg-pf-warning/10 border-pf-warning/40 text-pf-warning' : 'bg-pf-elevated border-pf-border text-pf-text-secondary hover:border-pf-border-strong'}`}
                 aria-label="Performance alerts"
@@ -1054,9 +1068,11 @@ export function Component() {
                     {strategyAlerts.length > 9 ? '9+' : strategyAlerts.length}
                   </span>
                 )}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={openSharePanel}
                 className={`p-2 rounded-pf border transition-colors ${showSharePanel ? 'bg-pf-cyan-500/10 border-pf-cyan-500/40 text-pf-cyan-400' : 'bg-pf-elevated border-pf-border text-pf-text-secondary hover:border-pf-border-strong'}`}
                 aria-label="Share strategy"
@@ -1064,16 +1080,18 @@ export function Component() {
                 title="Share"
               >
                 <Share2 className="size-4" />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => { setListTitle(strategy.name); setShowListing((v) => !v); }}
                 className="p-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-cyan-400 transition-colors"
                 aria-label="List on Marketplace"
                 title="List on Marketplace"
               >
                 <Store className="size-4" />
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -1085,14 +1103,14 @@ export function Component() {
                   <Store className="size-4 text-pf-cyan-400" />
                   List on Marketplace
                 </span>
-                <button type="button" onClick={() => setShowListing(false)} className="text-pf-text-muted hover:text-pf-text transition-colors">
+                <Button type="button" variant="ghost" onClick={() => setShowListing(false)} className="text-pf-text-muted hover:text-pf-text transition-colors">
                   <X className="size-4" />
-                </button>
+                </Button>
               </div>
               <div className="space-y-2">
                 <div>
                   <label className="block text-xs font-medium text-pf-text-secondary mb-1">Listing Title *</label>
-                  <input
+                  <Input
                     type="text"
                     value={listTitle}
                     onChange={(e) => setListTitle(e.target.value)}
@@ -1102,7 +1120,7 @@ export function Component() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-pf-text-secondary mb-1">Description</label>
-                  <textarea
+                  <Textarea
                     value={listDesc}
                     onChange={(e) => setListDesc(e.target.value)}
                     rows={2}
@@ -1113,7 +1131,7 @@ export function Component() {
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <label className="block text-xs font-medium text-pf-text-secondary mb-1">Price (USDC)</label>
-                    <input
+                    <Input
                       type="number"
                       min="0"
                       step="1"
@@ -1126,7 +1144,7 @@ export function Component() {
                   </div>
                   <div className="flex-1">
                     <label className="block text-xs font-medium text-pf-text-secondary mb-1">Tags (comma-separated)</label>
-                    <input
+                    <Input
                       type="text"
                       value={listTags}
                       onChange={(e) => setListTags(e.target.value)}
@@ -1136,14 +1154,14 @@ export function Component() {
                   </div>
                 </div>
               </div>
-              <button
+              <Button
                 type="button"
                 onClick={submitListing}
                 disabled={listSubmitting || !listTitle}
                 className="w-full py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-semibold hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
               >
                 {listSubmitting ? 'Publishing...' : 'Publish to Marketplace'}
-              </button>
+              </Button>
             </div>
           )}
 
@@ -1156,14 +1174,15 @@ export function Component() {
                   <Share2 className="size-4 text-pf-cyan-400" />
                   Share Strategy
                 </span>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setShowSharePanel(false)}
                   className="text-pf-text-muted hover:text-pf-text transition-colors"
                   aria-label="Close share panel"
                 >
                   <X className="size-4" />
-                </button>
+                </Button>
               </div>
 
               {/* Public link row */}
@@ -1179,23 +1198,25 @@ export function Component() {
                       </span>
                     )}
                   </div>
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
                     onClick={copyShareUrl}
                     disabled={!shareUrl || loadingShare}
                     className="flex items-center gap-1.5 px-3 h-9 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors shrink-0"
                   >
                     {copying ? <Check className="size-3.5 text-pf-success" /> : <Copy className="size-3.5" />}
                     {copying ? 'Copied!' : 'Copy'}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
               {/* Share actions */}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-pf-text-muted">Share on:</span>
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   disabled={!shareUrl || loadingShare}
                   onClick={() => {
                     if (!shareUrl) return;
@@ -1210,16 +1231,17 @@ export function Component() {
                 >
                   <span className="font-bold text-sm leading-none">𝕏</span>
                   Twitter
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={copyShareUrl}
                   disabled={!shareUrl || loadingShare}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 transition-colors"
                 >
                   {copying ? <Check className="size-3.5 text-pf-success" /> : <Copy className="size-3.5" />}
                   Copy link
-                </button>
+                </Button>
               </div>
 
               {/* Preview card */}
@@ -1273,8 +1295,9 @@ export function Component() {
                     {strategy.visibility === 'public' ? 'Public' : 'Private'}
                   </span>
                 </div>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={toggleVisibility}
                   disabled={togglingVisibility}
                   className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium transition-colors disabled:opacity-40 ${
@@ -1288,7 +1311,7 @@ export function Component() {
                     : strategy.visibility === 'public'
                     ? 'Make Private'
                     : 'Make Public'}
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -1302,27 +1325,29 @@ export function Component() {
                   <Bell className="size-4 text-pf-warning" />
                   Performance Alerts
                 </span>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => { setShowAlertsPanel(false); setShowAlertForm(false); setEditingAlert(null); }}
                   className="text-pf-text-muted hover:text-pf-text transition-colors"
                   aria-label="Close alerts panel"
                 >
                   <X className="size-4" />
-                </button>
+                </Button>
               </div>
               <p className="text-xs text-pf-text-muted -mt-2">Get notified when your strategy hits key thresholds.</p>
 
               {/* Add Alert button */}
               {!showAlertForm && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => openAlertForm()}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-warning/50 hover:text-pf-warning transition-colors"
                 >
                   <BellPlus className="size-3.5" />
                   Add Alert
-                </button>
+                </Button>
               )}
 
               {/* Inline form */}
@@ -1335,7 +1360,7 @@ export function Component() {
                     {/* Alert type */}
                     <div>
                       <label className="block text-xs font-medium text-pf-text-secondary mb-1">Alert type</label>
-                      <select
+                      <Select
                         value={alertType}
                         onChange={(e) => {
                           const t = e.target.value as StrategyAlertType;
@@ -1348,14 +1373,14 @@ export function Component() {
                         {ALERT_TYPES_ORDERED.map((t) => (
                           <option key={t} value={t}>{ALERT_TYPE_LABELS[t]}</option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
 
                     {/* Threshold — hidden for strategy_offline */}
                     {alertType !== 'strategy_offline' && (
                       <div>
                         <label className="block text-xs font-medium text-pf-text-secondary mb-1">Threshold</label>
-                        <input
+                        <Input
                           type="number"
                           value={alertThreshold}
                           onChange={(e) => setAlertThreshold(e.target.value)}
@@ -1397,22 +1422,23 @@ export function Component() {
 
                   {/* Form actions */}
                   <div className="flex items-center gap-2 pt-1">
-                    <button
+                    <Button
                       type="button"
                       onClick={saveAlert}
                       disabled={alertFormSaving}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-warning text-black text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
                     >
                       {alertFormSaving ? 'Saving...' : 'Save Alert'}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="secondary"
                       onClick={cancelAlertForm}
                       disabled={alertFormSaving}
                       className="px-3 py-1.5 rounded-pf border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
@@ -1438,14 +1464,15 @@ export function Component() {
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-pf border transition-colors ${alert.enabled ? 'border-pf-border bg-pf-surface' : 'border-pf-border-subtle bg-pf-surface/50 opacity-60'}`}
                     >
                       {/* Enabled toggle */}
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => toggleAlertEnabled(alert)}
                         aria-label={alert.enabled ? 'Disable alert' : 'Enable alert'}
                         className={`shrink-0 w-8 h-5 rounded-full border transition-colors relative ${alert.enabled ? 'bg-pf-warning/20 border-pf-warning/40' : 'bg-pf-overlay border-pf-border'}`}
                       >
                         <span className={`absolute top-0.5 w-3 h-3 rounded-full transition-all ${alert.enabled ? 'left-4 bg-pf-warning' : 'left-0.5 bg-pf-text-muted'}`} />
-                      </button>
+                      </Button>
 
                       {/* Label + threshold */}
                       <div className="flex-1 min-w-0">
@@ -1472,26 +1499,28 @@ export function Component() {
                       )}
 
                       {/* Edit */}
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => openAlertForm(alert)}
                         className="shrink-0 p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
                         aria-label="Edit alert"
                         title="Edit"
                       >
                         <Edit2 className="size-3.5" />
-                      </button>
+                      </Button>
 
                       {/* Delete */}
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => deleteAlert(alert.id)}
                         className="shrink-0 p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors"
                         aria-label="Delete alert"
                         title="Delete"
                       >
                         <Trash2 className="size-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -1628,37 +1657,42 @@ export function Component() {
 
           {/* Detail tab bar */}
           <div className="flex items-center gap-1 border-b border-pf-border-subtle pb-1">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setDetailTab('overview')}
               className={`px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'overview' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
             >
               Overview
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setDetailTab('log')}
               className={`px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'log' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
             >
               Execution Log
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setDetailTab('versions')}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'versions' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
             >
               <History className="size-3.5" aria-hidden="true" />
               History
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setDetailTab('executions')}
               className={`px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'executions' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
             >
               Executions
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setDetailTab('live')}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'live' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
             >
@@ -1666,7 +1700,7 @@ export function Component() {
                 ? <span className="w-1.5 h-1.5 rounded-full bg-pf-success animate-pulse" />
                 : <Wifi className="size-3" />}
               Live
-            </button>
+            </Button>
           </div>
 
           {/* Body grid */}
@@ -1862,27 +1896,31 @@ export function Component() {
                   </div>
                   {executionsTotalPages > 1 && (
                     <div className="flex items-center justify-end gap-2 mt-3">
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         disabled={executionsPage === 1}
                         onClick={() => { const p = executionsPage - 1; setExecutionsPage(p); fetchExecutions(p); }}
                         className="p-1.5 rounded-pf border border-pf-border text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
                         aria-label="Previous page"
                       >
                         <ChevronLeft className="size-4" />
-                      </button>
+                      </Button>
                       <span className="text-xs text-pf-text-muted">
                         {executionsPage} / {executionsTotalPages}
                       </span>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         disabled={executionsPage === executionsTotalPages}
                         onClick={() => { const p = executionsPage + 1; setExecutionsPage(p); fetchExecutions(p); }}
                         className="p-1.5 rounded-pf border border-pf-border text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
                         aria-label="Next page"
                       >
                         <ChevronRight className="size-4" />
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </>
@@ -2019,8 +2057,9 @@ export function Component() {
                           {/* Restore button for non-current versions */}
                           {!isCurrent && (
                             <div className="pt-1">
-                              <button
+                              <Button
                                 type="button"
+                                variant="ghost"
                                 disabled={!!rollingBack}
                                 onClick={async (e) => {
                                   e.stopPropagation();
@@ -2062,7 +2101,7 @@ export function Component() {
                               >
                                 <RotateCcw className="size-3" aria-hidden="true" />
                                 {isRestoring ? 'Restoring...' : `Restore this version`}
-                              </button>
+                              </Button>
                             </div>
                           )}
                         </div>
@@ -2093,14 +2132,15 @@ export function Component() {
                     </span>
                   )}
                 </div>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setLiveEvents([])}
                   className="flex items-center gap-1.5 px-2.5 py-1 rounded-pf border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors"
                 >
                   <Trash2 className="size-3" />
                   Clear
-                </button>
+                </Button>
               </div>
 
               {/* Not running banner */}
@@ -2215,9 +2255,10 @@ function StarRow({
       {[1, 2, 3, 4, 5].map((n) => {
         const filled = n <= display;
         return (
-          <button
+          <Button
             key={n}
             type="button"
+            variant="ghost"
             disabled={!interactive}
             aria-label={`Rate ${n} star${n !== 1 ? 's' : ''}`}
             onMouseEnter={() => onHover?.(n)}
@@ -2232,7 +2273,7 @@ function StarRow({
                   : 'text-pf-text-muted fill-none'
               }`}
             />
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -2383,7 +2424,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
         </div>
 
         {/* Comment */}
-        <textarea
+        <Textarea
           value={state.submitComment}
           onChange={(e) =>
             setState(prev => ({ ...prev, submitComment: e.target.value }))
@@ -2397,14 +2438,14 @@ function ReviewsSection({ listingId }: { listingId: string }) {
           <span className="text-[10px] text-pf-text-muted">
             {state.submitComment.length}/500
           </span>
-          <button
+          <Button
             type="button"
             onClick={submitReview}
             disabled={state.submitting}
             className="flex items-center gap-2 px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
           >
             {state.submitting ? 'Submitting...' : 'Submit Review'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -2481,27 +2522,31 @@ function ReviewsSection({ listingId }: { listingId: string }) {
       {/* Pagination */}
       {state.totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-1">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => fetchReviews(state.page - 1)}
             disabled={state.page === 1 || state.loading}
             aria-label="Previous reviews page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
-          </button>
+          </Button>
           <span className="text-sm font-mono text-pf-text-secondary">
             Page {state.page} of {state.totalPages}
           </span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => fetchReviews(state.page + 1)}
             disabled={state.page === state.totalPages || state.loading}
             aria-label="Next reviews page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
-          </button>
+          </Button>
         </div>
       )}
     </div>

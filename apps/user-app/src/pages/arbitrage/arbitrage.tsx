@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import {
   TrendingDown, RefreshCw, Loader2, ArrowRight, AlertTriangle, Info,
 } from 'lucide-react';
+import { Button } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -126,7 +127,7 @@ export function Component() {
             risk-free profit on resolution.
           </p>
         </div>
-        <button
+        <Button
           type="button"
           onClick={load}
           disabled={loading}
@@ -134,7 +135,7 @@ export function Component() {
         >
           {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           Refresh
-        </button>
+        </Button>
       </div>
 
       {/* How it works */}
@@ -153,9 +154,10 @@ export function Component() {
       <div className="flex items-center gap-4">
         <span className="text-xs text-pf-text-secondary whitespace-nowrap">Min margin:</span>
         {[0.5, 1, 2, 5].map(v => (
-          <button
+          <Button
             key={v}
             type="button"
+            variant="ghost"
             onClick={() => setMinMargin(v)}
             className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
               minMargin === v
@@ -164,7 +166,7 @@ export function Component() {
             }`}
           >
             {v}%+
-          </button>
+          </Button>
         ))}
         <span className="ml-auto text-xs text-pf-text-muted">
           {loading ? 'Scanning…' : `${opportunities.length} opportunit${opportunities.length !== 1 ? 'ies' : 'y'} found`}
@@ -234,8 +236,9 @@ export function Component() {
               </span>
 
               {/* Execute */}
-              <button
+              <Button
                 type="button"
+                variant="success"
                 onClick={() => executeArbitrage(opp)}
                 disabled={executing === opp.marketId}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-success text-black text-xs font-medium hover:bg-pf-success/80 disabled:opacity-50 transition-colors whitespace-nowrap"
@@ -245,7 +248,7 @@ export function Component() {
                   : <ArrowRight className="size-3" />
                 }
                 Execute
-              </button>
+              </Button>
             </div>
           ))}
         </div>

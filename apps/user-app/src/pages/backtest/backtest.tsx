@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import {
   Play, ChevronLeft, ChevronRight, History, X, AlertTriangle, XCircle, Loader2,
 } from 'lucide-react';
+import { Button, Input, Select } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -255,7 +256,7 @@ export function Component() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label htmlFor="backtest-strategy" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Strategy</label>
-              <select
+              <Select
                 id="backtest-strategy"
                 value={selectedStratId}
                 onChange={e => setSelectedStratId(e.target.value)}
@@ -263,7 +264,7 @@ export function Component() {
               >
                 <option value="">Select strategy</option>
                 {strategies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
+              </Select>
             </div>
             <div>
               <label htmlFor="backtest-start" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Start Date</label>
@@ -288,7 +289,7 @@ export function Component() {
               />
             </div>
             <div className="flex items-end">
-              <button
+              <Button
                 type="button"
                 onClick={submit}
                 disabled={!canSubmit}
@@ -296,7 +297,7 @@ export function Component() {
               >
                 {submitting ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
                 Run Backtest
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -307,7 +308,7 @@ export function Component() {
                 <div key={slot.slot} className="space-y-1">
                   <label htmlFor={`market-binding-${slot.slot}`} className="text-xs text-pf-text-muted">{slot.label || slot.slot}</label>
                   <div className="relative">
-                    <input
+                    <Input
                       id={`market-binding-${slot.slot}`}
                       type="text"
                       value={marketSearch[slot.slot] ?? marketBindings[slot.slot] ?? ''}
@@ -325,8 +326,9 @@ export function Component() {
                   {(marketResults[slot.slot] ?? []).length > 0 && (
                     <div className="bg-pf-elevated border border-pf-border rounded-pf max-h-40 overflow-y-auto">
                       {marketResults[slot.slot].map((m) => (
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           key={m.id}
                           onClick={() => {
                             setMarketBindings(prev => ({ ...prev, [slot.slot]: m.id }));
@@ -336,7 +338,7 @@ export function Component() {
                           className="w-full text-left px-3 py-2 text-xs text-pf-text hover:bg-pf-surface cursor-pointer transition-colors border-b border-pf-border-subtle last:border-b-0"
                         >
                           {m.title ?? m.question}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   )}
@@ -355,9 +357,9 @@ export function Component() {
               <div className="text-sm font-medium text-pf-text">{selectedRun.strategyName ?? 'Unnamed Strategy'}</div>
               <div className="text-xs font-mono text-pf-text-muted mt-1">{dateRangeLabel(selectedRun)}</div>
             </div>
-            <button type="button" onClick={() => setSelectedRun(null)} aria-label="Close run details" className="text-pf-text-muted hover:text-pf-text transition-colors">
+            <Button type="button" variant="ghost" size="icon" onClick={() => setSelectedRun(null)} aria-label="Close run details" className="text-pf-text-muted hover:text-pf-text transition-colors">
               <X className="size-4" />
-            </button>
+            </Button>
           </div>
 
           {(selectedRun.status === 'RUNNING' || selectedRun.status === 'QUEUED') && (
@@ -443,13 +445,14 @@ export function Component() {
         <div className="px-4 pt-4 pb-2">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-semibold text-pf-text">Backtest History</h2>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => { setCompareMode(!compareMode); setCompareA(null); setCompareB(null); }}
               className={`text-xs px-3 py-1.5 rounded-pf border transition-colors ${compareMode ? 'bg-pf-cyan-500/15 border-pf-cyan-500/30 text-pf-cyan-400' : 'border-pf-border text-pf-text-secondary hover:text-pf-text'}`}
             >
               {compareMode ? 'Exit Compare' : 'Compare Runs'}
-            </button>
+            </Button>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -540,16 +543,18 @@ export function Component() {
                       {compareMode && (
                         <td className="px-3 py-2 text-right" onClick={e => e.stopPropagation()}>
                           <div className="flex gap-1 justify-end">
-                            <button
+                            <Button
                               type="button"
+                              variant="ghost"
                               onClick={() => setCompareA(run.id === compareA ? null : run.id)}
                               className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${compareA === run.id ? 'bg-blue-500/20 border-blue-500/40 text-blue-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
-                            >A</button>
-                            <button
+                            >A</Button>
+                            <Button
                               type="button"
+                              variant="ghost"
                               onClick={() => setCompareB(run.id === compareB ? null : run.id)}
                               className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${compareB === run.id ? 'bg-purple-500/20 border-purple-500/40 text-purple-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
-                            >B</button>
+                            >B</Button>
                           </div>
                         </td>
                       )}
@@ -617,25 +622,29 @@ export function Component() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
-          </button>
+          </Button>
           <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
-          </button>
+          </Button>
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { Button } from '@polyforge/ui';
 import {
   Users,
   Blocks,
@@ -248,9 +249,9 @@ export function Component() {
             <div className="text-center py-6">
               <AlertCircle className="mx-auto mb-2 text-pf-text-tertiary" size={24} aria-hidden="true" />
               <p className="text-sm text-pf-text-secondary">Health unavailable</p>
-              <button type="button" onClick={load} className="text-pf-cyan-400 hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded">
+              <Button type="button" variant="ghost" onClick={load} className="text-pf-cyan-400 hover:text-[var(--color-pf-cyan-300)] text-xs mt-2">
                 Retry
-              </button>
+              </Button>
             </div>
           </div>
         ) : health ? (
@@ -348,11 +349,12 @@ export function Component() {
                   Invite-only registration
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={toggleInviteOnly}
                 disabled={!isSuperAdmin}
-                className={`transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded ${isSuperAdmin ? 'cursor-pointer text-pf-cyan-500 hover:text-pf-cyan-400' : 'text-pf-text-tertiary opacity-50 cursor-not-allowed'}`}
+                className={`transition-colors ${isSuperAdmin ? 'cursor-pointer text-pf-cyan-500 hover:text-pf-cyan-400' : 'text-pf-text-tertiary opacity-50 cursor-not-allowed'}`}
                 aria-label={config?.inviteOnly ? 'Disable invite-only registration' : 'Enable invite-only registration'}
                 title={!isSuperAdmin ? 'Super Admin only' : undefined}
               >
@@ -361,7 +363,7 @@ export function Component() {
                 ) : (
                   <ToggleLeft size={32} className="text-pf-text-tertiary" />
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -440,9 +442,9 @@ export function Component() {
             <Clock className="mx-auto mb-2 text-pf-text-tertiary" size={20} aria-hidden="true" />
             <p className="text-sm text-pf-text-secondary">No recent activity</p>
             <p className="text-xs text-pf-text-tertiary mt-1">Activity will appear here as admins take actions.</p>
-            <button type="button" onClick={load} className="text-pf-cyan-400 hover:text-[var(--color-pf-cyan-300)] text-xs mt-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded">
+            <Button type="button" variant="ghost" onClick={load} className="text-pf-cyan-400 hover:text-[var(--color-pf-cyan-300)] text-xs mt-2">
               Refresh
-            </button>
+            </Button>
           </div>
         ) : auditLogs.length === 0 ? (
           <div className="py-2">

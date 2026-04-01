@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button, Input, Select } from '@polyforge/ui';
 
 interface AlertToken {
   id: string;
@@ -208,14 +209,14 @@ export function Component() {
               {loading ? '...' : `${alerts.length} alert${alerts.length !== 1 ? 's' : ''}`}
             </p>
           </div>
-          <button
+          <Button
             type="button"
             onClick={() => { setFormOpen(v => !v); if (formOpen) resetForm(); }}
             className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors font-medium"
           >
             <span className="text-base leading-none">＋</span>
             New Alert
-          </button>
+          </Button>
         </div>
 
         {/* Create form (collapsible) */}
@@ -230,7 +231,7 @@ export function Component() {
                 Market
               </label>
               <div className="relative">
-                <input
+                <Input
                   type="text"
                   value={query}
                   onChange={e => {
@@ -246,14 +247,15 @@ export function Component() {
                 {showDropdown && (
                   <div className="absolute z-20 w-full top-full mt-1 rounded-pf border border-pf-border bg-pf-elevated shadow-lg overflow-hidden">
                     {searchResults.map(m => (
-                      <button
+                      <Button
                         key={m.id}
                         type="button"
+                        variant="ghost"
                         onMouseDown={() => selectMarket(m)}
                         className="w-full text-left px-3 py-2 text-sm text-pf-text hover:bg-pf-surface transition-colors truncate"
                       >
                         {m.title}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}
@@ -302,20 +304,20 @@ export function Component() {
                 <label className="block text-xs font-medium text-pf-text-secondary uppercase tracking-wide">
                   Direction
                 </label>
-                <select
+                <Select
                   value={direction}
                   onChange={e => setDirection(e.target.value as 'above' | 'below')}
                   className="w-full bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text focus:outline-none focus:ring-1 focus:ring-pf-cyan-500/50"
                 >
                   <option value="above">Price rises above</option>
                   <option value="below">Price falls below</option>
-                </select>
+                </Select>
               </div>
               <div className="space-y-1">
                 <label className="block text-xs font-medium text-pf-text-secondary uppercase tracking-wide">
                   Price threshold
                 </label>
-                <input
+                <Input
                   type="number"
                   min="0.01"
                   max="0.99"
@@ -340,13 +342,13 @@ export function Component() {
 
             {/* Submit */}
             <div className="flex justify-end">
-              <button
+              <Button
                 type="submit"
                 disabled={submitting || !selectedTokenId}
                 className="px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-pf-bg text-sm font-semibold hover:bg-pf-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Creating...' : 'Create Alert'}
-              </button>
+              </Button>
             </div>
           </form>
         )}
@@ -421,14 +423,16 @@ export function Component() {
                   </div>
 
                   {/* Delete */}
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => deleteAlert(alert.id)}
                     className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-danger transition-colors shrink-0"
                     aria-label="Delete alert"
                   >
                     <Trash2 size={14} aria-hidden="true" />
-                  </button>
+                  </Button>
                 </div>
               );
             })}

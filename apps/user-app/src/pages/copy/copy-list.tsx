@@ -18,6 +18,7 @@ import {
   BarChart2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button, Input } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -192,7 +193,7 @@ function MaxLossEditor({
     return (
       <span className="inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
         <span className="text-pf-text-muted text-[11px]">$</span>
-        <input
+        <Input
           ref={inputRef}
           type="number"
           min={0}
@@ -207,30 +208,35 @@ function MaxLossEditor({
           disabled={saving}
           className="w-20 px-1.5 py-0.5 rounded bg-pf-surface border border-pf-cyan-500/40 text-pf-text text-[11px] font-mono focus:outline-none"
         />
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={save}
           disabled={saving}
           className="text-pf-success hover:text-pf-success/80 disabled:opacity-40 transition-colors"
           aria-label="Save max loss"
         >
           <Check className="size-3" />
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={cancel}
           className="text-pf-text-muted hover:text-pf-text transition-colors"
           aria-label="Cancel"
         >
           <X className="size-3" />
-        </button>
+        </Button>
       </span>
     );
   }
 
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
       onClick={startEdit}
       title="Click to set max loss limit"
       className="inline-flex items-center gap-1 text-pf-text-secondary hover:text-pf-text transition-colors"
@@ -239,7 +245,7 @@ function MaxLossEditor({
         {value != null ? `$${Number(value).toFixed(2)}` : 'No limit'}
       </span>
       <Pencil className="size-2.5 text-pf-text-muted" />
-    </button>
+    </Button>
   );
 }
 
@@ -332,8 +338,9 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
   return (
     <div className="rounded-pf-lg border border-pf-border bg-pf-elevated overflow-hidden">
       {/* Summary bar — always visible */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={onToggle}
         className="w-full flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-sm text-left hover:bg-pf-surface/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40"
         aria-expanded={expanded}
@@ -397,7 +404,7 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
             ? <ChevronUp className="size-4" aria-hidden="true" />
             : <ChevronDown className="size-4" aria-hidden="true" />}
         </span>
-      </button>
+      </Button>
 
       {/* Expanded section */}
       {expanded && (
@@ -665,8 +672,9 @@ export function Component() {
       {/* Filter tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {FILTERS.map((f) => (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             key={f.value}
             onClick={() => onFilterChange(f.value)}
             className={`px-3 py-1.5 text-sm rounded-full border transition-colors cursor-pointer ${
@@ -676,7 +684,7 @@ export function Component() {
             }`}
           >
             {f.label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -772,8 +780,10 @@ export function Component() {
                     <span className="font-mono text-sm text-pf-text group-hover:text-pf-cyan-400 transition-colors truncate">
                       {truncateAddress(config.targetWallet)}
                     </span>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         copyToClipboard(config.targetWallet);
@@ -783,7 +793,7 @@ export function Component() {
                       aria-label="Copy wallet address"
                     >
                       <Copy className="size-3.5" />
-                    </button>
+                    </Button>
                   </div>
                   <span
                     data-testid="status-badge"
@@ -866,30 +876,33 @@ export function Component() {
                 >
                   <div className="flex items-center gap-1">
                     {config.status === 'ACTIVE' && (
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => doAction(config.id, 'pause')}
                         disabled={busy}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-pf-sm text-xs font-medium text-pf-warning bg-pf-warning/10 hover:bg-pf-warning/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
                         aria-label="Pause config"
                       >
                         <Pause className="size-3" /> Pause
-                      </button>
+                      </Button>
                     )}
                     {config.status === 'PAUSED' && (
-                      <button
+                      <Button
                         type="button"
+                        variant="success"
                         onClick={() => doAction(config.id, 'resume')}
                         disabled={busy}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-pf-sm text-xs font-medium text-pf-success bg-pf-success/10 hover:bg-pf-success/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
                         aria-label="Resume config"
                       >
                         <Play className="size-3" /> Resume
-                      </button>
+                      </Button>
                     )}
                     {config.status !== 'STOPPED' && (
-                      <button
+                      <Button
                         type="button"
+                        variant="danger"
                         onClick={() => doAction(config.id, 'stop')}
                         disabled={busy}
                         className="px-2.5 py-1.5 rounded-pf-sm text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
@@ -897,7 +910,7 @@ export function Component() {
                         title="Stop"
                       >
                         <Square className="size-3.5" />
-                      </button>
+                      </Button>
                     )}
                   </div>
                   <Link
@@ -919,8 +932,10 @@ export function Component() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => {
               const p = Math.max(1, page - 1);
               setPage(p);
@@ -931,12 +946,14 @@ export function Component() {
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
-          </button>
+          </Button>
           <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">
             Page {page} of {totalPages}
           </span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => {
               const p = Math.min(totalPages, page + 1);
               setPage(p);
@@ -947,7 +964,7 @@ export function Component() {
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
-          </button>
+          </Button>
         </div>
       )}
     </div>

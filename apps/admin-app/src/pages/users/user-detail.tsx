@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router';
 import { toast } from 'sonner';
+import { Button, Input, Select } from '@polyforge/ui';
 import {
   ChevronLeft,
   ChevronRight,
@@ -305,7 +306,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
             className="absolute left-3 top-1/2 -translate-y-1/2 text-pf-text-muted pointer-events-none"
             aria-hidden="true"
           />
-          <input
+          <Input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -322,7 +323,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
             className="absolute left-3 top-1/2 -translate-y-1/2 text-pf-text-muted pointer-events-none"
             aria-hidden="true"
           />
-          <select
+          <Select
             value={filterGroup}
             onChange={(e) => setFilterGroup(e.target.value as ActivityFilterGroup)}
             className="pl-8 pr-8 py-2 text-sm bg-pf-elevated border border-pf-border rounded-pf-sm text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 appearance-none cursor-pointer"
@@ -333,7 +334,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
             <option value="strategies">Strategies</option>
             <option value="auth">Auth</option>
             <option value="settings">Settings</option>
-          </select>
+          </Select>
           <ChevronRight
             size={12}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 text-pf-text-muted pointer-events-none"
@@ -348,18 +349,19 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
           aria-label="Date range filter"
         >
           {(['7d', '30d', '90d', 'all'] as ActivityDateRange[]).map((r) => (
-            <button
+            <Button
               key={r}
               type="button"
+              variant="ghost"
               onClick={() => setDateRange(r)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-pf-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
+              className={`px-2.5 py-1 text-xs font-medium rounded-pf-sm transition-colors ${
                 dateRange === r
                   ? 'bg-pf-cyan-500 text-white'
                   : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-base'
               }`}
             >
               {r === 'all' ? 'All' : `Last ${r}`}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -446,11 +448,12 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
               <span className="text-xs text-pf-text-muted">
                 Showing {events.length} of {total} events
               </span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => fetchActivity(page + 1, true)}
                 disabled={loading}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base hover:text-pf-text disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base hover:text-pf-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? (
                   <RotateCcw size={13} className="animate-spin" aria-hidden="true" />
@@ -458,7 +461,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
                   <ChevronRight size={13} aria-hidden="true" />
                 )}
                 Load more
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -741,35 +744,38 @@ export function Component() {
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             {isSuspended ? (
-              <button
+              <Button
                 type="button"
+                variant="success"
                 onClick={handleUnsuspend}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-success text-pf-success hover:bg-pf-success/10 disabled:opacity-50 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-success text-pf-success hover:bg-pf-success/10 disabled:opacity-50 transition-colors"
               >
                 <UserCheck size={14} aria-hidden="true" />
                 Unsuspend
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
                 type="button"
+                variant="danger"
                 onClick={handleSuspend}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-danger text-pf-danger hover:bg-pf-danger/10 disabled:opacity-50 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-danger text-pf-danger hover:bg-pf-danger/10 disabled:opacity-50 transition-colors"
               >
                 <Ban size={14} aria-hidden="true" />
                 Suspend
-              </button>
+              </Button>
             )}
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={handleResetPassword}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base hover:text-pf-text disabled:opacity-50 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base hover:text-pf-text disabled:opacity-50 transition-colors"
             >
               <RotateCcw size={14} aria-hidden="true" />
               Reset Password
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -810,13 +816,14 @@ export function Component() {
       <div>
         <div className="flex gap-1 border-b border-pf-border mb-4 overflow-x-auto" role="tablist" aria-label="User detail sections">
           {tabs.map(({ key, label, Icon }) => (
-            <button
+            <Button
               key={key}
               type="button"
+              variant="ghost"
               role="tab"
               aria-selected={activeTab === key}
               onClick={() => handleTabChange(key)}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded-t-pf-sm -mb-px border-b-2 shrink-0 ${
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded-t-pf-sm -mb-px border-b-2 shrink-0 ${
                 activeTab === key
                   ? 'border-pf-cyan-500 text-pf-cyan-500'
                   : 'border-transparent text-pf-text-secondary hover:text-pf-text'
@@ -824,7 +831,7 @@ export function Component() {
             >
               <Icon size={14} aria-hidden="true" />
               {label}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -1007,24 +1014,28 @@ export function Component() {
                   Page {ordersPage} of {ordersPageCount}
                 </span>
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => handleOrdersPage(ordersPage - 1)}
                     disabled={ordersPage === 1 || ordersLoading}
                     aria-label="Previous page"
-                    className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                    className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronLeft size={16} />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => handleOrdersPage(ordersPage + 1)}
                     disabled={ordersPage === ordersPageCount || ordersLoading}
                     aria-label="Next page"
-                    className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                    className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronRight size={16} />
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { Lock, Check, AlertCircle } from 'lucide-react';
 import { AuthBackground } from '@/components/auth-background';
+import { Button, Input } from '@polyforge/ui';
 
 export function Component() {
   const [searchParams] = useSearchParams();
@@ -88,7 +89,7 @@ export function Component() {
                   <label htmlFor="password" className="block text-sm font-medium text-pf-text mb-1.5">New password</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
-                    <input
+                    <Input
                       id="password"
                       type="password"
                       autoComplete="new-password"
@@ -110,7 +111,7 @@ export function Component() {
                   <label htmlFor="confirm" className="block text-sm font-medium text-pf-text mb-1.5">Confirm password</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
-                    <input
+                    <Input
                       id="confirm"
                       type="password"
                       autoComplete="new-password"
@@ -126,13 +127,13 @@ export function Component() {
                   {confirmError && <p id="reset-confirm-error" role="alert" className="mt-1 text-xs text-pf-danger">{confirmError}</p>}
                 </div>
 
-                <button
+                <Button
                   type="submit"
                   disabled={loading || !token}
                   className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
                 >
                   {loading ? 'Resetting...' : 'Reset password'}
-                </button>
+                </Button>
               </form>
             </>
           ) : (

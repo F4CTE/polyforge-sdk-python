@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { Mail, Lock, User, KeyRound, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { AuthBackground } from '@/components/auth-background';
+import { Button, Input } from '@polyforge/ui';
 
 function validatePassword(v: string): string {
   if (!v) return '';
@@ -146,7 +147,7 @@ export function Component() {
               <label htmlFor="email" className="block text-sm font-medium text-pf-text mb-1.5">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
-                <input
+                <Input
                   id="email"
                   type="email"
                   autoComplete="email"
@@ -168,7 +169,7 @@ export function Component() {
               <label htmlFor="username" className="block text-sm font-medium text-pf-text mb-1.5">Username</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
-                <input
+                <Input
                   id="username"
                   type="text"
                   autoComplete="username"
@@ -189,7 +190,7 @@ export function Component() {
               <label htmlFor="password" className="block text-sm font-medium text-pf-text mb-1.5">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
-                <input
+                <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
@@ -201,9 +202,9 @@ export function Component() {
                   aria-describedby={fieldError('password') ? 'register-password-error' : 'register-password-requirements'}
                   className={inputClass}
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text transition-colors">
+                <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text transition-colors">
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
+                </Button>
               </div>
               {fieldError('password') && <p id="register-password-error" role="alert" className="mt-1 text-xs text-pf-danger">{fieldError('password')}</p>}
               {touched.password && password && (
@@ -221,7 +222,7 @@ export function Component() {
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-pf-text mb-1.5">Confirm password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
-                <input
+                <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   autoComplete="new-password"
@@ -233,9 +234,9 @@ export function Component() {
                   aria-describedby={fieldError('confirmPassword') ? 'register-confirm-password-error' : undefined}
                   className={inputClass}
                 />
-                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text transition-colors">
+                <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text transition-colors">
                   {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
+                </Button>
               </div>
               {fieldError('confirmPassword') && <p id="register-confirm-password-error" role="alert" className="mt-1 text-xs text-pf-danger">{fieldError('confirmPassword')}</p>}
             </div>
@@ -246,7 +247,7 @@ export function Component() {
                 <label htmlFor="inviteCode" className="block text-sm font-medium text-pf-text mb-1.5">Invite code</label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
-                  <input
+                  <Input
                     id="inviteCode"
                     type="text"
                     value={inviteCode}
@@ -282,13 +283,13 @@ export function Component() {
             </div>
             {fieldError('tos') && <p id="register-tos-error" role="alert" className="text-xs text-pf-danger -mt-2">{fieldError('tos')}</p>}
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
               className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Creating account...' : 'Create account'}
-            </button>
+            </Button>
           </form>
 
         </div>

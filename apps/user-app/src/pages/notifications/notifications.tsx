@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner';
 import { useNotificationStore } from '@/stores/notification-store';
 import type { NotificationItem } from '@/stores/notification-store';
+import { Button } from '@polyforge/ui';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -182,8 +183,10 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
     >
       {/* Delete button — visible on hover */}
       {hovered && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           aria-label="Delete notification"
           onClick={() => onDelete(item.id, item.source)}
           className={[
@@ -193,7 +196,7 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
           ].join(' ')}
         >
           <X className="h-3.5 w-3.5" />
-        </button>
+        </Button>
       )}
 
       {/* Severity dot */}
@@ -202,8 +205,9 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
       </span>
 
       {/* Main content — clickable for read */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => onRead(item.id, item.source)}
         className={[
           'min-w-0 flex-1 text-left',
@@ -225,7 +229,7 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
         <span className="block text-xs text-pf-text-muted mt-1">
           {relativeTime(item.timestamp)}
         </span>
-      </button>
+      </Button>
 
       {/* Right column: unread dot + action link */}
       <span className="flex flex-col items-end gap-2 shrink-0 mt-1">
@@ -383,8 +387,10 @@ export function Component() {
 
         <div className="flex items-center gap-3">
           {/* Refresh button */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={handleRefresh}
             disabled={refreshing}
             aria-label="Refresh notifications"
@@ -395,11 +401,12 @@ export function Component() {
             ].join(' ')}
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          </button>
+          </Button>
 
           {/* Mark all read */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={handleMarkAllRead}
             className={[
               'text-sm font-medium text-pf-cyan-400 hover:text-pf-cyan-300',
@@ -408,7 +415,7 @@ export function Component() {
             ].join(' ')}
           >
             Mark all read
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -432,9 +439,10 @@ export function Component() {
       {/* Filter tabs */}
       <div className="flex gap-1 border-b border-pf-border">
         {TABS.map((tab) => (
-          <button
+          <Button
             key={tab.value}
             type="button"
+            variant="ghost"
             onClick={() => setActiveTab(tab.value)}
             className={[
               'px-3 py-2 text-sm font-medium rounded-t transition-colors',
@@ -445,7 +453,7 @@ export function Component() {
             ].join(' ')}
           >
             {tab.label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -485,8 +493,9 @@ export function Component() {
           </p>
 
           {serverTotal > merged.length && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={handleLoadMore}
               disabled={loadingMore}
               className={[
@@ -497,7 +506,7 @@ export function Component() {
               ].join(' ')}
             >
               {loadingMore ? 'Loading…' : 'Load more'}
-            </button>
+            </Button>
           )}
         </div>
       )}

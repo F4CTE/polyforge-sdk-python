@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
+import { Button } from '@polyforge/ui';
 import {
   TrendingUp,
   TrendingDown,
@@ -302,16 +303,17 @@ export function Component() {
       {/* ── Page header ── */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-pf-text">Market Sentiment</h2>
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => { loadRows(true, period); loadSummary(); loadCategory(); }}
           disabled={refreshing}
           aria-label="Refresh sentiment data"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text disabled:opacity-50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text disabled:opacity-50 transition-colors"
         >
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} aria-hidden="true" />
           Refresh
-        </button>
+        </Button>
       </div>
 
       {/* ── Summary stat cards ── */}
@@ -436,11 +438,12 @@ export function Component() {
         {/* Period pills */}
         <div className="flex items-center gap-1 rounded-pf-sm border border-pf-border overflow-hidden">
           {(['1h', '24h', '7d'] as Period[]).map((p) => (
-            <button
+            <Button
               key={p}
               type="button"
+              variant="ghost"
               onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                 period === p
                   ? 'bg-pf-cyan-500/10 text-pf-cyan-500'
                   : 'text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text'
@@ -448,18 +451,19 @@ export function Component() {
               aria-pressed={period === p}
             >
               {p}
-            </button>
+            </Button>
           ))}
         </div>
 
         {/* Label filter pills */}
         <div className="flex items-center gap-1 rounded-pf-sm border border-pf-border overflow-hidden">
           {(['', 'BULLISH', 'BEARISH', 'NEUTRAL'] as LabelFilter[]).map((val) => (
-            <button
+            <Button
               key={val === '' ? 'all' : val}
               type="button"
+              variant="ghost"
               onClick={() => setLabelFilter(val)}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                 labelFilter === val
                   ? 'bg-pf-cyan-500/10 text-pf-cyan-500'
                   : 'text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text'
@@ -467,7 +471,7 @@ export function Component() {
               aria-pressed={labelFilter === val}
             >
               {val === '' ? 'All' : val}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

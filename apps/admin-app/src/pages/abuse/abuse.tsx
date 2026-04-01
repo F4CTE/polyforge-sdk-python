@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Button, Textarea } from '@polyforge/ui';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -241,7 +242,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
         <label htmlFor={`note-${strategy.id}`} className="block text-xs font-medium text-pf-text-secondary mb-1">
           Review note <span className="text-pf-text-tertiary">(required for Warn, Delist, Ban)</span>
         </label>
-        <textarea
+        <Textarea
           id={`note-${strategy.id}`}
           rows={2}
           value={note}
@@ -260,21 +261,23 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
             Ban <strong>@{strategy.authorUsername}</strong>? This will permanently disable their account and remove all their listings.
           </span>
           <div className="flex gap-2">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => setConfirmBan(false)}
               className="px-3 py-1.5 rounded-pf-sm border border-pf-border text-xs text-pf-text-secondary hover:bg-pf-elevated transition-colors"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="danger"
               onClick={() => handleAction('ban_author')}
               disabled={isActioning}
               className="px-3 py-1.5 rounded-pf-sm bg-pf-danger text-white text-xs font-medium hover:bg-pf-danger/90 transition-colors disabled:opacity-50"
             >
               {pending === 'ban_author' ? 'Banning…' : 'Confirm Ban'}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -282,45 +285,49 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
       {/* Action buttons */}
       {!confirmBan && (
         <div className="flex flex-wrap gap-2">
-          <button
+          <Button
             type="button"
+            variant="success"
             onClick={() => handleAction('clear')}
             disabled={isActioning}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm border border-pf-success/40 text-xs font-medium text-pf-success hover:bg-pf-success/10 transition-colors disabled:opacity-50"
           >
             <ShieldCheck size={13} aria-hidden="true" />
             {pending === 'clear' ? 'Clearing…' : 'Clear — No Abuse'}
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => handleAction('warn')}
             disabled={isActioning}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm border border-pf-warning/40 text-xs font-medium text-pf-warning hover:bg-pf-warning/10 transition-colors disabled:opacity-50"
           >
             <AlertTriangle size={13} aria-hidden="true" />
             {pending === 'warn' ? 'Warning…' : 'Warn Author'}
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="danger"
             onClick={() => handleAction('delist')}
             disabled={isActioning}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm border border-pf-danger/40 text-xs font-medium text-pf-danger hover:bg-pf-danger/10 transition-colors disabled:opacity-50"
           >
             <Eye size={13} aria-hidden="true" />
             {pending === 'delist' ? 'Delisting…' : 'Delist Strategy'}
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="danger"
             onClick={() => handleAction('ban_author')}
             disabled={isActioning}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm bg-pf-danger text-white text-xs font-medium hover:bg-pf-danger/90 transition-colors disabled:opacity-50"
           >
             <Ban size={13} aria-hidden="true" />
             {pending === 'ban_author' ? 'Banning…' : 'Ban Author'}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -456,11 +463,12 @@ export function Component() {
       {/* Status filter tabs */}
       <div className="flex items-center gap-1 border-b border-pf-border">
         {STATUS_TABS.map((tab) => (
-          <button
+          <Button
             key={tab.key}
             type="button"
+            variant="ghost"
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded-t-pf-sm ${
+            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px rounded-t-pf-sm ${
               activeTab === tab.key
                 ? 'border-pf-cyan-500 text-pf-cyan-500'
                 : 'border-transparent text-pf-text-secondary hover:text-pf-text'
@@ -473,7 +481,7 @@ export function Component() {
                 {pendingCount}
               </span>
             )}
-          </button>
+          </Button>
         ))}
       </div>
 

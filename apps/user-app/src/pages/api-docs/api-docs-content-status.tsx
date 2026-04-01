@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock } from 'lucide-react';
 import { PageTitle } from './api-docs-primitives';
+import { Button } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -163,15 +164,16 @@ export function StatusSection() {
         <span>
           {lastChecked ? `Last checked ${formatTimestamp(lastChecked.toISOString())}` : ''}
         </span>
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => fetchStatus(true)}
           disabled={refreshing}
           className="flex items-center gap-1.5 hover:text-pf-text transition-colors disabled:opacity-50 cursor-pointer"
         >
           <RefreshCw className={`size-3 ${refreshing ? 'animate-spin' : ''}`} />
           Refresh
-        </button>
+        </Button>
       </div>
     </div>
   );

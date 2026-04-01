@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import {
   ChevronLeft, ChevronRight, Compass, Heart, GitFork, TrendingUp, Tag, Star, Award, Library,
 } from 'lucide-react';
+import { Button, Input } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -392,16 +393,17 @@ export function Component() {
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
             {collections.map(col => (
-              <button
+              <Button
                 key={col.id}
                 type="button"
+                variant="ghost"
                 onClick={() => navigate(`/collections/${col.id}`)}
                 className="bg-pf-elevated border border-pf-border rounded-full px-3 py-1.5 text-sm flex items-center gap-1.5 whitespace-nowrap hover:border-pf-border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
               >
                 <span role="img" aria-label={col.title}>{col.emoji}</span>
                 <span className="text-pf-text font-medium">{col.title}</span>
                 <span className="text-pf-text-muted text-xs">{col.listingCount} strategies</span>
-              </button>
+              </Button>
             ))}
           </div>
         </section>
@@ -412,7 +414,7 @@ export function Component() {
         {/* Search */}
         <div className="relative flex-1">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-          <input
+          <Input
             type="text"
             placeholder="Search strategies..."
             aria-label="Search strategies"
@@ -424,7 +426,7 @@ export function Component() {
         {/* Tag filter */}
         <div className="relative">
           <Tag className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-pf-text-muted" aria-hidden="true" />
-          <input
+          <Input
             type="text"
             placeholder="Filter by tag..."
             aria-label="Filter by tag"
@@ -438,8 +440,9 @@ export function Component() {
       {/* Sort tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {SORT_OPTIONS.map(opt => (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             key={opt.value}
             onClick={() => changeSort(opt.value)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
@@ -449,15 +452,16 @@ export function Component() {
             }`}
           >
             {opt.label}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Category filter chips */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {CATEGORIES.map(cat => (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             key={cat.value ?? 'all'}
             onClick={() => changeCategory(cat.value)}
             className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors whitespace-nowrap ${
@@ -467,7 +471,7 @@ export function Component() {
             }`}
           >
             {cat.label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -559,8 +563,9 @@ export function Component() {
                 {/* Footer stats */}
                 <div className="flex items-center gap-3 text-sm text-pf-text-muted pt-1">
                   {/* Like button */}
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     aria-label={isLiked ? 'Unlike strategy' : 'Like strategy'}
                     aria-pressed={isLiked}
                     disabled={isLiking}
@@ -577,7 +582,7 @@ export function Component() {
                       fill={isLiked ? 'currentColor' : 'none'}
                     />
                     {likeCount}
-                  </button>
+                  </Button>
                   <span className="flex items-center gap-1"><GitFork className="size-3.5" aria-hidden="true" /> {s.forkCount}</span>
                   <span className="ml-auto text-[11px] text-pf-text-muted">&bull;</span>
                   <span className="font-mono text-[11px]">{formatDate(s.createdAt)}</span>
@@ -591,25 +596,29 @@ export function Component() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
-          </button>
+          </Button>
           <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
-          </button>
+          </Button>
         </div>
       )}
     </div>

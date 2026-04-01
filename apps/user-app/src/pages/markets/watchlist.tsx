@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Button, Input } from '@polyforge/ui';
 import {
   Star,
   TrendingUp,
@@ -225,7 +226,9 @@ function AlertBell({ alerts, loading, onClick, active }: AlertBellProps) {
   }
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon-sm"
       onClick={onClick}
       disabled={loading}
       aria-label="Manage price alerts"
@@ -240,7 +243,7 @@ function AlertBell({ alerts, loading, onClick, active }: AlertBellProps) {
           {count > 9 ? '9+' : count}
         </span>
       )}
-    </button>
+    </Button>
   );
 }
 
@@ -487,8 +490,9 @@ export function Component() {
           {/* Category filter pills */}
           <div className="flex items-center gap-1.5 flex-wrap" role="group" aria-label="Filter by category">
             {categories.map((cat) => (
-              <button
+              <Button
                 key={cat}
+                variant="ghost"
                 onClick={() => setFilterCategory(cat)}
                 className={`px-3 py-1 text-xs font-medium rounded-pf-sm border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                   filterCategory === cat
@@ -497,7 +501,7 @@ export function Component() {
                 }`}
               >
                 {cat}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -513,12 +517,12 @@ export function Component() {
           <p className="text-pf-text-muted text-sm max-w-xs">
             Browse markets and tap the star icon to add them here for quick access.
           </p>
-          <button
+          <Button
             onClick={() => navigate('/markets')}
             className="mt-2 px-4 py-2 bg-pf-cyan-500 text-black text-sm font-semibold rounded-pf hover:brightness-110 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
           >
             Browse Markets
-          </button>
+          </Button>
         </div>
       )}
 
@@ -625,24 +629,27 @@ export function Component() {
                     >
                       {/* Star / remove */}
                       <td className="py-3 pr-2 w-8">
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => handleRemoveStar(market.id)}
                           aria-label={`Remove ${market.title} from watchlist`}
                           className="text-pf-cyan-400 hover:text-pf-warning transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                         >
                           <Star className="w-4 h-4 fill-current" />
-                        </button>
+                        </Button>
                       </td>
 
                       {/* Title */}
                       <td className="py-3 pr-4">
                         <div className="flex flex-col gap-0.5">
-                          <button
+                          <Button
+                            variant="ghost"
                             onClick={() => navigate(`/markets/${market.slug}`)}
                             className="text-left text-pf-text font-medium hover:text-pf-cyan-400 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm leading-snug max-w-xs"
                           >
                             {market.title}
-                          </button>
+                          </Button>
                           <span className="flex items-center gap-1 text-xs text-pf-text-muted">
                             <Clock className="w-3 h-3" aria-hidden="true" />
                             Expires {formatDate(market.expiryDate)}
@@ -694,7 +701,8 @@ export function Component() {
 
                       {/* Trade / Quick-order button */}
                       <td className="py-3 text-right w-20">
-                        <button
+                        <Button
+                          variant="ghost"
                           onClick={() => openQuickOrder(market.id)}
                           aria-pressed={isQuickOrderOpen}
                           aria-label={`Quick order for ${market.title}`}
@@ -706,7 +714,7 @@ export function Component() {
                         >
                           <Zap className="w-3 h-3" aria-hidden="true" />
                           Trade
-                        </button>
+                        </Button>
                       </td>
                     </tr>
 
@@ -726,13 +734,15 @@ export function Component() {
                                   — {market.title}
                                 </span>
                               </div>
-                              <button
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => setExpandedQuickOrder(null)}
                                 aria-label="Close quick order panel"
                                 className="text-pf-text-muted hover:text-pf-text transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                               >
                                 <X className="w-4 h-4" />
-                              </button>
+                              </Button>
                             </div>
 
                             <div className="flex flex-wrap items-end gap-4">
@@ -745,8 +755,9 @@ export function Component() {
                                   aria-label="Select outcome"
                                 >
                                   {(['YES', 'NO'] as const).map((o) => (
-                                    <button
+                                    <Button
                                       key={o}
+                                      variant="ghost"
                                       onClick={() => updateQuickOrder(market.id, { outcome: o })}
                                       aria-pressed={qo.outcome === o}
                                       className={`px-4 py-1.5 text-sm font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
@@ -758,7 +769,7 @@ export function Component() {
                                       }`}
                                     >
                                       {o}
-                                    </button>
+                                    </Button>
                                   ))}
                                 </div>
                               </div>
@@ -767,7 +778,9 @@ export function Component() {
                               <div className="flex flex-col gap-1">
                                 <label className="text-xs text-pf-text-muted font-medium">Amount (USDC)</label>
                                 <div className="flex items-center gap-1 border border-pf-border rounded-pf bg-pf-elevated px-1">
-                                  <button
+                                  <Button
+                                    variant="ghost"
+                                    size="icon-sm"
                                     onClick={() =>
                                       updateQuickOrder(market.id, { amount: Math.max(1, qo.amount - 10) })
                                     }
@@ -775,8 +788,8 @@ export function Component() {
                                     className="p-1 text-pf-text-muted hover:text-pf-text transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                                   >
                                     <Minus className="w-3.5 h-3.5" />
-                                  </button>
-                                  <input
+                                  </Button>
+                                  <Input
                                     type="number"
                                     min={1}
                                     step={1}
@@ -789,7 +802,9 @@ export function Component() {
                                     aria-label="Order amount in USDC"
                                     className="w-16 text-center bg-transparent text-pf-text text-sm font-semibold tabular-nums py-1.5 focus:outline-none"
                                   />
-                                  <button
+                                  <Button
+                                    variant="ghost"
+                                    size="icon-sm"
                                     onClick={() =>
                                       updateQuickOrder(market.id, { amount: qo.amount + 10 })
                                     }
@@ -797,15 +812,16 @@ export function Component() {
                                     className="p-1 text-pf-text-muted hover:text-pf-text transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                                   >
                                     <Plus className="w-3.5 h-3.5" />
-                                  </button>
+                                  </Button>
                                 </div>
                               </div>
 
                               {/* Quick-amount presets */}
                               <div className="flex items-end gap-1 pb-0.5">
                                 {[10, 25, 50, 100].map((preset) => (
-                                  <button
+                                  <Button
                                     key={preset}
+                                    variant="ghost"
                                     onClick={() => updateQuickOrder(market.id, { amount: preset })}
                                     className={`px-2 py-1.5 text-xs font-medium rounded-pf-sm border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                                       qo.amount === preset
@@ -814,7 +830,7 @@ export function Component() {
                                     }`}
                                   >
                                     ${preset}
-                                  </button>
+                                  </Button>
                                 ))}
                               </div>
 
@@ -838,22 +854,23 @@ export function Component() {
                               </div>
 
                               {/* Submit */}
-                              <button
+                              <Button
                                 onClick={() => submitQuickOrder(market)}
                                 disabled={qo.submitting}
                                 className="px-5 py-2 bg-pf-cyan-500 text-black text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
                               >
                                 {qo.submitting ? 'Placing…' : `Buy ${qo.outcome}`}
-                              </button>
+                              </Button>
 
                               {/* Full detail link */}
-                              <button
+                              <Button
+                                variant="ghost"
                                 onClick={() => navigate(`/markets/${market.slug}`)}
                                 className="inline-flex items-center gap-1 text-xs text-pf-text-muted hover:text-pf-cyan-400 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                               >
                                 <ExternalLink className="w-3 h-3" />
                                 Full detail
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         </td>
@@ -876,13 +893,15 @@ export function Component() {
                                   — {market.title}
                                 </span>
                               </div>
-                              <button
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => setExpandedAlerts(null)}
                                 aria-label="Close price alerts panel"
                                 className="text-pf-text-muted hover:text-pf-text transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                               >
                                 <X className="w-4 h-4" />
-                              </button>
+                              </Button>
                             </div>
 
                             {/* ---- Create new alert form ---- */}
@@ -900,8 +919,9 @@ export function Component() {
                                     aria-label="Alert outcome"
                                   >
                                     {(['YES', 'NO'] as const).map((o) => (
-                                      <button
+                                      <Button
                                         key={o}
+                                        variant="ghost"
                                         onClick={() => setAlertOutcome(o)}
                                         aria-pressed={alertOutcome === o}
                                         className={`px-4 py-1.5 text-sm font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
@@ -913,7 +933,7 @@ export function Component() {
                                         }`}
                                       >
                                         {o}
-                                      </button>
+                                      </Button>
                                     ))}
                                   </div>
                                 </div>
@@ -927,8 +947,9 @@ export function Component() {
                                     aria-label="Alert condition"
                                   >
                                     {(['above', 'below'] as const).map((c) => (
-                                      <button
+                                      <Button
                                         key={c}
+                                        variant="ghost"
                                         onClick={() => setAlertCondition(c)}
                                         aria-pressed={alertCondition === c}
                                         className={`px-3 py-1.5 text-sm font-medium transition-colors duration-150 capitalize focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
@@ -938,7 +959,7 @@ export function Component() {
                                         }`}
                                       >
                                         {c}
-                                      </button>
+                                      </Button>
                                     ))}
                                   </div>
                                 </div>
@@ -951,7 +972,7 @@ export function Component() {
                                   >
                                     Threshold (0–1)
                                   </label>
-                                  <input
+                                  <Input
                                     id={`alert-threshold-${market.id}`}
                                     type="number"
                                     min={0.01}
@@ -980,14 +1001,14 @@ export function Component() {
                                 </div>
 
                                 {/* Add button */}
-                                <button
+                                <Button
                                   onClick={() => handleAddAlert(market.id)}
                                   disabled={addingAlert}
                                   className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-pf-cyan-500 text-black text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
                                 >
                                   <Plus className="w-3.5 h-3.5" aria-hidden="true" />
                                   {addingAlert ? 'Adding…' : 'Add Alert'}
-                                </button>
+                                </Button>
                               </div>
                             </div>
 
@@ -1071,14 +1092,16 @@ export function Component() {
                                       </div>
 
                                       {/* Delete */}
-                                      <button
+                                      <Button
+                                        variant="ghost"
+                                        size="icon-sm"
                                         onClick={() => handleDeleteAlert(market.id, alert.id)}
                                         disabled={deletingAlertId === alert.id}
                                         aria-label={`Delete alert: ${alert.outcome} ${alert.condition} ${alert.threshold}`}
                                         className="flex-shrink-0 p-1 rounded-pf-sm text-pf-text-muted hover:text-pf-danger transition-colors duration-150 disabled:opacity-40 disabled:cursor-wait focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
+                                      </Button>
                                     </li>
                                   ))}
                                 </ul>
@@ -1087,14 +1110,15 @@ export function Component() {
 
                             {/* Footer link to full market detail */}
                             <div className="mt-3 pt-3 border-t border-pf-border/40">
-                              <button
+                              <Button
+                                variant="ghost"
                                 onClick={() => navigate(`/markets/${market.slug}`)}
                                 className="inline-flex items-center gap-1 text-xs text-pf-text-muted hover:text-pf-cyan-400 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                               >
                                 <BarChart2 className="w-3 h-3" aria-hidden="true" />
                                 View full market &amp; alerts
                                 <ExternalLink className="w-3 h-3" aria-hidden="true" />
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         </td>

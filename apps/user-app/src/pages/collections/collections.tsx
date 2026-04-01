@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Library, ChevronRight } from 'lucide-react';
+import { Button } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -129,14 +130,14 @@ export function Component() {
               )}
 
               {/* CTA */}
-              <button
+              <Button
                 type="button"
                 onClick={() => navigate(`/collections/${col.id}`)}
                 className="mt-auto flex items-center justify-center gap-1.5 w-full py-2 rounded-pf-sm text-sm font-medium border border-pf-cyan-500/40 text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
               >
                 Browse Collection
                 <ChevronRight className="size-3.5" aria-hidden="true" />
-              </button>
+              </Button>
             </div>
           ))}
         </div>

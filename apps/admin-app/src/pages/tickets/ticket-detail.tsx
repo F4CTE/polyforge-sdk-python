@@ -1,6 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { Button, Select, Textarea } from '@polyforge/ui';
 import { ArrowLeft, Send } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime, timeAgo, priorityColor } from '@/lib/utils';
@@ -127,12 +128,13 @@ export function Component() {
     return (
       <div className="text-center py-12">
         <p className="text-pf-text-secondary">Ticket not found</p>
-        <button type="button"
+        <Button type="button"
+          variant="ghost"
           onClick={() => navigate('/tickets')}
-          className="mt-4 text-sm text-pf-cyan-500 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded"
+          className="mt-4 text-sm text-pf-cyan-500 hover:underline rounded"
         >
           Back to tickets
-        </button>
+        </Button>
       </div>
     );
   }
@@ -142,13 +144,13 @@ export function Component() {
   return (
     <div className="animate-fade-in space-y-6">
       {/* Back */}
-      <button type="button"
+      <Button type="button" variant="ghost"
         onClick={() => navigate('/tickets')}
-        className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded-pf-sm"
+        className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
       >
         <ArrowLeft size={16} aria-hidden="true" />
         Back to tickets
-      </button>
+      </Button>
 
       {/* Header */}
       <header className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
@@ -180,7 +182,7 @@ export function Component() {
         <div className="flex flex-wrap gap-4 pt-4 border-t border-pf-border">
           <div>
             <label htmlFor="ticket-status" className="block text-xs text-pf-text-tertiary mb-1">Status</label>
-            <select
+            <Select
               id="ticket-status"
               value={statusValue}
               onChange={(e) => handleStatusChange(e.target.value)}
@@ -190,11 +192,11 @@ export function Component() {
               <option value="IN_PROGRESS">In Progress</option>
               <option value="RESOLVED">Resolved</option>
               <option value="CLOSED">Closed</option>
-            </select>
+            </Select>
           </div>
           <div>
             <label htmlFor="ticket-assign" className="block text-xs text-pf-text-tertiary mb-1">Assign To</label>
-            <select
+            <Select
               id="ticket-assign"
               value={assignedTo}
               onChange={(e) => handleAssign(e.target.value)}
@@ -206,7 +208,7 @@ export function Component() {
                   {a.displayName}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </div>
       </header>
@@ -245,7 +247,7 @@ export function Component() {
         className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4"
       >
         <label htmlFor="ticket-reply" className="sr-only">Reply message</label>
-        <textarea
+        <Textarea
           id="ticket-reply"
           value={reply}
           onChange={(e) => setReply(e.target.value)}
@@ -255,14 +257,15 @@ export function Component() {
           className="w-full px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500 mb-3 resize-y disabled:opacity-50"
         />
         <div className="flex justify-end">
-          <button
+          <Button
             type="submit"
+            variant="default"
             disabled={sending || !reply.trim()}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send size={14} aria-hidden="true" />
             {sending ? 'Sending...' : 'Reply'}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

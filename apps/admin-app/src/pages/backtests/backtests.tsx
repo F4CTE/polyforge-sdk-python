@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
+import { Button, Input } from '@polyforge/ui';
 import {
   ChevronLeft,
   ChevronRight,
@@ -249,12 +250,13 @@ export function Component() {
           </label>
 
           {/* Manual refresh */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => load({ silent: true })}
             disabled={loading || refreshing}
             aria-label="Refresh backtests"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm bg-pf-elevated border border-pf-border text-pf-text-secondary hover:text-pf-text hover:border-pf-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm bg-pf-elevated border border-pf-border text-pf-text-secondary hover:text-pf-text hover:border-pf-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <RefreshCw
               size={12}
@@ -262,7 +264,7 @@ export function Component() {
               aria-hidden="true"
             />
             Refresh
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -299,24 +301,25 @@ export function Component() {
         {/* Status tabs */}
         <div className="flex items-center gap-1 bg-pf-elevated border border-pf-border rounded-pf-sm p-1 flex-wrap">
           {STATUS_TABS.map(({ label, value }) => (
-            <button
+            <Button
               key={value}
               type="button"
+              variant="ghost"
               onClick={() => handleStatusTab(value)}
-              className={`px-3 py-1 text-xs rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
+              className={`px-3 py-1 text-xs rounded transition-colors ${
                 statusFilter === value
                   ? 'bg-pf-cyan-500/20 text-pf-cyan-400 font-medium'
                   : 'text-pf-text-tertiary hover:text-pf-text'
               }`}
             >
               {label}
-            </button>
+            </Button>
           ))}
         </div>
 
         {/* Username search */}
         <form onSubmit={handleUsernameSearch} className="flex items-center gap-2 ml-auto">
-          <input
+          <Input
             type="text"
             value={usernameInput}
             onChange={(e) => setUsernameInput(e.target.value)}
@@ -324,24 +327,26 @@ export function Component() {
             aria-label="Filter by username"
             className="h-8 px-3 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-tertiary focus-visible:outline-none focus-visible:border-pf-cyan-500 transition-colors w-48"
           />
-          <button
+          <Button
             type="submit"
-            className="h-8 px-3 rounded-pf-sm bg-pf-cyan-500/10 border border-pf-cyan-500/30 text-xs text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+            variant="default"
+            className="h-8 px-3 rounded-pf-sm bg-pf-cyan-500/10 border border-pf-cyan-500/30 text-xs text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors"
           >
             Search
-          </button>
+          </Button>
           {usernameFilter && (
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => {
                 setUsernameFilter('');
                 setUsernameInput('');
                 setPage(1);
               }}
-              className="h-8 px-3 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+              className="h-8 px-3 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text transition-colors"
             >
               Clear
-            </button>
+            </Button>
           )}
         </form>
       </div>
@@ -508,12 +513,13 @@ export function Component() {
                       {/* Actions */}
                       <td className="px-4 py-3 text-right">
                         {canCancel && (
-                          <button
+                          <Button
                             type="button"
+                            variant="danger"
                             onClick={() => handleCancel(bt)}
                             disabled={cancelling[bt.id]}
                             aria-label={`Cancel backtest ${bt.id.slice(0, 8)}`}
-                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded border border-pf-danger/40 text-pf-danger hover:bg-pf-danger/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded border border-pf-danger/40 text-pf-danger hover:bg-pf-danger/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {cancelling[bt.id] ? (
                               <Loader2 size={11} className="animate-spin" aria-hidden="true" />
@@ -521,7 +527,7 @@ export function Component() {
                               <Ban size={11} aria-hidden="true" />
                             )}
                             Cancel
-                          </button>
+                          </Button>
                         )}
                       </td>
                     </tr>
@@ -539,24 +545,28 @@ export function Component() {
               Page {page} of {totalPages}
             </span>
             <div className="flex items-center gap-2">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 aria-label="Previous page"
-                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 cursor-pointer transition-colors"
+                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft size={16} />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 aria-label="Next page"
-                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 cursor-pointer transition-colors"
+                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight size={16} />
-              </button>
+              </Button>
             </div>
           </div>
         )}

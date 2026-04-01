@@ -5,6 +5,7 @@ import {
   MessageCircle, Share2, Send, ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button, Input } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -192,15 +193,16 @@ function EmojiPicker({
       aria-label="Pick a reaction"
     >
       {REACTION_EMOJIS.map(emoji => (
-        <button
+        <Button
           key={emoji}
           type="button"
+          variant="ghost"
           onClick={() => { onSelect(emoji); onClose(); }}
           className="text-base leading-none p-1 rounded hover:bg-pf-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
           aria-label={`React with ${emoji}`}
         >
           {emoji}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -278,8 +280,9 @@ function CommentSection({
                 <p className="text-xs text-pf-text-secondary mt-0.5 leading-relaxed break-words">
                   {comment.body}
                 </p>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => onLikeComment(comment.id)}
                   aria-label={comment.userLiked ? 'Unlike comment' : 'Like comment'}
                   className={`mt-1 flex items-center gap-1 text-[10px] rounded px-1 py-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
@@ -289,7 +292,7 @@ function CommentSection({
                   }`}
                 >
                   👍 {comment.likeCount}
-                </button>
+                </Button>
               </div>
             </li>
           ))}
@@ -298,20 +301,21 @@ function CommentSection({
 
       {/* Load more */}
       {commentsLoaded && remaining > 0 && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={onLoadMore}
           className="flex items-center gap-1 text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
           aria-label={`Load ${remaining} more comment${remaining !== 1 ? 's' : ''}`}
         >
           <ChevronDown className="size-3.5" aria-hidden="true" />
           Show {remaining} more comment{remaining !== 1 ? 's' : ''}
-        </button>
+        </Button>
       )}
 
       {/* Comment input */}
       <div className="flex items-center gap-2">
-        <input
+        <Input
           ref={inputRef}
           type="text"
           value={commentInput}
@@ -321,7 +325,7 @@ function CommentSection({
           aria-label={`Add a comment to post ${itemId}`}
           className="flex-1 min-w-0 bg-pf-surface border border-pf-border rounded-pf px-3 py-1.5 text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/60 focus:ring-1 focus:ring-pf-cyan-500/30 transition-colors"
         />
-        <button
+        <Button
           type="button"
           onClick={onSubmit}
           disabled={!commentInput.trim()}
@@ -330,7 +334,7 @@ function CommentSection({
         >
           <Send className="size-3" aria-hidden="true" />
           Post
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -743,9 +747,10 @@ export function Component() {
                   {/* Reactions bar */}
                   <div className="mt-3 flex items-center flex-wrap gap-1.5">
                     {activeReactions.map(r => (
-                      <button
+                      <Button
                         key={r.emoji}
                         type="button"
+                        variant="ghost"
                         onClick={() => handleReact(item.id, r.emoji)}
                         aria-pressed={r.userReacted}
                         aria-label={`${r.emoji} ${r.count} reaction${r.count !== 1 ? 's' : ''}${r.userReacted ? ', you reacted' : ''}`}
@@ -757,7 +762,7 @@ export function Component() {
                       >
                         <span aria-hidden="true">{r.emoji}</span>
                         <span>{r.count}</span>
-                      </button>
+                      </Button>
                     ))}
 
                     {/* + React button / inline picker */}
@@ -768,8 +773,9 @@ export function Component() {
                           onClose={() => setPickerOpen(null)}
                         />
                       ) : (
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           onClick={() => setPickerOpen(item.id)}
                           aria-label="Add reaction"
                           aria-expanded={false}
@@ -777,15 +783,16 @@ export function Component() {
                         >
                           <span aria-hidden="true">+</span>
                           React
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </div>
 
                   {/* Action row */}
                   <div className="mt-2 flex items-center gap-3">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => handleToggleComments(item.id, item.commentsLoaded)}
                       aria-expanded={isExpanded}
                       aria-controls={`comments-${item.id}`}
@@ -797,10 +804,11 @@ export function Component() {
                     >
                       <MessageCircle className="size-3.5" aria-hidden="true" />
                       {item.commentCount > 0 ? `${item.commentCount} comment${item.commentCount !== 1 ? 's' : ''}` : 'Comment'}
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => handleShare(item.id)}
                       className="flex items-center gap-1.5 text-xs text-pf-text-muted hover:text-pf-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded"
                     >
@@ -809,7 +817,7 @@ export function Component() {
                       {item.shareCount > 0 && (
                         <span className="text-pf-text-muted">({item.shareCount})</span>
                       )}
-                    </button>
+                    </Button>
                   </div>
 
                   {/* Comment section */}
@@ -839,8 +847,9 @@ export function Component() {
       {/* Pagination */}
       {!loading && totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={handlePrev}
             disabled={page <= 1}
             aria-label="Previous page"
@@ -848,12 +857,13 @@ export function Component() {
           >
             <ChevronLeft className="size-3.5" aria-hidden="true" />
             Previous
-          </button>
+          </Button>
           <span className="text-xs text-pf-text-muted">
             Page {page} of {totalPages}
           </span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={handleNext}
             disabled={page >= totalPages}
             aria-label="Next page"
@@ -861,7 +871,7 @@ export function Component() {
           >
             Next
             <ChevronRight className="size-3.5" aria-hidden="true" />
-          </button>
+          </Button>
         </div>
       )}
     </div>

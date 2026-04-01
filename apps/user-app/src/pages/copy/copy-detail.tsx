@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import { Button, Input } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -183,9 +184,9 @@ function EditDialog({
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 w-full max-w-md space-y-5 animate-fade-in">
         <div className="flex items-center justify-between">
           <h2 id="edit-config-title" className="text-sm font-medium text-pf-text">Edit Config</h2>
-          <button type="button" onClick={onClose} aria-label="Close edit config" className="text-pf-text-muted hover:text-pf-text transition-colors">
+          <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Close edit config" className="text-pf-text-muted hover:text-pf-text transition-colors">
             <X className="size-4" />
-          </button>
+          </Button>
         </div>
 
         {config.mode !== 'MIRROR' && (
@@ -193,7 +194,7 @@ function EditDialog({
             <label htmlFor="edit-size-value" className="text-xs text-pf-text-secondary">
               {config.mode === 'PERCENTAGE' ? 'Size (%)' : 'Fixed Amount ($)'}
             </label>
-            <input
+            <Input
               id="edit-size-value"
               type="number"
               min={0}
@@ -206,7 +207,7 @@ function EditDialog({
 
         <div className="space-y-2">
           <label htmlFor="edit-max-exposure" className="text-xs text-pf-text-secondary">Max Exposure ($)</label>
-          <input
+          <Input
             id="edit-max-exposure"
             type="number"
             min={0}
@@ -218,7 +219,7 @@ function EditDialog({
 
         <div className="space-y-2">
           <label htmlFor="edit-max-daily-loss" className="text-xs text-pf-text-secondary">Max Daily Loss ($)</label>
-          <input
+          <Input
             id="edit-max-daily-loss"
             type="number"
             min={0}
@@ -230,7 +231,7 @@ function EditDialog({
 
         <div className="space-y-2">
           <label htmlFor="edit-price-offset" className="text-xs text-pf-text-secondary">Price Offset (%)</label>
-          <input
+          <Input
             id="edit-price-offset"
             type="number"
             min={-5}
@@ -243,14 +244,15 @@ function EditDialog({
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-2">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={onClose}
             className="px-4 py-2 rounded-pf-sm text-sm text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong transition-colors"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={handleSave}
             disabled={saving}
@@ -258,7 +260,7 @@ function EditDialog({
           >
             <Check className="size-3.5" />
             {saving ? 'Saving...' : 'Save'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -370,9 +372,9 @@ export function Component() {
           <AlertCircle className="size-10 text-pf-danger mb-4" />
           <p className="text-pf-text font-medium">Something went wrong</p>
           <p className="text-sm text-pf-text-muted mt-1">Failed to load copy config. Please try again.</p>
-          <button type="button" onClick={loadConfig} className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-pf-elevated border border-pf-border text-pf-text hover:border-pf-border-strong transition-colors">
+          <Button type="button" onClick={loadConfig} className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-pf-elevated border border-pf-border text-pf-text hover:border-pf-border-strong transition-colors">
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -397,15 +399,17 @@ export function Component() {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm text-pf-text">{truncateAddress(config.targetWallet)}</span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => copyToClipboard(config.targetWallet)}
                 className="text-pf-text-muted hover:text-pf-text transition-colors shrink-0"
                 title="Copy address"
                 aria-label="Copy wallet address"
               >
                 <Copy className="size-3.5" />
-              </button>
+              </Button>
             </div>
             <div className="flex items-center gap-2 mt-1">
               <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${statusStyle.bg} ${statusStyle.text}`}>
@@ -421,42 +425,46 @@ export function Component() {
 
         {/* Action buttons */}
         <div className="flex items-center gap-2">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => setShowEdit(true)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text transition-colors"
           >
             <Pencil className="size-3.5" /> Edit
-          </button>
+          </Button>
           {config.status === 'ACTIVE' && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => doAction('pause')}
               disabled={actionLoading}
               className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-warning/30 text-pf-warning hover:bg-pf-warning/10 disabled:opacity-40 transition-colors"
             >
               <Pause className="size-3.5" /> Pause
-            </button>
+            </Button>
           )}
           {config.status === 'PAUSED' && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => doAction('resume')}
               disabled={actionLoading}
               className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 disabled:opacity-40 transition-colors"
             >
               <Play className="size-3.5" /> Resume
-            </button>
+            </Button>
           )}
           {config.status !== 'STOPPED' && (
-            <button
+            <Button
               type="button"
+              variant="danger"
               onClick={() => doAction('stop')}
               disabled={actionLoading}
               className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-danger/30 text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
             >
               <Square className="size-3.5" /> Stop
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -582,27 +590,31 @@ export function Component() {
       {/* Trade pagination */}
       {tradeTotalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setTradePage((p) => Math.max(1, p - 1))}
             disabled={tradePage === 1}
             aria-label="Previous page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
-          </button>
+          </Button>
           <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">
             Page {tradePage} of {tradeTotalPages}
           </span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setTradePage((p) => Math.min(tradeTotalPages, p + 1))}
             disabled={tradePage === tradeTotalPages}
             aria-label="Next page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
-          </button>
+          </Button>
         </div>
       )}
 

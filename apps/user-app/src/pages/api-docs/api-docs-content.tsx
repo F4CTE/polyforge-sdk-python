@@ -1,6 +1,7 @@
 /* renderContent — all non-endpoint prose sections of the API docs. */
 
 import { Link } from 'react-router';
+import { Button } from '@polyforge/ui';
 import {
   Badge,
   Code,
@@ -219,9 +220,9 @@ export function renderContent({
         <Code code={'npx @polyforge/mcp-server'} lang="curl" />
         <p className="text-xs text-pf-text-secondary">
           23 tools covering markets, strategies, orders, and live events.{' '}
-          <button type="button" onClick={() => navigate('mcp-server')} className="text-pf-cyan-400 hover:text-pf-cyan-300 underline underline-offset-2 cursor-pointer">
+          <Button variant="link" type="button" onClick={() => navigate('mcp-server')} className="text-pf-cyan-400 hover:text-pf-cyan-300 underline underline-offset-2 cursor-pointer">
             Setup guide →
-          </button>
+          </Button>
         </p>
       </div>
     </div>

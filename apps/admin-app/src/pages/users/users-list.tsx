@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { toast } from 'sonner';
+import { Button, Input, Select } from '@polyforge/ui';
 import { Search, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Check, X, Wifi, Shield, Users, AlertCircle, EyeOff } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDate } from '@/lib/utils';
@@ -163,7 +164,7 @@ export function Component() {
             className="absolute left-3 top-1/2 -translate-y-1/2 text-pf-text-tertiary"
             aria-hidden="true"
           />
-          <input
+          <Input
             type="text"
             placeholder="Search users..."
             aria-label="Search users"
@@ -172,7 +173,7 @@ export function Component() {
             className="w-full pl-9 pr-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
           />
         </div>
-        <select
+        <Select
           value={statusFilter}
           onChange={(e) => {
             setStatusFilter(e.target.value);
@@ -187,7 +188,7 @@ export function Component() {
           <option value="VERIFIED">Verified</option>
           <option value="CONNECTED">Connected</option>
           <option value="SUSPENDED">Suspended</option>
-        </select>
+        </Select>
         <label className="flex items-center gap-2 text-sm text-pf-text-secondary cursor-pointer select-none ml-auto">
           <input
             type="checkbox"
@@ -205,9 +206,9 @@ export function Component() {
         <div className="text-center py-12">
           <AlertCircle className="mx-auto mb-3 text-pf-text-tertiary" size={40} aria-hidden="true" />
           <p className="text-pf-text-secondary mb-4">Failed to load data</p>
-          <button type="button" onClick={load} className="text-pf-cyan-400 hover:text-[var(--color-pf-cyan-300)] text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded-pf-sm px-2 py-1">
+          <Button type="button" variant="ghost" onClick={load} className="text-pf-cyan-400 hover:text-[var(--color-pf-cyan-300)] text-sm rounded-pf-sm px-2 py-1">
             Try again
-          </button>
+          </Button>
         </div>
       )}
 
@@ -303,20 +304,22 @@ export function Component() {
                     <td className="px-4 py-3 text-right">
                       {computeUserStatus(user) === 'PENDING' && (
                         <div className="flex items-center gap-2 justify-end">
-                          <button
+                          <Button
                             type="button"
+                            variant="success"
                             onClick={(e) => { e.stopPropagation(); handleApprove(user.id, user.username); }}
-                            className="px-2 py-1 text-xs font-medium rounded bg-pf-success/10 text-pf-success hover:bg-pf-success/20 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success"
+                            className="px-2 py-1 text-xs font-medium rounded bg-pf-success/10 text-pf-success hover:bg-pf-success/20 transition-colors"
                           >
                             Approve
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            variant="danger"
                             onClick={(e) => { e.stopPropagation(); handleReject(user.id, user.username); }}
-                            className="px-2 py-1 text-xs font-medium rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
+                            className="px-2 py-1 text-xs font-medium rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
                           >
                             Reject
-                          </button>
+                          </Button>
                         </div>
                       )}
                     </td>
@@ -334,24 +337,28 @@ export function Component() {
               Page {page} of {totalPages}
             </span>
             <div className="flex items-center gap-2">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 aria-label="Previous page"
-                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft size={16} />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 aria-label="Next page"
-                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight size={16} />
-              </button>
+              </Button>
             </div>
           </div>
         )}

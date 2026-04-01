@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { Button, Input, Textarea } from '@polyforge/ui';
 import {
   Megaphone,
   Send,
@@ -228,14 +229,15 @@ export function Component() {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-pf-text">Broadcasts</h2>
         {!composeOpen && (
-          <button
+          <Button
             type="button"
+            variant="default"
             onClick={openCompose}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
           >
             <Megaphone size={15} aria-hidden="true" />
             New Broadcast
-          </button>
+          </Button>
         )}
       </div>
 
@@ -247,14 +249,16 @@ export function Component() {
               <Send size={15} className="text-pf-cyan-500" aria-hidden="true" />
               <h3 className="text-sm font-semibold text-pf-text">Compose Broadcast</h3>
             </div>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={closeCompose}
-              className="p-1 rounded hover:bg-pf-base text-pf-text-tertiary hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+              className="p-1 rounded hover:bg-pf-base text-pf-text-tertiary hover:text-pf-text transition-colors"
               aria-label="Close compose panel"
             >
               <X size={16} />
-            </button>
+            </Button>
           </div>
 
           {/* Title */}
@@ -262,7 +266,7 @@ export function Component() {
             <label htmlFor="bc-title" className="block text-xs text-pf-text-tertiary mb-1">
               Title
             </label>
-            <input
+            <Input
               id="bc-title"
               type="text"
               value={draft.title}
@@ -277,7 +281,7 @@ export function Component() {
             <label htmlFor="bc-message" className="block text-xs text-pf-text-tertiary mb-1">
               Message
             </label>
-            <textarea
+            <Textarea
               id="bc-message"
               rows={3}
               value={draft.message}
@@ -292,16 +296,17 @@ export function Component() {
             <div className="text-xs text-pf-text-tertiary mb-2">Type</div>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Broadcast type">
               {TYPE_OPTIONS.map((opt) => (
-                <button
+                <Button
                   key={opt.value}
                   type="button"
+                  variant="ghost"
                   onClick={() => handleDraftChange('type', opt.value)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${typePillClass(opt.value, draft.type === opt.value)}`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${typePillClass(opt.value, draft.type === opt.value)}`}
                   aria-pressed={draft.type === opt.value}
                 >
                   <TypeIcon type={opt.value} size={12} />
                   {opt.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -311,20 +316,21 @@ export function Component() {
             <div className="text-xs text-pf-text-tertiary mb-2">Target Audience</div>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Target audience">
               {AUDIENCE_OPTIONS.map((opt) => (
-                <button
+                <Button
                   key={opt.value}
                   type="button"
+                  variant="ghost"
                   onClick={() => handleDraftChange('targetAudience', opt.value)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
                     draft.targetAudience === opt.value
                       ? 'border border-pf-cyan-500/40 bg-pf-cyan-500/10 text-pf-cyan-400'
                       : 'border border-pf-border bg-pf-base text-pf-text-secondary hover:text-pf-text hover:border-pf-text-secondary'
-                  } transition-colors`}
+                  }`}
                   aria-pressed={draft.targetAudience === opt.value}
                 >
                   <Users size={12} aria-hidden="true" />
                   {opt.label}
-                </button>
+                </Button>
               ))}
             </div>
             {selectedAudience && (
@@ -351,23 +357,25 @@ export function Component() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="default"
                   onClick={handleConfirmSend}
                   disabled={sending}
-                  className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                  className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
                 >
                   <Send size={12} aria-hidden="true" />
                   {sending ? 'Sending...' : 'Confirm Send'}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => setConfirmSend(false)}
                   disabled={sending}
-                  className="px-4 py-1.5 text-xs font-medium rounded-pf-sm border border-pf-border bg-pf-base text-pf-text-secondary hover:text-pf-text hover:border-pf-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                  className="px-4 py-1.5 text-xs font-medium rounded-pf-sm border border-pf-border bg-pf-base text-pf-text-secondary hover:text-pf-text hover:border-pf-text-secondary transition-colors"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -375,21 +383,23 @@ export function Component() {
           {/* Actions */}
           {!confirmSend && (
             <div className="flex items-center gap-2 pt-1">
-              <button
+              <Button
                 type="button"
+                variant="default"
                 onClick={handleSendClick}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
               >
                 <Send size={14} aria-hidden="true" />
                 Send Broadcast
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={closeCompose}
-                className="px-4 py-2 text-sm font-medium rounded-pf-sm border border-pf-border bg-pf-base text-pf-text-secondary hover:text-pf-text hover:border-pf-text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                className="px-4 py-2 text-sm font-medium rounded-pf-sm border border-pf-border bg-pf-base text-pf-text-secondary hover:text-pf-text hover:border-pf-text-secondary transition-colors"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -450,31 +460,35 @@ export function Component() {
                     <td className="px-3 py-3 text-right">
                       {deleteId === b.id ? (
                         <div className="flex items-center justify-end gap-1.5 text-xs">
-                          <button
+                          <Button
                             type="button"
+                            variant="danger"
                             onClick={() => handleDelete(b.id)}
-                            className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
+                            className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
                           >
                             Delete
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            variant="secondary"
                             onClick={() => setDeleteId(null)}
-                            className="px-2 py-0.5 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                            className="px-2 py-0.5 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base transition-colors"
                           >
                             Cancel
-                          </button>
+                          </Button>
                         </div>
                       ) : (
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => setDeleteId(b.id)}
-                          className="p-1 rounded hover:bg-pf-danger/10 text-pf-text-tertiary hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
+                          className="p-1 rounded hover:bg-pf-danger/10 text-pf-text-tertiary hover:text-pf-danger transition-colors"
                           aria-label={`Delete broadcast: ${b.title}`}
                           title="Delete broadcast record"
                         >
                           <Trash2 size={14} />
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>

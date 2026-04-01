@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { Button, Select } from '@polyforge/ui';
 import { ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime, priorityColor } from '@/lib/utils';
@@ -57,7 +58,7 @@ export function Component() {
         <h2 className="text-lg font-semibold text-pf-text">
           Tickets <span className="text-sm font-normal text-pf-text-tertiary">({total})</span>
         </h2>
-        <select
+        <Select
           value={statusFilter}
           onChange={(e) => {
             setStatusFilter(e.target.value);
@@ -71,7 +72,7 @@ export function Component() {
           <option value="IN_PROGRESS">In Progress</option>
           <option value="RESOLVED">Resolved</option>
           <option value="CLOSED">Closed</option>
-        </select>
+        </Select>
       </div>
 
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
@@ -155,12 +156,12 @@ export function Component() {
           <div className="flex items-center justify-between px-4 py-3 border-t border-pf-border">
             <span className="text-xs text-pf-text-tertiary">Page {page} of {totalPages}</span>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page" className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
+              <Button type="button" variant="ghost" size="icon-sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">
                 <ChevronLeft size={16} />
-              </button>
-              <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page" className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
+              </Button>
+              <Button type="button" variant="ghost" size="icon-sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page">
                 <ChevronRight size={16} />
-              </button>
+              </Button>
             </div>
           </div>
         )}

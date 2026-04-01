@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts';
+import { Button, Input } from '@polyforge/ui';
 import {
   LineChart as LineChartIcon,
   Bot,
@@ -384,7 +385,7 @@ export function Component() {
 
         <div className="flex items-center gap-2">
           {/* Export CSV */}
-          <button
+          <Button
             type="button"
             onClick={exportCsv}
             disabled={exportingCsv}
@@ -395,7 +396,7 @@ export function Component() {
               ? <Loader2 className="size-3 animate-spin" aria-hidden="true" />
               : <Download className="size-3" aria-hidden="true" />}
             Export CSV
-          </button>
+          </Button>
 
           {/* Period selector */}
           <div
@@ -404,9 +405,10 @@ export function Component() {
             aria-label="Select period"
           >
             {PERIODS.map((p) => (
-              <button
+              <Button
                 key={p.value}
                 type="button"
+                variant="ghost"
                 onClick={() => setPeriod(p.value)}
                 className={`px-3 py-1.5 rounded text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-400/40 ${
                   period === p.value
@@ -415,7 +417,7 @@ export function Component() {
                 }`}
               >
                 {p.label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -612,8 +614,9 @@ export function Component() {
                 Last updated: {minutesAgo(aiReview.generatedAt)}
               </span>
             )}
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={loadAiReview}
               disabled={loadingAiReview}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface border border-pf-border transition-colors disabled:opacity-50"
@@ -621,7 +624,7 @@ export function Component() {
             >
               <RefreshCw className={`size-3.5 ${loadingAiReview ? 'animate-spin' : ''}`} aria-hidden="true" />
               Refresh
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -647,13 +650,13 @@ export function Component() {
             <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
               <AlertTriangle className="size-8 text-pf-danger opacity-60" aria-hidden="true" />
               <p className="text-sm text-pf-text-secondary">Could not load AI review.</p>
-              <button
+              <Button
                 type="button"
                 onClick={loadAiReview}
                 className="px-4 py-2 rounded text-sm font-medium bg-pf-surface border border-pf-border text-pf-text-secondary hover:text-pf-text transition-colors"
               >
                 Retry
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="space-y-6">
@@ -730,7 +733,7 @@ export function Component() {
 
         {/* Input row */}
         <div className="flex items-center gap-2">
-          <input
+          <Input
             ref={aiInputRef}
             type="text"
             value={aiQuery}
@@ -743,7 +746,7 @@ export function Component() {
             disabled={loadingAiQuery}
             aria-label="Ask AI a question about your portfolio"
           />
-          <button
+          <Button
             type="button"
             onClick={submitAiQuery}
             disabled={loadingAiQuery || !aiQuery.trim()}
@@ -756,7 +759,7 @@ export function Component() {
               <Send className="size-4" aria-hidden="true" />
             )}
             Send
-          </button>
+          </Button>
         </div>
 
         {/* AI response */}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { Button, Input, Select } from '@polyforge/ui';
 import {
   Search,
   Grid3X3,
@@ -283,8 +284,10 @@ const MarketCard = memo(function MarketCard({
             </span>
           </div>
         </div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={(e) => onToggleWatch(market.id, e)}
           disabled={isWatchLoading}
           className={`p-1.5 rounded-pf transition-colors ${isWatched ? 'text-amber-400 hover:text-amber-300' : 'text-pf-text-muted hover:text-pf-text'}`}
@@ -293,7 +296,7 @@ const MarketCard = memo(function MarketCard({
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={isWatched ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
-        </button>
+        </Button>
       </div>
 
       {/* Binary market */}
@@ -552,21 +555,23 @@ function AdvancedSearchModal({
         <div className="flex items-center gap-3 px-5 py-4 border-b border-pf-border shrink-0">
           <Search className="size-5 text-pf-cyan-400 shrink-0" aria-hidden="true" />
           <h2 className="text-base font-semibold text-pf-text flex-1">Advanced Market Search</h2>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={onClose}
             aria-label="Close advanced search"
             className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors"
           >
             <X className="size-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Scrollable filter + results body */}
         <div className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
 
           {/* Query */}
-          <input
+          <Input
             ref={queryInputRef}
             type="text"
             placeholder="Search by keyword, topic, or question..."
@@ -581,8 +586,9 @@ function AdvancedSearchModal({
           <div>
             <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide mb-2">Categories</p>
             <div className="flex flex-wrap gap-2">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => updateFilters((prev) => ({ ...prev, categories: [] }))}
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   filters.categories.length === 0
@@ -591,11 +597,12 @@ function AdvancedSearchModal({
                 }`}
               >
                 All
-              </button>
+              </Button>
               {SEARCH_CATEGORIES.map((cat) => (
-                <button
+                <Button
                   key={cat}
                   type="button"
+                  variant="ghost"
                   onClick={() => toggleCategory(cat)}
                   className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                     filters.categories.includes(cat)
@@ -604,7 +611,7 @@ function AdvancedSearchModal({
                   }`}
                 >
                   {cat}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -642,7 +649,7 @@ function AdvancedSearchModal({
               <div className="flex items-center gap-2">
                 <div className="flex-1">
                   <label className="block text-[10px] text-pf-text-muted mb-0.5">Min</label>
-                  <input
+                  <Input
                     type="number"
                     min={0.01}
                     max={0.99}
@@ -656,7 +663,7 @@ function AdvancedSearchModal({
                 <span className="text-pf-text-muted text-xs mt-4">—</span>
                 <div className="flex-1">
                   <label className="block text-[10px] text-pf-text-muted mb-0.5">Max</label>
-                  <input
+                  <Input
                     type="number"
                     min={0.01}
                     max={0.99}
@@ -681,7 +688,7 @@ function AdvancedSearchModal({
             <div className="bg-pf-surface border border-pf-border rounded-pf p-3 space-y-2">
               <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide">Volume (USDC)</p>
               <div className="flex items-center gap-2">
-                <input
+                <Input
                   type="number"
                   min={0}
                   placeholder="Min"
@@ -690,7 +697,7 @@ function AdvancedSearchModal({
                   className="flex-1 h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
                 />
                 <span className="text-pf-text-muted text-xs">—</span>
-                <input
+                <Input
                   type="number"
                   min={0}
                   placeholder="Max"
@@ -703,7 +710,7 @@ function AdvancedSearchModal({
 
             <div className="bg-pf-surface border border-pf-border rounded-pf p-3 space-y-2">
               <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide">Min Liquidity (USDC)</p>
-              <input
+              <Input
                 type="number"
                 min={0}
                 placeholder="e.g. 10000"
@@ -721,9 +728,10 @@ function AdvancedSearchModal({
               <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide mb-2">Status</p>
               <div className="flex items-center gap-1.5">
                 {(['active', 'closed', 'all'] as const).map((s) => (
-                  <button
+                  <Button
                     key={s}
                     type="button"
+                    variant="ghost"
                     onClick={() => updateFilters((prev) => ({ ...prev, status: s }))}
                     className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors capitalize ${
                       filters.status === s
@@ -739,7 +747,7 @@ function AdvancedSearchModal({
                     {s === 'active' && filters.status === 'active' && (
                       <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-pf-success align-middle" />
                     )}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -749,9 +757,10 @@ function AdvancedSearchModal({
               <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide mb-2">Sort By</p>
               <div className="flex flex-wrap gap-1.5">
                 {ADVANCED_SORT_OPTIONS.map((opt) => (
-                  <button
+                  <Button
                     key={opt.value}
                     type="button"
+                    variant="ghost"
                     onClick={() => {
                       updateFilters((prev) => ({
                         ...prev,
@@ -769,7 +778,7 @@ function AdvancedSearchModal({
                     {filters.sortBy === opt.value && (
                       <ArrowUpDown className="size-3" aria-hidden="true" />
                     )}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -777,14 +786,15 @@ function AdvancedSearchModal({
 
           {/* Actions */}
           <div className="flex items-center justify-between gap-3 pt-1">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={handleReset}
               className="px-4 py-2 rounded-pf text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay border border-pf-border hover:border-pf-border-strong transition-colors"
             >
               Reset Filters
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => runSearch(0)}
               disabled={searchLoading}
@@ -796,7 +806,7 @@ function AdvancedSearchModal({
                 <Search className="size-4" aria-hidden="true" />
               )}
               Search Markets
-            </button>
+            </Button>
           </div>
 
           {/* Results */}
@@ -821,9 +831,10 @@ function AdvancedSearchModal({
                     const catColor = CATEGORY_COLORS[market.category];
                     const yesP = yesPercent(market);
                     return (
-                      <button
+                      <Button
                         key={market.id}
                         type="button"
+                        variant="ghost"
                         onClick={() => handleResultClick(market)}
                         className="w-full flex items-center gap-3 px-4 py-3 bg-pf-surface hover:bg-pf-elevated transition-colors text-left group"
                       >
@@ -851,21 +862,22 @@ function AdvancedSearchModal({
                           )}
                           <p className="text-[10px] text-pf-text-muted mt-0.5">{daysUntil(market.endDate)}</p>
                         </div>
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
               )}
 
               {canLoadMore && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={handleLoadMore}
                   disabled={searchLoading}
                   className="w-full py-2 text-sm text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong rounded-pf transition-colors disabled:opacity-60"
                 >
                   {searchLoading ? 'Loading...' : `Load more (${searchTotal - results.length} remaining)`}
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -1069,7 +1081,7 @@ export function Component() {
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" aria-hidden="true" />
-          <input
+          <Input
             type="text"
             placeholder="Search markets..."
             aria-label="Search markets"
@@ -1079,8 +1091,9 @@ export function Component() {
           />
         </div>
         {/* Advanced search button */}
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => setShowAdvancedSearch(true)}
           aria-label="Open advanced search"
           title="Advanced Search (Ctrl+F)"
@@ -1097,14 +1110,15 @@ export function Component() {
               {countActiveFilters(advancedFilters)}
             </span>
           )}
-        </button>
+        </Button>
       </div>
 
       {/* Category chips */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {CATEGORIES.map((cat) => (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             key={cat}
             onClick={() => { setCategory(cat); setPage(1); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
@@ -1115,7 +1129,7 @@ export function Component() {
           >
             {CATEGORY_ICONS[cat]}
             {cat === 'all' ? 'All' : cat}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -1131,22 +1145,24 @@ export function Component() {
         <div className="flex items-center gap-3">
           {/* View toggle */}
           <div className="flex bg-pf-surface rounded-pf border border-pf-border-subtle">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => changeViewMode('cards')}
               className={`p-1.5 rounded-pf-sm transition-colors ${viewMode === 'cards' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-muted hover:text-pf-text-secondary'}`}
               aria-label="Card view"
             >
               <Grid3X3 className="size-4" />
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => changeViewMode('table')}
               className={`p-1.5 rounded-pf-sm transition-colors ${viewMode === 'table' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-muted hover:text-pf-text-secondary'}`}
               aria-label="Table view"
             >
               <List className="size-4" />
-            </button>
+            </Button>
           </div>
 
           {/* End date filter */}
@@ -1158,9 +1174,10 @@ export function Component() {
                 { value: 'month', label: 'This Month', Icon: Calendar },
               ] as { value: EndDateFilter; label: string; Icon: typeof Clock }[]
             ).map(({ value, label, Icon }) => (
-              <button
+              <Button
                 key={value}
                 type="button"
+                variant="ghost"
                 onClick={() => {
                   setEndDateFilter(endDateFilter === value ? 'any' : value);
                   setPage(1);
@@ -1173,14 +1190,14 @@ export function Component() {
               >
                 <Icon className="size-3" aria-hidden="true" />
                 {label}
-              </button>
+              </Button>
             ))}
           </div>
 
           {/* Sort */}
           <div className="flex items-center gap-2">
             <label htmlFor="sort-select" className="text-xs text-pf-text-secondary">Sort by</label>
-            <select
+            <Select
               id="sort-select"
               value={sort}
               onChange={(e) => { setSort(e.target.value as SortOption); setPage(1); }}
@@ -1189,7 +1206,7 @@ export function Component() {
               {SORT_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
-            </select>
+            </Select>
           </div>
         </div>
       </div>
@@ -1288,8 +1305,10 @@ export function Component() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon-sm"
                             onClick={(e) => toggleWatch(market.id, e)}
                             disabled={watchlistLoading.has(market.id)}
                             className={`p-1.5 rounded-pf transition-colors ${watchedIds.has(market.id) ? 'text-amber-400 hover:text-amber-300' : 'text-pf-text-muted hover:text-pf-text'}`}
@@ -1298,7 +1317,7 @@ export function Component() {
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={watchedIds.has(market.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                             </svg>
-                          </button>
+                          </Button>
                         </td>
                       </tr>
                     );
@@ -1313,27 +1332,31 @@ export function Component() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
-          </button>
+          </Button>
           <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">
             Page {page} of {totalPages}
           </span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
-          </button>
+          </Button>
         </div>
       )}
 

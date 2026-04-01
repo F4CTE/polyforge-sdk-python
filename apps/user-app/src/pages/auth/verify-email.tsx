@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router';
 import { Check, AlertCircle, Mail, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { AuthBackground } from '@/components/auth-background';
+import { Button } from '@polyforge/ui';
 
 type VerifyState = 'pending' | 'waiting' | 'verified' | 'error';
 
@@ -120,14 +121,15 @@ export function Component() {
               </div>
               <h1 className="text-xl font-semibold text-pf-text mb-2">Verification failed</h1>
               <p className="text-sm text-pf-danger mb-6">{error}</p>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={handleResend}
                 disabled={resending}
                 className="inline-block px-6 py-2.5 border border-pf-border text-pf-text font-medium rounded-pf hover:bg-pf-border/30 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
               >
                 {resending ? 'Sending...' : 'Resend email'}
-              </button>
+              </Button>
             </div>
           )}
 
@@ -151,14 +153,15 @@ export function Component() {
                 </div>
               )}
 
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={handleResend}
                 disabled={resending}
                 className="w-full py-2.5 border border-pf-border text-pf-text font-medium rounded-pf hover:bg-pf-border/30 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
               >
                 {resending ? 'Sending...' : 'Resend email'}
-              </button>
+              </Button>
 
               <div className="mt-4 text-sm">
                 <Link to="/login" className="text-pf-cyan-500 hover:text-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 rounded-pf-sm">

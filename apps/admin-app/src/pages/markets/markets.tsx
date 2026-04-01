@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Button, Input, Select } from '@polyforge/ui';
 import {
   BarChart2,
   Star,
@@ -229,15 +230,16 @@ export function Component() {
             {total.toLocaleString()}
           </span>
         </div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={fetchMarkets}
           disabled={loading}
           className="flex items-center gap-2 px-3 py-1.5 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors disabled:opacity-50"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           Refresh
-        </button>
+        </Button>
       </div>
 
       {/* Summary Stats */}
@@ -271,7 +273,7 @@ export function Component() {
       {/* Filters */}
       <div className="flex flex-col gap-3">
         {/* Search */}
-        <input
+        <Input
           type="text"
           placeholder="Search markets..."
           value={searchInput}
@@ -283,9 +285,10 @@ export function Component() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1 bg-pf-elevated rounded-pf-sm border border-pf-border p-0.5">
             {STATUS_TABS.map((tab) => (
-              <button
+              <Button
                 key={tab}
                 type="button"
+                variant="ghost"
                 onClick={() => { setStatusTab(tab); setPage(1); }}
                 className={`px-3 py-1 rounded-pf-sm text-sm font-medium transition-colors ${
                   statusTab === tab
@@ -294,11 +297,11 @@ export function Component() {
                 }`}
               >
                 {tab}
-              </button>
+              </Button>
             ))}
           </div>
 
-          <select
+          <Select
             value={category}
             onChange={(e) => { setCategory(e.target.value); setPage(1); }}
             className="px-3 py-1.5 rounded-pf-sm border border-pf-border bg-pf-elevated text-sm text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
@@ -306,7 +309,7 @@ export function Component() {
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
 
@@ -424,8 +427,10 @@ export function Component() {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
                         {/* Star toggle */}
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => handleToggleFeatured(market)}
                           disabled={isUpdating}
                           title={market.featured ? 'Remove from featured' : 'Mark as featured'}
@@ -436,31 +441,34 @@ export function Component() {
                           }`}
                         >
                           <Star size={14} fill={market.featured ? 'currentColor' : 'none'} />
-                        </button>
+                        </Button>
 
                         {/* Delist (ACTIVE only) */}
                         {market.status === 'ACTIVE' && (
                           confirmDelist === market.id ? (
                             <div className="flex items-center gap-1">
-                              <button
+                              <Button
                                 type="button"
+                                variant="danger"
                                 onClick={() => handleDelist(market)}
                                 disabled={isUpdating}
                                 className="px-2 py-1 rounded-pf-sm text-[11px] font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-40"
                               >
                                 Confirm
-                              </button>
-                              <button
+                              </Button>
+                              <Button
                                 type="button"
+                                variant="secondary"
                                 onClick={() => setConfirmDelist(null)}
                                 className="px-2 py-1 rounded-pf-sm text-[11px] text-pf-text-secondary hover:text-pf-text transition-colors"
                               >
                                 Cancel
-                              </button>
+                              </Button>
                             </div>
                           ) : (
-                            <button
+                            <Button
                               type="button"
+                              variant="ghost"
                               onClick={() => setConfirmDelist(market.id)}
                               disabled={isUpdating}
                               title="Delist market"
@@ -468,20 +476,21 @@ export function Component() {
                             >
                               <Ban size={12} />
                               Delist
-                            </button>
+                            </Button>
                           )
                         )}
 
                         {/* Restore (DELISTED only) */}
                         {market.status === 'DELISTED' && (
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
                             onClick={() => handleRestore(market)}
                             disabled={isUpdating}
                             className="flex items-center gap-1 px-2 py-1 rounded-pf-sm text-[11px] font-medium text-pf-text-tertiary hover:text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-40"
                           >
                             Restore
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -500,24 +509,26 @@ export function Component() {
             Page {page} of {totalPages} &mdash; {total.toLocaleString()} markets
           </span>
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1 || loading}
               className="flex items-center gap-1 px-3 py-1.5 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors disabled:opacity-40"
             >
               <ChevronLeft size={14} />
               Prev
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || loading}
               className="flex items-center gap-1 px-3 py-1.5 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors disabled:opacity-40"
             >
               Next
               <ChevronRight size={14} />
-            </button>
+            </Button>
           </div>
         </div>
       )}

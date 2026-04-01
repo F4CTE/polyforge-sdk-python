@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { ChevronLeft, ChevronRight, Trophy, TrendingUp } from 'lucide-react';
+import { Button, Select } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -173,8 +174,9 @@ export function Component() {
       {/* Period tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {PERIODS.map(p => (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             key={p.value}
             onClick={() => changePeriod(p.value)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
@@ -184,15 +186,16 @@ export function Component() {
             }`}
           >
             {p.label}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Category chips */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {CATEGORIES.map(cat => (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             key={String(cat.value)}
             onClick={() => changeCategory(cat.value)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
@@ -202,14 +205,14 @@ export function Component() {
             }`}
           >
             {cat.label}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Filter bar */}
       <div className="flex items-center gap-3">
-        <select
-          value={minTrades}
+        <Select
+          value={String(minTrades)}
           onChange={e => changeMinTrades(Number(e.target.value))}
           className="bg-pf-elevated border border-pf-border rounded-pf text-xs text-pf-text-secondary px-2 py-1.5"
           aria-label="Minimum trades filter"
@@ -217,7 +220,7 @@ export function Component() {
           {MIN_TRADES_OPTIONS.map(opt => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {/* Table */}
@@ -336,25 +339,29 @@ export function Component() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
             aria-label="Previous page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
-          </button>
+          </Button>
           <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             aria-label="Next page"
             className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
-          </button>
+          </Button>
         </div>
       )}
     </div>

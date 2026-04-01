@@ -14,6 +14,7 @@ import {
   SCOPE_CLS,
   type Lang,
 } from './api-docs-primitives';
+import { Button, Input, Textarea } from '@polyforge/ui';
 
 /* ─── Try It Out panel ───────────────────────────────────────────── */
 
@@ -88,7 +89,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
       {/* API key */}
       <div className="space-y-1">
         <label className="text-xs text-pf-text-muted">API Key</label>
-        <input
+        <Input
           type="password"
           value={apiKey}
           onChange={e => setApiKey(e.target.value)}
@@ -101,7 +102,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
       {paramNames.map(name => (
         <div key={name} className="space-y-1">
           <label className="text-xs text-pf-text-muted font-mono">:{name}</label>
-          <input
+          <Input
             type="text"
             value={pathParams[name] ?? ''}
             onChange={e => setPathParams(prev => ({ ...prev, [name]: e.target.value }))}
@@ -115,7 +116,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
       {['POST', 'PATCH'].includes(ep.method) && (
         <div className="space-y-1">
           <label className="text-xs text-pf-text-muted">Request Body (JSON)</label>
-          <textarea
+          <Textarea
             value={body}
             onChange={e => setBody(e.target.value)}
             rows={5}
@@ -124,14 +125,14 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
         </div>
       )}
 
-      <button
+      <Button
         type="button"
         onClick={handleSend}
         disabled={loading}
         className="flex items-center gap-1.5 px-4 py-1.5 rounded-pf-sm bg-pf-cyan-500 text-black text-xs font-semibold hover:bg-pf-cyan-400 transition-colors disabled:opacity-50 cursor-pointer"
       >
         <Play size={11} /> {loading ? 'Sending…' : 'Send'}
-      </button>
+      </Button>
 
       {error && (
         <p className="text-xs text-pf-danger bg-pf-danger/10 border border-pf-danger/20 rounded-pf px-3 py-2">
@@ -177,8 +178,9 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
     <div
       className={`border border-pf-border border-l-[3px] ${METHOD_BORDER[ep.method]} rounded-pf-lg overflow-hidden transition-all duration-200 ${isOpen ? '' : 'hover:border-pf-border-strong'}`}
     >
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-3 px-4 py-3 bg-pf-elevated hover:bg-pf-elevated/80 text-left transition-colors duration-200 cursor-pointer"
         aria-expanded={isOpen}
@@ -199,7 +201,7 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
           ? <ChevronDown className="size-4 text-pf-text-muted shrink-0" />
           : <ChevronRight className="size-4 text-pf-text-muted shrink-0" />
         }
-      </button>
+      </Button>
 
       {isOpen && (
         <div className="border-t border-pf-border bg-pf-base px-4 py-5 space-y-5">
@@ -239,13 +241,14 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
           )}
 
           {/* Try it out */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setTryItOpen(v => !v)}
             className="text-xs text-pf-cyan-400 hover:text-pf-cyan-300 flex items-center gap-1.5"
           >
             <Play size={12} /> {tryItOpen ? 'Close' : 'Try it out'}
-          </button>
+          </Button>
 
           {tryItOpen && <TryItPanel ep={ep} />}
         </div>

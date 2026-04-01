@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { Mail, ArrowLeft, Check } from 'lucide-react';
 import { AuthBackground } from '@/components/auth-background';
+import { Button, Input } from '@polyforge/ui';
 
 export function Component() {
   const [email, setEmail] = useState('');
@@ -62,7 +63,7 @@ export function Component() {
                   <label htmlFor="email" className="block text-sm font-medium text-pf-text mb-1.5">Email</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
-                    <input
+                    <Input
                       id="email"
                       type="email"
                       autoComplete="email"
@@ -79,13 +80,13 @@ export function Component() {
                   {emailError && <p id="forgot-email-error" role="alert" className="mt-1 text-xs text-pf-danger">{emailError}</p>}
                 </div>
 
-                <button
+                <Button
                   type="submit"
                   disabled={loading}
                   className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
                 >
                   {loading ? 'Sending...' : 'Send reset link'}
-                </button>
+                </Button>
               </form>
             </>
           ) : (

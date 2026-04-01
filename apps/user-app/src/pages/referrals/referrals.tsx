@@ -10,6 +10,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '@polyforge/ui';
 
 interface ReferralEntry {
   id: string;
@@ -201,7 +202,7 @@ export function Component() {
 
         {/* Copy buttons */}
         <div className="flex flex-wrap gap-2">
-          <button
+          <Button
             type="button"
             onClick={handleCopyLink}
             disabled={loading || !data}
@@ -213,9 +214,10 @@ export function Component() {
               <Copy size={14} aria-hidden="true" />
             )}
             {copiedLink ? 'Copied!' : 'Copy Link'}
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
             type="button"
             onClick={handleCopyCode}
             disabled={loading || !data}
@@ -230,12 +232,13 @@ export function Component() {
             {data && (
               <span className="font-mono text-pf-cyan-400">{data.referralCode}</span>
             )}
-          </button>
+          </Button>
         </div>
 
         {/* Share buttons */}
         <div className="flex flex-wrap gap-2 pt-1">
-          <button
+          <Button
+            variant="secondary"
             type="button"
             onClick={handleShareTwitter}
             disabled={loading || !data}
@@ -243,8 +246,9 @@ export function Component() {
           >
             <ExternalLink size={14} aria-hidden="true" />
             Share on X
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
             type="button"
             onClick={handleShare}
             disabled={loading || !data}
@@ -252,7 +256,7 @@ export function Component() {
           >
             <Share2 size={14} aria-hidden="true" />
             Share
-          </button>
+          </Button>
         </div>
 
         {/* How it works */}

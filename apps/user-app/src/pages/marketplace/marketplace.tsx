@@ -4,6 +4,7 @@ import {
   Store, Star, ShoppingCart, Loader2, RefreshCw,
   GitFork, Filter, Search, ChevronRight, AlertTriangle,
 } from 'lucide-react';
+import { Button, Input } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -131,7 +132,7 @@ export function Component() {
             Buy proven trading strategies from top forecasters — get a private fork you can customize.
           </p>
         </div>
-        <button
+        <Button
           type="button"
           onClick={load}
           disabled={loading}
@@ -139,15 +140,16 @@ export function Component() {
         >
           {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           Refresh
-        </button>
+        </Button>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-pf-border">
         {(['browse', 'my-purchases'] as const).map((t) => (
-          <button
+          <Button
             key={t}
             type="button"
+            variant="ghost"
             onClick={() => setTab(t)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
               tab === t
@@ -156,7 +158,7 @@ export function Component() {
             }`}
           >
             {t === 'browse' ? 'Browse' : 'My Purchases'}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -169,7 +171,7 @@ export function Component() {
             {/* Search */}
             <div className="relative flex-1 min-w-[200px] max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted pointer-events-none" />
-              <input
+              <Input
                 type="text"
                 placeholder="Search strategies…"
                 value={search}
@@ -183,9 +185,10 @@ export function Component() {
               <Filter className="size-4 text-pf-text-muted" />
               <div className="flex gap-1">
                 {(Object.keys(SORT_LABELS) as SortOption[]).map((s) => (
-                  <button
+                  <Button
                     key={s}
                     type="button"
+                    variant="ghost"
                     onClick={() => setSort(s)}
                     className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
                       sort === s
@@ -194,7 +197,7 @@ export function Component() {
                     }`}
                   >
                     {SORT_LABELS[s]}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -293,7 +296,7 @@ function ListingCard({
       {/* Price + action */}
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-pf-border/50">
         <PriceTag price={listing.priceUsdc} />
-        <button
+        <Button
           type="button"
           onClick={onPurchase}
           disabled={purchasing}
@@ -305,7 +308,7 @@ function ListingCard({
             <ChevronRight className="size-3" />
           )}
           {parseFloat(listing.priceUsdc) === 0 ? 'Fork Free' : 'Purchase'}
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Button, Select } from '@polyforge/ui';
 import { ChevronLeft, ChevronRight, RotateCcw, Trash2, AlertTriangle, ClipboardList, AlertCircle } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { statusColor, formatDateTime } from '@/lib/utils';
@@ -90,7 +91,7 @@ export function Component() {
         <h2 className="text-lg font-semibold text-pf-text">
           Orders <span className="text-sm font-normal text-pf-text-tertiary">({total})</span>
         </h2>
-        <select
+        <Select
           value={statusFilter}
           onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
           aria-label="Filter by order status"
@@ -103,16 +104,16 @@ export function Component() {
           <option value="CONFIRMED">Confirmed</option>
           <option value="CANCELLED">Cancelled</option>
           <option value="FAILED">Failed</option>
-        </select>
+        </Select>
       </div>
 
       {error && (
         <div className="text-center py-12">
           <AlertCircle className="mx-auto mb-3 text-pf-text-tertiary" size={40} aria-hidden="true" />
           <p className="text-pf-text-secondary mb-4">Failed to load data</p>
-          <button type="button" onClick={load} className="text-pf-cyan-400 hover:text-[var(--color-pf-cyan-300)] text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded-pf-sm">
+          <Button type="button" variant="ghost" onClick={load} className="text-pf-cyan-400 hover:text-[var(--color-pf-cyan-300)] text-sm">
             Try again
-          </button>
+          </Button>
         </div>
       )}
 
@@ -147,39 +148,43 @@ export function Component() {
                       <span className="text-pf-text-secondary">
                         {confirmAction?.type === 'discard' ? 'Discard?' : 'Replay?'}
                       </span>
-                      <button
+                      <Button
                         type="button"
+                        variant="danger"
                         onClick={() => confirmAction?.type === 'replay' ? handleReplay(entry.intentId) : handleDiscard(entry.intentId)}
-                        className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
+                        className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors"
                       >
                         Confirm
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="secondary"
                         onClick={() => setConfirmAction(null)}
-                        className="px-2 py-0.5 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                        className="px-2 py-0.5 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base cursor-pointer transition-colors"
                       >
                         Cancel
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     <>
-                      <button
+                      <Button
                         type="button"
+                        variant="default"
                         onClick={() => setConfirmAction({ type: 'replay', intentId: entry.intentId })}
-                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-info/10 text-pf-info hover:bg-pf-info/20 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-info"
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-info/10 text-pf-info hover:bg-pf-info/20 cursor-pointer transition-colors"
                       >
                         <RotateCcw size={12} aria-hidden="true" />
                         Replay
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="danger"
                         onClick={() => setConfirmAction({ type: 'discard', intentId: entry.intentId })}
-                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors"
                       >
                         <Trash2 size={12} aria-hidden="true" />
                         Discard
-                      </button>
+                      </Button>
                     </>
                   )}
                 </div>
@@ -255,12 +260,12 @@ export function Component() {
           <div className="flex items-center justify-between px-4 py-3 border-t border-pf-border">
             <span className="text-xs text-pf-text-tertiary">Page {page} of {totalPages}</span>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page" className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
+              <Button type="button" variant="ghost" size="icon-sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">
                 <ChevronLeft size={16} />
-              </button>
-              <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page" className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40">
+              </Button>
+              <Button type="button" variant="ghost" size="icon-sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page">
                 <ChevronRight size={16} />
-              </button>
+              </Button>
             </div>
           </div>
         )}

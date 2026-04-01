@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { toast } from 'sonner';
+import { Button, Input, Select } from '@polyforge/ui';
 import { ShieldCheck, Plus, Pencil, Trash2, X } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { useAdminAuthStore } from '@/stores/admin-auth-store';
@@ -136,14 +137,15 @@ export function Component() {
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-pf-text">Admin Accounts</h2>
-        <button
+        <Button
           type="button"
+          variant="default"
           onClick={openAdd}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
         >
           <Plus size={14} aria-hidden="true" />
           Add Admin
-        </button>
+        </Button>
       </div>
 
       {/* Table */}
@@ -198,28 +200,32 @@ export function Component() {
                     <td className="px-4 py-3 text-pf-text-tertiary">{formatDate(a.createdAt ?? "")}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => openEdit(a)}
-                          className="p-1.5 rounded hover:bg-pf-base text-pf-text-tertiary hover:text-pf-text cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                          className="p-1.5 rounded hover:bg-pf-base text-pf-text-tertiary hover:text-pf-text cursor-pointer transition-colors"
                           aria-label="Edit admin"
                           title="Edit admin"
                         >
                           <Pencil size={14} />
-                        </button>
+                        </Button>
                         {a.id !== currentAdmin?.id && (
-                          <button
+                          <Button
                             type="button"
+                            variant="danger"
+                            size="icon-sm"
                             onClick={() => {
                               setDeleteConfirmId(a.id);
                               setDeletePassword('');
                             }}
-                            className="p-1.5 rounded hover:bg-pf-danger/10 text-pf-text-tertiary hover:text-pf-danger cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger"
+                            className="p-1.5 rounded hover:bg-pf-danger/10 text-pf-text-tertiary hover:text-pf-danger cursor-pointer transition-colors"
                             aria-label="Deactivate admin"
                             title="Deactivate admin"
                           >
                             <Trash2 size={14} />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -239,20 +245,22 @@ export function Component() {
               <h3 id="admin-dialog-title" className="text-base font-semibold text-pf-text">
                 {dialogMode === 'add' ? 'Add Admin' : 'Edit Admin'}
               </h3>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={closeDialog}
-                className="p-1 rounded hover:bg-pf-base text-pf-text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                className="p-1 rounded hover:bg-pf-base text-pf-text-tertiary"
                 aria-label="Close dialog"
               >
                 <X size={18} />
-              </button>
+              </Button>
             </div>
             <form onSubmit={handleSubmit} noValidate className="space-y-4">
               {dialogMode === 'add' && (
                 <div>
                   <label htmlFor="admin-email" className="block text-xs font-medium text-pf-text-secondary mb-1">Email</label>
-                  <input
+                  <Input
                     id="admin-email"
                     type="email"
                     value={form.email}
@@ -264,7 +272,7 @@ export function Component() {
               )}
               <div>
                 <label htmlFor="admin-display-name" className="block text-xs font-medium text-pf-text-secondary mb-1">Display Name</label>
-                <input
+                <Input
                   id="admin-display-name"
                   type="text"
                   value={form.displayName}
@@ -277,7 +285,7 @@ export function Component() {
                 <label htmlFor="admin-password" className="block text-xs font-medium text-pf-text-secondary mb-1">
                   Password{dialogMode === 'edit' ? ' (leave blank to keep)' : ''}
                 </label>
-                <input
+                <Input
                   id="admin-password"
                   type="password"
                   value={form.password}
@@ -288,7 +296,7 @@ export function Component() {
               </div>
               <div>
                 <label htmlFor="admin-role" className="block text-xs font-medium text-pf-text-secondary mb-1">Role</label>
-                <select
+                <Select
                   id="admin-role"
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
@@ -297,23 +305,25 @@ export function Component() {
                   <option value="VIEWER">Viewer</option>
                   <option value="ADMIN">Admin</option>
                   <option value="SUPER_ADMIN">Super Admin</option>
-                </select>
+                </Select>
               </div>
               <div className="flex gap-3 pt-2">
-                <button
+                <Button
                   type="submit"
+                  variant="default"
                   disabled={submitting}
-                  className="flex-1 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+                  className="flex-1 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
                 >
                   {submitting ? 'Saving...' : dialogMode === 'add' ? 'Create Admin' : 'Save Changes'}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={closeDialog}
-                  className="px-4 py-2 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                  className="px-4 py-2 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base transition-colors"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -331,7 +341,7 @@ export function Component() {
               Enter your password to confirm this action.
             </p>
             <label htmlFor="deactivate-password" className="sr-only">Your password</label>
-            <input
+            <Input
               id="deactivate-password"
               type="password"
               value={deletePassword}
@@ -340,21 +350,23 @@ export function Component() {
               className="w-full px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-danger mb-4"
             />
             <div className="flex gap-3">
-              <button
+              <Button
                 type="button"
+                variant="danger"
                 onClick={handleDeactivate}
                 disabled={submitting || !deletePassword}
-                className="flex-1 py-2 text-sm font-medium rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/80 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+                className="flex-1 py-2 text-sm font-medium rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/80 disabled:opacity-50 transition-colors"
               >
                 {submitting ? 'Deactivating...' : 'Deactivate'}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setDeleteConfirmId(null)}
-                className="px-4 py-2 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+                className="px-4 py-2 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base transition-colors"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         </div>

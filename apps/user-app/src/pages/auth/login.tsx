@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { Mail, Lock, KeyRound, AlertCircle, Eye, EyeOff, X } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { AuthBackground } from '@/components/auth-background';
+import { Button, Input } from '@polyforge/ui';
 
 export function Component() {
   const navigate = useNavigate();
@@ -84,14 +85,16 @@ export function Component() {
             <div role="alert" className="flex items-center gap-2 bg-pf-warning/10 border border-pf-warning/20 text-pf-warning rounded-pf px-4 py-3 mb-4 text-sm">
               <AlertCircle className="size-4 shrink-0" />
               <span className="flex-1">Your session has expired. Please sign in again.</span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => setSessionExpired(false)}
                 className="shrink-0 text-pf-warning hover:text-pf-warning/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-warning/40 rounded-pf-sm cursor-pointer"
                 aria-label="Dismiss warning"
               >
                 <X className="size-4" />
-              </button>
+              </Button>
             </div>
           )}
 
@@ -99,14 +102,16 @@ export function Component() {
             <div role="alert" className="flex items-center gap-2 bg-pf-danger/10 border border-pf-danger/20 text-pf-danger rounded-pf px-4 py-3 mb-4 text-sm">
               <AlertCircle className="size-4 shrink-0" />
               <span className="flex-1">{error}</span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => setError('')}
                 className="shrink-0 text-pf-danger hover:text-pf-danger/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 rounded-pf-sm cursor-pointer"
                 aria-label="Dismiss error"
               >
                 <X className="size-4" />
-              </button>
+              </Button>
             </div>
           )}
 
@@ -116,7 +121,7 @@ export function Component() {
               <label htmlFor="email" className="block text-sm font-medium text-pf-text mb-1.5">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
-                <input
+                <Input
                   id="email"
                   type="email"
                   autoComplete="email"
@@ -138,7 +143,7 @@ export function Component() {
               <label htmlFor="password" className="block text-sm font-medium text-pf-text mb-1.5">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
-                <input
+                <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
@@ -150,14 +155,16 @@ export function Component() {
                   aria-describedby={passwordError ? 'login-password-error' : undefined}
                   className="w-full pl-10 pr-10 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
+                </Button>
               </div>
               {passwordError && <p id="login-password-error" role="alert" className="mt-1 text-xs text-pf-danger">{passwordError}</p>}
             </div>
@@ -169,7 +176,7 @@ export function Component() {
                 <p className="text-xs text-pf-text-muted mb-2">Enter the 6-digit code from your authenticator app.</p>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
-                  <input
+                  <Input
                     id="totp"
                     type="text"
                     inputMode="numeric"
@@ -186,13 +193,13 @@ export function Component() {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
               className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Signing in...' : 'Sign in'}
-            </button>
+            </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">

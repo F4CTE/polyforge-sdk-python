@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { toast } from 'sonner';
+import { Button, Input, Select } from '@polyforge/ui';
 import { wsManager, WebSocketManager } from '@/lib/websocket';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -836,13 +837,13 @@ export function Component() {
           <p className="text-sm text-pf-text-muted mt-1">
             This market may have been removed or the link is incorrect.
           </p>
-          <button
+          <Button
             type="button"
             onClick={() => navigate('/markets')}
             className="mt-4 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text hover:border-pf-border-strong transition-colors"
           >
             Back to Markets
-          </button>
+          </Button>
         </div>
       )}
 
@@ -881,22 +882,24 @@ export function Component() {
                     {yesPrice ?? '\u2014'}
                   </span>
                   <div className="flex gap-1 mt-1">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => openConditional('TAKE_PROFIT', 'YES')}
                       aria-label="Set take profit for YES"
                       className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-success/20 text-pf-success hover:bg-pf-success/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                     >
                       TP
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => openConditional('STOP_LOSS', 'YES')}
                       aria-label="Set stop loss for YES"
                       className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-danger/20 text-pf-danger hover:bg-pf-danger/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                     >
                       SL
-                    </button>
+                    </Button>
                   </div>
                 </div>
                 <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-pf-danger/10 border border-pf-danger/20">
@@ -905,32 +908,35 @@ export function Component() {
                     {noPrice ?? '\u2014'}
                   </span>
                   <div className="flex gap-1 mt-1">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => openConditional('TAKE_PROFIT', 'NO')}
                       aria-label="Set take profit for NO"
                       className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-success/20 text-pf-success hover:bg-pf-success/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                     >
                       TP
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => openConditional('STOP_LOSS', 'NO')}
                       aria-label="Set stop loss for NO"
                       className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-pf-danger/20 text-pf-danger hover:bg-pf-danger/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                     >
                       SL
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="success"
                 onClick={() => setShowRunStrategy(true)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-success text-white text-sm font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base"
               >
                 <Play className="size-4" /> Run Strategy
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -971,8 +977,9 @@ export function Component() {
               {/* Period tabs */}
               <div className="flex gap-1">
                 {(['7d', '30d', 'allTime'] as const).map((p) => (
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     key={p}
                     onClick={() => setHistoryPeriod(p)}
                     aria-pressed={historyPeriod === p}
@@ -983,7 +990,7 @@ export function Component() {
                     }`}
                   >
                     {p === 'allTime' ? 'All' : p}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -1097,8 +1104,9 @@ export function Component() {
                 <span className="text-sm font-medium text-pf-text">Price History &mdash; YES</span>
                 <div className="flex gap-1">
                   {(['1m', '1h', '1d'] as Resolution[]).map((r) => (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       key={r}
                       onClick={() => onResolutionChange(r)}
                       aria-pressed={resolution === r}
@@ -1109,7 +1117,7 @@ export function Component() {
                       }`}
                     >
                       {r}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -1168,8 +1176,9 @@ export function Component() {
                   <div className="h-full flex flex-col items-center justify-center text-pf-text-muted text-sm">
                     <TrendingUp className="size-8 opacity-20 mb-2" />
                     No price data available for this resolution
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => {
                         const yesToken = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === 'YES');
                         if (yesToken) loadChart(yesToken.id, resolution);
@@ -1177,7 +1186,7 @@ export function Component() {
                       className="mt-2 px-3 py-1 rounded-pf text-xs bg-pf-overlay hover:bg-pf-border transition-colors"
                     >
                       Retry
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -1197,8 +1206,9 @@ export function Component() {
                   )}
                   {/* Table / Chart toggle */}
                   <div className="flex rounded-pf-sm overflow-hidden border border-pf-border" role="group" aria-label="Order book view">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => setOrderBookView('table')}
                       aria-pressed={orderBookView === 'table'}
                       className={`px-2 py-0.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
@@ -1208,9 +1218,10 @@ export function Component() {
                       }`}
                     >
                       Table
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => setOrderBookView('chart')}
                       aria-pressed={orderBookView === 'chart'}
                       className={`px-2 py-0.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 border-l border-pf-border ${
@@ -1220,10 +1231,12 @@ export function Component() {
                       }`}
                     >
                       Chart
-                    </button>
+                    </Button>
                   </div>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => {
                       const yesToken = (market?.tokens ?? []).find((t) => t.outcome === 'YES');
                       if (yesToken) loadBook(yesToken.id);
@@ -1233,7 +1246,7 @@ export function Component() {
                     title="Refresh book"
                   >
                     <RefreshCw size={12} />
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -1477,8 +1490,9 @@ export function Component() {
               {/* Outcome toggle */}
               <div className="flex gap-1 mt-3">
                 {(['YES', 'NO'] as const).map((o) => (
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     key={o}
                     onClick={() => {
                       setTradeOutcome(o);
@@ -1494,15 +1508,16 @@ export function Component() {
                     }`}
                   >
                     {o}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
               {/* Side toggle */}
               <div className="flex gap-1 mt-2">
                 {(['BUY', 'SELL'] as const).map((s) => (
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     key={s}
                     onClick={() => setTradeSide(s)}
                     className={`flex-1 py-1.5 rounded-pf-sm text-xs font-semibold transition-colors ${
@@ -1514,14 +1529,14 @@ export function Component() {
                     }`}
                   >
                     {s}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
               {/* Price input */}
               <div className="mt-3">
                 <label htmlFor="trade-price" className="block text-xs font-medium text-pf-text-secondary mb-1">Price</label>
-                <input
+                <Input
                   id="trade-price"
                   type="number"
                   step="0.01"
@@ -1583,7 +1598,7 @@ export function Component() {
               <div className="mt-3">
                 <label htmlFor="trade-amount" className="block text-xs font-medium text-pf-text-secondary mb-1">Amount</label>
                 <div className="relative">
-                  <input
+                  <Input
                     id="trade-amount"
                     type="number"
                     step="1"
@@ -1616,7 +1631,7 @@ export function Component() {
               )}
 
               {/* Place order button */}
-              <button
+              <Button
                 type="button"
                 onClick={placeOrder}
                 disabled={placingOrder || !tradeAmount || parseFloat(tradeAmount || '0') <= 0 || (!isMarketOrder && (!tradePrice || parseFloat(tradePrice || '0') <= 0))}
@@ -1627,7 +1642,7 @@ export function Component() {
                 }`}
               >
                 {placingOrder ? 'Placing...' : `Place ${tradeSide} ${tradeOutcome} Order`}
-              </button>
+              </Button>
 
               {/* Success / Error messages */}
               {tradeSuccess && (
@@ -1666,15 +1681,17 @@ export function Component() {
                             {order.size}@{order.price}
                           </span>
                         </div>
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => cancelMyOrder(order.id)}
                           className="shrink-0 p-0.5 rounded text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                           title="Cancel order"
                           aria-label="Cancel order"
                         >
                           <X className="size-3" />
-                        </button>
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -1686,8 +1703,9 @@ export function Component() {
 
             {/* Provide Liquidity */}
             <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => setLpExpanded((v) => !v)}
                 className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-pf-text hover:bg-pf-surface/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:rounded-pf"
                 aria-expanded={lpExpanded}
@@ -1711,7 +1729,7 @@ export function Component() {
                 >
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
-              </button>
+              </Button>
 
               {lpExpanded && (
                 <div className="px-4 pb-4 space-y-3 border-t border-pf-border-subtle pt-3">
@@ -1720,7 +1738,7 @@ export function Component() {
                     <label htmlFor="lp-token" className="block text-xs font-medium text-pf-text-secondary mb-1">
                       Token
                     </label>
-                    <select
+                    <Select
                       id="lp-token"
                       value={lpTokenId}
                       onChange={(e) => setLpTokenId(e.target.value)}
@@ -1731,7 +1749,7 @@ export function Component() {
                           {t.outcome}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
 
                   {/* Spread input */}
@@ -1739,7 +1757,7 @@ export function Component() {
                     <label htmlFor="lp-spread" className="block text-xs font-medium text-pf-text-secondary mb-1">
                       Spread
                     </label>
-                    <input
+                    <Input
                       id="lp-spread"
                       type="number"
                       step="0.001"
@@ -1757,7 +1775,7 @@ export function Component() {
                     <label htmlFor="lp-size" className="block text-xs font-medium text-pf-text-secondary mb-1">
                       Size (USDC)
                     </label>
-                    <input
+                    <Input
                       id="lp-size"
                       type="number"
                       step="1"
@@ -1773,14 +1791,14 @@ export function Component() {
                     <p className="text-xs text-pf-danger">{lpError}</p>
                   )}
 
-                  <button
+                  <Button
                     type="button"
                     onClick={submitLp}
                     disabled={lpSubmitting || !lpTokenId || !lpSpread || !lpSize}
                     className="w-full py-2.5 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-sm font-semibold text-pf-cyan-400 hover:bg-pf-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                   >
                     {lpSubmitting ? 'Submitting...' : 'Submit'}
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -1858,8 +1876,9 @@ export function Component() {
                           {' '}({sentiment.userVote.confidence}% confident)
                         </span>
                       </div>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => {
                           setSelectedDir(sentiment.userVote!.direction);
                           setConfidence(sentiment.userVote!.confidence);
@@ -1868,7 +1887,7 @@ export function Component() {
                         className="flex items-center gap-1 text-[11px] text-pf-text-muted hover:text-pf-cyan-400 transition-colors"
                       >
                         <Edit2 className="size-3" /> Edit
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     /* Vote form */
@@ -1877,8 +1896,9 @@ export function Component() {
 
                       {/* YES / NO toggle */}
                       <div className="flex gap-2">
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           onClick={() => setSelectedDir('YES')}
                           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-pf border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success/40 ${
                             selectedDir === 'YES'
@@ -1887,9 +1907,10 @@ export function Component() {
                           }`}
                         >
                           <ThumbsUp className="size-3.5" /> YES
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          variant="ghost"
                           onClick={() => setSelectedDir('NO')}
                           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-pf border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 ${
                             selectedDir === 'NO'
@@ -1898,7 +1919,7 @@ export function Component() {
                           }`}
                         >
                           <ThumbsDown className="size-3.5" /> NO
-                        </button>
+                        </Button>
                       </div>
 
                       {/* Confidence slider */}
@@ -1924,14 +1945,14 @@ export function Component() {
                       )}
 
                       {/* Submit */}
-                      <button
+                      <Button
                         type="button"
                         disabled={!selectedDir || voting}
                         onClick={submitVote}
                         className="w-full py-2.5 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-sm font-semibold text-pf-cyan-400 hover:bg-pf-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                       >
                         {voting ? 'Submitting...' : 'Submit Vote'}
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </>
@@ -1946,8 +1967,9 @@ export function Component() {
                   <Bell className="size-4 text-pf-text-muted" aria-hidden="true" />
                   <span className="text-sm font-medium text-pf-text">Price Alerts</span>
                 </div>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setShowAlertForm((v) => !v)}
                   aria-expanded={showAlertForm}
                   aria-label={showAlertForm ? 'Cancel new alert' : 'Add price alert'}
@@ -1958,7 +1980,7 @@ export function Component() {
                   ) : (
                     <><BellPlus className="size-3" /> Add</>
                   )}
-                </button>
+                </Button>
               </div>
 
               {/* Inline form */}
@@ -1969,8 +1991,9 @@ export function Component() {
                     <p className="text-xs font-medium text-pf-text-secondary mb-1.5">Outcome</p>
                     <div className="flex gap-1.5">
                       {(['YES', 'NO'] as const).map((o) => (
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           key={o}
                           onClick={() => setAlertOutcome(o)}
                           className={`flex-1 py-1.5 rounded-pf-sm text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
@@ -1982,7 +2005,7 @@ export function Component() {
                           }`}
                         >
                           {o}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -1992,8 +2015,9 @@ export function Component() {
                     <p className="text-xs font-medium text-pf-text-secondary mb-1.5">Condition</p>
                     <div className="flex gap-1.5">
                       {(['above', 'below'] as const).map((c) => (
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           key={c}
                           onClick={() => setAlertCondition(c)}
                           className={`flex-1 py-1.5 rounded-pf-sm text-xs font-semibold capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
@@ -2003,7 +2027,7 @@ export function Component() {
                           }`}
                         >
                           {c}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -2032,14 +2056,15 @@ export function Component() {
 
                   {/* Actions */}
                   <div className="flex gap-2 pt-1">
-                    <button
+                    <Button
                       type="button"
+                      variant="secondary"
                       onClick={() => setShowAlertForm(false)}
                       className="flex-1 py-2 rounded-pf-sm text-xs text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong transition-colors"
                     >
                       Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
                       disabled={savingAlert}
                       onClick={async () => {
@@ -2075,7 +2100,7 @@ export function Component() {
                       className="flex-1 py-2 rounded-pf-sm text-xs font-semibold bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                     >
                       {savingAlert ? 'Saving...' : 'Save Alert'}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
@@ -2092,13 +2117,14 @@ export function Component() {
                   <div className="flex flex-col items-center py-4 text-center">
                     <Bell className="size-6 text-pf-text-muted opacity-30 mb-2" aria-hidden="true" />
                     <p className="text-xs text-pf-text-muted">No alerts set</p>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => setShowAlertForm(true)}
                       className="mt-1.5 text-[11px] text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
                     >
                       Add your first alert
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                   <ul className="space-y-1.5">
@@ -2122,8 +2148,10 @@ export function Component() {
                             </span>
                           )}
                         </div>
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon-sm"
                           aria-label={`Delete alert: ${alert.outcome} ${alert.condition} ${alert.threshold.toFixed(2)}`}
                           onClick={async () => {
                             try {
@@ -2144,7 +2172,7 @@ export function Component() {
                           className="shrink-0 p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                         >
                           <Trash2 className="size-3" />
-                        </button>
+                        </Button>
                       </li>
                     ))}
                   </ul>
@@ -2160,13 +2188,14 @@ export function Component() {
             <div className="flex flex-col items-center py-6 text-center">
               <Zap className="size-6 text-pf-text-muted mb-2" />
               <p className="text-sm text-pf-text-muted">No strategies running on this market yet.</p>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setShowRunStrategy(true)}
                 className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong transition-colors"
               >
                 <Play className="size-3" /> Run Strategy
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -2259,19 +2288,21 @@ export function Component() {
                   <h2 className="text-base font-semibold text-pf-text">
                     {condType === 'TAKE_PROFIT' ? 'Set Take Profit' : 'Set Stop Loss'} &mdash; {condOutcome}
                   </h2>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setShowConditional(false)}
                     aria-label="Close dialog"
                     className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
                   >
                     <X className="size-4" />
-                  </button>
+                  </Button>
                 </div>
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="cond-trigger-price-dialog" className="block text-xs font-medium text-pf-text-secondary mb-1.5">Trigger Price</label>
-                    <input
+                    <Input
                       id="cond-trigger-price-dialog"
                       type="number"
                       step="0.01"
@@ -2285,7 +2316,7 @@ export function Component() {
                   </div>
                   <div>
                     <label htmlFor="cond-size-dialog" className="block text-xs font-medium text-pf-text-secondary mb-1.5">Size (shares)</label>
-                    <input
+                    <Input
                       id="cond-size-dialog"
                       type="number"
                       step="1"
@@ -2297,15 +2328,17 @@ export function Component() {
                     />
                   </div>
                   <div className="flex gap-2 justify-end pt-3 border-t border-pf-border-subtle">
-                    <button
+                    <Button
                       type="button"
+                      variant="secondary"
                       onClick={() => setShowConditional(false)}
                       className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
                     >
                       Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant={condType === 'TAKE_PROFIT' ? 'success' : 'danger'}
                       onClick={submitConditional}
                       disabled={!condSize || !condTriggerPrice || condSubmitting}
                       className={`flex items-center gap-2 px-4 py-2 rounded-pf text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${
@@ -2313,7 +2346,7 @@ export function Component() {
                       }`}
                     >
                       {condType === 'TAKE_PROFIT' ? 'Set TP' : 'Set SL'}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -2326,14 +2359,16 @@ export function Component() {
               <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg w-full max-w-md p-6 shadow-pf-lg">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-semibold text-pf-text">Run Strategy on This Market</h2>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setShowRunStrategy(false)}
                     aria-label="Close dialog"
                     className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
                   >
                     <X className="size-4" />
-                  </button>
+                  </Button>
                 </div>
 
                 <div className="space-y-4">
@@ -2341,7 +2376,7 @@ export function Component() {
                     <label htmlFor="run-strategy-select" className="block text-xs font-medium text-pf-text-secondary mb-1.5">
                       Select Strategy
                     </label>
-                    <select
+                    <Select
                       id="run-strategy-select"
                       value={selectedStrategyId}
                       onChange={(e) => setSelectedStrategyId(e.target.value)}
@@ -2351,7 +2386,7 @@ export function Component() {
                       {strategyOptions.map((s) => (
                         <option key={s.id} value={s.id}>{s.name}</option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
 
                   <div className="text-center text-xs text-pf-text-muted">or</div>
@@ -2365,21 +2400,23 @@ export function Component() {
                   </Link>
 
                   <div className="flex gap-2 justify-end pt-3 border-t border-pf-border-subtle">
-                    <button
+                    <Button
                       type="button"
+                      variant="secondary"
                       onClick={() => setShowRunStrategy(false)}
                       className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
                     >
                       Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="success"
                       onClick={onStartStrategy}
                       disabled={!selectedStrategyId}
                       className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-success text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                     >
                       <Play className="size-3.5" /> Start Strategy
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>

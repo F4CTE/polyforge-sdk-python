@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, Send, Loader2 } from 'lucide-react';
+import { Button, Input, Select, Textarea } from '@polyforge/ui';
 
 /* ─── Constants ──────────────────────────────────────────────────────── */
 
@@ -67,14 +68,16 @@ export function Component() {
     <div className="animate-fade-in p-6 max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => navigate('/support')}
           className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
           aria-label="Back to support"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
-        </button>
+        </Button>
         <h1 className="text-2xl font-semibold text-pf-text">New Support Ticket</h1>
       </div>
 
@@ -82,7 +85,7 @@ export function Component() {
       <form onSubmit={handleSubmit} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
         <div>
           <label htmlFor="ticket-subject" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Subject</label>
-          <input
+          <Input
             id="ticket-subject"
             type="text"
             value={subject}
@@ -99,31 +102,31 @@ export function Component() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="ticket-category" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Category</label>
-            <select
+            <Select
               id="ticket-category"
               value={category}
               onChange={e => setCategory(e.target.value)}
               className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
             >
               {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </select>
+            </Select>
           </div>
           <div>
             <label htmlFor="ticket-priority" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Priority</label>
-            <select
+            <Select
               id="ticket-priority"
               value={priority}
               onChange={e => setPriority(e.target.value)}
               className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
             >
               {PRIORITIES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-            </select>
+            </Select>
           </div>
         </div>
 
         <div>
           <label htmlFor="ticket-body" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Description</label>
-          <textarea
+          <Textarea
             id="ticket-body"
             value={body}
             onChange={e => setBody(e.target.value)}
@@ -142,14 +145,14 @@ export function Component() {
         )}
 
         <div className="flex justify-end">
-          <button
- type="submit"
- disabled={!canSubmit}
- className="flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
- >
+          <Button
+            type="submit"
+            disabled={!canSubmit}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+          >
             {submitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             Submit Ticket
-          </button>
+          </Button>
         </div>
       </form>
     </div>

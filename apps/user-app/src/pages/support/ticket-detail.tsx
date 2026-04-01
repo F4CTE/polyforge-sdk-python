@@ -4,6 +4,7 @@ import {
   ArrowLeft, Send, Loader2, Lock, RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button, Textarea } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -137,9 +138,9 @@ export function Component() {
     return (
       <div className="p-6 max-w-3xl mx-auto text-center py-20">
         <p className="text-pf-text font-medium">Ticket not found</p>
-        <button type="button" onClick={() => navigate('/support')} className="text-sm text-pf-cyan-400 mt-2">
+        <Button variant="link" type="button" onClick={() => navigate('/support')} className="text-sm text-pf-cyan-400 mt-2">
           Back to support
-        </button>
+        </Button>
       </div>
     );
   }
@@ -151,14 +152,16 @@ export function Component() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => navigate('/support')}
             className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
             aria-label="Back to support"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-          </button>
+          </Button>
           <div>
             <h1 className="text-2xl font-semibold text-pf-text">{ticket.subject}</h1>
             <div className="flex items-center gap-3 mt-1 text-xs text-pf-text-muted">
@@ -175,23 +178,24 @@ export function Component() {
           showCloseConfirm ? (
             <div className="flex items-center gap-2">
               <span className="text-xs text-pf-text-muted">Close this ticket?</span>
-              <button type="button" onClick={closeTicket} disabled={closing} className="px-2 py-1 text-xs rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors">
+              <Button type="button" onClick={closeTicket} disabled={closing} className="px-2 py-1 text-xs rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors">
                 {closing ? 'Closing...' : 'Confirm'}
-              </button>
-              <button type="button" onClick={() => setShowCloseConfirm(false)} className="px-2 py-1 text-xs rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface transition-colors">
+              </Button>
+              <Button variant="secondary" type="button" onClick={() => setShowCloseConfirm(false)} className="px-2 py-1 text-xs rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface transition-colors">
                 Cancel
-              </button>
+              </Button>
             </div>
           ) : (
-            <button
+            <Button
               type="button"
+              variant="danger"
               onClick={() => setShowCloseConfirm(true)}
               disabled={closing}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs text-pf-text-muted border border-pf-border hover:border-pf-border-strong hover:text-pf-text cursor-pointer disabled:cursor-not-allowed transition-colors"
             >
               {closing ? <Loader2 className="size-3 animate-spin" /> : <Lock className="size-3" />}
               Close Ticket
-            </button>
+            </Button>
           )
         )}
       </div>
@@ -237,7 +241,7 @@ export function Component() {
       {/* Reply */}
       {ticket.status !== 'CLOSED' ? (
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
-          <textarea
+          <Textarea
             value={reply}
             onChange={e => setReply(e.target.value.slice(0, MAX_CHARS))}
             placeholder="Write a reply..."
@@ -249,7 +253,7 @@ export function Component() {
             <span className={`text-xs font-mono ${isOverWarn ? 'text-pf-danger' : 'text-pf-text-muted'}`}>
               {charCount} / {MAX_CHARS}
             </span>
-            <button
+            <Button
               type="button"
               onClick={sendReply}
               disabled={!reply.trim() || sending}
@@ -257,7 +261,7 @@ export function Component() {
             >
               {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
               Send Reply
-            </button>
+            </Button>
           </div>
         </div>
       ) : (

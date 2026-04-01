@@ -8,6 +8,7 @@ import { useThemeStore } from '@/stores/theme-store';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
 import { DocsSidebar } from './api-docs-sidebar';
+import { Button } from '@polyforge/ui';
 import { renderContent } from './api-docs-content';
 import { NAV_GROUPS, ENDPOINT_SECTIONS } from './api-docs-nav';
 import { Badge, METHOD_CLS, type Lang } from './api-docs-primitives';
@@ -26,14 +27,16 @@ function PublicHeader() {
         <span className="text-xs font-medium text-pf-text-secondary">API Reference</span>
       </Link>
       <div className="flex items-center gap-1.5">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={toggle}
           aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors cursor-pointer"
         >
           {isDark ? <Sun size={15} /> : <Moon size={15} />}
-        </button>
+        </Button>
         <Link
           to="/login"
           className="text-sm font-medium text-pf-text-secondary hover:text-pf-text transition-colors px-3 py-1.5"
@@ -67,15 +70,16 @@ function OnThisPage({ sectionId, onSelect }: TocProps) {
         On this page
       </p>
       {section.eps.map(ep => (
-        <button
+        <Button
           type="button"
+          variant="ghost"
           key={`${ep.method}-${ep.path}`}
           onClick={() => onSelect(`${ep.method}-${ep.path}`)}
           className="text-xs text-pf-text-muted hover:text-pf-text py-1 cursor-pointer text-left flex items-center gap-1.5 truncate"
         >
           <Badge text={ep.method} cls={`${METHOD_CLS[ep.method]} shrink-0`} />
           <span className="truncate">{ep.summary}</span>
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -143,15 +147,16 @@ export function Component() {
           className="sticky top-0 z-10 flex items-center gap-1.5 px-6 h-11 bg-pf-surface/80 backdrop-blur-sm border-b border-pf-border text-xs text-pf-text-muted shrink-0"
         >
           {/* Mobile docs menu button — visible only below lg */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setMobileSidebarOpen(true)}
             className="lg:hidden flex items-center gap-1.5 mr-2 text-pf-text-muted hover:text-pf-text transition-colors cursor-pointer"
             aria-label="Open docs navigation"
           >
             <BookOpen size={16} />
             <span className="text-xs">Menu</span>
-          </button>
+          </Button>
           <span>Docs</span>
           <ChevronRight className="size-3 shrink-0" />
           {currentGroup && (
@@ -195,14 +200,16 @@ export function Component() {
         )}
         <div className="flex flex-col flex-1 min-w-0">
           <div className="flex items-center">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setMobileOpen(true)}
               className="min-h-[44px] min-w-[44px] flex items-center justify-center ml-2 rounded-pf-sm text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text transition-colors md:hidden"
               aria-label="Open navigation menu"
             >
               <Menu size={20} />
-            </button>
+            </Button>
             <div className="flex-1"><Topbar /></div>
           </div>
           <main className="flex-1 overflow-hidden flex" id="main-content">

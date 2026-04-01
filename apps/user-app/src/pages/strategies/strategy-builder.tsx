@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ReactFlowProvider } from '@xyflow/react';
 import { ArrowLeft, Check, Loader2, Pencil, Blocks, Upload, Zap, FlaskConical, HelpCircle, Target, RotateCcw, RotateCw, LayoutTemplate, X, TrendingUp, RefreshCw, Calendar, Brain } from 'lucide-react';
+import { Button, Input } from '@polyforge/ui';
 import { toast } from 'sonner';
 import type { Node, Edge } from '@xyflow/react';
 import type { BlockNodeData } from '../../stores/builder-store';
@@ -1142,9 +1143,10 @@ export function Component() {
         <p className="text-sm text-pf-text-secondary mb-6">Choose a starting point</p>
         <div className="grid grid-cols-1 gap-3">
           {TEMPLATES.map(t => (
-            <button
+            <Button
               key={t.id}
               type="button"
+              variant="ghost"
               onClick={async () => {
                 if (t.id !== 'blank') {
                   // Load from template
@@ -1172,7 +1174,7 @@ export function Component() {
                 <p className="text-xs text-pf-text-muted mt-0.5">{t.description}</p>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-pf-text-muted group-hover:text-pf-cyan-400 flex-shrink-0 transition-colors"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -1207,7 +1209,7 @@ export function Component() {
         <div className="w-px h-4 bg-pf-border-subtle" />
 
         {editingName ? (
-          <input
+          <Input
             aria-label="Strategy name"
             className="text-lg font-semibold bg-transparent border-b border-pf-cyan-500 outline-none text-pf-text px-1 flex-1 min-w-0"
             value={name}
@@ -1217,21 +1219,23 @@ export function Component() {
             autoFocus
           />
         ) : (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             className="text-lg font-semibold cursor-pointer hover:text-pf-cyan-400 transition-colors group flex items-center gap-2 truncate flex-1 text-left text-pf-text bg-transparent border-none p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
             onClick={() => setEditingName(true)}
             aria-label={`Edit strategy name: ${name || 'Untitled Strategy'}`}
           >
             <h1 className="text-lg font-semibold truncate">{name || 'Untitled Strategy'}</h1>
             <Pencil size={14} className="opacity-0 group-hover:opacity-50 transition-opacity shrink-0" aria-hidden="true" />
-          </button>
+          </Button>
         )}
 
         <div className="flex items-center gap-2 shrink-0">
           {/* Panel toggle */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setPanelOpen((v) => !v)}
             className={`p-1.5 rounded-pf-sm transition-colors ${
               panelOpen
@@ -1242,11 +1246,12 @@ export function Component() {
             title={panelOpen ? 'Hide blocks' : 'Show blocks'}
           >
             <Blocks className="size-4" />
-          </button>
+          </Button>
 
           {/* Execution panel toggle */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => { setExecPanelExpanded((v) => !v); }}
             className={`p-1.5 rounded-pf-sm transition-colors ${
               execPanelExpanded
@@ -1257,22 +1262,24 @@ export function Component() {
             title={execPanelExpanded ? 'Collapse execution panel' : 'Backtest & Live'}
           >
             <FlaskConical className="size-4" />
-          </button>
+          </Button>
 
           {/* Tutorial help */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setShowTutorial(true)}
             className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-text-secondary hover:bg-pf-overlay transition-colors"
             aria-label="Show builder tutorial"
             title="How the builder works"
           >
             <HelpCircle className="size-4" />
-          </button>
+          </Button>
 
           {/* Template library */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => { setShowTemplates(true); setTemplateCategory('all'); }}
             className={`p-1.5 rounded-pf-sm transition-colors ${
               showTemplates
@@ -1283,13 +1290,14 @@ export function Component() {
             title="Strategy Templates"
           >
             <LayoutTemplate className="size-4" />
-          </button>
+          </Button>
 
           <div className="w-px h-4 bg-pf-border-subtle" />
 
           {/* Undo */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={undo}
             disabled={historyLength === 0}
             className="p-1.5 rounded text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -1297,11 +1305,12 @@ export function Component() {
             title={`Undo (Ctrl+Z) — ${historyLength} step${historyLength !== 1 ? 's' : ''}`}
           >
             <RotateCcw className="size-3.5" />
-          </button>
+          </Button>
 
           {/* Redo */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={redo}
             disabled={futureLength === 0}
             className="p-1.5 rounded text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -1309,12 +1318,13 @@ export function Component() {
             title={`Redo (Ctrl+Y) — ${futureLength} step${futureLength !== 1 ? 's' : ''}`}
           >
             <RotateCw className="size-3.5" />
-          </button>
+          </Button>
 
           <div className="w-px h-4 bg-pf-border-subtle" />
 
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={onQuickTest}
             disabled={quickTesting || !strategyId}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-border-strong disabled:opacity-50 transition-colors"
@@ -1326,7 +1336,7 @@ export function Component() {
               <Zap className="size-3" />
             )}
             Quick Test
-          </button>
+          </Button>
 
           <Link
             to="/strategies"
@@ -1335,7 +1345,7 @@ export function Component() {
             Cancel
           </Link>
 
-          <button
+          <Button
             type="button"
             onClick={onSave}
             disabled={saving}
@@ -1347,7 +1357,7 @@ export function Component() {
               <Check className="size-3" />
             )}
             {isEdit ? 'Save Changes' : 'Create Strategy'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -1368,22 +1378,25 @@ export function Component() {
               </h2>
               <p className="text-xs text-pf-text-muted mt-0.5">Start faster with a pre-built strategy</p>
             </div>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => { setShowTemplates(false); setConfirmTemplate(null); }}
               className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
               aria-label="Close template library"
             >
               <X className="size-4" />
-            </button>
+            </Button>
           </div>
 
           {/* Category filter tabs */}
           <div className="flex items-center gap-1.5 px-6 py-3 border-b border-pf-border-subtle bg-pf-elevated/50 shrink-0 overflow-x-auto">
             {(['all', 'momentum', 'mean-reversion', 'event-based', 'sentiment'] as const).map((cat) => (
-              <button
+              <Button
                 key={cat}
                 type="button"
+                variant="ghost"
                 onClick={() => setTemplateCategory(cat)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                   templateCategory === cat
@@ -1395,7 +1408,7 @@ export function Component() {
                   <span aria-hidden="true" className="opacity-70">{TEMPLATE_CATEGORY_ICONS[cat]}</span>
                 )}
                 {TEMPLATE_CATEGORY_LABELS[cat]}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -1443,30 +1456,32 @@ export function Component() {
                       <div className="bg-pf-warning/8 border border-pf-warning/25 rounded-pf p-3">
                         <p className="text-[11px] text-pf-warning mb-2 font-medium">This will replace your current canvas. Continue?</p>
                         <div className="flex items-center gap-2">
-                          <button
+                          <Button
                             type="button"
+                            variant="secondary"
                             onClick={() => setConfirmTemplate(null)}
                             className="flex-1 px-2.5 py-1.5 rounded-pf-sm text-xs text-pf-text-muted hover:text-pf-text border border-pf-border hover:bg-pf-overlay transition-colors"
                           >
                             Cancel
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
                             onClick={() => loadTemplate(template)}
                             className="flex-1 px-2.5 py-1.5 rounded-pf-sm text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
                           >
                             Load Template
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     ) : (
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => setConfirmTemplate(template)}
                         className="w-full px-3 py-1.5 rounded-pf-sm text-xs font-medium bg-pf-surface border border-pf-border text-pf-text-secondary hover:text-pf-text hover:border-pf-cyan-500/50 hover:bg-pf-cyan-500/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
                       >
                         Use Template
-                      </button>
+                      </Button>
                     )}
                   </div>
                 ))}
@@ -1537,7 +1552,7 @@ export function Component() {
               <div className="absolute bottom-4 left-4 z-40 bg-pf-elevated border border-pf-border rounded-pf-lg p-4 shadow-pf-lg max-w-xs">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-pf-text uppercase tracking-wider">Quick Test Results</span>
-                  <button type="button" onClick={() => setQuickResult(null)} className="text-pf-text-muted hover:text-pf-text text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Close quick test results">&times;</button>
+                  <Button type="button" variant="ghost" onClick={() => setQuickResult(null)} className="text-pf-text-muted hover:text-pf-text text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Close quick test results">&times;</Button>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="bg-pf-surface rounded-pf p-2">
@@ -1567,32 +1582,34 @@ export function Component() {
               <BlockPalette open={panelOpen} onClose={() => setPanelOpen(false)} />
               {/* Market Picker */}
               <div className="border-t border-pf-border mt-2 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setMarketPickerOpen(p => !p)}
                   className="w-full flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-pf-text-secondary hover:text-pf-text transition-colors"
                 >
                   <Target className="size-3.5 text-pf-cyan-400" aria-hidden="true" />
                   Pinned Market
                   {pinnedMarket && <span className="ml-auto text-[10px] bg-pf-cyan-500/15 text-pf-cyan-400 px-1.5 py-0.5 rounded-full truncate max-w-[90px]">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
-                </button>
+                </Button>
                 {marketPickerOpen && (
                   <div className="px-2 pb-2 space-y-1.5">
                     {pinnedMarket ? (
                       <div className="flex items-center gap-1.5 bg-pf-elevated border border-pf-cyan-500/25 rounded-pf p-2">
                         <span className="text-[11px] text-pf-text flex-1 truncate">{pinnedMarket.title}</span>
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           onClick={() => { setMarketId(''); setPinnedMarket(null); }}
                           className="text-pf-text-muted hover:text-pf-danger transition-colors"
                           title="Unpin market"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                        </button>
+                        </Button>
                       </div>
                     ) : (
                       <>
-                        <input
+                        <Input
                           type="text"
                           placeholder="Search markets…"
                           value={marketSearch}
@@ -1602,14 +1619,15 @@ export function Component() {
                         {marketResults.length > 0 && (
                           <div className="max-h-40 overflow-y-auto space-y-0.5">
                             {marketResults.map(m => (
-                              <button
+                              <Button
                                 key={m.id}
                                 type="button"
+                                variant="ghost"
                                 onClick={() => { setMarketId(m.id); setPinnedMarket({ id: m.id, title: m.title }); setMarketSearch(''); setMarketResults([]); }}
                                 className="w-full text-left px-2 py-1.5 text-[11px] rounded-pf hover:bg-pf-overlay text-pf-text transition-colors truncate"
                               >
                                 {m.title}
-                              </button>
+                              </Button>
                             ))}
                           </div>
                         )}

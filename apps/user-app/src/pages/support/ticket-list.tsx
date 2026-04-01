@@ -4,6 +4,7 @@ import {
   Plus, LifeBuoy, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -164,8 +165,9 @@ export function Component() {
         <div className="space-y-2">
           {FAQ_ITEMS.map((item, idx) => (
             <div key={idx} className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 id={`faq-btn-${idx}`}
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                 className="w-full flex items-center justify-between px-4 py-4 text-left hover:bg-pf-surface/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pf-cyan-500/40 transition-colors"
@@ -178,7 +180,7 @@ export function Component() {
                 ) : (
                   <ChevronDown size={20} className="text-pf-text-muted shrink-0" />
                 )}
-              </button>
+              </Button>
               {openFaq === idx && (
                 <div id={`faq-panel-${idx}`} role="region" aria-labelledby={`faq-btn-${idx}`} className="px-4 pb-3 text-sm text-pf-text-secondary leading-relaxed border-l-2 border-pf-cyan-500/40 ml-4 mr-4">
                   {item.a}

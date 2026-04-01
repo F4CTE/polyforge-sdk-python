@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Button, Input, Select, Textarea } from '@polyforge/ui';
 import {
   AlertTriangle,
   Check,
@@ -241,13 +242,13 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
 
       {/* Action buttons */}
       <div className="flex flex-wrap items-center gap-2 pt-1">
-        <button
+        <Button
           type="button"
+          variant="success"
           onClick={handleApprove}
           disabled={busy}
           className={[
             'inline-flex items-center gap-1.5 rounded-pf-sm border px-3 py-1.5 text-xs font-medium transition-colors',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
             review.status === 'approved'
               ? 'border-pf-success/40 bg-pf-success/10 text-pf-success'
               : 'border-pf-border bg-pf-surface text-pf-text-secondary hover:border-pf-success/40 hover:text-pf-success',
@@ -256,15 +257,15 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
         >
           <Check className="h-3.5 w-3.5" aria-hidden />
           Approve
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
+          variant="danger"
           onClick={handleReject}
           disabled={busy}
           className={[
             'inline-flex items-center gap-1.5 rounded-pf-sm border px-3 py-1.5 text-xs font-medium transition-colors',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
             review.status === 'rejected'
               ? 'border-pf-border/60 bg-pf-border/10 text-pf-text-muted'
               : 'border-pf-border bg-pf-surface text-pf-text-secondary hover:border-pf-danger/40 hover:text-pf-danger',
@@ -273,15 +274,15 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
         >
           <X className="h-3.5 w-3.5" aria-hidden />
           Reject
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={handleFlagToggle}
           disabled={busy}
           className={[
             'inline-flex items-center gap-1.5 rounded-pf-sm border px-3 py-1.5 text-xs font-medium transition-colors',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
             review.status === 'flagged' || flagging
               ? 'border-pf-danger/40 bg-pf-danger/10 text-pf-danger'
               : 'border-pf-border bg-pf-surface text-pf-text-secondary hover:border-pf-danger/40 hover:text-pf-danger',
@@ -291,7 +292,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
         >
           <Flag className="h-3.5 w-3.5" aria-hidden />
           Flag
-        </button>
+        </Button>
 
         <a
           href={`/strategies/${review.strategyId}`}
@@ -317,7 +318,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           >
             Flag reason <span aria-hidden>*</span>
           </label>
-          <textarea
+          <Textarea
             id={`flag-reason-${review.id}`}
             ref={textareaRef}
             value={flagReason}
@@ -331,20 +332,21 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
             ].join(' ')}
           />
           <div className="flex items-center gap-2 justify-end">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => { setFlagging(false); setFlagReason(''); }}
-              className="rounded-pf-sm border border-pf-border px-3 py-1.5 text-xs font-medium text-pf-text-secondary hover:border-pf-border-strong transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+              className="rounded-pf-sm border border-pf-border px-3 py-1.5 text-xs font-medium text-pf-text-secondary hover:border-pf-border-strong transition-colors"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="danger"
               onClick={handleFlagSubmit}
               disabled={!flagReason.trim() || busy}
               className={[
                 'inline-flex items-center gap-1.5 rounded-pf-sm px-3 py-1.5 text-xs font-semibold transition-all',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
                 flagReason.trim()
                   ? 'bg-pf-danger text-white hover:brightness-110'
                   : 'bg-pf-elevated border border-pf-border text-pf-text-muted cursor-not-allowed opacity-50',
@@ -352,7 +354,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
             >
               <Flag className="h-3 w-3" aria-hidden />
               Submit Flag
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -601,29 +603,29 @@ function ReviewsTab() {
           className="flex flex-wrap gap-1.5"
         >
           {STATUS_TABS.map((tab) => (
-            <button
+            <Button
               key={tab.value}
               role="tab"
               aria-selected={status === tab.value}
               type="button"
+              variant="ghost"
               onClick={() => setStatus(tab.value)}
               className={[
                 'rounded-pf-sm px-3 py-1.5 text-xs font-medium transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
                 status === tab.value
                   ? 'bg-pf-elevated border border-pf-border text-pf-text'
                   : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated/50',
               ].join(' ')}
             >
               {tab.label}
-            </button>
+            </Button>
           ))}
         </div>
 
         {/* Secondary filters */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Min reports dropdown */}
-          <select
+          <Select
             value={minReports}
             onChange={(e) => setMinReports(Number(e.target.value) as MinReports)}
             aria-label="Minimum report count filter"
@@ -637,7 +639,7 @@ function ReviewsTab() {
                 {opt.label}
               </option>
             ))}
-          </select>
+          </Select>
 
           {/* Search */}
           <div className="relative flex-1 min-w-[180px] max-w-xs">
@@ -645,7 +647,7 @@ function ReviewsTab() {
               className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-pf-text-muted"
               aria-hidden
             />
-            <input
+            <Input
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -684,20 +686,20 @@ function ReviewsTab() {
       {/* Load more */}
       {!loading && hasMore && (
         <div className="flex justify-center">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setPage((p) => p + 1)}
             disabled={loadingMore}
             className={[
               'rounded-pf px-5 py-2 text-sm font-medium transition-all',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
               loadingMore
                 ? 'bg-pf-elevated border border-pf-border text-pf-text-muted cursor-not-allowed'
                 : 'bg-pf-elevated border border-pf-border text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong',
             ].join(' ')}
           >
             {loadingMore ? 'Loading…' : `Load more (${total - reviews.length} remaining)`}
-          </button>
+          </Button>
         </div>
       )}
     </div>
@@ -757,17 +759,17 @@ export function Component() {
           className="flex gap-1 border-b border-pf-border"
         >
           {TABS.map((tab) => (
-            <button
+            <Button
               key={tab.id}
               role="tab"
               id={`tab-${tab.id}`}
               aria-selected={activeTab === tab.id}
               aria-controls={`tabpanel-${tab.id}`}
               type="button"
+              variant="ghost"
               onClick={() => setActiveTab(tab.id)}
               className={[
-                'inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors -mb-px border-b-2',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-t-pf-sm',
+                'inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors -mb-px border-b-2 rounded-t-pf-sm',
                 activeTab === tab.id
                   ? 'border-pf-cyan-400 text-pf-text'
                   : 'border-transparent text-pf-text-secondary hover:text-pf-text hover:border-pf-border',
@@ -775,7 +777,7 @@ export function Component() {
             >
               {tab.icon}
               {tab.label}
-            </button>
+            </Button>
           ))}
         </div>
 

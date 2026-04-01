@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { Button } from '@polyforge/ui';
 import {
   Plus,
   Play,
@@ -233,14 +234,15 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Back button */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={onBack}
         className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
       >
         <ChevronLeft className="size-4" aria-hidden="true" />
         Back to Strategies
-      </button>
+      </Button>
 
       {/* P&L Line Chart */}
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5">
@@ -590,29 +592,32 @@ export function Component() {
         <div className="flex items-center gap-2">
           {/* Compare toggle */}
           {!compareMode ? (
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={enterCompareMode}
               className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary font-medium hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
             >
               <GitCompare className="size-4" aria-hidden="true" /> Compare
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={exitCompareMode}
               className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500/10 border border-pf-cyan-500/30 text-sm text-pf-cyan-400 font-medium hover:bg-pf-cyan-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
             >
               <X className="size-4" aria-hidden="true" /> Exit Compare
-            </button>
+            </Button>
           )}
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={handleImport}
             className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary font-medium hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
           >
             <Upload className="size-4" aria-hidden="true" /> Import Strategy
-          </button>
+          </Button>
           <Link
             to="/strategies/new"
             className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
@@ -626,8 +631,9 @@ export function Component() {
       {!showComparison && (
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {FILTERS.map((f) => (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               key={f.value}
               onClick={() => onFilterChange(f.value)}
               className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
@@ -637,7 +643,7 @@ export function Component() {
               }`}
             >
               {f.label}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -732,8 +738,9 @@ export function Component() {
                 {/* Compare mode checkbox overlay */}
                 {compareMode && (
                   <div className="absolute top-3 left-3" onClick={(e) => e.stopPropagation()}>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       aria-label={isSelected ? `Deselect ${strategy.name}` : `Select ${strategy.name} for comparison`}
                       disabled={isMaxed}
                       onClick={() => { if (!isMaxed) toggleSelect(strategy.id); }}
@@ -746,7 +753,7 @@ export function Component() {
                       style={isSelected ? { background: chipColor, borderColor: chipColor } : {}}
                     >
                       {isSelected && <Check className="size-3 text-white" aria-hidden="true" />}
-                    </button>
+                    </Button>
                   </div>
                 )}
 
@@ -819,8 +826,9 @@ export function Component() {
                     <div className="flex items-center gap-1">
                       {isIdle(strategy) && (
                         <>
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
                             onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'live' }); }}
                             disabled={busy}
                             className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 text-[11px] font-medium hover:bg-pf-cyan-500/20 disabled:opacity-40 transition-colors"
@@ -828,9 +836,10 @@ export function Component() {
                             aria-label="Start strategy in live mode"
                           >
                             <Zap className="size-3" aria-hidden="true" /> Live
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            variant="ghost"
                             onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'paper' }); }}
                             disabled={busy}
                             className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-overlay text-pf-text-secondary text-[11px] font-medium hover:bg-pf-border-subtle disabled:opacity-40 transition-colors"
@@ -838,70 +847,75 @@ export function Component() {
                             aria-label="Start strategy in paper mode"
                           >
                             <FileText className="size-3" aria-hidden="true" /> Paper
-                          </button>
+                          </Button>
                         </>
                       )}
 
                       {isActive(strategy) && (
                         <>
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon-sm"
                             onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'pause'); }}
                             disabled={busy}
-                            className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:bg-pf-overlay disabled:opacity-40 transition-colors"
                             aria-label="Pause strategy"
                             title="Pause strategy"
                           >
                             <Pause className="size-3.5" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon-sm"
                             onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'stop'); }}
                             disabled={busy}
-                            className="p-1.5 rounded-pf-sm text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
                             aria-label="Stop strategy"
                             title="Stop strategy"
                           >
                             <Square className="size-3.5" />
-                          </button>
+                          </Button>
                         </>
                       )}
 
                       {isPaused(strategy) && (
                         <>
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon-sm"
                             onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'resume'); }}
                             disabled={busy}
-                            className="p-1.5 rounded-pf-sm text-pf-cyan-400 hover:bg-pf-cyan-500/10 disabled:opacity-40 transition-colors"
                             aria-label="Resume strategy"
                             title="Resume strategy"
                           >
                             <Play className="size-3.5" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon-sm"
                             onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'stop'); }}
                             disabled={busy}
-                            className="p-1.5 rounded-pf-sm text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
                             aria-label="Stop strategy"
                             title="Stop strategy"
                           >
                             <Square className="size-3.5" />
-                          </button>
+                          </Button>
                         </>
                       )}
 
                       {/* Export */}
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={(e) => handleExport(e, strategy.id)}
-                        className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
                         aria-label="Export strategy"
                         title="Export strategy"
                       >
                         <Download className="size-3.5" />
-                      </button>
+                      </Button>
 
                       {/* Edit */}
                       <Link
@@ -959,14 +973,15 @@ export function Component() {
                       aria-hidden="true"
                     />
                     <span className="truncate max-w-[120px]">{s.name}</span>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       aria-label={`Remove ${s.name} from comparison`}
                       onClick={() => toggleSelect(id)}
                       className="ml-0.5 text-pf-text-muted hover:text-pf-text transition-colors"
                     >
                       <X className="size-3" />
-                    </button>
+                    </Button>
                   </span>
                 );
               })}
@@ -974,21 +989,22 @@ export function Component() {
 
             {/* Actions */}
             <div className="flex items-center gap-2 shrink-0 ml-auto">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setSelectedIds([])}
                 className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors px-3 py-1.5 rounded-pf border border-pf-border hover:border-pf-border-strong"
               >
                 Clear
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={openComparison}
                 className="flex items-center gap-1.5 text-sm font-medium px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
               >
                 <GitCompare className="size-4" aria-hidden="true" />
                 View Comparison
-              </button>
+              </Button>
             </div>
           </div>
         </div>

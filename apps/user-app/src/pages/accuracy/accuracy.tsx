@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Target, Info } from 'lucide-react';
+import { Button } from '@polyforge/ui';
 import {
   ScatterChart,
   Scatter,
@@ -73,8 +74,10 @@ function StatCard({
       <div className="flex items-center gap-1.5 mb-2">
         <span className="text-xs font-medium uppercase tracking-wider text-pf-text-secondary">{label}</span>
         {tooltip && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onMouseEnter={() => setShowTip(true)}
             onMouseLeave={() => setShowTip(false)}
             onFocus={() => setShowTip(true)}
@@ -83,7 +86,7 @@ function StatCard({
             className="text-pf-text-muted hover:text-pf-text-secondary transition-colors focus-visible:outline-none"
           >
             <Info className="size-3.5" />
-          </button>
+          </Button>
         )}
       </div>
       <span className="text-3xl font-mono font-semibold text-pf-text">{value}</span>
