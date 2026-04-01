@@ -444,7 +444,7 @@ describe('AuthService', () => {
       const user = userFactory({ totpEnabled: false });
       vi.mocked(usersService.findByEmail).mockResolvedValue(user as any);
       vi.mocked(usersService.validatePassword).mockResolvedValue(true);
-      redis.getClient().xadd.mockRejectedValue(new Error('Redis down'));
+      (redis.getClient().xadd as any).mockRejectedValue(new Error('Redis down'));
 
       await expect(
         service.login(makeLoginDto({ ip: '10.0.0.1' }) as any),
@@ -608,7 +608,7 @@ describe('AuthService', () => {
 
   describe('resetPassword', () => {
     it('delegates to usersService.resetPassword and returns success message', async () => {
-      vi.mocked(usersService.resetPassword).mockResolvedValue(undefined);
+      vi.mocked(usersService.resetPassword).mockResolvedValue("user-1");
       const dto = { token: 'a'.repeat(64), newPassword: 'NewPassw0rd!' };
 
       const result = await service.resetPassword(dto as any);

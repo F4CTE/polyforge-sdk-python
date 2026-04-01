@@ -11,7 +11,7 @@ describe("AiService", () => {
 
   beforeEach(() => {
     db = createMockDb();
-    service = new AiService(db as unknown as PrismaService);
+    service = new AiService(db as unknown as PrismaService, {} as any);
   });
 
   afterEach(() => {
