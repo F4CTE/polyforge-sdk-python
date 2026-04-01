@@ -183,7 +183,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
                 onChange={(e) => setAdminNote(e.target.value)}
                 placeholder="Reason for rejection (optional)"
                 rows={2}
-                className="w-full text-xs bg-pf-base border border-pf-border rounded-pf-sm px-2 py-1.5 text-pf-text placeholder:text-pf-text-muted resize-none focus:outline-none focus:ring-1 focus:ring-pf-danger/40"
+                className="w-full text-xs bg-pf-base border border-pf-border rounded-pf-sm px-2 py-1.5 text-pf-text placeholder:text-pf-text-muted resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-danger/40"
               />
               <div className="flex gap-2">
                 <button

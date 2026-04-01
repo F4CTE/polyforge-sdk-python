@@ -86,7 +86,7 @@ export function Component() {
               max={50}
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus:outline-none focus:ring-1 focus:ring-pf-cyan-500"
+              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
             />
           </div>
           <div>
@@ -98,7 +98,7 @@ export function Component() {
               max={100}
               value={maxUses}
               onChange={(e) => setMaxUses(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus:outline-none focus:ring-1 focus:ring-pf-cyan-500"
+              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
             />
           </div>
           <div>
@@ -110,7 +110,7 @@ export function Component() {
               max={365}
               value={ttlDays}
               onChange={(e) => setTtlDays(Number(e.target.value))}
-              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus:outline-none focus:ring-1 focus:ring-pf-cyan-500"
+              className="w-20 px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
             />
           </div>
           <button

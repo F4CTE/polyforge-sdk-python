@@ -94,7 +94,7 @@ export function Component() {
           value={statusFilter}
           onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
           aria-label="Filter by order status"
-          className="h-8 px-2 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500"
+          className="h-8 px-2 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500"
         >
           <option value="">All statuses</option>
           <option value="PENDING">Pending</option>

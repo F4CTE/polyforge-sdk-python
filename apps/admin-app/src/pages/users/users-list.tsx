@@ -169,7 +169,7 @@ export function Component() {
             aria-label="Search users"
             defaultValue={search}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus:outline-none focus:ring-1 focus:ring-pf-cyan-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+            className="w-full pl-9 pr-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
           />
         </div>
         <select
@@ -179,7 +179,7 @@ export function Component() {
             setPage(1);
           }}
           aria-label="Filter by status"
-          className="px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus:outline-none focus:ring-1 focus:ring-pf-cyan-500"
+          className="px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
         >
           <option value="">All statuses</option>
           <option value="PENDING">Pending approval</option>

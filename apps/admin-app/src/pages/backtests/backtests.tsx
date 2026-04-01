@@ -322,7 +322,7 @@ export function Component() {
             onChange={(e) => setUsernameInput(e.target.value)}
             placeholder="Filter by username..."
             aria-label="Filter by username"
-            className="h-8 px-3 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-tertiary focus:outline-none focus:border-pf-cyan-500 transition-colors w-48"
+            className="h-8 px-3 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-tertiary focus-visible:outline-none focus-visible:border-pf-cyan-500 transition-colors w-48"
           />
           <button
             type="submit"

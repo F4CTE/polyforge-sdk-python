@@ -310,7 +310,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search activity..."
-            className="w-full pl-8 pr-3 py-2 text-sm bg-pf-elevated border border-pf-border rounded-pf-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:ring-2 focus:ring-pf-cyan-500"
+            className="w-full pl-8 pr-3 py-2 text-sm bg-pf-elevated border border-pf-border rounded-pf-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
             aria-label="Search activity by description"
           />
         </div>
@@ -325,7 +325,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
           <select
             value={filterGroup}
             onChange={(e) => setFilterGroup(e.target.value as ActivityFilterGroup)}
-            className="pl-8 pr-8 py-2 text-sm bg-pf-elevated border border-pf-border rounded-pf-sm text-pf-text focus:outline-none focus:ring-2 focus:ring-pf-cyan-500 appearance-none cursor-pointer"
+            className="pl-8 pr-8 py-2 text-sm bg-pf-elevated border border-pf-border rounded-pf-sm text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 appearance-none cursor-pointer"
             aria-label="Filter by event type"
           >
             <option value="all">All Events</option>

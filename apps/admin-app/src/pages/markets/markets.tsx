@@ -276,7 +276,7 @@ export function Component() {
           placeholder="Search markets..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="w-full max-w-sm px-3 py-2 rounded-pf-sm border border-pf-border bg-pf-elevated text-pf-text text-sm placeholder:text-pf-text-tertiary focus:outline-none focus:ring-2 focus:ring-pf-cyan-500"
+          className="w-full max-w-sm px-3 py-2 rounded-pf-sm border border-pf-border bg-pf-elevated text-pf-text text-sm placeholder:text-pf-text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
         />
 
         {/* Status tabs + Category */}
@@ -301,7 +301,7 @@ export function Component() {
           <select
             value={category}
             onChange={(e) => { setCategory(e.target.value); setPage(1); }}
-            className="px-3 py-1.5 rounded-pf-sm border border-pf-border bg-pf-elevated text-sm text-pf-text focus:outline-none focus:ring-2 focus:ring-pf-cyan-500"
+            className="px-3 py-1.5 rounded-pf-sm border border-pf-border bg-pf-elevated text-sm text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
           >
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>{c}</option>

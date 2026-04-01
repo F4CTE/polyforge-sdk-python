@@ -72,7 +72,7 @@ export function Component() {
         <button
           type="button"
           onClick={() => load(page)}
-          className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+          className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:ring-offset-2 rounded"
         >
           Refresh
         </button>

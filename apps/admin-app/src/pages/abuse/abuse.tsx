@@ -248,7 +248,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
           onChange={(e) => setNote(e.target.value)}
           placeholder="Add a review note..."
           disabled={isActioning}
-          className="w-full rounded-pf-sm border border-pf-border bg-pf-elevated px-3 py-2 text-xs text-pf-text placeholder:text-pf-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-pf-cyan-500 disabled:opacity-50"
+          className="w-full rounded-pf-sm border border-pf-border bg-pf-elevated px-3 py-2 text-xs text-pf-text placeholder:text-pf-text-tertiary resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 disabled:opacity-50"
         />
       </div>
 
