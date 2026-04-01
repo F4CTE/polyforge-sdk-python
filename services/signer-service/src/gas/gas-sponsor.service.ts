@@ -102,36 +102,20 @@ export class GasSponsorService {
     const key = this.redisKey(userId);
     const client = this.redis.getClient();
 
-    // Atomic check-and-increment via Lua script — truly TOCTOU-safe.
-    // The previous incrbyfloat+rollback pattern was NOT atomic under concurrency.
-    const luaScript = `
-local key = KEYS[1]
-local cost = tonumber(ARGV[1])
-local limit = tonumber(ARGV[2])
-local ttl = tonumber(ARGV[3])
-local current = tonumber(redis.call('GET', key) or '0')
-if current + cost > limit then
-  return 0
-end
-redis.call('INCRBYFLOAT', key, cost)
-redis.call('EXPIRE', key, ttl)
-return 1
-`;
-    const result = (await client.eval(
-      luaScript,
-      1,
-      key,
-      String(gasCostMatic),
-      String(this.dailyLimitMatic),
-      String(48 * 60 * 60),
-    )) as number;
+    const newTotal = parseFloat(
+      String(await client.incrbyfloat(key, gasCostMatic)),
+    );
 
-    if (result === 0) {
+    if (newTotal > this.dailyLimitMatic) {
+      // Rollback the increment
+      await client.incrbyfloat(key, -gasCostMatic);
       this.logger.warn(
         `User ${userId} exceeded daily gas limit (${this.dailyLimitMatic} MATIC)`,
       );
       return false;
     }
+
+    await client.expire(key, 48 * 60 * 60);
 
     this.logger.log(
       `Sponsored ${gasCostMatic.toFixed(6)} MATIC for user ${userId}`,
