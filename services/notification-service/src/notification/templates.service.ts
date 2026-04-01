@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
-const FRONTEND = process.env.FRONTEND_URL ?? "https://polyforge.app";
+const FRONTEND = process.env.FRONTEND_URL;
+if (!FRONTEND) throw new Error('FRONTEND_URL environment variable is required');
 
 /** Escape user-controlled strings before inserting into HTML */
 function escapeHtml(str: string): string {

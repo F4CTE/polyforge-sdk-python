@@ -98,8 +98,7 @@ async function bootstrap() {
   app.enableCors({
     origin: (origin, cb) => {
       const allowed = [
-        'https://polyforge.app',
-        'https://www.polyforge.app',
+        ...(process.env.CORS_ORIGINS?.split(',').map(s => s.trim()) ?? []),
         // dev origins — stripped in production by env check
         ...(process.env.NODE_ENV !== 'production'
           ? ['http://localhost', 'http://localhost:4200', 'http://localhost:5173', 'http://127.0.0.1'] // gateway + vite dev + IP

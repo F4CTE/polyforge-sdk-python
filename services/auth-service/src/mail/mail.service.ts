@@ -7,9 +7,14 @@ export class MailService {
   private readonly logger = new Logger(MailService.name);
   private readonly transporter: nodemailer.Transporter;
   private readonly from: string;
+  private readonly frontendUrl: string;
 
   constructor() {
-    this.from = `Polyforge <${process.env.AWS_SES_FROM_EMAIL ?? 'noreply@polyforge.app'}>`;
+    const fromEmail = process.env.AWS_SES_FROM_EMAIL;
+    if (!fromEmail) throw new Error('AWS_SES_FROM_EMAIL environment variable is required');
+    if (!process.env.FRONTEND_URL) throw new Error('FRONTEND_URL environment variable is required');
+    this.from = `Polyforge <${fromEmail}>`;
+    this.frontendUrl = process.env.FRONTEND_URL;
     const driver = process.env.EMAIL_DRIVER ?? 'mailhog';
 
     if (driver === 'mailhog') {
@@ -33,7 +38,7 @@ export class MailService {
   }
 
   async sendVerificationEmail(to: string, token: string): Promise<void> {
-    const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
+    const base = this.frontendUrl;
     const url = `${base}/verify-email?token=${token}`;
 
     const html = emailLayout({
@@ -79,7 +84,7 @@ export class MailService {
   }
 
   async sendWaitlistConfirmationEmail(to: string): Promise<void> {
-    const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
+    const base = this.frontendUrl;
 
     const html = emailLayout({
       preheader: "You're on the Polyforge waitlist — we'll be in touch soon.",
@@ -122,7 +127,7 @@ export class MailService {
   }
 
   async sendPendingApprovalEmail(to: string, username: string): Promise<void> {
-    const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
+    const base = this.frontendUrl;
 
     const html = emailLayout({
       preheader: 'Your Polyforge account is pending approval — we\'ll notify you once approved.',
@@ -165,7 +170,7 @@ export class MailService {
   }
 
   async sendAccountApprovedEmail(to: string, username: string): Promise<void> {
-    const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
+    const base = this.frontendUrl;
     const loginUrl = `${base}/login`;
 
     const html = emailLayout({
@@ -205,7 +210,7 @@ export class MailService {
   }
 
   async sendPasswordResetEmail(to: string, token: string): Promise<void> {
-    const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
+    const base = this.frontendUrl;
     const url = `${base}/reset-password?token=${token}`;
 
     const html = emailLayout({
