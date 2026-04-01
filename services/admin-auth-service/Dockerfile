@@ -1,5 +1,5 @@
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-slim AS builder
+FROM node:24-slim@sha256:06e5c9f86bfa0aaa7163cf37a5eaa8805f16b9acb48e3f85645b09d459fc2a9f AS builder
 
 WORKDIR /app
 
@@ -44,7 +44,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine
+FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b
 
 WORKDIR /app
 

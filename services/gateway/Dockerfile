@@ -13,7 +13,7 @@
 # ─── Stage 1: user-app build ─────────────────────────────────────────────────
 
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine AS user-app-builder
+FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b AS user-app-builder
 
 WORKDIR /build
 
@@ -37,7 +37,7 @@ RUN pnpm --filter @polyforge/shared-types run build && \
 # ─── Stage 2: admin-app build ────────────────────────────────────────────────
 
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine AS admin-app-builder
+FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b AS admin-app-builder
 
 WORKDIR /build
 
@@ -58,7 +58,7 @@ RUN pnpm --filter @polyforge/shared-types run build && \
 # ─── Stage 3: nginx runtime ──────────────────────────────────────────────────
 
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' nginx:1.27-alpine
-FROM nginx:1.27-alpine
+FROM nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
 
 # Remove default nginx config
 RUN rm /etc/nginx/conf.d/default.conf

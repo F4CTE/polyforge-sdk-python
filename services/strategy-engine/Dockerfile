@@ -1,5 +1,5 @@
 # ── Rust build stage: compile WASM strategy evaluator ─────────────────────────
-FROM rust:1-slim AS wasm-builder
+FROM rust:1-slim@sha256:1d0000a49fb62f4fde24455f49d59c6c088af46202d65d8f455b722f7263e8f8 AS wasm-builder
 
 RUN rustup target add wasm32-unknown-unknown && \
     cargo install wasm-pack
@@ -11,7 +11,7 @@ RUN cd packages/polyforge-engine && wasm-pack build --target nodejs --release
 
 # ── TypeScript build stage ────────────────────────────────────────────────────
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine AS builder
+FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b AS builder
 
 WORKDIR /app
 
@@ -54,7 +54,7 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
 # SECURITY: Pin to digest in production. Run: docker inspect --format='{{index .RepoDigests 0}}' node:24-alpine
-FROM node:24-alpine
+FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a95ac4e4700b
 
 WORKDIR /app
 
