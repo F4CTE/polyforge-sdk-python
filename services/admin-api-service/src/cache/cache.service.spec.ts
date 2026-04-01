@@ -118,18 +118,18 @@ describe("CacheAdminService", () => {
   // ── flushPattern ──────────────────────────────────────────────────────────
 
   describe("flushPattern", () => {
-    it("returns keysDeleted: 0 for non-cache: patterns without touching Redis", async () => {
-      const result = await service.flushPattern("health:*");
-
-      expect(result).toEqual({ keysDeleted: 0 });
+    it("throws BadRequestException for non-whitelisted patterns", async () => {
+      await expect(service.flushPattern("health:*")).rejects.toThrow(
+        "not allowed",
+      );
       expect(client.scan).not.toHaveBeenCalled();
       expect(client.del).not.toHaveBeenCalled();
     });
 
     it("rejects patterns not starting with cache:", async () => {
-      const result = await service.flushPattern("invite:*");
-
-      expect(result.keysDeleted).toBe(0);
+      await expect(service.flushPattern("invite:*")).rejects.toThrow(
+        "not allowed",
+      );
     });
 
     it("returns keysDeleted: 0 when no matching keys exist", async () => {

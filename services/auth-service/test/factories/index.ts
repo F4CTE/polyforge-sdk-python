@@ -13,6 +13,7 @@ export interface UserLike {
     totpEnabled: boolean;
     suspended: boolean;
     deleted: boolean;
+    approved: boolean;
     bio: string | null;
     avatarUrl: string | null;
     tosAcceptedAt: Date;
@@ -51,6 +52,7 @@ export function userFactory(overrides: Partial<UserLike> = {}): UserLike {
         totpEnabled: false,
         suspended: false,
         deleted: false,
+        approved: true,
         bio: null,
         avatarUrl: null,
         tosAcceptedAt: new Date(),

@@ -207,13 +207,14 @@ describe('AuthService', () => {
       );
     });
 
-    it('throws INVITE_REQUIRED (403) when no invite code is provided', async () => {
-      await expect(
-        service.register(makeRegisterDto() as any),
-      ).rejects.toMatchObject({
-        response: { code: 'INVITE_REQUIRED' },
-        status: 403,
-      });
+    it('returns a pending (unapproved) user when no invite code is provided', async () => {
+      const user = userFactory({ approved: false });
+      vi.mocked(usersService.create).mockResolvedValue(user as any);
+
+      const result = await service.register(makeRegisterDto() as any);
+
+      expect(result.pending).toBe(true);
+      expect(result.user.status).toBe('PENDING');
     });
 
     it('throws INVITE_INVALID (403) when invite code is not in Redis', async () => {
@@ -262,12 +263,13 @@ describe('AuthService', () => {
       vi.mocked(redis.get).mockResolvedValue(null); // no Redis flag
       vi.mocked(config.get).mockReturnValue('true'); // env var is true
 
-      await expect(
-        service.register(makeRegisterDto() as any),
-      ).rejects.toMatchObject({
-        response: { code: 'INVITE_REQUIRED' },
-        status: 403,
-      });
+      const user = userFactory({ approved: false });
+      vi.mocked(usersService.create).mockResolvedValue(user as any);
+
+      const result = await service.register(makeRegisterDto() as any);
+
+      expect(result.pending).toBe(true);
+      expect(result.user.status).toBe('PENDING');
     });
   });
 
