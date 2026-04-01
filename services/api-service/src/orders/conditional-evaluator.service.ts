@@ -39,7 +39,7 @@ export class ConditionalEvaluatorService {
     const priceValues = await this.redis.getClient().mget(...priceKeys);
     const priceMap = new Map<string, number>();
     tokenIds.forEach((id, i) => {
-      if (priceValues[i]) priceMap.set(id, parseFloat(priceValues[i]!));
+      if (priceValues[i]) priceMap.set(id, parseFloat(priceValues[i]));
     });
 
     for (const order of pendingOrders) {
@@ -112,12 +112,9 @@ export class ConditionalEvaluatorService {
 
     // For BUY YES positions, track the highest price
     // For BUY NO positions, track the lowest price
-    let newPeak = currentPeak;
-    if (isBuyYes) {
-      newPeak = Math.max(currentPeak, currentPrice);
-    } else {
-      newPeak = Math.min(currentPeak, currentPrice);
-    }
+    const newPeak = isBuyYes
+      ? Math.max(currentPeak, currentPrice)
+      : Math.min(currentPeak, currentPrice);
 
     // Update peak if changed
     if (newPeak !== currentPeak) {
@@ -128,14 +125,9 @@ export class ConditionalEvaluatorService {
     }
 
     // Check if price has dropped (or risen for NO) by trailingPct from peak
-    let triggered = false;
-    if (isBuyYes) {
-      const dropPct = ((newPeak - currentPrice) / newPeak) * 100;
-      triggered = dropPct >= trailingPct;
-    } else {
-      const risePct = ((currentPrice - newPeak) / newPeak) * 100;
-      triggered = risePct >= trailingPct;
-    }
+    const triggered = isBuyYes
+      ? ((newPeak - currentPrice) / newPeak) * 100 >= trailingPct
+      : ((currentPrice - newPeak) / newPeak) * 100 >= trailingPct;
 
     if (triggered) {
       await this.triggerOrder(order);
@@ -147,8 +139,14 @@ export class ConditionalEvaluatorService {
     const newLimitPrice = Math.max(0.01, Math.min(0.99, currentPrice + offset));
 
     // Skip DB write if price hasn't changed materially (avoids write on every tick)
-    const existingLimit = order.limitPrice ? parseFloat(String(order.limitPrice)) : null;
-    if (existingLimit !== null && Math.abs(newLimitPrice - existingLimit) < 0.0001) return;
+    const existingLimit = order.limitPrice
+      ? parseFloat(String(order.limitPrice))
+      : null;
+    if (
+      existingLimit !== null &&
+      Math.abs(newLimitPrice - existingLimit) < 0.0001
+    )
+      return;
 
     await this.prisma.conditionalOrder.update({
       where: { id: order.id },
@@ -169,7 +167,9 @@ export class ConditionalEvaluatorService {
       side: order.side,
       outcome: order.outcome,
       size: String(order.size),
-      price: order.limitPrice ? String(order.limitPrice) : String(order.triggerPrice),
+      price: order.limitPrice
+        ? String(order.limitPrice)
+        : String(order.triggerPrice),
       orderType: "GTC",
       expiration: "",
       ts: String(Date.now()),
@@ -215,7 +215,8 @@ export class ConditionalEvaluatorService {
         },
         data: { status: "CANCELLED" },
       });
-      if (count > 0) this.logger.log(`Cancelled ${count} expired conditional order(s)`);
+      if (count > 0)
+        this.logger.log(`Cancelled ${count} expired conditional order(s)`);
     } catch (err) {
       this.logger.error("Expiration check failed", err);
     }

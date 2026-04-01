@@ -1,10 +1,18 @@
-import { Injectable, Logger, NotFoundException, UnprocessableEntityException } from "@nestjs/common";
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnprocessableEntityException,
+} from "@nestjs/common";
 import { Interval } from "@nestjs/schedule";
 import { randomUUID } from "crypto";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
-import { PlaceSmartOrderDto, SmartOrderTypeDto } from "./dto/place-smart-order.dto";
+import {
+  PlaceSmartOrderDto,
+  SmartOrderTypeDto,
+} from "./dto/place-smart-order.dto";
 
 const STREAM_ORDERS = "stream:orders";
 
@@ -36,15 +44,19 @@ export class SmartOrderService {
       select: { marketId: true },
     });
     if (!token) {
-      throw new NotFoundException({ code: "TOKEN_NOT_FOUND", message: "Token not found" });
+      throw new NotFoundException({
+        code: "TOKEN_NOT_FOUND",
+        message: "Token not found",
+      });
     }
 
     const config = this.buildConfig(dto);
-    const slicesTotal = dto.type === "TWAP" || dto.type === "DCA"
-      ? (dto.slices ?? 1)
-      : dto.type === "BRACKET"
-      ? 3 // entry + TP + SL
-      : 2; // OCO: leg A + leg B
+    const slicesTotal =
+      dto.type === SmartOrderTypeDto.TWAP || dto.type === SmartOrderTypeDto.DCA
+        ? (dto.slices ?? 1)
+        : dto.type === SmartOrderTypeDto.BRACKET
+          ? 3 // entry + TP + SL
+          : 2; // OCO: leg A + leg B
 
     const nextExecuteAt = new Date(); // start immediately for TWAP/DCA first slice
 
@@ -65,14 +77,19 @@ export class SmartOrderService {
     });
 
     // For BRACKET and OCO, publish all legs immediately
-    if (dto.type === "BRACKET") {
+    if (dto.type === SmartOrderTypeDto.BRACKET) {
       await this.executeBracket(smart.id, userId, token.marketId, dto);
-    } else if (dto.type === "OCO") {
+    } else if (dto.type === SmartOrderTypeDto.OCO) {
       await this.executeOco(smart.id, userId, token.marketId, dto);
     }
     // TWAP/DCA: first slice runs on next @Interval tick
 
-    return { smartOrderId: smart.id, type: dto.type, status: "PENDING", slicesTotal };
+    return {
+      smartOrderId: smart.id,
+      type: dto.type,
+      status: "PENDING",
+      slicesTotal,
+    };
   }
 
   // ── Cancel ────────────────────────────────────────────────────────────────
@@ -81,14 +98,24 @@ export class SmartOrderService {
     const smart = await this.prisma.smartOrder.findFirst({
       where: { id: smartOrderId, userId },
     });
-    if (!smart) throw new NotFoundException({ code: "NOT_FOUND", message: "Smart order not found" });
+    if (!smart)
+      throw new NotFoundException({
+        code: "NOT_FOUND",
+        message: "Smart order not found",
+      });
     if (!["PENDING", "ACTIVE"].includes(smart.status)) {
-      throw new UnprocessableEntityException({ code: "NOT_CANCELLABLE", message: "Cannot cancel a completed or failed order" });
+      throw new UnprocessableEntityException({
+        code: "NOT_CANCELLABLE",
+        message: "Cannot cancel a completed or failed order",
+      });
     }
 
     // Cancel any child orders that are still pending
     const pendingChildren = await this.prisma.order.findMany({
-      where: { smartOrderId, status: { in: ["PENDING" as any, "SUBMITTED" as any] } },
+      where: {
+        smartOrderId,
+        status: { in: ["PENDING" as any, "SUBMITTED" as any] },
+      },
     });
     for (const child of pendingChildren) {
       await this.redis.xadd("stream:cancellations", {
@@ -112,7 +139,13 @@ export class SmartOrderService {
       where: { userId },
       include: {
         orders: {
-          select: { id: true, status: true, fillSize: true, fillPrice: true, createdAt: true },
+          select: {
+            id: true,
+            status: true,
+            fillSize: true,
+            fillPrice: true,
+            createdAt: true,
+          },
           orderBy: { createdAt: "desc" },
         },
       },
@@ -138,7 +171,9 @@ export class SmartOrderService {
     await Promise.allSettled(
       due.map((so) =>
         this.executeNextSlice(so).catch((err: unknown) =>
-          this.logger.warn(`Slice execution failed for ${so.id}: ${(err as Error).message}`),
+          this.logger.warn(
+            `Slice execution failed for ${so.id}: ${(err as Error).message}`,
+          ),
         ),
       ),
     );
@@ -161,7 +196,9 @@ export class SmartOrderService {
     const config = smart.config as Record<string, unknown>;
     const intervalMs = parseInt(String(config.intervalMinutes ?? 1)) * 60_000;
     const sliceSize = parseFloat(String(smart.totalSize)) / smart.slicesTotal;
-    const limitPrice = config.limitPrice ? parseFloat(String(config.limitPrice)) : 0;
+    const limitPrice = config.limitPrice
+      ? parseFloat(String(config.limitPrice))
+      : 0;
 
     const intentId = randomUUID();
     const intent: Record<string, string> = {
@@ -217,8 +254,16 @@ export class SmartOrderService {
     const legs: Array<{ side: string; price: number; label: string }> = [
       { side: dto.side, price: dto.entryPrice!, label: "ENTRY" },
       // Opposite side for TP/SL (selling after buying)
-      { side: dto.side === "BUY" ? "SELL" : "BUY", price: dto.takeProfitPrice!, label: "TAKE_PROFIT" },
-      { side: dto.side === "BUY" ? "SELL" : "BUY", price: dto.stopLossPrice!, label: "STOP_LOSS" },
+      {
+        side: dto.side === "BUY" ? "SELL" : "BUY",
+        price: dto.takeProfitPrice!,
+        label: "TAKE_PROFIT",
+      },
+      {
+        side: dto.side === "BUY" ? "SELL" : "BUY",
+        price: dto.stopLossPrice!,
+        label: "STOP_LOSS",
+      },
     ];
 
     for (const leg of legs) {
@@ -265,7 +310,10 @@ export class SmartOrderService {
     marketId: string,
     dto: PlaceSmartOrderDto,
   ) {
-    for (const [price, leg] of [[dto.priceA!, "LEG_A"], [dto.priceB!, "LEG_B"]] as const) {
+    for (const [price, leg] of [
+      [dto.priceA!, "LEG_A"],
+      [dto.priceB!, "LEG_B"],
+    ] as const) {
       const intentId = randomUUID();
       await this.redis.xadd(STREAM_ORDERS, {
         intentId,

@@ -38,7 +38,7 @@ export class LlmService {
         return await this.callOpenAI(prompt);
       } catch (err: any) {
         this.logger.error(`OpenAI API call also failed: ${err?.message}`);
-        throw new Error("All LLM providers failed");
+        throw new Error("All LLM providers failed", { cause: err });
       }
     }
 
@@ -90,7 +90,9 @@ export class LlmService {
       throw new Error(`OpenAI API error ${res.status}: ${text}`);
     }
 
-    const data = (await res.json()) as { choices: { message: { content: string } }[] };
+    const data = (await res.json()) as {
+      choices: { message: { content: string } }[];
+    };
     return data.choices[0].message.content;
   }
 }

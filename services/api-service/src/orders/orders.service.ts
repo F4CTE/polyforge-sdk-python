@@ -45,7 +45,10 @@ export class OrdersService {
 
     const where: any = { userId };
     if (status) {
-      const statuses = status.split(',').map((s) => s.trim()).filter(Boolean);
+      const statuses = status
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
       where.status = statuses.length === 1 ? statuses[0] : { in: statuses };
     }
     if (strategyId) where.strategyId = strategyId;
@@ -68,12 +71,13 @@ export class OrdersService {
 
     // Resolve market titles for display
     const marketIds = [...new Set(orders.map((o) => o.marketId))];
-    const markets = marketIds.length > 0
-      ? await this.prisma.market.findMany({
-          where: { id: { in: marketIds } },
-          select: { id: true, title: true, category: true },
-        })
-      : [];
+    const markets =
+      marketIds.length > 0
+        ? await this.prisma.market.findMany({
+            where: { id: { in: marketIds } },
+            select: { id: true, title: true, category: true },
+          })
+        : [];
     const marketMap = new Map(markets.map((m) => [m.id, m]));
     const enriched = orders.map((o) => ({
       ...o,
@@ -150,10 +154,7 @@ export class OrdersService {
     return { orderId: order.id, intentId, status: "PENDING" };
   }
 
-  async redeemPosition(
-    userId: string,
-    dto: RedeemPositionDto,
-  ): Promise<any> {
+  async redeemPosition(userId: string, dto: RedeemPositionDto): Promise<any> {
     if (!dto.positionId && !dto.marketId) {
       throw new UnprocessableEntityException({
         code: "MISSING_PARAM",
@@ -230,12 +231,17 @@ export class OrdersService {
     }
 
     const signerUrl =
-      this.config.get<string>("SIGNER_SERVICE_URL") ?? "http://signer-service:3012";
+      this.config.get<string>("SIGNER_SERVICE_URL") ??
+      "http://signer-service:3012";
 
     // SECURITY: Use internal JWT auth for signer-service calls
     const internalToken = this.jwtService.sign(
-      { sub: "api-service", jti: require("crypto").randomUUID() },
-      { secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"), audience: "signer-service", expiresIn: "30s" },
+      { sub: "api-service", jti: randomUUID() },
+      {
+        secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+        audience: "signer-service",
+        expiresIn: "30s",
+      },
     );
     const res = await fetch(`${signerUrl}/internal/split-position`, {
       method: "POST",
@@ -279,11 +285,16 @@ export class OrdersService {
     }
 
     const signerUrl =
-      this.config.get<string>("SIGNER_SERVICE_URL") ?? "http://signer-service:3012";
+      this.config.get<string>("SIGNER_SERVICE_URL") ??
+      "http://signer-service:3012";
 
     const mergeToken = this.jwtService.sign(
-      { sub: "api-service", jti: require("crypto").randomUUID() },
-      { secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"), audience: "signer-service", expiresIn: "30s" },
+      { sub: "api-service", jti: randomUUID() },
+      {
+        secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
+        audience: "signer-service",
+        expiresIn: "30s",
+      },
     );
     const res = await fetch(`${signerUrl}/internal/merge-position`, {
       method: "POST",
@@ -310,9 +321,14 @@ export class OrdersService {
 
   async placeOrder(userId: string, dto: PlaceOrderDto) {
     // 1. Find user and verify polymarketConnected
-    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+    });
     if (!user.polymarketConnected) {
-      throw new ForbiddenException({ code: 'WALLET_NOT_CONNECTED', message: 'Connect your Polymarket wallet first' });
+      throw new ForbiddenException({
+        code: "WALLET_NOT_CONNECTED",
+        message: "Connect your Polymarket wallet first",
+      });
     }
 
     // 2. Find the token and its market
@@ -326,18 +342,18 @@ export class OrdersService {
     const intent = {
       intentId,
       userId,
-      strategyId: '',
+      strategyId: "",
       marketId: token.marketId,
       tokenId: dto.tokenId,
       side: dto.side,
       outcome: dto.outcome,
       size: String(dto.size),
       price: String(dto.price),
-      orderType: dto.orderType || 'GTC',
+      orderType: dto.orderType || "GTC",
     };
 
     // 4. Publish to Redis stream
-    await this.redis.xadd('stream:orders', intent);
+    await this.redis.xadd("stream:orders", intent);
 
     // 5. Create order record
     const order = await this.prisma.order.create({
@@ -351,35 +367,36 @@ export class OrdersService {
         outcome: dto.outcome,
         size: String(dto.size),
         price: String(dto.price),
-        orderType: (dto.orderType || 'GTC') as any,
-        status: 'PENDING' as any,
+        orderType: (dto.orderType || "GTC") as any,
+        status: "PENDING" as any,
       },
     });
 
-    return { orderId: order.id, intentId, status: 'PENDING' };
+    return { orderId: order.id, intentId, status: "PENDING" };
   }
 
   async exportCsv(userId: string): Promise<string> {
     const orders = await this.prisma.order.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    const header = 'Market ID,Side,Outcome,Size,Price,Type,Status,Fill Price,Date\n';
-    const rows = orders.map(o =>
+    const header =
+      "Market ID,Side,Outcome,Size,Price,Type,Status,Fill Price,Date\n";
+    const rows = orders.map((o) =>
       [
         `"${o.marketId}"`,
         o.side,
-        o.outcome ?? '',
-        o.size?.toString() ?? '',
-        o.price?.toString() ?? '',
+        o.outcome ?? "",
+        o.size?.toString() ?? "",
+        o.price?.toString() ?? "",
         o.orderType,
         o.status,
-        o.fillPrice?.toString() ?? '',
+        o.fillPrice?.toString() ?? "",
         o.createdAt.toISOString(),
-      ].join(',')
+      ].join(","),
     );
-    return header + rows.join('\n');
+    return header + rows.join("\n");
   }
 
   async cancelOrder(userId: string, orderId: string) {
@@ -388,28 +405,30 @@ export class OrdersService {
     });
 
     if (order.userId !== userId) {
-      throw new ForbiddenException('Not your order');
+      throw new ForbiddenException("Not your order");
     }
 
-    if (!['PENDING', 'SUBMITTED', 'LIVE'].includes(order.status)) {
-      throw new BadRequestException(`Cannot cancel order in ${order.status} status`);
+    if (!["PENDING", "SUBMITTED", "LIVE"].includes(order.status)) {
+      throw new BadRequestException(
+        `Cannot cancel order in ${order.status} status`,
+      );
     }
 
     // Update status to CANCELLED
     await this.prisma.order.update({
       where: { id: orderId },
-      data: { status: 'CANCELLED' as any },
+      data: { status: "CANCELLED" as any },
     });
 
     // If order has a CLOB ID, publish cancel to stream
     if (order.clobOrderId) {
-      await this.redis.xadd('stream:cancellations', {
+      await this.redis.xadd("stream:cancellations", {
         orderId,
         clobOrderId: order.clobOrderId,
         userId,
       });
     }
 
-    return { orderId, status: 'CANCELLED' };
+    return { orderId, status: "CANCELLED" };
   }
 }
