@@ -23,10 +23,12 @@ export class InternalJwtGuard implements CanActivate {
   private validateInternalJwtSecret(): void {
     const secret = process.env.INTERNAL_JWT_SECRET;
     if (!secret) {
-      throw new Error('INTERNAL_JWT_SECRET environment variable is required');
+      throw new Error("INTERNAL_JWT_SECRET environment variable is required");
     }
     if (secret.length < 32) {
-      throw new Error(`INTERNAL_JWT_SECRET must be at least 32 characters long (current length: ${secret.length})`);
+      throw new Error(
+        `INTERNAL_JWT_SECRET must be at least 32 characters long (current length: ${secret.length})`,
+      );
     }
   }
 

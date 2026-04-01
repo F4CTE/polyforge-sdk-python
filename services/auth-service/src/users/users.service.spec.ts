@@ -1,11 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import * as bcrypt from "bcrypt";
+import * as bcrypt from 'bcrypt';
 
 // Mock the worker-thread bcrypt util to use direct bcrypt in tests
 vi.mock('../auth/bcrypt.util', () => ({
-  hashPassword: (password: string, rounds?: number) => bcrypt.hash(password, rounds ?? 12),
-  comparePassword: (password: string, hash: string) => bcrypt.compare(password, hash),
+  hashPassword: (password: string, rounds?: number) =>
+    bcrypt.hash(password, rounds ?? 12),
+  comparePassword: (password: string, hash: string) =>
+    bcrypt.compare(password, hash),
 }));
 
 import { UsersService } from './users.service';
@@ -29,7 +31,11 @@ function createMockRedis() {
   const pipelineDel = vi.fn();
   const pipelineExec = vi.fn().mockResolvedValue([]);
   const scanStreamInstance = {
-    on: vi.fn().mockImplementation(function (this: any, event: string, cb: Function) {
+    on: vi.fn().mockImplementation(function (
+      this: any,
+      event: string,
+      cb: (...args: unknown[]) => unknown,
+    ) {
       if (event === 'end') cb();
       return scanStreamInstance;
     }),
@@ -37,7 +43,9 @@ function createMockRedis() {
   return {
     getClient: vi.fn().mockReturnValue({
       scanStream: vi.fn().mockReturnValue(scanStreamInstance),
-      pipeline: vi.fn().mockReturnValue({ del: pipelineDel, exec: pipelineExec }),
+      pipeline: vi
+        .fn()
+        .mockReturnValue({ del: pipelineDel, exec: pipelineExec }),
     }),
     _scanStream: scanStreamInstance,
     _pipelineDel: pipelineDel,
@@ -421,11 +429,13 @@ describe('UsersService', () => {
       db.$transaction.mockResolvedValue([]);
 
       // Simulate scanStream emitting keys then ending
-      redis._scanStream.on.mockImplementation((event: string, cb: Function) => {
-        if (event === 'data') cb(['refresh:' + record.userId + ':abc123']);
-        if (event === 'end') cb();
-        return redis._scanStream;
-      });
+      redis._scanStream.on.mockImplementation(
+        (event: string, cb: (...args: unknown[]) => unknown) => {
+          if (event === 'data') cb(['refresh:' + record.userId + ':abc123']);
+          if (event === 'end') cb();
+          return redis._scanStream;
+        },
+      );
 
       await service.resetPassword(token, 'NewPassw0rd!');
 
@@ -446,10 +456,12 @@ describe('UsersService', () => {
       db.$transaction.mockResolvedValue([]);
 
       // Simulate scanStream emitting no keys
-      redis._scanStream.on.mockImplementation((event: string, cb: Function) => {
-        if (event === 'end') cb();
-        return redis._scanStream;
-      });
+      redis._scanStream.on.mockImplementation(
+        (event: string, cb: (...args: unknown[]) => unknown) => {
+          if (event === 'end') cb();
+          return redis._scanStream;
+        },
+      );
 
       await service.resetPassword(token, 'NewPassw0rd!');
 
@@ -463,10 +475,12 @@ describe('UsersService', () => {
       db.passwordResetToken.findUnique.mockResolvedValue(record as any);
       db.$transaction.mockResolvedValue([]);
 
-      redis._scanStream.on.mockImplementation((event: string, cb: Function) => {
-        if (event === 'end') cb();
-        return redis._scanStream;
-      });
+      redis._scanStream.on.mockImplementation(
+        (event: string, cb: (...args: unknown[]) => unknown) => {
+          if (event === 'end') cb();
+          return redis._scanStream;
+        },
+      );
 
       await service.resetPassword(token, 'NewPassw0rd!');
 

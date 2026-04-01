@@ -1,19 +1,22 @@
 import { Logger } from "@nestjs/common";
+import { createRequire } from "node:module";
 
 const logger = new Logger("WasmEvaluator");
 
 // Load WASM engine — MANDATORY, no fallback
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+const _require = createRequire(__filename);
+
 const wasmEngine = (() => {
   try {
-    const engine = require("@polyforge/engine");
+    const engine = _require("@polyforge/engine");
     logger.log("WASM strategy engine loaded — sandboxed evaluation active");
     return engine;
-  } catch (err: any) {
+  } catch (err: unknown) {
     throw new Error(
-      `SECURITY: @polyforge/engine WASM module is REQUIRED but not available: ${err?.message}\n` +
-      "The strategy-engine MUST use the Rust WASM evaluator for expression sandboxing. " +
-      "Build with: cd packages/polyforge-engine && wasm-pack build --target nodejs"
+      `SECURITY: @polyforge/engine WASM module is REQUIRED but not available: ${err instanceof Error ? err.message : String(err)}\n` +
+        "The strategy-engine MUST use the Rust WASM evaluator for expression sandboxing. " +
+        "Build with: cd packages/polyforge-engine && wasm-pack build --target nodejs",
+      { cause: err },
     );
   }
 })();
@@ -57,7 +60,13 @@ export function wasmEvaluateTick(
   actions: any[],
   context: WasmEvalContext,
 ): WasmEvalResult {
-  return wasmEngine.evaluateTick(safety, triggers, conditions, actions, context);
+  return wasmEngine.evaluateTick(
+    safety,
+    triggers,
+    conditions,
+    actions,
+    context,
+  );
 }
 
 /** Always true — WASM engine is mandatory */

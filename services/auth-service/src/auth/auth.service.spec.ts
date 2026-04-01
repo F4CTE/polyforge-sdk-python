@@ -78,12 +78,19 @@ describe('AuthService', () => {
         eval: vi.fn().mockResolvedValue(0),
         xadd: vi.fn().mockResolvedValue('stream-id'),
         scanStream: vi.fn().mockReturnValue({
-          on: vi.fn().mockImplementation(function (this: any, event: string, cb: Function) {
+          on: vi.fn().mockImplementation(function (
+            this: any,
+            event: string,
+            cb: (...args: unknown[]) => unknown,
+          ) {
             if (event === 'end') cb();
             return this;
           }),
         }),
-        pipeline: vi.fn().mockReturnValue({ del: vi.fn(), exec: vi.fn().mockResolvedValue([]) }),
+        pipeline: vi.fn().mockReturnValue({
+          del: vi.fn(),
+          exec: vi.fn().mockResolvedValue([]),
+        }),
       }),
     } as unknown as RedisService;
 
@@ -219,7 +226,10 @@ describe('AuthService', () => {
     it('throws INVITE_INVALID (403) when invite code is not in Redis', async () => {
       // Lua script returns -1 when key doesn't exist
       const evalMock = vi.fn().mockResolvedValue(-1);
-      vi.mocked(redis.getClient).mockReturnValue({ eval: evalMock, xadd: vi.fn().mockResolvedValue('1-0') } as any);
+      vi.mocked(redis.getClient).mockReturnValue({
+        eval: evalMock,
+        xadd: vi.fn().mockResolvedValue('1-0'),
+      } as any);
 
       await expect(
         service.register(makeRegisterDto({ inviteCode: 'POLY-AAAAAA' }) as any),
@@ -232,7 +242,10 @@ describe('AuthService', () => {
     it('deletes the invite key when only 1 use remains', async () => {
       // Lua script returns 0 = single-use code consumed (key deleted atomically)
       const evalMock = vi.fn().mockResolvedValue(0);
-      vi.mocked(redis.getClient).mockReturnValue({ eval: evalMock, xadd: vi.fn().mockResolvedValue('1-0') } as any);
+      vi.mocked(redis.getClient).mockReturnValue({
+        eval: evalMock,
+        xadd: vi.fn().mockResolvedValue('1-0'),
+      } as any);
       const user = userFactory();
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
@@ -247,7 +260,10 @@ describe('AuthService', () => {
     it('decrements the invite key when more than 1 use remains', async () => {
       // Lua script returns remaining uses after decrement (e.g. 2 remaining)
       const evalMock = vi.fn().mockResolvedValue(2);
-      vi.mocked(redis.getClient).mockReturnValue({ eval: evalMock, xadd: vi.fn().mockResolvedValue('1-0') } as any);
+      vi.mocked(redis.getClient).mockReturnValue({
+        eval: evalMock,
+        xadd: vi.fn().mockResolvedValue('1-0'),
+      } as any);
       const user = userFactory();
       vi.mocked(usersService.create).mockResolvedValue(user as any);
 
