@@ -185,6 +185,32 @@ describe("AdminAuthService", () => {
       });
     });
 
+    it("throws TOTP_INVALID (400) when admin TOTP code is wrong", async () => {
+      const { authenticator } = await import("otplib");
+      vi.mocked(authenticator.check).mockReturnValueOnce(false);
+
+      const admin = await adminFactory({
+        totpEnabled: true,
+        totpSecret: "encrypted:secret",
+      });
+      adminDb.admin.findUnique.mockResolvedValue(admin);
+
+      // Add getClient mock for the lockout counter
+      const incrMock = vi.fn().mockResolvedValue(1);
+      const expireMock = vi.fn().mockResolvedValue(1);
+      redis.getClient = vi.fn().mockReturnValue({ incr: incrMock, expire: expireMock });
+
+      // Spy on decrypt to return a valid secret string
+      vi.spyOn(service as any, "decrypt").mockReturnValue("JBSWY3DPEHPK3PXP");
+
+      await expect(
+        service.login({ email: admin.email, password: "Passw0rd!", totpCode: "000000" }),
+      ).rejects.toMatchObject({
+        response: { code: "TOTP_INVALID" },
+        status: HttpStatus.BAD_REQUEST,
+      });
+    });
+
     it("never exposes passwordHash in the response", async () => {
       const admin = await adminFactory();
       adminDb.admin.findUnique.mockResolvedValue(admin);
@@ -457,6 +483,17 @@ describe("AdminAuthService", () => {
         service.logout("Bearer expired-token"),
       ).resolves.toBeUndefined();
       expect(redis.del).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── encryption helpers ───────────────────────────────────────────────────────
+
+  describe("encrypt / decrypt round-trip", () => {
+    it("decrypts a value that was encrypted with the same key", () => {
+      const plaintext = "JBSWY3DPEHPK3PXP";
+      const encrypted = (service as any).encrypt(plaintext);
+      const decrypted = (service as any).decrypt(encrypted);
+      expect(decrypted).toBe(plaintext);
     });
   });
 });

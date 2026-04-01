@@ -198,6 +198,7 @@ describe("DiscoverService", () => {
                 username: true,
                 displayName: true,
                 avatarUrl: true,
+                traderScore: { select: { score: true } },
               },
             },
           },
@@ -238,6 +239,7 @@ describe("DiscoverService", () => {
         username: "alice",
         displayName: "Alice",
         avatarUrl: null,
+        score: null,
       });
       expect(returned).not.toHaveProperty("user");
     });
@@ -291,6 +293,7 @@ describe("DiscoverService", () => {
         .mockResolvedValueOnce(snapshots as any); // count query
       (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
+      db.position.findMany.mockResolvedValue([] as any);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
 
@@ -367,6 +370,7 @@ describe("DiscoverService", () => {
         .mockResolvedValueOnce(snapshots as any);
       (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue([] as any); // no user record found
+      db.position.findMany.mockResolvedValue([] as any);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
 
@@ -395,6 +399,7 @@ describe("DiscoverService", () => {
         .mockResolvedValueOnce(snapshots as any);
       (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
+      db.position.findMany.mockResolvedValue([] as any);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
 
@@ -439,6 +444,7 @@ describe("DiscoverService", () => {
         .mockResolvedValueOnce(allSnapshots as any);
       (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
+      db.position.findMany.mockResolvedValue([] as any);
 
       const result = await service.leaderboard(
         makeLeaderboardQuery({ page: 2, limit: 20 }),

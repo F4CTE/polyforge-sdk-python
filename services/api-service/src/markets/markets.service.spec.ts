@@ -69,21 +69,20 @@ describe("MarketsService", () => {
   describe("list", () => {
     it("returns a paginated response with markets and tokens included", async () => {
       const markets = [makeMarket()];
-      db.market.findMany.mockResolvedValue(markets as any);
-      db.market.count.mockResolvedValue(1);
+      // Service uses $queryRaw for estimated count and $queryRawUnsafe for data
+      db.$queryRaw.mockResolvedValue([{ reltuples: 1 }] as any);
+      db.$queryRawUnsafe.mockResolvedValue(markets as any);
 
       const result = await service.list(makeMarketQuery() as any);
 
       expect(result.data).toEqual(markets);
       expect(result.total).toBe(1);
-      expect(db.market.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ include: { tokens: true } }),
-      );
     });
 
     it("returns an empty paginated result when there are no markets", async () => {
-      db.market.findMany.mockResolvedValue([]);
+      db.$queryRaw.mockResolvedValue([{ reltuples: 0 }] as any);
       db.market.count.mockResolvedValue(0);
+      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       const result = await service.list(makeMarketQuery() as any);
 
@@ -92,90 +91,94 @@ describe("MarketsService", () => {
     });
 
     it("adds a search filter when search is provided", async () => {
-      db.market.findMany.mockResolvedValue([]);
       db.market.count.mockResolvedValue(0);
+      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery({ search: "eth" }) as any);
 
-      const whereArg = db.market.findMany.mock.calls[0][0]?.where;
-      expect(whereArg!.OR).toBeDefined();
-      expect(whereArg!.OR![0]).toMatchObject({
-        title: { contains: "eth", mode: "insensitive" },
-      });
+      // With search filter, uses market.count (exact count) and $queryRawUnsafe
+      const rawCall = db.$queryRawUnsafe.mock.calls[0];
+      expect(rawCall[0]).toContain("ILIKE");
     });
 
     it("adds category filter when category is provided", async () => {
-      db.market.findMany.mockResolvedValue([]);
       db.market.count.mockResolvedValue(0);
+      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery({ category: "politics" }) as any);
 
-      const whereArg = db.market.findMany.mock.calls[0][0]?.where;
-      expect(whereArg!.category).toBe("politics");
+      const rawCall = db.$queryRawUnsafe.mock.calls[0];
+      expect(rawCall[0]).toContain("LOWER(m.category)");
     });
 
     it("adds closed filter when closed is provided", async () => {
-      db.market.findMany.mockResolvedValue([]);
       db.market.count.mockResolvedValue(0);
+      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery({ closed: true }) as any);
 
-      const whereArg = db.market.findMany.mock.calls[0][0]?.where;
-      expect(whereArg!.closed).toBe(true);
+      const rawCall = db.$queryRawUnsafe.mock.calls[0];
+      expect(rawCall[0]).toContain("m.closed");
     });
 
     it("does NOT add closed filter when closed is undefined", async () => {
-      db.market.findMany.mockResolvedValue([]);
+      db.$queryRaw.mockResolvedValue([{ reltuples: 0 }] as any);
       db.market.count.mockResolvedValue(0);
+      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery() as any);
 
-      const whereArg = db.market.findMany.mock.calls[0][0]?.where;
-      expect(whereArg).not.toHaveProperty("closed");
+      const rawCall = db.$queryRawUnsafe.mock.calls[0];
+      // The SELECT clause always includes m.closed, but the WHERE clause should not filter by it
+      expect(rawCall[0]).not.toContain("m.closed =");
     });
 
     it("orders by volume24h desc by default", async () => {
-      db.market.findMany.mockResolvedValue([]);
+      db.$queryRaw.mockResolvedValue([{ reltuples: 0 }] as any);
       db.market.count.mockResolvedValue(0);
+      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery() as any);
 
-      expect(db.market.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ orderBy: { volume24h: "desc" } }),
-      );
+      const rawCall = db.$queryRawUnsafe.mock.calls[0];
+      expect(rawCall[0]).toContain("volume24h DESC");
     });
 
     it("orders by endDate asc when sort is endDate", async () => {
-      db.market.findMany.mockResolvedValue([]);
+      db.$queryRaw.mockResolvedValue([{ reltuples: 0 }] as any);
       db.market.count.mockResolvedValue(0);
+      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery({ sort: "endDate" }) as any);
 
-      expect(db.market.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ orderBy: { endDate: "asc" } }),
-      );
+      const rawCall = db.$queryRawUnsafe.mock.calls[0];
+      expect(rawCall[0]).toContain('"endDate" ASC');
     });
 
     it("orders by firstSeenAt desc when sort is firstSeenAt", async () => {
-      db.market.findMany.mockResolvedValue([]);
+      db.$queryRaw.mockResolvedValue([{ reltuples: 0 }] as any);
       db.market.count.mockResolvedValue(0);
+      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery({ sort: "firstSeenAt" }) as any);
 
-      expect(db.market.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ orderBy: { firstSeenAt: "desc" } }),
-      );
+      const rawCall = db.$queryRawUnsafe.mock.calls[0];
+      expect(rawCall[0]).toContain('"firstSeenAt" DESC');
     });
 
     it("passes correct skip and take for page 3 limit 10", async () => {
-      db.market.findMany.mockResolvedValue([]);
+      db.$queryRaw.mockResolvedValue([{ reltuples: 0 }] as any);
       db.market.count.mockResolvedValue(0);
+      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery({ page: 3, limit: 10 }) as any);
 
-      expect(db.market.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ skip: 20, take: 10 }),
-      );
+      // The raw query includes LIMIT and OFFSET as params
+      const rawCallArgs = db.$queryRawUnsafe.mock.calls[0];
+      // skip=20, limit=10 — they are passed as the last two params
+      const params = rawCallArgs.slice(1);
+      expect(params[params.length - 2]).toBe(10); // limit
+      expect(params[params.length - 1]).toBe(20); // offset (skip)
     });
   });
 

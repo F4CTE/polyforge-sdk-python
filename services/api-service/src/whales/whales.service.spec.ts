@@ -234,6 +234,11 @@ describe("WhalesService", () => {
           id: "t1",
           walletAddress: "0xabc",
           notional: new Prisma.Decimal(10000),
+          detectedAt: new Date(),
+          side: "BUY",
+          outcome: "YES",
+          size: new Prisma.Decimal(100),
+          price: new Prisma.Decimal(0.65),
         },
       ];
 
@@ -242,7 +247,9 @@ describe("WhalesService", () => {
 
       const result = await service.getProfile("0xabc");
 
-      expect(result.profile.walletAddress).toBe("0xabc");
+      // Service returns { walletAddress, stats, recentTrades, sparkline, isFollowing }
+      expect(result.walletAddress).toBe("0xabc");
+      expect(result.stats).not.toBeNull();
       expect(result.recentTrades).toHaveLength(1);
     });
 
@@ -252,8 +259,9 @@ describe("WhalesService", () => {
 
       const result = await service.getProfile("0xunknown");
 
-      expect(result.profile.walletAddress).toBe("0xunknown");
-      expect(result.profile.tradeCount).toBe(0);
+      // Service returns { walletAddress, stats: null, recentTrades, sparkline, isFollowing }
+      expect(result.walletAddress).toBe("0xunknown");
+      expect(result.stats).toBeNull();
       expect(result.recentTrades).toHaveLength(0);
     });
   });

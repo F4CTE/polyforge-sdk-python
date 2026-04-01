@@ -69,7 +69,15 @@ describe("BacktestsService", () => {
 
       const result = await service.list("user-uuid-1", makeQuery() as any);
 
-      expect(result.data).toEqual(runs);
+      // Service maps runs to add strategyName and remove strategy relation
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0]).toMatchObject({
+        id: runs[0].id,
+        userId: runs[0].userId,
+        strategyId: runs[0].strategyId,
+        status: runs[0].status,
+        strategyName: null,
+      });
       expect(result.total).toBe(2);
       expect(result.page).toBe(1);
       expect(result.limit).toBe(20);

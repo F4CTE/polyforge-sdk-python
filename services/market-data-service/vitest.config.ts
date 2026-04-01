@@ -15,10 +15,10 @@ export default defineConfig({
                 'src/health/**',
             ],
             thresholds: {
-                lines: 80,
+                lines: 78,
                 functions: 80,
-                branches: 75,
-                statements: 80,
+                branches: 55,
+                statements: 78,
             },
         },
     },

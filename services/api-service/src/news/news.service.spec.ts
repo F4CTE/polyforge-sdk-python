@@ -283,6 +283,10 @@ describe("NewsIngestionService", () => {
 
   describe("deduplication", () => {
     it("skips articles that already exist by URL", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network error")),
+      );
       prisma.newsArticle.findUnique.mockResolvedValue({ id: "existing" });
 
       // Access the private method via the ingestion flow

@@ -23,7 +23,11 @@ function makeMocks() {
     get: vi.fn().mockReturnValue("http://mock-polymarket:3099"),
   } as any;
 
-  return { prisma, redis, config };
+  const gateway = {
+    pushNotification: vi.fn(),
+  } as any;
+
+  return { prisma, redis, config, gateway };
 }
 
 // ─── Suite ───────────────────────────────────────────────────────────────────
@@ -33,11 +37,12 @@ describe("PositionReconcilerService", () => {
   let prisma: ReturnType<typeof makeMocks>["prisma"];
   let redis: ReturnType<typeof makeMocks>["redis"];
   let config: ReturnType<typeof makeMocks>["config"];
+  let gateway: ReturnType<typeof makeMocks>["gateway"];
 
   beforeEach(() => {
     const m = makeMocks();
-    ({ prisma, redis, config } = m);
-    svc = new PositionReconcilerService(prisma, redis, config);
+    ({ prisma, redis, config, gateway } = m);
+    svc = new PositionReconcilerService(prisma, redis, config, gateway);
 
     vi.stubGlobal(
       "fetch",

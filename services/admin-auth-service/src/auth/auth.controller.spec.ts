@@ -27,6 +27,7 @@ describe("AdminAuthController", () => {
         .mockResolvedValue({ secret: "s", uri: "u", qrCode: "q" }),
       confirmTotp: vi.fn().mockResolvedValue({ enabled: true }),
       disableTotp: vi.fn().mockResolvedValue(undefined),
+      verifyToken: vi.fn().mockReturnValue({ sub: "admin-1" }),
     } as unknown as AuthService;
     controller = new AuthController(authService);
   });
@@ -98,6 +99,38 @@ describe("AdminAuthController", () => {
       expect(reply.clearCookie).toHaveBeenCalledWith("pf_admin_token", {
         path: "/",
       });
+    });
+  });
+
+  describe("POST totp/setup", () => {
+    it("delegates to authService.setupTotp with adminId from cookie", async () => {
+      const req = makeReq("admin-jwt");
+
+      const result = await controller.setupTotp(req);
+
+      expect(result).toEqual({ secret: "s", uri: "u", qrCode: "q" });
+      expect(authService.setupTotp).toHaveBeenCalledWith("admin-1");
+    });
+  });
+
+  describe("POST totp/confirm", () => {
+    it("delegates to authService.confirmTotp with adminId and code", async () => {
+      const req = makeReq("admin-jwt");
+
+      const result = await controller.confirmTotp(req, { code: "123456" });
+
+      expect(result).toEqual({ enabled: true });
+      expect(authService.confirmTotp).toHaveBeenCalledWith("admin-1", "123456");
+    });
+  });
+
+  describe("DELETE totp", () => {
+    it("delegates to authService.disableTotp with adminId, password, and code", async () => {
+      const req = makeReq("admin-jwt");
+
+      await controller.disableTotp(req, { password: "Passw0rd!", totpCode: "123456" });
+
+      expect(authService.disableTotp).toHaveBeenCalledWith("admin-1", "Passw0rd!", "123456");
     });
   });
 });
