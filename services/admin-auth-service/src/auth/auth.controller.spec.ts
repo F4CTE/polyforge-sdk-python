@@ -128,9 +128,16 @@ describe("AdminAuthController", () => {
     it("delegates to authService.disableTotp with adminId, password, and code", async () => {
       const req = makeReq("admin-jwt");
 
-      await controller.disableTotp(req, { password: "Passw0rd!", totpCode: "123456" });
+      await controller.disableTotp(req, {
+        password: "Passw0rd!",
+        totpCode: "123456",
+      });
 
-      expect(authService.disableTotp).toHaveBeenCalledWith("admin-1", "Passw0rd!", "123456");
+      expect(authService.disableTotp).toHaveBeenCalledWith(
+        "admin-1",
+        "Passw0rd!",
+        "123456",
+      );
     });
   });
 });

@@ -25,7 +25,7 @@ export function Component() {
     setLoading(true);
     try {
       const res = await adminApi.users({ status: 'PENDING', page: p, limit: 25 });
-      setUsers(res.data as PendingUser[]);
+      setUsers(res.data as unknown as PendingUser[]);
       setTotal(res.total);
       setTotalPages(res.totalPages ?? 1);
     } catch {

@@ -71,7 +71,10 @@ export class AuthService {
     // Determine if this registration has a valid invite code
     if (inviteOnly && !dto.inviteCode) {
       throw new HttpException(
-        { code: 'INVITE_REQUIRED', message: 'An invite code is required to register' },
+        {
+          code: 'INVITE_REQUIRED',
+          message: 'An invite code is required to register',
+        },
         HttpStatus.FORBIDDEN,
       );
     }

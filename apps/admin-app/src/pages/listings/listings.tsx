@@ -325,7 +325,7 @@ export function Component() {
     const next = !current;
     setListings((prev) => prev.map((l) => l.id === id ? { ...l, featured: next } : l));
     try {
-      await adminApi.reviewListing(id, { featured: next } as { status: 'APPROVED' });
+      await adminApi.reviewListing(id, { featured: next } as unknown as { status: 'APPROVED' });
       toast.success(next ? 'Listing featured' : 'Feature removed');
     } catch {
       setListings((prev) => prev.map((l) => l.id === id ? { ...l, featured: current } : l));

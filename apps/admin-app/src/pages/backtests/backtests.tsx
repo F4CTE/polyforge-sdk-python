@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
