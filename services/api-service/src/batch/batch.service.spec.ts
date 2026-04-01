@@ -92,7 +92,9 @@ describe("BatchService", () => {
 
     await service.executeBatch(items, AUTH_TOKEN, PORT);
 
-    expect(mockFetch.mock.calls[0][1].body).toBe(JSON.stringify({ name: "Test" }));
+    expect(mockFetch.mock.calls[0][1].body).toBe(
+      JSON.stringify({ name: "Test" }),
+    );
   });
 
   it("should not send body for GET requests", async () => {
@@ -112,7 +114,9 @@ describe("BatchService", () => {
   });
 
   it("should handle fetch failures gracefully with 502", async () => {
-    const mockFetch = vi.fn().mockRejectedValue(new Error("Connection refused"));
+    const mockFetch = vi
+      .fn()
+      .mockRejectedValue(new Error("Connection refused"));
     vi.stubGlobal("fetch", mockFetch);
 
     const results = await service.executeBatch(

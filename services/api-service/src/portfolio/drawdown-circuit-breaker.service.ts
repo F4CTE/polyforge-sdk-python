@@ -38,11 +38,13 @@ export class DrawdownCircuitBreakerService {
     if (limits.length === 0) return;
 
     await Promise.allSettled(
-      limits.map((limit) => this.checkUser(limit).catch((err: unknown) => {
-        this.logger.warn(
-          `Drawdown check failed for ${limit.userId}: ${(err as Error).message}`,
-        );
-      })),
+      limits.map((limit) =>
+        this.checkUser(limit).catch((err: unknown) => {
+          this.logger.warn(
+            `Drawdown check failed for ${limit.userId}: ${(err as Error).message}`,
+          );
+        }),
+      ),
     );
   }
 

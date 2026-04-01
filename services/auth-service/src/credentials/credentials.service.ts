@@ -31,13 +31,19 @@ export class CredentialsService {
       'STRATEGY_ENGINE_URL',
       'http://strategy-engine:3006',
     );
-    this.internalJwtSecret = this.config.getOrThrow<string>('INTERNAL_JWT_SECRET');
+    this.internalJwtSecret = this.config.getOrThrow<string>(
+      'INTERNAL_JWT_SECRET',
+    );
   }
 
   private issueInternalToken(): string {
     return this.jwt.sign(
       { sub: 'auth-service', jti: randomUUID() },
-      { secret: this.internalJwtSecret, audience: 'signer-service', expiresIn: '30s' },
+      {
+        secret: this.internalJwtSecret,
+        audience: 'signer-service',
+        expiresIn: '30s',
+      },
     );
   }
 
@@ -128,7 +134,7 @@ export class CredentialsService {
         return;
       }
 
-      const strategies = await listRes.json() as any[];
+      const strategies = (await listRes.json()) as any[];
 
       for (const s of strategies) {
         try {
@@ -138,9 +144,13 @@ export class CredentialsService {
             headers: { Authorization: `Bearer ${stopToken}` },
             signal: AbortSignal.timeout(10_000),
           });
-          this.logger.log(`Stopped strategy ${s.id} before credential deletion for user ${userId}`);
+          this.logger.log(
+            `Stopped strategy ${s.id} before credential deletion for user ${userId}`,
+          );
         } catch (err) {
-          this.logger.warn(`Failed to stop strategy ${s.id}: ${(err as Error)?.message}`);
+          this.logger.warn(
+            `Failed to stop strategy ${s.id}: ${(err as Error)?.message}`,
+          );
         }
       }
     } catch (err) {

@@ -131,7 +131,10 @@ export class PriceCacheService {
         ),
       );
     } catch (err) {
-      this.logger.error(`Failed to flush ${entries.length} token price updates`, err);
+      this.logger.error(
+        `Failed to flush ${entries.length} token price updates`,
+        err,
+      );
     }
   }
 

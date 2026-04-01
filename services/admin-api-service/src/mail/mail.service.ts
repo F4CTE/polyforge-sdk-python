@@ -178,7 +178,8 @@ export class AdminMailService {
     const loginUrl = `${FRONTEND}/login`;
 
     const html = emailLayout({
-      preheader: 'Your Polyforge beta access has been approved — you can now sign in!',
+      preheader:
+        "Your Polyforge beta access has been approved — you can now sign in!",
       body: `
                 <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827">
                   You're in, ${username}! 🎉
@@ -200,7 +201,8 @@ export class AdminMailService {
                   Welcome to the Polyforge beta. Happy trading!
                 </p>
             `,
-      footerNote: 'You received this because your Polyforge beta application was approved.',
+      footerNote:
+        "You received this because your Polyforge beta application was approved.",
     });
 
     await this.transporter.sendMail({

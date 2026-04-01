@@ -107,7 +107,11 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
     // Fan-out to SSE strategy-event subscribers for any event that carries a strategyId
     if (strategyId) {
       this.strategyEvents.emit(strategyId, type, {
-        userId, orderId, tokenId, reason, ...rest,
+        userId,
+        orderId,
+        tokenId,
+        reason,
+        ...rest,
       });
     }
 
@@ -159,7 +163,10 @@ export class EventsService implements OnModuleInit, OnModuleDestroy {
         break;
 
       case "WHALE_TRADE":
-        this.gateway.pushWhaleTrade({ ...rest, walletAddress: rest.walletAddress });
+        this.gateway.pushWhaleTrade({
+          ...rest,
+          walletAddress: rest.walletAddress,
+        });
         break;
 
       case "NEWS_SIGNAL":

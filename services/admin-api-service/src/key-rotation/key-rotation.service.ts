@@ -47,7 +47,10 @@ export class KeyRotationService {
     };
   }
 
-  async startRotation(): Promise<{ secretHash: string; gracePeriodSeconds: number }> {
+  async startRotation(): Promise<{
+    secretHash: string;
+    gracePeriodSeconds: number;
+  }> {
     // Mark rotation in progress
     const now = new Date().toISOString();
     await this.redis.set(
@@ -62,7 +65,11 @@ export class KeyRotationService {
     // Move current secret to previous (with grace period TTL)
     const currentSecret = await this.redis.get(JWT_SECRET_CURRENT);
     if (currentSecret) {
-      await this.redis.set(JWT_SECRET_PREVIOUS, currentSecret, GRACE_PERIOD_TTL);
+      await this.redis.set(
+        JWT_SECRET_PREVIOUS,
+        currentSecret,
+        GRACE_PERIOD_TTL,
+      );
     }
 
     // Store new secret as current
@@ -78,7 +85,9 @@ export class KeyRotationService {
       }),
     );
 
-    this.logger.log(`JWT secret rotated at ${now}. Grace period: ${GRACE_PERIOD_TTL}s`);
+    this.logger.log(
+      `JWT secret rotated at ${now}. Grace period: ${GRACE_PERIOD_TTL}s`,
+    );
 
     return { secretHash, gracePeriodSeconds: GRACE_PERIOD_TTL };
   }

@@ -139,7 +139,9 @@ describe("WebhooksService", () => {
 
       await service.remove(webhook.id, "user-1");
 
-      expect(db.webhook.delete).toHaveBeenCalledWith({ where: { id: webhook.id } });
+      expect(db.webhook.delete).toHaveBeenCalledWith({
+        where: { id: webhook.id },
+      });
     });
 
     it("throws ForbiddenException when user does not own the webhook", async () => {

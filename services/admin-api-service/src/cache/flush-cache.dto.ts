@@ -6,10 +6,13 @@ import { IsString, Matches } from "class-validator";
  */
 export class FlushCacheDto {
   @IsString()
-  @Matches(/^(cache:(price|book|market|notif-prefs)|user|portfolio|markets):\*?$/, {
-    message:
-      "Pattern must be one of: cache:price:*, cache:book:*, cache:market:*, cache:notif-prefs:*, user:*, portfolio:*, or markets:*",
-  })
+  @Matches(
+    /^(cache:(price|book|market|notif-prefs)|user|portfolio|markets):\*?$/,
+    {
+      message:
+        "Pattern must be one of: cache:price:*, cache:book:*, cache:market:*, cache:notif-prefs:*, user:*, portfolio:*, or markets:*",
+    },
+  )
   pattern: string;
 
   /**

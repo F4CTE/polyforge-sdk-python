@@ -58,7 +58,11 @@ describe("SettingsService", () => {
     db = createMockDb();
     mockRedis = createMockRedis();
     mockConfig = createMockConfig();
-    service = new SettingsService(db as any, mockRedis as any, mockConfig as any);
+    service = new SettingsService(
+      db as any,
+      mockRedis as any,
+      mockConfig as any,
+    );
   });
 
   afterEach(() => {
@@ -401,7 +405,11 @@ describe("SettingsService", () => {
 
     it("reflects disabled sponsor when GAS_SPONSOR_ENABLED=false", async () => {
       mockConfig = createMockConfig({ GAS_SPONSOR_ENABLED: "false" });
-      service = new SettingsService(db as any, mockRedis as any, mockConfig as any);
+      service = new SettingsService(
+        db as any,
+        mockRedis as any,
+        mockConfig as any,
+      );
 
       const result = await service.getGasUsage("user-uuid-1");
 

@@ -84,7 +84,9 @@ export class BacktestsService {
       runId: run.id,
       userId,
       strategyId: dto.strategyId ?? "",
-      marketBindings: dto.marketBindings ? JSON.stringify(dto.marketBindings) : "",
+      marketBindings: dto.marketBindings
+        ? JSON.stringify(dto.marketBindings)
+        : "",
       ts: String(Date.now()),
     });
 
@@ -105,11 +107,14 @@ export class BacktestsService {
   async findOrders(id: string, userId: string): Promise<any[]> {
     const run = await this.prisma.backtestRun.findUnique({ where: { id } });
     if (!run || run.userId !== userId) {
-      throw new NotFoundException({ code: 'NOT_FOUND', message: 'Backtest run not found' });
+      throw new NotFoundException({
+        code: "NOT_FOUND",
+        message: "Backtest run not found",
+      });
     }
     const orders = await this.prisma.backtestOrder.findMany({
       where: { runId: id },
-      orderBy: { simulatedAt: 'asc' },
+      orderBy: { simulatedAt: "asc" },
       select: {
         id: true,
         tokenId: true,

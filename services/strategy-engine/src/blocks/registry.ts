@@ -1,4 +1,9 @@
-import { BlockEvaluator, ActionEvaluator, LogicBlockEvaluator, CalcBlockEvaluator } from "./block.types";
+import {
+  BlockEvaluator,
+  ActionEvaluator,
+  LogicBlockEvaluator,
+  CalcBlockEvaluator,
+} from "./block.types";
 
 import {
   StopIfDailyLossBlock,

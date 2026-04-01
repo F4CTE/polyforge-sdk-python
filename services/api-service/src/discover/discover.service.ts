@@ -35,12 +35,14 @@ export class DiscoverService {
     const where: any = {
       visibility: { in: ["PUBLIC", "UNLISTED"] },
       status: { not: "ARCHIVED" },
-      ...(query.search ? {
-        OR: [
-          { name: { contains: query.search, mode: "insensitive" } },
-          { description: { contains: query.search, mode: "insensitive" } },
-        ],
-      } : {}),
+      ...(query.search
+        ? {
+            OR: [
+              { name: { contains: query.search, mode: "insensitive" } },
+              { description: { contains: query.search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
     };
 
     const orderBy =
@@ -77,7 +79,10 @@ export class DiscoverService {
     const result = strategies.map((s) => {
       const { user, ...rest } = s as any;
       const { traderScore, ...userRest } = user ?? {};
-      const mapped = { ...rest, author: { ...userRest, score: traderScore?.score ?? null } };
+      const mapped = {
+        ...rest,
+        author: { ...userRest, score: traderScore?.score ?? null },
+      };
       if (mapped.visibility === "UNLISTED") {
         return {
           ...mapped,
@@ -119,49 +124,63 @@ export class DiscoverService {
     // Run paginated snapshot query and total count in parallel
     const [snapshots, totalGroups] = await Promise.all([
       this.prisma.pnlSnapshot.groupBy({
-        by: ['userId'],
+        by: ["userId"],
         where: { time: { gte: since } },
         _sum: { realizedPnl: true },
-        orderBy: { _sum: { realizedPnl: 'desc' } },
+        orderBy: { _sum: { realizedPnl: "desc" } },
         take: limit,
         skip,
       }),
-      this.prisma.pnlSnapshot.groupBy({
-        by: ['userId'],
-        where: { time: { gte: since } },
-      }).then(r => r.length),
+      this.prisma.pnlSnapshot
+        .groupBy({
+          by: ["userId"],
+          where: { time: { gte: since } },
+        })
+        .then((r) => r.length),
     ]);
 
     const total = totalGroups;
 
-    const rows = snapshots.map(s => ({
+    const rows = snapshots.map((s) => ({
       userId: s.userId,
-      pnl: s._sum.realizedPnl?.toString() ?? '0',
+      pnl: s._sum.realizedPnl?.toString() ?? "0",
       tradeCount: 0,
     }));
 
     // Enrich with trade counts and user profiles in parallel
     const userIds = rows.map((r) => r.userId);
     let userMap: Record<string, any> = {};
-    let winRateMap: Record<string, string> = {};
+    const winRateMap: Record<string, string> = {};
     if (userIds.length > 0) {
       const [tradeCounts, users, resolvedPositions] = await Promise.all([
         this.prisma.order.groupBy({
-          by: ['userId'],
+          by: ["userId"],
           where: { userId: { in: userIds }, createdAt: { gte: since } },
           _count: true,
         }),
         this.prisma.user.findMany({
           where: { id: { in: userIds } },
-          select: { id: true, username: true, displayName: true, avatarUrl: true },
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+          },
         }),
         this.prisma.position.findMany({
-          where: { userId: { in: userIds }, resolutionStatus: 'RESOLVED' as any },
+          where: {
+            userId: { in: userIds },
+            resolutionStatus: "RESOLVED" as any,
+          },
           select: { userId: true, realizedPnl: true },
         }),
       ]);
-      const tradeMap = Object.fromEntries(tradeCounts.map(t => [t.userId, t._count]));
-      rows.forEach(r => { r.tradeCount = tradeMap[r.userId] ?? 0; });
+      const tradeMap = Object.fromEntries(
+        tradeCounts.map((t) => [t.userId, t._count]),
+      );
+      rows.forEach((r) => {
+        r.tradeCount = tradeMap[r.userId] ?? 0;
+      });
       userMap = Object.fromEntries(users.map((u) => [u.id, u]));
       const posMap: Record<string, { total: number; wins: number }> = {};
       for (const p of resolvedPositions) {
@@ -170,7 +189,8 @@ export class DiscoverService {
         if (parseFloat(String(p.realizedPnl)) > 0) posMap[p.userId].wins++;
       }
       for (const [uid, stats] of Object.entries(posMap)) {
-        winRateMap[uid] = stats.total > 0 ? ((stats.wins / stats.total) * 100).toFixed(1) : '0';
+        winRateMap[uid] =
+          stats.total > 0 ? ((stats.wins / stats.total) * 100).toFixed(1) : "0";
       }
     }
 
@@ -181,7 +201,7 @@ export class DiscoverService {
       displayName: userMap[r.userId]?.displayName ?? "",
       avatarUrl: userMap[r.userId]?.avatarUrl ?? null,
       pnl: String(r.pnl ?? "0"),
-      winRate: winRateMap[r.userId] ?? '0',
+      winRate: winRateMap[r.userId] ?? "0",
       tradeCount: Number(r.tradeCount ?? 0),
     }));
 

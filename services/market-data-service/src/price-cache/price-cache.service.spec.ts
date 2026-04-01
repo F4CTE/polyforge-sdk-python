@@ -212,7 +212,9 @@ describe("PriceCacheService", () => {
     });
 
     it("does not throw when createMany fails", async () => {
-      prisma.priceSnapshot.createMany.mockRejectedValue(new Error("TimescaleDB error"));
+      prisma.priceSnapshot.createMany.mockRejectedValue(
+        new Error("TimescaleDB error"),
+      );
 
       await svc.handlePriceUpdate({
         tokenId: "token-1",

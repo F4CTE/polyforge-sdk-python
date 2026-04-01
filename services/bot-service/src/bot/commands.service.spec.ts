@@ -510,8 +510,18 @@ describe("CommandsService", () => {
           ok: true,
           json: vi.fn().mockResolvedValue({
             trades: [
-              { wallet: "0xabc12345def", side: "BUY", sizeUsdc: 50000, market: "Will ETH reach 5000?" },
-              { wallet: "0xdef67890abc", side: "SELL", sizeUsdc: 30000, market: "BTC above 100k?" },
+              {
+                wallet: "0xabc12345def",
+                side: "BUY",
+                sizeUsdc: 50000,
+                market: "Will ETH reach 5000?",
+              },
+              {
+                wallet: "0xdef67890abc",
+                side: "SELL",
+                sizeUsdc: 30000,
+                market: "BTC above 100k?",
+              },
             ],
           }),
         }),
@@ -620,7 +630,12 @@ describe("CommandsService", () => {
           ok: true,
           json: vi.fn().mockResolvedValue({
             configs: [
-              { targetWallet: "0xabc12345def67890", status: "ACTIVE", mode: "PERCENTAGE", percentage: 10 },
+              {
+                targetWallet: "0xabc12345def67890",
+                status: "ACTIVE",
+                mode: "PERCENTAGE",
+                percentage: 10,
+              },
             ],
           }),
         }),
@@ -725,7 +740,9 @@ describe("CommandsService", () => {
     it("stops copy config and returns success", async () => {
       vi.stubGlobal(
         "fetch",
-        vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({}) }),
+        vi
+          .fn()
+          .mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({}) }),
       );
 
       const result = await svc.execute("user-1", "/stopcopy copy-1");
@@ -757,8 +774,16 @@ describe("CommandsService", () => {
           ok: true,
           json: vi.fn().mockResolvedValue({
             signals: [
-              { market: "Will ETH reach 5000?", direction: "BUY", confidence: 0.85 },
-              { market: "BTC above 100k?", direction: "SELL", confidence: 0.72 },
+              {
+                market: "Will ETH reach 5000?",
+                direction: "BUY",
+                confidence: 0.85,
+              },
+              {
+                market: "BTC above 100k?",
+                direction: "SELL",
+                confidence: 0.72,
+              },
             ],
           }),
         }),
@@ -811,7 +836,11 @@ describe("CommandsService", () => {
           ok: true,
           json: vi.fn().mockResolvedValue({
             articles: [
-              { title: "Crypto market surges", source: "Reuters", signalCount: 3 },
+              {
+                title: "Crypto market surges",
+                source: "Reuters",
+                signalCount: 3,
+              },
               { title: "Fed holds rates", source: "Bloomberg", signalCount: 1 },
             ],
           }),
@@ -848,9 +877,7 @@ describe("CommandsService", () => {
         vi.fn().mockResolvedValue({
           ok: true,
           json: vi.fn().mockResolvedValue({
-            articles: [
-              { title: "Test article", signalCount: 1 },
-            ],
+            articles: [{ title: "Test article", signalCount: 1 }],
           }),
         }),
       );
@@ -1205,9 +1232,7 @@ describe("CommandsService", () => {
         vi.fn().mockResolvedValue({
           ok: true,
           json: vi.fn().mockResolvedValue({
-            articles: [
-              { title: "Test article", signalCount: 2 },
-            ],
+            articles: [{ title: "Test article", signalCount: 2 }],
           }),
         }),
       );

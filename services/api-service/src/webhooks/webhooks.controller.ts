@@ -11,7 +11,12 @@ import {
   ParseUUIDPipe,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  RequireScopes,
+  ApiKeyScopeGuard,
+} from "@polyforge/shared-auth";
 import { WebhooksService } from "./webhooks.service";
 import { CreateWebhookDto } from "./dto/create-webhook.dto";
 

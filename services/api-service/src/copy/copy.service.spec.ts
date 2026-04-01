@@ -89,7 +89,9 @@ describe("CopyService", () => {
 
       await expect(
         service.create("user-1", { targetWallet: "0xabc" }),
-      ).rejects.toThrow("You already have an active copy config for this wallet");
+      ).rejects.toThrow(
+        "You already have an active copy config for this wallet",
+      );
     });
 
     it("allows re-creating a STOPPED config for same wallet", async () => {
@@ -355,7 +357,7 @@ describe("CopyEngineService", () => {
 
       // Daily PnL cache returns "0" (fine), exposure cache returns "500" (at limit)
       redis.get.mockImplementation(async (key: string) => {
-        if (key.includes(':exposure')) return "500";
+        if (key.includes(":exposure")) return "500";
         return "0";
       });
 
@@ -458,7 +460,10 @@ describe("CopyEngineService", () => {
       prisma.copyConfig.findMany.mockResolvedValue([config]);
       redis.get.mockResolvedValue("0");
       prisma.copyTrade.findMany.mockResolvedValue([]);
-      prisma.copyTrade.create.mockResolvedValue({ id: "trade-1", configId: "cfg-1" });
+      prisma.copyTrade.create.mockResolvedValue({
+        id: "trade-1",
+        configId: "cfg-1",
+      });
       prisma.copyConfig.update.mockResolvedValue({});
       redis.xadd.mockResolvedValue("ok");
 
@@ -495,7 +500,10 @@ describe("CopyEngineService", () => {
 
       redis.get.mockResolvedValue("0");
       prisma.copyTrade.findMany.mockResolvedValue([]);
-      prisma.copyTrade.create.mockResolvedValue({ id: "trade-1", configId: "cfg-1" });
+      prisma.copyTrade.create.mockResolvedValue({
+        id: "trade-1",
+        configId: "cfg-1",
+      });
       prisma.copyConfig.update.mockResolvedValue({});
       redis.xadd.mockResolvedValue("ok");
 
@@ -516,7 +524,9 @@ describe("CopyEngineService", () => {
 
       const createCall = prisma.copyTrade.create.mock.calls[0][0];
       // 0.50 * 1.05 = 0.525
-      expect(parseFloat(createCall.data.copiedPrice.toString())).toBeCloseTo(0.525);
+      expect(parseFloat(createCall.data.copiedPrice.toString())).toBeCloseTo(
+        0.525,
+      );
     });
   });
 });

@@ -32,9 +32,7 @@ const TIERS = [
 ];
 
 function getTierByName(tierName: string): (typeof TIERS)[number] {
-  return (
-    TIERS.find((t) => t.name === tierName.toUpperCase()) ?? TIERS[0]
-  );
+  return TIERS.find((t) => t.name === tierName.toUpperCase()) ?? TIERS[0];
 }
 
 @Injectable()
@@ -53,10 +51,8 @@ export class BuilderService {
     this.builderApiUrl =
       this.config.get<string>("BUILDER_API_URL") ??
       "https://clob.polymarket.com";
-    this.builderApiKey =
-      this.config.get<string>("POLY_BUILDER_API_KEY") ?? "";
-    this.builderSecret =
-      this.config.get<string>("POLY_BUILDER_SECRET") ?? "";
+    this.builderApiKey = this.config.get<string>("POLY_BUILDER_API_KEY") ?? "";
+    this.builderSecret = this.config.get<string>("POLY_BUILDER_SECRET") ?? "";
     this.builderPassphrase =
       this.config.get<string>("POLY_BUILDER_PASSPHRASE") ?? "";
     this.configuredTier =
@@ -130,7 +126,10 @@ export class BuilderService {
 
       return { currentTier, weeklyRewardUsdc };
     } catch (err) {
-      this.logger.warn("Failed to fetch builder data from Polymarket API, falling back to config", err);
+      this.logger.warn(
+        "Failed to fetch builder data from Polymarket API, falling back to config",
+        err,
+      );
       return {
         currentTier: this.configuredTier,
         weeklyRewardUsdc: null,

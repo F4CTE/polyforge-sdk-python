@@ -207,14 +207,18 @@ export class WhatsAppService implements OnModuleInit {
           template: {
             name: templateName,
             language: { code: languageCode },
-            components: params.length > 0
-              ? [
-                  {
-                    type: "body",
-                    parameters: params.map((text) => ({ type: "text", text })),
-                  },
-                ]
-              : [],
+            components:
+              params.length > 0
+                ? [
+                    {
+                      type: "body",
+                      parameters: params.map((text) => ({
+                        type: "text",
+                        text,
+                      })),
+                    },
+                  ]
+                : [],
           },
         }),
       });

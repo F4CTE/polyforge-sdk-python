@@ -28,7 +28,8 @@ export class UsersService {
     suspended?: boolean;
     polymarketConnected?: boolean;
   }) {
-    const { page, limit, search, status, suspended, polymarketConnected } = params;
+    const { page, limit, search, status, suspended, polymarketConnected } =
+      params;
     const skip = (page - 1) * limit;
 
     const where: Prisma.UserWhereInput = {
@@ -193,7 +194,7 @@ export class UsersService {
     // Send approval email — fire-and-forget
     this.mailService
       .sendAccountApprovedEmail(user.email, user.username)
-      .catch((err) => this.logger.error('Failed to send approval email', err));
+      .catch((err) => this.logger.error("Failed to send approval email", err));
 
     return { approved: true, email: user.email, username: user.username };
   }
@@ -204,7 +205,11 @@ export class UsersService {
     // Soft-delete the rejected user
     await this.prisma.user.update({
       where: { id },
-      data: { deleted: true, deletedAt: new Date(), suspendedReason: reason ?? 'Registration rejected' },
+      data: {
+        deleted: true,
+        deletedAt: new Date(),
+        suspendedReason: reason ?? "Registration rejected",
+      },
     });
 
     return { rejected: true, email: user.email };
@@ -280,11 +285,21 @@ export class UsersService {
 
   async getUserAccuracy(userId: string): Promise<any> {
     const positions = await this.prisma.position.findMany({
-      where: { userId, resolutionStatus: { in: ['RESOLVED', 'REDEEMED'] as any[] } },
+      where: {
+        userId,
+        resolutionStatus: { in: ["RESOLVED", "REDEEMED"] as any[] },
+      },
     });
 
     if (positions.length === 0) {
-      return { brierScore: null, totalPredictions: 0, correctPredictions: 0, winRate: '0', calibration: [], byCategory: {} };
+      return {
+        brierScore: null,
+        totalPredictions: 0,
+        correctPredictions: 0,
+        winRate: "0",
+        calibration: [],
+        byCategory: {},
+      };
     }
 
     let brierSum = 0;
@@ -300,7 +315,10 @@ export class UsersService {
     const buckets: Record<number, { sum: number; count: number }> = {};
     for (let b = 0; b <= 9; b++) buckets[b] = { sum: 0, count: 0 };
     for (const p of positions) {
-      const prob = Math.min(0.999, Math.max(0.001, parseFloat(String((p as any).avgPrice ?? 0))));
+      const prob = Math.min(
+        0.999,
+        Math.max(0.001, parseFloat(String((p as any).avgPrice ?? 0))),
+      );
       const bucket = Math.floor(prob * 10);
       const won = parseFloat(String((p as any).realizedPnl ?? 0)) > 0 ? 1 : 0;
       buckets[bucket].sum += won;
@@ -308,7 +326,11 @@ export class UsersService {
     }
     const calibration = Object.entries(buckets)
       .filter(([, v]) => v.count > 0)
-      .map(([k, v]) => ({ bucketMid: (parseInt(k) + 0.5) / 10, frequency: v.sum / v.count, count: v.count }));
+      .map(([k, v]) => ({
+        bucketMid: (parseInt(k) + 0.5) / 10,
+        frequency: v.sum / v.count,
+        count: v.count,
+      }));
 
     return {
       brierScore: parseFloat(brierScore.toFixed(4)),

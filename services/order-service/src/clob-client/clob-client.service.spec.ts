@@ -231,9 +231,9 @@ describe("ClobClientService", () => {
         status: 404,
         text: vi.fn().mockResolvedValue("Market not found"),
       });
-      await expect(
-        svc.cancelByMarket("key", "bad-market"),
-      ).rejects.toThrow("404");
+      await expect(svc.cancelByMarket("key", "bad-market")).rejects.toThrow(
+        "404",
+      );
     });
   });
 

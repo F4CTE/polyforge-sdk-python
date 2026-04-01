@@ -39,12 +39,60 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "READ",
       category: "markets",
       parameters: [
-        { name: "search", type: "string", required: false, in: "query", description: "Full-text search query" },
-        { name: "category", type: "string", required: false, in: "query", enum: ["Sports", "Crypto", "Politics", "Economics", "Finance", "Technology"], description: "Filter by category" },
-        { name: "closed", type: "boolean", required: false, in: "query", description: "Include closed markets" },
-        { name: "sort", type: "string", required: false, in: "query", enum: ["volume", "endDate", "firstSeenAt"], default: "volume" },
-        { name: "page", type: "number", required: false, in: "query", default: 1, min: 1 },
-        { name: "limit", type: "number", required: false, in: "query", default: 20, max: 100, min: 1 },
+        {
+          name: "search",
+          type: "string",
+          required: false,
+          in: "query",
+          description: "Full-text search query",
+        },
+        {
+          name: "category",
+          type: "string",
+          required: false,
+          in: "query",
+          enum: [
+            "Sports",
+            "Crypto",
+            "Politics",
+            "Economics",
+            "Finance",
+            "Technology",
+          ],
+          description: "Filter by category",
+        },
+        {
+          name: "closed",
+          type: "boolean",
+          required: false,
+          in: "query",
+          description: "Include closed markets",
+        },
+        {
+          name: "sort",
+          type: "string",
+          required: false,
+          in: "query",
+          enum: ["volume", "endDate", "firstSeenAt"],
+          default: "volume",
+        },
+        {
+          name: "page",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 1,
+          min: 1,
+        },
+        {
+          name: "limit",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 20,
+          max: 100,
+          min: 1,
+        },
       ],
     },
     {
@@ -54,7 +102,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/markets/:marketId",
       scope: "READ",
       category: "markets",
-      parameters: [{ name: "marketId", type: "string", required: true, in: "path", description: "Market ID" }],
+      parameters: [
+        {
+          name: "marketId",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Market ID",
+        },
+      ],
     },
     {
       name: "get_price_history",
@@ -64,11 +120,44 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "READ",
       category: "markets",
       parameters: [
-        { name: "tokenId", type: "string", required: true, in: "path", description: "Token ID" },
-        { name: "resolution", type: "string", required: false, in: "query", enum: ["1m", "1h", "1d"], default: "1h" },
-        { name: "from", type: "string", required: false, in: "query", description: "ISO 8601 start date" },
-        { name: "to", type: "string", required: false, in: "query", description: "ISO 8601 end date" },
-        { name: "limit", type: "number", required: false, in: "query", default: 200, max: 1000, min: 1 },
+        {
+          name: "tokenId",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Token ID",
+        },
+        {
+          name: "resolution",
+          type: "string",
+          required: false,
+          in: "query",
+          enum: ["1m", "1h", "1d"],
+          default: "1h",
+        },
+        {
+          name: "from",
+          type: "string",
+          required: false,
+          in: "query",
+          description: "ISO 8601 start date",
+        },
+        {
+          name: "to",
+          type: "string",
+          required: false,
+          in: "query",
+          description: "ISO 8601 end date",
+        },
+        {
+          name: "limit",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 200,
+          max: 1000,
+          min: 1,
+        },
       ],
     },
     {
@@ -78,7 +167,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/markets/:tokenId/book",
       scope: "READ",
       category: "markets",
-      parameters: [{ name: "tokenId", type: "string", required: true, in: "path", description: "Token ID" }],
+      parameters: [
+        {
+          name: "tokenId",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Token ID",
+        },
+      ],
     },
 
     // ─── Strategies ────────────────────────────────────────────────────
@@ -90,8 +187,21 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "READ",
       category: "strategies",
       parameters: [
-        { name: "page", type: "number", required: false, in: "query", default: 1 },
-        { name: "limit", type: "number", required: false, in: "query", default: 20, max: 100 },
+        {
+          name: "page",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 1,
+        },
+        {
+          name: "limit",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 20,
+          max: 100,
+        },
       ],
     },
     {
@@ -102,11 +212,45 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "WRITE",
       category: "strategies",
       parameters: [
-        { name: "name", type: "string", required: true, in: "body", description: "Strategy name (max 100 chars)" },
-        { name: "description", type: "string", required: false, in: "body", description: "Strategy description" },
-        { name: "visibility", type: "string", required: false, in: "body", enum: ["PRIVATE", "PUBLIC", "UNLISTED"], default: "PRIVATE" },
-        { name: "execMode", type: "string", required: false, in: "body", enum: ["EVENT", "TICK", "HYBRID"], default: "TICK" },
-        { name: "tickMs", type: "number", required: false, in: "body", default: 1000, min: 200, max: 60000 },
+        {
+          name: "name",
+          type: "string",
+          required: true,
+          in: "body",
+          description: "Strategy name (max 100 chars)",
+        },
+        {
+          name: "description",
+          type: "string",
+          required: false,
+          in: "body",
+          description: "Strategy description",
+        },
+        {
+          name: "visibility",
+          type: "string",
+          required: false,
+          in: "body",
+          enum: ["PRIVATE", "PUBLIC", "UNLISTED"],
+          default: "PRIVATE",
+        },
+        {
+          name: "execMode",
+          type: "string",
+          required: false,
+          in: "body",
+          enum: ["EVENT", "TICK", "HYBRID"],
+          default: "TICK",
+        },
+        {
+          name: "tickMs",
+          type: "number",
+          required: false,
+          in: "body",
+          default: 1000,
+          min: 200,
+          max: 60000,
+        },
       ],
     },
     {
@@ -116,7 +260,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/strategies/:id",
       scope: "READ",
       category: "strategies",
-      parameters: [{ name: "id", type: "string", required: true, in: "path", description: "Strategy UUID" }],
+      parameters: [
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Strategy UUID",
+        },
+      ],
     },
     {
       name: "update_strategy",
@@ -126,7 +278,13 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "WRITE",
       category: "strategies",
       parameters: [
-        { name: "id", type: "string", required: true, in: "path", description: "Strategy UUID" },
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Strategy UUID",
+        },
         { name: "name", type: "string", required: false, in: "body" },
         { name: "description", type: "string", required: false, in: "body" },
       ],
@@ -138,7 +296,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/strategies/:id",
       scope: "WRITE",
       category: "strategies",
-      parameters: [{ name: "id", type: "string", required: true, in: "path", description: "Strategy UUID" }],
+      parameters: [
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Strategy UUID",
+        },
+      ],
     },
     {
       name: "start_strategy",
@@ -148,8 +314,21 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "TRADE",
       category: "strategies",
       parameters: [
-        { name: "id", type: "string", required: true, in: "path", description: "Strategy UUID" },
-        { name: "mode", type: "string", required: false, in: "body", enum: ["live", "paper"], default: "paper" },
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Strategy UUID",
+        },
+        {
+          name: "mode",
+          type: "string",
+          required: false,
+          in: "body",
+          enum: ["live", "paper"],
+          default: "paper",
+        },
       ],
     },
     {
@@ -159,7 +338,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/strategies/:id/stop",
       scope: "TRADE",
       category: "strategies",
-      parameters: [{ name: "id", type: "string", required: true, in: "path", description: "Strategy UUID" }],
+      parameters: [
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Strategy UUID",
+        },
+      ],
     },
     {
       name: "pause_strategy",
@@ -168,7 +355,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/strategies/:id/pause",
       scope: "TRADE",
       category: "strategies",
-      parameters: [{ name: "id", type: "string", required: true, in: "path", description: "Strategy UUID" }],
+      parameters: [
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Strategy UUID",
+        },
+      ],
     },
     {
       name: "resume_strategy",
@@ -177,7 +372,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/strategies/:id/resume",
       scope: "TRADE",
       category: "strategies",
-      parameters: [{ name: "id", type: "string", required: true, in: "path", description: "Strategy UUID" }],
+      parameters: [
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Strategy UUID",
+        },
+      ],
     },
     {
       name: "fork_strategy",
@@ -186,7 +389,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/strategies/:id/fork",
       scope: "WRITE",
       category: "strategies",
-      parameters: [{ name: "id", type: "string", required: true, in: "path", description: "Strategy UUID to fork" }],
+      parameters: [
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Strategy UUID to fork",
+        },
+      ],
     },
     {
       name: "like_strategy",
@@ -195,7 +406,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/strategies/:id/like",
       scope: "WRITE",
       category: "strategies",
-      parameters: [{ name: "id", type: "string", required: true, in: "path", description: "Strategy UUID" }],
+      parameters: [
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Strategy UUID",
+        },
+      ],
     },
     {
       name: "export_strategy",
@@ -204,7 +423,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/strategies/:id/export",
       scope: "READ",
       category: "strategies",
-      parameters: [{ name: "id", type: "string", required: true, in: "path", description: "Strategy UUID" }],
+      parameters: [
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Strategy UUID",
+        },
+      ],
     },
     {
       name: "import_strategy",
@@ -222,8 +449,21 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "READ",
       category: "strategies",
       parameters: [
-        { name: "page", type: "number", required: false, in: "query", default: 1 },
-        { name: "limit", type: "number", required: false, in: "query", default: 20, max: 100 },
+        {
+          name: "page",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 1,
+        },
+        {
+          name: "limit",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 20,
+          max: 100,
+        },
       ],
     },
 
@@ -236,12 +476,49 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "READ",
       category: "orders",
       parameters: [
-        { name: "status", type: "string", required: false, in: "query", description: "Filter by order status" },
-        { name: "strategyId", type: "string", required: false, in: "query", description: "Filter by strategy" },
-        { name: "from", type: "string", required: false, in: "query", description: "ISO 8601 start date" },
-        { name: "to", type: "string", required: false, in: "query", description: "ISO 8601 end date" },
-        { name: "page", type: "number", required: false, in: "query", default: 1 },
-        { name: "limit", type: "number", required: false, in: "query", default: 20, max: 100 },
+        {
+          name: "status",
+          type: "string",
+          required: false,
+          in: "query",
+          description: "Filter by order status",
+        },
+        {
+          name: "strategyId",
+          type: "string",
+          required: false,
+          in: "query",
+          description: "Filter by strategy",
+        },
+        {
+          name: "from",
+          type: "string",
+          required: false,
+          in: "query",
+          description: "ISO 8601 start date",
+        },
+        {
+          name: "to",
+          type: "string",
+          required: false,
+          in: "query",
+          description: "ISO 8601 end date",
+        },
+        {
+          name: "page",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 1,
+        },
+        {
+          name: "limit",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 20,
+          max: 100,
+        },
       ],
     },
     {
@@ -252,7 +529,13 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "TRADE",
       category: "orders",
       parameters: [
-        { name: "tokenId", type: "string", required: true, in: "body", description: "Token ID to close" },
+        {
+          name: "tokenId",
+          type: "string",
+          required: true,
+          in: "body",
+          description: "Token ID to close",
+        },
       ],
     },
     {
@@ -271,8 +554,20 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "TRADE",
       category: "orders",
       parameters: [
-        { name: "tokenId", type: "string", required: true, in: "body", description: "Market condition token ID" },
-        { name: "amount", type: "string", required: true, in: "body", description: "USDC amount to split" },
+        {
+          name: "tokenId",
+          type: "string",
+          required: true,
+          in: "body",
+          description: "Market condition token ID",
+        },
+        {
+          name: "amount",
+          type: "string",
+          required: true,
+          in: "body",
+          description: "USDC amount to split",
+        },
       ],
     },
     {
@@ -283,8 +578,20 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "TRADE",
       category: "orders",
       parameters: [
-        { name: "tokenId", type: "string", required: true, in: "body", description: "Market condition token ID" },
-        { name: "amount", type: "string", required: true, in: "body", description: "Token amount to merge" },
+        {
+          name: "tokenId",
+          type: "string",
+          required: true,
+          in: "body",
+          description: "Market condition token ID",
+        },
+        {
+          name: "amount",
+          type: "string",
+          required: true,
+          in: "body",
+          description: "Token amount to merge",
+        },
       ],
     },
 
@@ -305,8 +612,21 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "READ",
       category: "portfolio",
       parameters: [
-        { name: "period", type: "string", required: false, in: "query", enum: ["7d", "30d", "90d", "allTime"], default: "30d" },
-        { name: "strategyId", type: "string", required: false, in: "query", description: "Filter by strategy" },
+        {
+          name: "period",
+          type: "string",
+          required: false,
+          in: "query",
+          enum: ["7d", "30d", "90d", "allTime"],
+          default: "30d",
+        },
+        {
+          name: "strategyId",
+          type: "string",
+          required: false,
+          in: "query",
+          description: "Filter by strategy",
+        },
       ],
     },
 
@@ -327,10 +647,35 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "WRITE",
       category: "alerts",
       parameters: [
-        { name: "tokenId", type: "string", required: true, in: "body", description: "Token to watch" },
-        { name: "direction", type: "string", required: true, in: "body", enum: ["above", "below"] },
-        { name: "price", type: "string", required: true, in: "body", description: "Trigger price" },
-        { name: "persistent", type: "boolean", required: false, in: "body", default: false, description: "Re-arm after triggering" },
+        {
+          name: "tokenId",
+          type: "string",
+          required: true,
+          in: "body",
+          description: "Token to watch",
+        },
+        {
+          name: "direction",
+          type: "string",
+          required: true,
+          in: "body",
+          enum: ["above", "below"],
+        },
+        {
+          name: "price",
+          type: "string",
+          required: true,
+          in: "body",
+          description: "Trigger price",
+        },
+        {
+          name: "persistent",
+          type: "boolean",
+          required: false,
+          in: "body",
+          default: false,
+          description: "Re-arm after triggering",
+        },
       ],
     },
     {
@@ -340,7 +685,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/alerts/:id",
       scope: "WRITE",
       category: "alerts",
-      parameters: [{ name: "id", type: "string", required: true, in: "path", description: "Alert UUID" }],
+      parameters: [
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Alert UUID",
+        },
+      ],
     },
 
     // ─── Backtests ─────────────────────────────────────────────────────
@@ -354,8 +707,21 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       parameters: [
         { name: "strategyId", type: "string", required: false, in: "query" },
         { name: "status", type: "string", required: false, in: "query" },
-        { name: "page", type: "number", required: false, in: "query", default: 1 },
-        { name: "limit", type: "number", required: false, in: "query", default: 20, max: 100 },
+        {
+          name: "page",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 1,
+        },
+        {
+          name: "limit",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 20,
+          max: 100,
+        },
       ],
     },
     {
@@ -366,7 +732,13 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "WRITE",
       category: "backtests",
       parameters: [
-        { name: "strategyId", type: "string", required: true, in: "body", description: "Strategy UUID" },
+        {
+          name: "strategyId",
+          type: "string",
+          required: true,
+          in: "body",
+          description: "Strategy UUID",
+        },
       ],
     },
     {
@@ -384,7 +756,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/backtests/:id",
       scope: "READ",
       category: "backtests",
-      parameters: [{ name: "id", type: "string", required: true, in: "path", description: "Backtest UUID" }],
+      parameters: [
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Backtest UUID",
+        },
+      ],
     },
 
     // ─── Whales ────────────────────────────────────────────────────────
@@ -396,8 +776,21 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "READ",
       category: "whales",
       parameters: [
-        { name: "page", type: "number", required: false, in: "query", default: 1 },
-        { name: "limit", type: "number", required: false, in: "query", default: 20, max: 100 },
+        {
+          name: "page",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 1,
+        },
+        {
+          name: "limit",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 20,
+          max: 100,
+        },
       ],
     },
     {
@@ -423,7 +816,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/whales/:address",
       scope: "READ",
       category: "whales",
-      parameters: [{ name: "address", type: "string", required: true, in: "path", description: "Wallet address" }],
+      parameters: [
+        {
+          name: "address",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Wallet address",
+        },
+      ],
     },
     {
       name: "whale_toggle_follow",
@@ -432,7 +833,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/whales/:address/follow",
       scope: "WRITE",
       category: "whales",
-      parameters: [{ name: "address", type: "string", required: true, in: "path", description: "Wallet address" }],
+      parameters: [
+        {
+          name: "address",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Wallet address",
+        },
+      ],
     },
 
     // ─── Copy Trading ──────────────────────────────────────────────────
@@ -444,7 +853,13 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "TRADE",
       category: "copy",
       parameters: [
-        { name: "strategyId", type: "string", required: true, in: "body", description: "Strategy UUID to copy" },
+        {
+          name: "strategyId",
+          type: "string",
+          required: true,
+          in: "body",
+          description: "Strategy UUID to copy",
+        },
       ],
     },
     {
@@ -509,8 +924,21 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       category: "copy",
       parameters: [
         { name: "id", type: "string", required: true, in: "path" },
-        { name: "page", type: "number", required: false, in: "query", default: 1 },
-        { name: "limit", type: "number", required: false, in: "query", default: 20, max: 100 },
+        {
+          name: "page",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 1,
+        },
+        {
+          name: "limit",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 20,
+          max: 100,
+        },
       ],
     },
 
@@ -538,7 +966,15 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/news/:id",
       scope: "READ",
       category: "news",
-      parameters: [{ name: "id", type: "string", required: true, in: "path", description: "Article ID" }],
+      parameters: [
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          in: "path",
+          description: "Article ID",
+        },
+      ],
     },
 
     // ─── Scores ────────────────────────────────────────────────────────
@@ -576,10 +1012,30 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "READ",
       category: "discover",
       parameters: [
-        { name: "sort", type: "string", required: false, in: "query", enum: ["popular", "newest", "top_pnl", "most_forked"], default: "popular" },
+        {
+          name: "sort",
+          type: "string",
+          required: false,
+          in: "query",
+          enum: ["popular", "newest", "top_pnl", "most_forked"],
+          default: "popular",
+        },
         { name: "category", type: "string", required: false, in: "query" },
-        { name: "page", type: "number", required: false, in: "query", default: 1 },
-        { name: "limit", type: "number", required: false, in: "query", default: 20, max: 100 },
+        {
+          name: "page",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 1,
+        },
+        {
+          name: "limit",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 20,
+          max: 100,
+        },
       ],
     },
     {
@@ -590,9 +1046,29 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       scope: "READ",
       category: "discover",
       parameters: [
-        { name: "period", type: "string", required: false, in: "query", enum: ["7d", "30d", "allTime"], default: "30d" },
-        { name: "page", type: "number", required: false, in: "query", default: 1 },
-        { name: "limit", type: "number", required: false, in: "query", default: 20, max: 100 },
+        {
+          name: "period",
+          type: "string",
+          required: false,
+          in: "query",
+          enum: ["7d", "30d", "allTime"],
+          default: "30d",
+        },
+        {
+          name: "page",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 1,
+        },
+        {
+          name: "limit",
+          type: "number",
+          required: false,
+          in: "query",
+          default: 20,
+          max: 100,
+        },
       ],
     },
 
@@ -622,7 +1098,9 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/profile/:username",
       scope: "READ",
       category: "profile",
-      parameters: [{ name: "username", type: "string", required: true, in: "path" }],
+      parameters: [
+        { name: "username", type: "string", required: true, in: "path" },
+      ],
     },
     {
       name: "toggle_follow_user",
@@ -631,7 +1109,9 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
       path: "/api/v1/profile/:username/follow",
       scope: "WRITE",
       category: "profile",
-      parameters: [{ name: "username", type: "string", required: true, in: "path" }],
+      parameters: [
+        { name: "username", type: "string", required: true, in: "path" },
+      ],
     },
 
     // ─── Settings ──────────────────────────────────────────────────────
@@ -674,7 +1154,8 @@ const AVAILABLE_ACTIONS: ActionsSchema = {
           type: "array",
           required: true,
           in: "body",
-          description: "Array of 1-10 requests, each with id, method, path, and optional body",
+          description:
+            "Array of 1-10 requests, each with id, method, path, and optional body",
         },
       ],
     },

@@ -55,7 +55,11 @@ describe("WhaleDetectorService", () => {
       svc["processEvent"](event);
 
     it("ignores non-ORDER_FILLED events", async () => {
-      await processEvent(service, { type: "ORDER_CREATED", size: "10000", price: "1" });
+      await processEvent(service, {
+        type: "ORDER_CREATED",
+        size: "10000",
+        price: "1",
+      });
 
       expect(prisma.whaleAlert.create).not.toHaveBeenCalled();
     });
@@ -136,7 +140,11 @@ describe("WhaleDetectorService", () => {
     it("recalculates volume and trade count for each profile", async () => {
       // The new implementation uses groupBy + $transaction instead of N+1 queries
       prisma.whaleAlert.groupBy.mockResolvedValue([
-        { walletAddress: "0xwhale1", _sum: { notional: new Prisma.Decimal(3000) }, _count: 2 },
+        {
+          walletAddress: "0xwhale1",
+          _sum: { notional: new Prisma.Decimal(3000) },
+          _count: 2,
+        },
       ]);
       prisma.market.findMany.mockResolvedValue([]);
       prisma.$transaction.mockResolvedValue([{}]);

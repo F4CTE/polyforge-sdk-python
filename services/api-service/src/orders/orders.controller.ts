@@ -16,8 +16,19 @@ import type { FastifyReply } from "fastify";
 type Response = FastifyReply;
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
-import { IsOptional, IsString, IsNotEmpty, IsNumberString, MaxLength } from "class-validator";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  RequireScopes,
+  ApiKeyScopeGuard,
+} from "@polyforge/shared-auth";
+import {
+  IsOptional,
+  IsString,
+  IsNotEmpty,
+  IsNumberString,
+  MaxLength,
+} from "class-validator";
 import { OrdersService } from "./orders.service";
 import { ClosePositionDto } from "./dto/close-position.dto";
 import { PlaceOrderDto } from "./dto/place-order.dto";
@@ -85,7 +96,7 @@ export class OrdersController {
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
-  @RequireScopes('TRADE')
+  @RequireScopes("TRADE")
   closePosition(@CurrentUser() user: any, @Body() dto: ClosePositionDto) {
     return this.orders.closePosition(user.sub, dto);
   }
@@ -93,7 +104,7 @@ export class OrdersController {
   @Post("redeem")
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
-  @RequireScopes('TRADE')
+  @RequireScopes("TRADE")
   redeemPosition(@CurrentUser() user: any, @Body() dto: RedeemPositionDto) {
     return this.orders.redeemPosition(user.sub, dto);
   }
@@ -103,7 +114,7 @@ export class OrdersController {
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
-  @RequireScopes('TRADE')
+  @RequireScopes("TRADE")
   splitPosition(@CurrentUser() user: any, @Body() dto: SplitPositionDto) {
     return this.orders.splitPosition(user.sub, dto);
   }
@@ -113,31 +124,37 @@ export class OrdersController {
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
-  @RequireScopes('TRADE')
+  @RequireScopes("TRADE")
   mergePosition(@CurrentUser() user: any, @Body() dto: MergePositionDto) {
     return this.orders.mergePosition(user.sub, dto);
   }
 
-  @Post('place')
+  @Post("place")
   @UseGuards(JwtAuthGuard)
   @Throttle({ default: { limit: 30, ttl: 60000 } })
-  async placeOrder(@Req() req: { user: { sub: string } }, @Body() dto: PlaceOrderDto) {
+  async placeOrder(
+    @Req() req: { user: { sub: string } },
+    @Body() dto: PlaceOrderDto,
+  ) {
     return this.orders.placeOrder(req.user.sub, dto);
   }
 
-  @Delete(':id')
+  @Delete(":id")
   @UseGuards(JwtAuthGuard)
-  async cancelOrder(@Req() req: { user: { sub: string } }, @Param('id') id: string) {
+  async cancelOrder(
+    @Req() req: { user: { sub: string } },
+    @Param("id") id: string,
+  ) {
     return this.orders.cancelOrder(req.user.sub, id);
   }
 
-  @Get('export/csv')
+  @Get("export/csv")
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('READ')
+  @RequireScopes("READ")
   async exportCsv(@CurrentUser() user: any, @Res() res: Response) {
     const csv = await this.orders.exportCsv(user.sub);
-    res.header('Content-Type', 'text/csv');
-    res.header('Content-Disposition', 'attachment; filename="orders.csv"');
+    res.header("Content-Type", "text/csv");
+    res.header("Content-Disposition", 'attachment; filename="orders.csv"');
     res.send(csv);
   }
 }

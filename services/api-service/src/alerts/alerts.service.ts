@@ -26,7 +26,11 @@ export class AlertsService implements OnModuleInit {
 
   onModuleInit() {
     // Check alerts every 15 seconds
-    this.checkInterval = setInterval(() => this.checkAndFireAlerts(), 15_000);
+    this.checkInterval = setInterval(() => {
+      this.checkAndFireAlerts().catch((err: unknown) => {
+        this.logger.error("checkAndFireAlerts error", err);
+      });
+    }, 15_000);
   }
 
   /** Check all untriggered alerts against current Redis prices */
@@ -49,7 +53,9 @@ export class AlertsService implements OnModuleInit {
             const parsed = JSON.parse(raw);
             const price = parseFloat(parsed.price ?? parsed ?? "0");
             if (!isNaN(price)) priceMap.set(id, price);
-          } catch {}
+          } catch {
+            // no-op
+          }
         }
       });
 

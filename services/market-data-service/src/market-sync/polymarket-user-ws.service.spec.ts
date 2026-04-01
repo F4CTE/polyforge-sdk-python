@@ -67,9 +67,7 @@ function makeMocks() {
   const config = {
     get: vi
       .fn()
-      .mockReturnValue(
-        "wss://ws-subscriptions-clob.polymarket.com/ws/user",
-      ),
+      .mockReturnValue("wss://ws-subscriptions-clob.polymarket.com/ws/user"),
   } as any;
 
   return { redis, config };

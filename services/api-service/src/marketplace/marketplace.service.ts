@@ -34,19 +34,24 @@ export class MarketplaceService {
 
   // ── Browse ────────────────────────────────────────────────────────────────
 
-  async browse(params: { tag?: string; sort?: string; limit?: number; offset?: number }) {
+  async browse(params: {
+    tag?: string;
+    sort?: string;
+    limit?: number;
+    offset?: number;
+  }) {
     const { tag, sort = "newest", limit = 20, offset = 0 } = params;
 
     const orderBy =
       sort === "popular"
         ? { purchaseCount: "desc" as const }
         : sort === "rating"
-        ? { avgRating: "desc" as const }
-        : sort === "price_asc"
-        ? { priceUsdc: "asc" as const }
-        : sort === "price_desc"
-        ? { priceUsdc: "desc" as const }
-        : { createdAt: "desc" as const };
+          ? { avgRating: "desc" as const }
+          : sort === "price_asc"
+            ? { priceUsdc: "asc" as const }
+            : sort === "price_desc"
+              ? { priceUsdc: "desc" as const }
+              : { createdAt: "desc" as const };
 
     const where: any = {
       status: "ACTIVE",
@@ -57,7 +62,14 @@ export class MarketplaceService {
       this.prisma.marketplaceListing.findMany({
         where,
         include: {
-          seller: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
+          seller: {
+            select: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
           strategy: { select: { id: true, name: true, description: true } },
         },
         orderBy,
@@ -76,8 +88,17 @@ export class MarketplaceService {
     const listing = await this.prisma.marketplaceListing.findUnique({
       where: { id },
       include: {
-        seller: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
-        strategy: { select: { id: true, name: true, description: true, tags: true } },
+        seller: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+          },
+        },
+        strategy: {
+          select: { id: true, name: true, description: true, tags: true },
+        },
         purchases: {
           select: { rating: true, review: true, createdAt: true },
           where: { rating: { not: null } },
@@ -87,7 +108,10 @@ export class MarketplaceService {
       },
     });
     if (!listing || listing.status === "DELISTED") {
-      throw new NotFoundException({ code: "NOT_FOUND", message: "Listing not found" });
+      throw new NotFoundException({
+        code: "NOT_FOUND",
+        message: "Listing not found",
+      });
     }
     return listing;
   }
@@ -99,7 +123,10 @@ export class MarketplaceService {
       where: { id: dto.strategyId, userId: sellerId },
     });
     if (!strategy) {
-      throw new NotFoundException({ code: "STRATEGY_NOT_FOUND", message: "Strategy not found" });
+      throw new NotFoundException({
+        code: "STRATEGY_NOT_FOUND",
+        message: "Strategy not found",
+      });
     }
 
     const existing = await this.prisma.marketplaceListing.findUnique({
@@ -135,19 +162,28 @@ export class MarketplaceService {
 
   // ── Update listing ────────────────────────────────────────────────────────
 
-  async updateListing(sellerId: string, listingId: string, dto: UpdateListingDto) {
+  async updateListing(
+    sellerId: string,
+    listingId: string,
+    dto: UpdateListingDto,
+  ) {
     const listing = await this.prisma.marketplaceListing.findUnique({
       where: { id: listingId },
     });
     if (!listing || listing.sellerId !== sellerId) {
-      throw new NotFoundException({ code: "NOT_FOUND", message: "Listing not found" });
+      throw new NotFoundException({
+        code: "NOT_FOUND",
+        message: "Listing not found",
+      });
     }
 
     return this.prisma.marketplaceListing.update({
       where: { id: listingId },
       data: {
         ...(dto.title !== undefined ? { title: dto.title } : {}),
-        ...(dto.description !== undefined ? { description: dto.description } : {}),
+        ...(dto.description !== undefined
+          ? { description: dto.description }
+          : {}),
         ...(dto.priceUsdc !== undefined ? { priceUsdc: dto.priceUsdc } : {}),
         ...(dto.tags !== undefined ? { tags: dto.tags } : {}),
         ...(dto.status !== undefined ? { status: dto.status as any } : {}),
@@ -163,7 +199,10 @@ export class MarketplaceService {
       include: { strategy: true },
     });
     if (!listing || listing.status !== "ACTIVE") {
-      throw new NotFoundException({ code: "NOT_FOUND", message: "Listing not available" });
+      throw new NotFoundException({
+        code: "NOT_FOUND",
+        message: "Listing not available",
+      });
     }
     if (listing.sellerId === buyerId) {
       throw new UnprocessableEntityException({
@@ -192,7 +231,10 @@ export class MarketplaceService {
       where: { id: listing.strategyId },
     });
     if (!sourceStrategy) {
-      throw new NotFoundException({ code: "STRATEGY_GONE", message: "Strategy no longer available" });
+      throw new NotFoundException({
+        code: "STRATEGY_GONE",
+        message: "Strategy no longer available",
+      });
     }
 
     // Fork the strategy for the buyer
@@ -307,7 +349,12 @@ export class MarketplaceService {
       where: { buyerId },
       include: {
         listing: {
-          select: { id: true, title: true, priceUsdc: true, seller: { select: { username: true, displayName: true } } },
+          select: {
+            id: true,
+            title: true,
+            priceUsdc: true,
+            seller: { select: { username: true, displayName: true } },
+          },
         },
       },
       orderBy: { createdAt: "desc" },

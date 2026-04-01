@@ -125,7 +125,8 @@ export class MailService {
     const base = process.env.FRONTEND_URL ?? 'https://polyforge.app';
 
     const html = emailLayout({
-      preheader: 'Your Polyforge account is pending approval — we\'ll notify you once approved.',
+      preheader:
+        "Your Polyforge account is pending approval — we'll notify you once approved.",
       body: `
                 <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827">
                   Welcome to the beta waitlist, ${username}!
@@ -151,7 +152,8 @@ export class MailService {
                   You'll receive another email once your account is approved.
                 </p>
             `,
-      footerNote: 'You received this because you registered for a Polyforge beta account.',
+      footerNote:
+        'You received this because you registered for a Polyforge beta account.',
     });
 
     await this.transporter.sendMail({
@@ -169,7 +171,8 @@ export class MailService {
     const loginUrl = `${base}/login`;
 
     const html = emailLayout({
-      preheader: 'Your Polyforge beta access has been approved — you can now sign in!',
+      preheader:
+        'Your Polyforge beta access has been approved — you can now sign in!',
       body: `
                 <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827">
                   You're in, ${username}! 🎉
@@ -191,7 +194,8 @@ export class MailService {
                   Welcome to the Polyforge beta. Happy trading!
                 </p>
             `,
-      footerNote: 'You received this because your Polyforge beta application was approved.',
+      footerNote:
+        'You received this because your Polyforge beta application was approved.',
     });
 
     await this.transporter.sendMail({

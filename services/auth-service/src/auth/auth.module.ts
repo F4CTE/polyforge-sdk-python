@@ -9,7 +9,14 @@ import { MailModule } from '../mail/mail.module';
 import { TotpModule } from '../totp/totp.module';
 
 @Module({
-  imports: [UsersModule, MailModule, SharedAuthModule, TotpModule, RedisModule, SharedDbModule],
+  imports: [
+    UsersModule,
+    MailModule,
+    SharedAuthModule,
+    TotpModule,
+    RedisModule,
+    SharedDbModule,
+  ],
   providers: [AuthService],
   controllers: [AuthController],
 })

@@ -1,19 +1,26 @@
 import {
-  Controller, Get, Post, Delete, Param, Body,
-  UseGuards, HttpCode, HttpStatus,
-} from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
-import { WatchlistService } from './watchlist.service';
-import { IsString } from 'class-validator';
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from "@nestjs/common";
+import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
+import { WatchlistService } from "./watchlist.service";
+import { IsString } from "class-validator";
 
 class AddWatchlistDto {
   @IsString() marketId!: string;
 }
 
-@ApiTags('watchlist')
-@ApiBearerAuth('jwt')
-@Controller('watchlist')
+@ApiTags("watchlist")
+@ApiBearerAuth("jwt")
+@Controller("watchlist")
 @UseGuards(JwtAuthGuard)
 export class WatchlistController {
   constructor(private readonly watchlist: WatchlistService) {}
@@ -29,14 +36,14 @@ export class WatchlistController {
     return this.watchlist.add(user.sub, dto.marketId);
   }
 
-  @Delete(':marketId')
+  @Delete(":marketId")
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@CurrentUser() user: any, @Param('marketId') marketId: string) {
+  remove(@CurrentUser() user: any, @Param("marketId") marketId: string) {
     return this.watchlist.remove(user.sub, marketId);
   }
 
-  @Get(':marketId/status')
-  status(@CurrentUser() user: any, @Param('marketId') marketId: string) {
+  @Get(":marketId/status")
+  status(@CurrentUser() user: any, @Param("marketId") marketId: string) {
     return this.watchlist.isWatched(user.sub, marketId);
   }
 }

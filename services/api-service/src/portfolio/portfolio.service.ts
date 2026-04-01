@@ -31,37 +31,41 @@ export class PortfolioService {
 
     // Batch fetch all prices in one Redis MGET instead of sequential GETs
     const priceKeys = positions.map((p) => `cache:price:${p.tokenId}`);
-    const priceValues = priceKeys.length > 0
-      ? await this.redis.getClient().mget(...priceKeys)
-      : [];
+    const priceValues =
+      priceKeys.length > 0
+        ? await this.redis.getClient().mget(...priceKeys)
+        : [];
     const priceMap = new Map<string, number>();
     positions.forEach((pos, i) => {
       const raw = priceValues[i];
-      priceMap.set(pos.tokenId, raw ? parseFloat(JSON.parse(raw).price ?? "0") : 0);
+      priceMap.set(
+        pos.tokenId,
+        raw ? parseFloat(JSON.parse(raw).price ?? "0") : 0,
+      );
     });
 
     const enriched = positions.map((pos) => {
-        const currentPrice = priceMap.get(pos.tokenId) ?? 0;
-        const avgEntry = parseFloat(String(pos.avgPrice ?? "0"));
-        const size = parseFloat(String(pos.size ?? "0"));
-        const unrealizedPnl = (currentPrice - avgEntry) * size;
-        totalUnrealizedPnl += unrealizedPnl;
-        totalRealizedPnl += parseFloat(String(pos.realizedPnl ?? "0"));
+      const currentPrice = priceMap.get(pos.tokenId) ?? 0;
+      const avgEntry = parseFloat(String(pos.avgPrice ?? "0"));
+      const size = parseFloat(String(pos.size ?? "0"));
+      const unrealizedPnl = (currentPrice - avgEntry) * size;
+      totalUnrealizedPnl += unrealizedPnl;
+      totalRealizedPnl += parseFloat(String(pos.realizedPnl ?? "0"));
 
-        return {
-          id: pos.id,
-          marketId: pos.marketId,
-          tokenId: pos.tokenId,
-          marketTitle: marketTitleMap.get(pos.marketId) ?? "",
-          side: pos.outcome,
-          size: String(pos.size),
-          avgEntryPrice: String(pos.avgPrice),
-          currentPrice: currentPrice.toFixed(6),
-          unrealizedPnl: unrealizedPnl.toFixed(6),
-          resolutionStatus: pos.resolutionStatus,
-          marketCategory: marketMap.get(pos.marketId)?.category ?? null,
-        };
-      });
+      return {
+        id: pos.id,
+        marketId: pos.marketId,
+        tokenId: pos.tokenId,
+        marketTitle: marketTitleMap.get(pos.marketId) ?? "",
+        side: pos.outcome,
+        size: String(pos.size),
+        avgEntryPrice: String(pos.avgPrice),
+        currentPrice: currentPrice.toFixed(6),
+        unrealizedPnl: unrealizedPnl.toFixed(6),
+        resolutionStatus: pos.resolutionStatus,
+        marketCategory: marketMap.get(pos.marketId)?.category ?? null,
+      };
+    });
 
     return {
       positions: enriched,
@@ -73,23 +77,24 @@ export class PortfolioService {
   async exportCsv(userId: string): Promise<string> {
     const positions = await this.prisma.position.findMany({
       where: { userId },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { updatedAt: "desc" },
     });
 
-    const header = 'Market ID,Outcome,Size,Avg Price,Unrealized P&L,Realized P&L,Status,Updated\n';
-    const rows = positions.map(p =>
+    const header =
+      "Market ID,Outcome,Size,Avg Price,Unrealized P&L,Realized P&L,Status,Updated\n";
+    const rows = positions.map((p) =>
       [
         `"${p.marketId}"`,
-        p.outcome ?? '',
-        p.size?.toString() ?? '',
-        p.avgPrice?.toString() ?? '',
-        p.unrealizedPnl?.toString() ?? '',
-        p.realizedPnl?.toString() ?? '',
-        p.resolutionStatus ?? '',
+        p.outcome ?? "",
+        p.size?.toString() ?? "",
+        p.avgPrice?.toString() ?? "",
+        p.unrealizedPnl?.toString() ?? "",
+        p.realizedPnl?.toString() ?? "",
+        p.resolutionStatus ?? "",
         p.updatedAt.toISOString(),
-      ].join(',')
+      ].join(","),
     );
-    return header + rows.join('\n');
+    return header + rows.join("\n");
   }
 
   async getPnl(

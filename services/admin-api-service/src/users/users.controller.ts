@@ -46,8 +46,17 @@ export class UsersController {
     const suspended =
       suspendedRaw !== undefined ? suspendedRaw === "true" : undefined;
     const polymarketConnected =
-      polymarketConnectedRaw !== undefined ? polymarketConnectedRaw === "true" : undefined;
-    return this.users.findAll({ page, limit, search, status, suspended, polymarketConnected });
+      polymarketConnectedRaw !== undefined
+        ? polymarketConnectedRaw === "true"
+        : undefined;
+    return this.users.findAll({
+      page,
+      limit,
+      search,
+      status,
+      suspended,
+      polymarketConnected,
+    });
   }
 
   @Get(":id")

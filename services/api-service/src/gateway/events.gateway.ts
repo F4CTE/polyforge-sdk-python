@@ -1,8 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import {
-  WebSocketGateway,
-  WebSocketServer,
-} from "@nestjs/websockets";
+import { WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server } from "ws";
 
 @Injectable()
@@ -13,7 +10,11 @@ export class EventsGateway {
 
   broadcast(event: string, data: unknown): void {
     if (!this.server?.clients) return;
-    const message = JSON.stringify({ type: event, data, timestamp: Date.now() });
+    const message = JSON.stringify({
+      type: event,
+      data,
+      timestamp: Date.now(),
+    });
     for (const client of this.server.clients) {
       if (client.readyState === 1) {
         client.send(message);
@@ -29,7 +30,12 @@ export class EventsGateway {
     this.broadcast("PRICE_UPDATE", { tokenId, price, timestamp });
   }
 
-  pushStrategyEvent(strategyId: string, userId: string, type: string, data: unknown): void {
+  pushStrategyEvent(
+    strategyId: string,
+    userId: string,
+    type: string,
+    data: unknown,
+  ): void {
     this.sendToUser(userId, type, { strategyId, ...(data as object) });
   }
 

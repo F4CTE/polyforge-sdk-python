@@ -1,8 +1,4 @@
-import {
-  IsOptional,
-  IsEnum,
-  IsNumberString,
-} from "class-validator";
+import { IsOptional, IsEnum, IsNumberString } from "class-validator";
 import { CopyModeDto } from "./create-copy.dto";
 
 export class UpdateCopyDto {

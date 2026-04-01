@@ -65,7 +65,10 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
 
         if (!results) continue;
 
-        for (const [, messages] of results as [string, [string, string[]][]][]) {
+        for (const [, messages] of results as [
+          string,
+          [string, string[]][],
+        ][]) {
           for (const [id, fields] of messages) {
             const event = this.parseFields(fields);
             if (event.type === "WHALE_TRADE") {
@@ -152,9 +155,7 @@ export class CopyEngineService implements OnModuleInit, OnModuleDestroy {
     if (parseFloat(String(newLoss)) > maxDailyLoss) {
       // Rollback the increment
       await client.incrbyfloat(dailyKey, -notional);
-      this.logger.warn(
-        `Config ${config.id} exceeded daily loss limit`,
-      );
+      this.logger.warn(`Config ${config.id} exceeded daily loss limit`);
       return;
     }
 

@@ -19,7 +19,13 @@ function makeConfig(overrides: Record<string, string> = {}): ConfigService {
     GAS_ESTIMATE_MATIC: "0.002",
     ...overrides,
   };
-  return { get: (k: string, d?: string) => map[k] ?? d, getOrThrow: (k: string) => { if (!map[k]) throw new Error(`Missing ${k}`); return map[k]; } } as any;
+  return {
+    get: (k: string, d?: string) => map[k] ?? d,
+    getOrThrow: (k: string) => {
+      if (!map[k]) throw new Error(`Missing ${k}`);
+      return map[k];
+    },
+  } as any;
 }
 
 function makeMockRedis() {
@@ -59,9 +65,17 @@ describe("SigningService", () => {
     credentials = {
       getDecryptedCredentials: vi.fn().mockResolvedValue(DECRYPTED_CREDS),
     } as any;
-    const gasSponsor = { sponsorGas: vi.fn().mockResolvedValue(true), isActive: vi.fn().mockReturnValue(true) } as any;
+    const gasSponsor = {
+      sponsorGas: vi.fn().mockResolvedValue(true),
+      isActive: vi.fn().mockReturnValue(true),
+    } as any;
     redis = makeMockRedis();
-    svc = new SigningService(credentials, makeConfig(), gasSponsor, redis as any);
+    svc = new SigningService(
+      credentials,
+      makeConfig(),
+      gasSponsor,
+      redis as any,
+    );
   });
 
   // ── Dev stub signing ──────────────────────────────────────────────────────
@@ -216,12 +230,17 @@ describe("SigningService", () => {
       const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
       const prodSvc = new SigningService(
         credentials,
-        makeConfig({ NODE_ENV: "production", CLOB_API_URL: "http://mock-polymarket:3099" }),
+        makeConfig({
+          NODE_ENV: "production",
+          CLOB_API_URL: "http://mock-polymarket:3099",
+        }),
         gasSponsor,
         redis as any,
       );
 
-      expect(() => prodSvc.onModuleInit()).toThrow("Production requires real CLOB_API_URL");
+      expect(() => prodSvc.onModuleInit()).toThrow(
+        "Production requires real CLOB_API_URL",
+      );
     });
 
     it("throws when builder keys are missing in production", () => {
@@ -259,7 +278,10 @@ describe("SigningService", () => {
 
   describe("gas estimate configuration", () => {
     it("uses GAS_ESTIMATE_MATIC from env when set", async () => {
-      const gasSponsor = { sponsorGas: vi.fn().mockResolvedValue(true), isActive: vi.fn() } as any;
+      const gasSponsor = {
+        sponsorGas: vi.fn().mockResolvedValue(true),
+        isActive: vi.fn(),
+      } as any;
       const customSvc = new SigningService(
         credentials,
         makeConfig({ GAS_ESTIMATE_MATIC: "0.005" }),
@@ -273,7 +295,10 @@ describe("SigningService", () => {
     });
 
     it("defaults gas estimate to 0.002 MATIC when env not set", async () => {
-      const gasSponsor = { sponsorGas: vi.fn().mockResolvedValue(true), isActive: vi.fn() } as any;
+      const gasSponsor = {
+        sponsorGas: vi.fn().mockResolvedValue(true),
+        isActive: vi.fn(),
+      } as any;
       const defaultSvc = new SigningService(
         credentials,
         makeConfig(),

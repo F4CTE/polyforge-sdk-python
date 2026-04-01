@@ -22,7 +22,9 @@ describe("AdminAuthController", () => {
       login: vi.fn(),
       logout: vi.fn().mockResolvedValue(undefined),
       getMe: vi.fn(),
-      setupTotp: vi.fn().mockResolvedValue({ secret: "s", uri: "u", qrCode: "q" }),
+      setupTotp: vi
+        .fn()
+        .mockResolvedValue({ secret: "s", uri: "u", qrCode: "q" }),
       confirmTotp: vi.fn().mockResolvedValue({ enabled: true }),
       disableTotp: vi.fn().mockResolvedValue(undefined),
     } as unknown as AuthService;

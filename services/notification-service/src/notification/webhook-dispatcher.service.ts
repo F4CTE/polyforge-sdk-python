@@ -33,7 +33,9 @@ export class WebhookDispatcherService {
         select: { id: true, url: true, secret: true },
       });
     } catch (err: any) {
-      this.logger.warn(`Failed to load webhooks for user ${userId}: ${err?.message}`);
+      this.logger.warn(
+        `Failed to load webhooks for user ${userId}: ${err?.message}`,
+      );
       return;
     }
 
@@ -61,9 +63,24 @@ export class WebhookDispatcherService {
     // SECURITY: Re-validate URL at dispatch time to prevent DNS rebinding
     try {
       const parsed = new URL(url);
-      const blocked = ["localhost", "127.", "0.0.0.0", "10.", "172.16.", "172.17.", "172.18.", "192.168.", "169.254."];
-      if (blocked.some((b) => parsed.hostname.startsWith(b)) || parsed.protocol !== "https:") {
-        this.logger.warn(`Webhook ${webhookId} blocked — internal/non-HTTPS URL`);
+      const blocked = [
+        "localhost",
+        "127.",
+        "0.0.0.0",
+        "10.",
+        "172.16.",
+        "172.17.",
+        "172.18.",
+        "192.168.",
+        "169.254.",
+      ];
+      if (
+        blocked.some((b) => parsed.hostname.startsWith(b)) ||
+        parsed.protocol !== "https:"
+      ) {
+        this.logger.warn(
+          `Webhook ${webhookId} blocked — internal/non-HTTPS URL`,
+        );
         return;
       }
     } catch {
@@ -90,9 +107,13 @@ export class WebhookDispatcherService {
         this.logger.debug(`Webhook ${webhookId} delivered successfully`);
         return;
       }
-      this.logger.warn(`Webhook ${webhookId} returned ${res.status}, retrying...`);
+      this.logger.warn(
+        `Webhook ${webhookId} returned ${res.status}, retrying...`,
+      );
     } catch (err: any) {
-      this.logger.warn(`Webhook ${webhookId} failed: ${err?.message}, retrying...`);
+      this.logger.warn(
+        `Webhook ${webhookId} failed: ${err?.message}, retrying...`,
+      );
     }
 
     // Single retry
@@ -104,7 +125,9 @@ export class WebhookDispatcherService {
         signal: AbortSignal.timeout(5000),
       });
       if (!res.ok) {
-        this.logger.error(`Webhook ${webhookId} retry failed with ${res.status}`);
+        this.logger.error(
+          `Webhook ${webhookId} retry failed with ${res.status}`,
+        );
       }
     } catch (err: any) {
       this.logger.error(`Webhook ${webhookId} retry failed: ${err?.message}`);

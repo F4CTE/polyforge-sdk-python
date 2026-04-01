@@ -8,9 +8,7 @@ import {
 } from "./logic.blocks";
 import type { EvalContext, StrategyState } from "./block.types";
 
-function makeCtx(
-  overrides: Partial<EvalContext> = {},
-): EvalContext {
+function makeCtx(overrides: Partial<EvalContext> = {}): EvalContext {
   const state: StrategyState = {
     betsToday: 0,
     dailyPnl: 0,
@@ -40,8 +38,12 @@ describe("AndGateBlock", () => {
   });
 
   it("returns false when any input is false", () => {
-    expect(AndGateBlock.evaluate({}, [true, false], makeCtx()).value).toBe(false);
-    expect(AndGateBlock.evaluate({}, [false, true], makeCtx()).value).toBe(false);
+    expect(AndGateBlock.evaluate({}, [true, false], makeCtx()).value).toBe(
+      false,
+    );
+    expect(AndGateBlock.evaluate({}, [false, true], makeCtx()).value).toBe(
+      false,
+    );
   });
 
   it("returns false when all inputs are false", () => {
@@ -68,7 +70,9 @@ describe("OrGateBlock", () => {
   });
 
   it("returns false when all inputs are false", () => {
-    expect(OrGateBlock.evaluate({}, [false, false], makeCtx()).value).toBe(false);
+    expect(OrGateBlock.evaluate({}, [false, false], makeCtx()).value).toBe(
+      false,
+    );
   });
 
   it("returns false when no inputs", () => {
@@ -156,29 +160,17 @@ describe("IfThenElseBlock", () => {
 
 describe("DelayBlock", () => {
   it("passes through input value", () => {
-    const result = DelayBlock.evaluate(
-      { seconds: 5 },
-      [true],
-      makeCtx(),
-    );
+    const result = DelayBlock.evaluate({ seconds: 5 }, [true], makeCtx());
     expect(result.value).toBe(true);
   });
 
   it("passes through false input", () => {
-    const result = DelayBlock.evaluate(
-      { seconds: 5 },
-      [false],
-      makeCtx(),
-    );
+    const result = DelayBlock.evaluate({ seconds: 5 }, [false], makeCtx());
     expect(result.value).toBe(false);
   });
 
   it("reports delayed output when seconds > 0", () => {
-    const result = DelayBlock.evaluate(
-      { seconds: 10 },
-      [true],
-      makeCtx(),
-    );
+    const result = DelayBlock.evaluate({ seconds: 10 }, [true], makeCtx());
     expect(result.activeOutput).toBe("delayed");
   });
 
@@ -193,21 +185,13 @@ describe("DelayBlock", () => {
   });
 
   it("returns no activeOutput when seconds is 0", () => {
-    const result = DelayBlock.evaluate(
-      { seconds: 0 },
-      [true],
-      makeCtx(),
-    );
+    const result = DelayBlock.evaluate({ seconds: 0 }, [true], makeCtx());
     expect(result.value).toBe(true);
     expect(result.activeOutput).toBeUndefined();
   });
 
   it("defaults to false when no inputs provided", () => {
-    const result = DelayBlock.evaluate(
-      { seconds: 5 },
-      [],
-      makeCtx(),
-    );
+    const result = DelayBlock.evaluate({ seconds: 5 }, [], makeCtx());
     expect(result.value).toBe(false);
   });
 });
@@ -263,6 +247,8 @@ describe("Logic blocks — edge cases", () => {
 
   it("NotGateBlock: multiple inputs only inverts the first", () => {
     // First input is true, so result is false (ignores second input)
-    expect(NotGateBlock.evaluate({}, [true, false], makeCtx()).value).toBe(false);
+    expect(NotGateBlock.evaluate({}, [true, false], makeCtx()).value).toBe(
+      false,
+    );
   });
 });

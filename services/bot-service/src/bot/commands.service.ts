@@ -365,7 +365,10 @@ export class CommandsService {
 
   // ─── /whale <address> ─────────────────────────────────────────────────────
 
-  private async whaleProfile(_userId: string, address: string): Promise<string> {
+  private async whaleProfile(
+    _userId: string,
+    address: string,
+  ): Promise<string> {
     if (!address) return "Usage: /whale <wallet address>";
 
     try {
@@ -376,7 +379,8 @@ export class CommandsService {
       );
 
       if (!res.ok) {
-        if (res.status === 404) return `🐋 Whale "${address.slice(0, 10)}…" not found.`;
+        if (res.status === 404)
+          return `🐋 Whale "${address.slice(0, 10)}…" not found.`;
         return "⚠️ Could not fetch whale profile. Try again shortly.";
       }
 
@@ -498,7 +502,8 @@ export class CommandsService {
       );
 
       if (!res.ok) {
-        if (res.status === 404) return `❌ Copy config "${configId}" not found.`;
+        if (res.status === 404)
+          return `❌ Copy config "${configId}" not found.`;
         return "⚠️ Could not stop copy config. Try again shortly.";
       }
 

@@ -91,10 +91,7 @@ export class TradeReconcilerService {
         }
       }
     } catch (err) {
-      this.logger.error(
-        `Failed to reconcile trades for user ${userId}`,
-        err,
-      );
+      this.logger.error(`Failed to reconcile trades for user ${userId}`, err);
     }
 
     return updatedCount;

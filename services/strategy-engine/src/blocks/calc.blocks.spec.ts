@@ -7,9 +7,7 @@ import {
 } from "./calc.blocks";
 import type { EvalContext, StrategyState } from "./block.types";
 
-function makeCtx(
-  overrides: Partial<EvalContext> = {},
-): EvalContext {
+function makeCtx(overrides: Partial<EvalContext> = {}): EvalContext {
   const state: StrategyState = {
     betsToday: 0,
     dailyPnl: 0,
@@ -230,43 +228,53 @@ describe("ComparisonBlockEvaluator", () => {
 
   it("evaluates greater than or equal", () => {
     expect(
-      ComparisonBlockEvaluator.evaluate({ operator: ">=" }, [5, 5], makeCtx()).booleanValue,
+      ComparisonBlockEvaluator.evaluate({ operator: ">=" }, [5, 5], makeCtx())
+        .booleanValue,
     ).toBe(true);
     expect(
-      ComparisonBlockEvaluator.evaluate({ operator: ">=" }, [6, 5], makeCtx()).booleanValue,
+      ComparisonBlockEvaluator.evaluate({ operator: ">=" }, [6, 5], makeCtx())
+        .booleanValue,
     ).toBe(true);
     expect(
-      ComparisonBlockEvaluator.evaluate({ operator: ">=" }, [4, 5], makeCtx()).booleanValue,
+      ComparisonBlockEvaluator.evaluate({ operator: ">=" }, [4, 5], makeCtx())
+        .booleanValue,
     ).toBe(false);
   });
 
   it("evaluates less than or equal", () => {
     expect(
-      ComparisonBlockEvaluator.evaluate({ operator: "<=" }, [5, 5], makeCtx()).booleanValue,
+      ComparisonBlockEvaluator.evaluate({ operator: "<=" }, [5, 5], makeCtx())
+        .booleanValue,
     ).toBe(true);
     expect(
-      ComparisonBlockEvaluator.evaluate({ operator: "<=" }, [4, 5], makeCtx()).booleanValue,
+      ComparisonBlockEvaluator.evaluate({ operator: "<=" }, [4, 5], makeCtx())
+        .booleanValue,
     ).toBe(true);
     expect(
-      ComparisonBlockEvaluator.evaluate({ operator: "<=" }, [6, 5], makeCtx()).booleanValue,
+      ComparisonBlockEvaluator.evaluate({ operator: "<=" }, [6, 5], makeCtx())
+        .booleanValue,
     ).toBe(false);
   });
 
   it("evaluates equal", () => {
     expect(
-      ComparisonBlockEvaluator.evaluate({ operator: "==" }, [5, 5], makeCtx()).booleanValue,
+      ComparisonBlockEvaluator.evaluate({ operator: "==" }, [5, 5], makeCtx())
+        .booleanValue,
     ).toBe(true);
     expect(
-      ComparisonBlockEvaluator.evaluate({ operator: "==" }, [5, 6], makeCtx()).booleanValue,
+      ComparisonBlockEvaluator.evaluate({ operator: "==" }, [5, 6], makeCtx())
+        .booleanValue,
     ).toBe(false);
   });
 
   it("evaluates not equal", () => {
     expect(
-      ComparisonBlockEvaluator.evaluate({ operator: "!=" }, [5, 6], makeCtx()).booleanValue,
+      ComparisonBlockEvaluator.evaluate({ operator: "!=" }, [5, 6], makeCtx())
+        .booleanValue,
     ).toBe(true);
     expect(
-      ComparisonBlockEvaluator.evaluate({ operator: "!=" }, [5, 5], makeCtx()).booleanValue,
+      ComparisonBlockEvaluator.evaluate({ operator: "!=" }, [5, 5], makeCtx())
+        .booleanValue,
     ).toBe(false);
   });
 
@@ -338,10 +346,12 @@ describe("AbsRoundBlockEvaluator", () => {
 
   it("rounds to nearest integer", () => {
     expect(
-      AbsRoundBlockEvaluator.evaluate({ function: "round" }, [3.7], makeCtx()).value,
+      AbsRoundBlockEvaluator.evaluate({ function: "round" }, [3.7], makeCtx())
+        .value,
     ).toBe(4);
     expect(
-      AbsRoundBlockEvaluator.evaluate({ function: "round" }, [3.2], makeCtx()).value,
+      AbsRoundBlockEvaluator.evaluate({ function: "round" }, [3.2], makeCtx())
+        .value,
     ).toBe(3);
   });
 
@@ -356,19 +366,23 @@ describe("AbsRoundBlockEvaluator", () => {
 
   it("floors value", () => {
     expect(
-      AbsRoundBlockEvaluator.evaluate({ function: "floor" }, [3.9], makeCtx()).value,
+      AbsRoundBlockEvaluator.evaluate({ function: "floor" }, [3.9], makeCtx())
+        .value,
     ).toBe(3);
     expect(
-      AbsRoundBlockEvaluator.evaluate({ function: "floor" }, [-3.1], makeCtx()).value,
+      AbsRoundBlockEvaluator.evaluate({ function: "floor" }, [-3.1], makeCtx())
+        .value,
     ).toBe(-4);
   });
 
   it("ceils value", () => {
     expect(
-      AbsRoundBlockEvaluator.evaluate({ function: "ceil" }, [3.1], makeCtx()).value,
+      AbsRoundBlockEvaluator.evaluate({ function: "ceil" }, [3.1], makeCtx())
+        .value,
     ).toBe(4);
     expect(
-      AbsRoundBlockEvaluator.evaluate({ function: "ceil" }, [-3.9], makeCtx()).value,
+      AbsRoundBlockEvaluator.evaluate({ function: "ceil" }, [-3.9], makeCtx())
+        .value,
     ).toBe(-3);
   });
 

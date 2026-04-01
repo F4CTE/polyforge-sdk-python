@@ -1,7 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '@polyforge/shared-db';
 import { RedisService } from '@polyforge/shared-redis';
-import * as bcrypt from "bcrypt";
+import * as bcrypt from 'bcrypt';
 import { hashPassword, comparePassword } from '../auth/bcrypt.util';
 import { randomBytes, createHash } from 'crypto';
 
@@ -28,7 +28,12 @@ export class UsersService {
 
   // ─── Create ───────────────────────────────────────────────────────────────────
 
-  async create(data: { email: string; password: string; username: string; approved?: boolean }) {
+  async create(data: {
+    email: string;
+    password: string;
+    username: string;
+    approved?: boolean;
+  }) {
     const existingEmail = await this.findByEmail(data.email);
     if (existingEmail) {
       throw new HttpException(

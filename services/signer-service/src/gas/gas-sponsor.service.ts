@@ -117,14 +117,14 @@ redis.call('INCRBYFLOAT', key, cost)
 redis.call('EXPIRE', key, ttl)
 return 1
 `;
-    const result = await client.eval(
+    const result = (await client.eval(
       luaScript,
       1,
       key,
       String(gasCostMatic),
       String(this.dailyLimitMatic),
       String(48 * 60 * 60),
-    ) as number;
+    )) as number;
 
     if (result === 0) {
       this.logger.warn(

@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { EventEmitter } from 'events';
+import { Injectable } from "@nestjs/common";
+import { EventEmitter } from "events";
 
 export interface StrategyEventPayload {
   type: string;
@@ -39,7 +39,10 @@ export class StrategyEventsService {
    * Subscribe to events for a strategy.
    * Returns an unsubscribe function — call it when the SSE connection closes.
    */
-  subscribe(strategyId: string, handler: (event: StrategyEventPayload) => void): () => void {
+  subscribe(
+    strategyId: string,
+    handler: (event: StrategyEventPayload) => void,
+  ): () => void {
     const key = `s:${strategyId}`;
     this.emitter.on(key, handler);
     return () => this.emitter.off(key, handler);

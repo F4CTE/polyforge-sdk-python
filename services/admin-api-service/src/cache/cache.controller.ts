@@ -35,7 +35,7 @@ export class CacheAdminController {
     if (!FlushCacheDto.isAllowed(pattern)) {
       throw new BadRequestException(
         `Pattern "${pattern}" is not allowed. ` +
-        `Allowed patterns: ${FlushCacheDto.ALLOWED_PATTERNS.join(", ")}`,
+          `Allowed patterns: ${FlushCacheDto.ALLOWED_PATTERNS.join(", ")}`,
       );
     }
     return this.cacheAdmin.flushPattern(pattern);

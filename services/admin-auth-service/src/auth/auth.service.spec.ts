@@ -40,13 +40,19 @@ async function adminFactory(
 vi.mock("otplib", () => ({
   authenticator: {
     generateSecret: vi.fn().mockReturnValue("JBSWY3DPEHPK3PXP"),
-    keyuri: vi.fn().mockReturnValue("otpauth://totp/Polyforge%20Admin:admin@test.com?secret=JBSWY3DPEHPK3PXP&issuer=Polyforge%20Admin"),
+    keyuri: vi
+      .fn()
+      .mockReturnValue(
+        "otpauth://totp/Polyforge%20Admin:admin@test.com?secret=JBSWY3DPEHPK3PXP&issuer=Polyforge%20Admin",
+      ),
     check: vi.fn().mockReturnValue(true),
   },
 }));
 
 vi.mock("qrcode", () => ({
-  default: { toDataURL: vi.fn().mockResolvedValue("data:image/png;base64,mock") },
+  default: {
+    toDataURL: vi.fn().mockResolvedValue("data:image/png;base64,mock"),
+  },
   toDataURL: vi.fn().mockResolvedValue("data:image/png;base64,mock"),
 }));
 
@@ -165,7 +171,10 @@ describe("AdminAuthService", () => {
     });
 
     it("throws TOTP_REQUIRED (403) when admin has TOTP enabled but no code provided", async () => {
-      const admin = await adminFactory({ totpEnabled: true, totpSecret: "encrypted:secret" });
+      const admin = await adminFactory({
+        totpEnabled: true,
+        totpSecret: "encrypted:secret",
+      });
       adminDb.admin.findUnique.mockResolvedValue(admin);
 
       await expect(
@@ -299,7 +308,10 @@ describe("AdminAuthService", () => {
 
   describe("disableTotp", () => {
     it("clears TOTP fields on admin record", async () => {
-      const admin = await adminFactory({ totpEnabled: true, totpSecret: "encrypted" });
+      const admin = await adminFactory({
+        totpEnabled: true,
+        totpSecret: "encrypted",
+      });
       adminDb.admin.findUnique.mockResolvedValue(admin);
 
       // Mock the private decrypt method to return a valid secret

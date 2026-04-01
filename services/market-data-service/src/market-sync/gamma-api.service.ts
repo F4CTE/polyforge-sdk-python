@@ -59,7 +59,10 @@ function classifyCategory(slug: string, title: string): string {
   const t = title.toLowerCase();
 
   // Sports — team-based leagues
-  if (/^(nba|nfl|mlb|nhl|cbb|cfb|mls|epl|ucl|liga|serie-a|ligue1|wnba)-/.test(s)) return "Sports";
+  if (
+    /^(nba|nfl|mlb|nhl|cbb|cfb|mls|epl|ucl|liga|serie-a|ligue1|wnba)-/.test(s)
+  )
+    return "Sports";
   if (/^(atp|wta)-/.test(s)) return "Sports"; // Tennis
   if (/^(f1|motogp|nascar)-/.test(s)) return "Sports"; // Motorsport
   if (/^(ufc|boxing|mma|pfl)-/.test(s)) return "Sports"; // Combat
@@ -68,25 +71,60 @@ function classifyCategory(slug: string, title: string): string {
   if (/^(cs2|dota2|lol|valorant|rl)-/.test(s)) return "Sports";
 
   // Crypto
-  if (/bitcoin|btc|ethereum|eth|solana|sol|crypto|token|defi/.test(s)) return "Crypto";
+  if (/bitcoin|btc|ethereum|eth|solana|sol|crypto|token|defi/.test(s))
+    return "Crypto";
   if (/bitcoin|btc|ethereum|eth|solana|crypto/.test(t)) return "Crypto";
 
   // Politics
-  if (/trump|biden|harris|election|president|congress|senate|governor|mayor|democrat|republican|gop|primary|caucus|impeach|netanyahu|zelensky|putin|parliament|minister|regime/.test(s)) return "Politics";
-  if (/trump|biden|harris|election|president|congress|senate|governor|democrat|republican|netanyahu|zelensky|putin/.test(t)) return "Politics";
-  if (/^us-|^uk-|^eu-/.test(s) && /policy|act|bill|vote|law|sanction|ceasefire|forces|war|peace/.test(s)) return "Politics";
+  if (
+    /trump|biden|harris|election|president|congress|senate|governor|mayor|democrat|republican|gop|primary|caucus|impeach|netanyahu|zelensky|putin|parliament|minister|regime/.test(
+      s,
+    )
+  )
+    return "Politics";
+  if (
+    /trump|biden|harris|election|president|congress|senate|governor|democrat|republican|netanyahu|zelensky|putin/.test(
+      t,
+    )
+  )
+    return "Politics";
+  if (
+    /^us-|^uk-|^eu-/.test(s) &&
+    /policy|act|bill|vote|law|sanction|ceasefire|forces|war|peace/.test(s)
+  )
+    return "Politics";
 
   // Economics
-  if (/fed-rate|interest-rate|inflation|gdp|recession|unemployment|jobs-report|cpi|ppi|fomc/.test(s)) return "Economics";
-  if (/federal reserve|interest rate|inflation|gdp|recession|unemployment/.test(t)) return "Economics";
+  if (
+    /fed-rate|interest-rate|inflation|gdp|recession|unemployment|jobs-report|cpi|ppi|fomc/.test(
+      s,
+    )
+  )
+    return "Economics";
+  if (
+    /federal reserve|interest rate|inflation|gdp|recession|unemployment/.test(t)
+  )
+    return "Economics";
 
   // Finance
-  if (/^(spy|qqq|djia|nasdaq|s-?p-?500|crude-oil|gold|silver|treasury|bond|stock|will-.*-hit)/.test(s)) return "Finance";
-  if (/crude.oil|stock.market|s&p|nasdaq|dow.jones|treasury|bond.yield/.test(t)) return "Finance";
+  if (
+    /^(spy|qqq|djia|nasdaq|s-?p-?500|crude-oil|gold|silver|treasury|bond|stock|will-.*-hit)/.test(
+      s,
+    )
+  )
+    return "Finance";
+  if (/crude.oil|stock.market|s&p|nasdaq|dow.jones|treasury|bond.yield/.test(t))
+    return "Finance";
 
   // Technology
-  if (/ai|openai|google|apple|meta|microsoft|tesla|spacex|neuralink|launch|ipo|antitrust|ftc/.test(s)) return "Technology";
-  if (/artificial intelligence|openai|chatgpt|spacex|launch|ipo/.test(t)) return "Technology";
+  if (
+    /ai|openai|google|apple|meta|microsoft|tesla|spacex|neuralink|launch|ipo|antitrust|ftc/.test(
+      s,
+    )
+  )
+    return "Technology";
+  if (/artificial intelligence|openai|chatgpt|spacex|launch|ipo/.test(t))
+    return "Technology";
 
   return "Other";
 }
@@ -149,7 +187,9 @@ export class GammaApiService implements OnModuleInit {
           if (tokenIds.length > 0) this.ws.subscribeTokens(tokenIds);
           totalSynced++;
         } catch (err) {
-          this.logger.warn(`Skipped market ${market.id}: ${(err as Error).message}`);
+          this.logger.warn(
+            `Skipped market ${market.id}: ${(err as Error).message}`,
+          );
         }
       }
 
@@ -165,10 +205,7 @@ export class GammaApiService implements OnModuleInit {
 
   // ─── Private ─────────────────────────────────────────────────────────────
 
-  async fetchMarkets(
-    offset: number,
-    limit: number,
-  ): Promise<GammaMarket[]> {
+  async fetchMarkets(offset: number, limit: number): Promise<GammaMarket[]> {
     await GAMMA_LIMITER.acquire();
     const res = await fetch(
       `${this.gammaUrl}/markets?closed=false&limit=${limit}&offset=${offset}`,
@@ -177,9 +214,11 @@ export class GammaApiService implements OnModuleInit {
 
     if (!res.ok) throw new Error(`Gamma API returned ${res.status}`);
 
-    const body = await res.json() as { data?: unknown[] } | unknown[];
+    const body = (await res.json()) as { data?: unknown[] } | unknown[];
     // Real Polymarket returns a raw array; mock wraps in { data: [] }
-    const arr = Array.isArray(body) ? body : ((body as { data?: unknown[] }).data ?? []);
+    const arr = Array.isArray(body)
+      ? body
+      : ((body as { data?: unknown[] }).data ?? []);
     return arr as GammaMarket[];
   }
 
@@ -198,9 +237,15 @@ export class GammaApiService implements OnModuleInit {
 
     // Real Polymarket format — parse JSON string fields
     try {
-      const tokenIds: string[] = market.clobTokenIds ? JSON.parse(market.clobTokenIds) : [];
-      const outcomes: string[] = market.outcomes ? JSON.parse(market.outcomes) : [];
-      const prices: string[] = market.outcomePrices ? JSON.parse(market.outcomePrices) : [];
+      const tokenIds: string[] = market.clobTokenIds
+        ? JSON.parse(market.clobTokenIds)
+        : [];
+      const outcomes: string[] = market.outcomes
+        ? JSON.parse(market.outcomes)
+        : [];
+      const prices: string[] = market.outcomePrices
+        ? JSON.parse(market.outcomePrices)
+        : [];
 
       return tokenIds.map((tokenId, i) => ({
         tokenId,
@@ -215,11 +260,14 @@ export class GammaApiService implements OnModuleInit {
 
   private async upsertMarket(market: GammaMarket, tokens: GammaToken[]) {
     const title = market.title ?? market.question ?? market.slug;
-    const eventSlug = market.seriesSlug ?? market.events?.[0]?.slug ?? market.slug;
+    const eventSlug =
+      market.seriesSlug ?? market.events?.[0]?.slug ?? market.slug;
     const category = classifyCategory(eventSlug, title);
     const volume = market.volume24h
       ? parseFloat(market.volume24h)
-      : (typeof market.volume24hr === "number" ? market.volume24hr : 0);
+      : typeof market.volume24hr === "number"
+        ? market.volume24hr
+        : 0;
 
     // Upsert the market record
     await this.prisma.market.upsert({

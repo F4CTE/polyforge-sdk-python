@@ -49,20 +49,22 @@ export class SettingsService {
       where: { userId },
     });
     // Return defaults if no row exists yet
-    return prefs ?? {
-      emailEnabled: true,
-      telegramEnabled: false,
-      discordEnabled: false,
-      onOrderFilled: true,
-      onStrategyError: true,
-      onBacktestComplete: true,
-      onDailyLossLimit: true,
-      onMarketResolved: true,
-      onSomeoneFelked: false,
-      onSomeoneFollowed: false,
-      onSomeoneLiked: false,
-      onSomeoneCommented: false,
-    };
+    return (
+      prefs ?? {
+        emailEnabled: true,
+        telegramEnabled: false,
+        discordEnabled: false,
+        onOrderFilled: true,
+        onStrategyError: true,
+        onBacktestComplete: true,
+        onDailyLossLimit: true,
+        onMarketResolved: true,
+        onSomeoneFelked: false,
+        onSomeoneFollowed: false,
+        onSomeoneLiked: false,
+        onSomeoneCommented: false,
+      }
+    );
   }
 
   async updateNotifications(
@@ -98,7 +100,11 @@ export class SettingsService {
 
     // R5-02: Mark password change timestamp so JWT guard can reject stale tokens
     try {
-      await this.redis.set(`pwchange:${userId}`, Math.floor(Date.now() / 1000).toString(), 300);
+      await this.redis.set(
+        `pwchange:${userId}`,
+        Math.floor(Date.now() / 1000).toString(),
+        300,
+      );
     } catch (err) {
       this.logger.error(`Failed to set pwchange key for user ${userId}`, err);
     }
@@ -106,7 +112,10 @@ export class SettingsService {
     // Revoke all refresh tokens + their reverse-lookup keys for this user
     try {
       const client = this.redis.getClient();
-      const stream = client.scanStream({ match: `refresh:${userId}:*`, count: 100 });
+      const stream = client.scanStream({
+        match: `refresh:${userId}:*`,
+        count: 100,
+      });
       stream.on("data", (keys: string[]) => {
         if (keys.length > 0) {
           // Also delete the corresponding refresh_lookup: keys
@@ -118,28 +127,41 @@ export class SettingsService {
         }
       });
     } catch (err) {
-      this.logger.error(`Failed to revoke refresh tokens for user ${userId}`, err);
+      this.logger.error(
+        `Failed to revoke refresh tokens for user ${userId}`,
+        err,
+      );
     }
 
     return { message: "Password updated" };
   }
 
   async getRiskSettings(userId: string): Promise<any> {
-    const limits = await this.prisma.userLimit.findUnique({ where: { userId } });
+    const limits = await this.prisma.userLimit.findUnique({
+      where: { userId },
+    });
     return {
       drawdownEnabled: limits?.drawdownEnabled ?? false,
       drawdownLookbackHours: limits?.drawdownLookbackHours ?? 24,
-      drawdownThresholdPct: parseFloat(String(limits?.drawdownThresholdPct ?? "0.1")),
+      drawdownThresholdPct: parseFloat(
+        String(limits?.drawdownThresholdPct ?? "0.1"),
+      ),
       circuitBreakerTripped: limits?.circuitBreakerTripped ?? false,
       circuitBreakerTrippedAt: limits?.circuitBreakerTrippedAt ?? null,
     };
   }
 
-  async updateRiskSettings(userId: string, dto: UpdateRiskSettingsDto): Promise<any> {
+  async updateRiskSettings(
+    userId: string,
+    dto: UpdateRiskSettingsDto,
+  ): Promise<any> {
     const data: Record<string, unknown> = {};
-    if (dto.drawdownEnabled !== undefined) data.drawdownEnabled = dto.drawdownEnabled;
-    if (dto.drawdownLookbackHours !== undefined) data.drawdownLookbackHours = dto.drawdownLookbackHours;
-    if (dto.drawdownThresholdPct !== undefined) data.drawdownThresholdPct = dto.drawdownThresholdPct;
+    if (dto.drawdownEnabled !== undefined)
+      data.drawdownEnabled = dto.drawdownEnabled;
+    if (dto.drawdownLookbackHours !== undefined)
+      data.drawdownLookbackHours = dto.drawdownLookbackHours;
+    if (dto.drawdownThresholdPct !== undefined)
+      data.drawdownThresholdPct = dto.drawdownThresholdPct;
 
     await this.prisma.userLimit.upsert({
       where: { userId },
@@ -168,7 +190,10 @@ export class SettingsService {
     try {
       await this.redis.getClient().del(`cb:tripped:${userId}`);
     } catch (err) {
-      this.logger.error(`Failed to clear circuit breaker debounce key for ${userId}`, err);
+      this.logger.error(
+        `Failed to clear circuit breaker debounce key for ${userId}`,
+        err,
+      );
     }
 
     return { reset: true };

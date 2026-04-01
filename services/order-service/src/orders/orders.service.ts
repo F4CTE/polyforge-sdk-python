@@ -64,7 +64,9 @@ export class OrdersService {
       select: { id: true },
     });
     if (existingOrder) {
-      this.logger.warn(`Duplicate intent ${intent.intentId} — skipping (already processed as order ${existingOrder.id})`);
+      this.logger.warn(
+        `Duplicate intent ${intent.intentId} — skipping (already processed as order ${existingOrder.id})`,
+      );
       return;
     }
 
@@ -89,7 +91,9 @@ export class OrdersService {
     } catch (err: any) {
       // Handle unique constraint violation (P2002) for intentId
       if (err?.code === "P2002") {
-        this.logger.warn(`Duplicate intent ${intent.intentId} — skipping (unique constraint)`);
+        this.logger.warn(
+          `Duplicate intent ${intent.intentId} — skipping (unique constraint)`,
+        );
         return;
       }
       this.logger.error(

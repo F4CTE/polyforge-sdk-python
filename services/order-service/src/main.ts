@@ -20,10 +20,12 @@ function validateEnv() {
     process.exit(1);
   }
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     const clobUrl = process.env.CLOB_API_URL;
-    if (!clobUrl || clobUrl.includes('mock')) {
-      throw new Error('CLOB_API_URL must point to real Polymarket API in production');
+    if (!clobUrl || clobUrl.includes("mock")) {
+      throw new Error(
+        "CLOB_API_URL must point to real Polymarket API in production",
+      );
     }
   }
 }

@@ -56,8 +56,6 @@ import { SentimentModule } from "./sentiment/sentiment.module";
     SentimentModule,
   ],
   controllers: [HealthController],
-  providers: [
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
-  ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

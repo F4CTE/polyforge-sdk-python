@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '@polyforge/shared-db';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
+import { PrismaService } from "@polyforge/shared-db";
 
 @Injectable()
 export class WatchlistService {
@@ -22,9 +22,13 @@ export class WatchlistService {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
-    return items.map(i => ({ ...i.market, watchlistId: i.id, addedAt: i.createdAt }));
+    return items.map((i) => ({
+      ...i.market,
+      watchlistId: i.id,
+      addedAt: i.createdAt,
+    }));
   }
 
   async add(userId: string, marketId: string) {
@@ -36,8 +40,14 @@ export class WatchlistService {
       });
       return item;
     } catch (e: any) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2003') {
-        throw new NotFoundException({ code: 'MARKET_NOT_FOUND', message: 'Market not found' });
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2003"
+      ) {
+        throw new NotFoundException({
+          code: "MARKET_NOT_FOUND",
+          message: "Market not found",
+        });
       }
       throw e;
     }

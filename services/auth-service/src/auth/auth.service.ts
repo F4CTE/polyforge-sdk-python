@@ -98,7 +98,10 @@ export class AuthService {
       }
       if (result === -2) {
         throw new HttpException(
-          { code: 'INVITE_INVALID', message: 'Invite code has been fully redeemed' },
+          {
+            code: 'INVITE_INVALID',
+            message: 'Invite code has been fully redeemed',
+          },
           HttpStatus.FORBIDDEN,
         );
       }
@@ -126,7 +129,9 @@ export class AuthService {
         .then((verifyToken) =>
           this.mailService.sendVerificationEmail(user.email, verifyToken),
         )
-        .catch((err) => this.logger.error('Failed to send verification email', err));
+        .catch((err) =>
+          this.logger.error('Failed to send verification email', err),
+        );
 
       return {
         pending: true,
@@ -180,7 +185,10 @@ export class AuthService {
 
     if (user.suspended) {
       throw new HttpException(
-        { code: 'ACCOUNT_SUSPENDED', message: 'This account has been suspended' },
+        {
+          code: 'ACCOUNT_SUSPENDED',
+          message: 'This account has been suspended',
+        },
         HttpStatus.FORBIDDEN,
       );
     }
@@ -189,7 +197,8 @@ export class AuthService {
       throw new HttpException(
         {
           code: 'ACCOUNT_PENDING',
-          message: 'Your account is pending approval. You will receive an email once approved.',
+          message:
+            'Your account is pending approval. You will receive an email once approved.',
         },
         HttpStatus.FORBIDDEN,
       );
@@ -197,10 +206,13 @@ export class AuthService {
 
     // SECURITY: Per-account lockout after 10 failed attempts (15-minute window)
     const lockKey = `login:fail:${user.id}`;
-    const failCount = parseInt(await this.redis.get(lockKey) ?? '0', 10);
+    const failCount = parseInt((await this.redis.get(lockKey)) ?? '0', 10);
     if (failCount >= 10) {
       throw new HttpException(
-        { code: 'ACCOUNT_LOCKED', message: 'Too many failed attempts. Try again in 15 minutes.' },
+        {
+          code: 'ACCOUNT_LOCKED',
+          message: 'Too many failed attempts. Try again in 15 minutes.',
+        },
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
@@ -216,14 +228,16 @@ export class AuthService {
       if (newCount === 1) await client.expire(lockKey, 900); // 15-minute window
 
       // R5-05: Record failed login attempt
-      this.prisma.userLoginHistory.create({
-        data: {
-          userId: user.id,
-          ip: dto.ip ?? 'unknown',
-          userAgent: dto.userAgent ?? 'unknown',
-          success: false,
-        },
-      }).catch(() => {}); // Fire and forget
+      this.prisma.userLoginHistory
+        .create({
+          data: {
+            userId: user.id,
+            ip: dto.ip ?? 'unknown',
+            userAgent: dto.userAgent ?? 'unknown',
+            success: false,
+          },
+        })
+        .catch(() => {}); // Fire and forget
       throw new HttpException(
         { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
         HttpStatus.BAD_REQUEST,
@@ -257,14 +271,16 @@ export class AuthService {
     // R5-05: Record successful login in UserLoginHistory
     const ip = dto.ip ?? 'unknown';
     const userAgent = dto.userAgent ?? 'unknown';
-    this.prisma.userLoginHistory.create({
-      data: {
-        userId: user.id,
-        ip,
-        userAgent,
-        success: true,
-      },
-    }).catch(() => {}); // Fire and forget — don't fail login if history write fails
+    this.prisma.userLoginHistory
+      .create({
+        data: {
+          userId: user.id,
+          ip,
+          userAgent,
+          success: true,
+        },
+      })
+      .catch(() => {}); // Fire and forget — don't fail login if history write fails
 
     // Record login event for audit trail
     // Clear login lockout counter on success
@@ -371,15 +387,25 @@ export class AuthService {
   // ─── Reset password ───────────────────────────────────────────────────────────
 
   async resetPassword(dto: ResetPasswordDto) {
-    const userId = await this.usersService.resetPassword(dto.token, dto.newPassword);
+    const userId = await this.usersService.resetPassword(
+      dto.token,
+      dto.newPassword,
+    );
 
     // R5-02: Mark password change timestamp so JWT guard can reject stale tokens
     if (userId) {
       await this.redis
-        .set(`pwchange:${userId}`, Math.floor(Date.now() / 1000).toString(), 300)
+        .set(
+          `pwchange:${userId}`,
+          Math.floor(Date.now() / 1000).toString(),
+          300,
+        )
         .catch((err) => this.logger.error('Failed to set pwchange key', err));
       await this.revokeAllRefreshTokens(userId).catch((err) =>
-        this.logger.error('Failed to revoke refresh tokens after password reset', err),
+        this.logger.error(
+          'Failed to revoke refresh tokens after password reset',
+          err,
+        ),
       );
     }
 
@@ -479,7 +505,10 @@ export class AuthService {
           this.logger.error('Failed to resend verification email', err),
         );
     }
-    return { message: 'If that email exists and is unverified, a verification link has been sent' };
+    return {
+      message:
+        'If that email exists and is unverified, a verification link has been sent',
+    };
   }
 
   // ─── Delete account ─────────────────────────────────────────────────────────
@@ -519,7 +548,10 @@ export class AuthService {
 
     // 3. Revoke all refresh tokens
     await this.revokeAllRefreshTokens(userId).catch((err) =>
-      this.logger.error('Failed to revoke refresh tokens on account deletion', err),
+      this.logger.error(
+        'Failed to revoke refresh tokens on account deletion',
+        err,
+      ),
     );
 
     // 4. FINALLY soft-delete the user (after all cleanup is done)
@@ -554,7 +586,11 @@ export class AuthService {
     const key = REFRESH_KEY(userId, tokenHash);
     await this.redis.set(key, userId, REFRESH_TTL_SECONDS);
     // Reverse lookup: tokenHash -> userId (O(1) instead of SCAN)
-    await this.redis.set(`refresh_lookup:${tokenHash}`, userId, REFRESH_TTL_SECONDS);
+    await this.redis.set(
+      `refresh_lookup:${tokenHash}`,
+      userId,
+      REFRESH_TTL_SECONDS,
+    );
     return token;
   }
 

@@ -49,9 +49,17 @@ function validateEnv() {
     }
 
     // Reject CHANGE_ME default JWT secrets in production
-    const secretsForDefaultCheck = ['USER_JWT_SECRET', 'ADMIN_JWT_SECRET', 'BOT_JWT_SECRET', 'INTERNAL_JWT_SECRET'];
+    const secretsForDefaultCheck = [
+      'USER_JWT_SECRET',
+      'ADMIN_JWT_SECRET',
+      'BOT_JWT_SECRET',
+      'INTERNAL_JWT_SECRET',
+    ];
     for (const key of secretsForDefaultCheck) {
-      if (process.env[key]?.startsWith('CHANGE_ME') || process.env[key]?.startsWith('dev-')) {
+      if (
+        process.env[key]?.startsWith('CHANGE_ME') ||
+        process.env[key]?.startsWith('dev-')
+      ) {
         process.stderr.write(
           `[auth-service] ${key} must be changed from default in production\n`,
         );
@@ -74,7 +82,7 @@ async function bootstrap() {
   await app.register(fastifyCookie as any);
 
   // Response compression (brotli preferred, gzip fallback)
-  await app.register(compress as any, { encodings: ["br", "gzip"] });
+  await app.register(compress as any, { encodings: ['br', 'gzip'] });
 
   // ETag support for conditional requests (304 Not Modified)
   await app.register(etag as any);
@@ -102,7 +110,12 @@ async function bootstrap() {
         'https://www.polyforge.app',
         // dev origins — stripped in production by env check
         ...(process.env.NODE_ENV !== 'production'
-          ? ['http://localhost', 'http://localhost:4200', 'http://localhost:5173', 'http://127.0.0.1'] // gateway + vite dev + IP
+          ? [
+              'http://localhost',
+              'http://localhost:4200',
+              'http://localhost:5173',
+              'http://127.0.0.1',
+            ] // gateway + vite dev + IP
           : []),
       ];
       if (!origin || allowed.includes(origin)) {
@@ -137,15 +150,17 @@ async function bootstrap() {
   // R4-07: Graceful shutdown with timeout
   app.enableShutdownHooks();
   const appLogger = app.get(Logger);
-  process.on('SIGTERM', async () => {
-    appLogger.log('SIGTERM received, starting graceful shutdown...');
-    const forceTimeout = setTimeout(() => {
-      appLogger.warn('Graceful shutdown timed out, forcing exit');
-      process.exit(1);
-    }, 10_000);
-    await app.close();
-    clearTimeout(forceTimeout);
-    process.exit(0);
+  process.on('SIGTERM', () => {
+    void (async () => {
+      appLogger.log('SIGTERM received, starting graceful shutdown...');
+      const forceTimeout = setTimeout(() => {
+        appLogger.warn('Graceful shutdown timed out, forcing exit');
+        process.exit(1);
+      }, 10_000);
+      await app.close();
+      clearTimeout(forceTimeout);
+      process.exit(0);
+    })();
   });
 
   const port = process.env.AUTH_SERVICE_PORT ?? 3001;

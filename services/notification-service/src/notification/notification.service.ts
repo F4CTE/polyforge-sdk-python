@@ -94,7 +94,9 @@ export class NotificationService {
 
     // Webhook dispatch: fire-and-forget to all matching webhooks
     this.webhookDispatcher.dispatch(userId, eventType, data).catch((err) => {
-      this.logger.warn(`Webhook dispatch failed for ${eventType}: ${err?.message}`);
+      this.logger.warn(
+        `Webhook dispatch failed for ${eventType}: ${err?.message}`,
+      );
     });
 
     // Determine delivery mode
@@ -120,11 +122,19 @@ export class NotificationService {
     const html = this.templates.toHtml(content);
 
     // Dispatch to all enabled channels in parallel
-    await Promise.allSettled([
-      prefs.emailEnabled ? this.sendEmail(userId, content.title, content.body, html, eventType) : null,
-      prefs.telegramEnabled ? this.sendTelegram(userId, content.title, content.body, eventType) : null,
-      prefs.discordEnabled ? this.sendDiscord(userId, content.title, content.body, eventType) : null,
-    ].filter(Boolean) as Promise<void>[]);
+    await Promise.allSettled(
+      [
+        prefs.emailEnabled
+          ? this.sendEmail(userId, content.title, content.body, html, eventType)
+          : null,
+        prefs.telegramEnabled
+          ? this.sendTelegram(userId, content.title, content.body, eventType)
+          : null,
+        prefs.discordEnabled
+          ? this.sendDiscord(userId, content.title, content.body, eventType)
+          : null,
+      ].filter(Boolean) as Promise<void>[],
+    );
   }
 
   // ─── Digest (HOURLY / DAILY) ──────────────────────────────────────────────
@@ -291,8 +301,14 @@ export class NotificationService {
     let error: string | undefined;
     try {
       // Escape HTML entities for Telegram's HTML parse mode
-      const safeTitle = title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const safeBody = body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const safeTitle = title
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      const safeBody = body
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
       await this.telegram.send(chatId, `<b>${safeTitle}</b>\n\n${safeBody}`);
     } catch (err: any) {
       success = false;

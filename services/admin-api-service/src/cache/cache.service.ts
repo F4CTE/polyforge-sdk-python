@@ -56,36 +56,41 @@ export class CacheAdminService {
   async getStreamStats() {
     const client = this.redis.getClient();
     const STREAMS = [
-      'stream:orders',
-      'stream:cancellations',
-      'stream:redemptions',
-      'stream:strategy-events',
-      'stream:notifications',
+      "stream:orders",
+      "stream:cancellations",
+      "stream:redemptions",
+      "stream:strategy-events",
+      "stream:notifications",
     ];
 
     const results = await Promise.all(
       STREAMS.map(async (name) => {
         try {
-          const rawInfo = await client.xinfo('STREAM', name) as unknown[];
+          const rawInfo = (await client.xinfo("STREAM", name)) as unknown[];
           const info: Record<string, unknown> = {};
           for (let i = 0; i < rawInfo.length - 1; i += 2) {
             info[String(rawInfo[i])] = rawInfo[i + 1];
           }
 
-          const rawGroups = await client.xinfo('GROUPS', name) as unknown[][];
+          const rawGroups = (await client.xinfo("GROUPS", name)) as unknown[][];
           const groups = rawGroups.map((g) => {
             const gm: Record<string, unknown> = {};
             for (let i = 0; i < g.length - 1; i += 2) {
               gm[String(g[i])] = g[i + 1];
             }
             return {
-              name: gm['name'],
-              consumers: Number(gm['consumers'] ?? 0),
-              pending: Number(gm['pel-count'] ?? 0),
+              name: gm["name"],
+              consumers: Number(gm["consumers"] ?? 0),
+              pending: Number(gm["pel-count"] ?? 0),
             };
           });
 
-          return { name, length: Number(info['length'] ?? 0), groups, error: false };
+          return {
+            name,
+            length: Number(info["length"] ?? 0),
+            groups,
+            error: false,
+          };
         } catch {
           return { name, length: 0, groups: [], error: true };
         }
@@ -100,7 +105,7 @@ export class CacheAdminService {
     if (!FlushCacheDto.isAllowed(pattern)) {
       throw new BadRequestException(
         `Pattern "${pattern}" is not allowed. ` +
-        `Allowed patterns: ${FlushCacheDto.ALLOWED_PATTERNS.join(", ")}`,
+          `Allowed patterns: ${FlushCacheDto.ALLOWED_PATTERNS.join(", ")}`,
       );
     }
 

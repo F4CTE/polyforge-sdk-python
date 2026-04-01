@@ -30,7 +30,10 @@ export class OutboundRateLimiter {
   private refill(): void {
     const now = Date.now();
     const elapsed = now - this.lastRefill;
-    this.tokens = Math.min(this.maxTokens, this.tokens + elapsed * this.refillRate);
+    this.tokens = Math.min(
+      this.maxTokens,
+      this.tokens + elapsed * this.refillRate,
+    );
     this.lastRefill = now;
   }
 
@@ -53,7 +56,7 @@ export class OutboundRateLimiter {
 }
 
 /** Pre-configured limiters at 50% of Polymarket's per-endpoint limits */
-export const CLOB_LIMITER = new OutboundRateLimiter(75);     // 50% of /book 150/s
-export const GAMMA_LIMITER = new OutboundRateLimiter(15);    // 50% of /markets 30/s
-export const DATA_LIMITER = new OutboundRateLimiter(10);     // 50% of /trades 20/s
+export const CLOB_LIMITER = new OutboundRateLimiter(75); // 50% of /book 150/s
+export const GAMMA_LIMITER = new OutboundRateLimiter(15); // 50% of /markets 30/s
+export const DATA_LIMITER = new OutboundRateLimiter(10); // 50% of /trades 20/s
 export const RELAYER_LIMITER = new OutboundRateLimiter(0.4); // ~25/min

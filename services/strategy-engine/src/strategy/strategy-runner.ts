@@ -24,17 +24,21 @@ const MIN_TICK_MS = 200;
 const STALE_PRICE_MS = 5_000;
 
 /** Safe wrapper around expr-eval to prevent DoS via long/malicious expressions */
-function safeEvaluate(expression: string, scope: Record<string, number>, maxLength = 200): number {
+function safeEvaluate(
+  expression: string,
+  scope: Record<string, number>,
+  maxLength = 200,
+): number {
   if (expression.length > maxLength) {
     throw new Error(`Expression too long: ${expression.length} > ${maxLength}`);
   }
   // Reject potentially dangerous patterns and CPU-exhausting exponentiation
   if (/while|for|function|eval|require|import/.test(expression)) {
-    throw new Error('Expression contains forbidden keywords');
+    throw new Error("Expression contains forbidden keywords");
   }
   // Block nested exponentiation (e.g., 9^9^9) which causes CPU exhaustion
   if ((expression.match(/\^/g) || []).length > 2) {
-    throw new Error('Expression contains too many exponentiation operators');
+    throw new Error("Expression contains too many exponentiation operators");
   }
   try {
     return exprParser.evaluate(expression, scope);
@@ -252,7 +256,9 @@ export class StrategyRunner {
         ctx.variables = ctx.variables ?? {};
         ctx.variables[`__calc_${block.id}`] = result.value;
         if (result.booleanValue !== undefined) {
-          ctx.variables[`__calc_bool_${block.id}`] = result.booleanValue ? 1 : 0;
+          ctx.variables[`__calc_bool_${block.id}`] = result.booleanValue
+            ? 1
+            : 0;
         }
       }
     }
@@ -448,10 +454,16 @@ export class StrategyRunner {
   private evaluateLogicGraph(
     ctx: EvalContext,
   ): Map<string, { value: boolean; activeOutput?: string }> {
-    const results = new Map<string, { value: boolean; activeOutput?: string }>();
+    const results = new Map<
+      string,
+      { value: boolean; activeOutput?: string }
+    >();
 
     // Build adjacency: which logic blocks feed into which
-    const incomingEdges = new Map<string, { source: string; sourceHandle?: string }[]>();
+    const incomingEdges = new Map<
+      string,
+      { source: string; sourceHandle?: string }[]
+    >();
     for (const conn of this.logicConnections) {
       const list = incomingEdges.get(conn.target) ?? [];
       list.push({ source: conn.source, sourceHandle: conn.sourceHandle });
@@ -528,7 +540,11 @@ export class StrategyRunner {
     return results;
   }
 
-  private scheduleDelayedAction(blockId: string, seconds: number, value: boolean) {
+  private scheduleDelayedAction(
+    blockId: string,
+    seconds: number,
+    value: boolean,
+  ) {
     // Clear any existing timer for this block
     const existing = this.delayedActions.get(blockId);
     if (existing) clearTimeout(existing);
@@ -549,7 +565,8 @@ export class StrategyRunner {
     const ids = new Set<string>();
     for (const block of [...this.triggers, ...this.actions]) {
       const params = (block as any).params;
-      if (params?.tokenId && typeof params.tokenId === "string") ids.add(params.tokenId);
+      if (params?.tokenId && typeof params.tokenId === "string")
+        ids.add(params.tokenId);
     }
     this._cachedTokenIds = [...ids];
     return this._cachedTokenIds;

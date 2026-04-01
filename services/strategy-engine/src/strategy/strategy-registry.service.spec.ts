@@ -190,7 +190,9 @@ describe("StrategyRegistryService — stop()", () => {
     await svc.stop("strat-1");
 
     expect(prisma.strategy.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: StrategyStatus.IDLE }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({ status: StrategyStatus.IDLE }),
+      }),
     );
   });
 
@@ -462,7 +464,10 @@ describe("StrategyRegistryService — onApplicationBootstrap()", () => {
   });
 
   it("resumes RUNNING strategies on startup", async () => {
-    const strategy = makeDbStrategy({ id: "strat-1", status: StrategyStatus.RUNNING });
+    const strategy = makeDbStrategy({
+      id: "strat-1",
+      status: StrategyStatus.RUNNING,
+    });
     prisma.strategy.findMany.mockResolvedValue([strategy]);
     prisma.strategy.findUnique.mockResolvedValue(strategy);
 
@@ -472,7 +477,10 @@ describe("StrategyRegistryService — onApplicationBootstrap()", () => {
   });
 
   it("resumes PAPER strategies on startup", async () => {
-    const strategy = makeDbStrategy({ id: "strat-2", status: StrategyStatus.PAPER });
+    const strategy = makeDbStrategy({
+      id: "strat-2",
+      status: StrategyStatus.PAPER,
+    });
     prisma.strategy.findMany.mockResolvedValue([strategy]);
     prisma.strategy.findUnique.mockResolvedValue(strategy);
 
@@ -482,8 +490,14 @@ describe("StrategyRegistryService — onApplicationBootstrap()", () => {
   });
 
   it("continues reconciliation when one strategy fails to resume", async () => {
-    const strat1 = makeDbStrategy({ id: "strat-1", status: StrategyStatus.RUNNING });
-    const strat2 = makeDbStrategy({ id: "strat-2", status: StrategyStatus.RUNNING });
+    const strat1 = makeDbStrategy({
+      id: "strat-1",
+      status: StrategyStatus.RUNNING,
+    });
+    const strat2 = makeDbStrategy({
+      id: "strat-2",
+      status: StrategyStatus.RUNNING,
+    });
 
     prisma.strategy.findMany.mockResolvedValue([strat1, strat2]);
     prisma.strategy.findUnique.mockResolvedValue(strat1);
@@ -493,7 +507,9 @@ describe("StrategyRegistryService — onApplicationBootstrap()", () => {
   });
 
   it("handles database failure during reconciliation gracefully", async () => {
-    prisma.strategy.findMany.mockRejectedValue(new Error("DB connection failed"));
+    prisma.strategy.findMany.mockRejectedValue(
+      new Error("DB connection failed"),
+    );
 
     // Should not throw
     await expect(svc.onApplicationBootstrap()).resolves.not.toThrow();

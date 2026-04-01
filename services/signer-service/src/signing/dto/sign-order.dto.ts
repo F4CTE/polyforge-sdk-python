@@ -31,7 +31,9 @@ export class SignOrderDto {
 
   /** Size in shares — minimum enforced per Polymarket CLOB requirements */
   @IsNumber()
-  @Min(1, { message: 'Order size must be at least 1 share (Polymarket minimum)' })
+  @Min(1, {
+    message: "Order size must be at least 1 share (Polymarket minimum)",
+  })
   size!: number;
 
   /** Limit price (0-1) */

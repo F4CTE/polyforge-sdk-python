@@ -31,7 +31,9 @@ export class ArbitrageService {
     private readonly redis: RedisService,
   ) {}
 
-  async getOpportunities(minMargin = MIN_MARGIN_PCT): Promise<ArbitrageOpportunity[]> {
+  async getOpportunities(
+    minMargin = MIN_MARGIN_PCT,
+  ): Promise<ArbitrageOpportunity[]> {
     // 1. Fetch open binary markets with their token pairs
     const markets = await this.prisma.market.findMany({
       where: { closed: false },

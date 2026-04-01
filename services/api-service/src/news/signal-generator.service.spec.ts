@@ -43,7 +43,14 @@ describe("SignalGeneratorService", () => {
     it("includes the article title and summary in the prompt", () => {
       const prompt = service.buildPrompt(
         { title: "Election update", summary: "Big changes ahead" },
-        [{ id: "m1", title: "Will X win?", slug: "x-win", category: "politics" }],
+        [
+          {
+            id: "m1",
+            title: "Will X win?",
+            slug: "x-win",
+            category: "politics",
+          },
+        ],
       );
 
       expect(prompt).toContain("Election update");
@@ -51,13 +58,10 @@ describe("SignalGeneratorService", () => {
     });
 
     it("includes market IDs and titles in the prompt", () => {
-      const prompt = service.buildPrompt(
-        { title: "Test", summary: null },
-        [
-          { id: "m1", title: "Market A", slug: "a", category: null },
-          { id: "m2", title: "Market B", slug: "b", category: null },
-        ],
-      );
+      const prompt = service.buildPrompt({ title: "Test", summary: null }, [
+        { id: "m1", title: "Market A", slug: "a", category: null },
+        { id: "m2", title: "Market B", slug: "b", category: null },
+      ]);
 
       expect(prompt).toContain("m1");
       expect(prompt).toContain("Market A");
@@ -66,10 +70,7 @@ describe("SignalGeneratorService", () => {
     });
 
     it('uses "No summary available." when summary is null', () => {
-      const prompt = service.buildPrompt(
-        { title: "Test", summary: null },
-        [],
-      );
+      const prompt = service.buildPrompt({ title: "Test", summary: null }, []);
 
       expect(prompt).toContain("No summary available.");
     });
@@ -80,7 +81,13 @@ describe("SignalGeneratorService", () => {
   describe("parseResponse", () => {
     it("parses valid JSON array of signals", () => {
       const raw = JSON.stringify([
-        { marketId: "m1", direction: "BUY", outcome: "YES", confidence: 80, reasoning: "test" },
+        {
+          marketId: "m1",
+          direction: "BUY",
+          outcome: "YES",
+          confidence: 80,
+          reasoning: "test",
+        },
       ]);
 
       const result = service.parseResponse(raw);
@@ -95,7 +102,8 @@ describe("SignalGeneratorService", () => {
     });
 
     it("handles markdown code blocks wrapping JSON", () => {
-      const raw = '```json\n[{"marketId":"m1","direction":"SELL","outcome":"NO","confidence":60,"reasoning":"r"}]\n```';
+      const raw =
+        '```json\n[{"marketId":"m1","direction":"SELL","outcome":"NO","confidence":60,"reasoning":"r"}]\n```';
 
       const result = service.parseResponse(raw);
 
@@ -148,7 +156,13 @@ describe("SignalGeneratorService", () => {
       ]);
       llm.analyze.mockResolvedValue(
         JSON.stringify([
-          { marketId: "m1", direction: "BUY", outcome: "YES", confidence: 98, reasoning: "r" },
+          {
+            marketId: "m1",
+            direction: "BUY",
+            outcome: "YES",
+            confidence: 98,
+            reasoning: "r",
+          },
         ]),
       );
 
@@ -163,12 +177,22 @@ describe("SignalGeneratorService", () => {
       ]);
       llm.analyze.mockResolvedValue(
         JSON.stringify([
-          { marketId: "m1", direction: "BUY", outcome: "YES", confidence: 80, reasoning: "strong signal" },
+          {
+            marketId: "m1",
+            direction: "BUY",
+            outcome: "YES",
+            confidence: 80,
+            reasoning: "strong signal",
+          },
         ]),
       );
       prisma.newsSignal.create.mockResolvedValue({ id: "sig1" });
 
-      await service.generateSignals({ id: "a1", title: "Test", summary: "Summary" });
+      await service.generateSignals({
+        id: "a1",
+        title: "Test",
+        summary: "Summary",
+      });
 
       expect(prisma.newsSignal.create).toHaveBeenCalledOnce();
       expect(redis.xadd).toHaveBeenCalledWith(
@@ -187,7 +211,13 @@ describe("SignalGeneratorService", () => {
       ]);
       llm.analyze.mockResolvedValue(
         JSON.stringify([
-          { marketId: "m999", direction: "BUY", outcome: "YES", confidence: 50, reasoning: "r" },
+          {
+            marketId: "m999",
+            direction: "BUY",
+            outcome: "YES",
+            confidence: 50,
+            reasoning: "r",
+          },
         ]),
       );
 

@@ -110,7 +110,9 @@ describe('AuthController', () => {
       const request = makeRequest();
       await controller.logout({}, request, reply);
       expect(reply.clearCookie).toHaveBeenCalledWith('pf_token', { path: '/' });
-      expect(reply.clearCookie).toHaveBeenCalledWith('pf_refresh', { path: '/' });
+      expect(reply.clearCookie).toHaveBeenCalledWith('pf_refresh', {
+        path: '/',
+      });
     });
 
     it('revokes refresh token from body when provided (N-H2)', async () => {
@@ -124,7 +126,9 @@ describe('AuthController', () => {
       const reply = makeReply();
       const request = makeRequest({ pf_refresh: 'cookie-token' });
       await controller.logout({}, request, reply);
-      expect(authService.revokeRefreshToken).toHaveBeenCalledWith('cookie-token');
+      expect(authService.revokeRefreshToken).toHaveBeenCalledWith(
+        'cookie-token',
+      );
     });
 
     it('prefers body token over cookie token (N-H2)', async () => {

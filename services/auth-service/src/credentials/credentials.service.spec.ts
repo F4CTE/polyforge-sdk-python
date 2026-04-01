@@ -8,7 +8,9 @@ import { JwtService } from '@nestjs/jwt';
 function makeMockConfig(overrides: Record<string, string> = {}) {
   return {
     get: vi.fn((key: string, def: string) => overrides[key] ?? def),
-    getOrThrow: vi.fn((key: string) => overrides[key] ?? 'test-internal-jwt-secret'),
+    getOrThrow: vi.fn(
+      (key: string) => overrides[key] ?? 'test-internal-jwt-secret',
+    ),
   };
 }
 
@@ -153,7 +155,9 @@ describe('CredentialsService', () => {
 
       // Verify strategy engine was called to list running strategies
       expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining(`/internal/strategies?userId=${encodeURIComponent(user.id)}&status=RUNNING`),
+        expect.stringContaining(
+          `/internal/strategies?userId=${encodeURIComponent(user.id)}&status=RUNNING`,
+        ),
         expect.objectContaining({
           headers: expect.objectContaining({
             Authorization: expect.stringContaining('Bearer'),
@@ -177,7 +181,10 @@ describe('CredentialsService', () => {
       } as any);
       // Strategy engine returns empty list, signer returns OK
       fetchSpy
-        .mockResolvedValueOnce({ ok: true, json: vi.fn().mockResolvedValue([]) })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue([]),
+        })
         .mockResolvedValueOnce({ ok: true });
 
       await service.delete(user.id);
@@ -206,7 +213,10 @@ describe('CredentialsService', () => {
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
       db.user.update.mockResolvedValue(user as any);
       fetchSpy
-        .mockResolvedValueOnce({ ok: true, json: vi.fn().mockResolvedValue([]) })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue([]),
+        })
         .mockResolvedValueOnce({ ok: false, status: 404 });
 
       await expect(service.delete(user.id)).resolves.toBeUndefined();
@@ -216,7 +226,10 @@ describe('CredentialsService', () => {
       const user = connectedUser();
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
       fetchSpy
-        .mockResolvedValueOnce({ ok: true, json: vi.fn().mockResolvedValue([]) })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue([]),
+        })
         .mockResolvedValueOnce({ ok: false, status: 500 });
 
       await expect(service.delete(user.id)).rejects.toMatchObject({
@@ -229,7 +242,10 @@ describe('CredentialsService', () => {
       const user = connectedUser();
       db.user.findUniqueOrThrow.mockResolvedValue(user as any);
       fetchSpy
-        .mockResolvedValueOnce({ ok: true, json: vi.fn().mockResolvedValue([]) })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue([]),
+        })
         .mockRejectedValueOnce(new Error('ECONNREFUSED'));
 
       await expect(service.delete(user.id)).rejects.toMatchObject({

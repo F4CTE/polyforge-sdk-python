@@ -31,7 +31,8 @@ export class ImportCredentialsDto {
 
   @ApiProperty({
     example: 1,
-    description: 'Signature type (0 = EOA, 1 = POLY_PROXY (Magic Link), 2 = GNOSIS_SAFE (MetaMask/Privy))',
+    description:
+      'Signature type (0 = EOA, 1 = POLY_PROXY (Magic Link), 2 = GNOSIS_SAFE (MetaMask/Privy))',
   })
   @IsInt()
   @IsIn([0, 1, 2])

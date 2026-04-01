@@ -105,7 +105,10 @@ export class StrategiesService {
     });
   }
 
-  async findOne(id: string, userId: string): Promise<Strategy & { childCount: number }> {
+  async findOne(
+    id: string,
+    userId: string,
+  ): Promise<Strategy & { childCount: number }> {
     const strategy = await this.prisma.strategy.findUnique({ where: { id } });
     if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
       throw new NotFoundException({
@@ -203,7 +206,8 @@ export class StrategiesService {
     dto: StartStrategyDto,
   ): Promise<{ status: string; startedAt: string }> {
     // R4-01: Atomic check-and-update to prevent race conditions
-    const newStatus = dto.mode === "paper" ? StrategyStatus.PAPER : StrategyStatus.RUNNING;
+    const newStatus =
+      dto.mode === "paper" ? StrategyStatus.PAPER : StrategyStatus.RUNNING;
     const updated = await this.prisma.strategy.updateMany({
       where: { id, userId, status: StrategyStatus.IDLE },
       data: { status: newStatus },
@@ -212,12 +216,21 @@ export class StrategiesService {
       // Either not found, not owned, or not in IDLE state
       const strategy = await this.prisma.strategy.findUnique({ where: { id } });
       if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
-        throw new NotFoundException({ code: "NOT_FOUND", message: "Strategy not found" });
+        throw new NotFoundException({
+          code: "NOT_FOUND",
+          message: "Strategy not found",
+        });
       }
       if (strategy.userId !== userId) {
-        throw new ForbiddenException({ code: "FORBIDDEN", message: "Access denied" });
+        throw new ForbiddenException({
+          code: "FORBIDDEN",
+          message: "Access denied",
+        });
       }
-      throw new ConflictException({ code: "ALREADY_RUNNING", message: "Strategy is already running or not in IDLE state" });
+      throw new ConflictException({
+        code: "ALREADY_RUNNING",
+        message: "Strategy is already running or not in IDLE state",
+      });
     }
 
     if (dto.mode === "live") {
@@ -268,23 +281,39 @@ export class StrategiesService {
   ): Promise<{ status: string; stoppedAt: string }> {
     // R4-01: Atomic check-and-update — only stop if currently RUNNING or PAPER
     const updated = await this.prisma.strategy.updateMany({
-      where: { id, userId, status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] } },
+      where: {
+        id,
+        userId,
+        status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] },
+      },
       data: { status: StrategyStatus.IDLE },
     });
     if (updated.count === 0) {
       const strategy = await this.prisma.strategy.findUnique({ where: { id } });
       if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
-        throw new NotFoundException({ code: "NOT_FOUND", message: "Strategy not found" });
+        throw new NotFoundException({
+          code: "NOT_FOUND",
+          message: "Strategy not found",
+        });
       }
       if (strategy.userId !== userId) {
-        throw new ForbiddenException({ code: "FORBIDDEN", message: "Access denied" });
+        throw new ForbiddenException({
+          code: "FORBIDDEN",
+          message: "Access denied",
+        });
       }
-      throw new ConflictException({ code: "NOT_RUNNING", message: "Strategy is not in a running state" });
+      throw new ConflictException({
+        code: "NOT_RUNNING",
+        message: "Strategy is not in a running state",
+      });
     }
 
     // Stop managed children first
     const children = await this.prisma.strategy.findMany({
-      where: { parentStrategyId: id, status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] } },
+      where: {
+        parentStrategyId: id,
+        status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] },
+      },
       select: { id: true },
     });
     for (const child of children) {
@@ -313,18 +342,31 @@ export class StrategiesService {
   async pause(id: string, userId: string): Promise<{ status: string }> {
     // R4-01: Atomic check-and-update — only pause if currently RUNNING or PAPER
     const updated = await this.prisma.strategy.updateMany({
-      where: { id, userId, status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] } },
+      where: {
+        id,
+        userId,
+        status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] },
+      },
       data: { status: StrategyStatus.PAUSED },
     });
     if (updated.count === 0) {
       const strategy = await this.prisma.strategy.findUnique({ where: { id } });
       if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
-        throw new NotFoundException({ code: "NOT_FOUND", message: "Strategy not found" });
+        throw new NotFoundException({
+          code: "NOT_FOUND",
+          message: "Strategy not found",
+        });
       }
       if (strategy.userId !== userId) {
-        throw new ForbiddenException({ code: "FORBIDDEN", message: "Access denied" });
+        throw new ForbiddenException({
+          code: "FORBIDDEN",
+          message: "Access denied",
+        });
       }
-      throw new ConflictException({ code: "NOT_RUNNING", message: "Strategy is not in a running state" });
+      throw new ConflictException({
+        code: "NOT_RUNNING",
+        message: "Strategy is not in a running state",
+      });
     }
 
     await this.client.post(
@@ -344,12 +386,21 @@ export class StrategiesService {
     if (updated.count === 0) {
       const strategy = await this.prisma.strategy.findUnique({ where: { id } });
       if (!strategy || strategy.status === StrategyStatus.ARCHIVED) {
-        throw new NotFoundException({ code: "NOT_FOUND", message: "Strategy not found" });
+        throw new NotFoundException({
+          code: "NOT_FOUND",
+          message: "Strategy not found",
+        });
       }
       if (strategy.userId !== userId) {
-        throw new ForbiddenException({ code: "FORBIDDEN", message: "Access denied" });
+        throw new ForbiddenException({
+          code: "FORBIDDEN",
+          message: "Access denied",
+        });
       }
-      throw new ConflictException({ code: "NOT_PAUSED", message: "Strategy is not in PAUSED state" });
+      throw new ConflictException({
+        code: "NOT_PAUSED",
+        message: "Strategy is not in PAUSED state",
+      });
     }
 
     await this.client.post(
@@ -485,7 +536,7 @@ export class StrategiesService {
     await this.findOne(id, userId);
 
     // R5-03: Strip HTML tags from comment content to prevent XSS
-    const sanitizedContent = dto.content.replace(/<[^>]*>/g, '');
+    const sanitizedContent = dto.content.replace(/<[^>]*>/g, "");
 
     return this.prisma.strategyComment.create({
       data: { strategyId: id, userId, content: sanitizedContent },
@@ -544,7 +595,9 @@ export class StrategiesService {
   async listChildren(
     id: string,
     userId: string,
-  ): Promise<{ children: Array<{ id: string; name: string; status: string }> }> {
+  ): Promise<{
+    children: Array<{ id: string; name: string; status: string }>;
+  }> {
     await this.getOwned(id, userId);
     const children = await this.prisma.strategy.findMany({
       where: { parentStrategyId: id, status: { not: StrategyStatus.ARCHIVED } },
@@ -589,10 +642,7 @@ export class StrategiesService {
 
     const isOwner = strategy.userId === userId;
 
-    if (
-      strategy.visibility === StrategyVisibility.PRIVATE &&
-      !isOwner
-    ) {
+    if (strategy.visibility === StrategyVisibility.PRIVATE && !isOwner) {
       throw new ForbiddenException({
         code: "FORBIDDEN",
         message: "Access denied",
@@ -617,9 +667,7 @@ export class StrategiesService {
           actions: strategy.actions ?? [],
         },
         // Only include canvas layout for the owner
-        ...(isOwner && strategy.canvas
-          ? { canvas: strategy.canvas }
-          : {}),
+        ...(isOwner && strategy.canvas ? { canvas: strategy.canvas } : {}),
       },
     };
 
@@ -678,29 +726,77 @@ export class StrategiesService {
     // Validate block types against known types
     const KNOWN_BLOCK_TYPES = new Set([
       // Safety (engine registry names)
-      "DAILY_LOSS_LIMIT", "CONSECUTIVE_LOSS", "MAX_POSITION_SIZE",
-      "EXPOSURE_EXCEEDS", "LOSS_STREAK", "WIN_STREAK", "ORDERS_PER_MIN",
+      "DAILY_LOSS_LIMIT",
+      "CONSECUTIVE_LOSS",
+      "MAX_POSITION_SIZE",
+      "EXPOSURE_EXCEEDS",
+      "LOSS_STREAK",
+      "WIN_STREAK",
+      "ORDERS_PER_MIN",
       "BETS_TODAY_LESS_THAN",
       // Safety (UI names)
-      "STOP_IF_DAILY_LOSS", "STOP_IF_CONSECUTIVE_LOSSES", "STOP_IF_DRAWDOWN",
-      "STOP_IF_POSITION_SIZE", "MAX_DAILY_BETS",
+      "STOP_IF_DAILY_LOSS",
+      "STOP_IF_CONSECUTIVE_LOSSES",
+      "STOP_IF_DRAWDOWN",
+      "STOP_IF_POSITION_SIZE",
+      "MAX_DAILY_BETS",
       // Triggers
-      "PRICE_ABOVE", "PRICE_BELOW", "PRICE_CROSSES_UP", "PRICE_CROSSES_DOWN",
-      "PRICE_IN_RANGE", "SPREAD_ABOVE", "TICK", "WAIT", "PAUSE_AFTER_FILL",
-      "PRICE_CHANGE_PCT", "VOLUME_SPIKE", "TIME_WINDOW", "TIME_IN_WINDOW",
+      "PRICE_ABOVE",
+      "PRICE_BELOW",
+      "PRICE_CROSSES_UP",
+      "PRICE_CROSSES_DOWN",
+      "PRICE_IN_RANGE",
+      "SPREAD_ABOVE",
+      "TICK",
+      "WAIT",
+      "PAUSE_AFTER_FILL",
+      "PRICE_CHANGE_PCT",
+      "VOLUME_SPIKE",
+      "TIME_WINDOW",
+      "TIME_IN_WINDOW",
       // Conditions
-      "POSITION_OPEN", "NO_POSITION", "POSITION_SIZE_BELOW", "NO_RECENT_BET",
-      "LIQUIDITY_ABOVE", "MIN_LIQUIDITY", "MIN_PRICE", "MAX_PRICE",
-      "MAX_SPREAD", "SPREAD_BELOW", "MARKET_OPEN", "MARKET_RESOLVED",
-      "MARKET_RESOLVING", "DAILY_LOSS_BELOW", "TIME_BETWEEN",
+      "POSITION_OPEN",
+      "NO_POSITION",
+      "POSITION_SIZE_BELOW",
+      "NO_RECENT_BET",
+      "LIQUIDITY_ABOVE",
+      "MIN_LIQUIDITY",
+      "MIN_PRICE",
+      "MAX_PRICE",
+      "MAX_SPREAD",
+      "SPREAD_BELOW",
+      "MARKET_OPEN",
+      "MARKET_RESOLVED",
+      "MARKET_RESOLVING",
+      "DAILY_LOSS_BELOW",
+      "TIME_BETWEEN",
       // Actions
-      "BUY", "SELL", "BUY_YES", "BUY_NO", "SELL_YES", "SELL_NO",
-      "CLOSE_POSITION", "SET_STOP_LOSS", "SET_TAKE_PROFIT", "TAKE_PROFIT",
-      "SCALE_IN", "SCALE_OUT", "CANCEL_ALL_ORDERS", "NOTIFY", "RUN_STRATEGY",
+      "BUY",
+      "SELL",
+      "BUY_YES",
+      "BUY_NO",
+      "SELL_YES",
+      "SELL_NO",
+      "CLOSE_POSITION",
+      "SET_STOP_LOSS",
+      "SET_TAKE_PROFIT",
+      "TAKE_PROFIT",
+      "SCALE_IN",
+      "SCALE_OUT",
+      "CANCEL_ALL_ORDERS",
+      "NOTIFY",
+      "RUN_STRATEGY",
       // Logic
-      "IF_THEN_ELSE", "AND_GATE", "OR_GATE", "NOT_GATE", "DELAY",
+      "IF_THEN_ELSE",
+      "AND_GATE",
+      "OR_GATE",
+      "NOT_GATE",
+      "DELAY",
       // Calc
-      "MATH", "AGGREGATION", "COMPARISON", "ABS_ROUND",
+      "MATH",
+      "AGGREGATION",
+      "COMPARISON",
+      "ABS_ROUND",
     ]);
     const allBlocks = [
       ...(Array.isArray(blocks.triggers) ? blocks.triggers : []),
@@ -709,7 +805,12 @@ export class StrategiesService {
       ...(Array.isArray(blocks.safety) ? blocks.safety : []),
     ];
     for (const block of allBlocks) {
-      if (block && typeof block.type === "string" && !KNOWN_BLOCK_TYPES.has(block.type) && !KNOWN_BLOCK_TYPES.has(block.type.toUpperCase())) {
+      if (
+        block &&
+        typeof block.type === "string" &&
+        !KNOWN_BLOCK_TYPES.has(block.type) &&
+        !KNOWN_BLOCK_TYPES.has(block.type.toUpperCase())
+      ) {
         throw new UnprocessableEntityException({
           code: "IMPORT_UNKNOWN_BLOCK_TYPE",
           message: `Unknown block type: ${block.type}`,
@@ -800,22 +901,71 @@ export class StrategiesService {
 
     // Validate block types against known types
     const KNOWN = new Set([
-      "DAILY_LOSS_LIMIT", "CONSECUTIVE_LOSS", "MAX_POSITION_SIZE",
-      "EXPOSURE_EXCEEDS", "LOSS_STREAK", "WIN_STREAK", "ORDERS_PER_MIN",
-      "BETS_TODAY_LESS_THAN", "STOP_IF_DAILY_LOSS", "STOP_IF_CONSECUTIVE_LOSSES",
-      "STOP_IF_DRAWDOWN", "STOP_IF_POSITION_SIZE", "MAX_DAILY_BETS",
-      "PRICE_ABOVE", "PRICE_BELOW", "PRICE_CROSSES_UP", "PRICE_CROSSES_DOWN",
-      "PRICE_IN_RANGE", "SPREAD_ABOVE", "TICK", "WAIT", "PAUSE_AFTER_FILL",
-      "PRICE_CHANGE_PCT", "VOLUME_SPIKE", "TIME_WINDOW", "TIME_IN_WINDOW",
-      "POSITION_OPEN", "NO_POSITION", "POSITION_SIZE_BELOW", "NO_RECENT_BET",
-      "LIQUIDITY_ABOVE", "MIN_LIQUIDITY", "MIN_PRICE", "MAX_PRICE",
-      "MAX_SPREAD", "SPREAD_BELOW", "MARKET_OPEN", "MARKET_RESOLVED",
-      "MARKET_RESOLVING", "DAILY_LOSS_BELOW", "TIME_BETWEEN",
-      "BUY", "SELL", "BUY_YES", "BUY_NO", "SELL_YES", "SELL_NO",
-      "CLOSE_POSITION", "SET_STOP_LOSS", "SET_TAKE_PROFIT", "TAKE_PROFIT",
-      "SCALE_IN", "SCALE_OUT", "CANCEL_ALL_ORDERS", "NOTIFY", "RUN_STRATEGY",
-      "IF_THEN_ELSE", "AND_GATE", "OR_GATE", "NOT_GATE", "DELAY",
-      "MATH", "AGGREGATION", "COMPARISON", "ABS_ROUND",
+      "DAILY_LOSS_LIMIT",
+      "CONSECUTIVE_LOSS",
+      "MAX_POSITION_SIZE",
+      "EXPOSURE_EXCEEDS",
+      "LOSS_STREAK",
+      "WIN_STREAK",
+      "ORDERS_PER_MIN",
+      "BETS_TODAY_LESS_THAN",
+      "STOP_IF_DAILY_LOSS",
+      "STOP_IF_CONSECUTIVE_LOSSES",
+      "STOP_IF_DRAWDOWN",
+      "STOP_IF_POSITION_SIZE",
+      "MAX_DAILY_BETS",
+      "PRICE_ABOVE",
+      "PRICE_BELOW",
+      "PRICE_CROSSES_UP",
+      "PRICE_CROSSES_DOWN",
+      "PRICE_IN_RANGE",
+      "SPREAD_ABOVE",
+      "TICK",
+      "WAIT",
+      "PAUSE_AFTER_FILL",
+      "PRICE_CHANGE_PCT",
+      "VOLUME_SPIKE",
+      "TIME_WINDOW",
+      "TIME_IN_WINDOW",
+      "POSITION_OPEN",
+      "NO_POSITION",
+      "POSITION_SIZE_BELOW",
+      "NO_RECENT_BET",
+      "LIQUIDITY_ABOVE",
+      "MIN_LIQUIDITY",
+      "MIN_PRICE",
+      "MAX_PRICE",
+      "MAX_SPREAD",
+      "SPREAD_BELOW",
+      "MARKET_OPEN",
+      "MARKET_RESOLVED",
+      "MARKET_RESOLVING",
+      "DAILY_LOSS_BELOW",
+      "TIME_BETWEEN",
+      "BUY",
+      "SELL",
+      "BUY_YES",
+      "BUY_NO",
+      "SELL_YES",
+      "SELL_NO",
+      "CLOSE_POSITION",
+      "SET_STOP_LOSS",
+      "SET_TAKE_PROFIT",
+      "TAKE_PROFIT",
+      "SCALE_IN",
+      "SCALE_OUT",
+      "CANCEL_ALL_ORDERS",
+      "NOTIFY",
+      "RUN_STRATEGY",
+      "IF_THEN_ELSE",
+      "AND_GATE",
+      "OR_GATE",
+      "NOT_GATE",
+      "DELAY",
+      "MATH",
+      "AGGREGATION",
+      "COMPARISON",
+      "ABS_ROUND",
     ]);
 
     const allBlocks = [
@@ -839,7 +989,9 @@ export class StrategiesService {
     return this.create(userId, {
       name: parsed.name ?? "AI-Generated Strategy",
       description: parsed.description ?? dto.description,
-      execMode: (["TICK", "EVENT", "HYBRID"].includes(parsed.execMode ?? "") ? parsed.execMode : "TICK") as string,
+      execMode: (["TICK", "EVENT", "HYBRID"].includes(parsed.execMode ?? "")
+        ? parsed.execMode
+        : "TICK") as string,
       safety: parsed.safety ?? [],
       triggers: parsed.triggers ?? [],
       conditions: parsed.conditions ?? [],
@@ -849,21 +1001,29 @@ export class StrategiesService {
 
   async listVersions(strategyId: string, userId: string) {
     // Verify ownership
-    const strategy = await this.prisma.strategy.findFirst({ where: { id: strategyId, userId } });
-    if (!strategy) throw new ForbiddenException('Strategy not found');
+    const strategy = await this.prisma.strategy.findFirst({
+      where: { id: strategyId, userId },
+    });
+    if (!strategy) throw new ForbiddenException("Strategy not found");
     return this.prisma.strategyVersion.findMany({
       where: { strategyId },
-      orderBy: { version: 'desc' },
+      orderBy: { version: "desc" },
     });
   }
 
-  async rollbackToVersion(strategyId: string, versionId: string, userId: string) {
-    const strategy = await this.prisma.strategy.findFirst({ where: { id: strategyId, userId } });
-    if (!strategy) throw new ForbiddenException('Strategy not found');
+  async rollbackToVersion(
+    strategyId: string,
+    versionId: string,
+    userId: string,
+  ) {
+    const strategy = await this.prisma.strategy.findFirst({
+      where: { id: strategyId, userId },
+    });
+    if (!strategy) throw new ForbiddenException("Strategy not found");
     const version = await this.prisma.strategyVersion.findFirst({
       where: { id: versionId, strategyId },
     });
-    if (!version) throw new ForbiddenException('Version not found');
+    if (!version) throw new ForbiddenException("Version not found");
     // Apply version to strategy
     await this.prisma.strategy.update({
       where: { id: strategyId },
@@ -874,14 +1034,14 @@ export class StrategiesService {
         safety: version.safety as any,
       },
     });
-    return { message: 'Rolled back successfully', version: version.version };
+    return { message: "Rolled back successfully", version: version.version };
   }
 
   async listEventLog(strategyId: string, userId: string, limit = 50) {
     await this.getOwned(strategyId, userId);
     const events = await this.prisma.strategyEvent.findMany({
       where: { strategyId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: Math.min(limit, 200),
       select: { id: true, eventType: true, payload: true, createdAt: true },
     });

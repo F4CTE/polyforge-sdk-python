@@ -143,7 +143,9 @@ export class ApiKeysService {
 
     // Mark the old key as deprecated with a 24-hour grace period
     const deprecatedAt = new Date();
-    const deprecatedExpiresAt = new Date(deprecatedAt.getTime() + DEPRECATION_GRACE_PERIOD_MS);
+    const deprecatedExpiresAt = new Date(
+      deprecatedAt.getTime() + DEPRECATION_GRACE_PERIOD_MS,
+    );
 
     await this.prisma.apiKey.update({
       where: { id: oldKeyId },

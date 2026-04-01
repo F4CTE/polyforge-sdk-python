@@ -41,9 +41,12 @@ describe("EventsConsumerService", () => {
   describe("parseFields", () => {
     it("converts flat string array to key-value object", () => {
       const result = (service as any).parseFields([
-        "type", "ORDER_FILLED",
-        "userId", "user-1",
-        "marketId", "m1",
+        "type",
+        "ORDER_FILLED",
+        "userId",
+        "user-1",
+        "marketId",
+        "m1",
       ]);
 
       expect(result).toEqual({
@@ -79,8 +82,16 @@ describe("EventsConsumerService", () => {
       // Run one iteration manually
       try {
         const results = await client.xreadgroup(
-          "GROUP", "notification-service", expect.any(String),
-          "COUNT", "100", "BLOCK", "2000", "STREAMS", "stream:events", ">"
+          "GROUP",
+          "notification-service",
+          expect.any(String),
+          "COUNT",
+          "100",
+          "BLOCK",
+          "2000",
+          "STREAMS",
+          "stream:events",
+          ">",
         );
         if (results) {
           for (const [, messages] of results) {

@@ -40,9 +40,12 @@ describe("StreamConsumerService (paper-order-service)", () => {
 
     it("converts flat string array to key-value object", () => {
       const result = parseFields(service, [
-        "intentId", "i1",
-        "userId", "u1",
-        "marketId", "m1",
+        "intentId",
+        "i1",
+        "userId",
+        "u1",
+        "marketId",
+        "m1",
       ]);
 
       expect(result).toEqual({
@@ -75,17 +78,19 @@ describe("StreamConsumerService (paper-order-service)", () => {
     });
 
     it("ignores BUSYGROUP error (group already exists)", async () => {
-      redis.getClient().xgroup.mockRejectedValueOnce(
-        new Error("BUSYGROUP Consumer Group name already exists"),
-      );
+      redis
+        .getClient()
+        .xgroup.mockRejectedValueOnce(
+          new Error("BUSYGROUP Consumer Group name already exists"),
+        );
 
       await expect((service as any).ensureGroup()).resolves.toBeUndefined();
     });
 
     it("rethrows non-BUSYGROUP errors", async () => {
-      redis.getClient().xgroup.mockRejectedValueOnce(
-        new Error("Connection refused"),
-      );
+      redis
+        .getClient()
+        .xgroup.mockRejectedValueOnce(new Error("Connection refused"));
 
       await expect((service as any).ensureGroup()).rejects.toThrow(
         "Connection refused",
@@ -104,8 +109,32 @@ describe("StreamConsumerService (paper-order-service)", () => {
           [
             "stream:paper_orders",
             [
-              ["msg-1", ["intentId", "i1", "userId", "u1", "size", "10", "price", "0.5"]],
-              ["msg-2", ["intentId", "i2", "userId", "u2", "size", "20", "price", "0.6"]],
+              [
+                "msg-1",
+                [
+                  "intentId",
+                  "i1",
+                  "userId",
+                  "u1",
+                  "size",
+                  "10",
+                  "price",
+                  "0.5",
+                ],
+              ],
+              [
+                "msg-2",
+                [
+                  "intentId",
+                  "i2",
+                  "userId",
+                  "u2",
+                  "size",
+                  "20",
+                  "price",
+                  "0.6",
+                ],
+              ],
             ],
           ],
         ])
@@ -114,8 +143,16 @@ describe("StreamConsumerService (paper-order-service)", () => {
       // Run one iteration of the loop manually
       (service as any).running = true;
       const results: any = await client.xreadgroup(
-        "GROUP", "paper-order-service", expect.any(String),
-        "COUNT", "50", "BLOCK", "2000", "STREAMS", "stream:paper_orders", ">"
+        "GROUP",
+        "paper-order-service",
+        expect.any(String),
+        "COUNT",
+        "50",
+        "BLOCK",
+        "2000",
+        "STREAMS",
+        "stream:paper_orders",
+        ">",
       );
 
       for (const [, messages] of results) {

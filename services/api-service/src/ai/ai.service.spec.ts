@@ -48,7 +48,10 @@ describe("AiService", () => {
     it('matches "news signals" to get_news_signals intent', async () => {
       db.newsSignal.findMany.mockResolvedValue([]);
 
-      const result = await service.query("user-1", "what are the latest news signals?");
+      const result = await service.query(
+        "user-1",
+        "what are the latest news signals?",
+      );
 
       expect(result.intent).toBe("get_news_signals");
     });

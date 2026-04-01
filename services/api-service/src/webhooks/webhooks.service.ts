@@ -20,7 +20,14 @@ export class WebhooksService {
   async create(
     userId: string,
     dto: CreateWebhookDto,
-  ): Promise<{ id: string; url: string; events: string[]; secret: string; active: boolean; createdAt: Date }> {
+  ): Promise<{
+    id: string;
+    url: string;
+    events: string[];
+    secret: string;
+    active: boolean;
+    createdAt: Date;
+  }> {
     const count = await this.prisma.webhook.count({ where: { userId } });
     if (count >= MAX_WEBHOOKS_PER_USER) {
       throw new UnprocessableEntityException({
@@ -69,21 +76,36 @@ export class WebhooksService {
   async remove(id: string, userId: string): Promise<void> {
     const webhook = await this.prisma.webhook.findUnique({ where: { id } });
     if (!webhook) {
-      throw new NotFoundException({ code: "NOT_FOUND", message: "Webhook not found" });
+      throw new NotFoundException({
+        code: "NOT_FOUND",
+        message: "Webhook not found",
+      });
     }
     if (webhook.userId !== userId) {
-      throw new ForbiddenException({ code: "FORBIDDEN", message: "Access denied" });
+      throw new ForbiddenException({
+        code: "FORBIDDEN",
+        message: "Access denied",
+      });
     }
     await this.prisma.webhook.delete({ where: { id } });
   }
 
-  async test(id: string, userId: string): Promise<{ success: boolean; statusCode?: number; error?: string }> {
+  async test(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; statusCode?: number; error?: string }> {
     const webhook = await this.prisma.webhook.findUnique({ where: { id } });
     if (!webhook) {
-      throw new NotFoundException({ code: "NOT_FOUND", message: "Webhook not found" });
+      throw new NotFoundException({
+        code: "NOT_FOUND",
+        message: "Webhook not found",
+      });
     }
     if (webhook.userId !== userId) {
-      throw new ForbiddenException({ code: "FORBIDDEN", message: "Access denied" });
+      throw new ForbiddenException({
+        code: "FORBIDDEN",
+        message: "Access denied",
+      });
     }
 
     const testPayload = {
@@ -99,7 +121,11 @@ export class WebhooksService {
    * Dispatch event to all matching webhooks for a user.
    * Fire-and-forget — errors are logged, not thrown.
    */
-  async dispatch(userId: string, eventType: string, data: Record<string, unknown>): Promise<void> {
+  async dispatch(
+    userId: string,
+    eventType: string,
+    data: Record<string, unknown>,
+  ): Promise<void> {
     const webhooks = await this.prisma.webhook.findMany({
       where: {
         userId,
@@ -118,7 +144,9 @@ export class WebhooksService {
       // Fire and forget — don't await sequentially in production,
       // but keep simple for now
       this.deliver(wh.url, wh.secret, payload).catch((err) => {
-        this.logger.warn(`Webhook delivery failed for ${wh.id}: ${err?.message}`);
+        this.logger.warn(
+          `Webhook delivery failed for ${wh.id}: ${err?.message}`,
+        );
       });
     }
   }
@@ -131,13 +159,30 @@ export class WebhooksService {
     // SECURITY: Block internal/private network URLs to prevent SSRF
     try {
       const parsed = new URL(url);
-      const blockedPrefixes = ["localhost", "127.", "0.0.0.0", "10.", "172.16.", "172.17.", "172.18.", "172.19.", "172.20.", "192.168.", "169.254.", "[::1]"];
+      const blockedPrefixes = [
+        "localhost",
+        "127.",
+        "0.0.0.0",
+        "10.",
+        "172.16.",
+        "172.17.",
+        "172.18.",
+        "172.19.",
+        "172.20.",
+        "192.168.",
+        "169.254.",
+        "[::1]",
+      ];
       if (
         blockedPrefixes.some((p) => parsed.hostname.startsWith(p)) ||
         parsed.hostname.endsWith(".internal") ||
         parsed.protocol !== "https:"
       ) {
-        return { success: false, statusCode: 0, error: "Internal or non-HTTPS URLs are not allowed" };
+        return {
+          success: false,
+          statusCode: 0,
+          error: "Internal or non-HTTPS URLs are not allowed",
+        };
       }
     } catch {
       return { success: false, statusCode: 0, error: "Invalid URL" };

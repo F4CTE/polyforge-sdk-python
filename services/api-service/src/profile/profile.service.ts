@@ -17,9 +17,11 @@ export class ProfileService {
     dto: { displayName?: string; bio?: string; avatarUrl?: string },
   ): Promise<any> {
     const data: Record<string, unknown> = {};
-    if (dto.displayName !== undefined) data.displayName = dto.displayName.slice(0, 50);
+    if (dto.displayName !== undefined)
+      data.displayName = dto.displayName.slice(0, 50);
     if (dto.bio !== undefined) data.bio = dto.bio.slice(0, 500);
-    if (dto.avatarUrl !== undefined) data.avatarUrl = dto.avatarUrl.slice(0, 500);
+    if (dto.avatarUrl !== undefined)
+      data.avatarUrl = dto.avatarUrl.slice(0, 500);
 
     const user = await this.prisma.user.update({
       where: { id: userId },

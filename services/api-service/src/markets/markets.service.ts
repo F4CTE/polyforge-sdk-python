@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, OnModuleInit, Logger } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  OnModuleInit,
+  Logger,
+} from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { paginate, PaginatedResponse } from "../common/dto/pagination.dto";
@@ -10,12 +15,12 @@ export class MarketsService implements OnModuleInit {
 
   // Whitelist of allowed ORDER BY expressions - SQL injection protection
   private readonly allowedSortColumns = new Map<string, string>([
-    ['endDate', 'm."endDate" ASC NULLS LAST'],
-    ['closing_soon', 'm."endDate" ASC NULLS LAST'],
-    ['firstSeenAt', 'm."firstSeenAt" DESC'],
-    ['newest', 'm."firstSeenAt" DESC'],
-    ['volume', 'm.volume24h DESC'],
-    ['liquidity', 'm.volume24h DESC'], // Token-level liquidity not available on Market; use volume as proxy
+    ["endDate", 'm."endDate" ASC NULLS LAST'],
+    ["closing_soon", 'm."endDate" ASC NULLS LAST'],
+    ["firstSeenAt", 'm."firstSeenAt" DESC'],
+    ["newest", 'm."firstSeenAt" DESC'],
+    ["volume", "m.volume24h DESC"],
+    ["liquidity", "m.volume24h DESC"], // Token-level liquidity not available on Market; use volume as proxy
   ]);
 
   constructor(
@@ -27,7 +32,7 @@ export class MarketsService implements OnModuleInit {
   async onModuleInit() {
     try {
       // Pre-warm Prisma connection pool + cache the default query
-      await this.list({ page: 1, limit: 25, sort: 'volume' } as MarketQueryDto);
+      await this.list({ page: 1, limit: 25, sort: "volume" } as MarketQueryDto);
       this.logger.log("Markets cache pre-warmed (page 1, 25 items)");
     } catch {
       this.logger.warn("Markets cache pre-warm failed (non-fatal)");
@@ -41,7 +46,11 @@ export class MarketsService implements OnModuleInit {
     // Check Redis cache first (30s TTL)
     const cached = await this.redis.get(cacheKey);
     if (cached) {
-      try { return JSON.parse(cached); } catch {}
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // no-op
+      }
     }
 
     const { page, limit, search, category, closed, sort } = query;
@@ -54,7 +63,7 @@ export class MarketsService implements OnModuleInit {
         { seriesSlug: { contains: search, mode: "insensitive" } },
       ];
     }
-    if (category) where.category = { equals: category, mode: 'insensitive' };
+    if (category) where.category = { equals: category, mode: "insensitive" };
     if (closed !== undefined) where.closed = closed;
 
     const orderBy: any =
@@ -89,14 +98,15 @@ export class MarketsService implements OnModuleInit {
 
     // Single raw SQL query — Prisma ORM adds ~5-15s overhead on resource-limited hosts
     // Validate sort parameter against whitelist to prevent SQL injection
-    const orderCol = (this.allowedSortColumns.get(sort ?? 'volume') || this.allowedSortColumns.get('volume'))!;
+    const orderCol = (this.allowedSortColumns.get(sort ?? "volume") ||
+      this.allowedSortColumns.get("volume"))!;
 
     let whereClause = "WHERE 1=1";
     const params: any[] = [];
     let paramIdx = 1;
 
     if (search) {
-      whereClause += ` AND (m.title ILIKE $${paramIdx} OR m.\"seriesSlug\" ILIKE $${paramIdx})`;
+      whereClause += ` AND (m.title ILIKE $${paramIdx} OR m."seriesSlug" ILIKE $${paramIdx})`;
       params.push(`%${search}%`);
       paramIdx++;
     }
@@ -111,7 +121,8 @@ export class MarketsService implements OnModuleInit {
       paramIdx++;
     }
 
-    const rows: any[] = await this.prisma.$queryRawUnsafe(`
+    const rows: any[] = await this.prisma.$queryRawUnsafe(
+      `
       SELECT
         m.id, m.slug, m.title, m.description, m.category, m.image,
         m."seriesSlug", m."endDate", m.closed, m."negRisk",
@@ -132,7 +143,11 @@ export class MarketsService implements OnModuleInit {
       GROUP BY m.id
       ORDER BY ${orderCol}
       LIMIT $${paramIdx} OFFSET $${paramIdx + 1}
-    `, ...params, limit, skip);
+    `,
+      ...params,
+      limit,
+      skip,
+    );
 
     const result = paginate(rows, total, page, limit);
 
@@ -147,7 +162,11 @@ export class MarketsService implements OnModuleInit {
     const cacheKey = `cache:markets:id:${marketId}`;
     const cached = await this.redis.get(cacheKey);
     if (cached) {
-      try { return JSON.parse(cached); } catch {}
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // no-op
+      }
     }
 
     const market = await this.prisma.market.findUnique({
@@ -177,7 +196,11 @@ export class MarketsService implements OnModuleInit {
     const cacheKey = `cache:markets:pricehistory:${tokenId}:${JSON.stringify(query)}`;
     const cached = await this.redis.get(cacheKey);
     if (cached) {
-      try { return JSON.parse(cached); } catch {}
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // no-op
+      }
     }
 
     const fromDate = from
