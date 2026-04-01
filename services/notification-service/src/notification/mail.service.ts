@@ -8,7 +8,7 @@ export class MailService {
   private readonly from: string;
 
   constructor() {
-    this.from = process.env.AWS_SES_FROM_EMAIL ?? "noreply@polyforge.app";
+    this.from = `Polyforge <${process.env.AWS_SES_FROM_EMAIL ?? "noreply@polyforge.app"}>`;
     const driver = process.env.EMAIL_DRIVER ?? "mailhog";
 
     if (driver === "mailhog") {
