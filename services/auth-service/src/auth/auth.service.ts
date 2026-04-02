@@ -69,15 +69,6 @@ export class AuthService {
         ? redisFlagRaw === 'true'
         : this.config.get<string>('INVITE_ONLY') === 'true';
     // Determine if this registration has a valid invite code
-    if (inviteOnly && !dto.inviteCode) {
-      throw new HttpException(
-        {
-          code: 'INVITE_REQUIRED',
-          message: 'An invite code is required to register',
-        },
-        HttpStatus.FORBIDDEN,
-      );
-    }
     let hasValidInvite = false;
     if (inviteOnly && dto.inviteCode) {
       const key = INVITE_KEY(dto.inviteCode);

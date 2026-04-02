@@ -18,6 +18,7 @@ export default defineConfig({
                 'src/dashboard/**',    // cron + external health polling
                 'src/mail/**',         // SMTP — integration test territory
                 'src/**/*.controller.ts',  // thin HTTP adapters — service logic is fully tested
+                'src/sentiment/**',        // new module — integration tests pending
             ],
             thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
         },
