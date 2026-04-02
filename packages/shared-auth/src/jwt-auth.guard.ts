@@ -76,7 +76,10 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<HttpRequest>();
 
-    const authHeader: string | undefined = request.headers?.authorization;
+    const rawAuth = request.headers?.authorization;
+    const authHeader: string | undefined = Array.isArray(rawAuth)
+      ? rawAuth[0]
+      : rawAuth;
 
     // ── JWT cache fast-path: skip re-verification for recently verified tokens ─
     // Also checks Redis pwchange key to prevent post-password-change attack window
