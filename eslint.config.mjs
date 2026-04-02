@@ -46,6 +46,7 @@ export default tseslint.config(
       '@typescript-eslint/require-await': 'warn',
       '@typescript-eslint/restrict-plus-operands': 'warn',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-redundant-type-constituents': 'warn',
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },

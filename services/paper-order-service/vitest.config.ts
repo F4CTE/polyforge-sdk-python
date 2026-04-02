@@ -1,5 +1,11 @@
 import { defineConfig } from 'vitest/config';
+import path from 'path';
 export default defineConfig({
+    resolve: {
+        alias: {
+            '.prisma/client': path.resolve(__dirname, 'test/mocks/prisma-client.ts'),
+        },
+    },
     test: {
         globals: true,
         environment: 'node',
