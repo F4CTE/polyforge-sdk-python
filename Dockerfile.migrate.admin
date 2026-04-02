@@ -12,7 +12,8 @@ RUN --mount=type=cache,target=/root/.npm \
 
 # ADMIN_DIRECT_DATABASE_URL must be injected at runtime via docker run -e or docker-compose
 
-RUN npx prisma generate \
+RUN ADMIN_DIRECT_DATABASE_URL=postgresql://ci:ci@localhost:5432/ci_admin \
+    npx prisma generate \
       --schema ./prisma/schema.admin.prisma \
       --config ./prisma/prisma.admin.config.ts
 
