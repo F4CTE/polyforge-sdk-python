@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
-import { ThrottlerModule } from "@nestjs/throttler";
+import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { SharedDbModule } from "@polyforge/shared-db";
 import { RedisModule } from "@polyforge/shared-redis";
 import { LoggerModule } from "@polyforge/logger";
@@ -15,5 +16,6 @@ import { HealthController } from "./common/health.controller";
     AuthModule,
   ],
   controllers: [HealthController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

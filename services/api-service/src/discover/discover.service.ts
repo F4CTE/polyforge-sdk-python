@@ -77,7 +77,7 @@ export class DiscoverService {
 
     // Remap `user` → `author` for the frontend and hide blocks for UNLISTED
     const result = strategies.map((s) => {
-      const { user, ...rest } = s as any;
+      const { user, ...rest } = s;
       const { traderScore, ...userRest } = user ?? {};
       const mapped = {
         ...rest,

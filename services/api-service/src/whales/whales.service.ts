@@ -112,7 +112,7 @@ export class WhalesService {
 
     const recentTrades = alerts.map((a) => ({
       id: a.id,
-      marketName: (a as any).market?.title ?? "Unknown Market",
+      marketName: a.market?.title ?? "Unknown Market",
       side: a.side,
       outcome: a.outcome,
       size: a.size?.toString() ?? "0",

@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - **Exponentiation guard in `logic.blocks.ts`** — added missing nested-exponentiation check (`^` operator count > 2) to `safeEvaluate` in `strategy-engine` logic blocks, matching the existing guard in `strategy-runner.ts`; prevents CPU exhaustion via expressions like `9^9^9` (closes #75)
+- **Admin-auth rate limiting** — registered `ThrottlerGuard` as a global guard in `admin-auth-service` `AppModule`, matching the pattern used by all other services; previously only the login endpoint was rate-limited, leaving TOTP setup/confirm/disable and other endpoints unprotected against brute-force attacks (closes #59)
 
 ---
 
