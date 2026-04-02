@@ -864,18 +864,64 @@ Automated liquidity provision built transparently on split/merge primitives. Use
 
 ### Phase 11 Priority Matrix
 
-| Feature | Business Impact | Technical Effort | Priority |
+| Feature | Business Impact | Technical Effort | Status |
 |---------|:-:|:-:|:-:|
-| Smart Order Execution (Bracket + DCA) | 🔴 HIGH | 🟢 LOW | **P0** |
-| Drawdown Circuit Breaker | 🔴 HIGH | 🟢 LOW | **P0** |
-| Merge Arbitrage Scanner | 🔴 HIGH | 🟢 LOW | **P0** |
-| Strategy Marketplace | 🔴 HIGH | 🔴 HIGH | **P0** |
-| Kelly Position Sizer | 🔴 HIGH | 🟢 LOW | **P1** |
-| Prediction Accuracy Score | 🟡 MEDIUM | 🟡 MEDIUM | **P1** |
-| AI Portfolio Optimizer | 🟡 MEDIUM | 🟡 MEDIUM | **P1** |
-| Sentiment Intelligence | 🟡 MEDIUM | 🟡 MEDIUM | **P2** |
-| LP / Market Making | 🟡 MEDIUM | 🟡 MEDIUM | **P2** |
-| TWAP / Iceberg Orders | 🟡 MEDIUM | 🟡 MEDIUM | **P2** |
+| Smart Order Execution (Bracket + DCA) | 🔴 HIGH | 🟢 LOW | ✅ *Shipped v6.12.0* |
+| Drawdown Circuit Breaker | 🔴 HIGH | 🟢 LOW | ✅ *Shipped v6.10.0* |
+| Merge Arbitrage Scanner | 🔴 HIGH | 🟢 LOW | ✅ *Shipped v6.11.0* |
+| Strategy Marketplace | 🔴 HIGH | 🔴 HIGH | ✅ *Shipped v6.13.0* |
+| Kelly Position Sizer | 🔴 HIGH | 🟢 LOW | ✅ *Shipped v6.14.0* |
+| Prediction Accuracy Score | 🟡 MEDIUM | 🟡 MEDIUM | ✅ *Shipped v6.15.0* |
+| AI Portfolio Optimizer | 🟡 MEDIUM | 🟡 MEDIUM | ✅ *Shipped v6.15.0* |
+| Sentiment Intelligence | 🟡 MEDIUM | 🟡 MEDIUM | ✅ *Shipped v6.15.0* |
+| LP / Market Making | 🟡 MEDIUM | 🟡 MEDIUM | ✅ *Shipped v6.15.0* |
+| TWAP / Iceberg Orders | 🟡 MEDIUM | 🟡 MEDIUM | ✅ *Shipped v6.12.0* |
+
+---
+
+## Phase 12 — Post-Launch Feature Expansion *(v6.16.0 – v6.32.0)*
+
+**Ongoing · v6.16.0 → v6.32.0**
+
+Continued expansion of analytics, social, marketplace, and UX features following the v6.15 competitive feature set.
+
+### 12.1 · Analytics & Performance
+
+- **Analytics dashboard** (`/analytics`) — Edge Score, equity curve (Recharts), category P&L breakdown, Sharpe/Profit Factor/Consistency — *Shipped v6.16.4*
+- **P&L attribution** — breakdown by market, strategy, category, time period — *Shipped v6.16.4*
+- **Correlation heat map** — category × category exposure matrix; over-concentration alerts — *Shipped v6.28.0*
+- **Portfolio analytics panels** — per-position risk scores, rolling drawdown chart — *Shipped v6.14.0–v6.28.0*
+
+### 12.2 · Trading Tools
+
+- **Trading journal** — mood tagging (Confident/Uncertain/FOMO/Disciplined/Revenge) and free-text notes on any order; filterable Journal tab — *Shipped v6.28.0*
+- **Tax report export** — CSV of all realized positions for any calendar year — *Shipped v6.23.0*
+- **Strategy version history** — auto-saved snapshots; one-click rollback — *Shipped v6.14.0*
+- **Strategy performance alerts** — fire on P&L / win rate / drawdown thresholds via all notification channels — *Shipped v6.31.0*
+- **Strategy comparison mode** — up to 4 strategies on shared equity chart + stats table — *Shipped v6.26.0*
+
+### 12.3 · Marketplace & Social
+
+- **Strategy marketplace reviews** — written reviews + star ratings + verified-purchase badge; admin moderation queue — *Shipped v6.13.0–v6.32.0*
+- **Social feed reactions & comment threads** — 5 emoji reactions; expandable threaded comments; "Share to Profile" reposts — *Shipped v6.31.0*
+- **Achievement badges** — 15 badges across 4 rarity tiers; auto-awarded by background job — *Shipped v6.26.0*
+- **Trader follow & accuracy** — follow/unfollow; public Brier score and calibration stats — *Shipped v6.28.0*
+
+### 12.4 · UX & Mobile
+
+- **Market watchlist** — star markets; `/watchlist` page with live WebSocket price ticks and ▲/▼ badges — *Shipped v6.14.0*
+- **Market collections** — admin-curated thematic collections on Discover page — *Shipped v6.24.0*
+- **Advanced market search** — full-text + filters (category, volume, resolution date) — *Shipped v6.30.0*
+- **Mobile bottom navigation** — 5-tab nav on small screens — *Shipped v6.21.0*
+- **Live P&L strip** — real-time unrealized P&L with flash animations on portfolio page — *Shipped v6.25.0*
+- **Welcome onboarding modal** — 4-step carousel for new users — *Shipped v6.17.0*
+- **Keyboard shortcuts modal** — `?` key; `⌘K` command palette — *Shipped v6.29.0*
+- **Strategy builder undo/redo** — 50-step history stack (`Ctrl+Z` / `Ctrl+Shift+Z`) — *Shipped v6.21.0*
+- **Session management** — view and revoke active sessions; TOTP re-auth endpoint — *Shipped v6.23.0*
+
+### Phase 12 Summary
+
+All Phase 12 features shipped between v6.16.0 and v6.32.0. See [`CHANGELOG.md`](../CHANGELOG.md) for the full release history and [`docs/14-future-features.md`](./14-future-features.md) for features still planned.
 
 ---
 

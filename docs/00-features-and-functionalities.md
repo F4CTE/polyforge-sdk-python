@@ -34,6 +34,29 @@
 25. [AI Portfolio Optimizer](#25-ai-portfolio-optimizer-v6150)
 26. [Sentiment Intelligence](#26-sentiment-intelligence-v6150)
 27. [LP / Market Making](#27-lp--market-making-v6150)
+28. [Drawdown Circuit Breaker](#28-drawdown-circuit-breaker-v6100)
+29. [Merge Arbitrage Scanner](#29-merge-arbitrage-scanner-v6110)
+30. [Smart Order Execution](#30-smart-order-execution-v6120)
+31. [Strategy Marketplace](#31-strategy-marketplace-v6130)
+32. [Market Watchlist](#32-market-watchlist-v6140)
+33. [Kelly Criterion Position Sizer](#33-kelly-criterion-position-sizer-v6140)
+34. [Strategy Version History](#34-strategy-version-history-v6140)
+35. [Backtest Compare Mode](#35-backtest-compare-mode-v6140)
+36. [Copy Trade Sizing Modes](#36-copy-trade-sizing-modes-v6140)
+37. [Analytics Dashboard](#37-analytics-dashboard-v6164)
+38. [Alerts Management Page](#38-alerts-management-page-v6165)
+39. [Trading Journal](#39-trading-journal-v6280)
+40. [Portfolio Analytics Panels](#40-portfolio-analytics-panels-v6140--v6280)
+41. [Achievement Badges](#41-achievement-badges-v6260)
+42. [Collections](#42-collections-v6240)
+43. [Tax Report Export](#43-tax-report-export-v6230)
+44. [Social Feed Reactions & Comment Threads](#44-social-feed-reactions--comment-threads-v6310)
+45. [Strategy Performance Alerts](#45-strategy-performance-alerts-v6310)
+46. [Session Management](#46-session-management-v6230)
+47. [Welcome & Onboarding Improvements](#47-welcome--onboarding-improvements-v6170--v6290)
+48. [Advanced Market Features](#48-advanced-market-features-v6220--v6300)
+49. [Mobile & UX Enhancements](#49-mobile--ux-enhancements-v6210--v6260)
+50. [Admin Panel Additions](#50-admin-panel-additions-v6163--v6320)
 
 ---
 
@@ -837,6 +860,260 @@ Allows strategies to invoke other strategies, enabling modular strategy design.
 
 ---
 
+## 28. Drawdown Circuit Breaker *(v6.10.0)*
+
+- `GET /api/v1/settings/risk` — returns `drawdownEnabled`, `drawdownThreshold` (%), `drawdownLookback` (hours), `drawdownTriggeredAt`
+- `PATCH /api/v1/settings/risk` — updates drawdown settings; body: `{ drawdownEnabled, drawdownThreshold, drawdownLookback }`
+- `POST /api/v1/settings/risk/reset` — clears `drawdownTriggeredAt` and re-enables strategy execution
+- Strategy engine checks portfolio value on each tick; pauses all running strategies when portfolio drops past threshold within lookback window
+- Configurable: 1–50% threshold; 1h–7d lookback; Settings → Risk tab
+- Portfolio alert banner displayed while circuit breaker is active
+- Requires JWT; READ scope for GET, WRITE scope for PATCH/POST
+
+---
+
+## 29. Merge Arbitrage Scanner *(v6.11.0)*
+
+- `GET /api/v1/arb/opportunities` — markets where `yesPrice + noPrice < threshold`; sorted by profit margin
+- Query params: `threshold` (default 0.99), `limit`; each entry includes `marketId`, `yesPrice`, `noPrice`, `priceSum`, `estimatedProfit`
+- `POST /api/v1/arb/execute` — places simultaneous BUY orders on YES and NO tokens for a market
+- Body: `{ marketId, amount }` (USDC); capital split equally across YES and NO at current prices
+- Real-time scanning via market-data-service WebSocket price events; `/orders/smart` arb tab
+- Requires JWT; TRADE scope for execute
+
+---
+
+## 30. Smart Order Execution *(v6.12.0)*
+
+- New `orderType` values on `POST /api/v1/orders`: `TWAP`, `DCA`, `BRACKET`, `OCO`
+- **TWAP**: `{ slices, windowMinutes }` — equal-sized tranches executed at uniform intervals over the window
+- **DCA**: `{ intervalMinutes, endCondition, maxFills, endDate }` — recurring buys; `endCondition` is `MAX_FILLS` or `DATE`
+- **Bracket**: `{ entrySize, takeProfitPrice, stopLossPrice }` — TP/SL linked to actual filled quantity
+- **OCO**: two linked orders; first fill cancels the other via `linkedOrders[]`
+- `GET /api/v1/orders/smart` — all smart orders with slice progress (`filledSlices`, `totalSlices`, `status`)
+- Order schema additions: `parentOrderId`, `linkedOrders[]`, `sliceConfig`, `executionAlgorithm`
+- Strategy engine `EXECUTION_ALGORITHM` block wraps any order action with smart execution logic
+
+---
+
+## 31. Strategy Marketplace *(v6.13.0)*
+
+- `GET /api/v1/marketplace` — paginated strategy listings; filters: `category`, `minWinRate`, `maxPrice`, `sortBy`
+- `POST /api/v1/marketplace/:strategyId/publish` — list a strategy; body: `{ price, pricingModel: 'ONE_TIME'|'SUBSCRIPTION', performanceFeePercent }`
+- `POST /api/v1/marketplace/:strategyId/purchase` — creates a buyer-owned fork; requires sufficient balance
+- `GET /api/v1/marketplace/:strategyId` — public strategy detail with verified live P&L, backtested P&L, ratings summary
+- `GET /api/v1/marketplace/:strategyId/reviews` / `POST` — paginated reviews; POST requires 30+ days of usage; body: `{ rating, body }`
+- `GET /api/v1/marketplace/my-listings` — creator view: subscribers, revenue, performance breakdown
+- `GET /api/v1/marketplace/purchases` — buyer's purchased strategies with performance since acquisition
+- Platform fee: 20% of sale price; performance fee: 0–20% of weekly profits (configurable by creator)
+- Admin moderation queue at `admin-api-service` for pending publications
+
+---
+
+## 32. Market Watchlist *(v6.14.0)*
+
+- `GET /api/v1/watchlist` — user's starred markets with current prices, 24h volume, and price change
+- `POST /api/v1/watchlist` — add market to watchlist; body: `{ marketId }`
+- `DELETE /api/v1/watchlist/:marketId` — remove market from watchlist
+- `GET /api/v1/watchlist/status/:marketId` — boolean `{ watched }` for a single market
+- WebSocket price updates push ▲/▼ delta badges on the `/watchlist` page in real time
+- Requires JWT; READ scope for GET, WRITE scope for POST/DELETE
+
+---
+
+## 33. Kelly Criterion Position Sizer *(v6.14.0)*
+
+- Kelly formula: `f = (p * b - q) / b` where `p` = user confidence, `q = 1 - p`, `b` = net odds at current market price
+- Displayed on the market detail page as a suggested position size before order placement
+- Confidence slider (1–99%) drives the calculation; result shown in USDC and as % of portfolio
+- Does not place orders automatically; suggestion only
+- Requires JWT; READ scope
+
+---
+
+## 34. Strategy Version History *(v6.14.0)*
+
+- `GET /api/v1/strategies/:id/versions` — paginated version snapshots with `versionNumber`, `createdAt`, `description`, block diff summary
+- `POST /api/v1/strategies/:id/versions/:versionId/rollback` — restores strategy blocks and config to a prior version; creates a new version entry marking the rollback
+- `GET /api/v1/strategies/:id/event-log` — ordered list of strategy lifecycle events (created, deployed, paused, edited, rolled back)
+- Versions created automatically on each save; manual description optional
+- Requires JWT; WRITE scope
+
+---
+
+## 35. Backtest Compare Mode *(v6.14.0)*
+
+- `GET /api/v1/backtests?strategyIds=id1,id2,id3,id4` — returns up to 4 backtest result sets in a single response for side-by-side comparison
+- Response shape: `{ results: BacktestResult[] }` — each result includes equity curve, total P&L, win rate, Sharpe ratio, max drawdown
+- Frontend renders a shared time-axis multi-line equity chart and a stats comparison table
+- Requires JWT; READ scope
+
+---
+
+## 36. Copy Trade Sizing Modes *(v6.14.0)*
+
+- New `sizingMode` field on copy-trade sessions: `FIXED`, `PROPORTIONAL`, `KELLY`
+- **FIXED**: always copy the same USDC amount regardless of leader's position size
+- **PROPORTIONAL**: scale leader's position size by a configurable multiplier (e.g., 0.5× for half-size)
+- **KELLY**: compute Kelly-optimal size using follower's confidence in the leader's edge
+- `PATCH /api/v1/copy-trading/sessions/:id` — update sizing mode; body: `{ sizingMode, fixedAmount?, multiplier? }`
+- Requires JWT; WRITE scope
+
+---
+
+## 37. Analytics Dashboard *(v6.16.4)*
+
+- `GET /api/v1/analytics/summary` — Edge Score (0–100), total P&L, win rate, total trades, cumulative equity data points
+- `GET /api/v1/analytics/performance` — Sharpe ratio, Profit Factor, Consistency Score, per-category P&L breakdown
+- `GET /api/v1/analytics/equity-curve` — time-series of portfolio value; query params: `from`, `to`, `interval`
+- `GET /api/v1/analytics/correlation` — returns heatmap data: category × category exposure matrix; flags over-concentration above configurable threshold
+- `/analytics` page: equity curve chart (Recharts), category performance table, Sharpe / Profit Factor / Consistency breakdown
+- Requires JWT; READ scope
+
+---
+
+## 38. Alerts Management Page *(v6.16.5)*
+
+- `/alerts` page listing all active and triggered price alerts with status badges
+- `GET /api/v1/alerts` — paginated alert list with `marketId`, `condition`, `threshold`, `status`, `triggeredAt`
+- `DELETE /api/v1/alerts/:id` — delete a price alert
+- `PATCH /api/v1/alerts/:id` — update threshold or re-arm a triggered alert
+- Bulk delete via `DELETE /api/v1/alerts` with body `{ ids: string[] }`
+- Requires JWT; WRITE scope
+
+---
+
+## 39. Trading Journal *(v6.28.0)*
+
+- `PATCH /api/v1/orders/:id/journal` — attach a mood tag and free-text note to any order
+- Body: `{ mood: 'CONFIDENT'|'UNCERTAIN'|'FOMO'|'DISCIPLINED'|'REVENGE', note?: string }`
+- `GET /api/v1/orders?tab=journal&mood=FOMO` — filter orders by mood on the Journal tab
+- Mood distribution chart on the `/orders` Journal tab (pie chart by mood label)
+- Notes visible inline on order detail panel
+- Requires JWT; WRITE scope for PATCH, READ scope for GET
+
+---
+
+## 40. Portfolio Analytics Panels *(v6.14.0 – v6.28.0)*
+
+- `GET /api/v1/portfolio/pnl-attribution` — realized and unrealized P&L broken down by market, strategy, category, and time period
+- `GET /api/v1/portfolio/drawdown` — rolling max drawdown series; current drawdown vs. peak portfolio value
+- `GET /api/v1/portfolio/positions/risk` — per-position risk score: time-to-resolution, liquidity depth, proximity to stop-loss
+- Live P&L strip on portfolio page: WebSocket price updates drive real-time unrealized P&L with flash animations on change
+- Requires JWT; READ scope
+
+---
+
+## 41. Achievement Badges *(v6.26.0)*
+
+- 15 badges across 4 rarity tiers: Common, Uncommon, Rare, Legendary
+- `GET /api/v1/users/:id/badges` — list of earned badges with `earnedAt`, rarity, and description
+- Badges awarded automatically by a background job evaluating trading milestones (first trade, 10-win streak, etc.)
+- Displayed on public user profiles and highlighted on the `/leaderboard`
+- Requires JWT for own badges; public endpoint for other users
+
+---
+
+## 42. Collections *(v6.24.0)*
+
+- Curated market collections (e.g., "US Elections", "Crypto Week", "Sports Finals") with category filter
+- `GET /api/v1/collections` — list of active collections with `title`, `description`, `marketIds[]`, `coverImage`
+- `GET /api/v1/collections/:id/markets` — paginated markets in a collection with current prices
+- Scrollable strip on the Discover page; admin-created via `admin-api-service`
+- Public endpoint; no auth required for GET
+
+---
+
+## 43. Tax Report Export *(v6.23.0)*
+
+- `GET /api/v1/portfolio/tax-report?year=2024` — returns CSV of all realized positions for the calendar year
+- CSV columns: `date`, `market`, `side`, `quantity`, `entryPrice`, `exitPrice`, `realizedPnl`, `fee`
+- Tax year summary: total realized gains, total realized losses, net position returned as JSON alongside CSV metadata
+- Client downloads file via `Content-Disposition: attachment; filename="polyforge-tax-2024.csv"`
+- Requires JWT; READ scope
+
+---
+
+## 44. Social Feed Reactions & Comment Threads *(v6.31.0)*
+
+- `POST /api/v1/feed/:postId/reactions` — add emoji reaction; body: `{ emoji: '🔥'|'💯'|'🎯'|'😬'|'🤔' }`
+- `DELETE /api/v1/feed/:postId/reactions/:emoji` — remove own reaction
+- `GET /api/v1/feed/:postId/comments` — paginated comment thread with nested replies
+- `POST /api/v1/feed/:postId/comments` — add comment; body: `{ body, parentCommentId? }` for threaded replies
+- `POST /api/v1/feed` with `{ type: 'REPOST', refId }` — share market or strategy card to own profile feed
+- Reaction counts returned on all feed post objects (`reactions: { '🔥': 12, '💯': 5, ... }`)
+- Requires JWT; WRITE scope
+
+---
+
+## 45. Strategy Performance Alerts *(v6.31.0)*
+
+- `POST /api/v1/strategies/:id/alerts` — create a performance alert; body: `{ metric: 'PNL'|'WIN_RATE'|'DRAWDOWN', condition: 'ABOVE'|'BELOW', threshold }`
+- `GET /api/v1/strategies/:id/alerts` — list active performance alerts
+- `DELETE /api/v1/strategies/:id/alerts/:alertId` — delete alert
+- Alerts evaluated on each strategy tick by strategy-engine; fires via notification-service (email, Telegram, Discord, webhook)
+- Alert types: P&L crosses threshold, win rate drops below X%, drawdown exceeds Y%
+- Requires JWT; WRITE scope
+
+---
+
+## 46. Session Management *(v6.23.0)*
+
+- `GET /api/v1/auth/sessions` — list active sessions with device info, IP, last active timestamp
+- `DELETE /api/v1/auth/sessions/:sessionId` — revoke a specific session (remote logout)
+- `DELETE /api/v1/auth/sessions` — revoke all sessions except the current one
+- `POST /api/v1/auth/totp/verify` — standalone TOTP re-authentication endpoint for sensitive actions; returns a short-lived re-auth token
+- Sessions displayed in Settings → Security tab
+- Requires JWT; WRITE scope
+
+---
+
+## 47. Welcome & Onboarding Improvements *(v6.17.0 – v6.29.0)*
+
+- Welcome modal shown once to new users: 4-step carousel covering strategy builder, copy trading, marketplace, and analytics
+- `POST /api/v1/users/me/onboarding/dismiss` — marks modal as seen; persisted on the user record
+- `GET /api/v1/users/me/preferences` — returns `onboardingDismissed`, `theme`, `notificationPreferences`, `locale`
+- `PATCH /api/v1/users/me/preferences` — update any preference; used by theme toggle, locale selector, notification toggles
+- Keyboard shortcuts modal: `?` key opens reference modal; `⌘K` / `Ctrl+K` opens command palette
+- Strategy builder undo/redo: 50-step history stack; `Ctrl+Z` / `Ctrl+Shift+Z`
+
+---
+
+## 48. Advanced Market Features *(v6.22.0 – v6.30.0)*
+
+- `GET /api/v1/markets/search?q=...&category=...&minVolume=...&sortBy=...` — full-text + filter market search with pagination
+- `GET /api/v1/markets/:id/history` — OHLCV-style price history; query params: `from`, `to`, `interval`
+- `GET /api/v1/markets/resolution-calendar` — markets expiring within 7/30/90 days sorted by price uncertainty (closest to 0.50)
+- Trader comparison: `GET /api/v1/users/:id/accuracy` — public accuracy stats (Brier score, calibration, win rate by category)
+- `GET /api/v1/users/:id/follow` / `POST /api/v1/users/:id/follow` — follow/unfollow a trader; triggers feed updates
+- Market detail page: resolution countdown, liquidity depth chart, 7-day price history sparkline
+
+---
+
+## 49. Mobile & UX Enhancements *(v6.21.0 – v6.26.0)*
+
+- 5-tab mobile bottom navigation (Home / Markets / Portfolio / Strategies / Profile) rendered below `sm` breakpoint
+- Responsive breakpoints audited across all pages; tables replaced with card stacks on mobile
+- `GET /api/v1/portfolio/live-pnl` — snapshot of unrealized P&L per open position; also pushed via WebSocket `portfolio:live-pnl` events
+- Flash animation on P&L values when price updates arrive (green flash for gains, red for losses)
+- Strategy comparison mode: select up to 4 strategies for side-by-side equity chart and stats table (`GET /api/v1/strategies/compare?ids=...`)
+- Dark mode consistency pass: 153 design token fixes across all pages
+
+---
+
+## 50. Admin Panel Additions *(v6.16.3 – v6.32.0)*
+
+- **Strategy marketplace moderation** — `GET /admin/api/v1/marketplace/pending` lists strategies awaiting review; `PATCH /admin/api/v1/marketplace/:id/approve` or `/reject`
+- **User accuracy overview** — `GET /admin/api/v1/users/:id/accuracy` — Brier scores, calibration data for any user
+- **Sentiment admin** — `GET /admin/api/v1/sentiment/sources` — list ingestion sources; `PATCH` to enable/disable individual feeds
+- **Collection management** — `POST /admin/api/v1/collections` — create curated collection; `PATCH /:id` to update markets list or metadata
+- **Achievement badge management** — `GET /admin/api/v1/badges` — list all badge definitions; `POST` to create new badge with criteria
+- **Drawdown override** — `POST /admin/api/v1/users/:id/risk/reset` — admin can clear a user's triggered circuit breaker
+- **Bulk user actions** — suspend, unsuspend, verify, or reset 2FA for multiple users via `POST /admin/api/v1/users/bulk`
+- Requires admin JWT; all routes guarded by `AdminRolesGuard`
+
+---
+
 ## Deferred (Future Versions)
 
 The following features are explicitly **out of scope for v1** and will be considered for future releases:
@@ -844,7 +1121,6 @@ The following features are explicitly **out of scope for v1** and will be consid
 | Feature | Notes |
 |---|---|
 | Protected strategies | Encrypted blocks, profit sharing with strategy creators |
-| Paid / subscription strategies | Strategy monetisation model |
 | GDPR compliance | Data export, right to erasure, consent management |
 | Negative risk markets | Multi-outcome markets (beyond YES/NO) |
 | Mobile app | React Native or Capacitor |

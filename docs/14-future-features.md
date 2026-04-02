@@ -34,16 +34,16 @@ Replace single-click orders with institutional-grade execution, all transparentl
 
 ---
 
-## Portfolio Risk Intelligence
+## Portfolio Risk Intelligence *(Partially Shipped)*
 
 Analytics and guardrails that make every user trade more safely — using their own data, no custody required.
 
 ### Scope
 
-- **Kelly Criterion Position Sizer** — user inputs their confidence level; Polyforge calculates optimal position size based on current portfolio balance and Kelly formula; displayed as a suggestion before order placement
+- **Kelly Criterion Position Sizer** ✅ *Shipped v6.14.0* — user inputs their confidence level; Polyforge calculates optimal position size based on current portfolio balance and Kelly formula; displayed as a suggestion before order placement
 - **Portfolio-Level Drawdown Circuit Breaker** ✅ *Shipped v6.10.0* — single global setting: if total portfolio value drops X% in Y hours, automatically pause all running strategies; configurable lookback (1h–7d), threshold slider (1–50%), Settings → Risk tab + Portfolio alert banner
-- **Correlation Heat Map** — visual breakdown of capital exposure by market topic/category (elections, crypto, sports, macro); flag over-concentration above a configurable threshold
-- **P&L Attribution** — break down realized and unrealized P&L by market, strategy, category, and time period; answer "which bets made money and why"
+- **Correlation Heat Map** ✅ *Shipped v6.28.0* — visual breakdown of capital exposure by market topic/category (elections, crypto, sports, macro); flag over-concentration above a configurable threshold; `/analytics/correlation` recharts heatmap
+- **P&L Attribution** ✅ *Shipped v6.16.4* — break down realized and unrealized P&L by market, strategy, category, and time period; answer "which bets made money and why"
 - **Resolution Calendar** — markets expiring within 7/30/90 days sorted by price uncertainty (closest to 0.50); surface high-value opportunities for traders who believe the market is mispriced
 - **Position-Level Risk Score** — per-position display of time-to-resolution, liquidity depth, and proximity to stop-loss; visible on the portfolio page
 
@@ -169,15 +169,15 @@ Real-time signal layer connecting news and social media to prediction market pri
 
 ---
 
-## Tax Reporting Assistant
+## Tax Reporting Assistant *(Partially Shipped)*
 
 Help users understand their own trade history for tax purposes — display only, no advice, no custody.
 
 ### Scope
 
 - **Cost basis tracking** — compute cost basis per position using FIFO, LIFO, or average cost methods; toggle between methods
-- **Realized P&L export** — CSV export of all closed positions with entry price, exit price, size, realized gain/loss, and timestamps; formatted for common tax software (TurboTax, Koinly, etc.)
-- **Tax year summary** — total realized gains, total realized losses, net position for a given tax year
+- **Realized P&L export** ✅ *Shipped v6.23.0* — CSV export of all closed positions with entry price, exit price, size, realized gain/loss, and timestamps; formatted for common tax software (TurboTax, Koinly, etc.)
+- **Tax year summary** ✅ *Shipped v6.23.0* — total realized gains, total realized losses, net position for a given tax year
 - **Lot-level detail** — show which specific buy lots were consumed by each sale (relevant for tax loss harvesting)
 - **Disclaimer** — clearly marked as informational only; Polyforge is not a tax advisor
 
@@ -325,18 +325,18 @@ Monitoring and analytics for UMA oracle disputes that affect Polymarket market r
 
 | Feature | Business Impact | Technical Effort | Competitive Moat | Priority |
 |---------|:-:|:-:|:-:|:-:|
-| Smart Order Execution | 🔴 HIGH | 🟡 MEDIUM | 🔴 HIGH (no competitor) | **P0** |
-| Drawdown Circuit Breaker | 🔴 HIGH | 🟢 LOW | 🟡 MEDIUM | **P0** |
-| Strategy Marketplace | 🔴 HIGH | 🔴 HIGH | 🔴 HIGH (network effects) | **P0** |
-| Merge Arbitrage Scanner | 🔴 HIGH | 🟢 LOW | 🟡 MEDIUM | **P0** |
-| Kelly Position Sizer | 🔴 HIGH | 🟢 LOW | 🟡 MEDIUM | **P1** |
+| Smart Order Execution | 🔴 HIGH | 🟡 MEDIUM | 🔴 HIGH (no competitor) | ✅ *Shipped v6.12.0* |
+| Drawdown Circuit Breaker | 🔴 HIGH | 🟢 LOW | 🟡 MEDIUM | ✅ *Shipped v6.10.0* |
+| Strategy Marketplace | 🔴 HIGH | 🔴 HIGH | 🔴 HIGH (network effects) | ✅ *Shipped v6.13.0* |
+| Merge Arbitrage Scanner | 🔴 HIGH | 🟢 LOW | 🟡 MEDIUM | ✅ *Shipped v6.11.0* |
+| Kelly Position Sizer | 🔴 HIGH | 🟢 LOW | 🟡 MEDIUM | ✅ *Shipped v6.14.0* |
 | Prediction Accuracy Score | 🟡 MEDIUM | 🟡 MEDIUM | 🔴 HIGH (unique to PM) | ✅ *Shipped v6.15.0* |
-| Bracket Orders | 🔴 HIGH | 🟢 LOW | 🟡 MEDIUM | **P1** |
+| Bracket Orders | 🔴 HIGH | 🟢 LOW | 🟡 MEDIUM | ✅ *Shipped v6.12.0* |
 | AI Portfolio Optimizer | 🟡 MEDIUM | 🟡 MEDIUM | 🟡 MEDIUM | ✅ *Shipped v6.15.0* |
 | LP / Market Making | 🟡 MEDIUM | 🟡 MEDIUM | 🟡 MEDIUM | ✅ *Shipped v6.15.0* |
 | Sentiment Intelligence | 🟡 MEDIUM | 🟡 MEDIUM | 🟡 MEDIUM | ✅ *Shipped v6.15.0* |
 | Arbitrage Scanner | 🟡 MEDIUM | 🔴 HIGH | 🟢 LOW | **P2** |
-| Tax Reporting Assistant | 🟡 MEDIUM | 🟡 MEDIUM | 🟢 LOW | **P2** |
+| Tax Reporting Assistant | 🟡 MEDIUM | 🟡 MEDIUM | 🟢 LOW | *(Partially shipped v6.23.0)* |
 | Multi-Platform Aggregation | 🟡 MEDIUM | 🔴 HIGH | 🟡 MEDIUM | **P3** |
 | Browser Extension | 🟡 MEDIUM | 🟡 MEDIUM | 🟢 LOW | **P3** |
 | Mobile App | 🟡 MEDIUM | 🔴 HIGH | 🟢 LOW | **P3** |

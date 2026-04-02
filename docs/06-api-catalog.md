@@ -3156,4 +3156,257 @@ Submit a rating (1–5) for a purchased listing. One rating per buyer per listin
 
 ---
 
+---
+
+## Watchlist
+
+### GET /api/v1/watchlist
+
+Returns the authenticated user's starred markets with current prices, 24h volume, and price delta.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Response `200`:** Array of `{ marketId, slug, title, currentPrice, volume24h, priceDelta24h, watched: true }`.
+
+---
+
+### POST /api/v1/watchlist
+
+Add a market to the watchlist.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Request:**
+```json
+{ "marketId": "market-uuid" }
+```
+
+**Response `201`:** `{ marketId, addedAt }`.
+
+**Errors:** `404 MARKET_NOT_FOUND` · `409 ALREADY_WATCHED`
+
+---
+
+### DELETE /api/v1/watchlist/:marketId
+
+Remove a market from the watchlist.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Response `204`:** No content.
+
+**Errors:** `404 NOT_IN_WATCHLIST`
+
+---
+
+### GET /api/v1/watchlist/status/:marketId
+
+Check whether a specific market is on the user's watchlist.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Response `200`:** `{ marketId, watched: boolean }`.
+
+---
+
+## Risk Settings
+
+### GET /api/v1/settings/risk
+
+Returns the user's drawdown circuit breaker configuration.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Response `200`:**
+```json
+{
+  "drawdownEnabled": true,
+  "drawdownThreshold": 10,
+  "drawdownLookback": 24,
+  "drawdownTriggeredAt": null
+}
+```
+
+---
+
+### PATCH /api/v1/settings/risk
+
+Update drawdown circuit breaker settings.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Request:**
+```json
+{
+  "drawdownEnabled": true,
+  "drawdownThreshold": 15,
+  "drawdownLookback": 48
+}
+```
+
+**Response `200`:** Updated risk settings object.
+
+---
+
+### POST /api/v1/settings/risk/reset
+
+Clear the triggered circuit breaker and re-enable strategy execution.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Response `200`:** `{ drawdownTriggeredAt: null, drawdownEnabled: true }`.
+
+**Errors:** `400 NOT_TRIGGERED` if circuit breaker is not currently active.
+
+---
+
+## Strategy Versions
+
+### GET /api/v1/strategies/:id/versions
+
+Paginated list of saved strategy versions.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Query params:** `page`, `limit`
+
+**Response `200`:** Array of `{ versionNumber, createdAt, description, blockCount, isRollback }`.
+
+---
+
+### POST /api/v1/strategies/:id/versions/:versionId/rollback
+
+Restore a strategy to a prior version. Creates a new version entry recording the rollback.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Response `200`:** Updated strategy object at the restored version.
+
+**Errors:** `404 VERSION_NOT_FOUND` · `403 FORBIDDEN`
+
+---
+
+### GET /api/v1/strategies/:id/event-log
+
+Ordered list of strategy lifecycle events (created, deployed, paused, edited, rolled back).
+
+**Auth:** JWT or API Key (READ scope)
+
+**Response `200`:** Array of `{ event, occurredAt, actorId, meta }`.
+
+---
+
+## Backtest Orders
+
+### GET /api/v1/backtests/:id/orders
+
+Returns the simulated order history for a completed backtest run.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Query params:** `page`, `limit`, `side` (`BUY`|`SELL`)
+
+**Response `200`:** Paginated array of simulated orders with `price`, `size`, `side`, `timestamp`, `pnl`.
+
+**Errors:** `404 BACKTEST_NOT_FOUND`
+
+---
+
+## Market History
+
+### GET /api/v1/markets/:id/history
+
+OHLCV-style price history for a market.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Query params:** `from` (ISO 8601), `to` (ISO 8601), `interval` (`1m`|`5m`|`1h`|`1d`)
+
+**Response `200`:** Array of `{ timestamp, open, high, low, close, volume }`.
+
+**Errors:** `404 MARKET_NOT_FOUND`
+
+---
+
+## TOTP Re-authentication
+
+### POST /api/v1/auth/totp/verify
+
+Standalone TOTP re-authentication for sensitive actions. Returns a short-lived re-auth token.
+
+**Auth:** JWT (current session)
+
+**Request:**
+```json
+{ "code": "123456" }
+```
+
+**Response `200`:** `{ reAuthToken, expiresAt }` — token valid for 5 minutes.
+
+**Errors:** `401 INVALID_TOTP` · `429 TOO_MANY_ATTEMPTS`
+
+---
+
+## User Preferences & Social
+
+### PATCH /api/v1/users/me/preferences
+
+Update user preferences (theme, locale, notification toggles, onboarding state).
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Request (partial):**
+```json
+{
+  "theme": "dark",
+  "locale": "en-US",
+  "onboardingDismissed": true
+}
+```
+
+**Response `200`:** Full preferences object.
+
+---
+
+### GET /api/v1/users/:id/follow
+
+Check whether the authenticated user follows the given user.
+
+**Auth:** JWT or API Key (READ scope)
+
+**Response `200`:** `{ following: boolean, followedAt: string | null }`.
+
+---
+
+### POST /api/v1/users/:id/follow
+
+Follow or unfollow a trader. Idempotent — calling again toggles the follow state.
+
+**Auth:** JWT or API Key (WRITE scope)
+
+**Response `200`:** `{ following: boolean }`.
+
+**Errors:** `404 USER_NOT_FOUND` · `400 CANNOT_FOLLOW_SELF`
+
+---
+
+### GET /api/v1/users/:id/accuracy
+
+Public accuracy statistics for a trader (Brier score, calibration curve, win rate by category).
+
+**Auth:** Optional JWT (public endpoint)
+
+**Response `200`:**
+```json
+{
+  "brierScore": 0.18,
+  "winRate": 0.62,
+  "totalPredictions": 241,
+  "calibration": [{ "bucket": "0.6-0.7", "predicted": 0.65, "actual": 0.63 }],
+  "byCategory": [{ "category": "crypto", "winRate": 0.71, "brierScore": 0.14 }]
+}
+```
+
+---
+
 *See also: [Architecture Addendum A3](./Polyforge-Architecture-Addendum.pdf) for the complete stream:events event taxonomy.*

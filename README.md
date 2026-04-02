@@ -29,16 +29,36 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Copy trading** — mirror trades from followed traders with risk controls (max position, daily loss limit, drawdown breaker), session management, trade attribution
 - **Advanced order types** — take-profit/stop-loss, trailing stop, limit orders, pegged orders, conditional order evaluator
 - **AI news-to-trade pipeline** — real-time news ingestion, LLM signal extraction (Claude + GPT-4o fallback), confidence-scored trade signals
-- **AI-friendly API** — OpenAPI spec endpoint, Swagger UI, actions catalog, batch API, webhook callbacks with HMAC-SHA256 signatures, natural language query endpoint, strategy-from-description via LLM, and standalone MCP server (`polyforge-mcp`, 23 tools) compatible with Claude Desktop, Claude Code, Cursor, Windsurf, Zed, and Continue
+- **AI-friendly API** — OpenAPI spec endpoint, Swagger UI, actions catalog, batch API, webhook callbacks with HMAC-SHA256 signatures, natural language query endpoint, strategy-from-description via LLM, and standalone MCP server (`polyforge-mcp`, 33 tools) compatible with Claude Desktop, Claude Code, Cursor, Windsurf, Zed, and Continue
 - **Official SDKs** — typed REST clients for TypeScript (`@polyforge/sdk`), Python (`polyforge`), and Rust (`polyforge`) with full API coverage
 - **Comprehensive API documentation** — interactive reference at `/api-docs` with copy buttons, response examples, Try It Out playground, Cmd+K search, "On this page" TOC, OpenAPI/Postman downloads, status badges, and a Changelog section; covers trading, conditional orders, copy trading, webhooks, whale feed, news signals, scores, and MCP setup for all supported AI clients
 - **Operational docs** — Backup & Recovery (RDS/Redis/EBS), Incident Response (P0-P3), Performance Tuning guides
 - **AWS infrastructure** — Terraform with tfvars template (20 variables), budget alerts ($800/month)
 - **Gasless trading** — platform absorbs Polygon gas fees with per-user daily budget tracking
 - **Educational onboarding** — guided tour, checklist widget, and 5 pre-built strategy templates for new users
-- **Future features planned** — arbitrage scanner, multi-platform aggregation, browser extension, mobile app, fund management, UMA oracle dashboard, LP/market making (see [`docs/19-future-features.md`](./docs/19-future-features.md))
+- **Future features planned** — cross-platform arbitrage scanner (Kalshi), multi-platform aggregation, browser extension, mobile app, UMA oracle dashboard (see [`docs/14-future-features.md`](./docs/14-future-features.md))
+- **Market watchlist** — star any market to save it; `/watchlist` page with live prices and volume; WebSocket price ticks with ▲/▼ delta badges
+- **Smart order execution** — TWAP, DCA, Bracket (entry+TP+SL), and OCO orders; `/orders/smart` page with slice progress tracking
+- **Merge arbitrage scanner** — real-time YES+NO price-sum monitoring across all markets; margin filter; one-click Execute places simultaneous buy orders
+- **Drawdown circuit breaker** — Settings → Risk tab; automatically pauses all strategies when portfolio drops past a configurable threshold within a configurable lookback window
+- **Strategy marketplace** — two-sided marketplace for buying/selling strategies; 20% platform fee, 80% to seller; star ratings, written reviews, verified-purchase badges; admin moderation queue
+- **Kelly Criterion position sizer** — confidence slider on market detail; platform calculates optimal position size using Kelly formula
+- **Prediction accuracy & calibration** — `/accuracy` page with Brier score, calibration scatter chart, per-category breakdown; powered by resolved position history
+- **AI portfolio optimizer** — `/optimizer` page; AI-generated weekly portfolio review, score (1–10), actionable suggestions; LLM with graceful fallback
+- **Analytics dashboard** — `/analytics` page with Edge Score, total P&L, win rate, cumulative equity curve, category performance table, Sharpe/Profit Factor/Consistency breakdown
+- **Trading journal** — tag any order with mood (Confident/Uncertain/FOMO/Disciplined/Revenge) and free-text notes; filterable by mood on the Orders page Journal tab
+- **Strategy comparison mode** — select up to 4 strategies for side-by-side P&L chart and stats table comparison
+- **Achievement badges** — 15 badges across 4 rarity tiers (Common/Uncommon/Rare/Legendary) on public profiles
+- **Collections** — curated market collections with category filter; scrollable strip on Discover page
+- **Tax report export** — download all realized positions as a CSV for any calendar year
+- **Strategy builder undo/redo** — 50-step history stack; Ctrl+Z / Ctrl+Shift+Z
+- **Social feed reactions & threads** — 5 emoji reactions on feed posts; expandable comment threads with threaded replies; "Share to Profile" reposts market/strategy cards
+- **Mobile bottom navigation** — 5-tab nav (Home/Markets/Portfolio/Strategies/Profile) on small screens
+- **Live P&L strip** — portfolio page subscribes to WebSocket price updates; open positions show real-time unrealized P&L with flash animations
+- **Welcome onboarding modal** — 4-step carousel shown once to new users covering strategy builder, copy trading, marketplace, and analytics
+- **Keyboard shortcuts modal** — `?` key opens reference modal listing all shortcuts grouped by section; ⌘K / Ctrl+K opens command palette
 
-> **Current version: v6.8.0.** API docs redesigned with 9 new features (Try It Out, search, copy buttons, response examples, TOC, Changelog); MCP server now documented for Claude, Cursor, Windsurf, Zed, and Continue; admin app design tokens standardized; light theme WCAG contrast fixed. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
+> **Current version: v6.32.0.** Strategy marketplace reviews moderation, strategy performance alerts, social feed reactions & comment threads, live P&L WebSocket strip, advanced market search, trader comparison, correlation heat map, and 20+ additional features since v6.8.0. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
 
 ---
 
@@ -254,7 +274,7 @@ export POLYFORGE_API_URL=http://localhost:3002   # or your production URL
 export POLYFORGE_API_KEY=pf_your_api_key_here    # API key with desired scopes
 ```
 
-The MCP server provides 23 tools for Claude Desktop covering markets, strategies, portfolio, orders (including `place_order` and `cancel_order`), whales, news, scores, alerts, copy trading, webhooks, and `get_strategy_events` for polling live execution events.
+The MCP server provides **33 tools** covering markets, strategies, portfolio, orders (`place_order`, `cancel_order`, smart orders), whales, news, scores, alerts, copy trading, webhooks, strategy marketplace, watchlist, merge arbitrage, LP/market making, analytics, and `get_strategy_events` for polling live execution events.
 
 ---
 
@@ -262,19 +282,29 @@ The MCP server provides 23 tools for Claude Desktop covering markets, strategies
 
 | File | Contents |
 |---|---|
+| [`docs/00-features-and-functionalities.md`](./docs/00-features-and-functionalities.md) | Product specification and feature backlog |
 | [`docs/01-architecture.md`](./docs/01-architecture.md) | System architecture, services, networks, auth flows |
 | [`docs/02-codebase-guide.md`](./docs/02-codebase-guide.md) | How to add features, conventions, code style |
 | [`docs/03-openapi-codegen.md`](./docs/03-openapi-codegen.md) | OpenAPI generation pipeline |
 | [`docs/04-database-and-redis.md`](./docs/04-database-and-redis.md) | Prisma schema, Redis keys, migrations |
 | [`docs/05-testing-and-practices.md`](./docs/05-testing-and-practices.md) | Testing conventions |
-| [`docs/00-features-and-functionalities.md`](./docs/00-features-and-functionalities.md) | Product specification and feature backlog |
 | [`docs/06-api-catalog.md`](./docs/06-api-catalog.md) | Complete REST + WebSocket endpoint reference |
-| [`docs/07-deployment.md`](./docs/07-deployment.md) | Production deployment guide |
-| [`docs/13-design-charter.md`](./docs/13-design-charter.md) | Design system, UI patterns, interactivity |
+| [`docs/07-polymarket-integration.md`](./docs/07-polymarket-integration.md) | Polymarket API integration, hybrid mode, market sync |
+| [`docs/08-env-reference.md`](./docs/08-env-reference.md) | Environment variable reference |
 | [`docs/09-dev-setup.md`](./docs/09-dev-setup.md) | Local development setup |
-| [`docs/10-env-reference.md`](./docs/10-env-reference.md) | Environment variable reference |
-| [`docs/11-roadmap.md`](./docs/11-roadmap.md) | Feature roadmap |
-| [`docs/19-future-features.md`](./docs/19-future-features.md) | Future feature plans (arbitrage, mobile, etc.) |
+| [`docs/10-roadmap.md`](./docs/10-roadmap.md) | Feature roadmap |
+| [`docs/11-config-files-setup.md`](./docs/11-config-files-setup.md) | Config file conventions and setup |
+| [`docs/12-local-dev-quickstart.md`](./docs/12-local-dev-quickstart.md) | Quickstart for local development |
+| [`docs/13-design-charter.md`](./docs/13-design-charter.md) | Design system, UI patterns, interactivity |
+| [`docs/14-future-features.md`](./docs/14-future-features.md) | Future feature plans (arbitrage, mobile, etc.) |
+| [`docs/15-rust-wasm-modules.md`](./docs/15-rust-wasm-modules.md) | Rust WASM strategy engine and crypto modules |
+| [`docs/16-seeds.md`](./docs/16-seeds.md) | Database seed data and development fixtures |
+| [`docs/ops/01-deployment-guide.md`](./docs/ops/01-deployment-guide.md) | Production deployment guide |
+| [`docs/ops/02-deployment-aws.md`](./docs/ops/02-deployment-aws.md) | AWS infrastructure and Terraform setup |
+| [`docs/ops/03-launch-runbook.md`](./docs/ops/03-launch-runbook.md) | Launch checklist and runbook |
+| [`docs/ops/04-backup-recovery.md`](./docs/ops/04-backup-recovery.md) | Backup and recovery procedures |
+| [`docs/ops/05-incident-response.md`](./docs/ops/05-incident-response.md) | Incident response playbook (P0–P3) |
+| [`docs/ops/06-performance-tuning.md`](./docs/ops/06-performance-tuning.md) | Performance tuning guide |
 | [`docs/polyforge_competitor_audit.md`](./docs/polyforge_competitor_audit.md) | 199-platform competitor analysis |
 | [`CHANGELOG.md`](./CHANGELOG.md) | Release history |
 | [`SECURITY.md`](./SECURITY.md) | Security policy, architecture, production checklist |
