@@ -81,9 +81,9 @@ infra/terraform/*.tfvars
 !infra/terraform/*.tfvars.example
 
 # Compiled TS artifacts in packages/*/src (should be in dist/)
-packages/*/src/*.js
-packages/*/src/*.js.map
-packages/*/src/*.d.ts
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+packages/*/src/**/*.d.ts
 
 # Compiled TS artifacts in services/*/src (should be in dist/)
 services/*/src/**/*.js
@@ -101,3 +101,57 @@ tests/e2e/playwright-report/
 tests/e2e/test-results/
 packages/**/src/*.d.ts
 services/gateway/certs/
+
+# AI agent working directories
+.claude-flow/
+.swarm/
+agent-outputs/
+
+# Windows crash dumps
+*.stackdump
+
+# Root-level compiled TS config files (openapi-ts, etc.)
+openapi-ts*.js
+openapi-ts*.js.map
+openapi-ts*.d.ts
+openapi-ts*.d.ts.map
+
+# Compiled TS artifacts at package root (polyforge-crypto, polyforge-engine)
+packages/polyforge-*/*.js
+packages/polyforge-*/*.js.map
+packages/polyforge-*/*.d.ts
+packages/polyforge-*/*.d.ts.map
+
+# Missing .d.ts.map in packages/src subdirectories
+packages/**/src/**/*.d.ts.map
+
+# Compiled TS in services: test dirs and root-level vitest configs
+services/*/vitest.config.js
+services/*/vitest.config.js.map
+services/*/vitest.config.d.ts
+services/*/vitest.config.d.ts.map
+services/**/test/**/*.js
+services/**/test/**/*.js.map
+services/**/test/**/*.d.ts
+services/**/test/**/*.d.ts.map
+
+# Compiled TS in apps: landing app router, vitest/vite root configs
+apps/landing/app/**/*.js
+apps/landing/app/**/*.js.map
+apps/landing/app/**/*.d.ts
+apps/landing/app/**/*.d.ts.map
+apps/landing/next.config.js
+apps/landing/next.config.js.map
+apps/landing/next.config.d.ts
+apps/landing/next.config.d.ts.map
+apps/*/vitest.config.js
+apps/*/vitest.config.js.map
+apps/*/vitest.config.d.ts
+apps/*/vitest.config.d.ts.map
+apps/*/vite.config.d.ts.map
+
+# Compiled TS in tests/e2e (playwright source → compiled JS)
+tests/e2e/**/*.js
+tests/e2e/**/*.js.map
+tests/e2e/**/*.d.ts
+tests/e2e/**/*.d.ts.map
