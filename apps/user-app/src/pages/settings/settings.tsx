@@ -9,7 +9,6 @@ import {
   Monitor, Smartphone, MapPin, LogOut,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
-import { Button, Input, Select, Textarea } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -970,7 +969,6 @@ export function Component() {
         {TABS.map(t => (
           <Button
             type="button"
-            variant="ghost"
             key={t.value}
             variant={activeTab === t.value ? 'default' : 'secondary'}
             size="sm"

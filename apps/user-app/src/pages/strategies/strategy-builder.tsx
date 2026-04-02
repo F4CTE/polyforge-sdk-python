@@ -13,7 +13,6 @@ import { BlockPalette } from '../../components/builder/block-palette';
 import { BuilderTutorial } from '../../components/builder/builder-tutorial';
 import { ExecutionPanel } from '../../components/builder/execution-panel';
 import { useBuilderStore } from '../../stores/builder-store';
-import { Button, Input } from '@polyforge/ui';
 
 // ─── Strategy Template Library ───────────────────────────────────────────────
 
