@@ -130,6 +130,7 @@ export class StrategyRunner {
 
   /** Get the mode for a child strategy */
   getChildMode(childId: string): SubStrategyMode | undefined {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.childModes.get(childId);
   }
 

@@ -1865,7 +1865,6 @@ export function Component() {
                 {PERIODS.map(p => (
                   <Button
                     type="button"
-                    variant="ghost"
                     key={p.value}
                     variant={period === p.value ? 'default' : 'ghost'}
                     size="sm"
