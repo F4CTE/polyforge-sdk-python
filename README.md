@@ -58,7 +58,7 @@ Strategy automation platform for [Polymarket](https://polymarket.com) — users 
 - **Welcome onboarding modal** — 4-step carousel shown once to new users covering strategy builder, copy trading, marketplace, and analytics
 - **Keyboard shortcuts modal** — `?` key opens reference modal listing all shortcuts grouped by section; ⌘K / Ctrl+K opens command palette
 
-> **Current version: v6.32.0.** Strategy marketplace reviews moderation, strategy performance alerts, social feed reactions & comment threads, live P&L WebSocket strip, advanced market search, trader comparison, correlation heat map, and 20+ additional features since v6.8.0. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
+> **Current version: v6.33.0.** Sentiment admin module, full CI/typecheck fix across all services, email sender display name, hardcoded domain removal, UI button refinements, and `.gitignore` cleanup. See [`CHANGELOG.md`](./CHANGELOG.md) for the full release history.
 
 ---
 

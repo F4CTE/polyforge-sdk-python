@@ -5,6 +5,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.33.0] — 2026-04-02
+
+### Added
+- **Sentiment admin module** — `admin-api-service` gains a `/admin/api/v1/sentiment/sources` endpoint for listing, enabling, and disabling individual news/social ingestion sources; backed by `SentimentController`, `SentimentService`, `SentimentModule`
+
+### Fixed
+- **Typecheck & lint across all services** — resolved TypeScript errors in `user-app`, `admin-app`, `admin-auth-service`, `admin-api-service`, `api-service`, `auth-service`, `bot-service`, `market-data-service`, `notification-service`, `order-service`, `signer-service`, `strategy-engine`; test coverage thresholds restored; vitest configs added where missing
+- **Email sender display name** — `notification-service` and `auth-service` mail senders now correctly show `Polyforge <noreply@...>` instead of a raw address
+- **Hardcoded domain values removed** — all services now read sender/host values from environment variables; no fallback to hardcoded domains in production paths
+- **Auth service test mocks** — `createMockMailService()` now includes `sendWaitlistConfirmationEmail` and `sendAccountApprovedEmail` stubs; fixed coverage gaps in `auth.service.spec.ts`
+
+### Changed
+- **UI refinements** — button `size="sm"` applied consistently across portfolio, settings, trading-account, strategy-builder, strategy-detail, ticket-detail, and whale-profile pages; tab buttons use conditional `variant` for active state
+
+### Chore
+- **`.gitignore` expanded** — suppresses AI agent working dirs (`.claude-flow/`, `.swarm/`, `agent-outputs/`), Windows crash dumps (`*.stackdump`), root-level compiled TS config files, compiled artifacts in `packages/polyforge-*`, `services/**/test/`, `apps/landing/app/`, `tests/e2e/`, and vite/vitest root configs across all apps
+- **Documentation** — all docs brought to v6.32.0: README version + doc table links fixed; `docs/00-features-and-functionalities.md` sections 28–50 added; `docs/06-api-catalog.md` 7 missing endpoint groups appended; `docs/10-roadmap.md` Phase 12 added; `docs/14-future-features.md` Priority Matrix updated
+
+---
+
 ## [6.32.0] — 2026-03-31
 
 ### Added
