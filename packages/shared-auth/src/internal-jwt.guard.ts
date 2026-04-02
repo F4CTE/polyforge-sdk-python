@@ -65,8 +65,11 @@ export class InternalJwtGuard implements CanActivate {
     }
   }
 
-  private extractToken(request: any): string | null {
-    const auth = request.headers?.authorization;
+  private extractToken(request: Record<string, unknown>): string | null {
+    const headers = request.headers as
+      | Record<string, string | undefined>
+      | undefined;
+    const auth = headers?.authorization;
     if (!auth?.startsWith("Bearer ")) return null;
     return auth.slice(7);
   }

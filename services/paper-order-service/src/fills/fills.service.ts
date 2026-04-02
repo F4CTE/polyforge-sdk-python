@@ -1,6 +1,26 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
+import {
+  OrderSide,
+  OrderOutcome,
+  OrderType,
+  OrderStatus,
+} from ".prisma/client";
+
+interface BookLevel {
+  price: string;
+  size: string;
+}
+
+interface BookData {
+  asks?: BookLevel[];
+  bids?: BookLevel[];
+}
+
+interface PriceData {
+  price?: string;
+}
 
 export interface OrderIntent {
   intentId: string;
@@ -38,12 +58,12 @@ export class FillsService {
         strategyId: intent.strategyId || null,
         marketId: intent.marketId,
         tokenId: intent.tokenId,
-        side: intent.side as any,
-        outcome: intent.outcome as any,
+        side: intent.side as OrderSide,
+        outcome: intent.outcome as OrderOutcome,
         size: intent.size,
         price: intent.price,
-        orderType: intent.orderType as any,
-        status: "CONFIRMED" as any,
+        orderType: intent.orderType as OrderType,
+        status: OrderStatus.CONFIRMED,
         fillSize: String(fillSize),
         fillPrice: String(fillPrice),
       },
@@ -88,12 +108,13 @@ export class FillsService {
       // No book data — fall back to current price cache or intent price
       const priceRaw = await this.redis.get(`cache:price:${intent.tokenId}`);
       if (priceRaw) {
-        return parseFloat(JSON.parse(priceRaw).price ?? String(intentPrice));
+        const priceData = JSON.parse(priceRaw) as PriceData;
+        return parseFloat(priceData.price ?? String(intentPrice));
       }
       return intentPrice;
     }
 
-    const book = JSON.parse(bookRaw);
+    const book = JSON.parse(bookRaw) as BookData;
 
     if (intent.side === "BUY") {
       // Buying: if best ask is lower than our limit price, fill at best ask (price improvement)
@@ -137,7 +158,7 @@ export class FillsService {
           userId: intent.userId,
           marketId: intent.marketId,
           tokenId: intent.tokenId,
-          outcome: intent.outcome as any,
+          outcome: intent.outcome as OrderOutcome,
           size: String(fillSize),
           avgPrice: String(fillPrice),
           currentPrice: String(fillPrice),

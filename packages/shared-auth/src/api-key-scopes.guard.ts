@@ -22,7 +22,9 @@ export class ApiKeyScopeGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<Record<string, any>>();
+    const request = context
+      .switchToHttp()
+      .getRequest<{ apiKeyMeta?: { scopes: string[] } }>();
 
     // JWT-based requests have full access (no apiKeyMeta)
     if (!request.apiKeyMeta) {

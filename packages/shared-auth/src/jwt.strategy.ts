@@ -9,7 +9,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       // Accept token from HttpOnly cookie (browser) or Authorization header (API clients)
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (req: any) => req?.cookies?.pf_token ?? null,
+        (req: { cookies?: Record<string, string> }) =>
+          req?.cookies?.pf_token ?? null,
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
@@ -27,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload): Promise<JwtPayload> {
+  validate(payload: JwtPayload): JwtPayload {
     return payload;
   }
 }

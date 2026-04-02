@@ -9,18 +9,26 @@ import {
 import { AuthGuard } from "@nestjs/passport";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
+import { JwtPayload } from "@polyforge/shared-types";
 import { createHash } from "crypto";
+
+interface HttpRequest {
+  headers: Record<string, string | string[] | undefined>;
+  ip?: string;
+  user?: JwtPayload;
+  apiKeyMeta?: { keyId: string; scopes: string[] };
+}
 
 // ── JWT verification cache (in-memory, 5s TTL with LRU eviction) ────────────
 // Avoids re-verifying the same JWT token on every request within the TTL window.
 // Reduced from 30s to 5s to minimize the post-password-change attack window.
 // Also checks Redis pwchange key to immediately invalidate cached tokens.
 // Uses LRU eviction: when cache exceeds max size, deletes oldest entries first.
-const JWT_CACHE = new Map<string, { user: any; expiresAt: number }>();
+const JWT_CACHE = new Map<string, { user: JwtPayload; expiresAt: number }>();
 const JWT_CACHE_TTL = 5_000; // 5 seconds (reduced from 30s for security)
 const MAX_CACHE_SIZE = 10_000;
 
-function getCachedJwtUser(token: string): any {
+function getCachedJwtUser(token: string): JwtPayload | null {
   const cached = JWT_CACHE.get(token);
   if (!cached) return null;
   if (cached.expiresAt <= Date.now()) {
@@ -30,7 +38,7 @@ function getCachedJwtUser(token: string): any {
   return cached.user;
 }
 
-function setCachedJwtUser(token: string, user: any): void {
+function setCachedJwtUser(token: string, user: JwtPayload): void {
   // LRU eviction: delete oldest entries when cache is at max capacity
   if (JWT_CACHE.size >= MAX_CACHE_SIZE) {
     // Map preserves insertion order; delete the oldest 10% of entries
@@ -66,7 +74,7 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Record<string, any>>();
+    const request = context.switchToHttp().getRequest<HttpRequest>();
 
     const authHeader: string | undefined = request.headers?.authorization;
 
@@ -138,13 +146,11 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
       };
 
       // Fire-and-forget: update lastUsedAt and lastUsedIp
-      const ip =
-        request.ip ||
-        request.headers?.["x-forwarded-for"]
-          ?.toString()
-          .split(",")[0]
-          ?.trim() ||
-        "unknown";
+      const rawForwardedFor = request.headers?.["x-forwarded-for"];
+      const forwardedFor = Array.isArray(rawForwardedFor)
+        ? rawForwardedFor[0]
+        : rawForwardedFor;
+      const ip = request.ip ?? forwardedFor?.split(",")[0]?.trim() ?? "unknown";
 
       this.prisma.apiKey
         .update({
@@ -168,7 +174,8 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     if (
       result &&
       authHeader?.startsWith("Bearer ") &&
-      !authHeader.startsWith("Bearer pf_")
+      !authHeader.startsWith("Bearer pf_") &&
+      request.user
     ) {
       const token = authHeader.slice(7);
       setCachedJwtUser(token, request.user);
@@ -177,7 +184,7 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     return result;
   }
 
-  handleRequest<TUser = any>(err: any, user: TUser): TUser {
+  handleRequest<TUser = JwtPayload>(err: unknown, user: TUser): TUser {
     if (err || !user) {
       throw new UnauthorizedException("Invalid or expired token");
     }

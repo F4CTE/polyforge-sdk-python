@@ -40,8 +40,9 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
         .getClient()
         .xgroup("CREATE", STREAM, GROUP, "$", "MKSTREAM");
       this.logger.log(`Consumer group '${GROUP}' created on ${STREAM}`);
-    } catch (err: any) {
-      if (!err.message?.includes("BUSYGROUP")) throw err;
+    } catch (err: unknown) {
+      if (!(err instanceof Error) || !err.message?.includes("BUSYGROUP"))
+        throw err;
     }
   }
 
@@ -49,7 +50,7 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
     const client = this.redis.getClient();
     while (this.running) {
       try {
-        const results: any = await client.xreadgroup(
+        const results = (await client.xreadgroup(
           "GROUP",
           GROUP,
           CONSUMER,
@@ -60,7 +61,7 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
           "STREAMS",
           STREAM,
           ">",
-        );
+        )) as Array<[string, Array<[string, string[]]>]> | null;
 
         if (!results) continue;
 
@@ -69,19 +70,22 @@ export class StreamConsumerService implements OnModuleInit, OnModuleDestroy {
             const intent = this.parseFields(fields) as unknown as OrderIntent;
             try {
               await this.fills.simulate(intent);
-            } catch (err) {
+            } catch (err: unknown) {
               this.logger.error(
                 `Failed to simulate intent ${intent.intentId}`,
-                err,
+                err instanceof Error ? err.message : String(err),
               );
             }
             // Always ACK — fill simulation is idempotent on PaperOrder creation
             await client.xack(STREAM, GROUP, id);
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (this.running) {
-          this.logger.error("stream:paper_orders consume error", err?.message);
+          this.logger.error(
+            "stream:paper_orders consume error",
+            err instanceof Error ? err.message : String(err),
+          );
           await new Promise((r) => setTimeout(r, 1000));
         }
       }
