@@ -63,8 +63,9 @@ FROM nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef
 # Remove default nginx config
 RUN rm /etc/nginx/conf.d/default.conf
 
-# Copy production nginx config
+# Copy production nginx config and entrypoint
 COPY services/gateway/nginx.prod.conf /etc/nginx/nginx.conf
+COPY services/gateway/docker-entrypoint.sh /docker-entrypoint.sh
 
 # Copy built Angular apps from previous stages
 COPY --from=user-app-builder /build/apps/user-app/dist/user-app/browser /usr/share/nginx/html/user-app
@@ -85,10 +86,12 @@ RUN mkdir -p /var/www/certbot
 RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup && \
     mkdir -p /var/cache/nginx/client_temp /var/cache/nginx/proxy_temp /var/cache/nginx/fastcgi_temp /var/cache/nginx/uwsgi_temp /var/cache/nginx/scgi_temp && \
     chown -R appuser:appgroup /var/cache/nginx /var/run /var/log/nginx /var/www/certbot && \
-    touch /run/nginx.pid && chown appuser:appgroup /run/nginx.pid
+    touch /run/nginx.pid && chown appuser:appgroup /run/nginx.pid && \
+    touch /etc/nginx/admin_allowlist.conf && chown appuser:appgroup /etc/nginx/admin_allowlist.conf
 
 EXPOSE 80 443
 
 USER appuser
 
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]

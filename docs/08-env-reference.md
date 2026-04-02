@@ -129,6 +129,7 @@ Dev values are 32-byte hex zero strings. In production, real random values are s
 | `ADMIN_URL` | `https://admin.polyforge.app` | Admin app URL. Used in CORS config. |
 | `CORS_ORIGINS` | `https://localhost` | Comma-separated list of allowed origins for user-facing services. |
 | `ADMIN_CORS_ORIGINS` | `https://admin.polyforge.app` | Allowed origins for admin services. |
+| `ADMIN_ALLOWED_IPS` | _(empty — loopback only)_ | Comma-separated CIDRs for admin panel access at the nginx gateway. If unset, admin panel is restricted to `127.0.0.1` only. Example: `203.0.113.1/32,10.8.0.0/24`. |
 
 ---
 
