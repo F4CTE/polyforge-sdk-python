@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.33.1] — 2026-04-02
+
+### Fixed
+- **Strict null narrowing for `polymarketAddress`** — added type-predicate filters in `order-service` `TradeReconcilerService`, `api-service` `PositionReconcilerService`, and `strategy-engine` `StrategyRunner` to satisfy TypeScript strict null checks on `string | null` values after `.filter()` guards
+
+---
+
 ## [6.33.0] — 2026-04-02
 
 ### Added
