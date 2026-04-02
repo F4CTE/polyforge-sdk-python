@@ -160,7 +160,11 @@ export class PolymarketWsService implements OnModuleInit, OnModuleDestroy {
   private handleMessage(msg: any) {
     // Detect format: real Polymarket uses "event_type", mock uses "type"
     const eventType = msg.event_type ?? msg.type;
-    const ts = msg.timestamp ? (typeof msg.timestamp === "string" ? Date.parse(msg.timestamp) : msg.timestamp) : Date.now();
+    const ts = msg.timestamp
+      ? typeof msg.timestamp === "string"
+        ? Date.parse(msg.timestamp)
+        : msg.timestamp
+      : Date.now();
 
     switch (eventType) {
       // ─── Real Polymarket format ──────────────────────────────────────

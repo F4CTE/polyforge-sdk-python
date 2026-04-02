@@ -1,14 +1,22 @@
 import { Parser } from "expr-eval";
-import { LogicBlockEvaluator, LogicBlockResult, EvalContext } from "./block.types";
+import {
+  LogicBlockEvaluator,
+  LogicBlockResult,
+  EvalContext,
+} from "./block.types";
 
 /** Safe wrapper around expr-eval to prevent DoS via long/malicious expressions */
-function safeEvaluate(expression: string, scope: Record<string, number>, maxLength = 200): number {
+function safeEvaluate(
+  expression: string,
+  scope: Record<string, number>,
+  maxLength = 200,
+): number {
   if (expression.length > maxLength) {
     throw new Error(`Expression too long: ${expression.length} > ${maxLength}`);
   }
   // Reject potentially dangerous patterns
   if (/while|for|function|eval|require|import/.test(expression)) {
-    throw new Error('Expression contains forbidden keywords');
+    throw new Error("Expression contains forbidden keywords");
   }
   try {
     return new Parser().evaluate(expression, scope);
@@ -21,7 +29,11 @@ function safeEvaluate(expression: string, scope: Record<string, number>, maxLeng
 
 export const IfThenElseBlock: LogicBlockEvaluator = {
   evaluate(block, inputs, ctx): LogicBlockResult {
-    const condition = String(block.condition ?? (block.params as Record<string, unknown>)?.condition ?? "");
+    const condition = String(
+      block.condition ??
+        (block.params as Record<string, unknown>)?.condition ??
+        "",
+    );
     if (!condition.trim()) {
       return { value: false, activeOutput: "false" };
     }
@@ -77,7 +89,9 @@ export const NotGateBlock: LogicBlockEvaluator = {
 
 export const DelayBlock: LogicBlockEvaluator = {
   evaluate(block, inputs, ctx): LogicBlockResult {
-    const seconds = Number(block.seconds ?? (block.params as Record<string, unknown>)?.seconds ?? 0);
+    const seconds = Number(
+      block.seconds ?? (block.params as Record<string, unknown>)?.seconds ?? 0,
+    );
     const delayMs = seconds * 1000;
     const inputValue = inputs.length > 0 ? inputs[0] : false;
 

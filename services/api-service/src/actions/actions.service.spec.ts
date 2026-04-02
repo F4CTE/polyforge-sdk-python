@@ -55,9 +55,12 @@ describe("ActionsService", () => {
 
   it("actions with path parameters should have corresponding parameter definitions", () => {
     const result = service.getActions();
-    const actionsWithPathParams = result.actions.filter((a) => a.path.includes(":"));
+    const actionsWithPathParams = result.actions.filter((a) =>
+      a.path.includes(":"),
+    );
     for (const action of actionsWithPathParams) {
-      const pathParamNames = action.path.match(/:(\w+)/g)?.map((p) => p.slice(1)) ?? [];
+      const pathParamNames =
+        action.path.match(/:(\w+)/g)?.map((p) => p.slice(1)) ?? [];
       for (const paramName of pathParamNames) {
         const param = action.parameters?.find((p) => p.name === paramName);
         expect(param).toBeDefined();
@@ -83,9 +86,13 @@ describe("ActionsService", () => {
 
   it("required parameters should be flagged correctly", () => {
     const result = service.getActions();
-    const createStrategy = result.actions.find((a) => a.name === "create_strategy");
+    const createStrategy = result.actions.find(
+      (a) => a.name === "create_strategy",
+    );
     expect(createStrategy).toBeDefined();
-    const nameParam = createStrategy?.parameters?.find((p) => p.name === "name");
+    const nameParam = createStrategy?.parameters?.find(
+      (p) => p.name === "name",
+    );
     expect(nameParam?.required).toBe(true);
   });
 });

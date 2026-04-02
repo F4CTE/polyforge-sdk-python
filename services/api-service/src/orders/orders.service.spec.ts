@@ -97,10 +97,20 @@ describe("OrdersService", () => {
       const orders = [makeOrder()];
       db.order.findMany.mockResolvedValue(orders as any);
       db.order.count.mockResolvedValue(1);
+      // Service enriches orders with market titles
+      db.market.findMany.mockResolvedValue([
+        { id: "market-uuid-1", title: "Test Market", category: "crypto" },
+      ] as any);
 
       const result = await service.list("user-uuid-1", makeOrderQuery() as any);
 
-      expect(result.data).toEqual(orders);
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0]).toMatchObject({
+        id: orders[0].id,
+        userId: orders[0].userId,
+        marketQuestion: "Test Market",
+        marketCategory: "crypto",
+      });
       expect(result.total).toBe(1);
       expect(result.page).toBe(1);
     });

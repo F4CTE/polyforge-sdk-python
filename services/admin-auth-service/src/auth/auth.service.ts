@@ -1,11 +1,23 @@
-import { Injectable, HttpException, HttpStatus, Logger, OnModuleInit } from "@nestjs/common";
+import {
+  Injectable,
+  HttpException,
+  HttpStatus,
+  Logger,
+  OnModuleInit,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { PrismaAdminService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { AdminJwtPayload, AdminRole } from "@polyforge/shared-types";
 import * as bcrypt from "bcrypt";
-import { randomUUID, randomBytes, createHash, createCipheriv, createDecipheriv } from "crypto";
+import {
+  randomUUID,
+  randomBytes,
+  createHash,
+  createCipheriv,
+  createDecipheriv,
+} from "crypto";
 import { AdminLoginDto } from "./dto/login.dto";
 
 const PENDING_TOTP_TTL = 300; // 5 minutes
@@ -60,7 +72,11 @@ export class AuthService implements OnModuleInit {
     }
 
     // Dynamic import to match user-facing auth service pattern
-    const otplib = await import("otplib"); const authenticator = (otplib as any).authenticator ?? (otplib as any).default?.authenticator ?? otplib;
+    const otplib = await import("otplib");
+    const authenticator =
+      (otplib as any).authenticator ??
+      (otplib as any).default?.authenticator ??
+      otplib;
     const QRCode = await import("qrcode");
 
     const secret = authenticator.generateSecret(20);
@@ -68,14 +84,21 @@ export class AuthService implements OnModuleInit {
     const qrCode = await QRCode.toDataURL(uri);
 
     // Store pending secret in Redis with TTL — not yet committed to DB
-    await this.redis.set(`totp:pending:admin:${adminId}`, secret, PENDING_TOTP_TTL);
+    await this.redis.set(
+      `totp:pending:admin:${adminId}`,
+      secret,
+      PENDING_TOTP_TTL,
+    );
 
     return { secret, uri, qrCode };
   }
 
   // ─── TOTP Confirm ────────────────────────────────────────────────────────────
 
-  async confirmTotp(adminId: string, code: string): Promise<{ enabled: boolean }> {
+  async confirmTotp(
+    adminId: string,
+    code: string,
+  ): Promise<{ enabled: boolean }> {
     const pendingSecret = await this.redis.get(`totp:pending:admin:${adminId}`);
 
     if (!pendingSecret) {
@@ -88,7 +111,11 @@ export class AuthService implements OnModuleInit {
       );
     }
 
-    const otplib = await import("otplib"); const authenticator = (otplib as any).authenticator ?? (otplib as any).default?.authenticator ?? otplib;
+    const otplib = await import("otplib");
+    const authenticator =
+      (otplib as any).authenticator ??
+      (otplib as any).default?.authenticator ??
+      otplib;
     let isValid = false;
     try {
       isValid = authenticator.check(code, pendingSecret);
@@ -135,7 +162,11 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  async disableTotp(adminId: string, password: string, totpCode: string): Promise<void> {
+  async disableTotp(
+    adminId: string,
+    password: string,
+    totpCode: string,
+  ): Promise<void> {
     const admin = await this.adminDb.admin.findUnique({
       where: { id: adminId },
     });
@@ -168,7 +199,11 @@ export class AuthService implements OnModuleInit {
 
     // Re-authenticate: verify current TOTP code
     const secret = this.decrypt((admin as any).totpSecret);
-    const otplib = await import("otplib"); const authenticator = (otplib as any).authenticator ?? (otplib as any).default?.authenticator ?? otplib;
+    const otplib = await import("otplib");
+    const authenticator =
+      (otplib as any).authenticator ??
+      (otplib as any).default?.authenticator ??
+      otplib;
     let totpValid = false;
     try {
       totpValid = authenticator.check(totpCode, secret);
@@ -226,16 +261,26 @@ export class AuthService implements OnModuleInit {
 
       // SECURITY: Per-account TOTP lockout after 5 failures (15-minute window)
       const totpLockKey = `admin:totp:fail:${admin.id}`;
-      const totpFailCount = parseInt(await this.redis.get(totpLockKey) ?? "0", 10);
+      const totpFailCount = parseInt(
+        (await this.redis.get(totpLockKey)) ?? "0",
+        10,
+      );
       if (totpFailCount >= 5) {
         throw new HttpException(
-          { code: "TOTP_LOCKED", message: "Too many failed 2FA attempts. Try again in 15 minutes." },
+          {
+            code: "TOTP_LOCKED",
+            message: "Too many failed 2FA attempts. Try again in 15 minutes.",
+          },
           HttpStatus.TOO_MANY_REQUESTS,
         );
       }
 
       const secret = this.decrypt((admin as any).totpSecret);
-      const otplib = await import("otplib"); const authenticator = (otplib as any).authenticator ?? (otplib as any).default?.authenticator ?? otplib;
+      const otplib = await import("otplib");
+      const authenticator =
+        (otplib as any).authenticator ??
+        (otplib as any).default?.authenticator ??
+        otplib;
       let totpValid = false;
       try {
         totpValid = authenticator.check(dto.totpCode, secret);

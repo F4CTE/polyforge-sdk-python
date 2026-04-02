@@ -11,8 +11,10 @@ describe("LlmService", () => {
   function createConfig(overrides: Record<string, string> = {}) {
     return {
       get: vi.fn((key: string, defaultValue: string) => {
-        if (key === "ANTHROPIC_API_KEY") return overrides.ANTHROPIC_API_KEY ?? defaultValue;
-        if (key === "OPENAI_API_KEY") return overrides.OPENAI_API_KEY ?? defaultValue;
+        if (key === "ANTHROPIC_API_KEY")
+          return overrides.ANTHROPIC_API_KEY ?? defaultValue;
+        if (key === "OPENAI_API_KEY")
+          return overrides.OPENAI_API_KEY ?? defaultValue;
         return defaultValue;
       }),
     } as any;
@@ -48,17 +50,25 @@ describe("LlmService", () => {
       const fetchMock = vi.fn().mockImplementation((url: string) => {
         callCount++;
         if (url.includes("anthropic.com")) {
-          return Promise.resolve({ ok: false, text: async () => "rate limited" });
+          return Promise.resolve({
+            ok: false,
+            text: async () => "rate limited",
+          });
         }
         return Promise.resolve({
           ok: true,
-          json: async () => ({ choices: [{ message: { content: "openai response" } }] }),
+          json: async () => ({
+            choices: [{ message: { content: "openai response" } }],
+          }),
         });
       });
       vi.stubGlobal("fetch", fetchMock);
 
       const service = new LlmService(
-        createConfig({ ANTHROPIC_API_KEY: "sk-ant-test", OPENAI_API_KEY: "sk-openai-test" }),
+        createConfig({
+          ANTHROPIC_API_KEY: "sk-ant-test",
+          OPENAI_API_KEY: "sk-openai-test",
+        }),
       );
       const result = await service.analyze("test prompt");
 
@@ -90,7 +100,10 @@ describe("LlmService", () => {
       vi.stubGlobal("fetch", fetchMock);
 
       const service = new LlmService(
-        createConfig({ ANTHROPIC_API_KEY: "sk-ant-test", OPENAI_API_KEY: "sk-openai-test" }),
+        createConfig({
+          ANTHROPIC_API_KEY: "sk-ant-test",
+          OPENAI_API_KEY: "sk-openai-test",
+        }),
       );
 
       await expect(service.analyze("test")).rejects.toThrow(

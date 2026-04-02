@@ -43,7 +43,9 @@ export class WhatsAppWebhookController {
     if (!this.appSecret) {
       // Reject webhooks when secret is not configured in production
       if (process.env.NODE_ENV === "production") {
-        this.logger.error("WHATSAPP_APP_SECRET is not configured — rejecting webhook");
+        this.logger.error(
+          "WHATSAPP_APP_SECRET is not configured — rejecting webhook",
+        );
         return reply.status(500).send("Webhook not configured");
       }
     } else {
@@ -67,7 +69,10 @@ export class WhatsAppWebhookController {
       // SECURITY: Check buffer lengths before timingSafeEqual to avoid RangeError
       const sigBuf = Buffer.from(signature);
       const expectedBuf = Buffer.from(expectedSignature);
-      if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+      if (
+        sigBuf.length !== expectedBuf.length ||
+        !crypto.timingSafeEqual(sigBuf, expectedBuf)
+      ) {
         this.logger.warn("WhatsApp webhook signature mismatch — rejecting");
         return reply.status(403).send("Invalid signature");
       }

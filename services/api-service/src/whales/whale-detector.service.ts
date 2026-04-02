@@ -75,7 +75,10 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
 
         if (!results) continue;
 
-        for (const [, messages] of results as [string, [string, string[]][]][]) {
+        for (const [, messages] of results as [
+          string,
+          [string, string[]][],
+        ][]) {
           for (const [id, fields] of messages) {
             const event = this.parseFields(fields);
             await this.processEvent(event);
@@ -210,9 +213,7 @@ export class WhaleDetectorService implements OnModuleInit, OnModuleDestroy {
         ),
       );
 
-      this.logger.log(
-        `Aggregated ${aggregations.length} whale profiles`,
-      );
+      this.logger.log(`Aggregated ${aggregations.length} whale profiles`);
     } catch (err: any) {
       this.logger.error("Whale profile aggregation failed", err?.message);
     }

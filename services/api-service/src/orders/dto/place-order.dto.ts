@@ -1,19 +1,26 @@
-import { IsString, IsNumber, IsEnum, IsOptional, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsEnum,
+  IsOptional,
+  Min,
+  Max,
+} from "class-validator";
 
 export enum OrderSideDto {
-  BUY = 'BUY',
-  SELL = 'SELL',
+  BUY = "BUY",
+  SELL = "SELL",
 }
 
 export enum OrderOutcomeDto {
-  YES = 'YES',
-  NO = 'NO',
+  YES = "YES",
+  NO = "NO",
 }
 
 export enum OrderTypeDto {
-  GTC = 'GTC',
-  FOK = 'FOK',
-  GTD = 'GTD',
+  GTC = "GTC",
+  FOK = "FOK",
+  GTD = "GTD",
 }
 
 export class PlaceOrderDto {

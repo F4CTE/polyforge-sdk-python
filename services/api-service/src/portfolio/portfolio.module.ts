@@ -9,6 +9,10 @@ import { EventsModule } from "../gateway/events.module";
 @Module({
   imports: [ScheduleModule.forRoot(), EventsModule],
   controllers: [PortfolioController],
-  providers: [PortfolioService, PositionReconcilerService, DrawdownCircuitBreakerService],
+  providers: [
+    PortfolioService,
+    PositionReconcilerService,
+    DrawdownCircuitBreakerService,
+  ],
 })
 export class PortfolioModule {}

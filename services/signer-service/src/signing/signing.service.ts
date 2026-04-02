@@ -53,7 +53,11 @@ export class SigningService implements OnModuleInit {
   }
 
   /** Read builder credentials on demand — never cached in class instance memory */
-  private getBuilderCredentials(): { apiKey: string; secret: string; passphrase: string } {
+  private getBuilderCredentials(): {
+    apiKey: string;
+    secret: string;
+    passphrase: string;
+  } {
     return {
       apiKey: this.config.get<string>("POLY_BUILDER_API_KEY") ?? "",
       secret: this.config.get<string>("POLY_BUILDER_SECRET") ?? "",
@@ -63,7 +67,9 @@ export class SigningService implements OnModuleInit {
 
   onModuleInit() {
     if (this.isDev && this.chainId === 137) {
-      this.logger.warn('Running in dev mode with MAINNET chain ID (137) — use 80002 for testnet');
+      this.logger.warn(
+        "Running in dev mode with MAINNET chain ID (137) — use 80002 for testnet",
+      );
     }
 
     if (!this.isDev) {
@@ -136,10 +142,7 @@ export class SigningService implements OnModuleInit {
     const gasEstimate = parseFloat(
       this.config.get<string>("GAS_ESTIMATE_MATIC") ?? "0.002",
     );
-    const gasSponsored = await this.gasSponsor.sponsorGas(
-      userId,
-      gasEstimate,
-    );
+    const gasSponsored = await this.gasSponsor.sponsorGas(userId, gasEstimate);
 
     this.logger.log(
       `Order signed for user=${userId} requestId=${requestId} tokenId=${tokenId} side=${side}` +
@@ -207,7 +210,11 @@ export class SigningService implements OnModuleInit {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { ClobClient } = require("@polymarket/clob-client");
 
-    const { apiKey: builderApiKey, secret: builderSecret, passphrase: builderPassphrase } = this.getBuilderCredentials();
+    const {
+      apiKey: builderApiKey,
+      secret: builderSecret,
+      passphrase: builderPassphrase,
+    } = this.getBuilderCredentials();
 
     const client = new ClobClient(
       this.clobApiUrl,
@@ -279,13 +286,15 @@ export class SigningService implements OnModuleInit {
         { signal: AbortSignal.timeout(5_000) },
       );
       if (res.ok) {
-        const data = await res.json() as Record<string, unknown>;
+        const data = (await res.json()) as Record<string, unknown>;
         const nonce = Number(data.nonce ?? data ?? 0);
         await this.redis.set(cacheKey, String(nonce), NONCE_CACHE_TTL);
         return nonce;
       }
     } catch (err) {
-      this.logger.warn(`Failed to fetch nonce for ${walletAddress}: ${(err as Error).message}`);
+      this.logger.warn(
+        `Failed to fetch nonce for ${walletAddress}: ${(err as Error).message}`,
+      );
     }
 
     return 0; // fallback
@@ -309,13 +318,15 @@ export class SigningService implements OnModuleInit {
         { signal: AbortSignal.timeout(5_000) },
       );
       if (res.ok) {
-        const data = await res.json() as Record<string, unknown>;
+        const data = (await res.json()) as Record<string, unknown>;
         const feeRate = String(data.feeRateBps ?? data ?? "0");
         await this.redis.set(cacheKey, feeRate, FEE_RATE_CACHE_TTL);
         return feeRate;
       }
     } catch (err) {
-      this.logger.warn(`Failed to fetch fee rate for ${tokenId}: ${(err as Error).message}`);
+      this.logger.warn(
+        `Failed to fetch fee rate for ${tokenId}: ${(err as Error).message}`,
+      );
     }
 
     return "0"; // fallback
@@ -345,9 +356,9 @@ export class SigningService implements OnModuleInit {
     }
 
     // Use configurable gas estimate for redemptions (slightly higher than orders)
-    const gasEstimateRedemption = parseFloat(
-      this.config.get<string>("GAS_ESTIMATE_MATIC") ?? "0.002",
-    ) * 1.5;
+    const gasEstimateRedemption =
+      parseFloat(this.config.get<string>("GAS_ESTIMATE_MATIC") ?? "0.002") *
+      1.5;
     const gasSponsored = await this.gasSponsor.sponsorGas(
       userId,
       gasEstimateRedemption,

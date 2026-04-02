@@ -55,7 +55,7 @@ export class ScoreCalculatorService {
         updated++;
       } catch (err) {
         this.logger.error(
-          `Failed to calculate score for user ${row.userId}: ${err}`,
+          `Failed to calculate score for user ${row.userId}: ${String(err)}`,
         );
       }
     }
@@ -73,8 +73,7 @@ export class ScoreCalculatorService {
 
     // ── Win rate ──────────────────────────────────────────────────────────────
     const closedPositions = positions.filter(
-      (p) =>
-        p.resolutionStatus === "RESOLVED" || Number(p.realizedPnl) !== 0,
+      (p) => p.resolutionStatus === "RESOLVED" || Number(p.realizedPnl) !== 0,
     );
     const wins = closedPositions.filter(
       (p) => Number(p.realizedPnl) > 0,
@@ -106,7 +105,8 @@ export class ScoreCalculatorService {
     const grossLoss = Math.abs(
       returns.filter((r) => r < 0).reduce((sum, r) => sum + r, 0),
     );
-    const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? 10 : 0;
+    const profitFactor =
+      grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? 10 : 0;
 
     // ── Max drawdown ─────────────────────────────────────────────────────────
     let peak = 0;
@@ -121,7 +121,9 @@ export class ScoreCalculatorService {
 
     // ── Consistency (% of profitable 30-day periods) ─────────────────────────
     // Use TimescaleDB time_bucket aggregation instead of loading all snapshots
-    const buckets = await this.prisma.$queryRawUnsafe<Array<{ bucket: Date; total_pnl: string }>>(
+    const buckets = await this.prisma.$queryRawUnsafe<
+      Array<{ bucket: Date; total_pnl: string }>
+    >(
       `SELECT time_bucket('30 days', time) AS bucket, SUM(pnl) AS total_pnl
        FROM pnl_snapshots WHERE "userId" = $1
        GROUP BY 1 ORDER BY 1`,

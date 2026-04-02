@@ -143,7 +143,9 @@ describe("HeartbeatService", () => {
     ]);
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) }),
+      vi
+        .fn()
+        .mockResolvedValue({ ok: false, status: 500, json: async () => ({}) }),
     );
 
     await expect(svc.sendHeartbeats()).resolves.toBeUndefined();

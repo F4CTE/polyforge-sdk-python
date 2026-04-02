@@ -96,7 +96,7 @@ export class NewsService {
       return {
         marketId,
         score: 0,
-        direction: 'NEUTRAL',
+        direction: "NEUTRAL",
         signalCount: 0,
         avgConfidence: 0,
         updatedAt: new Date().toISOString(),
@@ -109,12 +109,16 @@ export class NewsService {
 
     for (const s of signals) {
       totalConf += s.confidence;
-      if (s.direction === 'BUY') bullishWeight += s.confidence;
+      if (s.direction === "BUY") bullishWeight += s.confidence;
       else bearishWeight += s.confidence;
     }
 
-    const score = totalConf > 0 ? Math.round(((bullishWeight - bearishWeight) / totalConf) * 100) : 0;
-    const direction = score > 20 ? 'BULLISH' : score < -20 ? 'BEARISH' : 'NEUTRAL';
+    const score =
+      totalConf > 0
+        ? Math.round(((bullishWeight - bearishWeight) / totalConf) * 100)
+        : 0;
+    const direction =
+      score > 20 ? "BULLISH" : score < -20 ? "BEARISH" : "NEUTRAL";
 
     return {
       marketId,

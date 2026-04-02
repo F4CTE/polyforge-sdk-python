@@ -42,9 +42,9 @@ function filterByConnections(
   const sources = new Set<string>(connections.map((c: any) => c.source));
   const targets = new Set<string>(connections.map((c: any) => c.target));
   return {
-    triggers:   triggers.filter((b: any) => sources.has(b.id)),
+    triggers: triggers.filter((b: any) => sources.has(b.id)),
     conditions, // unwired = global gate, wired = same; always include all conditions
-    actions:    actions.filter((b: any) => targets.has(b.id)),
+    actions: actions.filter((b: any) => targets.has(b.id)),
   };
 }
 
@@ -102,7 +102,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
             : [];
           const calcBlocks = Array.isArray((canvas as any)?.calcBlocks)
             ? (canvas as any).calcBlocks
-            : (strategy as any).calcBlocks ?? [];
+            : ((strategy as any).calcBlocks ?? []);
 
           const wired = filterByConnections(
             (strategy.triggers as any[]) ?? [],
@@ -185,7 +185,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       : [];
     const calcBlocks = Array.isArray((canvas as any)?.calcBlocks)
       ? (canvas as any).calcBlocks
-      : (strategy as any).calcBlocks ?? [];
+      : ((strategy as any).calcBlocks ?? []);
 
     const wired = filterByConnections(
       (strategy.triggers as any[]) ?? [],
@@ -365,7 +365,9 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       where: { id: childStrategyId },
     });
     if (!child)
-      throw new NotFoundException(`Child strategy ${childStrategyId} not found`);
+      throw new NotFoundException(
+        `Child strategy ${childStrategyId} not found`,
+      );
 
     // Ownership check
     const parentRunner = this.runners.get(parentId);
@@ -426,7 +428,7 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       : [];
     const calcBlocks = Array.isArray((canvas as any)?.calcBlocks)
       ? (canvas as any).calcBlocks
-      : (child as any).calcBlocks ?? [];
+      : ((child as any).calcBlocks ?? []);
 
     const wiredChild = filterByConnections(
       (child.triggers as any[]) ?? [],
@@ -449,11 +451,17 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
       this.state,
       (intents) => this.publishIntents(intents, stream),
       (status, reason) =>
-        this.onRunnerStatusChange(childStrategyId, child.userId, status, reason),
+        this.onRunnerStatusChange(
+          childStrategyId,
+          child.userId,
+          status,
+          reason,
+        ),
       logicBlocks,
       logicConnections,
       calcBlocks,
-      (grandchildId, pId, m, ctx) => this.startAsChild(grandchildId, pId, m, ctx),
+      (grandchildId, pId, m, ctx) =>
+        this.startAsChild(grandchildId, pId, m, ctx),
     );
 
     this.runners.set(childStrategyId, runner);
@@ -474,7 +482,11 @@ export class StrategyRegistryService implements OnApplicationBootstrap {
    * Check if starting childId under parentId would create a circular dependency.
    * Walks up the parent chain from parentId. Max depth 3.
    */
-  hasCircularDependency(parentId: string, childId: string, visited = new Set<string>()): boolean {
+  hasCircularDependency(
+    parentId: string,
+    childId: string,
+    visited = new Set<string>(),
+  ): boolean {
     let current: string | undefined = parentId;
     let depth = 0;
     const MAX_DEPTH = 3;

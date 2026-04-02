@@ -13,6 +13,15 @@ function makeRedisClient(overrides: Record<string, unknown> = {}) {
     scan: vi.fn().mockResolvedValue(["0", []]),
     dbsize: vi.fn().mockResolvedValue(100),
     del: vi.fn().mockResolvedValue(0),
+    xinfo: vi.fn().mockImplementation((subcommand: string) => {
+      if (subcommand === "STREAM") {
+        return Promise.resolve(["length", 5, "groups", 1]);
+      }
+      // GROUPS subcommand returns array of group arrays
+      return Promise.resolve([
+        ["name", "consumers-group", "consumers", 2, "pel-count", 0],
+      ]);
+    }),
     ...overrides,
   };
 }
@@ -112,6 +121,46 @@ describe("CacheAdminService", () => {
       // First prefix has 3 keys across 2 pages
       const values = Object.values(result.keysByPrefix);
       expect(values[0]).toBe(3);
+    });
+  });
+
+  // ── getStreamStats ────────────────────────────────────────────────────────
+
+  describe("getStreamStats", () => {
+    it("returns streams array with 5 entries", async () => {
+      const result = await service.getStreamStats();
+
+      expect(result.streams).toHaveLength(5);
+    });
+
+    it("parses length from xinfo STREAM response", async () => {
+      const result = await service.getStreamStats();
+
+      expect(result.streams[0].length).toBe(5);
+    });
+
+    it("parses groups from xinfo GROUPS response", async () => {
+      const result = await service.getStreamStats();
+
+      expect(result.streams[0].groups).toHaveLength(1);
+      expect(result.streams[0].groups[0].name).toBe("consumers-group");
+      expect(result.streams[0].groups[0].consumers).toBe(2);
+      expect(result.streams[0].groups[0].pending).toBe(0);
+    });
+
+    it("returns error: false on success", async () => {
+      const result = await service.getStreamStats();
+
+      expect(result.streams[0].error).toBe(false);
+    });
+
+    it("returns error: true when xinfo throws", async () => {
+      client.xinfo.mockRejectedValue(new Error("stream not found"));
+
+      const result = await service.getStreamStats();
+
+      expect(result.streams[0].error).toBe(true);
+      expect(result.streams[0].length).toBe(0);
     });
   });
 

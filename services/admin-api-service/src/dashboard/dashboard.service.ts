@@ -147,29 +147,33 @@ export class DashboardService {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400_000);
     const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000);
 
-    const [totalNewsSignals, marketsWithSentimentRaw, totalLpOrders, resolvedPositions] =
-      await Promise.all([
-        this.prisma.newsSignal.count({
-          where: { createdAt: { gte: thirtyDaysAgo } },
-        }),
-        this.prisma.$queryRaw<[{ count: bigint }]>`
+    const [
+      totalNewsSignals,
+      marketsWithSentimentRaw,
+      totalLpOrders,
+      resolvedPositions,
+    ] = await Promise.all([
+      this.prisma.newsSignal.count({
+        where: { createdAt: { gte: thirtyDaysAgo } },
+      }),
+      this.prisma.$queryRaw<[{ count: bigint }]>`
           SELECT COUNT(DISTINCT "marketId")::bigint AS count
           FROM news_signals
           WHERE "createdAt" >= ${sevenDaysAgo}
         `,
-        this.prisma.order.count({
-          where: {
-            strategyId: null,
-            orderType: 'FOK',
-            status: { not: 'CANCELLED' },
-          },
-        }),
-        this.prisma.position.count({
-          where: {
-            resolutionStatus: 'RESOLVED' as any,
-          },
-        }),
-      ]);
+      this.prisma.order.count({
+        where: {
+          strategyId: null,
+          orderType: "FOK",
+          status: { not: "CANCELLED" },
+        },
+      }),
+      this.prisma.position.count({
+        where: {
+          resolutionStatus: "RESOLVED" as any,
+        },
+      }),
+    ]);
 
     return {
       totalNewsSignals,
@@ -239,42 +243,48 @@ export class DashboardService {
   async getMarketplaceStats() {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400_000);
 
-    const [totalListings, activeListings, totalPurchases, totalRevenue, topListings, recentPurchases] =
-      await Promise.all([
-        this.prisma.marketplaceListing.count(),
-        this.prisma.marketplaceListing.count({ where: { status: 'ACTIVE' } }),
-        this.prisma.marketplacePurchase.count(),
-        this.prisma.marketplacePurchase.aggregate({ _sum: { priceUsdc: true } }),
-        this.prisma.marketplaceListing.findMany({
-          where: { status: 'ACTIVE' },
-          orderBy: { totalRevenue: 'desc' },
-          take: 10,
-          select: {
-            id: true,
-            title: true,
-            priceUsdc: true,
-            purchaseCount: true,
-            forkCount: true,
-            avgRating: true,
-            ratingCount: true,
-            totalRevenue: true,
-            seller: { select: { username: true, displayName: true } },
-          },
-        }),
-        this.prisma.marketplacePurchase.findMany({
-          where: { createdAt: { gte: thirtyDaysAgo } },
-          orderBy: { createdAt: 'desc' },
-          take: 20,
-          select: {
-            id: true,
-            priceUsdc: true,
-            platformFee: true,
-            sellerNet: true,
-            createdAt: true,
-            listing: { select: { title: true } },
-          },
-        }),
-      ]);
+    const [
+      totalListings,
+      activeListings,
+      totalPurchases,
+      totalRevenue,
+      topListings,
+      recentPurchases,
+    ] = await Promise.all([
+      this.prisma.marketplaceListing.count(),
+      this.prisma.marketplaceListing.count({ where: { status: "ACTIVE" } }),
+      this.prisma.marketplacePurchase.count(),
+      this.prisma.marketplacePurchase.aggregate({ _sum: { priceUsdc: true } }),
+      this.prisma.marketplaceListing.findMany({
+        where: { status: "ACTIVE" },
+        orderBy: { totalRevenue: "desc" },
+        take: 10,
+        select: {
+          id: true,
+          title: true,
+          priceUsdc: true,
+          purchaseCount: true,
+          forkCount: true,
+          avgRating: true,
+          ratingCount: true,
+          totalRevenue: true,
+          seller: { select: { username: true, displayName: true } },
+        },
+      }),
+      this.prisma.marketplacePurchase.findMany({
+        where: { createdAt: { gte: thirtyDaysAgo } },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+        select: {
+          id: true,
+          priceUsdc: true,
+          platformFee: true,
+          sellerNet: true,
+          createdAt: true,
+          listing: { select: { title: true } },
+        },
+      }),
+    ]);
 
     const platformFeeTotal = await this.prisma.marketplacePurchase.aggregate({
       _sum: { platformFee: true },

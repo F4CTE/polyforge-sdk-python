@@ -46,16 +46,26 @@ describe("StreamConsumerService (order-service)", () => {
 
     it("parses valid fields into an OrderIntent", () => {
       const result = parseIntent(service, [
-        "intentId", "int-1",
-        "userId", "user-1",
-        "strategyId", "strat-1",
-        "marketId", "m1",
-        "tokenId", "t1",
-        "side", "BUY",
-        "outcome", "YES",
-        "size", "100",
-        "price", "0.55",
-        "orderType", "GTC",
+        "intentId",
+        "int-1",
+        "userId",
+        "user-1",
+        "strategyId",
+        "strat-1",
+        "marketId",
+        "m1",
+        "tokenId",
+        "t1",
+        "side",
+        "BUY",
+        "outcome",
+        "YES",
+        "size",
+        "100",
+        "price",
+        "0.55",
+        "orderType",
+        "GTC",
       ]);
 
       expect(result).toMatchObject({
@@ -69,8 +79,10 @@ describe("StreamConsumerService (order-service)", () => {
 
     it("returns null when intentId is missing", () => {
       const result = parseIntent(service, [
-        "userId", "user-1",
-        "marketId", "m1",
+        "userId",
+        "user-1",
+        "marketId",
+        "m1",
       ]);
 
       expect(result).toBeNull();
@@ -78,8 +90,10 @@ describe("StreamConsumerService (order-service)", () => {
 
     it("returns null when userId is missing", () => {
       const result = parseIntent(service, [
-        "intentId", "int-1",
-        "marketId", "m1",
+        "intentId",
+        "int-1",
+        "marketId",
+        "m1",
       ]);
 
       expect(result).toBeNull();
@@ -87,8 +101,10 @@ describe("StreamConsumerService (order-service)", () => {
 
     it("defaults orderType to GTC when not provided", () => {
       const result = parseIntent(service, [
-        "intentId", "int-1",
-        "userId", "user-1",
+        "intentId",
+        "int-1",
+        "userId",
+        "user-1",
       ]);
 
       expect(result?.orderType).toBe("GTC");
@@ -104,7 +120,29 @@ describe("StreamConsumerService (order-service)", () => {
         [
           "stream:orders",
           [
-            ["msg-1", ["intentId", "i1", "userId", "u1", "marketId", "m1", "tokenId", "t1", "side", "BUY", "outcome", "YES", "size", "10", "price", "0.5", "orderType", "GTC"]],
+            [
+              "msg-1",
+              [
+                "intentId",
+                "i1",
+                "userId",
+                "u1",
+                "marketId",
+                "m1",
+                "tokenId",
+                "t1",
+                "side",
+                "BUY",
+                "outcome",
+                "YES",
+                "size",
+                "10",
+                "price",
+                "0.5",
+                "orderType",
+                "GTC",
+              ],
+            ],
           ],
         ],
       ]);
@@ -129,7 +167,11 @@ describe("StreamConsumerService (order-service)", () => {
       await (service as any).pollOnce();
 
       expect(orders.processBatch).not.toHaveBeenCalled();
-      expect(client.xack).toHaveBeenCalledWith("stream:orders", "order-service", "msg-1");
+      expect(client.xack).toHaveBeenCalledWith(
+        "stream:orders",
+        "order-service",
+        "msg-1",
+      );
     });
   });
 });

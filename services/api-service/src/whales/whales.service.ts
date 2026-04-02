@@ -66,7 +66,8 @@ export class WhalesService {
       tradeCount: "tradeCount",
     };
 
-    const orderByField = sortFieldMap[query.sortBy ?? "volume"] ?? "totalVolume";
+    const orderByField =
+      sortFieldMap[query.sortBy ?? "volume"] ?? "totalVolume";
 
     const profiles = await this.prisma.whaleProfile.findMany({
       orderBy: { [orderByField]: "desc" },
@@ -170,9 +171,7 @@ export class WhalesService {
       where: { walletAddress: { in: addresses } },
     });
 
-    const profileMap = new Map(
-      profiles.map((p) => [p.walletAddress, p]),
-    );
+    const profileMap = new Map(profiles.map((p) => [p.walletAddress, p]));
 
     return follows.map((f) => ({
       ...f,

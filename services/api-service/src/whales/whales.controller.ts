@@ -45,19 +45,13 @@ export class WhalesController {
 
   @Post(":address/follow")
   @HttpCode(HttpStatus.OK)
-  follow(
-    @CurrentUser() user: any,
-    @Param("address") address: string,
-  ) {
+  follow(@CurrentUser() user: any, @Param("address") address: string) {
     return this.whales.toggleFollow(user.sub, address);
   }
 
   @Post(":address/unfollow")
   @HttpCode(HttpStatus.OK)
-  unfollow(
-    @CurrentUser() user: any,
-    @Param("address") address: string,
-  ) {
+  unfollow(@CurrentUser() user: any, @Param("address") address: string) {
     return this.whales.toggleFollow(user.sub, address);
   }
 }

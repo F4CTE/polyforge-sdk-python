@@ -82,9 +82,7 @@ export class SignalGeneratorService {
     const signals = this.parseResponse(rawResponse);
 
     if (signals.length === 0) {
-      this.logger.debug(
-        `No signals generated for article ${article.id}`,
-      );
+      this.logger.debug(`No signals generated for article ${article.id}`);
       return;
     }
 
@@ -144,7 +142,12 @@ export class SignalGeneratorService {
 
   buildPrompt(
     article: { title: string; summary: string | null },
-    markets: { id: string; title: string; slug: string; category: string | null }[],
+    markets: {
+      id: string;
+      title: string;
+      slug: string;
+      category: string | null;
+    }[],
   ): string {
     const marketList = markets
       .map((m) => `- ID: ${m.id} | Title: ${m.title}`)

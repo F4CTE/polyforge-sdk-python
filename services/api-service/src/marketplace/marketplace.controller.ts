@@ -91,7 +91,11 @@ export class MarketplaceController {
 
   @Post(":id/rate")
   @HttpCode(HttpStatus.OK)
-  rate(@CurrentUser() user: any, @Param("id") id: string, @Body() dto: RateListingDto) {
+  rate(
+    @CurrentUser() user: any,
+    @Param("id") id: string,
+    @Body() dto: RateListingDto,
+  ) {
     return this.marketplace.rateListing(user.sub, id, dto);
   }
 }

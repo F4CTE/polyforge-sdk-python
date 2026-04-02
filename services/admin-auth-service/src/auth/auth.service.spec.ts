@@ -40,13 +40,19 @@ async function adminFactory(
 vi.mock("otplib", () => ({
   authenticator: {
     generateSecret: vi.fn().mockReturnValue("JBSWY3DPEHPK3PXP"),
-    keyuri: vi.fn().mockReturnValue("otpauth://totp/Polyforge%20Admin:admin@test.com?secret=JBSWY3DPEHPK3PXP&issuer=Polyforge%20Admin"),
+    keyuri: vi
+      .fn()
+      .mockReturnValue(
+        "otpauth://totp/Polyforge%20Admin:admin@test.com?secret=JBSWY3DPEHPK3PXP&issuer=Polyforge%20Admin",
+      ),
     check: vi.fn().mockReturnValue(true),
   },
 }));
 
 vi.mock("qrcode", () => ({
-  default: { toDataURL: vi.fn().mockResolvedValue("data:image/png;base64,mock") },
+  default: {
+    toDataURL: vi.fn().mockResolvedValue("data:image/png;base64,mock"),
+  },
   toDataURL: vi.fn().mockResolvedValue("data:image/png;base64,mock"),
 }));
 
@@ -165,7 +171,10 @@ describe("AdminAuthService", () => {
     });
 
     it("throws TOTP_REQUIRED (403) when admin has TOTP enabled but no code provided", async () => {
-      const admin = await adminFactory({ totpEnabled: true, totpSecret: "encrypted:secret" });
+      const admin = await adminFactory({
+        totpEnabled: true,
+        totpSecret: "encrypted:secret",
+      });
       adminDb.admin.findUnique.mockResolvedValue(admin);
 
       await expect(
@@ -173,6 +182,39 @@ describe("AdminAuthService", () => {
       ).rejects.toMatchObject({
         response: { code: "TOTP_REQUIRED" },
         status: HttpStatus.FORBIDDEN,
+      });
+    });
+
+    it("throws TOTP_INVALID (400) when admin TOTP code is wrong", async () => {
+      const otplib = await import("otplib");
+      const authenticator = (otplib as any).authenticator;
+      vi.mocked(authenticator.check).mockReturnValueOnce(false);
+
+      const admin = await adminFactory({
+        totpEnabled: true,
+        totpSecret: "encrypted:secret",
+      });
+      adminDb.admin.findUnique.mockResolvedValue(admin);
+
+      // Add getClient mock for the lockout counter
+      const incrMock = vi.fn().mockResolvedValue(1);
+      const expireMock = vi.fn().mockResolvedValue(1);
+      redis.getClient = vi
+        .fn()
+        .mockReturnValue({ incr: incrMock, expire: expireMock });
+
+      // Spy on decrypt to return a valid secret string
+      vi.spyOn(service as any, "decrypt").mockReturnValue("JBSWY3DPEHPK3PXP");
+
+      await expect(
+        service.login({
+          email: admin.email,
+          password: "Passw0rd!",
+          totpCode: "000000",
+        }),
+      ).rejects.toMatchObject({
+        response: { code: "TOTP_INVALID" },
+        status: HttpStatus.BAD_REQUEST,
       });
     });
 
@@ -283,7 +325,8 @@ describe("AdminAuthService", () => {
       redis.get.mockResolvedValue("JBSWY3DPEHPK3PXP");
 
       // Override mock to return false for this test
-      const { authenticator } = await import("otplib");
+      const otplib = await import("otplib");
+      const authenticator = (otplib as any).authenticator;
       vi.mocked(authenticator.check).mockReturnValueOnce(false);
 
       await expect(
@@ -299,7 +342,10 @@ describe("AdminAuthService", () => {
 
   describe("disableTotp", () => {
     it("clears TOTP fields on admin record", async () => {
-      const admin = await adminFactory({ totpEnabled: true, totpSecret: "encrypted" });
+      const admin = await adminFactory({
+        totpEnabled: true,
+        totpSecret: "encrypted",
+      });
       adminDb.admin.findUnique.mockResolvedValue(admin);
 
       // Mock the private decrypt method to return a valid secret
@@ -319,7 +365,7 @@ describe("AdminAuthService", () => {
     it("throws ADMIN_NOT_FOUND (404) when admin does not exist", async () => {
       adminDb.admin.findUnique.mockResolvedValue(null);
 
-      await expect(service.disableTotp("nonexistent")).rejects.toMatchObject({
+      await expect(service.disableTotp("nonexistent", "password", "000000")).rejects.toMatchObject({
         response: { code: "ADMIN_NOT_FOUND" },
         status: HttpStatus.NOT_FOUND,
       });
@@ -329,7 +375,7 @@ describe("AdminAuthService", () => {
       const admin = await adminFactory({ totpEnabled: false });
       adminDb.admin.findUnique.mockResolvedValue(admin);
 
-      await expect(service.disableTotp(admin.id)).rejects.toMatchObject({
+      await expect(service.disableTotp(admin.id, "password", "000000")).rejects.toMatchObject({
         response: { code: "TOTP_NOT_ENABLED" },
         status: HttpStatus.BAD_REQUEST,
       });
@@ -445,6 +491,17 @@ describe("AdminAuthService", () => {
         service.logout("Bearer expired-token"),
       ).resolves.toBeUndefined();
       expect(redis.del).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── encryption helpers ───────────────────────────────────────────────────────
+
+  describe("encrypt / decrypt round-trip", () => {
+    it("decrypts a value that was encrypted with the same key", () => {
+      const plaintext = "JBSWY3DPEHPK3PXP";
+      const encrypted = (service as any).encrypt(plaintext);
+      const decrypted = (service as any).decrypt(encrypted);
+      expect(decrypted).toBe(plaintext);
     });
   });
 });

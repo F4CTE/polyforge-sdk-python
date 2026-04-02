@@ -35,7 +35,9 @@ export class CopyService {
 
     // Check duplicate wallet
     const existing = await this.prisma.copyConfig.findUnique({
-      where: { userId_targetWallet: { userId, targetWallet: dto.targetWallet } },
+      where: {
+        userId_targetWallet: { userId, targetWallet: dto.targetWallet },
+      },
     });
 
     if (existing && existing.status !== "STOPPED") {
@@ -49,20 +51,30 @@ export class CopyService {
       targetWallet: dto.targetWallet,
       mode: dto.mode ?? "PERCENTAGE",
       ...(dto.sizeValue && { sizeValue: new Prisma.Decimal(dto.sizeValue) }),
-      ...(dto.maxExposure && { maxExposure: new Prisma.Decimal(dto.maxExposure) }),
-      ...(dto.maxDailyLoss && { maxDailyLoss: new Prisma.Decimal(dto.maxDailyLoss) }),
-      ...(dto.priceOffset && { priceOffset: new Prisma.Decimal(dto.priceOffset) }),
+      ...(dto.maxExposure && {
+        maxExposure: new Prisma.Decimal(dto.maxExposure),
+      }),
+      ...(dto.maxDailyLoss && {
+        maxDailyLoss: new Prisma.Decimal(dto.maxDailyLoss),
+      }),
+      ...(dto.priceOffset && {
+        priceOffset: new Prisma.Decimal(dto.priceOffset),
+      }),
     };
 
     // If there was a STOPPED config for the same wallet, delete it first
     if (existing && existing.status === "STOPPED") {
-      await this.prisma.copyTrade.deleteMany({ where: { configId: existing.id } });
+      await this.prisma.copyTrade.deleteMany({
+        where: { configId: existing.id },
+      });
       await this.prisma.copyConfig.delete({ where: { id: existing.id } });
     }
 
     const config = await this.prisma.copyConfig.create({ data });
 
-    this.logger.log(`Copy config created: ${config.id} for wallet ${dto.targetWallet}`);
+    this.logger.log(
+      `Copy config created: ${config.id} for wallet ${dto.targetWallet}`,
+    );
     return config;
   }
 
@@ -108,8 +120,10 @@ export class CopyService {
     if (dto.mode) data.mode = dto.mode;
     if (dto.sizeValue) data.sizeValue = new Prisma.Decimal(dto.sizeValue);
     if (dto.maxExposure) data.maxExposure = new Prisma.Decimal(dto.maxExposure);
-    if (dto.maxDailyLoss) data.maxDailyLoss = new Prisma.Decimal(dto.maxDailyLoss);
-    if (dto.priceOffset !== undefined) data.priceOffset = new Prisma.Decimal(dto.priceOffset);
+    if (dto.maxDailyLoss)
+      data.maxDailyLoss = new Prisma.Decimal(dto.maxDailyLoss);
+    if (dto.priceOffset !== undefined)
+      data.priceOffset = new Prisma.Decimal(dto.priceOffset);
 
     return this.prisma.copyConfig.update({ where: { id }, data });
   }

@@ -22,10 +22,7 @@ export class ApiKeysService {
     });
   }
 
-  async create(
-    userId: string,
-    dto: { name: string; scopes?: string[] },
-  ) {
+  async create(userId: string, dto: { name: string; scopes?: string[] }) {
     const raw = `pf_${randomBytes(32).toString("hex")}`;
     const prefix = raw.slice(0, 10);
     const tokenHash = createHash("sha256").update(raw).digest("hex");

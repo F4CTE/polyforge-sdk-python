@@ -10,7 +10,11 @@ function createMockRedis() {
       get: vi.fn().mockResolvedValue(null),
       info: vi.fn().mockResolvedValue("used_memory:10485760"),
       scanStream: vi.fn().mockReturnValue({
-        on: vi.fn().mockImplementation(function (this: any, event: string, cb: Function) {
+        on: vi.fn().mockImplementation(function (
+          this: any,
+          event: string,
+          cb: (...args: unknown[]) => unknown,
+        ) {
           if (event === "end") setTimeout(() => cb(), 0);
           return this;
         }),
@@ -98,7 +102,9 @@ describe("DashboardService", () => {
       const health = await service.getHealth();
 
       const serviceValues = Object.values(health.services);
-      expect(serviceValues.every((s: any) => s.status === "unknown")).toBe(true);
+      expect(serviceValues.every((s: any) => s.status === "unknown")).toBe(
+        true,
+      );
     });
 
     it('reports db status as "down" when query fails', async () => {

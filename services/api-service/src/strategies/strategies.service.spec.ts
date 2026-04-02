@@ -118,7 +118,7 @@ describe("StrategiesService", () => {
     db = createMockDb();
     // Make $transaction execute its callback with the mock db (for like/unlike)
     (db.$transaction as any).mockImplementation(async (fn: any) => {
-      if (typeof fn === 'function') return fn(db);
+      if (typeof fn === "function") return fn(db);
       return Promise.all(fn); // array of promises
     });
 
@@ -367,9 +367,10 @@ describe("StrategiesService", () => {
       db.strategy.findUnique.mockResolvedValue(strategy as any);
       db.strategy.count.mockResolvedValue(0);
 
-      await expect(service.findOne(strategy.id, "user-1")).resolves.toEqual(
-        { ...strategy, childCount: 0 },
-      );
+      await expect(service.findOne(strategy.id, "user-1")).resolves.toEqual({
+        ...strategy,
+        childCount: 0,
+      });
     });
 
     it("allows any user to view a PUBLIC strategy", async () => {
@@ -380,9 +381,10 @@ describe("StrategiesService", () => {
       db.strategy.findUnique.mockResolvedValue(strategy as any);
       db.strategy.count.mockResolvedValue(0);
 
-      await expect(service.findOne(strategy.id, "any-user")).resolves.toEqual(
-        { ...strategy, childCount: 0 },
-      );
+      await expect(service.findOne(strategy.id, "any-user")).resolves.toEqual({
+        ...strategy,
+        childCount: 0,
+      });
     });
 
     it("allows any user to view an UNLISTED strategy", async () => {
@@ -644,7 +646,11 @@ describe("StrategiesService", () => {
       } as StartStrategyDto);
 
       expect(db.strategy.updateMany).toHaveBeenCalledWith({
-        where: { id: strategy.id, userId: "user-1", status: StrategyStatus.IDLE },
+        where: {
+          id: strategy.id,
+          userId: "user-1",
+          status: StrategyStatus.IDLE,
+        },
         data: { status: StrategyStatus.PAPER },
       });
     });
@@ -683,7 +689,11 @@ describe("StrategiesService", () => {
       } as StartStrategyDto);
 
       expect(db.strategy.updateMany).toHaveBeenCalledWith({
-        where: { id: strategy.id, userId: "user-1", status: StrategyStatus.IDLE },
+        where: {
+          id: strategy.id,
+          userId: "user-1",
+          status: StrategyStatus.IDLE,
+        },
         data: { status: StrategyStatus.RUNNING },
       });
     });
@@ -856,7 +866,11 @@ describe("StrategiesService", () => {
         `/internal/strategies/${strategy.id}`,
       );
       expect(db.strategy.updateMany).toHaveBeenCalledWith({
-        where: { id: strategy.id, userId: "user-1", status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] } },
+        where: {
+          id: strategy.id,
+          userId: "user-1",
+          status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] },
+        },
         data: { status: StrategyStatus.IDLE },
       });
     });
@@ -918,7 +932,11 @@ describe("StrategiesService", () => {
         `/internal/strategies/${strategy.id}/pause`,
       );
       expect(db.strategy.updateMany).toHaveBeenCalledWith({
-        where: { id: strategy.id, userId: "user-1", status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] } },
+        where: {
+          id: strategy.id,
+          userId: "user-1",
+          status: { in: [StrategyStatus.RUNNING, StrategyStatus.PAPER] },
+        },
         data: { status: StrategyStatus.PAUSED },
       });
     });
@@ -963,7 +981,11 @@ describe("StrategiesService", () => {
         `/internal/strategies/${strategy.id}/resume`,
       );
       expect(db.strategy.updateMany).toHaveBeenCalledWith({
-        where: { id: strategy.id, userId: "user-1", status: StrategyStatus.PAUSED },
+        where: {
+          id: strategy.id,
+          userId: "user-1",
+          status: StrategyStatus.PAUSED,
+        },
         data: { status: StrategyStatus.RUNNING },
       });
     });
@@ -1621,10 +1643,12 @@ describe("StrategiesService", () => {
         visibility: "PRIVATE",
         tags: ["momentum"],
         triggers: [{ type: "PRICE_CROSSES_UP", config: { threshold: "0.6" } }],
-        conditions: [{ type: "PRICE_IN_RANGE", config: { min: "0.3", max: "0.8" } }],
+        conditions: [
+          { type: "PRICE_IN_RANGE", config: { min: "0.3", max: "0.8" } },
+        ],
         actions: [{ type: "BUY_YES", config: { size: "50" } }],
         safety: [{ type: "STOP_IF_DAILY_LOSS", config: { maxLoss: "50" } }],
-        canvas: { positions: { "b1": { x: 100, y: 100 } }, connections: [] },
+        canvas: { positions: { b1: { x: 100, y: 100 } }, connections: [] },
       });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
 
@@ -1632,10 +1656,14 @@ describe("StrategiesService", () => {
 
       expect(result.payload).toHaveProperty("polyforge", "1.0");
       expect(result.payload).toHaveProperty("exportedAt");
-      expect((result.payload as any).strategy.name).toBe("My Momentum Strategy");
+      expect((result.payload as any).strategy.name).toBe(
+        "My Momentum Strategy",
+      );
       expect((result.payload as any).strategy.blocks.triggers).toHaveLength(1);
       expect((result.payload as any).strategy.blocks.safety).toHaveLength(1);
-      expect((result.payload as any).strategy.blocks.conditions).toHaveLength(1);
+      expect((result.payload as any).strategy.blocks.conditions).toHaveLength(
+        1,
+      );
       expect((result.payload as any).strategy.blocks.actions).toHaveLength(1);
       expect((result.payload as any).strategy.canvas).toBeDefined();
       expect(result.filename).toBe("my-momentum-strategy.polyforge");
@@ -1669,7 +1697,7 @@ describe("StrategiesService", () => {
       const strategy = makeStrategy({
         userId: "user-1",
         visibility: "PUBLIC",
-        canvas: { positions: { "b1": { x: 100, y: 100 } }, connections: [] },
+        canvas: { positions: { b1: { x: 100, y: 100 } }, connections: [] },
       });
       db.strategy.findUnique.mockResolvedValue(strategy as any);
 
@@ -1717,7 +1745,9 @@ describe("StrategiesService", () => {
           tags: ["tag1"],
           blocks: {
             safety: [{ type: "STOP_IF_DAILY_LOSS", config: { maxLoss: "50" } }],
-            triggers: [{ type: "PRICE_CROSSES_UP", config: { threshold: "0.6" } }],
+            triggers: [
+              { type: "PRICE_CROSSES_UP", config: { threshold: "0.6" } },
+            ],
             conditions: [],
             actions: [{ type: "BUY_YES", config: { size: "50" } }],
           },
@@ -2123,7 +2153,12 @@ describe("StrategiesService", () => {
       (llm.analyze as any).mockResolvedValue(llmResponse);
       db.strategy.count.mockResolvedValue(0);
       (db.strategy.create as any).mockImplementation(({ data }: any) =>
-        Promise.resolve({ id: "new-id", ...data, createdAt: new Date(), updatedAt: new Date() }),
+        Promise.resolve({
+          id: "new-id",
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
       );
 
       await service.createFromDescription("user-1", {
@@ -2149,7 +2184,12 @@ describe("StrategiesService", () => {
       (llm.analyze as any).mockResolvedValue(llmResponse);
       db.strategy.count.mockResolvedValue(0);
       (db.strategy.create as any).mockImplementation(({ data }: any) =>
-        Promise.resolve({ id: "new-id", ...data, createdAt: new Date(), updatedAt: new Date() }),
+        Promise.resolve({
+          id: "new-id",
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
       );
 
       const result = await service.createFromDescription("user-1", {
@@ -2178,7 +2218,9 @@ describe("StrategiesService", () => {
     });
 
     it("handles LLM failure gracefully", async () => {
-      (llm.analyze as any).mockRejectedValue(new Error("All LLM providers failed"));
+      (llm.analyze as any).mockRejectedValue(
+        new Error("All LLM providers failed"),
+      );
 
       await expect(
         service.createFromDescription("user-1", {
@@ -2208,7 +2250,12 @@ describe("StrategiesService", () => {
       (llm.analyze as any).mockResolvedValue("```json\n" + json + "\n```");
       db.strategy.count.mockResolvedValue(0);
       (db.strategy.create as any).mockImplementation(({ data }: any) =>
-        Promise.resolve({ id: "new-id", ...data, createdAt: new Date(), updatedAt: new Date() }),
+        Promise.resolve({
+          id: "new-id",
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
       );
 
       const result = await service.createFromDescription("user-1", {

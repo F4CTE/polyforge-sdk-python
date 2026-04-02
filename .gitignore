@@ -24,6 +24,9 @@ coverage
 # Vercel
 .vercel
 
+# Rust build artifacts
+**/target/
+
 # Build Outputs
 .next/
 out/

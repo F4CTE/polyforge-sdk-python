@@ -62,8 +62,18 @@ describe("WhalesService", () => {
   describe("getFeed", () => {
     it("returns paginated results", async () => {
       const alerts = [
-        { id: "a1", walletAddress: "0xabc", notional: new Prisma.Decimal(10000), detectedAt: new Date() },
-        { id: "a2", walletAddress: "0xdef", notional: new Prisma.Decimal(8000), detectedAt: new Date() },
+        {
+          id: "a1",
+          walletAddress: "0xabc",
+          notional: new Prisma.Decimal(10000),
+          detectedAt: new Date(),
+        },
+        {
+          id: "a2",
+          walletAddress: "0xdef",
+          notional: new Prisma.Decimal(8000),
+          detectedAt: new Date(),
+        },
       ];
 
       prisma.whaleAlert.findMany.mockResolvedValue(alerts);
@@ -122,8 +132,16 @@ describe("WhalesService", () => {
   describe("getTopWhales", () => {
     it("sorts by volume by default", async () => {
       const profiles = [
-        { walletAddress: "0x1", totalVolume: new Prisma.Decimal(50000), tradeCount: 10 },
-        { walletAddress: "0x2", totalVolume: new Prisma.Decimal(30000), tradeCount: 5 },
+        {
+          walletAddress: "0x1",
+          totalVolume: new Prisma.Decimal(50000),
+          tradeCount: 10,
+        },
+        {
+          walletAddress: "0x2",
+          totalVolume: new Prisma.Decimal(30000),
+          tradeCount: 5,
+        },
       ];
       prisma.whaleProfile.findMany.mockResolvedValue(profiles);
 
@@ -212,7 +230,16 @@ describe("WhalesService", () => {
         lastTradeAt: new Date(),
       };
       const trades = [
-        { id: "t1", walletAddress: "0xabc", notional: new Prisma.Decimal(10000) },
+        {
+          id: "t1",
+          walletAddress: "0xabc",
+          notional: new Prisma.Decimal(10000),
+          detectedAt: new Date(),
+          side: "BUY",
+          outcome: "YES",
+          size: new Prisma.Decimal(100),
+          price: new Prisma.Decimal(0.65),
+        },
       ];
 
       prisma.whaleProfile.findUnique.mockResolvedValue(profile);
@@ -220,7 +247,9 @@ describe("WhalesService", () => {
 
       const result = await service.getProfile("0xabc");
 
-      expect(result.profile.walletAddress).toBe("0xabc");
+      // Service returns { walletAddress, stats, recentTrades, sparkline, isFollowing }
+      expect(result.walletAddress).toBe("0xabc");
+      expect(result.stats).not.toBeNull();
       expect(result.recentTrades).toHaveLength(1);
     });
 
@@ -230,8 +259,9 @@ describe("WhalesService", () => {
 
       const result = await service.getProfile("0xunknown");
 
-      expect(result.profile.walletAddress).toBe("0xunknown");
-      expect(result.profile.tradeCount).toBe(0);
+      // Service returns { walletAddress, stats: null, recentTrades, sparkline, isFollowing }
+      expect(result.walletAddress).toBe("0xunknown");
+      expect(result.stats).toBeNull();
       expect(result.recentTrades).toHaveLength(0);
     });
   });
@@ -239,8 +269,18 @@ describe("WhalesService", () => {
   describe("getFollowing", () => {
     it("returns followed wallets enriched with profiles", async () => {
       const follows = [
-        { id: "f1", userId: "u1", walletAddress: "0xabc", createdAt: new Date() },
-        { id: "f2", userId: "u1", walletAddress: "0xdef", createdAt: new Date() },
+        {
+          id: "f1",
+          userId: "u1",
+          walletAddress: "0xabc",
+          createdAt: new Date(),
+        },
+        {
+          id: "f2",
+          userId: "u1",
+          walletAddress: "0xdef",
+          createdAt: new Date(),
+        },
       ];
       const profiles = [
         { walletAddress: "0xabc", totalVolume: new Prisma.Decimal(50000) },
@@ -325,7 +365,10 @@ describe("WhaleDetectorService", () => {
       expect(prisma.whaleProfile.upsert).toHaveBeenCalled();
       expect(redis.xadd).toHaveBeenCalledWith(
         "stream:events",
-        expect.objectContaining({ type: "WHALE_TRADE", walletAddress: "0xwhale" }),
+        expect.objectContaining({
+          type: "WHALE_TRADE",
+          walletAddress: "0xwhale",
+        }),
       );
     });
 
@@ -357,7 +400,11 @@ describe("WhaleDetectorService", () => {
   describe("aggregateProfiles", () => {
     it("recalculates profile stats from alerts using batch groupBy", async () => {
       prisma.whaleAlert.groupBy.mockResolvedValue([
-        { walletAddress: "0xabc", _sum: { notional: new Prisma.Decimal(15000) }, _count: 2 },
+        {
+          walletAddress: "0xabc",
+          _sum: { notional: new Prisma.Decimal(15000) },
+          _count: 2,
+        },
       ]);
       prisma.market.findMany.mockResolvedValue([]);
       prisma.$transaction.mockResolvedValue([{}]);

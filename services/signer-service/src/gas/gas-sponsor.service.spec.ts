@@ -24,7 +24,8 @@ function createMockConfig(overrides: Record<string, string> = {}) {
   const defaults: Record<string, string> = {
     GAS_SPONSOR_ENABLED: "true",
     GAS_DAILY_LIMIT_MATIC: "0.5",
-    GAS_SPONSOR_PRIVATE_KEY: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+    GAS_SPONSOR_PRIVATE_KEY:
+      "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
     NODE_ENV: "development",
     GAS_ESTIMATE_MATIC: "0.002",
     ...overrides,
@@ -293,7 +294,9 @@ describe("GasSponsorService", () => {
 
   describe("sponsorGas — Redis failure", () => {
     it("propagates error when Redis incrbyfloat fails", async () => {
-      redis._client.incrbyfloat.mockRejectedValue(new Error("Redis connection refused"));
+      redis._client.incrbyfloat.mockRejectedValue(
+        new Error("Redis connection refused"),
+      );
 
       await expect(service.sponsorGas("user-1", 0.01)).rejects.toThrow(
         "Redis connection refused",

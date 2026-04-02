@@ -1,6 +1,11 @@
 import { Controller, Get, Patch, Post, Body, UseGuards } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  RequireScopes,
+  ApiKeyScopeGuard,
+} from "@polyforge/shared-auth";
 import { SettingsService } from "./settings.service";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UpdatePasswordDto } from "./dto/update-password.dto";
@@ -16,7 +21,7 @@ export class SettingsController {
 
   @Patch("profile")
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('WRITE')
+  @RequireScopes("WRITE")
   updateProfile(@CurrentUser() user: any, @Body() dto: UpdateProfileDto) {
     return this.settings.updateProfile(user.sub, dto);
   }
@@ -28,7 +33,7 @@ export class SettingsController {
 
   @Patch("notifications")
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('WRITE')
+  @RequireScopes("WRITE")
   updateNotifications(
     @CurrentUser() user: any,
     @Body() dto: UpdateNotificationsDto,
@@ -38,7 +43,7 @@ export class SettingsController {
 
   @Patch("password")
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('WRITE')
+  @RequireScopes("WRITE")
   updatePassword(@CurrentUser() user: any, @Body() dto: UpdatePasswordDto) {
     return this.settings.updatePassword(user.sub, dto);
   }
@@ -55,14 +60,17 @@ export class SettingsController {
 
   @Patch("risk")
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('WRITE')
-  updateRiskSettings(@CurrentUser() user: any, @Body() dto: UpdateRiskSettingsDto) {
+  @RequireScopes("WRITE")
+  updateRiskSettings(
+    @CurrentUser() user: any,
+    @Body() dto: UpdateRiskSettingsDto,
+  ) {
     return this.settings.updateRiskSettings(user.sub, dto);
   }
 
   @Post("risk/reset")
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('WRITE')
+  @RequireScopes("WRITE")
   resetCircuitBreaker(@CurrentUser() user: any) {
     return this.settings.resetCircuitBreaker(user.sub);
   }

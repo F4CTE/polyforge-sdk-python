@@ -35,12 +35,15 @@ describe("BuilderService", () => {
 
   beforeEach(() => {
     prisma = makePrisma();
-    service = new BuilderService(prisma as any, makeConfig({
-      BUILDER_API_URL: "http://builder:3099",
-      POLY_BUILDER_API_KEY: "test-key",
-      POLY_BUILDER_SECRET: "test-secret",
-      POLY_BUILDER_PASSPHRASE: "test-pass",
-    }));
+    service = new BuilderService(
+      prisma as any,
+      makeConfig({
+        BUILDER_API_URL: "http://builder:3099",
+        POLY_BUILDER_API_KEY: "test-key",
+        POLY_BUILDER_SECRET: "test-secret",
+        POLY_BUILDER_PASSPHRASE: "test-pass",
+      }),
+    );
     fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
   });
@@ -199,7 +202,10 @@ describe("BuilderService", () => {
 
       // Should not throw — falls back to env BUILDER_TIER or default
       expect(result.currentTier).toBeDefined();
-      expect(typeof result.weeklyRewardUsdc === 'number' || result.weeklyRewardUsdc === null).toBe(true);
+      expect(
+        typeof result.weeklyRewardUsdc === "number" ||
+          result.weeklyRewardUsdc === null,
+      ).toBe(true);
     });
 
     it("handles non-OK response and falls back to local data", async () => {

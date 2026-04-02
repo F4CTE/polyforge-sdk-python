@@ -50,8 +50,8 @@ export class GeoBlockGuard implements CanActivate {
 
     // Sub-national region blocks (country → region codes)
     this.blockedRegions = {
-      CA: ["ON"],              // Canada: Ontario
-      UA: ["43", "14", "09"],  // Ukraine: Crimea, Donetsk, Luhansk
+      CA: ["ON"], // Canada: Ontario
+      UA: ["43", "14", "09"], // Ukraine: Crimea, Donetsk, Luhansk
     };
   }
 
@@ -60,13 +60,11 @@ export class GeoBlockGuard implements CanActivate {
     const country = (
       request.headers["x-country-code"] as string
     )?.toUpperCase();
-    const region = (
-      request.headers["x-region-code"] as string
-    )?.toUpperCase();
+    const region = (request.headers["x-region-code"] as string)?.toUpperCase();
 
     // SECURITY: In production, deny requests without geo headers (may be bypassing gateway)
     if (!country) {
-      return process.env.NODE_ENV !== 'production';
+      return process.env.NODE_ENV !== "production";
     }
 
     // 1. Fully blocked countries — HTTP 451
@@ -104,7 +102,7 @@ export class GeoBlockGuard implements CanActivate {
       const allowedMethods = [
         "closePosition",
         "redeemPosition",
-        "list",          // read-only listing is always allowed
+        "list", // read-only listing is always allowed
       ];
 
       if (!allowedMethods.includes(controllerMethod)) {

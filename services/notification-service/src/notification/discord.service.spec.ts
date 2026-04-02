@@ -74,7 +74,9 @@ describe("DiscordService", () => {
       const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       const body = JSON.parse(init.body as string);
       // Discord now sends embeds instead of plain content
-      expect(body.embeds?.[0]?.description ?? body.content).toContain("Token reached 0.90");
+      expect(body.embeds?.[0]?.description ?? body.content).toContain(
+        "Token reached 0.90",
+      );
     });
 
     it("throws when the Discord API responds with a non-ok status", async () => {

@@ -124,7 +124,11 @@ export class AuthController {
     const clientIp = request.ip ?? 'unknown';
     // R5-05: Pass userAgent for login history recording
     const userAgent = (request.headers['user-agent'] as string) ?? 'unknown';
-    const result = await this.authService.login({ ...dto, ip: clientIp, userAgent });
+    const result = await this.authService.login({
+      ...dto,
+      ip: clientIp,
+      userAgent,
+    });
     reply.setCookie(
       USER_COOKIE,
       result.token,
@@ -286,7 +290,8 @@ export class AuthController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Verification email resent if account exists and is unverified.',
+    description:
+      'Verification email resent if account exists and is unverified.',
   })
   async resendVerification(@Body() dto: ResendVerificationDto) {
     return this.authService.resendVerification(dto);

@@ -40,15 +40,17 @@ async function bootstrap() {
 
   // R4-07: Graceful shutdown with timeout
   app.enableShutdownHooks();
-  process.on('SIGTERM', async () => {
-    logger.log('SIGTERM received, starting graceful shutdown...');
-    const forceTimeout = setTimeout(() => {
-      logger.warn('Graceful shutdown timed out, forcing exit');
-      process.exit(1);
-    }, 10_000);
-    await app.close();
-    clearTimeout(forceTimeout);
-    process.exit(0);
+  process.on("SIGTERM", () => {
+    void (async () => {
+      logger.log("SIGTERM received, starting graceful shutdown...");
+      const forceTimeout = setTimeout(() => {
+        logger.warn("Graceful shutdown timed out, forcing exit");
+        process.exit(1);
+      }, 10_000);
+      await app.close();
+      clearTimeout(forceTimeout);
+      process.exit(0);
+    })();
   });
 
   await app.listen(PORT, "0.0.0.0");

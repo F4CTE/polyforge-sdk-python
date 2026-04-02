@@ -55,9 +55,16 @@ describe("ConditionalEvaluatorService", () => {
 
   describe("TAKE_PROFIT", () => {
     it("triggers when price >= triggerPrice for BUY YES", async () => {
-      const order = makeConditionalOrder({ type: "TAKE_PROFIT", side: "BUY", triggerPrice: "0.75" });
+      const order = makeConditionalOrder({
+        type: "TAKE_PROFIT",
+        side: "BUY",
+        triggerPrice: "0.75",
+      });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
+      db.conditionalOrder.update.mockResolvedValue({
+        ...order,
+        status: "TRIGGERED",
+      } as any);
       mgetMock.mockResolvedValue(["0.80"]);
 
       await service.processOrders();
@@ -71,7 +78,11 @@ describe("ConditionalEvaluatorService", () => {
     });
 
     it("does NOT trigger when price < triggerPrice for BUY YES", async () => {
-      const order = makeConditionalOrder({ type: "TAKE_PROFIT", side: "BUY", triggerPrice: "0.75" });
+      const order = makeConditionalOrder({
+        type: "TAKE_PROFIT",
+        side: "BUY",
+        triggerPrice: "0.75",
+      });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       mgetMock.mockResolvedValue(["0.70"]);
 
@@ -81,9 +92,16 @@ describe("ConditionalEvaluatorService", () => {
     });
 
     it("triggers when price <= triggerPrice for SELL (BUY NO) side", async () => {
-      const order = makeConditionalOrder({ type: "TAKE_PROFIT", side: "SELL", triggerPrice: "0.30" });
+      const order = makeConditionalOrder({
+        type: "TAKE_PROFIT",
+        side: "SELL",
+        triggerPrice: "0.30",
+      });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
+      db.conditionalOrder.update.mockResolvedValue({
+        ...order,
+        status: "TRIGGERED",
+      } as any);
       mgetMock.mockResolvedValue(["0.25"]);
 
       await service.processOrders();
@@ -100,9 +118,16 @@ describe("ConditionalEvaluatorService", () => {
 
   describe("STOP_LOSS", () => {
     it("triggers when price <= triggerPrice for BUY YES", async () => {
-      const order = makeConditionalOrder({ type: "STOP_LOSS", side: "BUY", triggerPrice: "0.40" });
+      const order = makeConditionalOrder({
+        type: "STOP_LOSS",
+        side: "BUY",
+        triggerPrice: "0.40",
+      });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
+      db.conditionalOrder.update.mockResolvedValue({
+        ...order,
+        status: "TRIGGERED",
+      } as any);
       mgetMock.mockResolvedValue(["0.35"]);
 
       await service.processOrders();
@@ -115,7 +140,11 @@ describe("ConditionalEvaluatorService", () => {
     });
 
     it("does NOT trigger when price > triggerPrice for BUY YES", async () => {
-      const order = makeConditionalOrder({ type: "STOP_LOSS", side: "BUY", triggerPrice: "0.40" });
+      const order = makeConditionalOrder({
+        type: "STOP_LOSS",
+        side: "BUY",
+        triggerPrice: "0.40",
+      });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
       mgetMock.mockResolvedValue(["0.50"]);
 
@@ -125,9 +154,16 @@ describe("ConditionalEvaluatorService", () => {
     });
 
     it("triggers when price >= triggerPrice for SELL side", async () => {
-      const order = makeConditionalOrder({ type: "STOP_LOSS", side: "SELL", triggerPrice: "0.60" });
+      const order = makeConditionalOrder({
+        type: "STOP_LOSS",
+        side: "SELL",
+        triggerPrice: "0.60",
+      });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
+      db.conditionalOrder.update.mockResolvedValue({
+        ...order,
+        status: "TRIGGERED",
+      } as any);
       mgetMock.mockResolvedValue(["0.65"]);
 
       await service.processOrders();
@@ -171,7 +207,10 @@ describe("ConditionalEvaluatorService", () => {
         peakPrice: "1.00",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
+      db.conditionalOrder.update.mockResolvedValue({
+        ...order,
+        status: "TRIGGERED",
+      } as any);
       mgetMock.mockResolvedValue(["0.89"]); // 11% drop from 1.00
 
       await service.processOrders();
@@ -210,9 +249,16 @@ describe("ConditionalEvaluatorService", () => {
 
   describe("LIMIT", () => {
     it("triggers when price <= triggerPrice for BUY side", async () => {
-      const order = makeConditionalOrder({ type: "LIMIT", side: "BUY", triggerPrice: "0.50" });
+      const order = makeConditionalOrder({
+        type: "LIMIT",
+        side: "BUY",
+        triggerPrice: "0.50",
+      });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
+      db.conditionalOrder.update.mockResolvedValue({
+        ...order,
+        status: "TRIGGERED",
+      } as any);
       mgetMock.mockResolvedValue(["0.45"]);
 
       await service.processOrders();
@@ -225,9 +271,16 @@ describe("ConditionalEvaluatorService", () => {
     });
 
     it("triggers when price >= triggerPrice for SELL side", async () => {
-      const order = makeConditionalOrder({ type: "LIMIT", side: "SELL", triggerPrice: "0.70" });
+      const order = makeConditionalOrder({
+        type: "LIMIT",
+        side: "SELL",
+        triggerPrice: "0.70",
+      });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
+      db.conditionalOrder.update.mockResolvedValue({
+        ...order,
+        status: "TRIGGERED",
+      } as any);
       mgetMock.mockResolvedValue(["0.75"]);
 
       await service.processOrders();
@@ -299,16 +352,21 @@ describe("ConditionalEvaluatorService", () => {
         expiresAt: new Date("2020-01-01T00:00:00.000Z"), // already expired
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({ ...order, status: "CANCELLED" } as any);
+      db.conditionalOrder.update.mockResolvedValue({
+        ...order,
+        status: "CANCELLED",
+      } as any);
 
       // Expiration is now in a separate cron method
-      if (typeof (service as any).checkExpiredOrders === 'function') {
+      if (typeof (service as any).checkExpiredOrders === "function") {
         await (service as any).checkExpiredOrders();
       } else {
         await service.processOrders();
       }
 
-      expect(db.conditionalOrder.updateMany || db.conditionalOrder.update).toBeDefined();
+      expect(
+        db.conditionalOrder.updateMany || db.conditionalOrder.update,
+      ).toBeDefined();
     });
 
     it("does NOT cancel non-expired orders", async () => {
@@ -339,7 +397,10 @@ describe("ConditionalEvaluatorService", () => {
         size: "100.00",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
+      db.conditionalOrder.update.mockResolvedValue({
+        ...order,
+        status: "TRIGGERED",
+      } as any);
       mgetMock.mockResolvedValue(["0.75"]);
 
       await service.processOrders();
@@ -363,7 +424,10 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.40",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
+      db.conditionalOrder.update.mockResolvedValue({
+        ...order,
+        status: "TRIGGERED",
+      } as any);
       mgetMock.mockResolvedValue(["0.35"]);
 
       await service.processOrders();
@@ -385,7 +449,10 @@ describe("ConditionalEvaluatorService", () => {
         triggerPrice: "0.50",
       });
       db.conditionalOrder.findMany.mockResolvedValue([order] as any);
-      db.conditionalOrder.update.mockResolvedValue({ ...order, status: "TRIGGERED" } as any);
+      db.conditionalOrder.update.mockResolvedValue({
+        ...order,
+        status: "TRIGGERED",
+      } as any);
       mgetMock.mockResolvedValue(["0.45"]);
 
       await service.processOrders();

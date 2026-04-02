@@ -18,7 +18,11 @@ export class HeartbeatService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit() {
-    this.interval = setInterval(() => this.sendHeartbeats(), 30_000);
+    this.interval = setInterval(() => {
+      this.sendHeartbeats().catch((err: unknown) => {
+        this.logger.error("sendHeartbeats error", err);
+      });
+    }, 30_000);
     this.logger.log("Heartbeat service started (30s interval)");
   }
 
@@ -59,7 +63,8 @@ export class HeartbeatService implements OnModuleInit, OnModuleDestroy {
     const clobUrl =
       this.config.get<string>("CLOB_API_URL") ?? "http://mock-polymarket:3099";
     const signerUrl =
-      this.config.get<string>("SIGNER_SERVICE_URL") ?? "http://signer-service:3012";
+      this.config.get<string>("SIGNER_SERVICE_URL") ??
+      "http://signer-service:3012";
 
     // Parallel with concurrency limit of 5
     const entries = [...ordersByUser.entries()];
@@ -76,12 +81,18 @@ export class HeartbeatService implements OnModuleInit, OnModuleDestroy {
               signal: AbortSignal.timeout(10_000),
             });
             if (res.ok) {
-              this.logger.debug(`Heartbeat sent for user=${userId} orders=${orderIds.length}`);
+              this.logger.debug(
+                `Heartbeat sent for user=${userId} orders=${orderIds.length}`,
+              );
             } else {
-              this.logger.warn(`Heartbeat failed for user=${userId}: ${res.status}`);
+              this.logger.warn(
+                `Heartbeat failed for user=${userId}: ${res.status}`,
+              );
             }
           } catch (err: unknown) {
-            this.logger.error(`Heartbeat error for user=${userId}: ${(err as Error).message}`);
+            this.logger.error(
+              `Heartbeat error for user=${userId}: ${(err as Error).message}`,
+            );
           }
         }),
       );

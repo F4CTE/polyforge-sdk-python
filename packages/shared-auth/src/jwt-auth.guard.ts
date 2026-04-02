@@ -20,7 +20,7 @@ const JWT_CACHE = new Map<string, { user: any; expiresAt: number }>();
 const JWT_CACHE_TTL = 5_000; // 5 seconds (reduced from 30s for security)
 const MAX_CACHE_SIZE = 10_000;
 
-function getCachedJwtUser(token: string): any | null {
+function getCachedJwtUser(token: string): any {
   const cached = JWT_CACHE.get(token);
   if (!cached) return null;
   if (cached.expiresAt <= Date.now()) {
@@ -72,7 +72,10 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
 
     // ── JWT cache fast-path: skip re-verification for recently verified tokens ─
     // Also checks Redis pwchange key to prevent post-password-change attack window
-    if (authHeader?.startsWith("Bearer ") && !authHeader.startsWith("Bearer pf_")) {
+    if (
+      authHeader?.startsWith("Bearer ") &&
+      !authHeader.startsWith("Bearer pf_")
+    ) {
       const token = authHeader.slice(7);
       const cachedUser = getCachedJwtUser(token);
       if (cachedUser) {
@@ -81,7 +84,9 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
           const pwChanged = await this.redis.get(`pwchange:${cachedUser.sub}`);
           if (pwChanged) {
             JWT_CACHE.delete(token);
-            throw new UnauthorizedException("Password was changed — please re-authenticate");
+            throw new UnauthorizedException(
+              "Password was changed — please re-authenticate",
+            );
           }
         }
         request.user = cachedUser;
@@ -160,7 +165,11 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     const result = await (super.canActivate(context) as Promise<boolean>);
 
     // Cache the verified JWT user for subsequent requests with the same token
-    if (result && authHeader?.startsWith("Bearer ") && !authHeader.startsWith("Bearer pf_")) {
+    if (
+      result &&
+      authHeader?.startsWith("Bearer ") &&
+      !authHeader.startsWith("Bearer pf_")
+    ) {
       const token = authHeader.slice(7);
       setCachedJwtUser(token, request.user);
     }

@@ -11,7 +11,12 @@ import {
   ParseUUIDPipe,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  RequireScopes,
+  ApiKeyScopeGuard,
+} from "@polyforge/shared-auth";
 import { AlertsService } from "./alerts.service";
 import { CreateAlertDto } from "./dto/create-alert.dto";
 
@@ -30,7 +35,7 @@ export class AlertsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('WRITE')
+  @RequireScopes("WRITE")
   create(@CurrentUser() user: any, @Body() dto: CreateAlertDto) {
     return this.alerts.create(user.sub, dto);
   }
@@ -38,7 +43,7 @@ export class AlertsController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('WRITE')
+  @RequireScopes("WRITE")
   remove(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.alerts.remove(id, user.sub);
   }

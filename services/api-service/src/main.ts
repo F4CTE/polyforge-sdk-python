@@ -34,7 +34,7 @@ function validateEnv() {
   }
 
   // Validate JWT secret minimum length (32 characters)
-  const secrets = ['INTERNAL_JWT_SECRET'];
+  const secrets = ["INTERNAL_JWT_SECRET"];
   for (const key of secrets) {
     const secret = process.env[key];
     if (secret && secret.length < 32) {
@@ -45,19 +45,26 @@ function validateEnv() {
     }
   }
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     // Reject CHANGE_ME default JWT secrets
-    const secretsForDefaultCheck = ['USER_JWT_SECRET', 'ADMIN_JWT_SECRET', 'BOT_JWT_SECRET', 'INTERNAL_JWT_SECRET'];
+    const secretsForDefaultCheck = [
+      "USER_JWT_SECRET",
+      "ADMIN_JWT_SECRET",
+      "BOT_JWT_SECRET",
+      "INTERNAL_JWT_SECRET",
+    ];
     for (const key of secretsForDefaultCheck) {
-      if (process.env[key]?.startsWith('CHANGE_ME')) {
+      if (process.env[key]?.startsWith("CHANGE_ME")) {
         throw new Error(`${key} must be changed from default in production`);
       }
     }
 
     // Reject mock URLs in production
     const clobUrl = process.env.CLOB_API_URL;
-    if (!clobUrl || clobUrl.includes('mock')) {
-      throw new Error('CLOB_API_URL must point to real Polymarket API in production');
+    if (!clobUrl || clobUrl.includes("mock")) {
+      throw new Error(
+        "CLOB_API_URL must point to real Polymarket API in production",
+      );
     }
   }
 }
@@ -98,7 +105,12 @@ async function bootstrap() {
         "https://polyforge.app",
         "https://www.polyforge.app",
         ...(process.env.NODE_ENV !== "production"
-          ? ["http://localhost", "http://localhost:4200", "http://localhost:5173", "http://127.0.0.1"] // gateway + vite dev + IP
+          ? [
+              "http://localhost",
+              "http://localhost:4200",
+              "http://localhost:5173",
+              "http://127.0.0.1",
+            ] // gateway + vite dev + IP
           : []),
       ];
       if (!origin || allowed.includes(origin)) {
@@ -202,15 +214,17 @@ async function bootstrap() {
   // R4-07: Graceful shutdown with timeout
   app.enableShutdownHooks();
   const appLogger = app.get(Logger);
-  process.on('SIGTERM', async () => {
-    appLogger.log('SIGTERM received, starting graceful shutdown...');
-    const forceTimeout = setTimeout(() => {
-      appLogger.warn('Graceful shutdown timed out, forcing exit');
-      process.exit(1);
-    }, 10_000);
-    await app.close();
-    clearTimeout(forceTimeout);
-    process.exit(0);
+  process.on("SIGTERM", () => {
+    void (async () => {
+      appLogger.log("SIGTERM received, starting graceful shutdown...");
+      const forceTimeout = setTimeout(() => {
+        appLogger.warn("Graceful shutdown timed out, forcing exit");
+        process.exit(1);
+      }, 10_000);
+      await app.close();
+      clearTimeout(forceTimeout);
+      process.exit(0);
+    })();
   });
 
   await app.listen(PORT, "0.0.0.0");

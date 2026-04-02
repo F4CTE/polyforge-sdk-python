@@ -49,7 +49,10 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, description: "Login successful." })
   @ApiResponse({ status: 401, description: "INVALID_CREDENTIALS" })
-  @ApiResponse({ status: 403, description: "TOTP_REQUIRED or ACCOUNT_INACTIVE" })
+  @ApiResponse({
+    status: 403,
+    description: "TOTP_REQUIRED or ACCOUNT_INACTIVE",
+  })
   async login(
     @Body() dto: AdminLoginDto,
     @Res({ passthrough: true }) reply: FastifyReply,
@@ -108,7 +111,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Confirm TOTP setup — enables 2FA" })
   @ApiResponse({ status: 200, description: "2FA enabled." })
-  @ApiResponse({ status: 400, description: "TOTP_INVALID or TOTP_SETUP_EXPIRED" })
+  @ApiResponse({
+    status: 400,
+    description: "TOTP_INVALID or TOTP_SETUP_EXPIRED",
+  })
   async confirmTotp(
     @Req() req: FastifyRequest,
     @Body() body: { code: string },
@@ -119,10 +125,16 @@ export class AuthController {
 
   @Delete("totp")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: "Disable TOTP 2FA — requires password + current TOTP code for re-authentication" })
+  @ApiOperation({
+    summary:
+      "Disable TOTP 2FA — requires password + current TOTP code for re-authentication",
+  })
   @ApiResponse({ status: 204, description: "2FA disabled." })
   @ApiResponse({ status: 400, description: "TOTP_NOT_ENABLED" })
-  @ApiResponse({ status: 401, description: "RE_AUTH_FAILED — invalid password or TOTP code" })
+  @ApiResponse({
+    status: 401,
+    description: "RE_AUTH_FAILED — invalid password or TOTP code",
+  })
   async disableTotp(
     @Req() req: FastifyRequest,
     @Body() body: { password: string; totpCode: string },

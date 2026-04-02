@@ -37,11 +37,11 @@ export class PortfolioController {
     );
   }
 
-  @Get('export/csv')
+  @Get("export/csv")
   async exportCsv(@CurrentUser() user: any, @Res() res: Response) {
     const csv = await this.portfolio.exportCsv(user.sub);
-    res.header('Content-Type', 'text/csv');
-    res.header('Content-Disposition', 'attachment; filename="portfolio.csv"');
+    res.header("Content-Type", "text/csv");
+    res.header("Content-Disposition", 'attachment; filename="portfolio.csv"');
     res.send(csv);
   }
 }

@@ -10,9 +10,9 @@ export class DiscordService {
   /** Severity-to-color mapping for Discord embeds */
   private static readonly SEVERITY_COLORS: Record<string, number> = {
     success: 0x22c55e, // green
-    error: 0xef4444,   // red
+    error: 0xef4444, // red
     warning: 0xf59e0b, // amber
-    info: 0x06b6d4,    // cyan (default)
+    info: 0x06b6d4, // cyan (default)
   };
 
   /**
@@ -28,7 +28,7 @@ export class DiscordService {
     content: string,
     options?: {
       title?: string;
-      severity?: 'success' | 'error' | 'warning' | 'info';
+      severity?: "success" | "error" | "warning" | "info";
     },
   ): Promise<void> {
     if (!this.enabled) {
@@ -38,8 +38,10 @@ export class DiscordService {
       return;
     }
 
-    const severity = options?.severity ?? 'info';
-    const color = DiscordService.SEVERITY_COLORS[severity] ?? DiscordService.SEVERITY_COLORS.info;
+    const severity = options?.severity ?? "info";
+    const color =
+      DiscordService.SEVERITY_COLORS[severity] ??
+      DiscordService.SEVERITY_COLORS.info;
 
     const embed: Record<string, unknown> = {
       description: content,

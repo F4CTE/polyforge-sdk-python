@@ -45,12 +45,12 @@ export class ConditionalController {
   ) {
     // H-01: Enforce per-user cap on pending conditional orders
     const count = await this.prisma.conditionalOrder.count({
-      where: { userId: user.sub, status: 'PENDING' },
+      where: { userId: user.sub, status: "PENDING" },
     });
     if (count >= 50) {
       throw new UnprocessableEntityException({
-        code: 'CONDITIONAL_ORDER_LIMIT',
-        message: 'Maximum 50 pending conditional orders',
+        code: "CONDITIONAL_ORDER_LIMIT",
+        message: "Maximum 50 pending conditional orders",
       });
     }
 

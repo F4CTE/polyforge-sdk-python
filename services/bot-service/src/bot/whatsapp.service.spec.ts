@@ -254,10 +254,7 @@ describe("WhatsAppService", () => {
       linking.getUserId.mockResolvedValue("user-789");
       commands.execute.mockResolvedValue("whale result");
       await (svc as any).dispatch("+1234567890", "/whale 0xabc");
-      expect(commands.execute).toHaveBeenCalledWith(
-        "user-789",
-        "/whale 0xabc",
-      );
+      expect(commands.execute).toHaveBeenCalledWith("user-789", "/whale 0xabc");
     });
   });
 

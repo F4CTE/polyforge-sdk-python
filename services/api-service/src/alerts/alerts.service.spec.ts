@@ -41,7 +41,7 @@ describe("AlertsService", () => {
 
   beforeEach(() => {
     db = createMockDb();
-    service = new AlertsService(db as any);
+    service = new AlertsService(db as any, {} as any, {} as any);
   });
 
   afterEach(() => {

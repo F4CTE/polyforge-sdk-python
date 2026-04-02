@@ -46,10 +46,11 @@ export class PositionReconcilerService {
         batch
           .filter((u) => u.polymarketAddress)
           .map((u) =>
-            this.reconcileUser(u.id, u.polymarketAddress!).catch((err: unknown) =>
-              this.logger.warn(
-                `Reconciliation failed for ${u.id}: ${(err as Error).message}`,
-              ),
+            this.reconcileUser(u.id, u.polymarketAddress!).catch(
+              (err: unknown) =>
+                this.logger.warn(
+                  `Reconciliation failed for ${u.id}: ${(err as Error).message}`,
+                ),
             ),
           ),
       );

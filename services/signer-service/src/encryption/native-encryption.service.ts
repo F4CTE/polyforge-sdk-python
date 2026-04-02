@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { createRequire } from "node:module";
 
 type PrismaBytes = Uint8Array<ArrayBuffer>;
 
@@ -18,15 +19,17 @@ function toHex(bytes: Uint8Array): string {
 }
 
 // Load Rust NAPI addon — MANDATORY, no fallback
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+const _require = createRequire(__filename);
+
 const nativeCrypto = (() => {
   try {
-    return require("@polyforge/crypto-native");
-  } catch (err: any) {
+    return _require("@polyforge/crypto-native");
+  } catch (err: unknown) {
     throw new Error(
-      `SECURITY: @polyforge/crypto-native NAPI addon is REQUIRED but not available: ${err?.message}\n` +
-      "The signer-service MUST use Rust for key material handling. " +
-      "Build with: cd packages/polyforge-crypto-native && pnpm build"
+      `SECURITY: @polyforge/crypto-native NAPI addon is REQUIRED but not available: ${err instanceof Error ? err.message : String(err)}\n` +
+        "The signer-service MUST use Rust for key material handling. " +
+        "Build with: cd packages/polyforge-crypto-native && pnpm build",
+      { cause: err },
     );
   }
 })();
@@ -49,13 +52,21 @@ export class NativeEncryptionService {
   constructor(private readonly config: ConfigService) {
     const keyHex = this.config.get<string>("MASTER_ENCRYPTION_KEY");
     if (!keyHex || keyHex.length !== 64) {
-      throw new Error("MASTER_ENCRYPTION_KEY must be a 64-char hex string (32 bytes)");
+      throw new Error(
+        "MASTER_ENCRYPTION_KEY must be a 64-char hex string (32 bytes)",
+      );
     }
     this.kekHex = keyHex;
-    this.logger.log("Rust NAPI-RS encryption active — memory-safe key handling enabled");
+    this.logger.log(
+      "Rust NAPI-RS encryption active — memory-safe key handling enabled",
+    );
   }
 
-  generateDek(): { dek: Buffer; encryptedDek: PrismaBytes; dekIv: PrismaBytes } {
+  generateDek(): {
+    dek: Buffer;
+    encryptedDek: PrismaBytes;
+    dekIv: PrismaBytes;
+  } {
     const dekHex = nativeCrypto.generateDek();
     const wrappedJson = nativeCrypto.wrapDek(dekHex, this.kekHex);
     const parsed = JSON.parse(wrappedJson);
@@ -86,7 +97,17 @@ export class NativeEncryptionService {
     };
   }
 
-  decryptField(ctRaw: Uint8Array, ivRaw: Uint8Array, tagRaw: Uint8Array, dek: Buffer): string {
-    return nativeCrypto.decryptAes256Gcm(toHex(ctRaw), toHex(ivRaw), toHex(tagRaw), dek.toString("hex"));
+  decryptField(
+    ctRaw: Uint8Array,
+    ivRaw: Uint8Array,
+    tagRaw: Uint8Array,
+    dek: Buffer,
+  ): string {
+    return nativeCrypto.decryptAes256Gcm(
+      toHex(ctRaw),
+      toHex(ivRaw),
+      toHex(tagRaw),
+      dek.toString("hex"),
+    );
   }
 }

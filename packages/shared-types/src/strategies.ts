@@ -25,7 +25,7 @@ export enum ExecMode {
 
 // ─── Sub-strategy modes ──────────────────────────────────────────────────────
 
-export type SubStrategyMode = 'fire_and_forget' | 'managed' | 'scoped';
+export type SubStrategyMode = "fire_and_forget" | "managed" | "scoped";
 
 // ─── Blocks ──────────────────────────────────────────────────────────────────
 
@@ -97,11 +97,11 @@ export interface Strategy {
 // ─── Logic blocks ───────────────────────────────────────────────────────────
 
 export type LogicBlockType =
-  | 'IF_THEN_ELSE'
-  | 'AND_GATE'
-  | 'OR_GATE'
-  | 'NOT_GATE'
-  | 'DELAY';
+  | "IF_THEN_ELSE"
+  | "AND_GATE"
+  | "OR_GATE"
+  | "NOT_GATE"
+  | "DELAY";
 
 export interface LogicBlock {
   id: string;
@@ -113,11 +113,7 @@ export interface LogicBlock {
 
 // ─── Calculation blocks ─────────────────────────────────────────────────────
 
-export type CalcBlockType =
-  | 'MATH'
-  | 'AGGREGATION'
-  | 'COMPARISON'
-  | 'ABS_ROUND';
+export type CalcBlockType = "MATH" | "AGGREGATION" | "COMPARISON" | "ABS_ROUND";
 
 export interface CalcBlock {
   id: string;

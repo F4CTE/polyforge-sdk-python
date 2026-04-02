@@ -1,4 +1,9 @@
-import { IsString, IsOptional, IsNumberString, MaxLength } from "class-validator";
+import {
+  IsString,
+  IsOptional,
+  IsNumberString,
+  MaxLength,
+} from "class-validator";
 
 export class ClosePositionDto {
   @IsString()

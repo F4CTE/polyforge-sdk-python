@@ -10,12 +10,14 @@ function makeRedis(overrides: Record<string, unknown> = {}) {
     set: vi.fn().mockResolvedValue("OK"),
     del: vi.fn().mockResolvedValue(1),
     getJson: vi.fn().mockResolvedValue(null),
-    getClient: vi
-      .fn()
-      .mockReturnValue({
-        lrange: vi.fn().mockResolvedValue([]),
-        mget: vi.fn().mockResolvedValue([JSON.stringify({ price: 0.5, timestamp: Date.now() })]),
-      }),
+    getClient: vi.fn().mockReturnValue({
+      lrange: vi.fn().mockResolvedValue([]),
+      mget: vi
+        .fn()
+        .mockResolvedValue([
+          JSON.stringify({ price: 0.5, timestamp: Date.now() }),
+        ]),
+    }),
     xadd: vi.fn().mockResolvedValue("1-0"),
     ...overrides,
   } as any;
@@ -796,9 +798,7 @@ describe("StrategyRunner — safeEvaluate edge cases", () => {
     const runner = makeRunner({
       execMode: "EVENT",
       state,
-      variables: [
-        { id: "v1", name: "dangerous", expression: "while(true) 1" },
-      ],
+      variables: [{ id: "v1", name: "dangerous", expression: "while(true) 1" }],
     });
 
     // Should not throw — forbidden keyword expressions are caught
@@ -815,7 +815,7 @@ describe("StrategyRunner — safeEvaluate edge cases", () => {
       execMode: "EVENT",
       state,
       variables: [
-        { id: "v1", name: "longExpr", expression: "1+" .repeat(150) + "1" },
+        { id: "v1", name: "longExpr", expression: "1+".repeat(150) + "1" },
       ],
     });
 
@@ -841,8 +841,12 @@ describe("StrategyRunner — getPrimaryTokenId", () => {
     const runner = makeRunner({
       execMode: "EVENT",
       state,
-      variables: [{ id: "v1", name: "testVar", expression: "currentPrice * 2" }],
-      triggers: [{ id: "t1", type: "every_tick", params: { tokenId: "tok-primary" } }],
+      variables: [
+        { id: "v1", name: "testVar", expression: "currentPrice * 2" },
+      ],
+      triggers: [
+        { id: "t1", type: "every_tick", params: { tokenId: "tok-primary" } },
+      ],
     });
 
     await runner.onPriceEvent("tok-primary", 0.5);

@@ -102,7 +102,9 @@ describe("PortfolioService", () => {
 
       await service.getPortfolio("user-uuid-1");
 
-      expect(redis.getClient().mget).toHaveBeenCalledWith("cache:price:token-abc");
+      expect(redis.getClient().mget).toHaveBeenCalledWith(
+        "cache:price:token-abc",
+      );
     });
 
     it("calculates unrealizedPnl as (currentPrice - avgEntry) * size", async () => {

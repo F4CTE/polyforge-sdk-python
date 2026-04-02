@@ -4,7 +4,12 @@ const FRONTEND = process.env.FRONTEND_URL ?? "https://polyforge.app";
 
 /** Escape user-controlled strings before inserting into HTML */
 function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 export interface NotificationContent {
@@ -33,8 +38,15 @@ export class TemplatesService {
     // Escape user-controlled fields to prevent HTML injection
     const safe = { ...data };
     const fieldsToEscape = [
-      'forkerUsername', 'followerUsername', 'likerUsername', 'commenterUsername',
-      'strategyName', 'adminName', 'subject', 'articleTitle', 'marketTitle',
+      "forkerUsername",
+      "followerUsername",
+      "likerUsername",
+      "commenterUsername",
+      "strategyName",
+      "adminName",
+      "subject",
+      "articleTitle",
+      "marketTitle",
     ];
     for (const field of fieldsToEscape) {
       if (safe[field]) safe[field] = escapeHtml(safe[field]);
@@ -171,7 +183,8 @@ export class TemplatesService {
         return {
           title: "News Signal",
           body: `${data.confidence ?? "?"}% confidence ${data.direction ?? "?"} ${data.outcome ?? "?"} signal on "${safe.marketTitle ?? data.marketId ?? "unknown"}" based on article "${safe.articleTitle ?? "unknown"}".`,
-          severity: parseInt(data.confidence ?? "0", 10) >= 80 ? "warning" : "info",
+          severity:
+            parseInt(data.confidence ?? "0", 10) >= 80 ? "warning" : "info",
         };
 
       default:

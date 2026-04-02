@@ -11,7 +11,10 @@ export function hashPassword(password: string, rounds = 12): Promise<string> {
   });
 }
 
-export function comparePassword(password: string, hash: string): Promise<boolean> {
+export function comparePassword(
+  password: string,
+  hash: string,
+): Promise<boolean> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(join(__dirname, 'bcrypt-worker.js'), {
       workerData: { action: 'compare', password, hash },

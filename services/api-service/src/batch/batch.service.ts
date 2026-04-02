@@ -37,10 +37,31 @@ export class BatchService {
   ): Promise<BatchResponseItem> {
     // SECURITY: Allow-list approach for batch paths + URL decode before validation
     const decodedPath = decodeURIComponent(item.path);
-    const ALLOWED_PREFIXES = ["/api/v1/markets", "/api/v1/strategies", "/api/v1/orders", "/api/v1/portfolio", "/api/v1/whales", "/api/v1/copy", "/api/v1/news", "/api/v1/leaderboard", "/api/v1/discover", "/api/v1/scores", "/api/v1/profile", "/api/v1/settings"];
+    const ALLOWED_PREFIXES = [
+      "/api/v1/markets",
+      "/api/v1/strategies",
+      "/api/v1/orders",
+      "/api/v1/portfolio",
+      "/api/v1/whales",
+      "/api/v1/copy",
+      "/api/v1/news",
+      "/api/v1/leaderboard",
+      "/api/v1/discover",
+      "/api/v1/scores",
+      "/api/v1/profile",
+      "/api/v1/settings",
+    ];
     const isAllowed = ALLOWED_PREFIXES.some((p) => decodedPath.startsWith(p));
-    if (!isAllowed || decodedPath.includes("..") || decodedPath.includes("\\")) {
-      return { id: item.id, status: 400, body: { error: "Invalid batch path" } };
+    if (
+      !isAllowed ||
+      decodedPath.includes("..") ||
+      decodedPath.includes("\\")
+    ) {
+      return {
+        id: item.id,
+        status: 400,
+        body: { error: "Invalid batch path" },
+      };
     }
     const url = `http://127.0.0.1:${port}${item.path}`;
     const headers: Record<string, string> = {

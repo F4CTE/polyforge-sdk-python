@@ -1009,7 +1009,9 @@ describe("NotificationService", () => {
   describe("handle — new event types", () => {
     it("dispatches WHALE_TRADE event (always dispatched, null pref field)", async () => {
       const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
-      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
       const dispatchSpy = vi
         .spyOn(service, "dispatch")
         .mockResolvedValue(undefined);
@@ -1025,7 +1027,9 @@ describe("NotificationService", () => {
 
     it("dispatches NEWS_SIGNAL event (always dispatched, null pref field)", async () => {
       const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
-      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
       const dispatchSpy = vi
         .spyOn(service, "dispatch")
         .mockResolvedValue(undefined);
@@ -1040,8 +1044,13 @@ describe("NotificationService", () => {
     });
 
     it("dispatches TICKET_REPLY when onTicketReply is enabled", async () => {
-      const prefs = makePrefs({ onTicketReply: true, notificationFreq: "IMMEDIATE" });
-      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+      const prefs = makePrefs({
+        onTicketReply: true,
+        notificationFreq: "IMMEDIATE",
+      });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
       const dispatchSpy = vi
         .spyOn(service, "dispatch")
         .mockResolvedValue(undefined);
@@ -1055,8 +1064,13 @@ describe("NotificationService", () => {
     });
 
     it("dispatches TICKET_CLOSED using onTicketReply pref", async () => {
-      const prefs = makePrefs({ onTicketReply: true, notificationFreq: "IMMEDIATE" });
-      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+      const prefs = makePrefs({
+        onTicketReply: true,
+        notificationFreq: "IMMEDIATE",
+      });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
       const dispatchSpy = vi
         .spyOn(service, "dispatch")
         .mockResolvedValue(undefined);
@@ -1070,8 +1084,13 @@ describe("NotificationService", () => {
     });
 
     it("skips TICKET_REPLY when onTicketReply is false", async () => {
-      const prefs = makePrefs({ onTicketReply: false, notificationFreq: "IMMEDIATE" });
-      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+      const prefs = makePrefs({
+        onTicketReply: false,
+        notificationFreq: "IMMEDIATE",
+      });
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
 
       await service.handle("TICKET_REPLY", {
         userId: "user-1",
@@ -1087,7 +1106,9 @@ describe("NotificationService", () => {
   describe("handle — in-app notification failure", () => {
     it("continues processing when in-app notification push fails", async () => {
       const prefs = makePrefs({ notificationFreq: "IMMEDIATE" });
-      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
       redis.xadd.mockRejectedValueOnce(new Error("Redis unavailable"));
       const dispatchSpy = vi
         .spyOn(service, "dispatch")
@@ -1115,7 +1136,9 @@ describe("NotificationService", () => {
         if (key.startsWith("cache:notif-prefs:")) return "not-valid-json";
         return null;
       });
-      (prisma.notificationPreference.findUnique as any).mockResolvedValue(prefs);
+      (prisma.notificationPreference.findUnique as any).mockResolvedValue(
+        prefs,
+      );
       const dispatchSpy = vi
         .spyOn(service, "dispatch")
         .mockResolvedValue(undefined);

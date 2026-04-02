@@ -80,7 +80,11 @@ async function bootstrap() {
       const allowed = [
         "https://admin.polyforge.app",
         ...(process.env.NODE_ENV !== "production"
-          ? ["http://localhost:4300", "http://localhost:8080", "http://127.0.0.1:8080"]
+          ? [
+              "http://localhost:4300",
+              "http://localhost:8080",
+              "http://127.0.0.1:8080",
+            ]
           : []),
       ];
       if (!origin || allowed.includes(origin)) {
@@ -113,15 +117,17 @@ async function bootstrap() {
   // R4-07: Graceful shutdown with timeout
   app.enableShutdownHooks();
   const appLogger = app.get(Logger);
-  process.on('SIGTERM', async () => {
-    appLogger.log('SIGTERM received, starting graceful shutdown...');
-    const forceTimeout = setTimeout(() => {
-      appLogger.warn('Graceful shutdown timed out, forcing exit');
-      process.exit(1);
-    }, 10_000);
-    await app.close();
-    clearTimeout(forceTimeout);
-    process.exit(0);
+  process.on("SIGTERM", () => {
+    void (async () => {
+      appLogger.log("SIGTERM received, starting graceful shutdown...");
+      const forceTimeout = setTimeout(() => {
+        appLogger.warn("Graceful shutdown timed out, forcing exit");
+        process.exit(1);
+      }, 10_000);
+      await app.close();
+      clearTimeout(forceTimeout);
+      process.exit(0);
+    })();
   });
 
   const port = process.env.PORT ?? 3004;
@@ -131,12 +137,12 @@ async function bootstrap() {
   const prisma = app.get(PrismaAdminService);
   try {
     await prisma.$queryRaw`SELECT 1`;
-    logger.log('Database connection verified');
+    logger.log("Database connection verified");
   } catch (err) {
-    logger.error('Database connection failed on startup, retrying...', err);
-    await new Promise(r => setTimeout(r, 2000));
+    logger.error("Database connection failed on startup, retrying...", err);
+    await new Promise((r) => setTimeout(r, 2000));
     await prisma.$queryRaw`SELECT 1`;
-    logger.log('Database connection verified on retry');
+    logger.log("Database connection verified on retry");
   }
 }
 

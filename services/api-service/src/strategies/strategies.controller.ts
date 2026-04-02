@@ -17,7 +17,12 @@ import {
 import type { FastifyReply } from "fastify";
 type Response = FastifyReply;
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  RequireScopes,
+  ApiKeyScopeGuard,
+} from "@polyforge/shared-auth";
 import { StrategiesService } from "./strategies.service";
 import { StrategyEventsService } from "../gateway/strategy-events.service";
 import { CreateStrategyDto } from "./dto/create-strategy.dto";
@@ -54,14 +59,17 @@ export class StrategiesController {
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
-  createFromDescription(@CurrentUser() user: any, @Body() dto: CreateFromDescriptionDto) {
+  createFromDescription(
+    @CurrentUser() user: any,
+    @Body() dto: CreateFromDescriptionDto,
+  ) {
     return this.strategies.createFromDescription(user.sub, dto);
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('WRITE')
+  @RequireScopes("WRITE")
   create(@CurrentUser() user: any, @Body() dto: CreateStrategyDto) {
     return this.strategies.create(user.sub, dto);
   }
@@ -73,7 +81,7 @@ export class StrategiesController {
 
   @Patch(":id")
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('WRITE')
+  @RequireScopes("WRITE")
   update(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: any,
@@ -85,7 +93,7 @@ export class StrategiesController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('WRITE')
+  @RequireScopes("WRITE")
   remove(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.strategies.remove(id, user.sub);
   }
@@ -170,7 +178,7 @@ export class StrategiesController {
 
   @Post(":id/start")
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('TRADE')
+  @RequireScopes("TRADE")
   start(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: any,
@@ -181,21 +189,21 @@ export class StrategiesController {
 
   @Post(":id/stop")
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('TRADE')
+  @RequireScopes("TRADE")
   stop(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.strategies.stop(id, user.sub);
   }
 
   @Post(":id/pause")
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('TRADE')
+  @RequireScopes("TRADE")
   pause(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.strategies.pause(id, user.sub);
   }
 
   @Post(":id/resume")
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('TRADE')
+  @RequireScopes("TRADE")
   resume(@Param("id", ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.strategies.resume(id, user.sub);
   }
@@ -257,21 +265,18 @@ export class StrategiesController {
     return this.strategies.report(id, user.sub, dto);
   }
 
-  @Get(':id/versions')
-  listVersions(
-    @Param('id') id: string,
-    @CurrentUser() user: any,
-  ) {
+  @Get(":id/versions")
+  listVersions(@Param("id") id: string, @CurrentUser() user: any) {
     return this.strategies.listVersions(id, user.sub);
   }
 
-  @Post(':id/versions/:versionId/rollback')
+  @Post(":id/versions/:versionId/rollback")
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard)
-  @RequireScopes('WRITE')
+  @RequireScopes("WRITE")
   rollback(
-    @Param('id') id: string,
-    @Param('versionId') versionId: string,
+    @Param("id") id: string,
+    @Param("versionId") versionId: string,
     @CurrentUser() user: any,
   ) {
     return this.strategies.rollbackToVersion(id, versionId, user.sub);

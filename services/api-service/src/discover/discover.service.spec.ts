@@ -198,6 +198,7 @@ describe("DiscoverService", () => {
                 username: true,
                 displayName: true,
                 avatarUrl: true,
+                traderScore: { select: { score: true } },
               },
             },
           },
@@ -238,6 +239,7 @@ describe("DiscoverService", () => {
         username: "alice",
         displayName: "Alice",
         avatarUrl: null,
+        score: null,
       });
       expect(returned).not.toHaveProperty("user");
     });
@@ -259,8 +261,14 @@ describe("DiscoverService", () => {
   describe("leaderboard", () => {
     it("returns a paginated leaderboard with user data", async () => {
       const snapshots = [
-        { userId: "user-uuid-1", _sum: { realizedPnl: { toString: () => "500.00" } } },
-        { userId: "user-uuid-2", _sum: { realizedPnl: { toString: () => "200.00" } } },
+        {
+          userId: "user-uuid-1",
+          _sum: { realizedPnl: { toString: () => "500.00" } },
+        },
+        {
+          userId: "user-uuid-2",
+          _sum: { realizedPnl: { toString: () => "200.00" } },
+        },
       ];
       const tradeCounts = [
         { userId: "user-uuid-1", _count: 10 },
@@ -285,6 +293,7 @@ describe("DiscoverService", () => {
         .mockResolvedValueOnce(snapshots as any); // count query
       (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
+      db.position.findMany.mockResolvedValue([] as any);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
 
@@ -350,16 +359,18 @@ describe("DiscoverService", () => {
 
     it("fills unknown users with empty string fallbacks", async () => {
       const snapshots = [
-        { userId: "user-uuid-orphan", _sum: { realizedPnl: { toString: () => "100" } } },
+        {
+          userId: "user-uuid-orphan",
+          _sum: { realizedPnl: { toString: () => "100" } },
+        },
       ];
-      const tradeCounts = [
-        { userId: "user-uuid-orphan", _count: 1 },
-      ];
+      const tradeCounts = [{ userId: "user-uuid-orphan", _count: 1 }];
       (db.pnlSnapshot.groupBy as any)
         .mockResolvedValueOnce(snapshots as any)
         .mockResolvedValueOnce(snapshots as any);
       (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue([] as any); // no user record found
+      db.position.findMany.mockResolvedValue([] as any);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
 
@@ -374,9 +385,7 @@ describe("DiscoverService", () => {
       const snapshots = [
         { userId: "user-uuid-1", _sum: { realizedPnl: null } },
       ];
-      const tradeCounts = [
-        { userId: "user-uuid-1", _count: 0 },
-      ];
+      const tradeCounts = [{ userId: "user-uuid-1", _count: 0 }];
       const users = [
         {
           id: "user-uuid-1",
@@ -390,6 +399,7 @@ describe("DiscoverService", () => {
         .mockResolvedValueOnce(snapshots as any);
       (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
+      db.position.findMany.mockResolvedValue([] as any);
 
       const result = await service.leaderboard(makeLeaderboardQuery());
 
@@ -410,16 +420,17 @@ describe("DiscoverService", () => {
 
     it("assigns correct rank numbers with pagination offset", async () => {
       const snapshots = [
-        { userId: "user-uuid-1", _sum: { realizedPnl: { toString: () => "100" } } },
+        {
+          userId: "user-uuid-1",
+          _sum: { realizedPnl: { toString: () => "100" } },
+        },
       ];
       // For count, return 21 items worth
       const allSnapshots = Array.from({ length: 21 }, (_, i) => ({
         userId: `user-uuid-${i}`,
         _sum: { realizedPnl: { toString: () => "100" } },
       }));
-      const tradeCounts = [
-        { userId: "user-uuid-1", _count: 2 },
-      ];
+      const tradeCounts = [{ userId: "user-uuid-1", _count: 2 }];
       const users = [
         {
           id: "user-uuid-1",
@@ -433,6 +444,7 @@ describe("DiscoverService", () => {
         .mockResolvedValueOnce(allSnapshots as any);
       (db.order.groupBy as any).mockResolvedValue(tradeCounts as any);
       db.user.findMany.mockResolvedValue(users as any);
+      db.position.findMany.mockResolvedValue([] as any);
 
       const result = await service.leaderboard(
         makeLeaderboardQuery({ page: 2, limit: 20 }),

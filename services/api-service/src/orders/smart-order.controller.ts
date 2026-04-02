@@ -11,7 +11,12 @@ import {
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import { JwtAuthGuard, CurrentUser, RequireScopes, ApiKeyScopeGuard } from "@polyforge/shared-auth";
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  RequireScopes,
+  ApiKeyScopeGuard,
+} from "@polyforge/shared-auth";
 import { GeoBlockGuard } from "../common/guards/geo.guard";
 import { SmartOrderService } from "./smart-order.service";
 import { PlaceSmartOrderDto } from "./dto/place-smart-order.dto";

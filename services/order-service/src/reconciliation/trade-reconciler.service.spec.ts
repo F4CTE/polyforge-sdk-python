@@ -43,8 +43,18 @@ describe("TradeReconcilerService", () => {
   describe("reconcileUserTrades()", () => {
     it("updates missed fills from LIVE to CONFIRMED", async () => {
       prisma.order.findMany.mockResolvedValue([
-        { id: "order-1", userId: "user-1", clobOrderId: "clob-1", status: "LIVE" },
-        { id: "order-2", userId: "user-1", clobOrderId: "clob-2", status: "LIVE" },
+        {
+          id: "order-1",
+          userId: "user-1",
+          clobOrderId: "clob-1",
+          status: "LIVE",
+        },
+        {
+          id: "order-2",
+          userId: "user-1",
+          clobOrderId: "clob-2",
+          status: "LIVE",
+        },
       ]);
 
       clob.fetchTrades.mockResolvedValue([
@@ -68,7 +78,12 @@ describe("TradeReconcilerService", () => {
 
     it("does not update orders that are still LIVE on the CLOB", async () => {
       prisma.order.findMany.mockResolvedValue([
-        { id: "order-1", userId: "user-1", clobOrderId: "clob-1", status: "LIVE" },
+        {
+          id: "order-1",
+          userId: "user-1",
+          clobOrderId: "clob-1",
+          status: "LIVE",
+        },
       ]);
 
       clob.fetchTrades.mockResolvedValue([
@@ -94,9 +109,7 @@ describe("TradeReconcilerService", () => {
 
   describe("reconcile()", () => {
     it("handles API failure gracefully without throwing", async () => {
-      prisma.order.findMany.mockResolvedValue([
-        { userId: "user-1" },
-      ]);
+      prisma.order.findMany.mockResolvedValue([{ userId: "user-1" }]);
       prisma.user.findMany.mockResolvedValue([
         { id: "user-1", walletAddress: "0xwallet" },
       ]);
@@ -106,9 +119,7 @@ describe("TradeReconcilerService", () => {
     });
 
     it("skips users without wallet address", async () => {
-      prisma.order.findMany.mockResolvedValue([
-        { userId: "user-1" },
-      ]);
+      prisma.order.findMany.mockResolvedValue([{ userId: "user-1" }]);
       prisma.user.findMany.mockResolvedValue([
         { id: "user-1", walletAddress: null },
       ]);

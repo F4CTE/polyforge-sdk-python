@@ -50,12 +50,14 @@ export class BadgeService {
         awarded += count;
       } catch (err) {
         this.logger.error(
-          `Badge evaluation failed for user ${user.id}: ${err}`,
+          `Badge evaluation failed for user ${user.id}: ${String(err)}`,
         );
       }
     }
 
-    this.logger.log(`Badge evaluation complete — ${awarded} new badges awarded`);
+    this.logger.log(
+      `Badge evaluation complete — ${awarded} new badges awarded`,
+    );
   }
 
   /** Evaluate all badge criteria for a user. Returns number of newly awarded badges. */

@@ -17,7 +17,9 @@ export class PolymarketUserWsService implements OnModuleDestroy {
   subscribeUser(userId: string, walletAddress: string): void {
     if (this.connections.has(userId)) return;
     if (this.connections.size >= this.MAX_CONNECTIONS) {
-      this.logger.warn(`Max user WS connections (${this.MAX_CONNECTIONS}) reached, skipping ${userId}`);
+      this.logger.warn(
+        `Max user WS connections (${this.MAX_CONNECTIONS}) reached, skipping ${userId}`,
+      );
       return;
     }
 
@@ -27,34 +29,38 @@ export class PolymarketUserWsService implements OnModuleDestroy {
 
     const ws = new WebSocket(`${wsUrl}?address=${walletAddress}`);
 
-    ws.on("message", async (data: Buffer) => {
-      try {
-        const msg = JSON.parse(data.toString());
+    ws.on("message", (data: Buffer) => {
+      (async () => {
+        try {
+          const msg = JSON.parse(data.toString());
 
-        if (msg.type === "ORDER_FILL") {
-          await this.redis.xadd("stream:events", {
-            type: "ORDER_FILLED",
-            userId,
-            tokenId: msg.asset,
-            fillPrice: String(msg.price ?? ""),
-            fillSize: String(msg.size ?? ""),
-            side: String(msg.side ?? ""),
-            ts: String(Date.now()),
-          });
-          this.logger.debug(`Fill event for user ${userId}: ${msg.asset}`);
-        }
+          if (msg.type === "ORDER_FILL") {
+            await this.redis.xadd("stream:events", {
+              type: "ORDER_FILLED",
+              userId,
+              tokenId: msg.asset,
+              fillPrice: String(msg.price ?? ""),
+              fillSize: String(msg.size ?? ""),
+              side: String(msg.side ?? ""),
+              ts: String(Date.now()),
+            });
+            this.logger.debug(`Fill event for user ${userId}: ${msg.asset}`);
+          }
 
-        if (msg.type === "ORDER_CANCELLED") {
-          await this.redis.xadd("stream:events", {
-            type: "ORDER_CANCELLED",
-            userId,
-            orderId: String(msg.orderId ?? ""),
-            ts: String(Date.now()),
-          });
+          if (msg.type === "ORDER_CANCELLED") {
+            await this.redis.xadd("stream:events", {
+              type: "ORDER_CANCELLED",
+              userId,
+              orderId: String(msg.orderId ?? ""),
+              ts: String(Date.now()),
+            });
+          }
+        } catch (err) {
+          this.logger.warn(`User WS parse error: ${(err as Error).message}`);
         }
-      } catch (err) {
-        this.logger.warn(`User WS parse error: ${(err as Error).message}`);
-      }
+      })().catch((err: unknown) => {
+        this.logger.error("User WS message handler error", err);
+      });
     });
 
     ws.on("close", () => {

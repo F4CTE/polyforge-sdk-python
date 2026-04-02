@@ -45,7 +45,10 @@ function createMockRedis() {
 
 function createMockConfig(overrides: Record<string, string> = {}) {
   return {
-    get: vi.fn((key: string, defaultValue?: string) => overrides[key] ?? defaultValue ?? ""),
+    get: vi.fn(
+      (key: string, defaultValue?: string) =>
+        overrides[key] ?? defaultValue ?? "",
+    ),
     getOrThrow: vi.fn((key: string) => {
       if (overrides[key] !== undefined) return overrides[key];
       throw new Error(`Missing config: ${key}`);
@@ -198,7 +201,9 @@ describe("NewsIngestionService", () => {
     const config = createMockConfig({
       NEWS_RSS_FEEDS: "https://feeds.example.com/rss",
     });
-    const signalGenerator = { generateSignals: vi.fn().mockResolvedValue(undefined) } as any;
+    const signalGenerator = {
+      generateSignals: vi.fn().mockResolvedValue(undefined),
+    } as any;
     ingestion = new NewsIngestionService(config, prisma, signalGenerator);
   });
 
@@ -278,10 +283,15 @@ describe("NewsIngestionService", () => {
 
   describe("deduplication", () => {
     it("skips articles that already exist by URL", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network error")),
+      );
       prisma.newsArticle.findUnique.mockResolvedValue({ id: "existing" });
 
       // Access the private method via the ingestion flow
-      const count = await ingestion.ingestFeed("https://feeds.example.com/rss")
+      const count = await ingestion
+        .ingestFeed("https://feeds.example.com/rss")
         .catch(() => 0);
 
       // Since fetch will fail in test, we test dedup logic directly
@@ -291,15 +301,21 @@ describe("NewsIngestionService", () => {
 
   describe("extractSource", () => {
     it("extracts source from feed URL", () => {
-      expect(ingestion.extractSource("https://feeds.reuters.com/reuters/topNews")).toBe("reuters");
-      expect(ingestion.extractSource("https://rss.cnn.com/rss/money_latest.rss")).toBe("cnn");
+      expect(
+        ingestion.extractSource("https://feeds.reuters.com/reuters/topNews"),
+      ).toBe("reuters");
+      expect(
+        ingestion.extractSource("https://rss.cnn.com/rss/money_latest.rss"),
+      ).toBe("cnn");
       expect(ingestion.extractSource("https://www.bbc.com/feed")).toBe("bbc");
     });
   });
 
   describe("stripHtml", () => {
     it("strips HTML tags", () => {
-      expect(ingestion.stripHtml("<p>Hello <b>World</b></p>")).toBe("Hello World");
+      expect(ingestion.stripHtml("<p>Hello <b>World</b></p>")).toBe(
+        "Hello World",
+      );
     });
 
     it("decodes HTML entities", () => {
@@ -406,9 +422,17 @@ describe("SignalGeneratorService", () => {
 
   describe("buildPrompt", () => {
     it("includes article title and market list", () => {
-      const article = { title: "Fed Raises Rates", summary: "The Federal Reserve..." };
+      const article = {
+        title: "Fed Raises Rates",
+        summary: "The Federal Reserve...",
+      };
       const markets = [
-        { id: "mkt-1", title: "Will Fed raise rates?", slug: "fed-rates", category: "Economics" },
+        {
+          id: "mkt-1",
+          title: "Will Fed raise rates?",
+          slug: "fed-rates",
+          category: "Economics",
+        },
       ];
 
       const prompt = generator.buildPrompt(article, markets);
@@ -434,7 +458,13 @@ describe("SignalGeneratorService", () => {
   describe("parseResponse", () => {
     it("parses valid JSON array", () => {
       const raw = JSON.stringify([
-        { marketId: "m1", direction: "BUY", outcome: "YES", confidence: 85, reasoning: "Strong correlation" },
+        {
+          marketId: "m1",
+          direction: "BUY",
+          outcome: "YES",
+          confidence: 85,
+          reasoning: "Strong correlation",
+        },
       ]);
 
       const signals = generator.parseResponse(raw);
@@ -446,7 +476,8 @@ describe("SignalGeneratorService", () => {
     });
 
     it("handles markdown code blocks", () => {
-      const raw = '```json\n[{"marketId":"m1","direction":"SELL","outcome":"NO","confidence":60,"reasoning":"Weak signal"}]\n```';
+      const raw =
+        '```json\n[{"marketId":"m1","direction":"SELL","outcome":"NO","confidence":60,"reasoning":"Weak signal"}]\n```';
 
       const signals = generator.parseResponse(raw);
 
@@ -456,9 +487,27 @@ describe("SignalGeneratorService", () => {
 
     it("filters out invalid signals", () => {
       const raw = JSON.stringify([
-        { marketId: "m1", direction: "BUY", outcome: "YES", confidence: 85, reasoning: "Good" },
-        { marketId: "m2", direction: "INVALID", outcome: "YES", confidence: 50, reasoning: "Bad" },
-        { marketId: "m3", direction: "BUY", outcome: "YES", confidence: 150, reasoning: "Too high" },
+        {
+          marketId: "m1",
+          direction: "BUY",
+          outcome: "YES",
+          confidence: 85,
+          reasoning: "Good",
+        },
+        {
+          marketId: "m2",
+          direction: "INVALID",
+          outcome: "YES",
+          confidence: 50,
+          reasoning: "Bad",
+        },
+        {
+          marketId: "m3",
+          direction: "BUY",
+          outcome: "YES",
+          confidence: 150,
+          reasoning: "Too high",
+        },
         { direction: "BUY", outcome: "YES", confidence: 50 }, // missing marketId
       ]);
 
@@ -482,7 +531,13 @@ describe("SignalGeneratorService", () => {
 
     it("rounds confidence to integer", () => {
       const raw = JSON.stringify([
-        { marketId: "m1", direction: "BUY", outcome: "YES", confidence: 72.6, reasoning: "Test" },
+        {
+          marketId: "m1",
+          direction: "BUY",
+          outcome: "YES",
+          confidence: 72.6,
+          reasoning: "Test",
+        },
       ]);
 
       const signals = generator.parseResponse(raw);
@@ -512,7 +567,13 @@ describe("SignalGeneratorService", () => {
 
       llm.analyze.mockResolvedValue(
         JSON.stringify([
-          { marketId: "mkt-1", direction: "BUY", outcome: "YES", confidence: 85, reasoning: "Strong" },
+          {
+            marketId: "mkt-1",
+            direction: "BUY",
+            outcome: "YES",
+            confidence: 85,
+            reasoning: "Strong",
+          },
         ]),
       );
 
@@ -554,7 +615,13 @@ describe("SignalGeneratorService", () => {
 
       llm.analyze.mockResolvedValue(
         JSON.stringify([
-          { marketId: "mkt-1", direction: "SELL", outcome: "NO", confidence: 40, reasoning: "Weak" },
+          {
+            marketId: "mkt-1",
+            direction: "SELL",
+            outcome: "NO",
+            confidence: 40,
+            reasoning: "Weak",
+          },
         ]),
       );
 
@@ -578,7 +645,13 @@ describe("SignalGeneratorService", () => {
 
       llm.analyze.mockResolvedValue(
         JSON.stringify([
-          { marketId: "mkt-999", direction: "BUY", outcome: "YES", confidence: 90, reasoning: "Good" },
+          {
+            marketId: "mkt-999",
+            direction: "BUY",
+            outcome: "YES",
+            confidence: 90,
+            reasoning: "Good",
+          },
         ]),
       );
 

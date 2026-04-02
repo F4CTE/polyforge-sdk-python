@@ -12,8 +12,7 @@ import { randomUUID } from "crypto";
 const AI_SUGGESTIONS: Record<string, string> = {
   STRATEGY_LIMIT_REACHED: "Delete unused strategies to make room",
   ALERT_LIMIT_REACHED: "Remove triggered or unnecessary alerts",
-  NOT_CONNECTED:
-    "Import Polymarket credentials in Settings > Trading Account",
+  NOT_CONNECTED: "Import Polymarket credentials in Settings > Trading Account",
   ALREADY_RUNNING: "Stop the strategy first, then start again",
   GEO_BLOCKED: "Trading is not available in your region",
   INSUFFICIENT_SCOPES:
@@ -23,7 +22,8 @@ const AI_SUGGESTIONS: Record<string, string> = {
   UNAUTHORIZED: "Provide a valid Bearer JWT in the Authorization header",
   FORBIDDEN: "You do not have permission to access this resource",
   NOT_FOUND: "The requested resource does not exist. Verify the ID and path.",
-  VALIDATION_ERROR: "Check the request body against the schema at GET /api/v1/actions",
+  VALIDATION_ERROR:
+    "Check the request body against the schema at GET /api/v1/actions",
   CONFLICT: "The resource is in a conflicting state. Refresh and retry.",
 };
 
@@ -61,12 +61,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           : "INTERNAL_ERROR";
 
     if (status >= 500) {
-      const errMsg = exception instanceof Error ? exception.message : String(exception);
-      const errStack = exception instanceof Error ? exception.stack : '';
+      const errMsg =
+        exception instanceof Error ? exception.message : String(exception);
+      const errStack = exception instanceof Error ? exception.stack : "";
       this.logger.error(
         `[${requestId}] ${request.method} ${request.url} — ${errMsg}`,
       );
-      if (errStack && process.env.NODE_ENV !== 'production') {
+      if (errStack && process.env.NODE_ENV !== "production") {
         this.logger.error(errStack);
       }
     }

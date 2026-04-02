@@ -55,9 +55,7 @@ export class NewsIngestionService implements OnModuleInit {
       try {
         await this.ingestFeed(feedUrl);
       } catch (err: any) {
-        this.logger.error(
-          `Failed to ingest feed ${feedUrl}: ${err?.message}`,
-        );
+        this.logger.error(`Failed to ingest feed ${feedUrl}: ${err?.message}`);
       }
     }
   }
@@ -75,9 +73,12 @@ export class NewsIngestionService implements OnModuleInit {
     // H-04: Limit RSS response body to 1MB max
     const xml = await res.text();
     if (xml.length > 1_048_576) {
-      throw new Error(`RSS response too large (${xml.length} bytes) from ${feedUrl}`);
+      throw new Error(
+        `RSS response too large (${xml.length} bytes) from ${feedUrl}`,
+      );
     }
     // H-04: Strip null bytes and control characters before parsing
+    // eslint-disable-next-line no-control-regex
     const sanitizedXml = xml.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
     const articles = this.parseRss(sanitizedXml, feedUrl);
 
@@ -96,22 +97,30 @@ export class NewsIngestionService implements OnModuleInit {
     const newCount = result.count;
 
     if (newCount > 0) {
-      this.logger.log(
-        `Ingested ${newCount} new article(s) from ${feedUrl}`,
-      );
+      this.logger.log(`Ingested ${newCount} new article(s) from ${feedUrl}`);
 
       // Trigger signal generation for newly inserted articles
       try {
         const recentArticles = await this.prisma.newsArticle.findMany({
-          where: { source: feedUrl.includes('reuters') ? 'reuters' : feedUrl.includes('coindesk') ? 'coindesk' : 'rss' },
+          where: {
+            source: feedUrl.includes("reuters")
+              ? "reuters"
+              : feedUrl.includes("coindesk")
+                ? "coindesk"
+                : "rss",
+          },
           orderBy: { ingestedAt: "desc" },
           take: newCount,
           select: { id: true, title: true, summary: true },
         });
         for (const article of recentArticles) {
-          this.signalGenerator?.generateSignals?.(article)?.catch((err: any) => {
-            this.logger.error(`Signal generation failed for article ${article.id}: ${err?.message}`);
-          });
+          this.signalGenerator
+            ?.generateSignals?.(article)
+            ?.catch((err: any) => {
+              this.logger.error(
+                `Signal generation failed for article ${article.id}: ${err?.message}`,
+              );
+            });
         }
       } catch {
         // Signal generation is non-critical
@@ -174,8 +183,7 @@ export class NewsIngestionService implements OnModuleInit {
     const description = this.extractTag(itemXml, "description");
     const pubDate = this.extractTag(itemXml, "pubDate");
     const imageUrl =
-      this.extractMediaContent(itemXml) ??
-      this.extractEnclosure(itemXml);
+      this.extractMediaContent(itemXml) ?? this.extractEnclosure(itemXml);
 
     return {
       source,
@@ -190,11 +198,11 @@ export class NewsIngestionService implements OnModuleInit {
   private parseEntry(entryXml: string, source: string): ParsedArticle | null {
     const title = this.extractTag(entryXml, "title");
     const link =
-      this.extractAtomLink(entryXml) ??
-      this.extractTag(entryXml, "link");
+      this.extractAtomLink(entryXml) ?? this.extractTag(entryXml, "link");
     if (!title || !link) return null;
 
-    const summary = this.extractTag(entryXml, "summary") ??
+    const summary =
+      this.extractTag(entryXml, "summary") ??
       this.extractTag(entryXml, "content");
     const updated =
       this.extractTag(entryXml, "published") ??
@@ -249,7 +257,8 @@ export class NewsIngestionService implements OnModuleInit {
   }
 
   private extractEnclosure(xml: string): string | null {
-    const regex = /<enclosure[^>]+url="([^"]+)"[^>]*type="image[^"]*"[^>]*\/?>/i;
+    const regex =
+      /<enclosure[^>]+url="([^"]+)"[^>]*type="image[^"]*"[^>]*\/?>/i;
     const match = regex.exec(xml);
     return match ? match[1] : null;
   }

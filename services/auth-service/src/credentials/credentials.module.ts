@@ -7,7 +7,12 @@ import { CredentialsService } from './credentials.service';
 import { CredentialsController } from './credentials.controller';
 
 @Module({
-  imports: [SharedDbModule, SharedAuthModule, ConfigModule, JwtModule.register({})],
+  imports: [
+    SharedDbModule,
+    SharedAuthModule,
+    ConfigModule,
+    JwtModule.register({}),
+  ],
   controllers: [CredentialsController],
   providers: [CredentialsService],
 })

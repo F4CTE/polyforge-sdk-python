@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@polyforge/shared-db';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "@polyforge/shared-db";
 
 @Injectable()
 export class AccuracyService {
@@ -9,7 +9,7 @@ export class AccuracyService {
     const positions = await this.prisma.position.findMany({
       where: {
         userId,
-        resolutionStatus: 'RESOLVED' as any,
+        resolutionStatus: "RESOLVED" as any,
       },
     });
 
@@ -18,7 +18,7 @@ export class AccuracyService {
         brierScore: null,
         totalPredictions: 0,
         correctPredictions: 0,
-        winRate: '0',
+        winRate: "0",
         calibration: [],
         byCategory: {},
       };
@@ -29,23 +29,32 @@ export class AccuracyService {
       where: { id: { in: marketIds } },
       select: { id: true, category: true },
     });
-    const categoryMap = new Map(markets.map((m) => [m.id, m.category ?? 'Other']));
+    const categoryMap = new Map(
+      markets.map((m) => [m.id, m.category ?? "Other"]),
+    );
 
     let totalBrier = 0;
     let correct = 0;
-    const byCategory: Record<string, { total: number; correct: number; brierSum: number }> = {};
+    const byCategory: Record<
+      string,
+      { total: number; correct: number; brierSum: number }
+    > = {};
     const buckets: Record<string, { total: number; correct: number }> = {};
 
     for (const pos of positions) {
-      const p = Math.min(0.99, Math.max(0.01, parseFloat(String(pos.avgPrice ?? 0.5))));
+      const p = Math.min(
+        0.99,
+        Math.max(0.01, parseFloat(String(pos.avgPrice ?? 0.5))),
+      );
       const won = parseFloat(String(pos.realizedPnl ?? 0)) > 0;
       const outcome = won ? 1 : 0;
       const brier = Math.pow(p - outcome, 2);
       totalBrier += brier;
       if (won) correct++;
 
-      const cat = categoryMap.get(pos.marketId) ?? 'Other';
-      if (!byCategory[cat]) byCategory[cat] = { total: 0, correct: 0, brierSum: 0 };
+      const cat = categoryMap.get(pos.marketId) ?? "Other";
+      if (!byCategory[cat])
+        byCategory[cat] = { total: 0, correct: 0, brierSum: 0 };
       byCategory[cat].total++;
       byCategory[cat].brierSum += brier;
       if (won) byCategory[cat].correct++;
@@ -70,14 +79,16 @@ export class AccuracyService {
       .sort((a, b) => a.expectedRate - b.expectedRate);
 
     const byCategoryFormatted = Object.fromEntries(
-      Object.entries(byCategory).map(([cat, { total, correct: c, brierSum }]) => [
-        cat,
-        {
-          brierScore: parseFloat((brierSum / total).toFixed(4)),
-          count: total,
-          correctPredictions: c,
-        },
-      ]),
+      Object.entries(byCategory).map(
+        ([cat, { total, correct: c, brierSum }]) => [
+          cat,
+          {
+            brierScore: parseFloat((brierSum / total).toFixed(4)),
+            count: total,
+            correctPredictions: c,
+          },
+        ],
+      ),
     );
 
     return {
