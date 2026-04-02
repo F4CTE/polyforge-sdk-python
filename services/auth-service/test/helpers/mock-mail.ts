@@ -6,5 +6,7 @@ export function createMockMailService(): Partial<MailService> {
         sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
         sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
         sendPendingApprovalEmail: vi.fn().mockResolvedValue(undefined),
+        sendWaitlistConfirmationEmail: vi.fn().mockResolvedValue(undefined),
+        sendAccountApprovedEmail: vi.fn().mockResolvedValue(undefined),
     };
 }

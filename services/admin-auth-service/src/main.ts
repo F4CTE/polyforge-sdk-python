@@ -75,7 +75,7 @@ async function bootstrap() {
   app.enableCors({
     origin: (origin, cb) => {
       const allowed = [
-        "https://admin.polyforge.app",
+        ...(process.env.ADMIN_CORS_ORIGINS?.split(",").map(s => s.trim()) ?? []),
         ...(process.env.NODE_ENV !== "production"
           ? [
               "http://localhost:4300",
