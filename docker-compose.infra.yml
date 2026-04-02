@@ -78,7 +78,7 @@ services:
       context: .
       dockerfile: Dockerfile.migrate
     environment:
-      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
@@ -123,7 +123,7 @@ services:
       context: .
       dockerfile: Dockerfile.migrate.admin
     environment:
-      DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
+      ADMIN_DIRECT_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
     networks: [admin-only]
     depends_on:
       postgres-admin: { condition: service_healthy }
