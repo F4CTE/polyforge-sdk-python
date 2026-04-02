@@ -41,8 +41,11 @@ export class PrismaService
   async onModuleInit() {
     // Log slow queries in development
     if (process.env.NODE_ENV !== "production") {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       (this as any).$on("query", (e: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (e.duration > 100) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           this.logger.warn(`Slow query (${e.duration}ms): ${e.query}`);
         }
       });
