@@ -203,7 +203,7 @@ describe("CredentialsService", () => {
       await svc.importCredentials(VALID_DTO);
       const result = await svc.getDecryptedCredentials("user-1");
 
-      expect(result.privateKey).toBe(VALID_PK);
+      expect(result.privateKey.toString("utf8")).toBe(VALID_PK);
     });
 
     it("returns correct apiKey, apiSecret, apiPassphrase", async () => {
@@ -222,9 +222,9 @@ describe("CredentialsService", () => {
       await svc.importCredentials(VALID_DTO);
       const result = await svc.getDecryptedCredentials("user-1");
 
-      expect(result.apiKey).toBe("ak-value");
-      expect(result.apiSecret).toBe("as-value");
-      expect(result.apiPassphrase).toBe("ap-value");
+      expect(result.apiKey.toString("utf8")).toBe("ak-value");
+      expect(result.apiSecret.toString("utf8")).toBe("as-value");
+      expect(result.apiPassphrase.toString("utf8")).toBe("ap-value");
     });
 
     it("returns correct sigType", async () => {
@@ -292,8 +292,8 @@ describe("CredentialsService", () => {
       const a = await svc.getDecryptedCredentials("user-A");
       const b = await svc.getDecryptedCredentials("user-B");
 
-      expect(a.apiKey).toBe("key-A");
-      expect(b.apiKey).toBe("key-B");
+      expect(a.apiKey.toString("utf8")).toBe("key-A");
+      expect(b.apiKey.toString("utf8")).toBe("key-B");
     });
   });
 });

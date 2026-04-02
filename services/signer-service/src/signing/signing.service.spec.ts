@@ -36,10 +36,10 @@ function makeMockRedis() {
 }
 
 const DECRYPTED_CREDS = {
-  privateKey: "0x" + "f".repeat(64),
-  apiKey: "ak",
-  apiSecret: "as",
-  apiPassphrase: "ap",
+  privateKey: Buffer.from("0x" + "f".repeat(64), "utf8"),
+  apiKey: Buffer.from("ak", "utf8"),
+  apiSecret: Buffer.from("as", "utf8"),
+  apiPassphrase: Buffer.from("ap", "utf8"),
   safeAddress: null,
   sigType: 0,
 };

@@ -197,18 +197,21 @@ export class EncryptionService {
     };
   }
 
+  /**
+   * Decrypt a field and return as Buffer so callers can .fill(0) when done.
+   * Avoids materializing secrets as immutable JS strings in memory.
+   */
   decryptField(
     ctRaw: Uint8Array,
     ivRaw: Uint8Array,
     tagRaw: Uint8Array,
     dek: Buffer,
-  ): string {
+  ): Buffer {
     const ct = Buffer.from(ctRaw);
     const iv = Buffer.from(ivRaw);
     const tag = Buffer.from(tagRaw);
     const decipher = crypto.createDecipheriv("aes-256-gcm", dek, iv);
     decipher.setAuthTag(tag);
-    const plain = Buffer.concat([decipher.update(ct), decipher.final()]);
-    return plain.toString("utf8");
+    return Buffer.concat([decipher.update(ct), decipher.final()]);
   }
 }

@@ -303,9 +303,9 @@ describe("EncryptionService", () => {
       const svc = makeService();
       const { dek } = svc.generateDek();
       const enc = svc.encryptField("hello", dek);
-      expect(svc.decryptField(enc.ciphertext, enc.iv, enc.tag, dek)).toBe(
-        "hello",
-      );
+      expect(
+        svc.decryptField(enc.ciphertext, enc.iv, enc.tag, dek).toString("utf8"),
+      ).toBe("hello");
     });
 
     it("round-trips a Polymarket private key (0x + 64 hex chars)", () => {
@@ -313,14 +313,18 @@ describe("EncryptionService", () => {
       const { dek } = svc.generateDek();
       const pk = "0x" + "a1b2c3d4".repeat(8);
       const enc = svc.encryptField(pk, dek);
-      expect(svc.decryptField(enc.ciphertext, enc.iv, enc.tag, dek)).toBe(pk);
+      expect(
+        svc.decryptField(enc.ciphertext, enc.iv, enc.tag, dek).toString("utf8"),
+      ).toBe(pk);
     });
 
     it("round-trips an empty string", () => {
       const svc = makeService();
       const { dek } = svc.generateDek();
       const enc = svc.encryptField("", dek);
-      expect(svc.decryptField(enc.ciphertext, enc.iv, enc.tag, dek)).toBe("");
+      expect(
+        svc.decryptField(enc.ciphertext, enc.iv, enc.tag, dek).toString("utf8"),
+      ).toBe("");
     });
 
     it("throws when ciphertext is tampered", () => {
@@ -389,16 +393,24 @@ describe("EncryptionService", () => {
       const recoveredDek = svc.decryptDek(encryptedDek, dekIv, kekVersion);
 
       expect(
-        svc.decryptField(pkEnc.ciphertext, pkEnc.iv, pkEnc.tag, recoveredDek),
+        svc
+          .decryptField(pkEnc.ciphertext, pkEnc.iv, pkEnc.tag, recoveredDek)
+          .toString("utf8"),
       ).toBe(privateKey);
       expect(
-        svc.decryptField(akEnc.ciphertext, akEnc.iv, akEnc.tag, recoveredDek),
+        svc
+          .decryptField(akEnc.ciphertext, akEnc.iv, akEnc.tag, recoveredDek)
+          .toString("utf8"),
       ).toBe(apiKey);
       expect(
-        svc.decryptField(asEnc.ciphertext, asEnc.iv, asEnc.tag, recoveredDek),
+        svc
+          .decryptField(asEnc.ciphertext, asEnc.iv, asEnc.tag, recoveredDek)
+          .toString("utf8"),
       ).toBe(apiSecret);
       expect(
-        svc.decryptField(apEnc.ciphertext, apEnc.iv, apEnc.tag, recoveredDek),
+        svc
+          .decryptField(apEnc.ciphertext, apEnc.iv, apEnc.tag, recoveredDek)
+          .toString("utf8"),
       ).toBe(apiPassphrase);
     });
   });

@@ -2,7 +2,11 @@ import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { RedisService } from "@polyforge/shared-redis";
 import * as crypto from "crypto";
-import { CredentialsService } from "../credentials/credentials.service";
+import {
+  CredentialsService,
+  DecryptedCredentials,
+  zeroCredentials,
+} from "../credentials/credentials.service";
 import { GasSponsorService } from "../gas/gas-sponsor.service";
 import { SignOrderDto } from "./dto/sign-order.dto";
 
@@ -105,51 +109,58 @@ export class SigningService implements OnModuleInit {
     // Retrieve decrypted credentials (never logs them)
     const creds = await this.credentials.getDecryptedCredentials(userId);
 
-    let order: Record<string, unknown>;
+    try {
+      let order: Record<string, unknown>;
 
-    if (this.isDev) {
-      this.logger.warn(
-        "DEV MODE: Using stub signer — orders will NOT be submitted to Polymarket",
+      if (this.isDev) {
+        this.logger.warn(
+          "DEV MODE: Using stub signer — orders will NOT be submitted to Polymarket",
+        );
+        order = this.stubSign({
+          tokenId,
+          side,
+          size,
+          price,
+          orderType,
+          expiration,
+          sigType: creds.sigType,
+          taker,
+        });
+      } else {
+        order = await this.eip712Sign(creds, {
+          tokenId,
+          side,
+          size,
+          price,
+          orderType,
+          expiration,
+          tickSize,
+          negRisk,
+          postOnly,
+          taker,
+        });
+      }
+
+      const builderHeaders = this.buildBuilderHeaders(requestId);
+
+      // Use configurable gas estimate from environment
+      const gasEstimate = parseFloat(
+        this.config.get<string>("GAS_ESTIMATE_MATIC") ?? "0.002",
       );
-      order = this.stubSign({
-        tokenId,
-        side,
-        size,
-        price,
-        orderType,
-        expiration,
-        sigType: creds.sigType,
-        taker,
-      });
-    } else {
-      order = await this.eip712Sign(creds, {
-        tokenId,
-        side,
-        size,
-        price,
-        orderType,
-        expiration,
-        tickSize,
-        negRisk,
-        postOnly,
-        taker,
-      });
+      const gasSponsored = await this.gasSponsor.sponsorGas(
+        userId,
+        gasEstimate,
+      );
+
+      this.logger.log(
+        `Order signed for user=${userId} requestId=${requestId} tokenId=${tokenId} side=${side}` +
+          ` gasSponsored=${gasSponsored}`,
+      );
+
+      return { order, builderHeaders, gasSponsored };
+    } finally {
+      zeroCredentials(creds);
     }
-
-    const builderHeaders = this.buildBuilderHeaders(requestId);
-
-    // Use configurable gas estimate from environment
-    const gasEstimate = parseFloat(
-      this.config.get<string>("GAS_ESTIMATE_MATIC") ?? "0.002",
-    );
-    const gasSponsored = await this.gasSponsor.sponsorGas(userId, gasEstimate);
-
-    this.logger.log(
-      `Order signed for user=${userId} requestId=${requestId} tokenId=${tokenId} side=${side}` +
-        ` gasSponsored=${gasSponsored}`,
-    );
-
-    return { order, builderHeaders, gasSponsored };
   }
 
   // ─── Dev stub signer ─────────────────────────────────────────────────────
@@ -185,14 +196,7 @@ export class SigningService implements OnModuleInit {
   // ─── Production EIP712 signer ─────────────────────────────────────────────
 
   private async eip712Sign(
-    creds: {
-      privateKey: string;
-      apiKey: string;
-      apiSecret: string;
-      apiPassphrase: string;
-      safeAddress: string | null;
-      sigType: number;
-    },
+    creds: DecryptedCredentials,
     params: {
       tokenId: string;
       side: "BUY" | "SELL";
@@ -216,17 +220,19 @@ export class SigningService implements OnModuleInit {
       passphrase: builderPassphrase,
     } = this.getBuilderCredentials();
 
+    // Convert Buffers to strings only at the external API boundary.
+    // The Buffer originals are zeroed by the caller's finally block.
     const client = new ClobClient(
       this.clobApiUrl,
       this.chainId,
       undefined, // ethers provider (not needed for signing)
       {
-        key: creds.apiKey,
-        secret: creds.apiSecret,
-        passphrase: creds.apiPassphrase,
+        key: creds.apiKey.toString("utf8"),
+        secret: creds.apiSecret.toString("utf8"),
+        passphrase: creds.apiPassphrase.toString("utf8"),
       },
       creds.sigType,
-      creds.privateKey,
+      creds.privateKey.toString("utf8"),
       creds.safeAddress ?? undefined,
       {
         apiKey: builderApiKey,
@@ -236,7 +242,9 @@ export class SigningService implements OnModuleInit {
     );
 
     // Fetch nonce from Polymarket relayer (cached 30s in Redis)
-    const nonce = await this.fetchNonce(creds.safeAddress ?? creds.apiKey);
+    const nonce = await this.fetchNonce(
+      creds.safeAddress ?? creds.apiKey.toString("utf8"),
+    );
 
     // Fetch fee rate from Polymarket (cached 5min in Redis)
     const feeRateBps = await this.fetchFeeRate(params.tokenId);
@@ -340,35 +348,39 @@ export class SigningService implements OnModuleInit {
   ): Promise<{ txHash: string; gasSponsored: boolean }> {
     const creds = await this.credentials.getDecryptedCredentials(userId);
 
-    let txHash: string;
+    try {
+      let txHash: string;
 
-    if (this.isDev) {
-      this.logger.warn(
-        "DEV MODE: Using stub redemption — positions will NOT be redeemed on Polymarket",
+      if (this.isDev) {
+        this.logger.warn(
+          "DEV MODE: Using stub redemption — positions will NOT be redeemed on Polymarket",
+        );
+        // Stub: return a fake transaction hash
+        txHash = "dev-redemption-" + crypto.randomBytes(16).toString("hex");
+      } else {
+        const client = await this.buildClient(userId);
+
+        const result = await client.redeemPositions([tokenId]);
+        txHash = result?.transactionHash ?? "0x0";
+      }
+
+      // Use configurable gas estimate for redemptions (slightly higher than orders)
+      const gasEstimateRedemption =
+        parseFloat(this.config.get<string>("GAS_ESTIMATE_MATIC") ?? "0.002") *
+        1.5;
+      const gasSponsored = await this.gasSponsor.sponsorGas(
+        userId,
+        gasEstimateRedemption,
       );
-      // Stub: return a fake transaction hash
-      txHash = "dev-redemption-" + crypto.randomBytes(16).toString("hex");
-    } else {
-      const client = await this.buildClient(userId);
 
-      const result = await client.redeemPositions([tokenId]);
-      txHash = result?.transactionHash ?? "0x0";
+      this.logger.log(
+        `Position redeemed for user=${userId} tokenId=${tokenId} gasSponsored=${gasSponsored}`,
+      );
+
+      return { txHash, gasSponsored };
+    } finally {
+      zeroCredentials(creds);
     }
-
-    // Use configurable gas estimate for redemptions (slightly higher than orders)
-    const gasEstimateRedemption =
-      parseFloat(this.config.get<string>("GAS_ESTIMATE_MATIC") ?? "0.002") *
-      1.5;
-    const gasSponsored = await this.gasSponsor.sponsorGas(
-      userId,
-      gasEstimateRedemption,
-    );
-
-    this.logger.log(
-      `Position redeemed for user=${userId} tokenId=${tokenId} gasSponsored=${gasSponsored}`,
-    );
-
-    return { txHash, gasSponsored };
   }
 
   // ─── CTF Split / Merge ──────────────────────────────────────────────────
@@ -409,19 +421,25 @@ export class SigningService implements OnModuleInit {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { ClobClient } = require("@polymarket/clob-client");
 
-    return new ClobClient(
+    // Convert Buffers to strings at the external API boundary
+    const client = new ClobClient(
       this.clobApiUrl,
       this.chainId,
       undefined,
       {
-        key: creds.apiKey,
-        secret: creds.apiSecret,
-        passphrase: creds.apiPassphrase,
+        key: creds.apiKey.toString("utf8"),
+        secret: creds.apiSecret.toString("utf8"),
+        passphrase: creds.apiPassphrase.toString("utf8"),
       },
       creds.sigType,
-      creds.privateKey,
+      creds.privateKey.toString("utf8"),
       creds.safeAddress ?? undefined,
     );
+
+    // Zero credential Buffers now that values are passed to the client
+    zeroCredentials(creds);
+
+    return client;
   }
 
   // ─── Builder HMAC headers ─────────────────────────────────────────────────

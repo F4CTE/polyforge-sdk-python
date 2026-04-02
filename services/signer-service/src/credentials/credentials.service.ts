@@ -9,12 +9,35 @@ import { EncryptionService } from "../encryption/encryption.service";
 import { ImportCredentialsDto } from "./dto/import-credentials.dto";
 
 /**
+ * Decrypted credentials with sensitive fields as Buffers (not strings).
+ * Buffers can be zeroed via .fill(0) after use; JS strings are immutable
+ * and linger in the V8 heap until garbage-collected.
+ */
+export interface DecryptedCredentials {
+  privateKey: Buffer;
+  apiKey: Buffer;
+  apiSecret: Buffer;
+  apiPassphrase: Buffer;
+  safeAddress: string | null;
+  sigType: number;
+}
+
+/** Zero all sensitive Buffer fields in a credentials object (best-effort). */
+export function zeroCredentials(creds: DecryptedCredentials): void {
+  creds.privateKey.fill(0);
+  creds.apiKey.fill(0);
+  creds.apiSecret.fill(0);
+  creds.apiPassphrase.fill(0);
+}
+
+/**
  * Stores and retrieves encrypted Polymarket credentials.
  *
  * SECURITY RULES:
  * - Plaintext credentials MUST NEVER be logged.
  * - Plaintext credentials MUST NEVER be persisted (in DB, cache, or disk).
  * - This service is the only place that touches raw key material.
+ * - Callers MUST call zeroCredentials() in a finally block after use.
  */
 @Injectable()
 export class CredentialsService {
@@ -124,15 +147,11 @@ export class CredentialsService {
   /**
    * Retrieve decrypted credentials for signing.
    * Called ONLY by SigningService — result must never be logged.
+   *
+   * Returns sensitive fields as Buffers so callers can zero them after use.
+   * Callers MUST call zeroCredentials(creds) in a finally block.
    */
-  async getDecryptedCredentials(userId: string): Promise<{
-    privateKey: string;
-    apiKey: string;
-    apiSecret: string;
-    apiPassphrase: string;
-    safeAddress: string | null;
-    sigType: number;
-  }> {
+  async getDecryptedCredentials(userId: string): Promise<DecryptedCredentials> {
     const row = await this.prisma.userCredential.findUnique({
       where: { userId },
     });

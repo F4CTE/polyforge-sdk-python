@@ -178,12 +178,13 @@ export class NativeEncryptionService {
     ivRaw: Uint8Array,
     tagRaw: Uint8Array,
     dek: Buffer,
-  ): string {
-    return nativeCrypto.decryptAes256Gcm(
+  ): Buffer {
+    const plaintext: string = nativeCrypto.decryptAes256Gcm(
       toHex(ctRaw),
       toHex(ivRaw),
       toHex(tagRaw),
       dek.toString("hex"),
     );
+    return Buffer.from(plaintext, "utf8");
   }
 }
