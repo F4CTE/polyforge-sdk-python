@@ -1,9 +1,6 @@
 import { Logger } from "@nestjs/common";
 import { v4 as uuidv4 } from "uuid";
-import { Parser } from "expr-eval";
-
-/** Singleton parser instance — avoids creating a new Parser per evaluation */
-const exprParser = new Parser();
+import { evaluate as mathEvaluate } from "mathjs";
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
@@ -33,7 +30,7 @@ function safeEvaluate(
     throw new Error(`Expression too long: ${expression.length} > ${maxLength}`);
   }
   // Reject potentially dangerous patterns and CPU-exhausting exponentiation
-  if (/while|for|function|eval|require|import/.test(expression)) {
+  if (/while|for|function|eval|require|import|__proto__|constructor|prototype/.test(expression)) {
     throw new Error("Expression contains forbidden keywords");
   }
   // Block nested exponentiation (e.g., 9^9^9) which causes CPU exhaustion
@@ -41,7 +38,7 @@ function safeEvaluate(
     throw new Error("Expression contains too many exponentiation operators");
   }
   try {
-    return exprParser.evaluate(expression, scope);
+    return Number(mathEvaluate(expression, scope));
   } catch {
     return 0; // Safe fallback
   }

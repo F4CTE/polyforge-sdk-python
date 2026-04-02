@@ -1,4 +1,4 @@
-import { Parser } from "expr-eval";
+import { evaluate as mathEvaluate } from "mathjs";
 import {
   LogicBlockEvaluator,
   LogicBlockResult,
@@ -15,11 +15,11 @@ function safeEvaluate(
     throw new Error(`Expression too long: ${expression.length} > ${maxLength}`);
   }
   // Reject potentially dangerous patterns
-  if (/while|for|function|eval|require|import/.test(expression)) {
+  if (/while|for|function|eval|require|import|__proto__|constructor|prototype/.test(expression)) {
     throw new Error("Expression contains forbidden keywords");
   }
   try {
-    return new Parser().evaluate(expression, scope);
+    return Number(mathEvaluate(expression, scope));
   } catch {
     return 0; // Safe fallback
   }
