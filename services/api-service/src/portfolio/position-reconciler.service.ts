@@ -44,9 +44,12 @@ export class PositionReconcilerService {
       const batch = connectedUsers.slice(i, i + CONCURRENCY);
       await Promise.allSettled(
         batch
-          .filter((u) => u.polymarketAddress)
+          .filter(
+            (u): u is typeof u & { polymarketAddress: string } =>
+              u.polymarketAddress != null,
+          )
           .map((u) =>
-            this.reconcileUser(u.id, u.polymarketAddress!).catch(
+            this.reconcileUser(u.id, u.polymarketAddress).catch(
               (err: unknown) =>
                 this.logger.warn(
                   `Reconciliation failed for ${u.id}: ${(err as Error).message}`,

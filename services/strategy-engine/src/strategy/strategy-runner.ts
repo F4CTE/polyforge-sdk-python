@@ -589,9 +589,10 @@ export class StrategyRunner {
     const now = Date.now();
 
     for (let i = 0; i < tokenIds.length; i++) {
-      if (!values[i]) return tokenIds[i];
+      const raw = values[i];
+      if (!raw) return tokenIds[i];
       try {
-        const { timestamp } = JSON.parse(values[i]!);
+        const { timestamp } = JSON.parse(raw);
         if (now - timestamp > STALE_PRICE_MS) return tokenIds[i];
       } catch {
         return tokenIds[i];

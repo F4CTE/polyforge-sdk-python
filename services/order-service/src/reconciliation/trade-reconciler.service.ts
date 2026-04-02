@@ -32,7 +32,10 @@ export class TradeReconcilerService {
   async reconcile(): Promise<void> {
     try {
       const users = await this.getConnectedUsersWithLiveOrders();
-      const eligible = users.filter((u) => u.polymarketAddress);
+      const eligible = users.filter(
+        (u): u is typeof u & { polymarketAddress: string } =>
+          u.polymarketAddress != null,
+      );
 
       // Parallel with concurrency limit of 5
       const CONCURRENCY = 5;
@@ -40,7 +43,7 @@ export class TradeReconcilerService {
         await Promise.allSettled(
           eligible
             .slice(i, i + CONCURRENCY)
-            .map((u) => this.reconcileUserTrades(u.id, u.polymarketAddress!)),
+            .map((u) => this.reconcileUserTrades(u.id, u.polymarketAddress)),
         );
       }
     } catch (err) {
