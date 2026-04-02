@@ -6,9 +6,8 @@ WORKDIR /app
 COPY prisma/schema.admin.prisma    ./prisma/schema.admin.prisma
 COPY prisma/prisma.admin.config.ts ./prisma/prisma.admin.config.ts
 
-# --network=host: use host network so npm can reach the registry in CI
 # --mount=type=cache: cache the npm store across rebuilds
-RUN --network=host --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,target=/root/.npm \
     npm install --save-dev prisma @prisma/client dotenv
 
 # ADMIN_DIRECT_DATABASE_URL must be injected at runtime via docker run -e or docker-compose
