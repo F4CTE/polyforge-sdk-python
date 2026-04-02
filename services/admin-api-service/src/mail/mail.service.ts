@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import * as nodemailer from "nodemailer";
 
 const FRONTEND = process.env.FRONTEND_URL;
-if (!FRONTEND) throw new Error('FRONTEND_URL environment variable is required');
+if (!FRONTEND) throw new Error("FRONTEND_URL environment variable is required");
 
 function emailLayout(opts: {
   preheader?: string;
@@ -97,7 +97,8 @@ export class AdminMailService {
 
   constructor() {
     const fromEmail = process.env.AWS_SES_FROM_EMAIL;
-    if (!fromEmail) throw new Error('AWS_SES_FROM_EMAIL environment variable is required');
+    if (!fromEmail)
+      throw new Error("AWS_SES_FROM_EMAIL environment variable is required");
     this.from = `Polyforge <${fromEmail}>`;
     const driver = process.env.EMAIL_DRIVER ?? "mailhog";
 

@@ -15,7 +15,11 @@ function safeEvaluate(
     throw new Error(`Expression too long: ${expression.length} > ${maxLength}`);
   }
   // Reject potentially dangerous patterns
-  if (/while|for|function|eval|require|import|__proto__|constructor|prototype/.test(expression)) {
+  if (
+    /while|for|function|eval|require|import|__proto__|constructor|prototype/.test(
+      expression,
+    )
+  ) {
     throw new Error("Expression contains forbidden keywords");
   }
   try {

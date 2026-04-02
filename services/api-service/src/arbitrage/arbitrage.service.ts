@@ -62,7 +62,7 @@ export class ArbitrageService {
 
     // 2. Batch-read live prices from Redis (10 s cache, set by market-data-service)
     const tokenIds = binary.flatMap((m) => m.tokens.map((t) => t.id));
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+
     const priceKeys = tokenIds.map((id) => `cache:price:${id}`);
     const client = this.redis.getClient();
     const rawPrices: (string | null)[] = await client.mget(...priceKeys);

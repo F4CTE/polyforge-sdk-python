@@ -365,7 +365,9 @@ describe("AdminAuthService", () => {
     it("throws ADMIN_NOT_FOUND (404) when admin does not exist", async () => {
       adminDb.admin.findUnique.mockResolvedValue(null);
 
-      await expect(service.disableTotp("nonexistent", "password", "000000")).rejects.toMatchObject({
+      await expect(
+        service.disableTotp("nonexistent", "password", "000000"),
+      ).rejects.toMatchObject({
         response: { code: "ADMIN_NOT_FOUND" },
         status: HttpStatus.NOT_FOUND,
       });
@@ -375,7 +377,9 @@ describe("AdminAuthService", () => {
       const admin = await adminFactory({ totpEnabled: false });
       adminDb.admin.findUnique.mockResolvedValue(admin);
 
-      await expect(service.disableTotp(admin.id, "password", "000000")).rejects.toMatchObject({
+      await expect(
+        service.disableTotp(admin.id, "password", "000000"),
+      ).rejects.toMatchObject({
         response: { code: "TOTP_NOT_ENABLED" },
         status: HttpStatus.BAD_REQUEST,
       });

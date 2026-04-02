@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 
-const FRONTEND = process.env.FRONTEND_URL ?? 'http://localhost';
+const FRONTEND = process.env.FRONTEND_URL ?? "http://localhost";
 
 /** Escape user-controlled strings before inserting into HTML */
 function escapeHtml(str: string): string {

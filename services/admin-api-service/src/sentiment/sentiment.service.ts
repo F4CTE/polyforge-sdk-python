@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@polyforge/shared-db';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "@polyforge/shared-db";
 
 @Injectable()
 export class SentimentService {
@@ -31,7 +31,7 @@ export class SentimentService {
         marketId: r.marketId,
         marketTitle: r.marketTitle,
         score: parseFloat(score.toFixed(1)),
-        label: score > 10 ? 'BULLISH' : score < -10 ? 'BEARISH' : 'NEUTRAL',
+        label: score > 10 ? "BULLISH" : score < -10 ? "BEARISH" : "NEUTRAL",
         signalCount: r.signalCount,
         bullishCount: r.bullishCount,
         bearishCount: r.bearishCount,

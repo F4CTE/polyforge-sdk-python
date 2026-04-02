@@ -35,7 +35,7 @@ export class ConditionalEvaluatorService {
 
     // Batch fetch all prices in one MGET instead of N sequential GETs
     const tokenIds = [...new Set(pendingOrders.map((o) => o.tokenId))];
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+
     const priceKeys = tokenIds.map((id) => `cache:price:${id}`);
     const priceValues = await this.redis.getClient().mget(...priceKeys);
     const priceMap = new Map<string, number>();

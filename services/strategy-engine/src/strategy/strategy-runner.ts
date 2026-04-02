@@ -30,7 +30,11 @@ function safeEvaluate(
     throw new Error(`Expression too long: ${expression.length} > ${maxLength}`);
   }
   // Reject potentially dangerous patterns and CPU-exhausting exponentiation
-  if (/while|for|function|eval|require|import|__proto__|constructor|prototype/.test(expression)) {
+  if (
+    /while|for|function|eval|require|import|__proto__|constructor|prototype/.test(
+      expression,
+    )
+  ) {
     throw new Error("Expression contains forbidden keywords");
   }
   // Block nested exponentiation (e.g., 9^9^9) which causes CPU exhaustion
@@ -126,7 +130,7 @@ export class StrategyRunner {
   }
 
   /** Get the mode for a child strategy */
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+
   getChildMode(childId: string): SubStrategyMode | undefined {
     return this.childModes.get(childId);
   }

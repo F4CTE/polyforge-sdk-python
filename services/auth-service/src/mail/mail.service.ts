@@ -11,8 +11,10 @@ export class MailService {
 
   constructor() {
     const fromEmail = process.env.AWS_SES_FROM_EMAIL;
-    if (!fromEmail) throw new Error('AWS_SES_FROM_EMAIL environment variable is required');
-    if (!process.env.FRONTEND_URL) throw new Error('FRONTEND_URL environment variable is required');
+    if (!fromEmail)
+      throw new Error('AWS_SES_FROM_EMAIL environment variable is required');
+    if (!process.env.FRONTEND_URL)
+      throw new Error('FRONTEND_URL environment variable is required');
     this.from = `Polyforge <${fromEmail}>`;
     this.frontendUrl = process.env.FRONTEND_URL;
     const driver = process.env.EMAIL_DRIVER ?? 'mailhog';

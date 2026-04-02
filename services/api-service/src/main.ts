@@ -102,7 +102,7 @@ async function bootstrap() {
   app.enableCors({
     origin: (origin, cb) => {
       const allowed = [
-        ...(process.env.CORS_ORIGINS?.split(",").map(s => s.trim()) ?? []),
+        ...(process.env.CORS_ORIGINS?.split(",").map((s) => s.trim()) ?? []),
         ...(process.env.NODE_ENV !== "production"
           ? [
               "http://localhost",
