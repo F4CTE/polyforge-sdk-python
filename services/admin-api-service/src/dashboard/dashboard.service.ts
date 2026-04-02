@@ -193,6 +193,7 @@ export class DashboardService {
       const stream = client.scanStream({ match: "throttler:*", count: 200 });
       stream.on("data", (batch: string[]) => found.push(...batch));
       stream.on("end", () => resolve(found));
+      // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
       stream.on("error", (err) => reject(err));
     });
 
