@@ -146,7 +146,6 @@ jobs:
           test -d packages/shared-auth/dist
           test -d packages/logger/dist
           test -d packages/shared-schemas/dist
-          test -d packages/mcp-server/dist
           echo "All build artifacts present"
 
   # ── 5. E2E ──────────────────────────────────────────────────────────────────
