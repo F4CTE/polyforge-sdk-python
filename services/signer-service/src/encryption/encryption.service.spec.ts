@@ -3,10 +3,21 @@ import { EncryptionService } from "./encryption.service";
 
 // 64 hex chars = 32 bytes (valid KEK)
 const TEST_KEK = "a".repeat(64);
+const TEST_KEK_V2 = "b".repeat(64);
 
-function makeService(kek = TEST_KEK): EncryptionService {
+function makeService(opts?: {
+  kek?: string;
+  kekPrevious?: string;
+  kekVersion?: string;
+}): EncryptionService {
+  const { kek = TEST_KEK, kekPrevious, kekVersion } = opts ?? {};
   const config = {
-    get: (key: string) => (key === "MASTER_ENCRYPTION_KEY" ? kek : undefined),
+    get: (key: string) => {
+      if (key === "MASTER_ENCRYPTION_KEY") return kek;
+      if (key === "MASTER_ENCRYPTION_KEY_PREVIOUS") return kekPrevious;
+      if (key === "MASTER_ENCRYPTION_KEY_VERSION") return kekVersion;
+      return undefined;
+    },
   } as any;
   return new EncryptionService(config);
 }
@@ -38,6 +49,26 @@ describe("EncryptionService", () => {
 
     it("constructs successfully with a 64-char hex key", () => {
       expect(() => makeService()).not.toThrow();
+    });
+
+    it("defaults kekVersion to 1 when not set", () => {
+      const svc = makeService();
+      expect(svc.currentKekVersion).toBe(1);
+    });
+
+    it("reads kekVersion from env", () => {
+      const svc = makeService({ kekVersion: "3" });
+      expect(svc.currentKekVersion).toBe(3);
+    });
+
+    it("loads previous KEK when provided", () => {
+      const svc = makeService({ kekPrevious: TEST_KEK_V2, kekVersion: "2" });
+      expect(svc.isRotationActive).toBe(true);
+    });
+
+    it("isRotationActive is false without previous KEK", () => {
+      const svc = makeService();
+      expect(svc.isRotationActive).toBe(false);
     });
   });
 
@@ -85,36 +116,131 @@ describe("EncryptionService", () => {
       const { encryptedDek } = svc.generateDek();
       expect(encryptedDek.length).toBe(48);
     });
+
+    it("returns the current KEK version", () => {
+      const svc = makeService({ kekVersion: "5" });
+      const { kekVersion } = svc.generateDek();
+      expect(kekVersion).toBe(5);
+    });
   });
 
   describe("decryptDek()", () => {
     it("round-trips the DEK: decrypt(encrypt(dek)) === dek", () => {
       const svc = makeService();
-      const { dek, encryptedDek, dekIv } = svc.generateDek();
-      const recovered = svc.decryptDek(encryptedDek, dekIv);
+      const { dek, encryptedDek, dekIv, kekVersion } = svc.generateDek();
+      const recovered = svc.decryptDek(encryptedDek, dekIv, kekVersion);
       expect(recovered.toString("hex")).toBe(dek.toString("hex"));
     });
 
     it("throws when encryptedDek is tampered (GCM auth tag fails)", () => {
       const svc = makeService();
-      const { encryptedDek, dekIv } = svc.generateDek();
+      const { encryptedDek, dekIv, kekVersion } = svc.generateDek();
       const tampered = new Uint8Array(encryptedDek);
       tampered[0] ^= 0xff;
-      expect(() => svc.decryptDek(tampered, dekIv)).toThrow();
+      expect(() => svc.decryptDek(tampered, dekIv, kekVersion)).toThrow();
     });
 
     it("throws when dekIv is wrong", () => {
       const svc = makeService();
-      const { encryptedDek } = svc.generateDek();
+      const { encryptedDek, kekVersion } = svc.generateDek();
       const wrongIv = new Uint8Array(12).fill(0);
-      expect(() => svc.decryptDek(encryptedDek, wrongIv)).toThrow();
+      expect(() => svc.decryptDek(encryptedDek, wrongIv, kekVersion)).toThrow();
     });
 
     it("throws when decrypting with a different KEK", () => {
-      const svc1 = makeService("a".repeat(64));
-      const svc2 = makeService("b".repeat(64));
-      const { encryptedDek, dekIv } = svc1.generateDek();
-      expect(() => svc2.decryptDek(encryptedDek, dekIv)).toThrow();
+      const svc1 = makeService({ kek: "a".repeat(64) });
+      const svc2 = makeService({ kek: "b".repeat(64) });
+      const { encryptedDek, dekIv, kekVersion } = svc1.generateDek();
+      expect(() => svc2.decryptDek(encryptedDek, dekIv, kekVersion)).toThrow();
+    });
+
+    it("decrypts with previous KEK when version matches", () => {
+      // Encrypt with v1 KEK
+      const svcV1 = makeService({ kek: TEST_KEK, kekVersion: "1" });
+      const { dek, encryptedDek, dekIv } = svcV1.generateDek();
+
+      // Create v2 service with v1 as previous
+      const svcV2 = makeService({
+        kek: TEST_KEK_V2,
+        kekPrevious: TEST_KEK,
+        kekVersion: "2",
+      });
+      const recovered = svcV2.decryptDek(encryptedDek, dekIv, 1);
+      expect(recovered.toString("hex")).toBe(dek.toString("hex"));
+    });
+
+    it("throws for unknown KEK version", () => {
+      const svc = makeService({ kekVersion: "3" });
+      const { encryptedDek, dekIv } = svc.generateDek();
+      expect(() => svc.decryptDek(encryptedDek, dekIv, 1)).toThrow(
+        "No KEK available for version 1",
+      );
+    });
+  });
+
+  // ── KEK Rotation ──────────────────────────────────────────────────────────
+
+  describe("rotateUserDek()", () => {
+    it("re-encrypts DEK from old KEK to new KEK", () => {
+      // Encrypt with v1
+      const svcV1 = makeService({ kek: TEST_KEK, kekVersion: "1" });
+      const { dek: originalDek, encryptedDek, dekIv } = svcV1.generateDek();
+
+      // Rotate with v2 service (v1 as previous)
+      const svcV2 = makeService({
+        kek: TEST_KEK_V2,
+        kekPrevious: TEST_KEK,
+        kekVersion: "2",
+      });
+      const rotated = svcV2.rotateUserDek(encryptedDek, dekIv, 1);
+
+      expect(rotated.kekVersion).toBe(2);
+
+      // Verify the rotated DEK decrypts to the same original DEK
+      const recoveredDek = svcV2.decryptDek(
+        rotated.encryptedDek,
+        rotated.dekIv,
+        2,
+      );
+      expect(recoveredDek.toString("hex")).toBe(originalDek.toString("hex"));
+    });
+
+    it("throws when DEK is already on current version", () => {
+      const svc = makeService({ kekVersion: "2" });
+      const { encryptedDek, dekIv } = svc.generateDek();
+      expect(() => svc.rotateUserDek(encryptedDek, dekIv, 2)).toThrow(
+        "already on the current KEK version",
+      );
+    });
+
+    it("full roundtrip: encrypt fields → rotate KEK → decrypt fields", () => {
+      // Step 1: Encrypt with v1
+      const svcV1 = makeService({ kek: TEST_KEK, kekVersion: "1" });
+      const { dek, encryptedDek, dekIv } = svcV1.generateDek();
+      const field = svcV1.encryptField("my-secret-key", dek);
+      dek.fill(0); // Simulate zeroing
+
+      // Step 2: Rotate DEK to v2
+      const svcV2 = makeService({
+        kek: TEST_KEK_V2,
+        kekPrevious: TEST_KEK,
+        kekVersion: "2",
+      });
+      const rotated = svcV2.rotateUserDek(encryptedDek, dekIv, 1);
+
+      // Step 3: Decrypt field using rotated DEK (now on v2)
+      const recoveredDek = svcV2.decryptDek(
+        rotated.encryptedDek,
+        rotated.dekIv,
+        2,
+      );
+      const plaintext = svcV2.decryptField(
+        field.ciphertext,
+        field.iv,
+        field.tag,
+        recoveredDek,
+      );
+      expect(plaintext).toBe("my-secret-key");
     });
   });
 
@@ -245,7 +371,7 @@ describe("EncryptionService", () => {
       const svc = makeService();
 
       // 1. Generate fresh DEK
-      const { dek, encryptedDek, dekIv } = svc.generateDek();
+      const { dek, encryptedDek, dekIv, kekVersion } = svc.generateDek();
 
       // 2. Encrypt multiple credential fields with the DEK
       const privateKey = "0x" + "f".repeat(64);
@@ -260,7 +386,7 @@ describe("EncryptionService", () => {
 
       // 3. Simulate storage: keep encryptedDek + iv + all field blobs
       // 4. Simulate retrieval: decrypt DEK first, then decrypt fields
-      const recoveredDek = svc.decryptDek(encryptedDek, dekIv);
+      const recoveredDek = svc.decryptDek(encryptedDek, dekIv, kekVersion);
 
       expect(
         svc.decryptField(pkEnc.ciphertext, pkEnc.iv, pkEnc.tag, recoveredDek),

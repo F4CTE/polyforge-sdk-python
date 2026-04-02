@@ -41,8 +41,9 @@ export class CredentialsService {
       throw new BadRequestException("Invalid private key format");
     }
 
-    // Generate per-user DEK
-    const { dek, encryptedDek, dekIv } = this.encryption.generateDek();
+    // Generate per-user DEK (always uses current KEK version)
+    const { dek, encryptedDek, dekIv, kekVersion } =
+      this.encryption.generateDek();
 
     // Encrypt each field separately (fresh IV per field).
     // try/finally guarantees DEK is zeroed even if an encryptField call throws.
@@ -66,6 +67,7 @@ export class CredentialsService {
         userId,
         encryptedDek,
         dekIv,
+        kekVersion,
         privateKeyCt: pkEnc.ciphertext,
         privateKeyIv: pkEnc.iv,
         privateKeyTag: pkEnc.tag,
@@ -84,6 +86,7 @@ export class CredentialsService {
       update: {
         encryptedDek,
         dekIv,
+        kekVersion,
         privateKeyCt: pkEnc.ciphertext,
         privateKeyIv: pkEnc.iv,
         privateKeyTag: pkEnc.tag,
@@ -137,7 +140,11 @@ export class CredentialsService {
       throw new NotFoundException("No credentials found for user");
     }
 
-    const dek = this.encryption.decryptDek(row.encryptedDek, row.dekIv);
+    const dek = this.encryption.decryptDek(
+      row.encryptedDek,
+      row.dekIv,
+      row.kekVersion,
+    );
 
     // try/finally guarantees DEK is zeroed even if a decryptField call throws.
     try {

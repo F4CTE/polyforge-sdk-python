@@ -64,6 +64,8 @@ Dev values are 32-byte hex zero strings. In production, real random values are s
 | Variable | Description |
 |---|---|
 | `MASTER_ENCRYPTION_KEY` | 32-byte hex. Master key for envelope encryption (KEK). Used **only** by `signer-service` to encrypt/decrypt DEKs. Never passed to any other service. |
+| `MASTER_ENCRYPTION_KEY_VERSION` | Integer (default: `1`). Tracks the current KEK version. Increment when rotating the master key. |
+| `MASTER_ENCRYPTION_KEY_PREVIOUS` | 32-byte hex (optional). Previous KEK, loaded during rotation grace period for decrypt-only. Remove after all DEKs are rotated. |
 | `TOTP_ENCRYPTION_KEY` | 32-byte hex. Key for encrypting TOTP secrets at rest. Used **only** by `auth-service`. |
 
 ---

@@ -237,6 +237,7 @@ model UserCredential {
   userId           String   @id
   encryptedDek     Bytes
   dekIv            Bytes
+  kekVersion       Int      @default(1) @db.SmallInt
   privateKeyCt     Bytes
   privateKeyIv     Bytes
   privateKeyTag    Bytes

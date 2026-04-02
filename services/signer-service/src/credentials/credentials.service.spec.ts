@@ -9,7 +9,13 @@ import { EncryptionService } from "../encryption/encryption.service";
 const TEST_KEK = "a".repeat(64);
 
 function makeEncryption(): EncryptionService {
-  const config = { get: () => TEST_KEK } as any as ConfigService;
+  const configMap: Record<string, string> = {
+    MASTER_ENCRYPTION_KEY: TEST_KEK,
+    MASTER_ENCRYPTION_KEY_VERSION: "1",
+  };
+  const config = {
+    get: (key: string) => configMap[key],
+  } as any as ConfigService;
   return new EncryptionService(config);
 }
 

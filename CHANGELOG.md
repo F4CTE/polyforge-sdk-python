@@ -5,9 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [6.33.2] — 2026-04-02
+## [6.34.0] — 2026-04-02
+
+### Added
+- **KEK rotation mechanism for signer-service** — `EncryptionService` and `NativeEncryptionService` now support dual-key rotation via `MASTER_ENCRYPTION_KEY_PREVIOUS` and `MASTER_ENCRYPTION_KEY_VERSION` env vars; `KekRotationService` provides batch DEK re-encryption with idempotent, per-row processing; `UserCredential` model gains `kekVersion` column to track which KEK encrypted each DEK
 
 ### Fixed
+- **KEK rotation compliance (CRITICAL)** — addresses the unbounded blast radius of a compromised master encryption key by enabling safe key rotation without service downtime
 - **Exponentiation guard in `logic.blocks.ts`** — added missing nested-exponentiation check (`^` operator count > 2) to `safeEvaluate` in `strategy-engine` logic blocks, matching the existing guard in `strategy-runner.ts`; prevents CPU exhaustion via expressions like `9^9^9` (closes #75)
 - **Admin-auth rate limiting** — registered `ThrottlerGuard` as a global guard in `admin-auth-service` `AppModule`, matching the pattern used by all other services; previously only the login endpoint was rate-limited, leaving TOTP setup/confirm/disable and other endpoints unprotected against brute-force attacks (closes #59)
 

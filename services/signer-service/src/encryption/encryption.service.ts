@@ -20,6 +20,13 @@ function toBytes(buf: Buffer | Uint8Array): PrismaBytes {
   return new Uint8Array(buf) as PrismaBytes;
 }
 
+function parseKekHex(hex: string | undefined, label: string): Buffer {
+  if (!hex || hex.length !== 64) {
+    throw new Error(`${label} must be a 64-char hex string (32 bytes)`);
+  }
+  return Buffer.from(hex, "hex");
+}
+
 /**
  * Envelope encryption for Polymarket credentials.
  *
@@ -32,42 +39,60 @@ function toBytes(buf: Buffer | Uint8Array): PrismaBytes {
  * Format: AES-256-GCM, 12-byte IV, 16-byte auth tag stored separately.
  * Key material MUST NEVER be logged.
  *
- * TODO: MASTER_ENCRYPTION_KEY ROTATION NOT IMPLEMENTED
- * ─────────────────────────────────────────────────────
- * Currently, MASTER_ENCRYPTION_KEY (KEK) is static. To rotate it safely:
- *
- * 1. Add a "key_version" field to encrypted_deks table (tracks which KEK version encrypted each DEK)
- * 2. Implement a key_rotation service with dual-key support:
- *    - Keep 2 KEKs in rotation (current + previous)
- *    - Previous KEK only for decryption (grace period ~24-48 hours)
- *    - All new encryption uses current KEK
- * 3. Add background job to re-encrypt DEKs from previous → current KEK
- *    - Runs during low-traffic windows (e.g., 2-4 AM UTC)
- *    - Must be idempotent (check key_version before re-encrypting)
- * 4. Update AWS Secrets Manager with new KEK
- * 5. Drain previous KEK from memory after grace period (restart signer-service)
- *
- * Implementation notes:
- *   - See docs/14-backup-recovery.md for disaster recovery context
- *   - DEK format: ciphertext + tag (concatenated); add key_version to stored format
- *   - Consider automated rotation via AWS Lambda triggered by SNS from Secrets Manager
- *   - Non-compliance with key rotation may be flagged in SOC 2 audits
- *
- * Reference: JWT secret rotation in admin-api-service/src/key-rotation/ shows grace-period pattern
+ * KEK Rotation:
+ *   - MASTER_ENCRYPTION_KEY is the current KEK (used for all new encryption)
+ *   - MASTER_ENCRYPTION_KEY_PREVIOUS (optional) is the previous KEK (decrypt-only, grace period)
+ *   - MASTER_ENCRYPTION_KEY_VERSION (int) tracks the current version number
+ *   - Each UserCredential row stores kekVersion so we know which KEK encrypted its DEK
+ *   - rotateUserDek() re-encrypts a single user's DEK from previous → current KEK
  */
 @Injectable()
 export class EncryptionService {
   private readonly logger = new Logger(EncryptionService.name);
   private readonly kek: Buffer;
+  private readonly kekPrevious: Buffer | null;
+  readonly currentKekVersion: number;
 
   constructor(private readonly config: ConfigService) {
-    const keyHex = this.config.get<string>("MASTER_ENCRYPTION_KEY");
-    if (!keyHex || keyHex.length !== 64) {
-      throw new Error(
-        "MASTER_ENCRYPTION_KEY must be a 64-char hex string (32 bytes)",
+    this.kek = parseKekHex(
+      this.config.get<string>("MASTER_ENCRYPTION_KEY"),
+      "MASTER_ENCRYPTION_KEY",
+    );
+
+    // Previous KEK is optional — only present during rotation grace period
+    const prevHex = this.config.get<string>("MASTER_ENCRYPTION_KEY_PREVIOUS");
+    this.kekPrevious =
+      prevHex && prevHex.length === 64 ? Buffer.from(prevHex, "hex") : null;
+
+    this.currentKekVersion = Number(
+      this.config.get<string>("MASTER_ENCRYPTION_KEY_VERSION") ?? "1",
+    );
+
+    if (this.kekPrevious) {
+      this.logger.log(
+        `KEK rotation active: current version=${this.currentKekVersion}, previous KEK loaded`,
       );
     }
-    this.kek = Buffer.from(keyHex, "hex");
+  }
+
+  // ─── KEK resolution ───────────────────────────────────────────────────────
+
+  /**
+   * Resolve the KEK for a given version.
+   * - currentKekVersion → current KEK
+   * - currentKekVersion - 1 → previous KEK (if available)
+   * - anything else → error
+   */
+  private resolveKek(kekVersion: number): Buffer {
+    if (kekVersion === this.currentKekVersion) {
+      return this.kek;
+    }
+    if (kekVersion === this.currentKekVersion - 1 && this.kekPrevious) {
+      return this.kekPrevious;
+    }
+    throw new Error(
+      `No KEK available for version ${kekVersion} (current=${this.currentKekVersion})`,
+    );
   }
 
   // ─── DEK lifecycle ────────────────────────────────────────────────────────
@@ -76,11 +101,13 @@ export class EncryptionService {
    * Generate a new DEK and return it plain (for encrypting fields)
    * alongside its encrypted form (for storage).
    * Encrypted DEK = ciphertext + tag concatenated.
+   * Always uses the current KEK version.
    */
   generateDek(): {
     dek: Buffer;
     encryptedDek: PrismaBytes;
     dekIv: PrismaBytes;
+    kekVersion: number;
   } {
     const dek = crypto.randomBytes(32);
     const iv = crypto.randomBytes(IV_LEN);
@@ -91,20 +118,68 @@ export class EncryptionService {
       dek,
       encryptedDek: toBytes(Buffer.concat([ct, tag])),
       dekIv: toBytes(iv),
+      kekVersion: this.currentKekVersion,
     };
   }
 
   /**
-   * Decrypt a stored DEK using the KEK.
+   * Decrypt a stored DEK using the appropriate KEK version.
    */
-  decryptDek(encryptedDekRaw: Uint8Array, dekIvRaw: Uint8Array): Buffer {
+  decryptDek(
+    encryptedDekRaw: Uint8Array,
+    dekIvRaw: Uint8Array,
+    kekVersion?: number,
+  ): Buffer {
+    const kek = this.resolveKek(kekVersion ?? this.currentKekVersion);
     const encryptedDek = Buffer.from(encryptedDekRaw);
     const iv = Buffer.from(dekIvRaw);
     const tag = encryptedDek.subarray(encryptedDek.length - TAG_LEN);
     const ct = encryptedDek.subarray(0, encryptedDek.length - TAG_LEN);
-    const decipher = crypto.createDecipheriv("aes-256-gcm", this.kek, iv);
+    const decipher = crypto.createDecipheriv("aes-256-gcm", kek, iv);
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(ct), decipher.final()]);
+  }
+
+  /**
+   * Re-encrypt a DEK from its current KEK version to the current KEK.
+   * Returns the new encrypted DEK, IV, and kekVersion.
+   * Used during KEK rotation to migrate credentials.
+   */
+  rotateUserDek(
+    encryptedDekRaw: Uint8Array,
+    dekIvRaw: Uint8Array,
+    oldKekVersion: number,
+  ): {
+    encryptedDek: PrismaBytes;
+    dekIv: PrismaBytes;
+    kekVersion: number;
+  } {
+    if (oldKekVersion === this.currentKekVersion) {
+      throw new Error("DEK is already on the current KEK version");
+    }
+
+    // Decrypt with old KEK
+    const dek = this.decryptDek(encryptedDekRaw, dekIvRaw, oldKekVersion);
+
+    try {
+      // Re-encrypt with current KEK
+      const iv = crypto.randomBytes(IV_LEN);
+      const cipher = crypto.createCipheriv("aes-256-gcm", this.kek, iv);
+      const ct = Buffer.concat([cipher.update(dek), cipher.final()]);
+      const tag = cipher.getAuthTag();
+      return {
+        encryptedDek: toBytes(Buffer.concat([ct, tag])),
+        dekIv: toBytes(iv),
+        kekVersion: this.currentKekVersion,
+      };
+    } finally {
+      dek.fill(0);
+    }
+  }
+
+  /** Check if a previous KEK is loaded (rotation in progress). */
+  get isRotationActive(): boolean {
+    return this.kekPrevious !== null;
   }
 
   // ─── Field encryption ─────────────────────────────────────────────────────

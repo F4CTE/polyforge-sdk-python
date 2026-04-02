@@ -43,11 +43,19 @@ const nativeCrypto = (() => {
  *   - Deterministic memory zeroing on drop (no GC ambiguity)
  *   - No string interning of key material in V8's string pool
  *   - Key material isolated from V8 heap dumps
+ *
+ * KEK Rotation:
+ *   - MASTER_ENCRYPTION_KEY is the current KEK (all new encryption)
+ *   - MASTER_ENCRYPTION_KEY_PREVIOUS (optional) for decrypt-only during grace period
+ *   - MASTER_ENCRYPTION_KEY_VERSION tracks the current version number
+ *   - Each UserCredential row stores kekVersion for rotation tracking
  */
 @Injectable()
 export class NativeEncryptionService {
   private readonly logger = new Logger(NativeEncryptionService.name);
   private readonly kekHex: string;
+  private readonly kekPreviousHex: string | null;
+  readonly currentKekVersion: number;
 
   constructor(private readonly config: ConfigService) {
     const keyHex = this.config.get<string>("MASTER_ENCRYPTION_KEY");
@@ -57,8 +65,34 @@ export class NativeEncryptionService {
       );
     }
     this.kekHex = keyHex;
+
+    // Previous KEK is optional — only present during rotation grace period
+    const prevHex = this.config.get<string>("MASTER_ENCRYPTION_KEY_PREVIOUS");
+    this.kekPreviousHex = prevHex && prevHex.length === 64 ? prevHex : null;
+
+    this.currentKekVersion = Number(
+      this.config.get<string>("MASTER_ENCRYPTION_KEY_VERSION") ?? "1",
+    );
+
     this.logger.log(
       "Rust NAPI-RS encryption active — memory-safe key handling enabled",
+    );
+    if (this.kekPreviousHex) {
+      this.logger.log(
+        `KEK rotation active: current version=${this.currentKekVersion}, previous KEK loaded`,
+      );
+    }
+  }
+
+  private resolveKekHex(kekVersion: number): string {
+    if (kekVersion === this.currentKekVersion) {
+      return this.kekHex;
+    }
+    if (kekVersion === this.currentKekVersion - 1 && this.kekPreviousHex) {
+      return this.kekPreviousHex;
+    }
+    throw new Error(
+      `No KEK available for version ${kekVersion} (current=${this.currentKekVersion})`,
     );
   }
 
@@ -66,6 +100,7 @@ export class NativeEncryptionService {
     dek: Buffer;
     encryptedDek: PrismaBytes;
     dekIv: PrismaBytes;
+    kekVersion: number;
   } {
     const dekHex = nativeCrypto.generateDek();
     const wrappedJson = nativeCrypto.wrapDek(dekHex, this.kekHex);
@@ -74,16 +109,57 @@ export class NativeEncryptionService {
       dek: Buffer.from(dekHex, "hex"),
       encryptedDek: toBytes(parsed.ciphertext + parsed.tag),
       dekIv: toBytes(parsed.iv),
+      kekVersion: this.currentKekVersion,
     };
   }
 
-  decryptDek(encryptedDekRaw: Uint8Array, dekIvRaw: Uint8Array): Buffer {
+  decryptDek(
+    encryptedDekRaw: Uint8Array,
+    dekIvRaw: Uint8Array,
+    kekVersion?: number,
+  ): Buffer {
+    const kek = this.resolveKekHex(kekVersion ?? this.currentKekVersion);
     const combined = toHex(encryptedDekRaw);
     const ct = combined.slice(0, combined.length - 32);
     const tag = combined.slice(combined.length - 32);
     const iv = toHex(dekIvRaw);
-    const dekHex = nativeCrypto.decryptAes256Gcm(ct, iv, tag, this.kekHex);
+    const dekHex = nativeCrypto.decryptAes256Gcm(ct, iv, tag, kek);
     return Buffer.from(dekHex, "hex");
+  }
+
+  rotateUserDek(
+    encryptedDekRaw: Uint8Array,
+    dekIvRaw: Uint8Array,
+    oldKekVersion: number,
+  ): {
+    encryptedDek: PrismaBytes;
+    dekIv: PrismaBytes;
+    kekVersion: number;
+  } {
+    if (oldKekVersion === this.currentKekVersion) {
+      throw new Error("DEK is already on the current KEK version");
+    }
+
+    // Decrypt with old KEK
+    const dekBuf = this.decryptDek(encryptedDekRaw, dekIvRaw, oldKekVersion);
+    const dekHex = dekBuf.toString("hex");
+
+    // Re-encrypt with current KEK
+    const wrappedJson = nativeCrypto.wrapDek(dekHex, this.kekHex);
+    const parsed = JSON.parse(wrappedJson);
+
+    // Zero out the JS-side DEK buffer (best-effort)
+    dekBuf.fill(0);
+
+    return {
+      encryptedDek: toBytes(parsed.ciphertext + parsed.tag),
+      dekIv: toBytes(parsed.iv),
+      kekVersion: this.currentKekVersion,
+    };
+  }
+
+  get isRotationActive(): boolean {
+    return this.kekPreviousHex !== null;
   }
 
   encryptField(plaintext: string, dek: Buffer): EncryptedField {
