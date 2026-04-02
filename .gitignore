@@ -148,6 +148,7 @@ apps/*/vitest.config.js
 apps/*/vitest.config.js.map
 apps/*/vitest.config.d.ts
 apps/*/vitest.config.d.ts.map
+apps/*/vite.config.d.ts
 apps/*/vite.config.d.ts.map
 
 # Compiled TS in tests/e2e (playwright source → compiled JS)

@@ -14,13 +14,17 @@ function safeEvaluate(
   if (expression.length > maxLength) {
     throw new Error(`Expression too long: ${expression.length} > ${maxLength}`);
   }
-  // Reject potentially dangerous patterns
+  // Reject potentially dangerous patterns and CPU-exhausting exponentiation
   if (
     /while|for|function|eval|require|import|__proto__|constructor|prototype/.test(
       expression,
     )
   ) {
     throw new Error("Expression contains forbidden keywords");
+  }
+  // Block nested exponentiation (e.g., 9^9^9) which causes CPU exhaustion
+  if ((expression.match(/\^/g) || []).length > 2) {
+    throw new Error("Expression contains too many exponentiation operators");
   }
   try {
     return Number(mathEvaluate(expression, scope));

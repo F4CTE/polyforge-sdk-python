@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.33.2] — 2026-04-02
+
+### Fixed
+- **Exponentiation guard in `logic.blocks.ts`** — added missing nested-exponentiation check (`^` operator count > 2) to `safeEvaluate` in `strategy-engine` logic blocks, matching the existing guard in `strategy-runner.ts`; prevents CPU exhaustion via expressions like `9^9^9` (closes #75)
+
+---
+
 ## [6.33.1] — 2026-04-02
 
 ### Fixed
