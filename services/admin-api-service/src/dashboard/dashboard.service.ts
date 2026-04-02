@@ -194,7 +194,9 @@ export class DashboardService {
       stream.on("data", (batch: string[]) => found.push(...batch));
       stream.on("end", () => resolve(found));
 
-      stream.on("error", (err) => reject(err));
+      stream.on("error", (err: unknown) =>
+        reject(err instanceof Error ? err : new Error(String(err))),
+      );
     });
 
     // Get TTLs and values for each key
