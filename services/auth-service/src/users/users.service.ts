@@ -224,6 +224,7 @@ export class UsersService {
         }
       });
       stream.on('end', () => resolve());
+      // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
       stream.on('error', (err) => reject(err));
     });
 
