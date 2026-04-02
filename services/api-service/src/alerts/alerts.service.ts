@@ -43,6 +43,7 @@ export class AlertsService implements OnModuleInit {
 
       // Batch-fetch prices from Redis
       const tokenIds = [...new Set(alerts.map((a) => a.tokenId))];
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       const priceKeys = tokenIds.map((id) => `cache:price:${id}`);
       const priceValues = await this.redis.getClient().mget(...priceKeys);
       const priceMap = new Map<string, number>();
