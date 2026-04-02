@@ -1502,10 +1502,11 @@ export function Component() {
                       <Button
                         type="button"
                         variant="ghost"
+                        size="icon-sm"
                         onClick={() => openAlertForm(alert)}
-                        className="shrink-0 p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
                         aria-label="Edit alert"
                         title="Edit"
+                        className="shrink-0"
                       >
                         <Edit2 className="size-3.5" />
                       </Button>
@@ -1514,10 +1515,11 @@ export function Component() {
                       <Button
                         type="button"
                         variant="ghost"
+                        size="icon-sm"
                         onClick={() => deleteAlert(alert.id)}
-                        className="shrink-0 p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors"
                         aria-label="Delete alert"
                         title="Delete"
+                        className="shrink-0"
                       >
                         <Trash2 className="size-3.5" />
                       </Button>
@@ -1659,42 +1661,44 @@ export function Component() {
           <div className="flex items-center gap-1 border-b border-pf-border-subtle pb-1">
             <Button
               type="button"
-              variant="ghost"
+              variant={detailTab === 'overview' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => setDetailTab('overview')}
-              className={`px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'overview' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
             >
               Overview
             </Button>
             <Button
               type="button"
-              variant="ghost"
+              variant={detailTab === 'log' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => setDetailTab('log')}
-              className={`px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'log' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
             >
               Execution Log
             </Button>
             <Button
               type="button"
-              variant="ghost"
+              variant={detailTab === 'versions' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => setDetailTab('versions')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'versions' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
+              className="flex items-center gap-1.5"
             >
               <History className="size-3.5" aria-hidden="true" />
               History
             </Button>
             <Button
               type="button"
-              variant="ghost"
+              variant={detailTab === 'executions' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => setDetailTab('executions')}
-              className={`px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'executions' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
             >
               Executions
             </Button>
             <Button
               type="button"
-              variant="ghost"
+              variant={detailTab === 'live' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => setDetailTab('live')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf transition-colors ${detailTab === 'live' ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'}`}
+              className="flex items-center gap-1.5"
             >
               {detailTab === 'live' && wsConnected
                 ? <span className="w-1.5 h-1.5 rounded-full bg-pf-success animate-pulse" />
@@ -1902,7 +1906,6 @@ export function Component() {
                         size="icon"
                         disabled={executionsPage === 1}
                         onClick={() => { const p = executionsPage - 1; setExecutionsPage(p); fetchExecutions(p); }}
-                        className="p-1.5 rounded-pf border border-pf-border text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
                         aria-label="Previous page"
                       >
                         <ChevronLeft className="size-4" />
@@ -1916,7 +1919,6 @@ export function Component() {
                         size="icon"
                         disabled={executionsPage === executionsTotalPages}
                         onClick={() => { const p = executionsPage + 1; setExecutionsPage(p); fetchExecutions(p); }}
-                        className="p-1.5 rounded-pf border border-pf-border text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
                         aria-label="Next page"
                       >
                         <ChevronRight className="size-4" />
@@ -2059,7 +2061,8 @@ export function Component() {
                             <div className="pt-1">
                               <Button
                                 type="button"
-                                variant="ghost"
+                                variant="secondary"
+                                size="sm"
                                 disabled={!!rollingBack}
                                 onClick={async (e) => {
                                   e.stopPropagation();
@@ -2097,7 +2100,7 @@ export function Component() {
                                     setRollingBack(null);
                                   }
                                 }}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pf border border-pf-border text-xs text-pf-text-secondary hover:border-pf-cyan-500/50 hover:text-pf-cyan-400 disabled:opacity-40 transition-colors"
+                                className="flex items-center gap-1.5"
                               >
                                 <RotateCcw className="size-3" aria-hidden="true" />
                                 {isRestoring ? 'Restoring...' : `Restore this version`}
@@ -2134,9 +2137,10 @@ export function Component() {
                 </div>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setLiveEvents([])}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-pf border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors"
+                  className="flex items-center gap-1.5"
                 >
                   <Trash2 className="size-3" />
                   Clear
@@ -2432,7 +2436,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
           placeholder="Share your experience..."
           rows={3}
           maxLength={500}
-          className="w-full px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 resize-none"
+          className="w-full resize-none"
         />
         <div className="flex items-center justify-between">
           <span className="text-[10px] text-pf-text-muted">
@@ -2440,9 +2444,11 @@ function ReviewsSection({ listingId }: { listingId: string }) {
           </span>
           <Button
             type="button"
+            variant="default"
+            size="sm"
             onClick={submitReview}
             disabled={state.submitting}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+            className="flex items-center gap-2"
           >
             {state.submitting ? 'Submitting...' : 'Submit Review'}
           </Button>
@@ -2529,7 +2535,6 @@ function ReviewsSection({ listingId }: { listingId: string }) {
             onClick={() => fetchReviews(state.page - 1)}
             disabled={state.page === 1 || state.loading}
             aria-label="Previous reviews page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4" />
           </Button>
@@ -2543,7 +2548,6 @@ function ReviewsSection({ listingId }: { listingId: string }) {
             onClick={() => fetchReviews(state.page + 1)}
             disabled={state.page === state.totalPages || state.loading}
             aria-label="Next reviews page"
-            className="p-2 rounded-pf text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4" />
           </Button>

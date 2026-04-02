@@ -1061,8 +1061,9 @@ export function Component() {
           <Button
             type="button"
             variant="secondary"
+            size="sm"
             onClick={exportCsv}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors"
+            className="flex items-center gap-1.5"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export CSV
@@ -1070,25 +1071,21 @@ export function Component() {
           <div className="flex bg-pf-surface rounded-pf border border-pf-border-subtle" role="tablist" aria-label="Portfolio mode">
             <Button
               type="button"
-              variant="ghost"
+              variant={tab === 'live' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => handleTabChange('live')}
               role="tab"
               aria-selected={tab === 'live'}
-              className={`px-4 py-1.5 text-sm font-medium rounded-pf transition-colors ${
-                tab === 'live' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-secondary hover:text-pf-text'
-              }`}
             >
               Live
             </Button>
             <Button
               type="button"
-              variant="ghost"
+              variant={tab === 'paper' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => handleTabChange('paper')}
               role="tab"
               aria-selected={tab === 'paper'}
-              className={`px-4 py-1.5 text-sm font-medium rounded-pf transition-colors ${
-                tab === 'paper' ? 'bg-pf-elevated text-pf-text' : 'text-pf-text-secondary hover:text-pf-text'
-              }`}
             >
               Paper
             </Button>
@@ -1253,11 +1250,7 @@ export function Component() {
                 <AlertTriangle className="mx-auto mb-3 text-pf-danger opacity-60" size={32} />
                 <p className="text-sm font-medium text-pf-text mb-1">Failed to load portfolio</p>
                 <p className="text-xs text-pf-text-muted mb-4">Something went wrong while fetching your data.</p>
-                <Button
-                 type="button"
-                  onClick={loadPortfolio}
-                  className="px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
-                >
+                <Button type="button" variant="default" onClick={loadPortfolio}>
                   Retry
                 </Button>
               </div>
@@ -1276,7 +1269,7 @@ export function Component() {
                 <Select
                   value={taxYear}
                   onChange={e => setTaxYear(Number(e.target.value))}
-                  className="bg-pf-surface border border-pf-border rounded-pf px-2 py-1 text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500"
+                  className="w-auto"
                 >
                   {[currentYear - 2, currentYear - 1, currentYear].map(y => (
                     <option key={y} value={y}>{y}</option>
@@ -1285,9 +1278,10 @@ export function Component() {
                 <Button
                   type="button"
                   variant="secondary"
+                  size="sm"
                   disabled={exportingTax || taxData.length === 0}
                   onClick={() => downloadTaxCsv(taxData, taxYear)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5"
                 >
                   <Download className="size-3.5" />
                   {exportingTax ? 'Exporting…' : 'Download CSV'}
@@ -1376,8 +1370,9 @@ export function Component() {
                     <Button
                       type="button"
                       variant="ghost"
+                      size="sm"
                       onClick={() => setTaxExpanded(prev => !prev)}
-                      className="flex items-center gap-1.5 mt-2 text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors"
+                      className="flex items-center gap-1.5 mt-2"
                     >
                       {taxExpanded ? (
                         <><ChevronUp className="size-3.5" /> Show fewer</>
@@ -1463,9 +1458,10 @@ export function Component() {
                     {goals.length < 3 && !showGoalForm && (
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="secondary"
+                        size="sm"
                         onClick={openNewGoalForm}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/30 text-xs font-medium text-pf-cyan-400 hover:bg-pf-cyan-500/25 transition-colors"
+                        className="flex items-center gap-1.5"
                       >
                         <Target className="size-3" />
                         {goals.length === 0 ? 'Set Goal' : 'Add Another Goal'}
@@ -1481,13 +1477,10 @@ export function Component() {
                       <Button
                         key={g.id}
                         type="button"
-                        variant="ghost"
+                        variant={i === activeGoalIdx ? 'default' : 'ghost'}
+                        size="sm"
                         onClick={() => setActiveGoalIdx(i)}
-                        className={`px-3 py-1 rounded-pf text-xs font-medium whitespace-nowrap transition-colors ${
-                          i === activeGoalIdx
-                            ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
-                            : 'text-pf-text-secondary hover:text-pf-text border border-transparent'
-                        }`}
+                        className="whitespace-nowrap"
                       >
                         {g.label}
                       </Button>
@@ -1505,7 +1498,7 @@ export function Component() {
                         placeholder="e.g. October target"
                         value={newGoalLabel}
                         onChange={e => setNewGoalLabel(e.target.value)}
-                        className="w-full bg-pf-overlay border border-pf-border rounded-pf px-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500"
+                        className="w-full"
                       />
                     </div>
                     <div>
@@ -1519,33 +1512,34 @@ export function Component() {
                           placeholder="0.00"
                           value={newGoalTarget}
                           onChange={e => setNewGoalTarget(e.target.value)}
-                          className="w-full bg-pf-overlay border border-pf-border rounded-pf pl-7 pr-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500"
+                          className="w-full pl-7"
                         />
                       </div>
                     </div>
                     <div>
                       <label className="text-xs text-pf-text-secondary block mb-1">Deadline</label>
-                      <input
+                      <Input
                         type="date"
                         value={newGoalDeadline}
                         onChange={e => setNewGoalDeadline(e.target.value)}
-                        className="w-full bg-pf-overlay border border-pf-border rounded-pf px-3 py-2 text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500"
+                        className="w-full"
                       />
                     </div>
                     <div className="flex gap-2 pt-1">
                       <Button
                         type="button"
+                        variant="default"
+                        size="sm"
                         onClick={saveGoal}
                         disabled={!newGoalLabel.trim() || !newGoalTarget || !newGoalDeadline}
-                        className="px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-white text-xs font-semibold hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       >
                         Save Goal
                       </Button>
                       <Button
                         type="button"
-                        variant="secondary"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => { setShowGoalForm(false); setEditingGoalId(null); }}
-                        className="px-4 py-1.5 rounded-pf border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text transition-colors"
                       >
                         Cancel
                       </Button>
@@ -1602,20 +1596,18 @@ export function Component() {
                           <Button
                             type="button"
                             variant="ghost"
-                            size="icon"
+                            size="icon-sm"
                             aria-label="Edit goal"
                             onClick={() => openEditGoalForm(activeGoal)}
-                            className="p-1 rounded text-pf-text-muted hover:text-pf-text transition-colors"
                           >
                             <Pencil className="size-3.5" />
                           </Button>
                           <Button
                             type="button"
                             variant="ghost"
-                            size="icon"
+                            size="icon-sm"
                             aria-label="Delete goal"
                             onClick={() => deleteGoal(activeGoal.id)}
-                            className="p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors"
                           >
                             <Trash2 className="size-3.5" />
                           </Button>
@@ -1752,8 +1744,9 @@ export function Component() {
               <Button
                 type="button"
                 variant="secondary"
+                size="sm"
                 onClick={handleCopyLink}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors"
+                className="flex items-center gap-1.5"
               >
                 {linkCopied ? (
                   <Check className="size-3.5 text-pf-success" />
@@ -1765,8 +1758,9 @@ export function Component() {
               <Button
                 type="button"
                 variant="secondary"
+                size="sm"
                 onClick={handleShareOnX}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors"
+                className="flex items-center gap-1.5"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63Zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -1776,8 +1770,9 @@ export function Component() {
               <Button
                 type="button"
                 variant="secondary"
+                size="sm"
                 onClick={handleDownloadCard}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors"
+                className="flex items-center gap-1.5"
               >
                 <Download className="size-3.5" />
                 Download Card
@@ -1872,12 +1867,9 @@ export function Component() {
                     type="button"
                     variant="ghost"
                     key={p.value}
+                    variant={period === p.value ? 'default' : 'ghost'}
+                    size="sm"
                     onClick={() => setPeriod(p.value)}
-                    className={`px-2.5 py-1 text-xs font-medium rounded-pf transition-colors ${
-                      period === p.value
-                        ? 'bg-pf-cyan-500/15 text-pf-cyan-400'
-                        : 'text-pf-text-secondary hover:text-pf-text'
-                    }`}
                   >
                     {p.label}
                   </Button>
@@ -2091,28 +2083,22 @@ export function Component() {
                                   <Button
                                     type="button"
                                     variant="ghost"
-                                    size="icon"
+                                    size="icon-sm"
                                     title={isTriggered ? 'Rule triggered' : hasRule ? 'Edit auto-close rule' : 'Set auto-close'}
                                     aria-label={isTriggered ? 'Rule triggered' : hasRule ? 'Edit auto-close rule' : 'Set auto-close'}
                                     onClick={e => { e.stopPropagation(); openAutoClosePanel(pos.id); }}
-                                    className={`p-1 rounded transition-colors hover:bg-pf-surface ${
-                                      isTriggered
-                                        ? 'text-pf-success'
-                                        : hasRule
-                                          ? 'text-pf-cyan-400'
-                                          : 'text-pf-text-muted hover:text-pf-text'
-                                    }`}
                                   >
-                                    <SlidersHorizontal className="size-3.5" />
+                                    <SlidersHorizontal className={`size-3.5 ${isTriggered ? 'text-pf-success' : hasRule ? 'text-pf-cyan-400' : ''}`} />
                                   </Button>
                                 )}
                                 {pos.resolutionStatus === 'UNRESOLVED' && (
                                   <Button
                                     type="button"
                                     variant="danger"
+                                    size="sm"
                                     onClick={e => { e.stopPropagation(); closePosition(pos); }}
                                     disabled={isClosing}
-                                    className="inline-flex items-center gap-1 text-pf-danger border border-pf-danger/30 hover:bg-pf-danger/10 text-xs px-2 py-1 rounded disabled:opacity-50 transition-colors"
+                                    className="flex items-center gap-1"
                                   >
                                     {isClosing
                                       ? <Loader2 className="size-3 animate-spin" />
@@ -2123,10 +2109,10 @@ export function Component() {
                                 {pos.resolutionStatus === 'RESOLVED' && (
                                   <Button
                                     type="button"
-                                    variant="ghost"
+                                    variant="success"
+                                    size="sm"
                                     onClick={e => { e.stopPropagation(); redeemPosition(pos); }}
                                     disabled={redeemingPosition[pos.id]}
-                                    className="text-xs text-pf-success hover:text-pf-success disabled:opacity-50 transition-colors"
                                   >
                                     {redeemingPosition[pos.id] ? <Loader2 className="size-3 animate-spin" /> : 'Redeem'}
                                   </Button>
@@ -2152,10 +2138,9 @@ export function Component() {
                                     <Button
                                       type="button"
                                       variant="ghost"
-                                      size="icon"
+                                      size="icon-sm"
                                       aria-label="Close auto-close panel"
                                       onClick={e => { e.stopPropagation(); setExpandedAutoClose(null); }}
-                                      className="p-1 rounded text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors"
                                     >
                                       <X className="size-4" />
                                     </Button>
@@ -2196,7 +2181,7 @@ export function Component() {
                                                 value={acSlPrice[pos.id] ?? ''}
                                                 onChange={e => { e.stopPropagation(); setAcSlPrice(prev => ({ ...prev, [pos.id]: e.target.value })); }}
                                                 onClick={e => e.stopPropagation()}
-                                                className="w-28 bg-pf-overlay border border-pf-border rounded-pf px-3 py-1.5 text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500"
+                                                className="w-28 font-mono"
                                               />
                                               <span className="text-xs text-pf-text-muted">(0.01 – 0.99)</span>
                                             </div>
@@ -2235,7 +2220,7 @@ export function Component() {
                                                 value={acTpPrice[pos.id] ?? ''}
                                                 onChange={e => { e.stopPropagation(); setAcTpPrice(prev => ({ ...prev, [pos.id]: e.target.value })); }}
                                                 onClick={e => e.stopPropagation()}
-                                                className="w-28 bg-pf-overlay border border-pf-border rounded-pf px-3 py-1.5 text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500"
+                                                className="w-28 font-mono"
                                               />
                                               <span className="text-xs text-pf-text-muted">(0.01 – 0.99)</span>
                                             </div>
@@ -2281,7 +2266,7 @@ export function Component() {
                                               value={acQuantity[pos.id] ?? ''}
                                               onChange={e => { e.stopPropagation(); setAcQuantity(prev => ({ ...prev, [pos.id]: e.target.value })); }}
                                               onClick={e => e.stopPropagation()}
-                                              className="w-28 bg-pf-overlay border border-pf-border rounded-pf px-3 py-1.5 text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500"
+                                              className="w-28 font-mono"
                                             />
                                           )}
                                         </div>
@@ -2299,9 +2284,11 @@ export function Component() {
                                       <div className="flex items-center gap-2 pt-1" onClick={e => e.stopPropagation()}>
                                         <Button
                                           type="button"
+                                          variant="default"
+                                          size="sm"
                                           disabled={acSubmitting[pos.id]}
                                           onClick={e => { e.stopPropagation(); saveAutoCloseRule(pos); }}
-                                          className="flex items-center gap-1.5 px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-white text-xs font-semibold hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                          className="flex items-center gap-1.5"
                                         >
                                           {acSubmitting[pos.id] && <Loader2 className="size-3 animate-spin" />}
                                           Save Rules
@@ -2310,9 +2297,9 @@ export function Component() {
                                           <Button
                                             type="button"
                                             variant="danger"
+                                            size="sm"
                                             disabled={acSubmitting[pos.id]}
                                             onClick={e => { e.stopPropagation(); deleteAutoCloseRule(pos.id); }}
-                                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-pf border border-pf-danger/30 text-pf-danger text-xs font-medium hover:bg-pf-danger/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                           >
                                             Remove Rules
                                           </Button>
@@ -3047,10 +3034,10 @@ export function Component() {
                           <Button
                             type="button"
                             variant="ghost"
-                            size="icon"
+                            size="icon-sm"
                             aria-label="Dismiss suggestion"
                             onClick={() => dismissSuggestion(s.id)}
-                            className="shrink-0 p-1 rounded text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors"
+                            className="shrink-0"
                           >
                             <X className="size-3.5" />
                           </Button>
@@ -3083,8 +3070,9 @@ export function Component() {
                 <Button
                   type="button"
                   variant="ghost"
+                  size="sm"
                   onClick={loadSuggestions}
-                  className="flex items-center gap-1 mt-4 text-xs text-pf-text-muted hover:text-pf-text transition-colors"
+                  className="flex items-center gap-1 mt-4"
                 >
                   <RefreshCw className="size-3" />
                   Refresh suggestions
@@ -3211,9 +3199,10 @@ export function Component() {
                   <Button
                     type="button"
                     variant="danger"
+                    size="sm"
                     onClick={() => setShowResetConfirm(true)}
                     disabled={resettingPaper}
-                    className="flex items-center gap-1.5 text-xs text-pf-danger hover:text-pf-danger disabled:opacity-50 transition-colors"
+                    className="flex items-center gap-1.5"
                   >
                     <RefreshCw className={`size-3.5 ${resettingPaper ? 'animate-spin' : ''}`} />
                     Reset Paper Account
@@ -3227,8 +3216,8 @@ export function Component() {
                         </div>
                         <p className="text-sm text-pf-text-secondary mb-4">This will delete all paper positions and orders. This cannot be undone.</p>
                         <div className="flex justify-end gap-2">
-                          <Button type="button" variant="secondary" onClick={() => setShowResetConfirm(false)} className="px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface cursor-pointer transition-colors">Cancel</Button>
-                          <Button type="button" variant="danger" onClick={resetPaper} className="px-3 py-1.5 text-sm rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/90 cursor-pointer transition-colors">Reset</Button>
+                          <Button type="button" variant="ghost" size="sm" onClick={() => setShowResetConfirm(false)}>Cancel</Button>
+                          <Button type="button" variant="danger" size="sm" onClick={resetPaper}>Reset</Button>
                         </div>
                       </div>
                     </div>

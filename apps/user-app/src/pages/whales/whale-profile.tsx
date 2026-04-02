@@ -178,7 +178,7 @@ export function Component() {
           <AlertCircle className="size-10 text-pf-danger mb-4" />
           <p className="text-pf-text font-medium">Something went wrong</p>
           <p className="text-sm text-pf-text-muted mt-1">Failed to load whale profile. Please try again.</p>
-          <Button type="button" onClick={load} className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-pf-elevated border border-pf-border text-pf-text hover:border-pf-border-strong transition-colors">
+          <Button type="button" variant="secondary" onClick={load} className="mt-4">
             Retry
           </Button>
         </div>
@@ -221,11 +221,11 @@ export function Component() {
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
+                size="icon-sm"
                 onClick={() => copyToClipboard(address ?? '')}
-                className="p-2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors shrink-0"
                 aria-label="Copy wallet address"
                 title="Copy address"
+                className="shrink-0"
               >
                 <Copy className="size-4" />
               </Button>
@@ -235,12 +235,9 @@ export function Component() {
         <div className="flex items-center gap-2">
           <Button
             type="button"
+            variant={following ? 'default' : 'secondary'}
             onClick={toggleFollow}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors ${
-              following
-                ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                : 'text-pf-cyan-400 border-pf-cyan-500/30 hover:bg-pf-cyan-500/10'
-            }`}
+            className="flex items-center gap-1.5"
           >
             {following ? <><UserCheck className="size-4" /> Following</> : <><UserPlus className="size-4" /> Follow</>}
           </Button>

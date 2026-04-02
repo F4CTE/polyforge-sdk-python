@@ -138,7 +138,7 @@ export function Component() {
     return (
       <div className="p-6 max-w-3xl mx-auto text-center py-20">
         <p className="text-pf-text font-medium">Ticket not found</p>
-        <Button variant="link" type="button" onClick={() => navigate('/support')} className="text-sm text-pf-cyan-400 mt-2">
+        <Button type="button" variant="link" onClick={() => navigate('/support')} className="text-sm mt-2">
           Back to support
         </Button>
       </div>
@@ -157,7 +157,6 @@ export function Component() {
             variant="ghost"
             size="icon"
             onClick={() => navigate('/support')}
-            className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
             aria-label="Back to support"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
@@ -178,20 +177,21 @@ export function Component() {
           showCloseConfirm ? (
             <div className="flex items-center gap-2">
               <span className="text-xs text-pf-text-muted">Close this ticket?</span>
-              <Button type="button" onClick={closeTicket} disabled={closing} className="px-2 py-1 text-xs rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors">
+              <Button type="button" variant="default" size="sm" onClick={closeTicket} disabled={closing}>
                 {closing ? 'Closing...' : 'Confirm'}
               </Button>
-              <Button variant="secondary" type="button" onClick={() => setShowCloseConfirm(false)} className="px-2 py-1 text-xs rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-surface transition-colors">
+              <Button type="button" variant="secondary" size="sm" onClick={() => setShowCloseConfirm(false)}>
                 Cancel
               </Button>
             </div>
           ) : (
             <Button
               type="button"
-              variant="danger"
+              variant="secondary"
+              size="sm"
               onClick={() => setShowCloseConfirm(true)}
               disabled={closing}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs text-pf-text-muted border border-pf-border hover:border-pf-border-strong hover:text-pf-text cursor-pointer disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1.5"
             >
               {closing ? <Loader2 className="size-3 animate-spin" /> : <Lock className="size-3" />}
               Close Ticket
@@ -247,7 +247,7 @@ export function Component() {
             placeholder="Write a reply..."
             aria-label="Reply message"
             rows={4}
-            className="w-full px-3 py-2.5 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors resize-y"
+            className="w-full resize-y"
           />
           <div className="flex items-center justify-between mt-3">
             <span className={`text-xs font-mono ${isOverWarn ? 'text-pf-danger' : 'text-pf-text-muted'}`}>
@@ -255,9 +255,10 @@ export function Component() {
             </span>
             <Button
               type="button"
+              variant="default"
               onClick={sendReply}
               disabled={!reply.trim() || sending}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2"
             >
               {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
               Send Reply

@@ -9,6 +9,7 @@ import {
   Monitor, Smartphone, MapPin, LogOut,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
+import { Button, Input, Select, Textarea } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -971,12 +972,10 @@ export function Component() {
             type="button"
             variant="ghost"
             key={t.value}
+            variant={activeTab === t.value ? 'default' : 'secondary'}
+            size="sm"
             onClick={() => handleTab(t.value)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
-              activeTab === t.value
-                ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
-            }`}
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-full"
           >
             {t.icon}
             {t.label}
@@ -990,25 +989,21 @@ export function Component() {
           <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Public Profile</h2>
           <div>
             <label htmlFor="settings-display-name" className="text-xs text-pf-text-secondary mb-1.5 block">Display Name</label>
-            <Input id="settings-display-name" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your display name"
-              className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
+            <Input id="settings-display-name" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your display name" className="w-full" />
           </div>
           <div>
             <label htmlFor="settings-bio" className="text-xs text-pf-text-secondary mb-1.5 block">Bio</label>
-            <Textarea id="settings-bio" value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="Tell others about yourself..."
-              className="w-full px-3 py-2.5 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors resize-y" />
+            <Textarea id="settings-bio" value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="Tell others about yourself..." className="w-full resize-y" />
           </div>
           <div>
             <label htmlFor="settings-avatar-url" className="text-xs text-pf-text-secondary mb-1.5 block">Avatar URL</label>
             <div className="flex items-center gap-3">
-              <Input id="settings-avatar-url" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://..."
-                className="flex-1 h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
+              <Input id="settings-avatar-url" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://..." className="flex-1" />
               {avatarUrl && <img src={avatarUrl} alt="Avatar preview" className="w-12 h-12 rounded-full object-cover border border-pf-border" />}
             </div>
           </div>
           <div className="flex justify-end">
-            <Button type="button" onClick={saveProfile} disabled={profileSaving}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors">
+            <Button type="button" variant="default" onClick={saveProfile} disabled={profileSaving} className="flex items-center gap-2">
               {profileSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Save Profile
             </Button>
@@ -1027,7 +1022,7 @@ export function Component() {
               type="button"
               variant="danger"
               onClick={() => setDeleteDialogOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger/10 text-pf-danger border border-pf-danger/20 text-sm font-medium hover:bg-pf-danger/20 transition-colors"
+              className="flex items-center gap-2"
             >
               <Trash2 className="size-4" />
               Delete Account
@@ -1060,15 +1055,14 @@ export function Component() {
                       value={deletePassword}
                       onChange={e => setDeletePassword(e.target.value)}
                       placeholder="Your password"
-                      className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-danger/50 transition-colors"
+                      className="w-full"
                     />
                   </div>
                   <div className="flex gap-3 justify-end">
                     <Button
                       type="button"
-                      variant="secondary"
+                      variant="ghost"
                       onClick={() => { setDeleteDialogOpen(false); setDeletePassword(''); }}
-                      className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text rounded-pf hover:bg-pf-overlay transition-colors"
                     >
                       Cancel
                     </Button>
@@ -1077,7 +1071,7 @@ export function Component() {
                       variant="danger"
                       onClick={handleDeleteAccount}
                       disabled={deleting || !deletePassword}
-                      className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger text-white text-sm font-medium hover:bg-pf-danger/80 disabled:opacity-50 transition-colors"
+                      className="flex items-center gap-2"
                     >
                       {deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
                       Delete My Account
@@ -1104,13 +1098,10 @@ export function Component() {
                 <Button
                   key={opt.value}
                   type="button"
-                  variant="ghost"
+                  variant={emailDigest === opt.value ? 'default' : 'secondary'}
+                  size="sm"
                   onClick={() => setEmailDigest(opt.value)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                    emailDigest === opt.value
-                      ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
-                      : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
-                  }`}
+                  className="rounded-full"
                 >
                   {opt.label}
                 </Button>
@@ -1174,7 +1165,7 @@ export function Component() {
                                 aria-checked={pref[field]}
                                 aria-label={`${evtDef.label} ${field} notification`}
                                 onClick={() => toggleNotifField(evtDef.event, field)}
-                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium w-14 transition-colors ${
+                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium w-14 transition-colors cursor-pointer ${
                                   pref[field]
                                     ? 'bg-pf-cyan-500 text-white'
                                     : 'bg-pf-overlay text-pf-text-muted'
@@ -1194,8 +1185,7 @@ export function Component() {
           )}
 
           <div className="flex justify-end pt-2 border-t border-pf-border">
-            <Button type="button" onClick={saveNotifications} disabled={notifSaving || notifLoading}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors">
+            <Button type="button" variant="default" onClick={saveNotifications} disabled={notifSaving || notifLoading} className="flex items-center gap-2">
               {notifSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Save Preferences
             </Button>
@@ -1210,9 +1200,8 @@ export function Component() {
           <div>
             <label htmlFor="settings-current-password" className="text-xs text-pf-text-secondary mb-1.5 block">Current Password</label>
             <div className="relative">
-              <Input id="settings-current-password" type={showCurrentPw ? 'text' : 'password'} autoComplete="current-password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
-                className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
-              <Button type="button" variant="ghost" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Toggle password visibility">
+              <Input id="settings-current-password" type={showCurrentPw ? 'text' : 'password'} autoComplete="current-password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="w-full pr-10" />
+              <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Toggle password visibility">
                 {showCurrentPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </Button>
             </div>
@@ -1220,24 +1209,21 @@ export function Component() {
           <div>
             <label htmlFor="settings-new-password" className="text-xs text-pf-text-secondary mb-1.5 block">New Password</label>
             <div className="relative">
-              <Input id="settings-new-password" type={showNewPw ? 'text' : 'password'} autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
-              <Button type="button" variant="ghost" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Toggle password visibility">
+              <Input id="settings-new-password" type={showNewPw ? 'text' : 'password'} autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full pr-10" />
+              <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Toggle password visibility">
                 {showNewPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </Button>
             </div>
           </div>
           <div>
             <label htmlFor="settings-confirm-password" className="text-xs text-pf-text-secondary mb-1.5 block">Confirm New Password</label>
-            <Input id="settings-confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-              className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
+            <Input id="settings-confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full" />
             {confirmPassword && newPassword !== confirmPassword && (
               <span className="text-xs text-pf-danger mt-1 block">Passwords do not match</span>
             )}
           </div>
           <div className="flex justify-end">
-            <Button type="button" onClick={savePassword} disabled={pwSaving || !currentPassword || !newPassword || newPassword !== confirmPassword}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors">
+            <Button type="button" variant="default" onClick={savePassword} disabled={pwSaving || !currentPassword || !newPassword || newPassword !== confirmPassword} className="flex items-center gap-2">
               {pwSaving ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}
               Change Password
             </Button>
@@ -1266,9 +1252,10 @@ export function Component() {
               </div>
               <Button
                 type="button"
+                variant="default"
                 onClick={twoFaStartSetup}
                 disabled={twoFaSetupLoading}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2"
               >
                 {twoFaSetupLoading ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
                 {twoFaSetupLoading ? 'Generating...' : 'Enable Two-Factor Authentication'}
@@ -1324,14 +1311,15 @@ export function Component() {
                     value={twoFaVerifyToken}
                     onChange={e => setTwoFaVerifyToken(e.target.value.replace(/\D/g, ''))}
                     placeholder="000000"
-                    className="w-40 h-12 text-2xl font-mono tracking-widest text-center rounded-pf bg-pf-surface border border-pf-border text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                    className="w-40 text-2xl font-mono tracking-widest text-center"
                   />
                   <div className="flex items-center gap-3">
                     <Button
                       type="button"
+                      variant="default"
                       onClick={twoFaEnable}
                       disabled={twoFaVerifying || twoFaVerifyToken.length !== 6}
-                      className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                      className="flex items-center gap-2"
                     >
                       {twoFaVerifying ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
                       Verify & Enable
@@ -1340,7 +1328,6 @@ export function Component() {
                       type="button"
                       variant="ghost"
                       onClick={() => { setTwoFaView('disabled'); setTwoFaVerifyToken(''); setTwoFaSetupSecret(''); setTwoFaQrCodeUrl(''); }}
-                      className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors underline underline-offset-2"
                     >
                       Cancel
                     </Button>
@@ -1376,8 +1363,9 @@ export function Component() {
                   <Button
                     type="button"
                     variant="secondary"
+                    size="sm"
                     onClick={() => twoFaDownloadCodes(twoFaBackupCodes)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-border-strong transition-colors"
+                    className="flex items-center gap-2"
                   >
                     <Download className="size-3.5" />
                     Download Backup Codes
@@ -1385,8 +1373,9 @@ export function Component() {
                   <Button
                     type="button"
                     variant="secondary"
+                    size="sm"
                     onClick={() => twoFaCopyAll(twoFaBackupCodes)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-border-strong transition-colors"
+                    className="flex items-center gap-2"
                   >
                     {twoFaCopied ? <Check className="size-3.5 text-pf-success" /> : <Copy className="size-3.5" />}
                     {twoFaCopied ? 'Copied!' : 'Copy All'}
@@ -1395,8 +1384,9 @@ export function Component() {
               </div>
               <Button
                 type="button"
+                variant="default"
                 onClick={() => setTwoFaView('enabled')}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
+                className="flex items-center gap-2"
               >
                 <Check className="size-4" />
                 Done
@@ -1425,7 +1415,7 @@ export function Component() {
                   variant="secondary"
                   onClick={twoFaRegenBackupCodes}
                   disabled={twoFaRegenLoading}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-sm font-medium text-pf-text hover:border-pf-border-strong disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-2"
                 >
                   {twoFaRegenLoading ? <Loader2 className="size-4 animate-spin" /> : <KeyRound className="size-4" />}
                   Regenerate Backup Codes
@@ -1448,8 +1438,9 @@ export function Component() {
                       <Button
                         type="button"
                         variant="secondary"
+                        size="sm"
                         onClick={() => twoFaDownloadCodes(twoFaRegenCodes)}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-border-strong transition-colors"
+                        className="flex items-center gap-2"
                       >
                         <Download className="size-3.5" />
                         Download
@@ -1457,8 +1448,9 @@ export function Component() {
                       <Button
                         type="button"
                         variant="secondary"
+                        size="sm"
                         onClick={() => twoFaCopyAll(twoFaRegenCodes)}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-border-strong transition-colors"
+                        className="flex items-center gap-2"
                       >
                         {twoFaCopied ? <Check className="size-3.5 text-pf-success" /> : <Copy className="size-3.5" />}
                         {twoFaCopied ? 'Copied!' : 'Copy All'}
@@ -1475,7 +1467,7 @@ export function Component() {
                     type="button"
                     variant="danger"
                     onClick={() => setTwoFaShowDisableForm(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger/10 text-pf-danger border border-pf-danger/30 text-sm font-medium hover:bg-pf-danger/20 transition-colors"
+                    className="flex items-center gap-2"
                   >
                     <ShieldOff className="size-4" />
                     Disable 2FA
@@ -1492,7 +1484,7 @@ export function Component() {
                       value={twoFaDisableToken}
                       onChange={e => setTwoFaDisableToken(e.target.value.replace(/\D/g, ''))}
                       placeholder="000000"
-                      className="w-40 h-12 text-2xl font-mono tracking-widest text-center rounded-pf bg-pf-elevated border border-pf-border text-pf-text focus:outline-none focus:border-pf-danger/50 transition-colors"
+                      className="w-40 text-2xl font-mono tracking-widest text-center"
                     />
                     <div className="flex items-center gap-3">
                       <Button
@@ -1500,7 +1492,7 @@ export function Component() {
                         variant="danger"
                         onClick={twoFaDisable}
                         disabled={twoFaDisabling || twoFaDisableToken.length !== 6}
-                        className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger text-white text-sm font-medium hover:bg-pf-danger/80 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                        className="flex items-center gap-2"
                       >
                         {twoFaDisabling ? <Loader2 className="size-4 animate-spin" /> : <ShieldOff className="size-4" />}
                         Confirm Disable
@@ -1509,7 +1501,6 @@ export function Component() {
                         type="button"
                         variant="ghost"
                         onClick={() => { setTwoFaShowDisableForm(false); setTwoFaDisableToken(''); }}
-                        className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
                       >
                         Cancel
                       </Button>
@@ -1582,8 +1573,7 @@ export function Component() {
               </div>
 
               <div className="flex justify-end">
-                <Button type="button" variant="secondary" onClick={loadGasUsage}
-                  className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm font-medium text-pf-text hover:border-pf-border-strong transition-colors">
+                <Button type="button" variant="secondary" onClick={loadGasUsage} className="flex items-center gap-2">
                   <Fuel className="size-4" />
                   Refresh
                 </Button>
@@ -1617,9 +1607,10 @@ export function Component() {
               <Button
                 type="button"
                 variant="danger"
+                size="sm"
                 onClick={resetCircuitBreaker}
                 disabled={riskResetting}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-pf bg-pf-danger text-white hover:bg-pf-danger/80 disabled:opacity-50 transition-colors shrink-0"
+                className="flex items-center gap-1.5 shrink-0"
               >
                 {riskResetting ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3" />}
                 Reset
@@ -1670,7 +1661,7 @@ export function Component() {
                 value={String(drawdownLookbackHours)}
                 onChange={e => setDrawdownLookbackHours(Number(e.target.value))}
                 disabled={!drawdownEnabled}
-                className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors disabled:opacity-50"
+                className="w-full"
               >
                 <option value={1}>1 hour</option>
                 <option value={4}>4 hours</option>
@@ -1706,9 +1697,10 @@ export function Component() {
             <div className="flex justify-end pt-2 border-t border-pf-border">
               <Button
                 type="button"
+                variant="default"
                 onClick={saveRiskSettings}
                 disabled={riskSaving}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2"
               >
                 {riskSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                 Save Risk Settings
@@ -1763,7 +1755,7 @@ export function Component() {
                 value={dlLimit}
                 onChange={e => setDlLimit(e.target.value)}
                 disabled={!dlEnabled}
-                className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors disabled:opacity-50"
+                className="w-full"
               />
               <p className="text-xs text-pf-text-muted mt-1.5">
                 Trading is paused automatically if your daily P&amp;L drops below this threshold.
@@ -1784,7 +1776,7 @@ export function Component() {
                 value={dlMaxPositionSize}
                 onChange={e => setDlMaxPositionSize(e.target.value)}
                 disabled={!dlEnabled}
-                className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors disabled:opacity-50"
+                className="w-full"
               />
               <p className="text-xs text-pf-text-muted mt-1.5">Maximum size for any single position.</p>
             </div>
@@ -1804,7 +1796,7 @@ export function Component() {
                 value={dlMaxOpenPositions}
                 onChange={e => setDlMaxOpenPositions(e.target.value)}
                 disabled={!dlEnabled}
-                className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors disabled:opacity-50"
+                className="w-full"
               />
               <p className="text-xs text-pf-text-muted mt-1.5">Maximum number of concurrent open positions (1–50).</p>
             </div>
@@ -1812,9 +1804,10 @@ export function Component() {
             <div className="flex justify-end pt-2 border-t border-pf-border">
               <Button
                 type="button"
+                variant="default"
                 onClick={saveDailyLossSettings}
                 disabled={dlSaving || dlLoading}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2"
               >
                 {dlSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                 Save Risk Settings
@@ -1832,8 +1825,7 @@ export function Component() {
             <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Generate API Key</h2>
             <div>
               <label htmlFor="settings-key-name" className="text-xs text-pf-text-secondary mb-1.5 block">Key Name</label>
-              <Input id="settings-key-name" value={newKeyName} onChange={e => setNewKeyName(e.target.value)} placeholder="My Integration"
-                className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
+              <Input id="settings-key-name" value={newKeyName} onChange={e => setNewKeyName(e.target.value)} placeholder="My Integration" className="w-full" />
             </div>
             <div>
               <span className="text-xs text-pf-text-secondary mb-2 block" id="settings-scopes-label">
@@ -1870,11 +1862,9 @@ export function Component() {
             </div>
             <div>
               <label htmlFor="settings-key-expiration" className="text-xs text-pf-text-secondary mb-1.5 block">Expiration (optional)</label>
-              <input id="settings-key-expiration" type="date" lang="en" value={newKeyExpiration} onChange={e => setNewKeyExpiration(e.target.value)}
-                className="w-full max-w-[220px] h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
+              <Input id="settings-key-expiration" type="date" lang="en" value={newKeyExpiration} onChange={e => setNewKeyExpiration(e.target.value)} className="w-full max-w-[220px]" />
             </div>
-            <Button type="button" onClick={createApiKey} disabled={apiKeysCreating || !newKeyName.trim() || newKeyScopes.size === 0}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors">
+            <Button type="button" variant="default" onClick={createApiKey} disabled={apiKeysCreating || !newKeyName.trim() || newKeyScopes.size === 0} className="flex items-center gap-2">
               {apiKeysCreating ? <Loader2 className="size-4 animate-spin" /> : <Key className="size-4" />}
               Generate API Key
             </Button>
@@ -1892,13 +1882,10 @@ export function Component() {
                   {createdKey.secret ?? createdKey.token ?? createdKey.key}
                 </code>
                 <div className="flex items-center gap-2 pt-1">
-                  <Button type="button" variant="ghost"
-                    onClick={() => copyKey((createdKey.secret ?? createdKey.token ?? createdKey.key)!)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-warning/20 text-pf-warning text-xs font-medium hover:bg-pf-warning/30 transition-colors">
+                  <Button type="button" variant="secondary" size="sm" onClick={() => copyKey((createdKey.secret ?? createdKey.token ?? createdKey.key)!)} className="flex items-center gap-1.5">
                     <Copy className="size-3" /> Copy Secret
                   </Button>
-                  <Button type="button" variant="secondary" onClick={() => setCreatedKey(null)}
-                    className="px-3 py-1.5 rounded-pf text-xs text-pf-text-muted border border-pf-border hover:text-pf-text transition-colors">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setCreatedKey(null)}>
                     Done
                   </Button>
                 </div>
@@ -1916,13 +1903,10 @@ export function Component() {
                 </p>
                 <code className="block font-mono text-sm text-pf-warning break-all">{rotatedSecret.secret}</code>
                 <div className="flex items-center gap-2 pt-1">
-                  <Button type="button" variant="ghost"
-                    onClick={() => copySecret(rotatedSecret.secret)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-warning/20 text-pf-warning text-xs font-medium hover:bg-pf-warning/30 transition-colors">
+                  <Button type="button" variant="secondary" size="sm" onClick={() => copySecret(rotatedSecret.secret)} className="flex items-center gap-1.5">
                     {secretCopied ? <><Check className="size-3" /> Copied!</> : <><Copy className="size-3" /> Copy Secret</>}
                   </Button>
-                  <Button type="button" variant="secondary" onClick={() => { setRotatedSecret(null); setSecretCopied(false); }}
-                    className="px-3 py-1.5 rounded-pf text-xs text-pf-text-muted border border-pf-border hover:text-pf-text transition-colors">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => { setRotatedSecret(null); setSecretCopied(false); }}>
                     Done
                   </Button>
                 </div>
@@ -1974,6 +1958,7 @@ export function Component() {
                                 size="icon-sm"
                                 onClick={() => copyKeyPrefix(key.id, displayPrefix)}
                                 aria-label={`Copy key prefix for ${key.name}`}
+                                className="shrink-0"
                               >
                                 {copiedKeyId === key.id
                                   ? <Check className="size-3 text-pf-success" />
@@ -2063,7 +2048,7 @@ export function Component() {
                 value={webhookUrl}
                 onChange={e => setWebhookUrl(e.target.value)}
                 placeholder="https://example.com/webhook"
-                className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                className="w-full"
               />
               {webhookUrl && !webhookUrl.startsWith('https://') && (
                 <span className="text-xs text-pf-danger mt-1 block">URL must start with https://</span>
@@ -2100,9 +2085,10 @@ export function Component() {
             <div className="flex justify-end">
               <Button
                 type="button"
+                variant="default"
                 onClick={addWebhook}
                 disabled={webhookAdding || !webhookUrl || webhookEvents.length === 0}
-                className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2"
               >
                 {webhookAdding ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
                 Add Webhook
@@ -2165,10 +2151,11 @@ export function Component() {
                           {/* Deliveries button */}
                           <Button
                             type="button"
-                            variant="ghost"
+                            variant="secondary"
+                            size="sm"
                             onClick={() => toggleWebhookDeliveries(wh.id)}
                             aria-label={`${isExpanded ? 'Hide' : 'Show'} deliveries for ${wh.url}`}
-                            className="relative flex items-center gap-1 text-xs px-2 py-1 rounded border border-pf-border text-pf-text-secondary hover:text-pf-text transition-colors cursor-pointer"
+                            className="relative flex items-center gap-1"
                           >
                             <History className="size-3.5" />
                             Deliveries
@@ -2182,10 +2169,11 @@ export function Component() {
                           <Button
                             type="button"
                             variant="ghost"
+                            size="sm"
                             onClick={() => testWebhook(wh.id)}
                             disabled={webhookTesting === wh.id}
                             aria-label={`Test webhook ${wh.url}`}
-                            className="flex items-center gap-1 text-xs text-pf-text-secondary hover:text-pf-cyan-400 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                            className="flex items-center gap-1"
                           >
                             {webhookTesting === wh.id ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
                             Test
@@ -2197,7 +2185,7 @@ export function Component() {
                             onClick={() => deleteWebhook(wh.id)}
                             aria-label={`Delete webhook ${wh.url}`}
                           >
-                            <Trash2 className="size-4" />
+                            <Trash2 className="size-4 text-pf-danger" />
                           </Button>
                         </div>
                       </div>
@@ -2273,9 +2261,10 @@ export function Component() {
                                               <Button
                                                 type="button"
                                                 variant="ghost"
+                                                size="sm"
                                                 onClick={() => setExpandedDeliveryId(isDelExpanded ? null : del.id)}
                                                 aria-label="View request/response"
-                                                className="flex items-center gap-1 text-pf-text-secondary hover:text-pf-text transition-colors cursor-pointer"
+                                                className="flex items-center gap-1"
                                               >
                                                 <Code className="size-3.5" />
                                                 View
@@ -2284,9 +2273,10 @@ export function Component() {
                                                 <Button
                                                   type="button"
                                                   variant="ghost"
+                                                  size="sm"
                                                   onClick={() => retryDelivery(wh.id, del.id)}
                                                   aria-label="Retry delivery"
-                                                  className="flex items-center gap-1 text-pf-text-secondary hover:text-pf-cyan-400 transition-colors cursor-pointer"
+                                                  className="flex items-center gap-1"
                                                 >
                                                   <RefreshCw className="size-3.5" />
                                                   Retry
@@ -2349,9 +2339,10 @@ export function Component() {
               <Button
                 type="button"
                 variant="danger"
+                size="sm"
                 onClick={revokeAllSessions}
                 disabled={revokingAll || sessions.filter(s => !s.isCurrent).length === 0}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-pf text-pf-danger border border-pf-danger/30 bg-pf-danger/5 text-xs font-medium hover:bg-pf-danger/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2"
               >
                 {revokingAll ? <Loader2 className="size-3.5 animate-spin" /> : <LogOut className="size-3.5" />}
                 Revoke All Other Sessions
@@ -2413,9 +2404,10 @@ export function Component() {
                       <Button
                         type="button"
                         variant="danger"
+                        size="sm"
                         onClick={() => revokeSession(session.id)}
                         disabled={revokingSessionId === session.id}
-                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-pf text-pf-danger border border-pf-danger/30 bg-pf-danger/5 text-xs font-medium hover:bg-pf-danger/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0 mt-0.5"
+                        className="flex items-center gap-1.5 shrink-0 mt-0.5"
                       >
                         {revokingSessionId === session.id ? <Loader2 className="size-3 animate-spin" /> : <LogOut className="size-3" />}
                         Revoke

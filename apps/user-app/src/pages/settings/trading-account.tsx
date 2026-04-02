@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../stores/auth-store';
+import { Button, Input } from '@polyforge/ui';
 
 /* ─── Component ──────────────────────────────────────────────────────── */
 
@@ -119,8 +120,7 @@ export function Component() {
             <p className="text-sm text-pf-text-secondary">
               Your Polymarket account is connected. You can disconnect it at any time -- your strategies will stop trading until you reconnect.
             </p>
-            <Button type="button" variant="danger" onClick={deleteCredentials} disabled={deleting}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-danger/10 text-pf-danger border border-pf-danger/20 text-sm font-medium hover:bg-pf-danger/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors">
+            <Button type="button" variant="danger" onClick={deleteCredentials} disabled={deleting} className="flex items-center gap-2">
               {deleting ? <Loader2 className="size-4 animate-spin" /> : <Unlink className="size-4" />}
               Disconnect Account
             </Button>
@@ -136,9 +136,8 @@ export function Component() {
                 Private Key <span className="text-pf-danger">*</span>
               </label>
               <div className="relative">
-                <Input id="trading-private-key" type={showPrivateKey ? 'text' : 'password'} value={privateKey} onChange={e => setPrivateKey(e.target.value)} placeholder="0x..." aria-required="true"
-                  className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
-                <Button type="button" variant="ghost" onClick={() => setShowPrivateKey(!showPrivateKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label={showPrivateKey ? "Hide private key" : "Show private key"}>
+                <Input id="trading-private-key" type={showPrivateKey ? 'text' : 'password'} value={privateKey} onChange={e => setPrivateKey(e.target.value)} placeholder="0x..." aria-required="true" className="w-full pr-10 font-mono" />
+                <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowPrivateKey(!showPrivateKey)} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label={showPrivateKey ? "Hide private key" : "Show private key"}>
                   {showPrivateKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </Button>
               </div>
@@ -147,17 +146,15 @@ export function Component() {
               <label htmlFor="trading-api-key" className="text-xs text-pf-text-secondary mb-1.5 block">
                 API Key <span className="text-pf-danger">*</span>
               </label>
-              <Input id="trading-api-key" type="text" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="API Key" aria-required="true"
-                className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
+              <Input id="trading-api-key" type="text" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="API Key" aria-required="true" className="w-full" />
             </div>
             <div>
               <label htmlFor="trading-api-secret" className="text-xs text-pf-text-secondary mb-1.5 block">
                 API Secret <span className="text-pf-danger">*</span>
               </label>
               <div className="relative">
-                <Input id="trading-api-secret" type={showApiSecret ? 'text' : 'password'} value={apiSecret} onChange={e => setApiSecret(e.target.value)} placeholder="API Secret" aria-required="true"
-                  className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
-                <Button type="button" variant="ghost" onClick={() => setShowApiSecret(!showApiSecret)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label={showApiSecret ? "Hide API secret" : "Show API secret"}>
+                <Input id="trading-api-secret" type={showApiSecret ? 'text' : 'password'} value={apiSecret} onChange={e => setApiSecret(e.target.value)} placeholder="API Secret" aria-required="true" className="w-full pr-10" />
+                <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowApiSecret(!showApiSecret)} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label={showApiSecret ? "Hide API secret" : "Show API secret"}>
                   {showApiSecret ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </Button>
               </div>
@@ -167,9 +164,8 @@ export function Component() {
                 API Passphrase <span className="text-pf-danger">*</span>
               </label>
               <div className="relative">
-                <Input id="trading-api-passphrase" type={showPassphrase ? 'text' : 'password'} value={apiPassphrase} onChange={e => setApiPassphrase(e.target.value)} placeholder="Passphrase" aria-required="true"
-                  className="w-full h-10 px-3 pr-10 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
-                <Button type="button" variant="ghost" onClick={() => setShowPassphrase(!showPassphrase)} className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-muted hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label={showPassphrase ? "Hide passphrase" : "Show passphrase"}>
+                <Input id="trading-api-passphrase" type={showPassphrase ? 'text' : 'password'} value={apiPassphrase} onChange={e => setApiPassphrase(e.target.value)} placeholder="Passphrase" aria-required="true" className="w-full pr-10" />
+                <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowPassphrase(!showPassphrase)} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label={showPassphrase ? "Hide passphrase" : "Show passphrase"}>
                   {showPassphrase ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </Button>
               </div>
@@ -178,11 +174,9 @@ export function Component() {
               <label htmlFor="trading-safe-address" className="text-xs text-pf-text-secondary mb-1.5 block">
                 Safe Address <span className="text-pf-text-muted text-[10px]">(optional)</span>
               </label>
-              <Input id="trading-safe-address" type="text" value={safeAddress} onChange={e => setSafeAddress(e.target.value)} placeholder="0x..."
-                className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text font-mono placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors" />
+              <Input id="trading-safe-address" type="text" value={safeAddress} onChange={e => setSafeAddress(e.target.value)} placeholder="0x..." className="w-full font-mono" />
             </div>
-            <Button type="button" onClick={importCredentials} disabled={!canImport}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors">
+            <Button type="button" variant="default" onClick={importCredentials} disabled={!canImport} className="flex items-center gap-2">
               {importing ? <Loader2 className="size-4 animate-spin" /> : <Link2 className="size-4" />}
               Connect Account
             </Button>
@@ -200,7 +194,7 @@ export function Component() {
         {botCode && (
           <div className="flex items-center gap-3 bg-pf-surface rounded-pf p-3 border border-pf-border">
             <code className="flex-1 font-mono text-lg text-pf-text tracking-wider">{botCode}</code>
-            <Button type="button" variant="ghost" size="icon" onClick={copyBotCode} aria-label="Copy bot code">
+            <Button type="button" variant="ghost" size="icon-sm" onClick={copyBotCode} aria-label="Copy bot code">
               <Copy className="size-4" />
             </Button>
           </div>
@@ -209,8 +203,7 @@ export function Component() {
           <p className="text-xs text-pf-text-muted">Expires: <span className="font-mono">{botCodeExpiry}</span></p>
         )}
 
-        <Button type="button" variant="secondary" onClick={generateBotCode} disabled={botCodeLoading}
-          className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm font-medium text-pf-text hover:border-pf-border-strong disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors">
+        <Button type="button" variant="secondary" onClick={generateBotCode} disabled={botCodeLoading} className="flex items-center gap-2">
           {botCodeLoading ? <Loader2 className="size-4 animate-spin" /> : <QrCode className="size-4" />}
           {botCode ? 'Regenerate Code' : 'Generate Code'}
         </Button>

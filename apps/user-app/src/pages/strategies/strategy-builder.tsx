@@ -13,6 +13,7 @@ import { BlockPalette } from '../../components/builder/block-palette';
 import { BuilderTutorial } from '../../components/builder/builder-tutorial';
 import { ExecutionPanel } from '../../components/builder/execution-panel';
 import { useBuilderStore } from '../../stores/builder-store';
+import { Button, Input } from '@polyforge/ui';
 
 // ─── Strategy Template Library ───────────────────────────────────────────────
 
@@ -1156,7 +1157,7 @@ export function Component() {
                 setSelectedTemplate(t.id);
                 setWizardStep('builder');
               }}
-              className="flex items-center gap-4 p-4 rounded-pf border border-pf-border bg-pf-surface hover:border-pf-cyan-500/50 hover:bg-pf-surface-hover transition-all text-left group"
+              className="flex items-center gap-4 p-4 text-left group w-full justify-start"
             >
               <span className="text-2xl">{t.icon}</span>
               <div className="flex-1">
@@ -1211,7 +1212,7 @@ export function Component() {
         {editingName ? (
           <Input
             aria-label="Strategy name"
-            className="text-lg font-semibold bg-transparent border-b border-pf-cyan-500 outline-none text-pf-text px-1 flex-1 min-w-0"
+            className="flex-1 min-w-0 bg-transparent border-b border-pf-cyan-500 rounded-none text-lg font-semibold"
             value={name}
             onChange={(e) => setName(e.target.value)}
             onBlur={() => setEditingName(false)}
@@ -1222,9 +1223,9 @@ export function Component() {
           <Button
             type="button"
             variant="ghost"
-            className="text-lg font-semibold cursor-pointer hover:text-pf-cyan-400 transition-colors group flex items-center gap-2 truncate flex-1 text-left text-pf-text bg-transparent border-none p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
             onClick={() => setEditingName(true)}
             aria-label={`Edit strategy name: ${name || 'Untitled Strategy'}`}
+            className="group flex items-center gap-2 truncate flex-1 text-left justify-start text-lg font-semibold p-0"
           >
             <h1 className="text-lg font-semibold truncate">{name || 'Untitled Strategy'}</h1>
             <Pencil size={14} className="opacity-0 group-hover:opacity-50 transition-opacity shrink-0" aria-hidden="true" />
@@ -1235,13 +1236,9 @@ export function Component() {
           {/* Panel toggle */}
           <Button
             type="button"
-            variant="ghost"
+            variant={panelOpen ? 'default' : 'ghost'}
+            size="icon-sm"
             onClick={() => setPanelOpen((v) => !v)}
-            className={`p-1.5 rounded-pf-sm transition-colors ${
-              panelOpen
-                ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
-                : 'text-pf-text-muted hover:text-pf-text-secondary hover:bg-pf-overlay'
-            }`}
             aria-label={panelOpen ? 'Hide blocks panel' : 'Show blocks panel'}
             title={panelOpen ? 'Hide blocks' : 'Show blocks'}
           >
@@ -1251,13 +1248,9 @@ export function Component() {
           {/* Execution panel toggle */}
           <Button
             type="button"
-            variant="ghost"
+            variant={execPanelExpanded ? 'default' : 'ghost'}
+            size="icon-sm"
             onClick={() => { setExecPanelExpanded((v) => !v); }}
-            className={`p-1.5 rounded-pf-sm transition-colors ${
-              execPanelExpanded
-                ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
-                : 'text-pf-text-muted hover:text-pf-text-secondary hover:bg-pf-overlay'
-            }`}
             aria-label={execPanelExpanded ? 'Collapse execution panel' : 'Expand execution panel'}
             title={execPanelExpanded ? 'Collapse execution panel' : 'Backtest & Live'}
           >
@@ -1268,8 +1261,8 @@ export function Component() {
           <Button
             type="button"
             variant="ghost"
+            size="icon-sm"
             onClick={() => setShowTutorial(true)}
-            className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-text-secondary hover:bg-pf-overlay transition-colors"
             aria-label="Show builder tutorial"
             title="How the builder works"
           >
@@ -1279,13 +1272,9 @@ export function Component() {
           {/* Template library */}
           <Button
             type="button"
-            variant="ghost"
+            variant={showTemplates ? 'default' : 'ghost'}
+            size="icon-sm"
             onClick={() => { setShowTemplates(true); setTemplateCategory('all'); }}
-            className={`p-1.5 rounded-pf-sm transition-colors ${
-              showTemplates
-                ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
-                : 'text-pf-text-muted hover:text-pf-text-secondary hover:bg-pf-overlay'
-            }`}
             aria-label="Open template library"
             title="Strategy Templates"
           >
@@ -1298,9 +1287,9 @@ export function Component() {
           <Button
             type="button"
             variant="ghost"
+            size="icon-sm"
             onClick={undo}
             disabled={historyLength === 0}
-            className="p-1.5 rounded text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             aria-label={`Undo (${historyLength} step${historyLength !== 1 ? 's' : ''})`}
             title={`Undo (Ctrl+Z) — ${historyLength} step${historyLength !== 1 ? 's' : ''}`}
           >
@@ -1311,9 +1300,9 @@ export function Component() {
           <Button
             type="button"
             variant="ghost"
+            size="icon-sm"
             onClick={redo}
             disabled={futureLength === 0}
-            className="p-1.5 rounded text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             aria-label={`Redo (${futureLength} step${futureLength !== 1 ? 's' : ''})`}
             title={`Redo (Ctrl+Y) — ${futureLength} step${futureLength !== 1 ? 's' : ''}`}
           >
@@ -1325,10 +1314,11 @@ export function Component() {
           <Button
             type="button"
             variant="secondary"
+            size="sm"
             onClick={onQuickTest}
             disabled={quickTesting || !strategyId}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-border-strong disabled:opacity-50 transition-colors"
             title="Run a 7-day quick backtest"
+            className="flex items-center gap-1.5"
           >
             {quickTesting ? (
               <Loader2 className="size-3 animate-spin" />
@@ -1347,9 +1337,11 @@ export function Component() {
 
           <Button
             type="button"
+            variant="default"
+            size="sm"
             onClick={onSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm bg-pf-cyan-500 text-black text-xs font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-1.5"
           >
             {saving ? (
               <Loader2 className="size-3 animate-spin" />
@@ -1381,9 +1373,8 @@ export function Component() {
             <Button
               type="button"
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               onClick={() => { setShowTemplates(false); setConfirmTemplate(null); }}
-              className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-text hover:bg-pf-overlay transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
               aria-label="Close template library"
             >
               <X className="size-4" />
@@ -1396,13 +1387,10 @@ export function Component() {
               <Button
                 key={cat}
                 type="button"
-                variant="ghost"
+                variant={templateCategory === cat ? 'default' : 'ghost'}
+                size="sm"
                 onClick={() => setTemplateCategory(cat)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
-                  templateCategory === cat
-                    ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border border-pf-cyan-500/30'
-                    : 'text-pf-text-muted hover:text-pf-text-secondary hover:bg-pf-overlay border border-transparent'
-                }`}
+                className="flex items-center gap-1.5 whitespace-nowrap"
               >
                 {cat !== 'all' && (
                   <span aria-hidden="true" className="opacity-70">{TEMPLATE_CATEGORY_ICONS[cat]}</span>
@@ -1458,16 +1446,19 @@ export function Component() {
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
-                            variant="secondary"
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setConfirmTemplate(null)}
-                            className="flex-1 px-2.5 py-1.5 rounded-pf-sm text-xs text-pf-text-muted hover:text-pf-text border border-pf-border hover:bg-pf-overlay transition-colors"
+                            className="flex-1"
                           >
                             Cancel
                           </Button>
                           <Button
                             type="button"
+                            variant="default"
+                            size="sm"
                             onClick={() => loadTemplate(template)}
-                            className="flex-1 px-2.5 py-1.5 rounded-pf-sm text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
+                            className="flex-1"
                           >
                             Load Template
                           </Button>
@@ -1476,9 +1467,10 @@ export function Component() {
                     ) : (
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="secondary"
+                        size="sm"
                         onClick={() => setConfirmTemplate(template)}
-                        className="w-full px-3 py-1.5 rounded-pf-sm text-xs font-medium bg-pf-surface border border-pf-border text-pf-text-secondary hover:text-pf-text hover:border-pf-cyan-500/50 hover:bg-pf-cyan-500/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                        className="w-full"
                       >
                         Use Template
                       </Button>
@@ -1552,7 +1544,7 @@ export function Component() {
               <div className="absolute bottom-4 left-4 z-40 bg-pf-elevated border border-pf-border rounded-pf-lg p-4 shadow-pf-lg max-w-xs">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-pf-text uppercase tracking-wider">Quick Test Results</span>
-                  <Button type="button" variant="ghost" onClick={() => setQuickResult(null)} className="text-pf-text-muted hover:text-pf-text text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm" aria-label="Close quick test results">&times;</Button>
+                  <Button type="button" variant="ghost" size="icon-sm" onClick={() => setQuickResult(null)} aria-label="Close quick test results"><X className="size-3" /></Button>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="bg-pf-surface rounded-pf p-2">
@@ -1585,8 +1577,9 @@ export function Component() {
                 <Button
                   type="button"
                   variant="ghost"
+                  size="sm"
                   onClick={() => setMarketPickerOpen(p => !p)}
-                  className="w-full flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-pf-text-secondary hover:text-pf-text transition-colors"
+                  className="w-full flex items-center gap-1.5 justify-start"
                 >
                   <Target className="size-3.5 text-pf-cyan-400" aria-hidden="true" />
                   Pinned Market
@@ -1600,11 +1593,11 @@ export function Component() {
                         <Button
                           type="button"
                           variant="ghost"
+                          size="icon-sm"
                           onClick={() => { setMarketId(''); setPinnedMarket(null); }}
-                          className="text-pf-text-muted hover:text-pf-danger transition-colors"
                           title="Unpin market"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                          <X className="size-3" />
                         </Button>
                       </div>
                     ) : (
@@ -1614,7 +1607,7 @@ export function Component() {
                           placeholder="Search markets…"
                           value={marketSearch}
                           onChange={e => setMarketSearch(e.target.value)}
-                          className="w-full px-2 py-1.5 text-xs rounded-pf bg-pf-elevated border border-pf-border text-pf-text placeholder:text-pf-text-muted focus:border-pf-cyan-500/50 focus:outline-none"
+                          className="w-full"
                         />
                         {marketResults.length > 0 && (
                           <div className="max-h-40 overflow-y-auto space-y-0.5">
@@ -1623,8 +1616,9 @@ export function Component() {
                                 key={m.id}
                                 type="button"
                                 variant="ghost"
+                                size="sm"
                                 onClick={() => { setMarketId(m.id); setPinnedMarket({ id: m.id, title: m.title }); setMarketSearch(''); setMarketResults([]); }}
-                                className="w-full text-left px-2 py-1.5 text-[11px] rounded-pf hover:bg-pf-overlay text-pf-text transition-colors truncate"
+                                className="w-full text-left justify-start truncate"
                               >
                                 {m.title}
                               </Button>
