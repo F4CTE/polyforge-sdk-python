@@ -171,6 +171,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.0] — 2026-04-02
+
+### Fixed
+- **ElastiCache HA (HIGH)** — migrated Terraform `aws_elasticache_cluster` (single-node) to `aws_elasticache_replication_group` with `automatic_failover_enabled = true` and `multi_az_enabled = true` (primary + 1 replica); `RedisService` gains exponential-backoff reconnection strategy, `reconnectOnError` for READONLY/ECONNRESET/ETIMEDOUT, and health tracking via `isHealthy` property and `ping()` method (closes #7)
+
+---
+
 ## [6.34.0] — 2026-04-02
 
 ### Added

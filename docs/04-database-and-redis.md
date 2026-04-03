@@ -386,7 +386,9 @@ SELECT add_retention_policy('cache_stats', INTERVAL '30 days');
 
 ## 5. Redis Architecture
 
+**Deployment:** ElastiCache replication group with automatic failover (primary + 1 replica across AZs).  
 **Persistence:** AOF mode with `fsync every second` — maximum 1 second data loss on crash.  
+**Resilience:** `RedisService` includes automatic reconnection with exponential backoff and health tracking (`isHealthy` / `ping()`).  
 **Shared by:** all services (user and admin alike access the same Redis instance via the `internal` network).
 
 ### Cache Keys

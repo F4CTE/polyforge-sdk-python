@@ -10,20 +10,45 @@ import Redis from "ioredis";
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
   private client!: Redis;
+  private _isHealthy = false;
+
+  get isHealthy(): boolean {
+    return this._isHealthy;
+  }
 
   onModuleInit() {
     this.client = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379", {
       maxRetriesPerRequest: 3,
       enableReadyCheck: true,
       lazyConnect: false,
+      retryStrategy: (times: number) => {
+        if (times > 10) return null;
+        return Math.min(times * 200, 5000);
+      },
+      reconnectOnError: (err: Error) => {
+        const targetErrors = ["READONLY", "ECONNRESET", "ETIMEDOUT"];
+        return targetErrors.some((e) => err.message.includes(e));
+      },
     });
 
     this.client.on("connect", () => {
+      this._isHealthy = true;
       this.logger.log("Connected to Redis");
     });
 
+    this.client.on("ready", () => {
+      this._isHealthy = true;
+      this.logger.log("Redis ready");
+    });
+
     this.client.on("error", (err) => {
+      this._isHealthy = false;
       this.logger.error("Redis error", err);
+    });
+
+    this.client.on("close", () => {
+      this._isHealthy = false;
+      this.logger.warn("Redis connection closed");
     });
   }
 
@@ -57,6 +82,15 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async exists(key: string): Promise<boolean> {
     const result = await this.client.exists(key);
     return result === 1;
+  }
+
+  async ping(): Promise<boolean> {
+    try {
+      const result = await this.client.ping();
+      return result === "PONG";
+    } catch {
+      return false;
+    }
   }
 
   // ─── JSON helpers ──────────────────────────────────────────────────────────

@@ -1,20 +1,9 @@
-# ─── Polyforge — ElastiCache Redis 7 ─────────────────────────────────────────
+# ─── Polyforge — ElastiCache Redis 7 (Multi-AZ Replication Group) ────────────
 #
-# PRODUCTION LIMITATION: Currently using aws_elasticache_cluster (single-node).
-# This means:
-#   - No automatic failover if the node fails → downtime for rate limiting, sessions, etc.
-#   - No read replicas → all queries hit the primary
-#   - Data loss risk during maintenance windows (AWS patches require a reboot)
-#
-# TODO: Migrate to aws_elasticache_replication_group with automatic failover when budget allows.
-# This would add:
-#   - 1-2 replica nodes in other AZs for HA
+# Uses aws_elasticache_replication_group with automatic failover for HA.
+#   - Primary + 1 replica in separate AZs
 #   - Automatic failover (RTO < 2 min)
-#   - Read replicas to distribute load
-# Estimated cost increase: ~3x for multi-AZ (but unavoidable for production HA)
-#
-# Cost tradeoff: v1.0 accepts this risk as a bootstrapped startup to reduce AWS spend.
-# Estimated cost for 1+2 cluster: $450-550/month vs. current $150-200/month.
+#   - Read replicas distribute load
 #
 # In-transit encryption + AUTH token enabled.
 # Connection string format (used in .env.prod):
@@ -60,18 +49,23 @@ resource "aws_elasticache_parameter_group" "redis7" {
   }
 }
 
-# ── ElastiCache Cluster ───────────────────────────────────────────────────────
+# ── ElastiCache Replication Group (Multi-AZ) ──────────────────────────────────
 
-resource "aws_elasticache_cluster" "main" {
-  cluster_id           = "${local.name}-redis"
+resource "aws_elasticache_replication_group" "main" {
+  replication_group_id = "${local.name}-redis"
+  description          = "Polyforge Redis 7 — multi-AZ replication group"
   engine               = "redis"
   engine_version       = "7.1"
   node_type            = var.redis_node_type
-  num_cache_nodes      = 1
+  num_cache_clusters   = 2
   parameter_group_name = aws_elasticache_parameter_group.redis7.name
   subnet_group_name    = aws_elasticache_subnet_group.main.name
   security_group_ids   = [aws_security_group.redis.id]
   port                 = 6379
+
+  # High availability
+  automatic_failover_enabled = true
+  multi_az_enabled           = true
 
   # Encryption
   transit_encryption_enabled = true
@@ -82,7 +76,7 @@ resource "aws_elasticache_cluster" "main" {
   snapshot_window          = "04:00-05:00"
 
   # Maintenance
-  maintenance_window       = "sun:05:00-sun:06:00"
+  maintenance_window = "sun:05:00-sun:06:00"
 
   # CloudWatch logs
   log_delivery_configuration {
