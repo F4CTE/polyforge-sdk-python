@@ -14,7 +14,7 @@ import { LinkingService } from "./linking.service";
 
 const TOKEN = process.env.WHATSAPP_TOKEN ?? "dev-disabled";
 const PHONE_ID = process.env.WHATSAPP_PHONE_ID ?? "";
-const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN ?? "polyforge-verify";
+const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN ?? "";
 const API_URL = `https://graph.facebook.com/v18.0/${PHONE_ID}/messages`;
 
 /**
@@ -52,6 +52,13 @@ export class WhatsAppService implements OnModuleInit {
     "hub.verify_token"?: string;
     "hub.challenge"?: string;
   }): { status: number; body: string } {
+    if (!VERIFY_TOKEN) {
+      this.logger.warn(
+        "WhatsApp webhook verification rejected — WHATSAPP_VERIFY_TOKEN not configured",
+      );
+      return { status: 403, body: "Forbidden" };
+    }
+
     const mode = query["hub.mode"];
     const token = query["hub.verify_token"];
     const challenge = query["hub.challenge"];

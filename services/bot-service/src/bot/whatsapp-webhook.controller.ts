@@ -41,13 +41,10 @@ export class WhatsAppWebhookController {
   async incoming(@Req() request: FastifyRequest, @Res() reply: FastifyReply) {
     // SECURITY: Validate X-Hub-Signature-256 from Meta
     if (!this.appSecret) {
-      // Reject webhooks when secret is not configured in production
-      if (process.env.NODE_ENV === "production") {
-        this.logger.error(
-          "WHATSAPP_APP_SECRET is not configured — rejecting webhook",
-        );
-        return reply.status(500).send("Webhook not configured");
-      }
+      this.logger.error(
+        "WHATSAPP_APP_SECRET is not configured — rejecting webhook",
+      );
+      return reply.status(500).send("Webhook not configured");
     } else {
       const signature = request.headers["x-hub-signature-256"] as string;
       if (!signature) {

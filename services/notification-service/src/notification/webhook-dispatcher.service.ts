@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { createHmac } from "crypto";
+import { isIP } from "net";
 import { PrismaService } from "@polyforge/shared-db";
 
 /**
@@ -54,32 +55,79 @@ export class WebhookDispatcherService {
     }
   }
 
+  /**
+   * Block internal/reserved hostnames and IP ranges (SSRF protection).
+   * Handles IPv4, IPv6, IPv4-mapped IPv6, and hostname variants.
+   */
+  private isBlockedHost(hostname: string): boolean {
+    const normalized = hostname.replace(/\.$/, "").toLowerCase();
+
+    // Block well-known internal hostnames
+    if (
+      normalized === "localhost" ||
+      normalized === "metadata.google.internal" ||
+      normalized.endsWith(".internal") ||
+      normalized.endsWith(".local")
+    ) {
+      return true;
+    }
+
+    // Strip IPv6 brackets if present
+    const bare = normalized.startsWith("[")
+      ? normalized.slice(1, -1)
+      : normalized;
+
+    // Block IPv6 loopback and link-local
+    if (bare === "::1" || bare === "::") return true;
+    if (
+      bare.startsWith("fe80:") ||
+      bare.startsWith("fc00:") ||
+      bare.startsWith("fd00:")
+    ) {
+      return true;
+    }
+
+    // Handle IPv4-mapped IPv6 (::ffff:127.0.0.1)
+    const v4Mapped = bare.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i);
+    const ipv4 = v4Mapped ? v4Mapped[1] : isIP(bare) === 4 ? bare : null;
+
+    if (ipv4) {
+      const parts = ipv4.split(".").map(Number);
+      if (parts.some((p) => isNaN(p) || p < 0 || p > 255)) return true;
+
+      // 127.0.0.0/8, 10.0.0.0/8, 0.0.0.0/8
+      if (parts[0] === 127 || parts[0] === 10 || parts[0] === 0) return true;
+      // 172.16.0.0/12
+      if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
+      // 192.168.0.0/16
+      if (parts[0] === 192 && parts[1] === 168) return true;
+      // 169.254.0.0/16 (link-local)
+      if (parts[0] === 169 && parts[1] === 254) return true;
+      // 100.64.0.0/10 (CGNAT)
+      if (parts[0] === 100 && parts[1] >= 64 && parts[1] <= 127) return true;
+    }
+
+    return false;
+  }
+
   private async deliverWithRetry(
     webhookId: string,
     url: string,
     secret: string,
     payload: unknown,
   ): Promise<void> {
-    // SECURITY: Re-validate URL at dispatch time to prevent DNS rebinding
+    // SECURITY: Re-validate URL at dispatch time to prevent SSRF / DNS rebinding
     try {
       const parsed = new URL(url);
-      const blocked = [
-        "localhost",
-        "127.",
-        "0.0.0.0",
-        "10.",
-        "172.16.",
-        "172.17.",
-        "172.18.",
-        "192.168.",
-        "169.254.",
-      ];
-      if (
-        blocked.some((b) => parsed.hostname.startsWith(b)) ||
-        parsed.protocol !== "https:"
-      ) {
+
+      if (parsed.protocol !== "https:") {
+        this.logger.warn(`Webhook ${webhookId} blocked — non-HTTPS URL`);
+        return;
+      }
+
+      if (this.isBlockedHost(parsed.hostname)) {
         this.logger.warn(
-          `Webhook ${webhookId} blocked — internal/non-HTTPS URL`,
+          `Webhook ${webhookId} blocked — internal/reserved URL`,
         );
         return;
       }

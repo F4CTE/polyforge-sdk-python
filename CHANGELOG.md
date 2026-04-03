@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.4] — 2026-04-02
+
+### Fixed
+- **SSRF protection in webhook dispatcher** — replaced naive string-prefix blocklist with robust `isBlockedHost()` method that correctly handles IPv6 loopback (`::1`), IPv4-mapped IPv6 (`::ffff:127.0.0.1`), full RFC 1918 ranges (172.16–31.x.x), CGNAT (100.64/10), trailing-dot hostname bypass, and `.internal`/`.local` TLDs; prevents Server-Side Request Forgery via crafted webhook URLs
+- **WhatsApp verify token hardcoded default** — removed predictable `"polyforge-verify"` fallback from `WHATSAPP_VERIFY_TOKEN`; verification is now rejected when the env var is not configured, preventing unauthorized webhook registration
+- **WhatsApp webhook signature bypass in non-production** — `WhatsAppWebhookController` now rejects unsigned webhook payloads in all environments when `WHATSAPP_APP_SECRET` is not configured, closing a vector for spoofed webhook payloads in staging/dev
+
+---
+
 ## [6.35.3] — 2026-04-02
 
 ### Fixed
