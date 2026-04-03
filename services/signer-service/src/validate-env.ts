@@ -3,6 +3,8 @@
  * Extracted from main.ts for testability.
  */
 
+import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
+
 const REQUIRED_ENV = ["INTERNAL_JWT_SECRET", "ENCRYPTION_KEY", "REDIS_URL"];
 
 export function validateEnv(
@@ -23,4 +25,11 @@ export function validateEnv(
       );
     }
   }
+
+  // Reject all known placeholder patterns in production
+  rejectPlaceholderSecrets(
+    "signer-service",
+    ["INTERNAL_JWT_SECRET", "MASTER_ENCRYPTION_KEY"],
+    env,
+  );
 }

@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.3] — 2026-04-02
+
+### Fixed
+- **Placeholder secret rejection (MEDIUM)** — added `rejectPlaceholderSecrets()` utility in `@polyforge/shared-auth` that rejects known placeholder values (`CHANGE_ME*`, `dev-*`, `sk-ant-xxx`, `sk-xxx`, `dev-builder-*`, all-zeros hex) when `NODE_ENV=production`; integrated into `auth-service`, `admin-auth-service`, `api-service`, `bot-service`, and `signer-service` startup validation (closes #80)
+
+---
+
 ## [6.35.2] — 2026-04-03
 
 ### Fixed

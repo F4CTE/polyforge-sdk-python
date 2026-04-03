@@ -15,6 +15,7 @@ import etag from "@fastify/etag";
 import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
+import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
 
 const PORT = parseInt(process.env.PORT ?? "3002", 10);
 
@@ -47,19 +48,6 @@ function validateEnv() {
   }
 
   if (process.env.NODE_ENV === "production") {
-    // Reject CHANGE_ME default JWT secrets
-    const secretsForDefaultCheck = [
-      "USER_JWT_SECRET",
-      "ADMIN_JWT_SECRET",
-      "BOT_JWT_SECRET",
-      "INTERNAL_JWT_SECRET",
-    ];
-    for (const key of secretsForDefaultCheck) {
-      if (process.env[key]?.startsWith("CHANGE_ME")) {
-        throw new Error(`${key} must be changed from default in production`);
-      }
-    }
-
     // Reject mock URLs in production
     const clobUrl = process.env.CLOB_API_URL;
     if (!clobUrl || clobUrl.includes("mock")) {
@@ -68,6 +56,16 @@ function validateEnv() {
       );
     }
   }
+
+  // Reject all known placeholder patterns in production
+  rejectPlaceholderSecrets("api-service", [
+    "INTERNAL_JWT_SECRET",
+    "ANTHROPIC_API_KEY",
+    "OPENAI_API_KEY",
+    "POLY_BUILDER_API_KEY",
+    "POLY_BUILDER_SECRET",
+    "POLY_BUILDER_PASSPHRASE",
+  ]);
 }
 
 async function bootstrap() {

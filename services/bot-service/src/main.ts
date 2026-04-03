@@ -7,6 +7,7 @@ import {
 import { Logger } from "nestjs-pino";
 import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
+import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
 
 const PORT = parseInt(process.env.PORT ?? "3011", 10);
 
@@ -20,6 +21,13 @@ function validateEnv() {
     );
     process.exit(1);
   }
+
+  // Reject all known placeholder patterns in production
+  rejectPlaceholderSecrets("bot-service", [
+    "INTERNAL_JWT_SECRET",
+    "WHATSAPP_APP_SECRET",
+    "WHATSAPP_VERIFY_TOKEN",
+  ]);
 }
 
 async function bootstrap() {

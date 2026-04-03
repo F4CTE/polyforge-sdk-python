@@ -10,6 +10,7 @@ import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 import { PrismaAdminService } from "@polyforge/shared-db";
+import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
 
 const REQUIRED_ENV = ["ADMIN_JWT_SECRET", "ADMIN_DATABASE_URL"];
 
@@ -39,13 +40,13 @@ function validateEnv() {
       );
       process.exit(1);
     }
-    if (jwtSecret?.startsWith("dev-") || jwtSecret?.startsWith("CHANGE_ME")) {
-      process.stderr.write(
-        "[admin-auth-service] ADMIN_JWT_SECRET must be changed from default in production\n",
-      );
-      process.exit(1);
-    }
   }
+
+  // Reject all known placeholder patterns in production
+  rejectPlaceholderSecrets("admin-auth-service", [
+    "ADMIN_JWT_SECRET",
+    "TOTP_ENCRYPTION_KEY",
+  ]);
 }
 
 async function bootstrap() {
