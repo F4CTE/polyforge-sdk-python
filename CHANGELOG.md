@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.34.1] — 2026-04-03
+
+### Fixed
+- **Landing page build failure** — fixed prettier formatting violations in `hero.tsx` (attribute line-wrapping) and `nav.tsx` (trailing commas) that caused `next build` to fail with ESLint/Prettier errors
+
+---
+
 ## [6.34.0] — 2026-04-02
 
 ### Added

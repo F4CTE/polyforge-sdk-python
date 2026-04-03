@@ -89,7 +89,10 @@ export function Hero() {
               key={badge}
               className="inline-flex items-center gap-1.5 text-[13px] font-medium text-pf-text-secondary bg-pf-surface border border-pf-border-subtle rounded-full px-3.5 py-1.5"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" aria-hidden="true" />
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-cyan-400"
+                aria-hidden="true"
+              />
               {badge}
             </span>
           ))}

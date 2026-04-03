@@ -126,7 +126,7 @@ export function Nav() {
   useEffect(() => {
     if (mobileOpen) {
       const firstFocusable = menuRef.current?.querySelector<HTMLElement>(
-        'a[href], button, [tabindex]:not([tabindex="-1"])'
+        'a[href], button, [tabindex]:not([tabindex="-1"])',
       );
       firstFocusable?.focus();
     } else {
@@ -141,8 +141,8 @@ export function Nav() {
       if (e.key !== "Tab" || !menuRef.current) return;
       const focusable = Array.from(
         menuRef.current.querySelectorAll<HTMLElement>(
-          'a[href], button, [tabindex]:not([tabindex="-1"])'
-        )
+          'a[href], button, [tabindex]:not([tabindex="-1"])',
+        ),
       ).filter((el) => !el.hasAttribute("disabled"));
       if (focusable.length === 0) return;
       const first = focusable[0];
