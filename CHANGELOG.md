@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.14] — 2026-04-03
+
+### Security
+- **Replace inline DTOs with validated DTO classes** — created `CreateApiKeyDto` (api-keys), `UpdateProfileDto` and `ChangePasswordDto` (profile), and `RejectUserDto` (admin users) with proper `class-validator` decorators (`@IsString`, `@MaxLength`, `@MinLength`, `@IsUrl`, `@IsArray`); enforces input length/type constraints at the controller boundary via the global `ValidationPipe`
+
+---
+
 ## [6.35.13] — 2026-04-03
 
 ### Fixed

@@ -10,6 +10,7 @@ import {
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { ApiKeysService } from "./api-keys.service";
+import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 
 @ApiTags("api-keys")
 @ApiBearerAuth("jwt")
@@ -24,10 +25,7 @@ export class ApiKeysController {
   }
 
   @Post()
-  create(
-    @CurrentUser() user: any,
-    @Body() dto: { name: string; scopes?: string[] },
-  ) {
+  create(@CurrentUser() user: any, @Body() dto: CreateApiKeyDto) {
     return this.keys.create(user.sub, dto);
   }
 

@@ -10,6 +10,8 @@ import {
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { ProfileService } from "./profile.service";
+import { UpdateProfileDto } from "./dto/update-profile.dto";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 
 @ApiTags("profile")
 @ApiBearerAuth("jwt")
@@ -19,18 +21,12 @@ export class ProfileController {
   constructor(private readonly profile: ProfileService) {}
 
   @Patch("me")
-  updateMyProfile(
-    @CurrentUser() user: any,
-    @Body() dto: { displayName?: string; bio?: string; avatarUrl?: string },
-  ) {
+  updateMyProfile(@CurrentUser() user: any, @Body() dto: UpdateProfileDto) {
     return this.profile.updateProfile(user.sub, dto);
   }
 
   @Post("password")
-  changePassword(
-    @CurrentUser() user: any,
-    @Body() dto: { currentPassword: string; newPassword: string },
-  ) {
+  changePassword(@CurrentUser() user: any, @Body() dto: ChangePasswordDto) {
     return this.profile.changePassword(user.sub, dto);
   }
 

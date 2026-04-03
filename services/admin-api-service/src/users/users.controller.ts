@@ -18,6 +18,7 @@ import {
 import { UsersService } from "./users.service";
 import { SuspendUserDto } from "./dto/suspend.dto";
 import { UpdateLimitsDto } from "./dto/update-limits.dto";
+import { RejectUserDto } from "./dto/reject-user.dto";
 import { AdminJwtGuard } from "../common/guard/admin-jwt.guard";
 import { AuditService } from "../common/audit/audit.service";
 import {
@@ -132,7 +133,7 @@ export class UsersController {
   @Patch(":id/reject")
   async reject(
     @Param("id", ParseUUIDPipe) id: string,
-    @Body() dto: { reason?: string },
+    @Body() dto: RejectUserDto,
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
   ) {
