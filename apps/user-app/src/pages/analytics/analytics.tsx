@@ -91,7 +91,7 @@ function pnlTextColor(val: string): string {
 
 function brierColor(score: number): string {
   if (score < 0.2) return 'text-pf-success';
-  if (score < 0.3) return 'text-yellow-400';
+  if (score < 0.3) return 'text-pf-warning';
   return 'text-pf-danger';
 }
 

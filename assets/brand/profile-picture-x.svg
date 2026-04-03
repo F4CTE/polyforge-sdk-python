@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#020817"/>
+      <stop offset="100%" stop-color="#0a1628"/>
+    </linearGradient>
+    <linearGradient id="cyan-glow" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="soft-glow">
+      <feGaussianBlur stdDeviation="18" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="400" rx="0" fill="url(#bg)"/>
+
+  <!-- Subtle radial glow behind mark -->
+  <circle cx="200" cy="190" r="120" fill="#06b6d4" opacity="0.06" filter="url(#soft-glow)"/>
+
+  <!-- Hexagon outline — prediction markets / blockchain geometry -->
+  <path
+    d="M200 60L310 123.5V250.5L200 314L90 250.5V123.5L200 60Z"
+    stroke="#06b6d4"
+    stroke-width="3"
+    fill="none"
+    opacity="0.35"
+    filter="url(#glow)"
+  />
+
+  <!-- Inner hexagon — subtle depth -->
+  <path
+    d="M200 90L288 140V240L200 290L112 240V140L200 90Z"
+    stroke="#06b6d4"
+    stroke-width="1.2"
+    fill="none"
+    opacity="0.15"
+  />
+
+  <!-- Lightning bolt — speed / automation -->
+  <path
+    d="M215 100L155 210H195L185 300L255 190H215L215 100Z"
+    fill="url(#cyan-glow)"
+    filter="url(#glow)"
+  />
+
+  <!-- "POLYFORGE" wordmark below -->
+  <text
+    x="200" y="360"
+    text-anchor="middle"
+    font-family="'Inter', 'SF Pro Display', -apple-system, sans-serif"
+    font-weight="700"
+    font-size="28"
+    letter-spacing="6"
+    fill="#06b6d4"
+  >POLYFORGE</text>
+</svg>

@@ -62,13 +62,13 @@ const AUDIENCE_REACH: Record<Broadcast['targetAudience'], number> = {
 function typeBadgeClass(type: Broadcast['type']): string {
   switch (type) {
     case 'INFO':
-      return 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+      return 'bg-pf-cyan-500/10 text-pf-cyan-500 border border-pf-cyan-500/20';
     case 'WARNING':
-      return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+      return 'bg-pf-warning/10 text-pf-warning border border-pf-warning/20';
     case 'SUCCESS':
-      return 'bg-green-500/10 text-green-400 border border-green-500/20';
+      return 'bg-pf-success/10 text-pf-success border border-pf-success/20';
     case 'PROMO':
-      return 'bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/20';
+      return 'bg-pf-cyan-500/10 text-pf-cyan-500 border border-pf-cyan-500/20';
   }
 }
 
@@ -78,13 +78,13 @@ function typePillClass(type: Broadcast['type'], selected: boolean): string {
   }
   switch (type) {
     case 'INFO':
-      return 'border border-blue-500/40 bg-blue-500/10 text-blue-400';
+      return 'border border-pf-cyan-500/40 bg-pf-cyan-500/10 text-pf-cyan-500';
     case 'WARNING':
-      return 'border border-amber-500/40 bg-amber-500/10 text-amber-400';
+      return 'border border-pf-warning/40 bg-pf-warning/10 text-pf-warning';
     case 'SUCCESS':
-      return 'border border-green-500/40 bg-green-500/10 text-green-400';
+      return 'border border-pf-success/40 bg-pf-success/10 text-pf-success';
     case 'PROMO':
-      return 'border border-pf-cyan-500/40 bg-pf-cyan-500/10 text-pf-cyan-400';
+      return 'border border-pf-cyan-500/40 bg-pf-cyan-500/10 text-pf-cyan-500';
   }
 }
 
@@ -346,11 +346,11 @@ export function Component() {
 
           {/* Confirmation warning */}
           {confirmSend && (
-            <div className="rounded-pf-sm border border-amber-500/30 bg-amber-500/5 p-4">
+            <div className="rounded-pf-sm border border-pf-warning/30 bg-pf-warning/5 p-4">
               <div className="flex items-start gap-2 mb-3">
-                <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-1" aria-hidden="true" />
+                <AlertTriangle size={16} className="text-pf-warning shrink-0 mt-1" aria-hidden="true" />
                 <div>
-                  <p className="text-sm font-semibold text-amber-400">Confirm broadcast</p>
+                  <p className="text-sm font-semibold text-pf-warning">Confirm broadcast</p>
                   <p className="text-xs text-pf-text-secondary mt-1">
                     You are about to send to <span className="font-semibold text-pf-text">~{estimatedReach.toLocaleString()} users</span>. This cannot be undone.
                   </p>

@@ -93,9 +93,9 @@ const MAX_COMPARE = 3;
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 function rankBadgeClass(rank: number): string {
-  if (rank === 1) return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30';
-  if (rank === 2) return 'bg-slate-400/20 text-slate-300 border border-slate-400/30';
-  if (rank === 3) return 'bg-orange-600/20 text-orange-400 border border-orange-600/30';
+  if (rank === 1) return 'bg-pf-warning/20 text-pf-warning border border-pf-warning/30';
+  if (rank === 2) return 'bg-pf-text/20 text-pf-text/70 border border-pf-text/30';
+  if (rank === 3) return 'bg-pf-warning/20 text-pf-warning/80 border border-pf-warning/30';
   return 'bg-pf-overlay text-pf-text-muted border border-pf-border';
 }
 

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#020817"/>
+      <stop offset="100%" stop-color="#0a1628"/>
+    </linearGradient>
+    <linearGradient id="cyan-glow" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="soft-glow">
+      <feGaussianBlur stdDeviation="20" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <clipPath id="circle-clip">
+      <circle cx="200" cy="200" r="200"/>
+    </clipPath>
+  </defs>
+
+  <!-- Circular clip for X avatar -->
+  <g clip-path="url(#circle-clip)">
+    <!-- Background -->
+    <rect width="400" height="400" fill="url(#bg)"/>
+
+    <!-- Subtle radial glow -->
+    <circle cx="200" cy="200" r="130" fill="#06b6d4" opacity="0.07" filter="url(#soft-glow)"/>
+
+    <!-- Hexagon outline -->
+    <path
+      d="M200 55L318 123V259L200 327L82 259V123L200 55Z"
+      stroke="#06b6d4"
+      stroke-width="3.5"
+      fill="none"
+      opacity="0.35"
+      filter="url(#glow)"
+    />
+
+    <!-- Inner hexagon -->
+    <path
+      d="M200 88L296 143V253L200 308L104 253V143L200 88Z"
+      stroke="#06b6d4"
+      stroke-width="1.2"
+      fill="none"
+      opacity="0.15"
+    />
+
+    <!-- Lightning bolt -->
+    <path
+      d="M218 95L150 215H195L183 310L260 195H218L218 95Z"
+      fill="url(#cyan-glow)"
+      filter="url(#glow)"
+    />
+  </g>
+</svg>

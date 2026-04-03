@@ -56,13 +56,13 @@ function statusBadge(status: AdminMarket['status']) {
   const base = 'inline-flex items-center px-2 py-1 rounded-pf-sm text-pf-label font-semibold uppercase tracking-wide';
   switch (status) {
     case 'ACTIVE':
-      return <span className={`${base} bg-green-500/15 text-green-400`}>Active</span>;
+      return <span className={`${base} bg-pf-success/15 text-pf-success`}>Active</span>;
     case 'RESOLVED':
-      return <span className={`${base} bg-blue-500/15 text-blue-400`}>Resolved</span>;
+      return <span className={`${base} bg-pf-cyan-500/15 text-pf-cyan-500`}>Resolved</span>;
     case 'DELISTED':
       return <span className={`${base} bg-pf-text-tertiary/20 text-pf-text-tertiary`}>Delisted</span>;
     case 'PENDING':
-      return <span className={`${base} bg-yellow-500/15 text-yellow-400`}>Pending</span>;
+      return <span className={`${base} bg-pf-warning/15 text-pf-warning`}>Pending</span>;
     default:
       return <span className={`${base} bg-pf-elevated text-pf-text-secondary`}>{status}</span>;
   }
@@ -408,15 +408,15 @@ export function Component() {
 
                     {/* YES / NO */}
                     <td className="px-4 py-3 text-right whitespace-nowrap">
-                      <div className="text-green-400 font-medium">{(parseFloat(market.yesPrice) * 100).toFixed(0)}¢</div>
-                      <div className="text-red-400 font-medium">{(parseFloat(market.noPrice) * 100).toFixed(0)}¢</div>
+                      <div className="text-pf-success font-medium">{(parseFloat(market.yesPrice) * 100).toFixed(0)}¢</div>
+                      <div className="text-pf-danger font-medium">{(parseFloat(market.noPrice) * 100).toFixed(0)}¢</div>
                     </td>
 
                     {/* End Date */}
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span
                         className={
-                          past || soon ? 'text-red-400 font-medium' : 'text-pf-text-secondary'
+                          past || soon ? 'text-pf-danger font-medium' : 'text-pf-text-secondary'
                         }
                       >
                         {formatDate(market.endDate)}
@@ -436,8 +436,8 @@ export function Component() {
                           title={market.featured ? 'Remove from featured' : 'Mark as featured'}
                           className={`p-2 rounded-pf-sm transition-colors disabled:opacity-40 ${
                             market.featured
-                              ? 'text-yellow-400 hover:text-yellow-300'
-                              : 'text-pf-text-tertiary hover:text-yellow-400'
+                              ? 'text-pf-warning hover:text-pf-warning/80'
+                              : 'text-pf-text-tertiary hover:text-pf-warning'
                           }`}
                         >
                           <Star size={14} fill={market.featured ? 'currentColor' : 'none'} />
@@ -452,7 +452,7 @@ export function Component() {
                                 variant="danger"
                                 onClick={() => handleDelist(market)}
                                 disabled={isUpdating}
-                                className="px-2 py-1 rounded-pf-sm text-pf-label font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-40"
+                                className="px-2 py-1 rounded-pf-sm text-pf-label font-semibold bg-pf-danger/20 text-pf-danger hover:bg-pf-danger/30 transition-colors disabled:opacity-40"
                               >
                                 Confirm
                               </Button>
@@ -472,7 +472,7 @@ export function Component() {
                               onClick={() => setConfirmDelist(market.id)}
                               disabled={isUpdating}
                               title="Delist market"
-                              className="flex items-center gap-1 px-2 py-1 rounded-pf-sm text-pf-label font-medium text-pf-text-tertiary hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
+                              className="flex items-center gap-1 px-2 py-1 rounded-pf-sm text-pf-label font-medium text-pf-text-tertiary hover:text-pf-danger hover:bg-pf-danger/10 transition-colors disabled:opacity-40"
                             >
                               <Ban size={12} />
                               Delist
@@ -487,7 +487,7 @@ export function Component() {
                             variant="ghost"
                             onClick={() => handleRestore(market)}
                             disabled={isUpdating}
-                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm text-pf-label font-medium text-pf-text-tertiary hover:text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-40"
+                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm text-pf-label font-medium text-pf-text-tertiary hover:text-pf-success hover:bg-pf-success/10 transition-colors disabled:opacity-40"
                           >
                             Restore
                           </Button>

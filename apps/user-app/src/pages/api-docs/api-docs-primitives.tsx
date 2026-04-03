@@ -79,7 +79,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
           </Button>
         </div>
       )}
-      <pre className="bg-pf-base px-4 py-4 text-[11.5px] font-mono text-pf-text overflow-x-auto whitespace-pre leading-relaxed">
+      <pre className="bg-pf-base px-4 py-4 text-pf-label font-mono text-pf-text overflow-x-auto whitespace-pre leading-relaxed">
         {code.trim()}
       </pre>
     </div>

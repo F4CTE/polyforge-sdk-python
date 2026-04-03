@@ -66,8 +66,8 @@ const COHORT_DEFINITIONS = [
     id: 'marketplace-buyers',
     label: 'Marketplace Buyers',
     icon: ShoppingBag,
-    borderColor: 'border-purple-500',
-    iconColor: 'text-purple-400',
+    borderColor: 'border-pf-cyan-500',
+    iconColor: 'text-pf-cyan-500',
     description: 'Purchased 1+ strategies from marketplace',
   },
   {
