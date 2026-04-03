@@ -1573,6 +1573,7 @@ export function Component() {
                     max="99"
                     step="1"
                     value={kellyConfidence}
+                    aria-label="Kelly confidence percentage"
                     onChange={(e) => {
                       const conf = parseInt(e.target.value) / 100;
                       setKellyConfidence(parseInt(e.target.value));

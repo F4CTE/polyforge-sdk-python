@@ -345,6 +345,7 @@ export function Component() {
                         step="1"
                         value={sizePercent}
                         onChange={(e) => setSizePercent(parseInt(e.target.value))}
+                        aria-label="Copy percentage of whale trade size"
                         className="flex-1 h-1.5 rounded-pf-full bg-pf-border accent-pf-cyan-500"
                       />
                       <span className="text-sm font-mono text-pf-cyan-400 w-12 text-right">{sizePercent}%</span>

@@ -623,8 +623,9 @@ function AdvancedSearchModal({
               <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide">End Date</p>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
-                  <label className="block text-pf-caption text-pf-text-muted mb-0.5">From</label>
+                  <label htmlFor="end-date-from" className="block text-pf-caption text-pf-text-muted mb-0.5">From</label>
                   <input
+                    id="end-date-from"
                     type="date"
                     value={filters.endDateFrom ?? ''}
                     onChange={(e) => updateFilters((prev) => ({ ...prev, endDateFrom: e.target.value || undefined }))}
@@ -632,8 +633,9 @@ function AdvancedSearchModal({
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-pf-caption text-pf-text-muted mb-0.5">To</label>
+                  <label htmlFor="end-date-to" className="block text-pf-caption text-pf-text-muted mb-0.5">To</label>
                   <input
+                    id="end-date-to"
                     type="date"
                     value={filters.endDateTo ?? ''}
                     onChange={(e) => updateFilters((prev) => ({ ...prev, endDateTo: e.target.value || undefined }))}

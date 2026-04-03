@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.15] — 2026-04-03
+
+### Fixed
+- **Form inputs missing accessibility labels (closes #48)** — added `aria-label` or `htmlFor`/`id` associations to 6 form controls: copy-setup size slider, alerts token radio, markets-list date pickers (×2), market-detail Kelly confidence slider, and block-palette search input
+
+---
+
 ## [6.35.14] — 2026-04-03
 
 ### Security

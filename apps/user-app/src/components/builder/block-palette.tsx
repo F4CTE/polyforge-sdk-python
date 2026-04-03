@@ -315,6 +315,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                   placeholder="Search blocks..."
                   value={paletteSearch}
                   onChange={e => setPaletteSearch(e.target.value)}
+                  aria-label="Search blocks"
                   className="w-full pl-7 pr-2 py-1.5 text-xs bg-pf-surface border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
                 />
               </div>

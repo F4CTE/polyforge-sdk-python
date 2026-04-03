@@ -286,6 +286,7 @@ export function Component() {
                         value={t.id}
                         checked={selectedTokenId === t.id}
                         onChange={() => setSelectedTokenId(t.id)}
+                        aria-label={`Select ${t.outcome.toUpperCase()} token`}
                         className="sr-only"
                       />
                       <span className="font-semibold">{t.outcome.toUpperCase()}</span>
