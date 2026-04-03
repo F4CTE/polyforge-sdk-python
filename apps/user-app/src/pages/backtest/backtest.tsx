@@ -547,13 +547,13 @@ export function Component() {
                               type="button"
                               variant="ghost"
                               onClick={() => setCompareA(run.id === compareA ? null : run.id)}
-                              className={`text-pf-caption px-1.5 py-0.5 rounded border transition-colors ${compareA === run.id ? 'bg-blue-500/20 border-blue-500/40 text-blue-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
+                              className={`text-pf-caption px-1.5 py-0.5 rounded border transition-colors ${compareA === run.id ? 'bg-pf-info/20 border-pf-info/40 text-pf-info' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
                             >A</Button>
                             <Button
                               type="button"
                               variant="ghost"
                               onClick={() => setCompareB(run.id === compareB ? null : run.id)}
-                              className={`text-pf-caption px-1.5 py-0.5 rounded border transition-colors ${compareB === run.id ? 'bg-purple-500/20 border-purple-500/40 text-purple-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
+                              className={`text-pf-caption px-1.5 py-0.5 rounded border transition-colors ${compareB === run.id ? 'bg-pf-purple-500/20 border-pf-purple-500/40 text-pf-purple-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
                             >B</Button>
                           </div>
                         </td>
@@ -590,7 +590,7 @@ export function Component() {
               <>
                 {winner && (
                   <div className="mb-3 text-xs text-pf-text-secondary">
-                    Run <span className={`font-semibold ${winner === 'A' ? 'text-blue-400' : 'text-purple-400'}`}>{winner}</span> outperforms by <span className="font-mono text-pf-success">{Math.abs(pnlA - pnlB).toFixed(2)}</span>
+                    Run <span className={`font-semibold ${winner === 'A' ? 'text-pf-info' : 'text-pf-purple-400'}`}>{winner}</span> outperforms by <span className="font-mono text-pf-success">{Math.abs(pnlA - pnlB).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="overflow-x-auto">
@@ -598,8 +598,8 @@ export function Component() {
                     <thead>
                       <tr className="border-b border-pf-border">
                         <th className="text-left py-1.5 pr-4 font-medium text-pf-text-muted">Metric</th>
-                        <th className="text-center py-1.5 px-4 font-medium text-blue-400">Run A</th>
-                        <th className="text-center py-1.5 px-4 font-medium text-purple-400">Run B</th>
+                        <th className="text-center py-1.5 px-4 font-medium text-pf-info">Run A</th>
+                        <th className="text-center py-1.5 px-4 font-medium text-pf-purple-400">Run B</th>
                       </tr>
                     </thead>
                     <tbody>

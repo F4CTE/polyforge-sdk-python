@@ -161,7 +161,7 @@ export function Component() {
                     {tab === 'events' && (
                       <>
                         <td className="px-4 py-3">
-                          <span className="px-2 py-0.5 rounded text-pf-label font-medium bg-[var(--color-pf-purple-500)]/10 text-[var(--color-pf-purple-500)]">
+                          <span className="px-2 py-0.5 rounded text-pf-label font-medium bg-pf-purple-500/10 text-pf-purple-500">
                             {log.type}
                           </span>
                         </td>

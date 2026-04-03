@@ -160,14 +160,14 @@ export function Component() {
   const statCards = [
     { label: 'Total Users', value: stats.totalUsers, icon: <Users size={20} aria-hidden="true" />, color: 'text-pf-info', bg: 'bg-pf-info/10' },
     { label: 'Active Strategies', value: stats.activeStrategies, icon: <Blocks size={20} aria-hidden="true" />, color: 'text-pf-success', bg: 'bg-pf-success/10' },
-    { label: 'Total Orders', value: stats.totalOrders, icon: <ShoppingCart size={20} aria-hidden="true" />, color: 'text-[var(--color-pf-purple-500)]', bg: 'bg-[var(--color-pf-purple-500)]/10' },
+    { label: 'Total Orders', value: stats.totalOrders, icon: <ShoppingCart size={20} aria-hidden="true" />, color: 'text-pf-purple-500', bg: 'bg-pf-purple-500/10' },
     { label: 'Open Tickets', value: stats.openTickets, icon: <TicketCheck size={20} aria-hidden="true" />, color: 'text-pf-warning', bg: 'bg-pf-warning/10' },
   ];
 
   const platformStatCards = [
     { label: 'News Signals (30d)', value: platformStats?.totalNewsSignals ?? 0, icon: <Newspaper size={20} aria-hidden="true" />, color: 'text-pf-cyan-500', bg: 'bg-pf-cyan-500/10' },
     { label: 'Markets w/ Sentiment', value: platformStats?.marketsWithSentiment ?? 0, icon: <BarChart2 size={20} aria-hidden="true" />, color: 'text-pf-info', bg: 'bg-pf-info/10' },
-    { label: 'LP Orders', value: platformStats?.totalLpOrders ?? 0, icon: <Layers size={20} aria-hidden="true" />, color: 'text-[var(--color-pf-purple-500)]', bg: 'bg-[var(--color-pf-purple-500)]/10' },
+    { label: 'LP Orders', value: platformStats?.totalLpOrders ?? 0, icon: <Layers size={20} aria-hidden="true" />, color: 'text-pf-purple-500', bg: 'bg-pf-purple-500/10' },
     { label: 'Resolved Positions', value: platformStats?.resolvedPositions ?? 0, icon: <CheckSquare size={20} aria-hidden="true" />, color: 'text-pf-success', bg: 'bg-pf-success/10' },
   ];
 
@@ -249,7 +249,7 @@ export function Component() {
             <div className="text-center py-6">
               <AlertCircle className="mx-auto mb-2 text-pf-text-tertiary" size={24} aria-hidden="true" />
               <p className="text-sm text-pf-text-secondary">Health unavailable</p>
-              <Button type="button" variant="ghost" onClick={load} className="text-pf-cyan-400 hover:text-[var(--color-pf-cyan-300)] text-xs mt-2">
+              <Button type="button" variant="ghost" onClick={load} className="text-pf-cyan-400 hover:text-pf-cyan-300 text-xs mt-2">
                 Retry
               </Button>
             </div>
@@ -442,7 +442,7 @@ export function Component() {
             <Clock className="mx-auto mb-2 text-pf-text-tertiary" size={20} aria-hidden="true" />
             <p className="text-sm text-pf-text-secondary">No recent activity</p>
             <p className="text-xs text-pf-text-tertiary mt-1">Activity will appear here as admins take actions.</p>
-            <Button type="button" variant="ghost" onClick={load} className="text-pf-cyan-400 hover:text-[var(--color-pf-cyan-300)] text-xs mt-2">
+            <Button type="button" variant="ghost" onClick={load} className="text-pf-cyan-400 hover:text-pf-cyan-300 text-xs mt-2">
               Refresh
             </Button>
           </div>

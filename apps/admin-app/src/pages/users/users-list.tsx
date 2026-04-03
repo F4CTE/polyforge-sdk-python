@@ -206,7 +206,7 @@ export function Component() {
         <div className="text-center py-12">
           <AlertCircle className="mx-auto mb-3 text-pf-text-tertiary" size={40} aria-hidden="true" />
           <p className="text-pf-text-secondary mb-4">Failed to load data</p>
-          <Button type="button" variant="ghost" onClick={load} className="text-pf-cyan-400 hover:text-[var(--color-pf-cyan-300)] text-sm rounded-pf-sm px-2 py-1">
+          <Button type="button" variant="ghost" onClick={load} className="text-pf-cyan-400 hover:text-pf-cyan-300 text-sm rounded-pf-sm px-2 py-1">
             Try again
           </Button>
         </div>

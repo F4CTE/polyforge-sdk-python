@@ -10,6 +10,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Security
 - **Replace inline DTOs with validated DTO classes** — created `CreateApiKeyDto` (api-keys), `UpdateProfileDto` and `ChangePasswordDto` (profile), and `RejectUserDto` (admin users) with proper `class-validator` decorators (`@IsString`, `@MaxLength`, `@MinLength`, `@IsUrl`, `@IsArray`); enforces input length/type constraints at the controller boundary via the global `ValidationPipe`
 
+### Fixed
+- **Landing CTA design tokens (closes #37)** — replaced all `cyan-*` classes with `pf-cyan-*` token equivalents in hero.tsx and cta-banner.tsx
+- **Admin chart hardcoded hex (closes #38)** — replaced 20+ hardcoded hex colors in revenue.tsx and sentiment.tsx with CSS variable references via `getComputedStyle` pattern
+- **User App non-token colors (closes #65)** — replaced `amber-*`, `blue-*`, `green-*`, `purple-*`, `red-*` Tailwind classes with `pf-gold-*`, `pf-info`, `pf-success`, `pf-purple-*`, `pf-danger` design tokens across portfolio, orders, backtest, referrals, markets, strategy-builder, alerts, and public-profile pages
+- **Admin bracket notation cleanup (closes #66)** — replaced `text-[var(--color-pf-*)]` bracket notation with proper Tailwind token classes (`text-pf-purple-500`, `hover:text-pf-cyan-300`, etc.) across dashboard, users, orders, retention, logs, and strategies pages
+
 ---
 
 ## [6.35.13] — 2026-04-03

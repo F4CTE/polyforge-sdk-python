@@ -290,7 +290,7 @@ const MarketCard = memo(function MarketCard({
           size="icon-sm"
           onClick={(e) => onToggleWatch(market.id, e)}
           disabled={isWatchLoading}
-          className={`p-1.5 rounded-pf transition-colors ${isWatched ? 'text-amber-400 hover:text-amber-300' : 'text-pf-text-muted hover:text-pf-text'}`}
+          className={`p-1.5 rounded-pf transition-colors ${isWatched ? 'text-pf-gold-500 hover:text-pf-gold-400' : 'text-pf-text-muted hover:text-pf-text'}`}
           title={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={isWatched ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1311,7 +1311,7 @@ export function Component() {
                             size="icon-sm"
                             onClick={(e) => toggleWatch(market.id, e)}
                             disabled={watchlistLoading.has(market.id)}
-                            className={`p-1.5 rounded-pf transition-colors ${watchedIds.has(market.id) ? 'text-amber-400 hover:text-amber-300' : 'text-pf-text-muted hover:text-pf-text'}`}
+                            className={`p-1.5 rounded-pf transition-colors ${watchedIds.has(market.id) ? 'text-pf-gold-500 hover:text-pf-gold-400' : 'text-pf-text-muted hover:text-pf-text'}`}
                             title={watchedIds.has(market.id) ? 'Remove from watchlist' : 'Add to watchlist'}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={watchedIds.has(market.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

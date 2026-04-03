@@ -782,18 +782,18 @@ function DifficultyDots({ difficulty }: { difficulty: TemplateDifficulty }) {
           className={`inline-block size-1.5 rounded-pf-full ${
             i <= filled
               ? difficulty === 'beginner'
-                ? 'bg-green-400'
+                ? 'bg-pf-success'
                 : difficulty === 'intermediate'
-                ? 'bg-amber-400'
-                : 'bg-red-400'
+                ? 'bg-pf-warning'
+                : 'bg-pf-danger'
               : 'bg-pf-border'
           }`}
         />
       ))}
       <span className={`ml-1 text-pf-caption capitalize ${
-        difficulty === 'beginner' ? 'text-green-400' :
-        difficulty === 'intermediate' ? 'text-amber-400' :
-        'text-red-400'
+        difficulty === 'beginner' ? 'text-pf-success' :
+        difficulty === 'intermediate' ? 'text-pf-warning' :
+        'text-pf-danger'
       }`}>{difficulty}</span>
     </span>
   );
@@ -1166,9 +1166,9 @@ export function Component() {
                     <span className="text-pf-caption px-1.5 py-0.5 rounded bg-pf-surface-elevated border border-pf-border text-pf-text-muted">{t.trigger}</span>
                   )}
                   <span className={`text-pf-caption px-1.5 py-0.5 rounded border ${
-                    t.difficulty === 'Beginner' ? 'bg-green-500/10 border-green-500/30 text-green-400' :
-                    t.difficulty === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
-                    'bg-red-500/10 border-red-500/30 text-red-400'
+                    t.difficulty === 'Beginner' ? 'bg-pf-success/10 border-pf-success/30 text-pf-success' :
+                    t.difficulty === 'Intermediate' ? 'bg-pf-warning/10 border-pf-warning/30 text-pf-warning' :
+                    'bg-pf-danger/10 border-pf-danger/30 text-pf-danger'
                   }`}>{t.difficulty}</span>
                 </div>
                 <p className="text-xs text-pf-text-muted mt-0.5">{t.description}</p>

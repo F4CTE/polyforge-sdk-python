@@ -62,7 +62,7 @@ function StatCard({
 function StatusBadge({ status }: { status: ReferralEntry['status'] }) {
   const map: Record<ReferralEntry['status'], { label: string; className: string }> = {
     PENDING: { label: 'Pending', className: 'bg-pf-surface text-pf-text-secondary border border-pf-border' },
-    SIGNED_UP: { label: 'Signed Up', className: 'bg-blue-500/10 text-blue-400 border border-blue-500/20' },
+    SIGNED_UP: { label: 'Signed Up', className: 'bg-pf-info/10 text-pf-info border border-pf-info/20' },
     ACTIVE: { label: 'Active', className: 'bg-pf-success/10 text-pf-success border border-pf-success/20' },
   };
   const { label, className } = map[status];
@@ -276,7 +276,7 @@ export function Component() {
           label="Signed Up"
           value={loading ? '—' : (data?.stats.signedUp ?? 0)}
           icon={Users}
-          valueClass="text-blue-400"
+          valueClass="text-pf-info"
         />
         <StatCard
           label="Active Traders"

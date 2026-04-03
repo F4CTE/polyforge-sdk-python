@@ -513,10 +513,10 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
 function CategoryBadge({ category }: { category?: string | null }) {
   if (!category) return null;
   const colors: Record<string, string> = {
-    crypto: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    politics: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    sports: 'bg-green-500/15 text-green-400 border-green-500/30',
-    entertainment: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+    crypto: 'bg-pf-gold-500/15 text-pf-gold-500 border-pf-gold-500/30',
+    politics: 'bg-pf-info/15 text-pf-info border-pf-info/30',
+    sports: 'bg-pf-success/15 text-pf-success border-pf-success/30',
+    entertainment: 'bg-pf-purple-500/15 text-pf-purple-400 border-pf-purple-500/30',
     science: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
   };
   const key = category.toLowerCase();

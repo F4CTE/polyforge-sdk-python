@@ -36,7 +36,7 @@ export function formatDateTime(dateStr: string): string {
 
 /** Status badge color helpers */
 export function statusColor(status: string | undefined | null): string {
-  if (!status) return 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]';
+  if (!status) return 'text-pf-text-secondary bg-pf-elevated';
   const s = status.toUpperCase();
   const colors: Record<string, string> = {
     HEALTHY: 'text-pf-success bg-pf-success/10',
@@ -54,26 +54,26 @@ export function statusColor(status: string | undefined | null): string {
     QUEUED: 'text-pf-warning bg-pf-warning/10',
     PAPER: 'text-pf-purple-500 bg-pf-purple-500/10',
     PAUSED: 'text-pf-warning bg-pf-warning/10',
-    IDLE: 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]',
+    IDLE: 'text-pf-text-secondary bg-pf-elevated',
     DEGRADED: 'text-pf-warning bg-pf-warning/10',
     DOWN: 'text-pf-danger bg-pf-danger/10',
     ERROR: 'text-pf-danger bg-pf-danger/10',
     FAILED: 'text-pf-danger bg-pf-danger/10',
-    CANCELLED: 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]',
-    ARCHIVED: 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]',
+    CANCELLED: 'text-pf-text-secondary bg-pf-elevated',
+    ARCHIVED: 'text-pf-text-secondary bg-pf-elevated',
     SUSPENDED: 'text-pf-danger bg-pf-danger/10',
     UNVERIFIED: 'text-pf-warning bg-pf-warning/10',
     RESOLVED: 'text-pf-success bg-pf-success/10',
-    CLOSED: 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]',
+    CLOSED: 'text-pf-text-secondary bg-pf-elevated',
     REVIEWED: 'text-pf-success bg-pf-success/10',
-    DISMISSED: 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]',
+    DISMISSED: 'text-pf-text-secondary bg-pf-elevated',
   };
-  return colors[s] ?? 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]';
+  return colors[s] ?? 'text-pf-text-secondary bg-pf-elevated';
 }
 
 /** Priority badge color helpers */
 export const priorityColor: Record<string, string> = {
-  LOW: 'text-[var(--color-pf-text-secondary)] bg-[var(--color-pf-elevated)]',
+  LOW: 'text-pf-text-secondary bg-pf-elevated',
   MEDIUM: 'text-pf-warning bg-pf-warning/10',
   HIGH: 'text-orange-400 bg-orange-400/10',
   URGENT: 'text-pf-danger bg-pf-danger/10',

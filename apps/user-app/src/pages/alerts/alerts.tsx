@@ -407,7 +407,7 @@ export function Component() {
                   {/* Badges */}
                   <div className="flex items-center gap-1.5 shrink-0">
                     {alert.triggered ? (
-                      <span className="text-pf-caption px-1.5 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 font-semibold">
+                      <span className="text-pf-caption px-1.5 py-0.5 rounded border border-pf-warning/30 bg-pf-warning/10 text-pf-warning font-semibold">
                         Triggered
                       </span>
                     ) : (

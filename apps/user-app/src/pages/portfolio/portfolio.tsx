@@ -203,13 +203,13 @@ const PERIODS: { label: string; value: Period }[] = [
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Politics: '#06b6d4',
-  Sports: '#22c55e',
-  Crypto: '#f59e0b',
-  Finance: '#8b5cf6',
-  Entertainment: '#ec4899',
-  Science: '#3b82f6',
-  Other: '#6b7280',
+  Politics: 'var(--color-pf-cyan-500)',
+  Sports: 'var(--color-pf-success)',
+  Crypto: 'var(--color-pf-gold-500)',
+  Finance: 'var(--color-pf-purple-500)',
+  Entertainment: 'var(--color-pf-danger)',
+  Science: 'var(--color-pf-info)',
+  Other: 'var(--color-pf-text-muted)',
 };
 
 function pnlColor(val: string): string {
@@ -249,10 +249,10 @@ function formatTokenId(tokenId: string): string {
 function CategoryBadge({ category }: { category?: string | null }) {
   if (!category) return null;
   const colors: Record<string, string> = {
-    crypto: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    politics: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    sports: 'bg-green-500/15 text-green-400 border-green-500/30',
-    entertainment: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+    crypto: 'bg-pf-gold-500/15 text-pf-gold-500 border-pf-gold-500/30',
+    politics: 'bg-pf-info/15 text-pf-info border-pf-info/30',
+    sports: 'bg-pf-success/15 text-pf-success border-pf-success/30',
+    entertainment: 'bg-pf-purple-500/15 text-pf-purple-400 border-pf-purple-500/30',
     science: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
   };
   const key = category.toLowerCase();
@@ -1357,7 +1357,7 @@ export function Component() {
                               {entry.realizedGain >= 0 ? '+' : ''}{entry.realizedGain.toFixed(2)}
                             </td>
                             <td className="px-3 py-2 text-center">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-pf-caption font-medium border ${entry.type === 'SHORT_TERM' ? 'bg-amber-500/10 text-amber-400 border-amber-500/25' : 'bg-pf-success/10 text-pf-success border-pf-success/25'}`}>
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-pf-caption font-medium border ${entry.type === 'SHORT_TERM' ? 'bg-pf-gold-500/10 text-pf-gold-500 border-pf-gold-500/25' : 'bg-pf-success/10 text-pf-success border-pf-success/25'}`}>
                                 {entry.type === 'SHORT_TERM' ? 'Short' : 'Long'}
                               </span>
                             </td>
@@ -1570,7 +1570,7 @@ export function Component() {
                     ? 'bg-pf-danger'
                     : onTrack
                       ? 'bg-pf-success'
-                      : 'bg-amber-400';
+                      : 'bg-pf-warning';
 
                   const endLabel = (() => {
                     const d = new Date(activeGoal.endDate + 'T00:00:00');
@@ -1654,7 +1654,7 @@ export function Component() {
                               : 'On track — no daily minimum needed'}
                           </span>
                         )}
-                        <span className={`font-mono font-semibold ${onTrack ? 'text-pf-success' : 'text-amber-400'}`}>
+                        <span className={`font-mono font-semibold ${onTrack ? 'text-pf-success' : 'text-pf-warning'}`}>
                           {progress.toFixed(1)}%
                         </span>
                       </div>
@@ -1790,7 +1790,7 @@ export function Component() {
             const progressColor = progress >= 80
               ? 'bg-pf-danger'
               : progress >= 50
-                ? 'bg-amber-400'
+                ? 'bg-pf-warning'
                 : 'bg-pf-success';
             const limitHit = progress >= 100;
             const remaining = limit != null ? limit - Math.abs(Math.min(0, totalPnl)) : 0;
@@ -2791,10 +2791,10 @@ export function Component() {
                   return (
                     <div
                       key={`warn-${c.category}-${c.outcome}`}
-                      className="flex items-center gap-2 mt-3 px-3 py-2 rounded-pf bg-amber-500/10 border border-amber-500/30"
+                      className="flex items-center gap-2 mt-3 px-3 py-2 rounded-pf bg-pf-warning/10 border border-pf-warning/30"
                     >
-                      <AlertTriangle className="size-3.5 text-amber-400 shrink-0" />
-                      <p className="text-xs text-amber-300">
+                      <AlertTriangle className="size-3.5 text-pf-warning shrink-0" />
+                      <p className="text-xs text-pf-gold-300">
                         High concentration in{' '}
                         <span className="font-semibold capitalize">{c.category}</span>{' '}
                         <span className="font-semibold">{c.outcome}</span>{' '}

@@ -243,8 +243,8 @@ export function Component() {
     {
       label: 'WAU',
       value: fmt(overview?.wau ?? 0),
-      color: 'text-[var(--color-pf-purple-500)]',
-      bg: 'bg-[var(--color-pf-purple-500)]/10',
+      color: 'text-pf-purple-500',
+      bg: 'bg-pf-purple-500/10',
     },
     {
       label: 'MAU',
