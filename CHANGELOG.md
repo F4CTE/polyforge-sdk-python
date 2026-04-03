@@ -1,27 +1,15 @@
 # Changelog
 
-<<<<<<< HEAD
-## [1.5.3] — 2026-04-03
+## [1.5.2] — 2026-04-03
 
 ### Fixed
-- Add `total_pages` field to `PaginatedResponse` dataclass and populate it from `totalPages` in API responses (closes #14)
-
-## [1.5.2] — 2026-04-03
+- `_validate_webhook_url`: comprehensive SSRF protection using `ipaddress` module — now blocks IPv6 loopback, RFC 1918 private ranges, IPv4-mapped IPv6, link-local, reserved addresses, and cloud metadata hostnames (closes #7)
+- `MarketSentiment` dataclass constructor: accept `direction` field from API response (closes #10)
 
 ### Security
 - URL-encode all path parameters using `urllib.parse.quote(segment, safe="")` via new `_encode_path()` helper to prevent path traversal attacks (CWE-22). Affected parameters: `market_id`, `strategy_id`, `order_id`, `smart_order_id`, `listing_id` across both `PolyforgeClient` (sync) and `AsyncPolyforgeClient` (async). Closes #15.
-=======
-## [1.5.2] — 2026-04-03
-
-<<<<<<< HEAD
-### Fixed
-- `_validate_webhook_url`: comprehensive SSRF protection using `ipaddress` module — now blocks IPv6 loopback, RFC 1918 private ranges, IPv4-mapped IPv6, link-local, reserved addresses, and cloud metadata hostnames (closes #7)
-=======
-### Security
 - Upgrade `cryptography` minimum to `>=46.0.6` to patch 6 known CVEs including memory corruption (PYSEC-2024-225, GHSA-3ww4-gg4f-jr7f, GHSA-9v9h-cgj8-h64p, GHSA-h4gh-qq45-vh27, GHSA-r6ph-v2qm-q3c2, GHSA-m959-cc7f-wv43)
 - Upgrade `requests` minimum to `>=2.32.6` to patch CVE in requests 2.32.5
->>>>>>> master
->>>>>>> master
 
 ## [1.5.1] — 2026-03-30
 
