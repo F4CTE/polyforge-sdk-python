@@ -8,6 +8,7 @@
 - `create_strategy_from_description`: send `marketId` (camelCase) instead of `market_id` in request body (closes #11)
 - `get_whale_feed`: send `minSize` (camelCase) instead of `min_size` in query params (closes #12)
 - `get_news_signals`: send `minConfidence` (camelCase) instead of `min_confidence` in query params (closes #13)
+- Add `total_pages` field to `PaginatedResponse` dataclass and populate it from `totalPages` in API responses (closes #14)
 
 ### Security
 - URL-encode all path parameters using `urllib.parse.quote(segment, safe="")` via new `_encode_path()` helper to prevent path traversal attacks (CWE-22). Affected parameters: `market_id`, `strategy_id`, `order_id`, `smart_order_id`, `listing_id` across both `PolyforgeClient` (sync) and `AsyncPolyforgeClient` (async). Closes #15.
