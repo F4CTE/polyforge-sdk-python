@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.2] — 2026-04-03
+
+### Fixed
+- **CORS reject credentialed requests when Origin absent (closes #58)** — fixed CORS origin callback in api-service, auth-service, admin-api-service, and admin-auth-service to return `false` when the Origin header is missing instead of granting credentials; server-to-server requests still work but no longer receive CORS credential headers
+
+---
+
 ## [6.35.1] — 2026-04-02
 
 ### Fixed

@@ -91,7 +91,10 @@ async function bootstrap() {
             ]
           : []),
       ];
-      if (!origin || allowed.includes(origin)) {
+      if (!origin) {
+        // Server-to-server requests (no Origin header) — allow without CORS credentials
+        cb(null, false);
+      } else if (allowed.includes(origin)) {
         cb(null, true);
       } else {
         cb(new Error(`CORS: origin ${origin} not allowed`), false);
