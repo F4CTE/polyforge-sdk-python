@@ -119,7 +119,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
   return (
     <aside
       aria-label="Admin sidebar"
-      className="flex flex-col h-full border-r border-pf-border bg-pf-surface border-t-[3px] border-t-pf-danger"
+      className="flex flex-col h-full border-r border-pf-border bg-pf-admin-sidebar border-t-[3px] border-t-pf-danger"
     >
       {/* Brand */}
       <div className="flex items-center gap-2 h-14 px-3 border-b border-pf-border shrink-0">
@@ -215,8 +215,11 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
               <div className="text-sm font-medium text-pf-text truncate">
                 {admin?.displayName}
               </div>
-              <div className="text-pf-label text-pf-text-tertiary">
+              <div className="flex items-center gap-1.5 text-pf-label text-pf-text-tertiary">
                 {roleLabel}
+                <span className="px-1.5 py-0.5 rounded-pf-sm bg-pf-danger/[0.12] text-pf-danger text-pf-caption font-semibold uppercase tracking-wider">
+                  Admin
+                </span>
               </div>
             </div>
           )}

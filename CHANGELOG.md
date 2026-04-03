@@ -19,6 +19,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Focus ring opacity consistency (closes #51)** — added `/40` opacity modifier to `focus-visible:ring-pf-cyan-500` in tabs.tsx and dialog.tsx close button to match all other interactive components
 - **Admin sidebar inline style → Tailwind (closes #67)** — replaced `style={{ borderTop: '3px solid var(--color-pf-danger)' }}` with `border-t-[3px] border-t-pf-danger` class-based styling
 - **Danger button style alignment (closes #39)** — removed `bg-pf-danger text-white` className overrides from 6 admin-app danger buttons (listings, config, admins, abuse×2, reports); buttons now use the shared `variant="danger"` styling (`bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20`) per design charter §2
+- **Light-theme token overrides (closes #47)** — added 38 missing `--color-pf-*` custom properties to `.light-theme` in `globals.css` so that every token the dark theme defines also has a light-mode equivalent
+- **Admin sidebar identity colour (closes #41)** — added `--color-pf-admin-sidebar` token (dark: `oklch(0.18 0.01 240)`; light: `oklch(0.96 0.01 240)`) and applied it via `bg-pf-admin-sidebar` class
+- **Replace bare `font-mono` with design-token stack (closes #45)** — replaced all 23 occurrences of `font-mono` across admin-app, user-app, and packages/ui with `font-pf-mono` mapping to `'JetBrains Mono', ui-monospace, monospace`; added `--font-pf-mono` definition and `font-pf-mono` Tailwind utility in `globals.css`
 
 ---
 

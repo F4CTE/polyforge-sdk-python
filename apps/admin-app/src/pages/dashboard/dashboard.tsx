@@ -194,7 +194,7 @@ export function Component() {
                   <span className={card.color}>{card.icon}</span>
                 </div>
               </div>
-              <div className="text-2xl font-bold text-pf-text">
+              <div className="text-2xl font-bold text-pf-text font-mono">
                 {card.value.toLocaleString()}
               </div>
             </div>
@@ -227,7 +227,7 @@ export function Component() {
                     <span className={card.color}>{card.icon}</span>
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-pf-text">
+                <div className="text-2xl font-bold text-pf-text font-mono">
                   {card.value.toLocaleString()}
                 </div>
               </div>
@@ -333,7 +333,7 @@ export function Component() {
               </span>
             </div>
             <div className="text-sm text-pf-text-secondary">
-              Memory usage: <span className="text-pf-text font-medium">{(health.redis?.memoryUsageMb ?? 0).toFixed(1)} MB</span>
+              Memory usage: <span className="text-pf-text font-medium font-mono">{(health.redis?.memoryUsageMb ?? 0).toFixed(1)} MB</span>
             </div>
           </div>
           )}

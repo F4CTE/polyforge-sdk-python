@@ -190,7 +190,7 @@ function DonutCenterLabel({ cx = 0, cy = 0, total }: DonutLabelProps) {
   return (
     <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
       <tspan x={cx} dy="-0.4em" fontSize={11} fill="var(--color-pf-text-muted)">Total</tspan>
-      <tspan x={cx} dy="1.4em" fontSize={14} fontWeight={700} fill="var(--color-pf-text-secondary)" fontFamily="monospace">
+      <tspan x={cx} dy="1.4em" fontSize={14} fontWeight={700} fill="var(--color-pf-text-secondary)" fontFamily="'JetBrains Mono', ui-monospace, monospace">
         {fmtDollar(total)}
       </tspan>
     </text>
@@ -232,7 +232,7 @@ function PeriodPills({ periods, active, onChange }: PeriodPillProps) {
 function ChangeBadge({ change }: { change: number }) {
   const positive = change >= 0;
   return (
-    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${positive ? 'text-pf-success' : 'text-pf-danger'}`}>
+    <span className={`inline-flex items-center gap-0.5 text-xs font-medium font-mono ${positive ? 'text-pf-success' : 'text-pf-danger'}`}>
       {positive
         ? <TrendingUp className="size-3" />
         : <TrendingDown className="size-3" />}
@@ -796,7 +796,7 @@ export function Component() {
                         <div className="text-sm font-mono font-semibold text-pf-success">
                           {fmt(parseFloat(l.totalRevenue))}
                         </div>
-                        <div className="text-xs text-pf-text-muted">${parseFloat(l.priceUsdc).toFixed(2)} ea</div>
+                        <div className="text-xs text-pf-text-muted font-mono">${parseFloat(l.priceUsdc).toFixed(2)} ea</div>
                       </div>
                     </div>
                   ))}
@@ -822,14 +822,14 @@ export function Component() {
                       <div className="flex-1 min-w-0">
                         <div className="text-sm text-pf-text truncate">{p.listing.title}</div>
                         <div className="text-xs text-pf-text-muted">
-                          {new Date(p.createdAt).toLocaleDateString()} · fee: ${parseFloat(p.platformFee).toFixed(2)}
+                          {new Date(p.createdAt).toLocaleDateString()} · <span className="font-mono">fee: ${parseFloat(p.platformFee).toFixed(2)}</span>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
                         <div className="text-sm font-mono font-semibold text-pf-text">
                           ${parseFloat(p.priceUsdc).toFixed(2)}
                         </div>
-                        <div className="text-xs text-pf-success">+${parseFloat(p.sellerNet).toFixed(2)} seller</div>
+                        <div className="text-xs text-pf-success font-mono">+${parseFloat(p.sellerNet).toFixed(2)} seller</div>
                       </div>
                     </div>
                   ))}
