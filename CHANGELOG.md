@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.2] — 2026-04-03
+
+### Security
+- Upgrade `cryptography` minimum to `>=46.0.6` to patch 6 known CVEs including memory corruption (PYSEC-2024-225, GHSA-3ww4-gg4f-jr7f, GHSA-9v9h-cgj8-h64p, GHSA-h4gh-qq45-vh27, GHSA-r6ph-v2qm-q3c2, GHSA-m959-cc7f-wv43)
+- Upgrade `requests` minimum to `>=2.32.6` to patch CVE in requests 2.32.5
+
 ## [1.5.1] — 2026-03-30
 
 ### Fixed
