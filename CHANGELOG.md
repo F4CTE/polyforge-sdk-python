@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.5] — 2026-04-02
+
+### Fixed
+- **X-Forwarded-Host spoofing (MEDIUM)** — added `proxy_set_header X-Forwarded-Host $host` to all proxy location blocks in `nginx.prod.conf`; ensures backend services receive the gateway-validated host, not a client-supplied `X-Forwarded-Host` header; fastify already patched to >=5.8.3 via pnpm override (closes #56)
+
+---
+
 ## [6.35.4] — 2026-04-02
 
 ### Fixed
