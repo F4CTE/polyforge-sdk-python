@@ -5,6 +5,9 @@
 ### Fixed
 - `_validate_webhook_url`: comprehensive SSRF protection using `ipaddress` module — now blocks IPv6 loopback, RFC 1918 private ranges, IPv4-mapped IPv6, link-local, reserved addresses, and cloud metadata hostnames (closes #7)
 - `MarketSentiment` dataclass constructor: accept `direction` field from API response (closes #10)
+- `create_strategy_from_description`: send `marketId` (camelCase) instead of `market_id` in request body (closes #11)
+- `get_whale_feed`: send `minSize` (camelCase) instead of `min_size` in query params (closes #12)
+- `get_news_signals`: send `minConfidence` (camelCase) instead of `min_confidence` in query params (closes #13)
 
 ### Security
 - URL-encode all path parameters using `urllib.parse.quote(segment, safe="")` via new `_encode_path()` helper to prevent path traversal attacks (CWE-22). Affected parameters: `market_id`, `strategy_id`, `order_id`, `smart_order_id`, `listing_id` across both `PolyforgeClient` (sync) and `AsyncPolyforgeClient` (async). Closes #15.
