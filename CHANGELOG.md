@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.2] — 2026-04-03
+
+### Fixed
+- `_validate_webhook_url`: comprehensive SSRF protection using `ipaddress` module — now blocks IPv6 loopback, RFC 1918 private ranges, IPv4-mapped IPv6, link-local, reserved addresses, and cloud metadata hostnames (closes #7)
+
 ## [1.5.1] — 2026-03-30
 
 ### Fixed

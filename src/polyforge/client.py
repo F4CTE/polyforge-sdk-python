@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import ipaddress
 import json as _json
 import logging as _log
+import socket
 from dataclasses import fields
 from typing import Any, AsyncIterator, Iterator, TypeVar, get_type_hints
 
@@ -144,14 +146,61 @@ def _strip_none(params: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in params.items() if v is not None}
 
 
+_BLOCKED_HOSTNAMES: set[str] = {
+    "localhost",
+    "metadata.google.internal",
+    "metadata.internal",
+    "instance-data",
+}
+
+
 def _validate_webhook_url(url: str) -> None:
-    """Validate webhook URL to prevent SSRF attacks."""
+    """Validate webhook URL to prevent SSRF attacks.
+
+    Blocks private, loopback, link-local, and reserved IP addresses as well as
+    known cloud metadata hostnames.  Only HTTPS URLs are allowed.
+    """
     parsed = urlparse(url)
+
+    # --- scheme check ---
     if parsed.scheme != "https":
         raise ValueError("Webhook URL must use HTTPS")
-    blocked = {"127.0.0.1", "localhost", "0.0.0.0", "169.254.169.254"}
-    if parsed.hostname in blocked:
+
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("Webhook URL must contain a valid hostname")
+
+    # --- blocked hostname check ---
+    if hostname.lower() in _BLOCKED_HOSTNAMES:
         raise ValueError("Webhook URL cannot point to localhost or internal addresses")
+
+    # --- resolve hostname and validate each resulting IP ---
+    try:
+        addrinfos = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        raise ValueError(f"Could not resolve webhook hostname: {hostname}")
+
+    for family, _, _, _, sockaddr in addrinfos:
+        ip_str = sockaddr[0]
+        try:
+            addr = ipaddress.ip_address(ip_str)
+        except ValueError:
+            raise ValueError(f"Invalid IP resolved for webhook hostname: {ip_str}")
+
+        if addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_reserved:
+            raise ValueError(
+                "Webhook URL cannot point to private, loopback, link-local, "
+                f"or reserved addresses (resolved to {addr})"
+            )
+
+        # Block IPv4-mapped IPv6 addresses that wrap private IPv4 ranges
+        if isinstance(addr, ipaddress.IPv6Address) and addr.ipv4_mapped:
+            mapped = addr.ipv4_mapped
+            if mapped.is_private or mapped.is_loopback or mapped.is_link_local or mapped.is_reserved:
+                raise ValueError(
+                    "Webhook URL cannot point to private/loopback addresses "
+                    f"via IPv4-mapped IPv6 (resolved to {addr})"
+                )
 
 
 # ---------------------------------------------------------------------------
