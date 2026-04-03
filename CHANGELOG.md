@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.2] — 2026-04-03
+
+### Security
+- URL-encode all path parameters using `urllib.parse.quote(segment, safe="")` via new `_encode_path()` helper to prevent path traversal attacks (CWE-22). Affected parameters: `market_id`, `strategy_id`, `order_id`, `smart_order_id`, `listing_id` across both `PolyforgeClient` (sync) and `AsyncPolyforgeClient` (async). Closes #15.
+
 ## [1.5.1] — 2026-03-30
 
 ### Fixed
