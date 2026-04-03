@@ -146,18 +146,17 @@ def _strip_none(params: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in params.items() if v is not None}
 
 
-<<<<<<< HEAD
 def _encode_path(segment: str) -> str:
     """URL-encode a path parameter to prevent path traversal attacks (CWE-22)."""
     return quote(str(segment), safe="")
-=======
+
+
 _BLOCKED_HOSTNAMES: set[str] = {
     "localhost",
     "metadata.google.internal",
     "metadata.internal",
     "instance-data",
 }
->>>>>>> master
 
 
 def _validate_webhook_url(url: str) -> None:
@@ -684,7 +683,7 @@ class PolyforgeClient:
         return MarketSentiment(
             market_id=data.get("marketId", ""),
             score=data.get("score", 0.0),
-            label=data.get("label", ""),
+            direction=data.get("direction", ""),
             signal_count=data.get("signalCount", 0),
             last_updated=data.get("lastUpdated"),
         )
@@ -1190,7 +1189,7 @@ class AsyncPolyforgeClient:
         return MarketSentiment(
             market_id=data.get("marketId", ""),
             score=data.get("score", 0.0),
-            label=data.get("label", ""),
+            direction=data.get("direction", ""),
             signal_count=data.get("signalCount", 0),
             last_updated=data.get("lastUpdated"),
         )
