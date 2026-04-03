@@ -1940,4 +1940,33 @@ Only truly dynamic values (per-instance colors, computed animation strings, fiel
 
 ---
 
+## §37 — Social Meta Images
+
+### OG Image (1200×630)
+- Background: `--color-pf-base` (`#020817`)
+- Subtle radial cyan glow at centre
+- PolyForge hexagon + lightning bolt logo centred
+- Title: "POLYFORGE" in bold, `--color-pf-text` (`#e2e8f0`)
+- Subtitle: "Algorithmic Trading for Prediction Markets" in `--color-pf-text-secondary`
+- Feature chips: "Strategy Builder", "Copy Trading", "Whale Tracking", "AI Signals" in cyan
+- Cyan accent bar at top (2px)
+
+### Apple Touch Icon (180×180)
+- Background: `--color-pf-base`
+- Hexagon outline + lightning bolt in `--color-pf-cyan-500`
+- "PF" text in cyan below icon
+
+### Chart Color Fallbacks
+- All Recharts components that use `getComputedStyle()` to read `--color-pf-*` tokens must provide **theme-aware** fallbacks
+- Fallback values must match the exact hex from `globals.css` for both dark and light themes
+- Pattern: `get('--color-pf-X') || (isDark ? '#dark' : '#light')`
+- Never hardcode a single dark-mode hex as the only fallback
+
+### Hero Particle Animation
+- Particle position/size: inline `style` props (data-driven per instance)
+- Particle animation: `.hero-particle` CSS class with `--particle-dur` and `--particle-delay` custom properties
+- Never construct full `animation` strings inline — use CSS classes with CSS custom properties
+
+---
+
 *Ce document doit être relu a chaque ajout de composant majeur pour s'assurer de la coherence visuelle.*

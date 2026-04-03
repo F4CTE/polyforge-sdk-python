@@ -50,15 +50,18 @@ function getTheme() {
     ? getComputedStyle(document.documentElement)
     : null;
   const get = (v: string) => s?.getPropertyValue(v).trim() || '';
+  const isDark = typeof window !== 'undefined'
+    ? !document.documentElement.classList.contains('light')
+    : true;
   return {
-    cyan:       get('--color-pf-cyan-500')       || '#06B6D4',
-    bgElevated: get('--color-pf-elevated')       || '#111D2E',
-    border:     get('--color-pf-border')         || '#1E3350',
-    textMuted:  get('--color-pf-text-muted')     || '#445E7A',
-    textSec:    get('--color-pf-text-secondary') || '#7A94B4',
-    success:    get('--color-pf-success')        || '#10b981',
-    danger:     get('--color-pf-danger')         || '#EF4444',
-    base:       get('--color-pf-base')           || '#0F172A',
+    cyan:       get('--color-pf-cyan-500')       || (isDark ? '#06b6d4' : '#0e7490'),
+    bgElevated: get('--color-pf-elevated')       || (isDark ? '#0f172a' : '#ffffff'),
+    border:     get('--color-pf-border')         || (isDark ? '#1e293b' : '#cbd5e1'),
+    textMuted:  get('--color-pf-text-muted')     || '#64748b',
+    textSec:    get('--color-pf-text-secondary') || (isDark ? '#94a3b8' : '#334155'),
+    success:    get('--color-pf-success')        || (isDark ? '#10b981' : '#059669'),
+    danger:     get('--color-pf-danger')         || (isDark ? '#ef4444' : '#dc2626'),
+    base:       get('--color-pf-base')           || (isDark ? '#020817' : '#f1f5f9'),
   };
 }
 

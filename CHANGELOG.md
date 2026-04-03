@@ -10,6 +10,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - **Form inputs missing accessibility labels (closes #48)** — added `aria-label` or `htmlFor`/`id` associations to 6 form controls: copy-setup size slider, alerts token radio, markets-list date pickers (×2), market-detail Kelly confidence slider, and block-palette search input
 - **Builder nodes inline styles → CSS classes (closes #40)** — replaced ~30 inline `style={{...}}` objects across `block-node.tsx`, `calc-node.tsx`, `logic-node.tsx`, and `variable-node.tsx` with reusable CSS utility classes (`.builder-node-card`, `.builder-node-header`, `.builder-handle`, `.builder-badge`, `.builder-preview-chip`) driven by a `--node-color` CSS custom property; handle positioning uses `.builder-handle--top` / `.builder-handle--bottom` classes; MiniMap inline styles deduplicated with existing CSS rules in `globals.css`
+- **Strategy-chart hex fallbacks now theme-aware (closes #46)** — updated all 8 fallback hex values in `strategy-chart.tsx` `getTheme()` to match actual `globals.css` token values; fallbacks now switch between dark/light mode values instead of hardcoding dark-only hex codes
+- **Hero particles inline animation → CSS class (closes #62)** — extracted `animation` inline style string from hero particle divs into `.hero-particle` CSS class driven by `--particle-dur` / `--particle-delay` CSS custom properties; per-instance positioning (`width`, `height`, `left`, `top`) remains as minimal style props since they're data-driven
+- **Missing OG image and apple-touch-icon (closes #44)** — generated `og-image.png` (1200×630) and `apple-touch-icon.png` (180×180) for the landing app; social share previews on Twitter, LinkedIn, Discord, etc. now render properly
 
 ---
 

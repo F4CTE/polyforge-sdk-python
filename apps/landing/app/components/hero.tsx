@@ -27,14 +27,15 @@ export function Hero() {
         {PARTICLES.map((p) => (
           <div
             key={`${p.left}-${p.top}`}
-            className="absolute rounded-pf-full bg-pf-cyan-500/25"
+            className="absolute rounded-pf-full bg-pf-cyan-500/25 hero-particle"
             style={{
               width: p.w,
               height: p.w,
               left: p.left,
               top: p.top,
-              animation: `float-particle ${p.dur} linear ${p.delay} infinite`,
-            }}
+              '--particle-dur': p.dur,
+              '--particle-delay': p.delay,
+            } as React.CSSProperties}
           />
         ))}
       </div>
