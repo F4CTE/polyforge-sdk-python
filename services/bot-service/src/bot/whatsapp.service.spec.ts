@@ -1,4 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+vi.hoisted(() => {
+  process.env.WHATSAPP_VERIFY_TOKEN = "polyforge-verify";
+});
+
 import { WhatsAppService } from "./whatsapp.service";
 
 // ─── Mock helpers ─────────────────────────────────────────────────────────────
