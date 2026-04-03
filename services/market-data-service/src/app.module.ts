@@ -1,5 +1,7 @@
 import { Module } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
 import { ConfigModule } from "@nestjs/config";
+import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { ScheduleModule } from "@nestjs/schedule";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { SharedDbModule } from "@polyforge/shared-db";
@@ -14,6 +16,7 @@ import { HealthController } from "./health/health.controller";
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 1000 }]),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     LoggerModule,
@@ -22,6 +25,7 @@ import { HealthController } from "./health/health.controller";
   ],
   controllers: [HealthController],
   providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
     PolymarketWsService,
     PolymarketUserWsService,
     GammaApiService,

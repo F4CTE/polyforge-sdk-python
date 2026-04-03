@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.6] — 2026-04-03
+
+### Fixed
+- **Rate limiting on notification-service and market-data-service (closes #78)** — registered `ThrottlerModule.forRoot([{ ttl: 60000, limit: 1000 }])` and `ThrottlerGuard` as global guard in both services; added `@nestjs/throttler` to market-data-service dependencies; applied `limit_req zone=api_rl burst=50 nodelay` to user-facing `/api/v1/` and `burst=20` to admin `/api/v1/` in gateway nginx config
+
+---
+
 ## [6.35.5] — 2026-04-02
 
 ### Fixed
