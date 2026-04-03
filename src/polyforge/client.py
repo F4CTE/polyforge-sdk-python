@@ -628,7 +628,7 @@ class PolyforgeClient:
         return MarketSentiment(
             market_id=data.get("marketId", ""),
             score=data.get("score", 0.0),
-            label=data.get("label", ""),
+            direction=data.get("direction", ""),
             signal_count=data.get("signalCount", 0),
             last_updated=data.get("lastUpdated"),
         )
@@ -1133,7 +1133,7 @@ class AsyncPolyforgeClient:
         return MarketSentiment(
             market_id=data.get("marketId", ""),
             score=data.get("score", 0.0),
-            label=data.get("label", ""),
+            direction=data.get("direction", ""),
             signal_count=data.get("signalCount", 0),
             last_updated=data.get("lastUpdated"),
         )

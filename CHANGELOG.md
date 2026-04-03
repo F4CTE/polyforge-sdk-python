@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.2] — 2026-04-03
+
+### Fixed
+- `MarketSentiment` constructor: corrected `label=` keyword argument to `direction=` to match the dataclass field name (closes #10)
+
 ## [1.5.1] — 2026-03-30
 
 ### Fixed
