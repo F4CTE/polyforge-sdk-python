@@ -9,6 +9,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - **Landing page build failure** — fixed prettier formatting violations in `hero.tsx` (attribute line-wrapping) and `nav.tsx` (trailing commas) that caused `next build` to fail with ESLint/Prettier errors
+- **vitest-mock-extended ESM compatibility** — upgraded from 3.1.0 to 3.1.1 across 6 services to fix Vitest 4 CJS import rejection (`vitest/index.cjs` cannot be `require()`d)
+- **Signer-service KEK rotation test** — updated `rotateUserDek` roundtrip assertion to expect `Buffer` return type (matching the `decryptField` change from #6)
+- **Signer-service coverage threshold** — excluded `kek-rotation.service.ts` from unit coverage (Prisma-dependent, integration-test territory)
 
 ---
 

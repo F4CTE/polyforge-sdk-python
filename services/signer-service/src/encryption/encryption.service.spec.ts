@@ -240,7 +240,8 @@ describe("EncryptionService", () => {
         field.tag,
         recoveredDek,
       );
-      expect(plaintext).toBe("my-secret-key");
+      expect(Buffer.isBuffer(plaintext)).toBe(true);
+      expect(plaintext.toString("utf8")).toBe("my-secret-key");
     });
   });
 

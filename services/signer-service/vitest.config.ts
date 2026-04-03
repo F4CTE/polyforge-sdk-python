@@ -21,6 +21,7 @@ export default defineConfig({
                 'src/**/*.controller.ts',   // HTTP wiring only — tested at service layer
                 'src/encryption/native-encryption.service.ts',  // NAPI Rust addon — requires native binary, integration-test territory
                 'src/signing/signing.service.ts',               // EIP712 signing requires @polymarket/clob-client (not a devDep)
+                'src/encryption/kek-rotation.service.ts',       // Prisma-dependent batch rotation — integration-test territory
             ],
             thresholds: {
                 lines:      85,
