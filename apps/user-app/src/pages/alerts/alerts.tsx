@@ -34,13 +34,13 @@ function OutcomeBadge({ outcome }: { outcome: string }) {
   const upper = outcome.toUpperCase();
   if (upper === 'YES') {
     return (
-      <span className="text-[10px] px-1.5 py-0.5 rounded border border-pf-success/30 bg-pf-success/10 text-pf-success font-semibold">
+      <span className="text-pf-caption px-1.5 py-0.5 rounded border border-pf-success/30 bg-pf-success/10 text-pf-success font-semibold">
         YES
       </span>
     );
   }
   return (
-    <span className="text-[10px] px-1.5 py-0.5 rounded border border-pf-danger/30 bg-pf-danger/10 text-pf-danger font-semibold">
+    <span className="text-pf-caption px-1.5 py-0.5 rounded border border-pf-danger/30 bg-pf-danger/10 text-pf-danger font-semibold">
       NO
     </span>
   );
@@ -407,16 +407,16 @@ export function Component() {
                   {/* Badges */}
                   <div className="flex items-center gap-1.5 shrink-0">
                     {alert.triggered ? (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 font-semibold">
+                      <span className="text-pf-caption px-1.5 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 font-semibold">
                         Triggered
                       </span>
                     ) : (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded border border-pf-cyan-500/30 bg-pf-cyan-500/10 text-pf-cyan-400 font-semibold">
+                      <span className="text-pf-caption px-1.5 py-0.5 rounded border border-pf-cyan-500/30 bg-pf-cyan-500/10 text-pf-cyan-400 font-semibold">
                         Active
                       </span>
                     )}
                     {alert.persistent && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded border border-pf-border bg-pf-elevated text-pf-text-muted font-medium">
+                      <span className="text-pf-caption px-1.5 py-0.5 rounded border border-pf-border bg-pf-elevated text-pf-text-muted font-medium">
                         Persistent
                       </span>
                     )}

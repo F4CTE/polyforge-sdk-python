@@ -272,7 +272,7 @@ function ListingCard({
           {listing.tags.slice(0, 4).map((t) => (
             <span
               key={t}
-              className="px-1.5 py-0.5 bg-pf-surface border border-pf-border rounded text-[10px] text-pf-text-muted"
+              className="px-1.5 py-0.5 bg-pf-surface border border-pf-border rounded text-pf-caption text-pf-text-muted"
             >
               {t}
             </span>

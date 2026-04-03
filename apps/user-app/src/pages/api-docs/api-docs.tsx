@@ -66,7 +66,7 @@ function OnThisPage({ sectionId, onSelect }: TocProps) {
   if (!section) return null;
   return (
     <div className="hidden xl:flex flex-col w-48 shrink-0 pl-6 pt-6 gap-1">
-      <p className="text-[10px] font-semibold text-pf-text-muted uppercase tracking-wider mb-2">
+      <p className="text-pf-caption font-semibold text-pf-text-muted uppercase tracking-wider mb-2">
         On this page
       </p>
       {section.eps.map(ep => (

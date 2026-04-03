@@ -571,7 +571,7 @@ export function Component() {
             {!loadingBadges && unlockedBadges.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
                 {rarityCounts.map(({ rarity, count }) => (
-                  <span key={rarity} className="text-[10px] text-pf-text-muted">
+                  <span key={rarity} className="text-pf-caption text-pf-text-muted">
                     {rarityLabel(rarity)}: {count}
                   </span>
                 ))}
@@ -664,20 +664,20 @@ export function Component() {
               >
                 <div className="min-w-0">
                   <div className="text-xs font-semibold text-pf-text truncate">{s.name}</div>
-                  <div className="text-[11px] text-pf-text-muted truncate mt-0.5">{s.description}</div>
+                  <div className="text-pf-label text-pf-text-muted truncate mt-0.5">{s.description}</div>
                 </div>
 
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-cyan-500/10 border border-pf-cyan-500/20 text-[10px] font-mono text-pf-cyan-400">
+                  <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-cyan-500/10 border border-pf-cyan-500/20 text-pf-caption font-mono text-pf-cyan-400">
                     {s.winRate.toFixed(0)}% WR
                   </span>
-                  <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-overlay border border-pf-border-subtle text-[10px] font-mono text-pf-text-muted">
+                  <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-overlay border border-pf-border-subtle text-pf-caption font-mono text-pf-text-muted">
                     {s.tradeCount} trades
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between mt-auto">
-                  <div className="flex items-center gap-3 text-[10px] text-pf-text-muted">
+                  <div className="flex items-center gap-3 text-pf-caption text-pf-text-muted">
                     <span className="flex items-center gap-0.5">
                       <GitFork className="size-3" />
                       {s.forkCount}
@@ -692,7 +692,7 @@ export function Component() {
                   </div>
                   <Link
                     to={`/marketplace/${s.id}`}
-                    className="px-2 py-0.5 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/25 text-[10px] font-medium text-pf-cyan-400 hover:bg-pf-cyan-500/25 transition-colors"
+                    className="px-2 py-0.5 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/25 text-pf-caption font-medium text-pf-cyan-400 hover:bg-pf-cyan-500/25 transition-colors"
                   >
                     View
                   </Link>
@@ -735,21 +735,21 @@ export function Component() {
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-pf-text truncate">{item.marketQuestion}</div>
                     <div className="flex items-center gap-1.5 mt-1">
-                      <span className={`px-1.5 py-px rounded-pf-full text-[10px] font-semibold ${
+                      <span className={`px-1.5 py-px rounded-pf-full text-pf-caption font-semibold ${
                         item.outcome === 'YES'
                           ? 'bg-pf-success/15 text-pf-success border border-pf-success/20'
                           : 'bg-pf-danger/15 text-pf-danger border border-pf-danger/20'
                       }`}>
                         {item.outcome}
                       </span>
-                      <span className="text-[10px] text-pf-text-muted">{item.side}</span>
+                      <span className="text-pf-caption text-pf-text-muted">{item.side}</span>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
                     <div className={`text-xs font-mono font-semibold ${isPos ? 'text-pf-success' : 'text-pf-danger'}`}>
                       {fmtPnl(item.pnl)}
                     </div>
-                    <div className="text-[10px] text-pf-text-muted mt-0.5">{relativeTime(item.resolvedAt)}</div>
+                    <div className="text-pf-caption text-pf-text-muted mt-0.5">{relativeTime(item.resolvedAt)}</div>
                   </div>
                 </div>
               );

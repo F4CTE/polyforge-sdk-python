@@ -149,7 +149,7 @@ export function Component() {
                 >
                   {/* Seller */}
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="size-6 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-[10px] font-bold text-pf-cyan-400">
+                    <div className="size-6 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-pf-caption font-bold text-pf-cyan-400">
                       {(listing.seller.displayName ?? listing.seller.username).slice(0, 2).toUpperCase()}
                     </div>
                     <span className="text-xs text-pf-text-secondary truncate">
@@ -169,7 +169,7 @@ export function Component() {
                   )}
 
                   {/* Stats */}
-                  <div className="flex flex-wrap gap-2 text-[11px] text-pf-text-secondary mb-3">
+                  <div className="flex flex-wrap gap-2 text-pf-label text-pf-text-secondary mb-3">
                     {listing.winRate != null && <span>{listing.winRate}% win</span>}
                     {listing.tradeCount != null && <span>{listing.tradeCount} trades</span>}
                     <span className="flex items-center gap-0.5 ml-auto">

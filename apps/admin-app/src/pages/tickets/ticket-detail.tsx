@@ -230,7 +230,7 @@ export function Component() {
                 <span className="text-xs font-medium text-pf-text-secondary">
                   {isAdmin ? (msg.senderName ?? 'Admin') : (ticket.username ?? 'User')}
                 </span>
-                <span className="text-[11px] text-pf-text-tertiary">
+                <span className="text-pf-label text-pf-text-tertiary">
                   {msg.createdAt ? timeAgo(msg.createdAt) : ''}
                 </span>
               </div>

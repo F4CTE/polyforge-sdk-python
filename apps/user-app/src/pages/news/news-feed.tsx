@@ -288,7 +288,7 @@ export function Component() {
                   }}
                   className="w-full flex flex-col items-start px-3 py-2 hover:bg-pf-surface transition-colors text-left"
                 >
-                  <span className="text-[10px] font-mono text-pf-text-muted">{m.slug}</span>
+                  <span className="text-pf-caption font-mono text-pf-text-muted">{m.slug}</span>
                   <span className="text-xs text-pf-text truncate w-full">
                     {m.question.length > 60 ? m.question.slice(0, 60) + '…' : m.question}
                   </span>
@@ -388,18 +388,18 @@ export function Component() {
                   >
                     {/* Top row: badges + time */}
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2 py-0.5 rounded-pf-full text-[11px] font-medium border ${sourceColor(article.source)}`}>
+                      <span className={`px-2 py-0.5 rounded-pf-full text-pf-label font-medium border ${sourceColor(article.source)}`}>
                         {article.source}
                       </span>
-                      <span className={`px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${sentimentColor(article.sentiment)}`}>
+                      <span className={`px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${sentimentColor(article.sentiment)}`}>
                         {article.sentiment}
                       </span>
                       {signals.length > 0 && (
-                        <span className="px-2 py-0.5 rounded-pf-full text-[11px] font-medium bg-pf-cyan-500/15 text-pf-cyan-400">
+                        <span className="px-2 py-0.5 rounded-pf-full text-pf-label font-medium bg-pf-cyan-500/15 text-pf-cyan-400">
                           {signals.length} signal{signals.length !== 1 ? 's' : ''}
                         </span>
                       )}
-                      <span className="ml-auto text-[11px] text-pf-text-muted">{timeAgo(article.publishedAt)}</span>
+                      <span className="ml-auto text-pf-label text-pf-text-muted">{timeAgo(article.publishedAt)}</span>
                     </div>
 
                     {/* Title */}
@@ -453,7 +453,7 @@ export function Component() {
                                 <span className="text-xs text-pf-text truncate flex-1">{signal.marketName}</span>
 
                                 {/* Outcome */}
-                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                                <span className={`px-1.5 py-0.5 rounded text-pf-caption font-semibold ${
                                   signal.outcome === 'YES' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
                                 }`}>
                                   {signal.outcome}
@@ -467,13 +467,13 @@ export function Component() {
                                       style={{ width: `${signal.confidence}%` }}
                                     />
                                   </div>
-                                  <span className="text-[10px] font-mono text-pf-text-muted w-7 text-right">{signal.confidence}%</span>
+                                  <span className="text-pf-caption font-mono text-pf-text-muted w-7 text-right">{signal.confidence}%</span>
                                 </div>
 
                                 {/* Trade button */}
                                 <Link
                                   to={`/markets/${signal.marketId}`}
-                                  className="px-2 py-1 rounded-pf-sm text-[11px] font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors"
+                                  className="px-2 py-1 rounded-pf-sm text-pf-label font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors"
                                 >
                                   Trade
                                 </Link>
@@ -488,7 +488,7 @@ export function Component() {
                     <div className="flex items-center justify-end mt-2">
                       <Link
                         to={`/news/${article.id}`}
-                        className="text-[11px] text-pf-text-muted hover:text-pf-cyan-400 transition-colors"
+                        className="text-pf-label text-pf-text-muted hover:text-pf-cyan-400 transition-colors"
                       >
                         View details &rarr;
                       </Link>
@@ -573,16 +573,16 @@ export function Component() {
                           style={{ width: `${signal.confidence}%` }}
                         />
                       </div>
-                      <span className="text-[10px] font-mono text-pf-text-muted w-7 text-right">{signal.confidence}%</span>
+                      <span className="text-pf-caption font-mono text-pf-text-muted w-7 text-right">{signal.confidence}%</span>
                     </div>
 
                     {/* Reasoning */}
-                    <p className="text-[11px] text-pf-text-muted line-clamp-1 mb-2">{signal.reasoning}</p>
+                    <p className="text-pf-label text-pf-text-muted line-clamp-1 mb-2">{signal.reasoning}</p>
 
                     {/* Trade button */}
                     <Link
                       to={`/markets/${signal.marketId}`}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pf-sm text-[11px] font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-pf-sm text-pf-label font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors"
                     >
                       Trade
                     </Link>

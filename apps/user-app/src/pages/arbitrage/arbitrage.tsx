@@ -190,12 +190,12 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
           {/* Header row */}
           <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2 border-b border-pf-border bg-pf-surface">
-            <span className="text-[10px] font-medium text-pf-text-muted uppercase tracking-wider">Market</span>
-            <span className="text-[10px] font-medium text-pf-text-muted uppercase tracking-wider text-right">YES</span>
-            <span className="text-[10px] font-medium text-pf-text-muted uppercase tracking-wider text-right">NO</span>
-            <span className="text-[10px] font-medium text-pf-text-muted uppercase tracking-wider text-right">Sum</span>
-            <span className="text-[10px] font-medium text-pf-text-muted uppercase tracking-wider text-right">Margin</span>
-            <span className="text-[10px] font-medium text-pf-text-muted uppercase tracking-wider text-right">Action</span>
+            <span className="text-pf-caption font-medium text-pf-text-muted uppercase tracking-wider">Market</span>
+            <span className="text-pf-caption font-medium text-pf-text-muted uppercase tracking-wider text-right">YES</span>
+            <span className="text-pf-caption font-medium text-pf-text-muted uppercase tracking-wider text-right">NO</span>
+            <span className="text-pf-caption font-medium text-pf-text-muted uppercase tracking-wider text-right">Sum</span>
+            <span className="text-pf-caption font-medium text-pf-text-muted uppercase tracking-wider text-right">Margin</span>
+            <span className="text-pf-caption font-medium text-pf-text-muted uppercase tracking-wider text-right">Action</span>
           </div>
 
           {opportunities.map((opp) => (
@@ -213,10 +213,10 @@ export function Component() {
                 </Link>
                 <div className="flex items-center gap-2 mt-0.5">
                   {opp.category && (
-                    <span className="text-[10px] text-pf-text-muted">{opp.category}</span>
+                    <span className="text-pf-caption text-pf-text-muted">{opp.category}</span>
                   )}
                   {opp.endDate && (
-                    <span className="text-[10px] text-pf-text-muted">· Closes {formatDate(opp.endDate)}</span>
+                    <span className="text-pf-caption text-pf-text-muted">· Closes {formatDate(opp.endDate)}</span>
                   )}
                 </div>
               </div>
@@ -254,7 +254,7 @@ export function Component() {
         </div>
       )}
 
-      <p className="text-[10px] text-pf-text-muted text-center">
+      <p className="text-pf-caption text-pf-text-muted text-center">
         Prices from live Redis cache (10 s TTL). Always verify on-chain before executing large positions.
         Arbitrage profit is not guaranteed if prices move between quote and fill.
       </p>

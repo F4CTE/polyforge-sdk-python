@@ -557,13 +557,13 @@ export function Component() {
                         <div className="flex flex-col gap-1">
                           <LabelPill label={row.label} />
                           <div className="flex items-center gap-1">
-                            <span className="text-[10px] px-1.5 py-px rounded bg-pf-success/10 text-pf-success font-mono">
+                            <span className="text-pf-caption px-1.5 py-px rounded bg-pf-success/10 text-pf-success font-mono">
                               B:{row.bullishCount}
                             </span>
-                            <span className="text-[10px] px-1.5 py-px rounded bg-pf-base border border-pf-border text-pf-text-secondary font-mono">
+                            <span className="text-pf-caption px-1.5 py-px rounded bg-pf-base border border-pf-border text-pf-text-secondary font-mono">
                               N:{Math.max(0, neutralCount)}
                             </span>
-                            <span className="text-[10px] px-1.5 py-px rounded bg-pf-danger/10 text-pf-danger font-mono">
+                            <span className="text-pf-caption px-1.5 py-px rounded bg-pf-danger/10 text-pf-danger font-mono">
                               Be:{row.bearishCount}
                             </span>
                           </div>

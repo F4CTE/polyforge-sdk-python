@@ -420,7 +420,7 @@ function StatTile({ label, value, accent, danger }: StatTileProps) {
 
   return (
     <div className="rounded-pf-lg border border-pf-border bg-pf-elevated px-4 py-3 space-y-0.5">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-pf-text-muted">
+      <p className="text-pf-label font-semibold uppercase tracking-wider text-pf-text-muted">
         {label}
       </p>
       <p className={['text-2xl font-bold tabular-nums', valueClass].join(' ')}>{value}</p>

@@ -177,7 +177,7 @@ export function HowItWorks() {
           >
             Get started in three steps
           </h2>
-          <p className="text-[17px] text-pf-text-secondary">
+          <p className="text-pf-subhead text-pf-text-secondary">
             From connection to profit in minutes, not months.
           </p>
         </div>
@@ -192,7 +192,7 @@ export function HowItWorks() {
                 className="flex flex-col items-center gap-3 mb-5"
                 aria-hidden="true"
               >
-                <div className="w-14 h-14 bg-gradient-to-br from-pf-cyan-500/20 to-pf-elevated border border-pf-cyan-500/35 rounded-pf-full flex items-center justify-center text-[15px] font-bold font-mono text-pf-cyan-400 shadow-pf-md">
+                <div className="w-14 h-14 bg-gradient-to-br from-pf-cyan-500/20 to-pf-elevated border border-pf-cyan-500/35 rounded-pf-full flex items-center justify-center text-pf-body font-bold font-mono text-pf-cyan-400 shadow-pf-md">
                   {step.number}
                 </div>
                 {step.visual}

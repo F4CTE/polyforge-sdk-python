@@ -334,7 +334,7 @@ export function Component() {
               ))}
             </div>
             {selectedAudience && (
-              <p className="mt-1.5 text-[11px] text-pf-text-tertiary">{selectedAudience.description}</p>
+              <p className="mt-1.5 text-pf-label text-pf-text-tertiary">{selectedAudience.description}</p>
             )}
           </div>
 
@@ -446,7 +446,7 @@ export function Component() {
                       <span className="truncate block" title={b.title}>{b.title}</span>
                     </td>
                     <td className="px-3 py-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-[11px] font-semibold ${typeBadgeClass(b.type)}`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-pf-label font-semibold ${typeBadgeClass(b.type)}`}>
                         <TypeIcon type={b.type} size={10} />
                         {b.type}
                       </span>

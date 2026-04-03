@@ -167,11 +167,11 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
     <div className="rounded-pf-sm bg-pf-elevated border border-pf-border overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-pf-border">
-        <span className="text-[10px] font-medium text-pf-text-secondary uppercase tracking-wider truncate max-w-[70%]">
+        <span className="text-pf-caption font-medium text-pf-text-secondary uppercase tracking-wider truncate max-w-[70%]">
           {label}
         </span>
         {!loading && !error && allCandles.length > 0 && (
-          <span className="text-[10px] font-mono text-pf-text-muted">
+          <span className="text-pf-caption font-mono text-pf-text-muted">
             {(candles.at(-1) ?? allCandles.at(-1))?.close.toFixed(3)}
             {live && <span className="ml-1 text-pf-cyan-400 animate-pulse">●</span>}
           </span>
@@ -188,13 +188,13 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
         {!loading && error && (
           <div className="h-full flex flex-col items-center justify-center gap-1 text-pf-text-muted">
             <AlertTriangle className="size-4 opacity-40" />
-            <span className="text-[10px]">{error}</span>
+            <span className="text-pf-caption">{error}</span>
           </div>
         )}
         {!loading && !error && allCandles.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center gap-1 text-pf-text-muted">
             <TrendingUp className="size-4 opacity-20" />
-            <span className="text-[10px]">No price data</span>
+            <span className="text-pf-caption">No price data</span>
           </div>
         )}
         {!loading && !error && allCandles.length > 0 && (
@@ -288,13 +288,13 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
       {trades.length > 0 && !loading && !error && allCandles.length > 0 && (
         <div className="flex items-center gap-3 px-3 py-1 border-t border-pf-border">
           {buyDots.length > 0 && (
-            <span className="flex items-center gap-1 text-[9px] text-pf-text-muted">
+            <span className="flex items-center gap-1 text-pf-micro text-pf-text-muted">
               <span className="size-2 rounded-pf-full bg-pf-success inline-block" />
               {visibleBuyDots.length}/{buyDots.length} BUY
             </span>
           )}
           {sellDots.length > 0 && (
-            <span className="flex items-center gap-1 text-[9px] text-pf-text-muted">
+            <span className="flex items-center gap-1 text-pf-micro text-pf-text-muted">
               <span className="size-2 rounded-pf-full bg-pf-danger inline-block" />
               {visibleSellDots.length}/{sellDots.length} SELL
             </span>

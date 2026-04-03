@@ -325,7 +325,7 @@ export function Component() {
               >
                 {/* FEATURED badge + seller */}
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="bg-pf-warning/15 text-pf-warning text-[10px] font-bold px-1.5 py-0.5 rounded">
+                  <span className="bg-pf-warning/15 text-pf-warning text-pf-caption font-bold px-1.5 py-0.5 rounded">
                     FEATURED
                   </span>
                   <span className="text-xs text-pf-text-secondary ml-auto truncate">
@@ -344,7 +344,7 @@ export function Component() {
                 )}
 
                 {/* Stats row */}
-                <div className="flex flex-wrap gap-2 text-[11px] text-pf-text-secondary mb-3">
+                <div className="flex flex-wrap gap-2 text-pf-label text-pf-text-secondary mb-3">
                   {f.winRate != null && (
                     <span className="flex items-center gap-0.5">
                       <TrendingUp className="size-3" aria-hidden="true" />
@@ -366,7 +366,7 @@ export function Component() {
                 <div className="flex items-center gap-3 text-xs text-pf-text-muted">
                   <span className="flex items-center gap-1"><GitFork className="size-3" aria-hidden="true" /> {f.forkCount}</span>
                   <span className="flex items-center gap-1"><Heart className="size-3" aria-hidden="true" /> {f.likeCount}</span>
-                  <span className="ml-auto border border-pf-cyan-500/40 text-pf-cyan-400 text-[10px] font-medium px-2 py-0.5 rounded hover:bg-pf-cyan-500/10 transition-colors">
+                  <span className="ml-auto border border-pf-cyan-500/40 text-pf-cyan-400 text-pf-caption font-medium px-2 py-0.5 rounded hover:bg-pf-cyan-500/10 transition-colors">
                     View Strategy
                   </span>
                 </div>
@@ -504,7 +504,7 @@ export function Component() {
                   {s.author.avatarUrl ? (
                     <img src={s.author.avatarUrl} alt={`${s.author.displayName ?? s.author.username} avatar`} className="size-7 rounded-pf-full object-cover" width={28} height={28} loading="lazy" />
                   ) : (
-                    <div className="size-7 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-[10px] font-bold text-pf-cyan-400">
+                    <div className="size-7 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-pf-caption font-bold text-pf-cyan-400">
                       {authorInitials(s)}
                     </div>
                   )}
@@ -516,7 +516,7 @@ export function Component() {
                     {s.author.displayName ?? s.author.username}
                   </a>
                   {s.author.score != null && s.author.score > 0 && (
-                    <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full text-[10px] font-mono font-bold border ${
+                    <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full text-pf-caption font-mono font-bold border ${
                       s.author.score >= 70 ? 'text-pf-success bg-pf-success/10 border-pf-success/20' :
                       s.author.score >= 40 ? 'text-pf-warning bg-pf-warning/10 border-pf-warning/20' :
                       'text-pf-danger bg-pf-danger/10 border-pf-danger/20'
@@ -525,7 +525,7 @@ export function Component() {
                       {s.author.score}
                     </span>
                   )}
-                  <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-pf-overlay text-pf-text-muted">
+                  <span className="ml-auto text-pf-caption px-1.5 py-0.5 rounded bg-pf-overlay text-pf-text-muted">
                     {execLabel(s.execMode)}
                   </span>
                 </div>
@@ -542,7 +542,7 @@ export function Component() {
                 {s.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-3">
                     {s.tags.slice(0, 4).map(tag => (
-                      <span key={tag} className={`px-1.5 py-0.5 rounded-pf-full text-[10px] font-medium ${
+                      <span key={tag} className={`px-1.5 py-0.5 rounded-pf-full text-pf-caption font-medium ${
                         tag === 'momentum' ? 'bg-pf-warning/15 text-pf-warning' :
                         tag === 'political' ? 'bg-pf-info/15 text-pf-info' :
                         tag === 'yes-bias' ? 'bg-pf-success/15 text-pf-success' :
@@ -584,8 +584,8 @@ export function Component() {
                     {likeCount}
                   </Button>
                   <span className="flex items-center gap-1"><GitFork className="size-3.5" aria-hidden="true" /> {s.forkCount}</span>
-                  <span className="ml-auto text-[11px] text-pf-text-muted">&bull;</span>
-                  <span className="font-mono text-[11px]">{formatDate(s.createdAt)}</span>
+                  <span className="ml-auto text-pf-label text-pf-text-muted">&bull;</span>
+                  <span className="font-mono text-pf-label">{formatDate(s.createdAt)}</span>
                 </div>
               </Link>
             );

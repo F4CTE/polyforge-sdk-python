@@ -225,6 +225,21 @@ Fallback système     : 'Inter', -apple-system, BlinkMacSystemFont, system-ui, s
 
 ### Échelle typographique
 
+#### Micro sizes (badges, pills, labels) — Tailwind: `text-pf-*`
+
+```
+text-pf-micro      9px  (0.5625rem)  — smallest captions
+text-pf-caption   10px  (0.625rem)   — badges, pill counts
+text-pf-label     11px  (0.6875rem)  — form labels, small UI text
+text-pf-body-sm   13px  (0.8125rem)  — compact body text
+text-pf-body      15px  (0.9375rem)  — standard reading text
+text-pf-subhead   17px  (1.0625rem)  — sub-headings
+```
+
+> **Rule:** Never use arbitrary font sizes like `text-[10px]`. Use the tokens above or standard Tailwind sizes (`text-xs`, `text-sm`, `text-base`, `text-lg`, etc.).
+
+#### Standard scale (headings, body) — design reference
+
 ```
 --pf-text-xs      11px / line-height: 1.4  / letter-spacing: 0.04em
 --pf-text-sm      12px / line-height: 1.5  / letter-spacing: 0.02em

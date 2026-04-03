@@ -412,11 +412,11 @@ export function Component() {
               </Button>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${statusStyle.bg} ${statusStyle.text}`}>
+              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${statusStyle.bg} ${statusStyle.text}`}>
                 <span className={`w-2.5 h-2.5 rounded-pf-full ${statusStyle.dot} ${config.status === 'ACTIVE' ? 'animate-pulse-dot' : ''}`} />
                 {config.status}
               </span>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${modeStyle.bg} ${modeStyle.text}`}>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${modeStyle.bg} ${modeStyle.text}`}>
                 {config.mode}
               </span>
             </div>
@@ -551,14 +551,14 @@ export function Component() {
                     <tr key={trade.id} className="hover:bg-pf-surface/50 transition-colors">
                       <td className="px-4 py-3 text-pf-text max-w-[180px] truncate">{trade.market}</td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                        <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${
                           trade.side === 'BUY' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
                         }`}>
                           {trade.side}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                        <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${
                           trade.outcome === 'YES' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
                         }`}>
                           {trade.outcome}
@@ -573,7 +573,7 @@ export function Component() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${TRADE_STATUS_STYLES[trade.status]}`}>
+                        <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${TRADE_STATUS_STYLES[trade.status]}`}>
                           {trade.status}
                         </span>
                       </td>

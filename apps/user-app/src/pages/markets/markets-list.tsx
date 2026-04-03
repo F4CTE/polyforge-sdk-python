@@ -232,7 +232,7 @@ function SentimentPill({ sentiment }: { sentiment: MarketSentiment | undefined }
   };
   return (
     <span
-      className={`inline-flex items-center px-1.5 py-0.5 rounded-pf-full text-[10px] font-semibold uppercase tracking-wide ${styles[sentiment.direction]}`}
+      className={`inline-flex items-center px-1.5 py-0.5 rounded-pf-full text-pf-caption font-semibold uppercase tracking-wide ${styles[sentiment.direction]}`}
       title={`Sentiment score: ${sentiment.score}`}
       aria-label={`Market sentiment: ${sentiment.direction}`}
     >
@@ -309,7 +309,7 @@ const MarketCard = memo(function MarketCard({
                 style={{ width: `${yesPercent(market) ?? 50}%` }}
               />
             </div>
-            <span className="text-[11px] text-pf-text-muted mt-1 block">
+            <span className="text-pf-label text-pf-text-muted mt-1 block">
               {yesPercent(market) !== null ? `${yesPercent(market)}% chance` : '\u2014'}
             </span>
           </div>
@@ -338,7 +338,7 @@ const MarketCard = memo(function MarketCard({
             </div>
           ))}
           {market.tokens.length > 4 && (
-            <span className="text-[11px] text-pf-text-muted">+{market.tokens.length - 4} more</span>
+            <span className="text-pf-label text-pf-text-muted">+{market.tokens.length - 4} more</span>
           )}
         </div>
       )}
@@ -346,7 +346,7 @@ const MarketCard = memo(function MarketCard({
       {/* Footer */}
       {market.tokens.length > 0 && (
         <div className="flex items-center justify-between gap-1 mt-3">
-          <div className="flex items-center gap-2 text-[11px] text-pf-text-muted">
+          <div className="flex items-center gap-2 text-pf-label text-pf-text-muted">
             <span className="flex items-center gap-1">
               <Zap className="size-3" aria-hidden="true" />
               {market.tokens.length} outcomes
@@ -399,7 +399,7 @@ function TrendingCard({ market }: { market: Market }) {
 
       {/* Category badge */}
       <span
-        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}
       >
         {market.category}
       </span>
@@ -623,7 +623,7 @@ function AdvancedSearchModal({
               <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide">End Date</p>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
-                  <label className="block text-[10px] text-pf-text-muted mb-0.5">From</label>
+                  <label className="block text-pf-caption text-pf-text-muted mb-0.5">From</label>
                   <input
                     type="date"
                     value={filters.endDateFrom ?? ''}
@@ -632,7 +632,7 @@ function AdvancedSearchModal({
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-[10px] text-pf-text-muted mb-0.5">To</label>
+                  <label className="block text-pf-caption text-pf-text-muted mb-0.5">To</label>
                   <input
                     type="date"
                     value={filters.endDateTo ?? ''}
@@ -648,7 +648,7 @@ function AdvancedSearchModal({
               <p className="text-xs font-medium text-pf-text-secondary uppercase tracking-wide">YES Price Range</p>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
-                  <label className="block text-[10px] text-pf-text-muted mb-0.5">Min</label>
+                  <label className="block text-pf-caption text-pf-text-muted mb-0.5">Min</label>
                   <Input
                     type="number"
                     min={0.01}
@@ -662,7 +662,7 @@ function AdvancedSearchModal({
                 </div>
                 <span className="text-pf-text-muted text-xs mt-4">—</span>
                 <div className="flex-1">
-                  <label className="block text-[10px] text-pf-text-muted mb-0.5">Max</label>
+                  <label className="block text-pf-caption text-pf-text-muted mb-0.5">Max</label>
                   <Input
                     type="number"
                     min={0.01}
@@ -676,7 +676,7 @@ function AdvancedSearchModal({
                 </div>
               </div>
               {(filters.minYesPrice !== undefined || filters.maxYesPrice !== undefined) && (
-                <p className="text-[11px] text-pf-cyan-400 font-mono">
+                <p className="text-pf-label text-pf-cyan-400 font-mono">
                   {filters.minYesPrice ?? '0.01'} — {filters.maxYesPrice ?? '0.99'}
                 </p>
               )}
@@ -848,10 +848,10 @@ function AdvancedSearchModal({
                             {market.title}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-pf-full ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}>
+                            <span className={`text-pf-caption px-1.5 py-0.5 rounded-pf-full ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}>
                               {market.category}
                             </span>
-                            <span className="text-[10px] text-pf-text-muted">{formatVolume(market.volume24h)} vol</span>
+                            <span className="text-pf-caption text-pf-text-muted">{formatVolume(market.volume24h)} vol</span>
                           </div>
                         </div>
                         <div className="shrink-0 text-right">
@@ -860,7 +860,7 @@ function AdvancedSearchModal({
                           ) : (
                             <span className="text-sm text-pf-text-muted">—</span>
                           )}
-                          <p className="text-[10px] text-pf-text-muted mt-0.5">{daysUntil(market.endDate)}</p>
+                          <p className="text-pf-caption text-pf-text-muted mt-0.5">{daysUntil(market.endDate)}</p>
                         </div>
                       </Button>
                     );
@@ -1106,7 +1106,7 @@ export function Component() {
           <SlidersHorizontal className="size-4" aria-hidden="true" />
           <span>Advanced</span>
           {countActiveFilters(advancedFilters) > 0 && (
-            <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-pf-cyan-500 text-pf-bg text-[10px] font-bold -mr-1">
+            <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-pf-cyan-500 text-pf-bg text-pf-caption font-bold -mr-1">
               {countActiveFilters(advancedFilters)}
             </span>
           )}
@@ -1285,7 +1285,7 @@ export function Component() {
                           </Link>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}>
                             {CATEGORY_ICONS[market.category]}
                             {market.category}
                           </span>

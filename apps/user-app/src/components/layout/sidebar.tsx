@@ -159,7 +159,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {navSections.map((section) => (
           <div key={section.title}>
             {!collapsed && (
-              <div className="px-2 mb-1 text-[11px] font-semibold uppercase tracking-wider text-pf-text-secondary">
+              <div className="px-2 mb-1 text-pf-label font-semibold uppercase tracking-wider text-pf-text-secondary">
                 {section.title}
               </div>
             )}

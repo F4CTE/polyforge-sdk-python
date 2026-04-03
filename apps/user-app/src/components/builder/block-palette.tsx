@@ -135,7 +135,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
         {/* Metadata form */}
         <div className="px-4 py-3 space-y-3 border-b border-pf-border-subtle">
           <div>
-            <label htmlFor="bp-strategy-name" className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-strategy-name" className="block text-pf-label font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
               Strategy Name *
             </label>
             <input
@@ -151,7 +151,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           </div>
 
           <div>
-            <label htmlFor="bp-strategy-description" className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-strategy-description" className="block text-pf-label font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
               Description
             </label>
             <textarea
@@ -167,7 +167,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           </div>
 
           <div>
-            <label htmlFor="bp-exec-mode" className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-exec-mode" className="block text-pf-label font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
               Exec Mode
             </label>
             <select
@@ -185,7 +185,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
 
           {execMode !== 'EVENT' && (
             <div>
-              <label htmlFor="bp-tick-interval" className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+              <label htmlFor="bp-tick-interval" className="block text-pf-label font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
                 Tick Interval (ms)
               </label>
               <input
@@ -203,7 +203,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           )}
 
           <div>
-            <label htmlFor="bp-visibility" className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-visibility" className="block text-pf-label font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
               Visibility
             </label>
             <select
@@ -220,7 +220,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           </div>
 
           <div>
-            <label htmlFor="bp-strategy-tags" className="block text-[11px] font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-strategy-tags" className="block text-pf-label font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
               Tags <span className="font-normal opacity-60">(comma separated)</span>
             </label>
             <input
@@ -255,7 +255,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                   key={key}
                   onClick={() => setActiveSection(key)}
                   aria-pressed={isActive}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-pf-sm text-[11px] font-medium transition-all shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
+                  className={`flex items-center gap-1 px-2 py-1 rounded-pf-sm text-pf-label font-medium transition-all shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
                     isActive
                       ? 'text-white shadow-pf-xs'
                       : 'text-pf-text-muted hover:text-pf-text-secondary bg-transparent hover:bg-pf-overlay'
@@ -266,7 +266,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                   {meta.label}
                   {count > 0 && (
                     <span
-                      className="ml-0.5 px-1 py-px rounded-pf-full text-[9px] font-semibold leading-none"
+                      className="ml-0.5 px-1 py-px rounded-pf-full text-pf-micro font-semibold leading-none"
                       style={{
                         backgroundColor: isActive ? 'color-mix(in srgb, var(--color-pf-text) 25%, transparent)' : meta.color + '30',
                         color: isActive ? 'white' : meta.color,
@@ -287,7 +287,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           {/* Block list or Variables panel */}
           {activeSection === 'variables' ? (
             <div className="space-y-3">
-              <p className="text-[10px] text-pf-text-muted leading-snug">
+              <p className="text-pf-caption text-pf-text-muted leading-snug">
                 Variables let you define reusable expressions. Reference them
                 in block fields with <code className="text-pf-purple-500 font-mono">$varName</code>.
               </p>
@@ -300,7 +300,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 Add Variable
               </button>
               {sectionCount('variables') > 0 && (
-                <p className="text-[10px] text-pf-text-muted">
+                <p className="text-pf-caption text-pf-text-muted">
                   {sectionCount('variables')} variable{sectionCount('variables') !== 1 ? 's' : ''} on canvas
                 </p>
               )}
@@ -329,7 +329,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 );
                 if (filtered.length === 0) {
                   return (
-                    <p className="text-[11px] text-pf-text-muted px-1 py-2">No blocks match</p>
+                    <p className="text-pf-label text-pf-text-muted px-1 py-2">No blocks match</p>
                   );
                 }
                 return filtered.map((def) => (
@@ -350,7 +350,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                         <span className="text-xs font-medium text-pf-text">{def.label}</span>
                         <ChevronRight className="size-3 text-pf-text-muted/0 group-hover:text-pf-text-muted/60 transition-all" />
                       </div>
-                      <p className="text-[10px] text-pf-text-muted leading-snug mt-0.5">
+                      <p className="text-pf-caption text-pf-text-muted leading-snug mt-0.5">
                         {def.description}
                       </p>
                     </div>

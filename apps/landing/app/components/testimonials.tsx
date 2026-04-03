@@ -33,7 +33,7 @@ export function Testimonials() {
           >
             Trusted by traders
           </h2>
-          <p className="text-[17px] text-pf-text-secondary">
+          <p className="text-pf-subhead text-pf-text-secondary">
             Early adopters are already building their edge.
           </p>
         </div>
@@ -57,7 +57,7 @@ export function Testimonials() {
               </blockquote>
               <figcaption className="flex items-center gap-3">
                 <div
-                  className="w-10 h-10 rounded-pf-full bg-gradient-to-br from-pf-cyan-500/20 to-pf-cyan-500/5 border border-pf-cyan-500/25 flex items-center justify-center text-[13px] font-semibold text-pf-cyan-400 font-mono shrink-0"
+                  className="w-10 h-10 rounded-pf-full bg-gradient-to-br from-pf-cyan-500/20 to-pf-cyan-500/5 border border-pf-cyan-500/25 flex items-center justify-center text-pf-body-sm font-semibold text-pf-cyan-400 font-mono shrink-0"
                   aria-hidden="true"
                 >
                   {t.initials}

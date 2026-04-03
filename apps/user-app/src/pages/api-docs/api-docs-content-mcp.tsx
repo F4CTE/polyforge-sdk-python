@@ -20,7 +20,7 @@ export function McpSection() {
         </div>
         <div className="flex flex-wrap gap-2">
           {['Claude Desktop','Claude Code','Cursor','Windsurf','Zed','Continue'].map(c => (
-            <span key={c} className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-secondary">{c}</span>
+            <span key={c} className="inline-flex items-center text-pf-label font-medium px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-secondary">{c}</span>
           ))}
         </div>
       </div>

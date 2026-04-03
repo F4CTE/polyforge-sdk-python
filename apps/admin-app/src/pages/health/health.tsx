@@ -161,11 +161,11 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
       </div>
 
       {service.version && (
-        <div className="text-[10px] text-pf-text-tertiary">v{service.version}</div>
+        <div className="text-pf-caption text-pf-text-tertiary">v{service.version}</div>
       )}
 
       {(service.status === 'DOWN' || service.status === 'DEGRADED') && service.errorMessage && (
-        <div className="text-[11px] text-pf-danger leading-snug">{service.errorMessage}</div>
+        <div className="text-pf-label text-pf-danger leading-snug">{service.errorMessage}</div>
       )}
     </div>
   );
@@ -200,7 +200,7 @@ function DbCard({ db }: { db: DbHealth }) {
           <span className="text-pf-text-tertiary">Migrations Pending</span>
           <div className="mt-0.5">
             {db.pendingMigrations > 0 ? (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-pf-danger/15 text-pf-danger">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-pf-caption font-bold bg-pf-danger/15 text-pf-danger">
                 {db.pendingMigrations}
               </span>
             ) : (
@@ -223,7 +223,7 @@ function DbCard({ db }: { db: DbHealth }) {
             style={{ width: `${connPct}%` }}
           />
         </div>
-        <div className="text-[10px] text-pf-text-tertiary mt-1">{connPct}% utilized</div>
+        <div className="text-pf-caption text-pf-text-tertiary mt-1">{connPct}% utilized</div>
       </div>
     </div>
   );

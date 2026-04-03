@@ -219,9 +219,9 @@ export function Component() {
                   {msg.senderName}
                 </span>
                 {msg.isAdmin && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-pf-cyan-500/15 text-pf-cyan-400 font-medium">Staff</span>
+                  <span className="text-pf-caption px-1.5 py-0.5 rounded bg-pf-cyan-500/15 text-pf-cyan-400 font-medium">Staff</span>
                 )}
-                <span className="text-[11px] text-pf-text-muted ml-auto font-mono">
+                <span className="text-pf-label text-pf-text-muted ml-auto font-mono">
                   {formatDateTime(msg.createdAt)}
                 </span>
               </div>
@@ -233,7 +233,7 @@ export function Component() {
       </div>
 
       {/* Auto-polling indicator */}
-      <div className="flex items-center gap-1.5 text-[11px] text-pf-text-muted">
+      <div className="flex items-center gap-1.5 text-pf-label text-pf-text-muted">
         <RefreshCw className="size-3" />
         Auto-updating every 15s
       </div>

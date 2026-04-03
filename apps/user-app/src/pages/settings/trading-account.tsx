@@ -171,7 +171,7 @@ export function Component() {
             </div>
             <div>
               <label htmlFor="trading-safe-address" className="text-xs text-pf-text-secondary mb-1.5 block">
-                Safe Address <span className="text-pf-text-muted text-[10px]">(optional)</span>
+                Safe Address <span className="text-pf-text-muted text-pf-caption">(optional)</span>
               </label>
               <Input id="trading-safe-address" type="text" value={safeAddress} onChange={e => setSafeAddress(e.target.value)} placeholder="0x..." className="w-full font-mono" />
             </div>

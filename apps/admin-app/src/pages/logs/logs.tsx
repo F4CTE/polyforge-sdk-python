@@ -147,7 +147,7 @@ export function Component() {
                     {tab === 'audit' && (
                       <>
                         <td className="px-4 py-3">
-                          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-pf-base text-pf-cyan-500 border border-pf-border">
+                          <span className="px-2 py-0.5 rounded text-pf-label font-medium bg-pf-base text-pf-cyan-500 border border-pf-border">
                             {log.action}
                           </span>
                         </td>
@@ -161,14 +161,14 @@ export function Component() {
                     {tab === 'events' && (
                       <>
                         <td className="px-4 py-3">
-                          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--color-pf-purple-500)]/10 text-[var(--color-pf-purple-500)]">
+                          <span className="px-2 py-0.5 rounded text-pf-label font-medium bg-[var(--color-pf-purple-500)]/10 text-[var(--color-pf-purple-500)]">
                             {log.type}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-pf-text-secondary max-w-[300px] font-mono text-xs">
                           <details className="cursor-pointer">
                             <summary className="truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500">{JSON.stringify(log.payload)}</summary>
-                            <pre className="mt-2 p-2 bg-pf-base rounded text-[10px] whitespace-pre-wrap break-all max-h-40 overflow-y-auto">{JSON.stringify(log.payload, null, 2)}</pre>
+                            <pre className="mt-2 p-2 bg-pf-base rounded text-pf-caption whitespace-pre-wrap break-all max-h-40 overflow-y-auto">{JSON.stringify(log.payload, null, 2)}</pre>
                           </details>
                         </td>
                       </>

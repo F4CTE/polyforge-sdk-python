@@ -259,7 +259,7 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
 
       {/* Retention Bar */}
       <div>
-        <div className="flex justify-between text-[11px] text-pf-text-muted mb-1">
+        <div className="flex justify-between text-pf-label text-pf-text-muted mb-1">
           <span>Retention</span>
           <span>{stats.retentionRate}%</span>
         </div>
@@ -399,7 +399,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
             { label: 'Retention', value: `${stats.retentionRate}%` },
           ].map((item) => (
             <div key={item.label} className="rounded-pf-lg bg-pf-elevated border border-pf-border px-4 py-3">
-              <div className="text-[11px] text-pf-text-muted uppercase tracking-wide">{item.label}</div>
+              <div className="text-pf-label text-pf-text-muted uppercase tracking-wide">{item.label}</div>
               <div className="text-lg font-bold text-pf-text mt-0.5 tabular-nums">{item.value}</div>
             </div>
           ))}
@@ -437,22 +437,22 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-pf-border bg-pf-surface">
-                <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-2.5 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
                   Username
                 </th>
-                <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-2.5 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
                   Email
                 </th>
-                <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-2.5 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
                   Joined
                 </th>
-                <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-2.5 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
                   Last Active
                 </th>
-                <th className="px-4 py-2.5 text-right text-[11px] font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-2.5 text-right text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
                   Trades
                 </th>
-                <th className="px-4 py-2.5 text-right text-[11px] font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-2.5 text-right text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
                   Volume
                 </th>
               </tr>

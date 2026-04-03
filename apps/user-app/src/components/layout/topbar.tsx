@@ -96,7 +96,7 @@ export function Topbar() {
         >
           <Bell size={18} />
           {unread > 0 && (
-            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold text-white bg-pf-danger rounded-pf-full" aria-label={`${unread} unread notifications`}>
+            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-pf-caption font-bold text-white bg-pf-danger rounded-pf-full" aria-label={`${unread} unread notifications`}>
               {unread > 9 ? '9+' : unread}
             </span>
           )}
@@ -151,7 +151,7 @@ export function Topbar() {
                       <p className="text-xs text-pf-text-muted truncate">
                         {n.body}
                       </p>
-                      <span className="text-[10px] text-pf-text-muted/70" title={new Date(n.timestamp).toLocaleString()}>
+                      <span className="text-pf-caption text-pf-text-muted/70" title={new Date(n.timestamp).toLocaleString()}>
                         {timeAgo(n.timestamp)}
                       </span>
                     </div>

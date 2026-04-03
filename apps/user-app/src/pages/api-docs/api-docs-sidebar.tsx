@@ -98,7 +98,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
         {filteredGroups.map(g => (
           <div key={g.group ?? 'overview'}>
             {g.group && (
-              <p className="text-[10px] font-semibold text-pf-text-muted uppercase tracking-wider mb-1 px-2 pt-1">
+              <p className="text-pf-caption font-semibold text-pf-text-muted uppercase tracking-wider mb-1 px-2 pt-1">
                 {g.group}
               </p>
             )}
@@ -125,7 +125,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
         {/* Endpoint search results */}
         {matchingEndpoints.length > 0 && (
           <div>
-            <p className="text-[10px] font-semibold text-pf-text-muted uppercase tracking-wider mb-1 px-2 pt-1">
+            <p className="text-pf-caption font-semibold text-pf-text-muted uppercase tracking-wider mb-1 px-2 pt-1">
               Endpoints
             </p>
             <div className="space-y-px">

@@ -206,7 +206,7 @@ export function Component() {
                     : 'border-pf-border text-pf-text-muted'
               }`}
             >
-              <span className="size-5 rounded-pf-full bg-pf-overlay flex items-center justify-center text-[10px] font-bold">
+              <span className="size-5 rounded-pf-full bg-pf-overlay flex items-center justify-center text-pf-caption font-bold">
                 {i + 1}
               </span>
               {label}
@@ -292,7 +292,7 @@ export function Component() {
                     >
                       {opt.label}
                     </span>
-                    <span className="text-[11px] text-pf-text-secondary leading-snug">
+                    <span className="text-pf-label text-pf-text-secondary leading-snug">
                       {opt.description}
                     </span>
                   </Button>
@@ -349,7 +349,7 @@ export function Component() {
                       />
                       <span className="text-sm font-mono text-pf-cyan-400 w-12 text-right">{sizePercent}%</span>
                     </div>
-                    <p className="text-[10px] text-pf-text-muted mt-1">
+                    <p className="text-pf-caption text-pf-text-muted mt-1">
                       Copy {sizePercent}% of each whale trade size
                     </p>
                   </div>
@@ -394,7 +394,7 @@ export function Component() {
                     placeholder="500"
                     className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
                   />
-                  <p className="text-[10px] text-pf-text-muted mt-0.5">Never copy more than this per single trade</p>
+                  <p className="text-pf-caption text-pf-text-muted mt-0.5">Never copy more than this per single trade</p>
                 </div>
               </div>
             )}

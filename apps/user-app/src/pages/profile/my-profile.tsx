@@ -227,7 +227,7 @@ export function Component() {
                 <span className="text-lg">{BADGE_ICONS[badge.type] ?? <Target className="size-4" />}</span>
                 <div className="min-w-0">
                   <div className="text-xs font-medium text-pf-text truncate">{badge.name}</div>
-                  <div className="text-[10px] text-pf-text-muted">
+                  <div className="text-pf-caption text-pf-text-muted">
                     {new Date(badge.earnedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </div>
                 </div>

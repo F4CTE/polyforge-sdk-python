@@ -1064,7 +1064,7 @@ export function Component() {
               >
                 <Bell className="size-4" />
                 {strategyAlerts.length > 0 && (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-pf-full bg-pf-warning text-pf-text-contrast text-[9px] font-bold leading-none">
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-pf-full bg-pf-warning text-pf-text-contrast text-pf-micro font-bold leading-none">
                     {strategyAlerts.length > 9 ? '9+' : strategyAlerts.length}
                   </span>
                 )}
@@ -1140,7 +1140,7 @@ export function Component() {
                       placeholder="0"
                       className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
                     />
-                    <p className="text-[10px] text-pf-text-muted mt-0.5">0 = Free</p>
+                    <p className="text-pf-caption text-pf-text-muted mt-0.5">0 = Free</p>
                   </div>
                   <div className="flex-1">
                     <label className="block text-xs font-medium text-pf-text-secondary mb-1">Tags (comma-separated)</label>
@@ -1258,7 +1258,7 @@ export function Component() {
                   <div className="flex items-center gap-4 py-1.5 border-t border-b border-pf-border-subtle">
                     {stratPnl && parseFloat(stratPnl.winRate) > 0 && (
                       <div className="text-center">
-                        <p className="text-[10px] text-pf-text-muted">Win Rate</p>
+                        <p className="text-pf-caption text-pf-text-muted">Win Rate</p>
                         <p className="text-xs font-mono font-semibold text-pf-cyan-400">
                           {(parseFloat(stratPnl.winRate) * 100).toFixed(0)}%
                         </p>
@@ -1266,7 +1266,7 @@ export function Component() {
                     )}
                     {(strategy.totalPnl ?? null) !== null && (
                       <div className="text-center">
-                        <p className="text-[10px] text-pf-text-muted">P&amp;L</p>
+                        <p className="text-pf-caption text-pf-text-muted">P&amp;L</p>
                         <p className={`text-xs font-mono font-semibold ${(strategy.totalPnl ?? 0) >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
                           {formatPnl(strategy.totalPnl ?? 0)}
                         </p>
@@ -1274,12 +1274,12 @@ export function Component() {
                     )}
                     {recentOrderCount !== null && (
                       <div className="text-center">
-                        <p className="text-[10px] text-pf-text-muted">Trades</p>
+                        <p className="text-pf-caption text-pf-text-muted">Trades</p>
                         <p className="text-xs font-mono font-semibold text-pf-text">{recentOrderCount}</p>
                       </div>
                     )}
                   </div>
-                  <p className="text-[10px] text-pf-text-muted">PolyForge · polyforge.io</p>
+                  <p className="text-pf-caption text-pf-text-muted">PolyForge · polyforge.io</p>
                 </div>
               </div>
 
@@ -1492,7 +1492,7 @@ export function Component() {
 
                       {/* Triggered badge */}
                       {alert.triggeredAt && (
-                        <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-pf-full bg-pf-warning/15 text-pf-warning text-[10px] font-semibold">
+                        <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-pf-full bg-pf-warning/15 text-pf-warning text-pf-caption font-semibold">
                           <AlertTriangle className="size-2.5" aria-hidden="true" />
                           Triggered
                         </span>
@@ -1617,7 +1617,7 @@ export function Component() {
                     >
                       <span className="text-xs text-pf-text font-medium">{child.name}</span>
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-[10px] font-medium ${childStyle.bg} ${childStyle.text}`}
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-pf-caption font-medium ${childStyle.bg} ${childStyle.text}`}
                       >
                         <span className={`w-1 h-1 rounded-pf-full ${childStyle.dot}`} />
                         {child.status}
@@ -1808,12 +1808,12 @@ export function Component() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs font-medium text-pf-text">{ev.eventType}</span>
-                          <span className="text-[10px] text-pf-text-muted flex-shrink-0">
+                          <span className="text-pf-caption text-pf-text-muted flex-shrink-0">
                             {new Date(ev.createdAt).toLocaleString()}
                           </span>
                         </div>
                         {ev.payload && Object.keys(ev.payload).length > 0 && (
-                          <p className="text-[11px] text-pf-text-secondary mt-0.5 font-mono truncate">
+                          <p className="text-pf-label text-pf-text-secondary mt-0.5 font-mono truncate">
                             {JSON.stringify(ev.payload).slice(0, 120)}
                           </p>
                         )}
@@ -1888,7 +1888,7 @@ export function Component() {
                                 {ex.fillPrice ? ` @ ${ex.fillPrice}` : ''}
                               </td>
                               <td className="px-3 py-2.5">
-                                <span className={`inline-flex px-2 py-0.5 rounded-pf-full text-[10px] font-medium ${statusBadge}`}>
+                                <span className={`inline-flex px-2 py-0.5 rounded-pf-full text-pf-caption font-medium ${statusBadge}`}>
                                   {ex.status}
                                 </span>
                               </td>
@@ -2012,12 +2012,12 @@ export function Component() {
                               {v.label}
                             </span>
                             {isCurrent && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-pf-full bg-pf-success/10 text-pf-success text-[10px] font-semibold uppercase tracking-wide">
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-pf-full bg-pf-success/10 text-pf-success text-pf-caption font-semibold uppercase tracking-wide">
                                 current
                               </span>
                             )}
                             <span className="text-xs text-pf-text-muted">{formatDate(v.createdAt)}</span>
-                            <span className="text-[10px] text-pf-text-muted ml-auto">by {v.author}</span>
+                            <span className="text-pf-caption text-pf-text-muted ml-auto">by {v.author}</span>
                           </div>
 
                           {/* Change note */}
@@ -2029,25 +2029,25 @@ export function Component() {
 
                           {/* Block count + change chips */}
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[11px] text-pf-text-muted">
+                            <span className="text-pf-label text-pf-text-muted">
                               {v.blockCount} block{v.blockCount !== 1 ? 's' : ''}
                             </span>
                             {v.changes && (
                               <>
                                 {v.changes.added > 0 && (
-                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full bg-pf-success/15 text-pf-success text-[10px] font-semibold">
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full bg-pf-success/15 text-pf-success text-pf-caption font-semibold">
                                     <Plus className="size-2.5" aria-hidden="true" />
                                     {v.changes.added} added
                                   </span>
                                 )}
                                 {v.changes.removed > 0 && (
-                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full bg-pf-danger/15 text-pf-danger text-[10px] font-semibold">
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full bg-pf-danger/15 text-pf-danger text-pf-caption font-semibold">
                                     <Minus className="size-2.5" aria-hidden="true" />
                                     {v.changes.removed} removed
                                   </span>
                                 )}
                                 {v.changes.modified > 0 && (
-                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full bg-pf-warning/15 text-pf-warning text-[10px] font-semibold">
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full bg-pf-warning/15 text-pf-warning text-pf-caption font-semibold">
                                     <Edit2 className="size-2.5" aria-hidden="true" />
                                     {v.changes.modified} modified
                                   </span>
@@ -2177,12 +2177,12 @@ export function Component() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 mb-0.5">
                             <span className={`text-xs font-bold ${color}`}>{ev.type.replace(/_/g, ' ')}</span>
-                            <span className="text-[10px] text-pf-text-muted flex-shrink-0">{relativeDate(ev.timestamp)}</span>
+                            <span className="text-pf-caption text-pf-text-muted flex-shrink-0">{relativeDate(ev.timestamp)}</span>
                           </div>
                           {ev.type === 'STRATEGY_ERROR' ? (
                             <p className="text-xs text-pf-danger truncate">{ev.data.errorMessage ?? 'Unknown error'}</p>
                           ) : (
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-pf-text-secondary">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-pf-label text-pf-text-secondary">
                               {ev.data.marketQuestion && (
                                 <span className="truncate max-w-[200px] text-pf-text-muted" title={ev.data.marketQuestion}>
                                   {ev.data.marketQuestion}
@@ -2439,7 +2439,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
           className="w-full resize-none"
         />
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-pf-text-muted">
+          <span className="text-pf-caption text-pf-text-muted">
             {state.submitComment.length}/500
           </span>
           <Button
@@ -2496,7 +2496,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
                     loading="lazy"
                   />
                 ) : (
-                  <div className="size-8 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-[10px] font-bold text-pf-cyan-400 shrink-0">
+                  <div className="size-8 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-pf-caption font-bold text-pf-cyan-400 shrink-0">
                     {initials}
                   </div>
                 )}

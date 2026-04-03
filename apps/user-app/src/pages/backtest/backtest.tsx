@@ -320,7 +320,7 @@ export function Component() {
                       className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
                     />
                     {marketBindings[slot.slot] && (
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-pf-cyan-400 font-mono">bound</span>
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-pf-caption text-pf-cyan-400 font-mono">bound</span>
                     )}
                   </div>
                   {(marketResults[slot.slot] ?? []).length > 0 && (
@@ -503,14 +503,14 @@ export function Component() {
                       }`}
                     >
                       <td className="px-4 py-3">
-                        <span className="text-[13px] font-medium text-pf-text">
+                        <span className="text-pf-body-sm font-medium text-pf-text">
                           {run.strategyName
                             ?? strategies.find(s => s.id === run.strategyId)?.name
                             ?? (run.strategyId ? `${run.strategyId.slice(0, 8)}...` : '\u2014')}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-mono text-[11px] text-pf-text-muted">{dateRangeLabel(run)}</span>
+                        <span className="font-mono text-pf-label text-pf-text-muted">{dateRangeLabel(run)}</span>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
@@ -523,10 +523,10 @@ export function Component() {
                             <div className="flex-1 h-1.5 bg-pf-overlay rounded-pf-full overflow-hidden">
                               <div className="h-full bg-pf-cyan-500 rounded-pf-full" style={{ width: `${run.progress}%` }} />
                             </div>
-                            <span className="font-mono text-[11px] text-pf-cyan-400">{run.progress}%</span>
+                            <span className="font-mono text-pf-label text-pf-cyan-400">{run.progress}%</span>
                           </div>
                         ) : run.status === 'COMPLETED' ? (
-                          <span className="font-mono text-[11px] text-pf-success">100%</span>
+                          <span className="font-mono text-pf-label text-pf-success">100%</span>
                         ) : (
                           <span className="text-pf-text-muted">\u2014</span>
                         )}
@@ -538,7 +538,7 @@ export function Component() {
                         {winRatePct(run.winRate)}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="font-mono text-[11px] text-pf-text-muted">{formatShortDate(run.createdAt)}</span>
+                        <span className="font-mono text-pf-label text-pf-text-muted">{formatShortDate(run.createdAt)}</span>
                       </td>
                       {compareMode && (
                         <td className="px-3 py-2 text-right" onClick={e => e.stopPropagation()}>
@@ -547,13 +547,13 @@ export function Component() {
                               type="button"
                               variant="ghost"
                               onClick={() => setCompareA(run.id === compareA ? null : run.id)}
-                              className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${compareA === run.id ? 'bg-blue-500/20 border-blue-500/40 text-blue-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
+                              className={`text-pf-caption px-1.5 py-0.5 rounded border transition-colors ${compareA === run.id ? 'bg-blue-500/20 border-blue-500/40 text-blue-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
                             >A</Button>
                             <Button
                               type="button"
                               variant="ghost"
                               onClick={() => setCompareB(run.id === compareB ? null : run.id)}
-                              className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${compareB === run.id ? 'bg-purple-500/20 border-purple-500/40 text-purple-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
+                              className={`text-pf-caption px-1.5 py-0.5 rounded border transition-colors ${compareB === run.id ? 'bg-purple-500/20 border-purple-500/40 text-purple-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
                             >B</Button>
                           </div>
                         </td>

@@ -118,7 +118,7 @@ export function Footer() {
           <div className="shrink-0 min-w-[220px]">
             <a
               href="/"
-              className="inline-flex items-center gap-2 text-[17px] font-bold text-pf-text mb-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
+              className="inline-flex items-center gap-2 text-pf-subhead font-bold text-pf-text mb-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
               aria-label="Polyforge home"
             >
               <PolyforgeIcon className="text-pf-cyan-400" />
@@ -185,7 +185,7 @@ export function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="pt-6 border-t border-pf-border-subtle text-[13px] text-pf-text-muted">
+        <div className="pt-6 border-t border-pf-border-subtle text-pf-body-sm text-pf-text-muted">
           &copy; 2026 Polyforge. All rights reserved.
         </div>
       </div>

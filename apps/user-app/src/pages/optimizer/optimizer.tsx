@@ -162,7 +162,7 @@ export function Component() {
               {data.summary}
             </p>
             {data.generatedAt && (
-              <p className="text-[11px] text-pf-text-muted pt-1 border-t border-pf-border-subtle">
+              <p className="text-pf-label text-pf-text-muted pt-1 border-t border-pf-border-subtle">
                 Generated {formatGeneratedAt(data.generatedAt)}
               </p>
             )}

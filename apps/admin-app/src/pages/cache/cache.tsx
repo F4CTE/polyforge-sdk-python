@@ -242,7 +242,7 @@ export function Component() {
                       <span className="text-xs text-pf-text-muted">
                         {s.error ? 'stream empty or not found' : `${s.length.toLocaleString()} entries`}
                       </span>
-                      <span className={`px-2 py-0.5 rounded-pf-full text-[10px] font-medium ${
+                      <span className={`px-2 py-0.5 rounded-pf-full text-pf-caption font-medium ${
                         s.error ? 'bg-pf-warning/10 text-pf-warning' : 'bg-pf-success/10 text-pf-success'
                       }`}>
                         {s.error ? 'empty' : 'active'}
@@ -253,10 +253,10 @@ export function Component() {
                     <div className="grid grid-cols-3 gap-2">
                       {s.groups.map((g, gi) => (
                         <div key={gi} className="bg-pf-base border border-pf-border rounded-pf-sm p-2.5">
-                          <p className="font-mono text-[11px] text-pf-text truncate">{String(g.name)}</p>
+                          <p className="font-mono text-pf-label text-pf-text truncate">{String(g.name)}</p>
                           <div className="flex items-center gap-3 mt-1">
-                            <span className="text-[10px] text-pf-text-muted">{g.consumers} consumer{g.consumers !== 1 ? 's' : ''}</span>
-                            <span className={`text-[10px] font-medium ${g.pending > 0 ? 'text-pf-warning' : 'text-pf-success'}`}>
+                            <span className="text-pf-caption text-pf-text-muted">{g.consumers} consumer{g.consumers !== 1 ? 's' : ''}</span>
+                            <span className={`text-pf-caption font-medium ${g.pending > 0 ? 'text-pf-warning' : 'text-pf-success'}`}>
                               {g.pending} pending
                             </span>
                           </div>

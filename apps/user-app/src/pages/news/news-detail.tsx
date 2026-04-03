@@ -149,10 +149,10 @@ export function Component() {
           <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`px-2 py-0.5 rounded-pf-full text-[11px] font-medium border ${sourceColor(article.source)}`}>
+              <span className={`px-2 py-0.5 rounded-pf-full text-pf-label font-medium border ${sourceColor(article.source)}`}>
                 {article.source}
               </span>
-              <span className={`px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${sentimentColor(article.sentiment)}`}>
+              <span className={`px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${sentimentColor(article.sentiment)}`}>
                 {article.sentiment}
               </span>
             </div>
@@ -216,7 +216,7 @@ export function Component() {
                           </span>
                         </td>
                         <td className="py-2.5 px-3">
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                          <span className={`px-1.5 py-0.5 rounded text-pf-caption font-semibold ${
                             signal.outcome === 'YES' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
                           }`}>
                             {signal.outcome}
@@ -237,7 +237,7 @@ export function Component() {
                         <td className="py-2.5 px-3 text-right">
                           <Link
                             to={`/markets/${signal.marketId}`}
-                            className="px-2.5 py-1 rounded-pf-sm text-[11px] font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+                            className="px-2.5 py-1 rounded-pf-sm text-pf-label font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
                           >
                             Trade
                           </Link>

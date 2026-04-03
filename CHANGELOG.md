@@ -125,6 +125,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.0] — 2026-04-03
+
+### Fixed
+- **Design system: arbitrary font sizes replaced with type-scale tokens** — added 6 font-size design tokens (`text-pf-micro` 9px, `text-pf-caption` 10px, `text-pf-label` 11px, `text-pf-body-sm` 13px, `text-pf-body` 15px, `text-pf-subhead` 17px) to the theme; replaced 433 hardcoded `text-[Npx]` values across 81 files with the corresponding tokens; eliminates arbitrary Tailwind values and enforces a consistent type scale across all apps
+
+---
+
 ## [6.34.0] — 2026-04-02
 
 ### Added

@@ -283,7 +283,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
               <Legend
                 formatter={(value: string) => {
                   const strategy = perfData.find((s) => s.strategyId === value);
-                  return <span style={{ color: 'var(--color-pf-text-secondary)', fontSize: 12 }}>{strategy?.name ?? value}</span>;
+                  return <span className="text-pf-text-secondary text-xs">{strategy?.name ?? value}</span>;
                 }}
               />
               {perfData.map((s) => (
@@ -762,7 +762,7 @@ export function Component() {
                   <h3 className="text-sm font-medium text-pf-text leading-snug line-clamp-1 group-hover:text-pf-cyan-400 transition-colors">
                     {strategy.name}
                   </h3>
-                  <span data-testid="status-badge" className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-[11px] font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}>
+                  <span data-testid="status-badge" className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-pf-label font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}>
                     <span className={`w-2.5 h-2.5 rounded-pf-full ${statusStyle.dot} ${strategy.status === 'RUNNING' ? 'animate-pulse-dot' : ''}`} />
                     {strategy.status}
                   </span>
@@ -770,7 +770,7 @@ export function Component() {
 
                 {/* Meta chips */}
                 <div className="flex flex-wrap gap-1.5 mb-2">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${
                     strategy.execMode === 'TICK'
                       ? 'bg-pf-purple-500/10 text-pf-purple-500'
                       : strategy.execMode === 'HYBRID'
@@ -779,11 +779,11 @@ export function Component() {
                   }`}>
                     {execLabel(strategy)}
                   </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-muted text-[11px] font-medium">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-muted text-pf-label font-medium">
                     {blocksCount(strategy)} blocks
                   </span>
                   {strategy.tags.length > 0 && (
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${
                       strategy.tags[0].toLowerCase() === 'momentum'
                         ? 'bg-pf-gold-500/10 text-pf-gold-500'
                         : strategy.tags[0].toLowerCase() === 'defensive'
@@ -793,7 +793,7 @@ export function Component() {
                       {strategy.tags[0]}
                     </span>
                   )}
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-pf-full bg-pf-purple-500/10 text-pf-purple-500 text-[11px] font-medium ml-auto">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-pf-full bg-pf-purple-500/10 text-pf-purple-500 text-pf-label font-medium ml-auto">
                     v{strategy.version}
                   </span>
                 </div>
@@ -820,7 +820,7 @@ export function Component() {
                     className="flex items-center justify-between pt-3 border-t border-pf-border-subtle"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="font-mono text-[11px] text-pf-text-muted">
+                    <span className="font-mono text-pf-label text-pf-text-muted">
                       {formatDate(strategy.updatedAt)}
                     </span>
                     <div className="flex items-center gap-1">
@@ -831,7 +831,7 @@ export function Component() {
                             variant="ghost"
                             onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'live' }); }}
                             disabled={busy}
-                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 text-[11px] font-medium hover:bg-pf-cyan-500/20 disabled:opacity-40 transition-colors"
+                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 text-pf-label font-medium hover:bg-pf-cyan-500/20 disabled:opacity-40 transition-colors"
                             title="Start strategy (Live)"
                             aria-label="Start strategy in live mode"
                           >
@@ -842,7 +842,7 @@ export function Component() {
                             variant="ghost"
                             onClick={(e) => { e.stopPropagation(); doAction(strategy.id, 'start', { mode: 'paper' }); }}
                             disabled={busy}
-                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-overlay text-pf-text-secondary text-[11px] font-medium hover:bg-pf-border-subtle disabled:opacity-40 transition-colors"
+                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-overlay text-pf-text-secondary text-pf-label font-medium hover:bg-pf-border-subtle disabled:opacity-40 transition-colors"
                             title="Start strategy (Paper)"
                             aria-label="Start strategy in paper mode"
                           >
@@ -934,7 +934,7 @@ export function Component() {
                 {/* Compare mode footer — show date only */}
                 {compareMode && (
                   <div className="pt-3 border-t border-pf-border-subtle">
-                    <span className="font-mono text-[11px] text-pf-text-muted">
+                    <span className="font-mono text-pf-label text-pf-text-muted">
                       {formatDate(strategy.updatedAt)}
                     </span>
                   </div>
@@ -965,7 +965,7 @@ export function Component() {
                 return (
                   <span
                     key={id}
-                    className="inline-flex items-center gap-1 pl-1.5 pr-1 py-0.5 rounded-pf-full text-[11px] font-medium text-pf-text bg-pf-overlay border border-pf-border"
+                    className="inline-flex items-center gap-1 pl-1.5 pr-1 py-0.5 rounded-pf-full text-pf-label font-medium text-pf-text bg-pf-overlay border border-pf-border"
                   >
                     <span
                       className="inline-block w-2 h-2 rounded-pf-full shrink-0"

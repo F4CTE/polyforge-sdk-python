@@ -277,7 +277,7 @@ export function Component() {
                     <div className="text-xs font-medium text-pf-text capitalize">
                       {name}
                     </div>
-                    <div className="text-[11px] text-pf-text-tertiary">
+                    <div className="text-pf-label text-pf-text-tertiary">
                       {svc?.latencyMs ?? 0}ms
                     </div>
                   </div>
@@ -386,17 +386,17 @@ export function Component() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-pf-base border border-pf-border rounded-pf-sm p-3">
-                <span className="text-[11px] text-pf-text-tertiary uppercase">Tracked Keys</span>
+                <span className="text-pf-label text-pf-text-tertiary uppercase">Tracked Keys</span>
                 <span className="block text-lg font-bold text-pf-text">{rateLimits.totalTrackedKeys}</span>
               </div>
               <div className="bg-pf-base border border-pf-border rounded-pf-sm p-3">
-                <span className="text-[11px] text-pf-text-tertiary uppercase">Recent 429s</span>
+                <span className="text-pf-label text-pf-text-tertiary uppercase">Recent 429s</span>
                 <span className={`block text-lg font-bold ${rateLimits.recent429Count > 0 ? 'text-pf-warning' : 'text-pf-text'}`}>
                   {rateLimits.recent429Count}
                 </span>
               </div>
               <div className="bg-pf-base border border-pf-border rounded-pf-sm p-3">
-                <span className="text-[11px] text-pf-text-tertiary uppercase">Top Offenders</span>
+                <span className="text-pf-label text-pf-text-tertiary uppercase">Top Offenders</span>
                 <span className="block text-lg font-bold text-pf-text">{rateLimits.topOffenders?.length ?? 0}</span>
               </div>
             </div>
@@ -459,7 +459,7 @@ export function Component() {
                 className="flex items-center justify-between py-2 border-b border-pf-border last:border-0"
               >
                 <div className="flex items-center gap-3">
-                  <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-pf-base text-pf-cyan-500 border border-pf-border">
+                  <span className="px-2 py-0.5 rounded text-pf-label font-medium bg-pf-base text-pf-cyan-500 border border-pf-border">
                     {log.action}
                   </span>
                   <span className="text-sm text-pf-text-secondary">

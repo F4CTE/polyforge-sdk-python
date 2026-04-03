@@ -162,7 +162,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
           return (
             <div key={section.title} className="mb-2">
               {!collapsed && (
-                <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-pf-text-tertiary">
+                <div className="px-2 py-1.5 text-pf-caption font-semibold uppercase tracking-wider text-pf-text-tertiary">
                   {section.title}
                 </div>
               )}
@@ -183,7 +183,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                   <span className="shrink-0 relative">
                     {item.icon}
                     {collapsed && item.label === 'Tickets' && openTickets > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-pf-full bg-pf-cyan-500 text-[8px] font-bold text-pf-text-contrast" aria-label={`${openTickets} open tickets`}>
+                      <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-pf-full bg-pf-cyan-500 text-pf-micro font-bold text-pf-text-contrast" aria-label={`${openTickets} open tickets`}>
                         {openTickets}
                       </span>
                     )}
@@ -192,7 +192,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                     <>
                       <span className="truncate">{item.label}</span>
                       {item.label === 'Tickets' && openTickets > 0 && (
-                        <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-pf-full bg-pf-cyan-500 text-[10px] font-bold text-pf-text-contrast" aria-label={`${openTickets} open tickets`}>
+                        <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-pf-full bg-pf-cyan-500 text-pf-caption font-bold text-pf-text-contrast" aria-label={`${openTickets} open tickets`}>
                           {openTickets}
                         </span>
                       )}
@@ -208,7 +208,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
       {/* Footer */}
       <div className="border-t border-pf-border px-3 py-4 shrink-0">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-pf-full bg-pf-elevated text-pf-cyan-500 text-[11px] font-bold shrink-0">
+          <div className="flex items-center justify-center w-8 h-8 rounded-pf-full bg-pf-elevated text-pf-cyan-500 text-pf-label font-bold shrink-0">
             {initials}
           </div>
           {!collapsed && (
@@ -216,7 +216,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
               <div className="text-sm font-medium text-pf-text truncate">
                 {admin?.displayName}
               </div>
-              <div className="text-[11px] text-pf-text-tertiary">
+              <div className="text-pf-label text-pf-text-tertiary">
                 {roleLabel}
               </div>
             </div>

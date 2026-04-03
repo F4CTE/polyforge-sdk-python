@@ -53,7 +53,7 @@ const CATEGORIES = [
 const LIMIT = 25;
 
 function statusBadge(status: AdminMarket['status']) {
-  const base = 'inline-flex items-center px-2 py-0.5 rounded-pf-sm text-[11px] font-semibold uppercase tracking-wide';
+  const base = 'inline-flex items-center px-2 py-0.5 rounded-pf-sm text-pf-label font-semibold uppercase tracking-wide';
   switch (status) {
     case 'ACTIVE':
       return <span className={`${base} bg-green-500/15 text-green-400`}>Active</span>;
@@ -70,7 +70,7 @@ function statusBadge(status: AdminMarket['status']) {
 
 function categoryBadge(category: string) {
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-pf-sm text-[11px] font-medium bg-pf-cyan-500/10 text-pf-cyan-500">
+    <span className="inline-flex items-center px-2 py-0.5 rounded-pf-sm text-pf-label font-medium bg-pf-cyan-500/10 text-pf-cyan-500">
       {category}
     </span>
   );
@@ -245,25 +245,25 @@ export function Component() {
       {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="rounded-pf border border-pf-border bg-pf-surface p-4">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-pf-text-tertiary mb-1">
+          <div className="text-pf-label font-semibold uppercase tracking-wider text-pf-text-tertiary mb-1">
             Active Markets
           </div>
           <div className="text-2xl font-bold text-pf-text">{activeCount}</div>
         </div>
         <div className="rounded-pf border border-pf-border bg-pf-surface p-4">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-pf-text-tertiary mb-1">
+          <div className="text-pf-label font-semibold uppercase tracking-wider text-pf-text-tertiary mb-1">
             Resolved (page)
           </div>
           <div className="text-2xl font-bold text-pf-text">{resolvedCount}</div>
         </div>
         <div className="rounded-pf border border-pf-border bg-pf-surface p-4">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-pf-text-tertiary mb-1">
+          <div className="text-pf-label font-semibold uppercase tracking-wider text-pf-text-tertiary mb-1">
             Total Volume
           </div>
           <div className="text-2xl font-bold text-pf-text">{formatVolume(String(totalVolume))}</div>
         </div>
         <div className="rounded-pf border border-pf-border bg-pf-surface p-4">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-pf-text-tertiary mb-1">
+          <div className="text-pf-label font-semibold uppercase tracking-wider text-pf-text-tertiary mb-1">
             Avg Participants
           </div>
           <div className="text-2xl font-bold text-pf-text">{avgParticipants.toLocaleString()}</div>
@@ -318,28 +318,28 @@ export function Component() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-pf-border">
-              <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-pf-text-tertiary">
+              <th className="px-4 py-3 text-left text-pf-label font-semibold uppercase tracking-wider text-pf-text-tertiary">
                 Question
               </th>
-              <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-pf-text-tertiary">
+              <th className="px-4 py-3 text-left text-pf-label font-semibold uppercase tracking-wider text-pf-text-tertiary">
                 Category
               </th>
-              <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-pf-text-tertiary">
+              <th className="px-4 py-3 text-left text-pf-label font-semibold uppercase tracking-wider text-pf-text-tertiary">
                 Status
               </th>
-              <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-pf-text-tertiary">
+              <th className="px-4 py-3 text-right text-pf-label font-semibold uppercase tracking-wider text-pf-text-tertiary">
                 Volume
               </th>
-              <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-pf-text-tertiary">
+              <th className="px-4 py-3 text-right text-pf-label font-semibold uppercase tracking-wider text-pf-text-tertiary">
                 Participants
               </th>
-              <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-pf-text-tertiary">
+              <th className="px-4 py-3 text-right text-pf-label font-semibold uppercase tracking-wider text-pf-text-tertiary">
                 YES / NO
               </th>
-              <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-pf-text-tertiary">
+              <th className="px-4 py-3 text-left text-pf-label font-semibold uppercase tracking-wider text-pf-text-tertiary">
                 End Date
               </th>
-              <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-pf-text-tertiary">
+              <th className="px-4 py-3 text-right text-pf-label font-semibold uppercase tracking-wider text-pf-text-tertiary">
                 Actions
               </th>
             </tr>
@@ -398,7 +398,7 @@ export function Component() {
                     {/* Volume */}
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <div className="text-pf-text font-medium">{formatVolume(market.volume24h)}</div>
-                      <div className="text-[11px] text-pf-text-tertiary">{formatVolume(market.totalVolume)} total</div>
+                      <div className="text-pf-label text-pf-text-tertiary">{formatVolume(market.totalVolume)} total</div>
                     </td>
 
                     {/* Participants */}
@@ -452,7 +452,7 @@ export function Component() {
                                 variant="danger"
                                 onClick={() => handleDelist(market)}
                                 disabled={isUpdating}
-                                className="px-2 py-1 rounded-pf-sm text-[11px] font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-40"
+                                className="px-2 py-1 rounded-pf-sm text-pf-label font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-40"
                               >
                                 Confirm
                               </Button>
@@ -460,7 +460,7 @@ export function Component() {
                                 type="button"
                                 variant="secondary"
                                 onClick={() => setConfirmDelist(null)}
-                                className="px-2 py-1 rounded-pf-sm text-[11px] text-pf-text-secondary hover:text-pf-text transition-colors"
+                                className="px-2 py-1 rounded-pf-sm text-pf-label text-pf-text-secondary hover:text-pf-text transition-colors"
                               >
                                 Cancel
                               </Button>
@@ -472,7 +472,7 @@ export function Component() {
                               onClick={() => setConfirmDelist(market.id)}
                               disabled={isUpdating}
                               title="Delist market"
-                              className="flex items-center gap-1 px-2 py-1 rounded-pf-sm text-[11px] font-medium text-pf-text-tertiary hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
+                              className="flex items-center gap-1 px-2 py-1 rounded-pf-sm text-pf-label font-medium text-pf-text-tertiary hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
                             >
                               <Ban size={12} />
                               Delist
@@ -487,7 +487,7 @@ export function Component() {
                             variant="ghost"
                             onClick={() => handleRestore(market)}
                             disabled={isUpdating}
-                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm text-[11px] font-medium text-pf-text-tertiary hover:text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-40"
+                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm text-pf-label font-medium text-pf-text-tertiary hover:text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-40"
                           >
                             Restore
                           </Button>

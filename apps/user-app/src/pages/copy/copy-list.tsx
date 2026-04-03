@@ -192,7 +192,7 @@ function MaxLossEditor({
   if (editing) {
     return (
       <span className="inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-        <span className="text-pf-text-muted text-[11px]">$</span>
+        <span className="text-pf-text-muted text-pf-label">$</span>
         <Input
           ref={inputRef}
           type="number"
@@ -206,7 +206,7 @@ function MaxLossEditor({
             if (e.key === 'Escape') { e.stopPropagation(); setEditing(false); }
           }}
           disabled={saving}
-          className="w-20 px-1.5 py-0.5 rounded bg-pf-surface border border-pf-cyan-500/40 text-pf-text text-[11px] font-mono focus:outline-none"
+          className="w-20 px-1.5 py-0.5 rounded bg-pf-surface border border-pf-cyan-500/40 text-pf-text text-pf-label font-mono focus:outline-none"
         />
         <Button
           type="button"
@@ -241,7 +241,7 @@ function MaxLossEditor({
       title="Click to set max loss limit"
       className="inline-flex items-center gap-1 text-pf-text-secondary hover:text-pf-text transition-colors"
     >
-      <span className="text-[11px]">
+      <span className="text-pf-label">
         {value != null ? `$${Number(value).toFixed(2)}` : 'No limit'}
       </span>
       <Pencil className="size-2.5 text-pf-text-muted" />
@@ -453,7 +453,7 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
                             className="inline-flex items-center gap-2 group/trader"
                           >
                             <span
-                              className="size-7 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 text-[11px] font-semibold flex items-center justify-center shrink-0 uppercase"
+                              className="size-7 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 text-pf-label font-semibold flex items-center justify-center shrink-0 uppercase"
                               aria-hidden="true"
                             >
                               {(t.displayName ?? t.username).slice(0, 2)}
@@ -797,7 +797,7 @@ export function Component() {
                   </div>
                   <span
                     data-testid="status-badge"
-                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-[11px] font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}
+                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-pf-label font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}
                   >
                     <span
                       className={`w-2.5 h-2.5 rounded-pf-full ${statusStyle.dot} ${
@@ -811,11 +811,11 @@ export function Component() {
                 {/* Mode + Size badges */}
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${modeStyle.bg} ${modeStyle.text}`}
+                    className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${modeStyle.bg} ${modeStyle.text}`}
                   >
                     {config.mode}
                   </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-muted text-[11px] font-medium">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-muted text-pf-label font-medium">
                     {sizeLabel(config.mode, config.sizeValue)}
                   </span>
                 </div>
@@ -848,7 +848,7 @@ export function Component() {
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-pf-text-secondary">Copying since</span>
-                    <span className="font-mono text-pf-text text-[11px]">
+                    <span className="font-mono text-pf-text text-pf-label">
                       {config.copyingSince ? relativeDate(config.copyingSince) : relativeDate(config.createdAt)}
                     </span>
                   </div>

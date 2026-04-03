@@ -219,8 +219,8 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
           {icon}
-          <span className="text-[11px] font-bold flex-1 truncate">{displaySymbol}</span>
-          <span className="text-[9px] opacity-70">{d.label}</span>
+          <span className="text-pf-label font-bold flex-1 truncate">{displaySymbol}</span>
+          <span className="text-pf-micro opacity-70">{d.label}</span>
           <button
             type="button"
             onClick={onDelete}
@@ -236,7 +236,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         <div className="px-2.5 py-2 space-y-2">
           {dropdownOptions && (
             <div>
-              <label htmlFor={`${id}-${dropdownOptions.key}`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+              <label htmlFor={`${id}-${dropdownOptions.key}`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                 {d.type === 'MATH' ? 'Operation' : d.type === 'COMPARISON' ? 'Operator' : 'Function'}
               </label>
               <select
@@ -258,7 +258,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {/* Window size for aggregation */}
           {showWindowField && (
             <div>
-              <label htmlFor={`${id}-windowSize`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+              <label htmlFor={`${id}-windowSize`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                 Window (N ticks)
               </label>
               <input
@@ -277,7 +277,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {showBetweenFields && (
             <>
               <div>
-                <label htmlFor={`${id}-min`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+                <label htmlFor={`${id}-min`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                   Min
                 </label>
                 <input
@@ -291,7 +291,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 />
               </div>
               <div>
-                <label htmlFor={`${id}-max`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+                <label htmlFor={`${id}-max`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                   Max
                 </label>
                 <input
@@ -310,7 +310,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {/* Decimals field for abs/round */}
           {showDecimalsField && (
             <div>
-              <label htmlFor={`${id}-decimals`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+              <label htmlFor={`${id}-decimals`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                 Decimals
               </label>
               <input
@@ -327,7 +327,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
 
           {/* Input handle labels */}
           {inputCount === 2 && (
-            <div className="flex items-center gap-2 text-[10px] text-pf-text-muted">
+            <div className="flex items-center gap-2 text-pf-caption text-pf-text-muted">
               <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-success/20 text-pf-success font-medium">
                 A
               </span>

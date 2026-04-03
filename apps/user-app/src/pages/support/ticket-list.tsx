@@ -146,8 +146,8 @@ export function Component() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-pf-text-secondary text-xs">{ticket.category}</td>
-                      <td className="px-4 py-3 text-right font-mono text-[11px] text-pf-text-muted">{formatDate(ticket.createdAt)}</td>
-                      <td className="px-4 py-3 text-right font-mono text-[11px] text-pf-text-muted">
+                      <td className="px-4 py-3 text-right font-mono text-pf-label text-pf-text-muted">{formatDate(ticket.createdAt)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-pf-label text-pf-text-muted">
                         {lastMsg ? formatDate(lastMsg.createdAt) : '\u2014'}
                       </td>
                     </tr>

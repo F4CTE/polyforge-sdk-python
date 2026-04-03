@@ -323,7 +323,7 @@ export function Component() {
                   aria-hidden="true"
                 >
                   <span
-                    className="text-[10px] font-semibold uppercase tracking-wider truncate max-w-[64px] block text-center"
+                    className="text-pf-caption font-semibold uppercase tracking-wider truncate max-w-[64px] block text-center"
                     style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', height: '60px', lineHeight: '60px' }}
                   >
                     {capitalize(cat)}
@@ -342,7 +342,7 @@ export function Component() {
                     }`}
                     aria-hidden="true"
                   >
-                    <span className="text-[10px] font-semibold uppercase tracking-wider truncate">
+                    <span className="text-pf-caption font-semibold uppercase tracking-wider truncate">
                       {capitalize(rowCat)}
                     </span>
                   </div>
@@ -396,7 +396,7 @@ export function Component() {
         {/* Legend */}
         {!loadingMatrix && categories.length > 0 && (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2">
-            <span className="text-[11px] text-pf-text-muted font-medium uppercase tracking-wider">Legend:</span>
+            <span className="text-pf-label text-pf-text-muted font-medium uppercase tracking-wider">Legend:</span>
             <LegendItem bgClass="bg-pf-success/80" label="Strong positive" />
             <LegendItem bgClass="bg-pf-success/35" label="Moderate positive" />
             <LegendItem bgClass="bg-pf-overlay border border-pf-border" label="Neutral" />
@@ -533,7 +533,7 @@ function LegendItem({ bgClass, label }: { bgClass: string; label: string }) {
   return (
     <div className="flex items-center gap-1.5">
       <div className={`size-3 rounded-sm ${bgClass}`} aria-hidden="true" />
-      <span className="text-[11px] text-pf-text-muted">{label}</span>
+      <span className="text-pf-label text-pf-text-muted">{label}</span>
     </div>
   );
 }

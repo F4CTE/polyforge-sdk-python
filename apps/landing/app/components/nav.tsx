@@ -171,7 +171,7 @@ export function Nav() {
       <div className="flex items-center gap-4 md:gap-8 h-16 max-w-[1100px] mx-auto px-6">
         <a
           href="/"
-          className="flex items-center gap-2 text-[17px] font-bold text-pf-text shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
+          className="flex items-center gap-2 text-pf-subhead font-bold text-pf-text shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
           aria-label="Polyforge home"
         >
           <PolyforgeIcon className="text-pf-cyan-400" />
@@ -284,7 +284,7 @@ export function Nav() {
             key={href}
             href={href}
             onClick={closeMobile}
-            className="py-2 text-[15px] text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
+            className="py-2 text-pf-body text-pf-text-secondary border-b border-pf-border-subtle hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors"
           >
             {label}
           </a>

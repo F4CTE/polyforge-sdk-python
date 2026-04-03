@@ -515,14 +515,14 @@ export function Component() {
                     <tr key={row.cohort}>
                       <td className="py-2 pr-4 whitespace-nowrap">
                         <div className="font-medium text-pf-text">{row.cohort}</div>
-                        <div className="text-[11px] text-pf-text-tertiary">{fmt(row.size)} users</div>
+                        <div className="text-pf-label text-pf-text-tertiary">{fmt(row.size)} users</div>
                       </td>
                       {COHORT_WEEKS.map((_, colIdx) => {
                         const pct = row.retention[colIdx] ?? 0;
                         return (
                           <td key={colIdx} className="py-2 px-1">
                             <div
-                              className={`flex items-center justify-center rounded-pf-sm h-7 w-14 mx-auto font-medium text-[11px] transition-opacity cursor-default ${retentionColor(pct)}`}
+                              className={`flex items-center justify-center rounded-pf-sm h-7 w-14 mx-auto font-medium text-pf-label transition-opacity cursor-default ${retentionColor(pct)}`}
                               title={`${row.cohort} — ${COHORT_WEEKS[colIdx]}: ${pct}%`}
                               aria-label={`${row.cohort} ${COHORT_WEEKS[colIdx]} retention: ${pct}%`}
                             >

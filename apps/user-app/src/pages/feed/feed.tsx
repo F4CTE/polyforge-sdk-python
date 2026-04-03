@@ -131,7 +131,7 @@ function Initials({ actor }: { actor: FeedActor }) {
 
 function CommentAvatar({ initials }: { initials: string }) {
   return (
-    <div className="size-7 rounded-pf-full bg-pf-elevated border border-pf-border flex items-center justify-center text-[10px] font-bold text-pf-text-secondary shrink-0">
+    <div className="size-7 rounded-pf-full bg-pf-elevated border border-pf-border flex items-center justify-center text-pf-caption font-bold text-pf-text-secondary shrink-0">
       {initials.slice(0, 2).toUpperCase()}
     </div>
   );
@@ -270,7 +270,7 @@ function CommentSection({
                 <div className="flex items-baseline gap-1.5 flex-wrap">
                   <span className="text-xs font-semibold text-pf-text">@{comment.authorUsername}</span>
                   <time
-                    className="text-[10px] text-pf-text-muted"
+                    className="text-pf-caption text-pf-text-muted"
                     dateTime={comment.createdAt}
                     title={new Date(comment.createdAt).toLocaleString()}
                   >
@@ -285,7 +285,7 @@ function CommentSection({
                   variant="ghost"
                   onClick={() => onLikeComment(comment.id)}
                   aria-label={comment.userLiked ? 'Unlike comment' : 'Like comment'}
-                  className={`mt-1 flex items-center gap-1 text-[10px] rounded px-1 py-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                  className={`mt-1 flex items-center gap-1 text-pf-caption rounded px-1 py-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                     comment.userLiked
                       ? 'text-pf-cyan-400 bg-pf-cyan-500/10'
                       : 'text-pf-text-muted hover:text-pf-text-secondary'
@@ -735,7 +735,7 @@ export function Component() {
                         {activityDescription(item)}
                       </p>
                       <time
-                        className="text-[10px] text-pf-text-muted mt-1 block"
+                        className="text-pf-caption text-pf-text-muted mt-1 block"
                         dateTime={item.createdAt}
                         title={new Date(item.createdAt).toLocaleString()}
                       >

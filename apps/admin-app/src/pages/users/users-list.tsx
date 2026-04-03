@@ -266,7 +266,7 @@ export function Component() {
                         {user.username ?? ''}
                       </Link>
                       {user.suspended && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium text-pf-danger bg-pf-danger/10">
+                        <span className="ml-2 px-1.5 py-0.5 rounded text-pf-caption font-medium text-pf-danger bg-pf-danger/10">
                           SUSPENDED
                         </span>
                       )}

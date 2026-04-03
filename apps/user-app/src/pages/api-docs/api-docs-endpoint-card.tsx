@@ -150,7 +150,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
         </div>
       )}
 
-      <p className="text-[10px] text-pf-text-muted">
+      <p className="text-pf-caption text-pf-text-muted">
         Requests go directly to api.polyforge.app from your browser.
       </p>
     </div>

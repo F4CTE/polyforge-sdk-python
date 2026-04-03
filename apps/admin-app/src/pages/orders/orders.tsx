@@ -138,7 +138,7 @@ export function Component() {
                     <span className="text-pf-text-tertiary"> - Intent {entry.intentId.slice(0, 8)}</span>
                   </div>
                   <div className="text-xs text-pf-danger mt-0.5 truncate">{entry.lastError}</div>
-                  <div className="text-[11px] text-pf-text-tertiary mt-0.5">
+                  <div className="text-pf-label text-pf-text-tertiary mt-0.5">
                     {entry.attempts} attempts - {formatDateTime(entry.enqueuedAt)}
                   </div>
                 </div>

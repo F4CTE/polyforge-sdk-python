@@ -14,7 +14,7 @@ export function ProductPreview() {
             <span className="w-[11px] h-[11px] rounded-pf-full bg-pf-danger" />
             <span className="w-[11px] h-[11px] rounded-pf-full bg-pf-warning" />
             <span className="w-[11px] h-[11px] rounded-pf-full bg-pf-success" />
-            <span className="flex-1 text-center text-[11px] font-mono text-pf-text-muted bg-white/4 rounded px-3 py-1 ml-2">
+            <span className="flex-1 text-center text-pf-label font-mono text-pf-text-muted bg-white/4 rounded px-3 py-1 ml-2">
               app.polyforge.app/dashboard
             </span>
           </div>

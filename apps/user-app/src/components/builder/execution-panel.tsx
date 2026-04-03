@@ -456,17 +456,17 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
 
           {/* Mini status in header */}
           {!expanded && bt.status === 'RUNNING' && (
-            <span className="text-[11px] font-mono text-pf-cyan-400">
+            <span className="text-pf-label font-mono text-pf-cyan-400">
               Backtest {bt.progress}%
             </span>
           )}
           {!expanded && bt.status === 'COMPLETED' && (
-            <span className={`text-[11px] font-mono ${pnlColor(bt.totalPnl)}`}>
+            <span className={`text-pf-label font-mono ${pnlColor(bt.totalPnl)}`}>
               P&L: {pnlSign(bt.totalPnl)}
             </span>
           )}
           {!expanded && isLiveActive && (
-            <span className={`text-[11px] font-mono ${live.status === 'RUNNING' ? 'text-pf-success' : 'text-pf-warning'}`}>
+            <span className={`text-pf-label font-mono ${live.status === 'RUNNING' ? 'text-pf-success' : 'text-pf-warning'}`}>
               {live.mode} {live.status}
             </span>
           )}
@@ -553,7 +553,7 @@ function BacktestTab({
         {/* Form row */}
         <div className="flex items-end gap-3 flex-wrap">
           <div className="flex-1 min-w-[140px]">
-            <label htmlFor="ep-start-date" className="text-[10px] text-pf-text-secondary uppercase tracking-wider mb-1 block">Start Date</label>
+            <label htmlFor="ep-start-date" className="text-pf-caption text-pf-text-secondary uppercase tracking-wider mb-1 block">Start Date</label>
             <input
               id="ep-start-date"
               type="date"
@@ -565,7 +565,7 @@ function BacktestTab({
             />
           </div>
           <div className="flex-1 min-w-[140px]">
-            <label htmlFor="ep-end-date" className="text-[10px] text-pf-text-secondary uppercase tracking-wider mb-1 block">End Date</label>
+            <label htmlFor="ep-end-date" className="text-pf-caption text-pf-text-secondary uppercase tracking-wider mb-1 block">End Date</label>
             <input
               id="ep-end-date"
               type="date"
@@ -636,7 +636,7 @@ function BacktestTab({
           <button
             type="button"
             onClick={onReset}
-            className="text-[10px] text-pf-text-muted hover:text-pf-text-secondary flex items-center gap-1 transition-colors"
+            className="text-pf-caption text-pf-text-muted hover:text-pf-text-secondary flex items-center gap-1 transition-colors"
           >
             <RotateCcw className="size-2.5" /> New Run
           </button>
@@ -678,7 +678,7 @@ function BacktestTab({
         </div>
 
         {bt.hasDataGaps && (
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-pf-sm bg-pf-warning/10 text-pf-warning text-[11px]">
+          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-pf-sm bg-pf-warning/10 text-pf-warning text-pf-label">
             <AlertTriangle className="size-3 shrink-0" />
             Results may be affected by data gaps in the selected date range.
           </div>
@@ -708,7 +708,7 @@ function BacktestTab({
       <button
         type="button"
         onClick={onReset}
-        className="text-[10px] text-pf-text-muted hover:text-pf-text-secondary flex items-center gap-1 transition-colors"
+        className="text-pf-caption text-pf-text-muted hover:text-pf-text-secondary flex items-center gap-1 transition-colors"
       >
         <RotateCcw className="size-2.5" /> Try Again
       </button>
@@ -778,7 +778,7 @@ function LiveTab({
           </button>
         </div>
 
-        <p className="text-[10px] text-pf-text-muted leading-relaxed">
+        <p className="text-pf-caption text-pf-text-muted leading-relaxed">
           Paper mode simulates trades without real funds. Live mode places real orders on Polymarket.
         </p>
       </div>
@@ -810,7 +810,7 @@ function LiveTab({
             {live.mode === 'PAPER' ? 'Paper' : 'Live'} — {live.status}
           </span>
           {live.lastTick && (
-            <span className="text-[10px] text-pf-text-muted flex items-center gap-0.5">
+            <span className="text-pf-caption text-pf-text-muted flex items-center gap-0.5">
               <Clock className="size-2.5" />
               {new Date(live.lastTick).toLocaleTimeString()}
             </span>
@@ -852,7 +852,7 @@ function LiveTab({
       </div>
 
       {live.error && (
-        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-pf-sm bg-pf-danger/10 text-pf-danger text-[11px]">
+        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-pf-sm bg-pf-danger/10 text-pf-danger text-pf-label">
           <XCircle className="size-3 shrink-0" />
           {live.error}
         </div>
@@ -879,9 +879,9 @@ function LiveTab({
       {/* Recent trades */}
       {live.recentTrades.length > 0 && (
         <div>
-          <span className="text-[10px] text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Recent Trades</span>
+          <span className="text-pf-caption text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Recent Trades</span>
           <div className="bg-pf-surface rounded-pf-sm overflow-hidden max-h-[120px] overflow-y-auto">
-            <table className="w-full text-[11px]" aria-label="Trade history">
+            <table className="w-full text-pf-label" aria-label="Trade history">
               <thead>
                 <tr className="text-pf-text-muted text-left">
                   <th scope="col" className="px-2 py-1 font-medium">Time</th>
@@ -921,7 +921,7 @@ function LiveTab({
 function MetricCard({ label, value, color, icon }: { label: string; value: string; color: string; icon: React.ReactNode }) {
   return (
     <div className="bg-pf-surface rounded-pf-sm p-2">
-      <span className="text-[10px] text-pf-text-muted flex items-center gap-1">{icon}{label}</span>
+      <span className="text-pf-caption text-pf-text-muted flex items-center gap-1">{icon}{label}</span>
       <span className={`text-sm font-mono font-semibold ${color} block mt-0.5`}>{value}</span>
     </div>
   );
@@ -942,13 +942,13 @@ function MarketBindingsSection({
 }) {
   return (
     <div className="space-y-2">
-      <span className="text-[10px] text-pf-text-secondary uppercase tracking-wider flex items-center gap-1">
+      <span className="text-pf-caption text-pf-text-secondary uppercase tracking-wider flex items-center gap-1">
         <Search className="size-2.5" /> Market Bindings
       </span>
       <div className="flex flex-wrap gap-2">
         {marketSlots.map(slot => (
           <div key={slot.slot} className="flex-1 min-w-[200px] relative">
-            <label htmlFor={`ep-market-${slot.slot}`} className="text-[10px] text-pf-text-muted mb-0.5 block">{slot.label || slot.slot}</label>
+            <label htmlFor={`ep-market-${slot.slot}`} className="text-pf-caption text-pf-text-muted mb-0.5 block">{slot.label || slot.slot}</label>
             <input
               id={`ep-market-${slot.slot}`}
               type="text"
@@ -958,10 +958,10 @@ function MarketBindingsSection({
                 searchMarkets(slot.slot, e.target.value);
               }}
               placeholder="Search markets..."
-              className="w-full h-7 px-2 rounded-pf-sm bg-pf-surface border border-pf-border text-[11px] text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+              className="w-full h-7 px-2 rounded-pf-sm bg-pf-surface border border-pf-border text-pf-label text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
             />
             {marketBindings[slot.slot] && (
-              <span className="absolute right-2 top-[22px] text-[9px] text-pf-cyan-400 font-mono">bound</span>
+              <span className="absolute right-2 top-[22px] text-pf-micro text-pf-cyan-400 font-mono">bound</span>
             )}
             {(marketResults[slot.slot] ?? []).length > 0 && (
               <div className="absolute z-50 w-full mt-0.5 bg-pf-elevated border border-pf-border rounded-pf-sm max-h-32 overflow-y-auto shadow-pf-lg">
@@ -974,7 +974,7 @@ function MarketBindingsSection({
                       setMarketSearch(prev => ({ ...prev, [slot.slot]: (m.title ?? m.question) as string }));
                       setMarketResults(prev => ({ ...prev, [slot.slot]: [] }));
                     }}
-                    className="w-full text-left px-2 py-1.5 text-[11px] text-pf-text hover:bg-pf-surface transition-colors border-b border-pf-border-subtle last:border-b-0"
+                    className="w-full text-left px-2 py-1.5 text-pf-label text-pf-text hover:bg-pf-surface transition-colors border-b border-pf-border-subtle last:border-b-0"
                   >
                     {(m.title ?? m.question) as string}
                   </button>

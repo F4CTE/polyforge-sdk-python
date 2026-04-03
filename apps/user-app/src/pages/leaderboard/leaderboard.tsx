@@ -275,7 +275,7 @@ export function Component() {
                         {entry.avatarUrl ? (
                           <img src={entry.avatarUrl} alt={`${entry.displayName ?? entry.username} avatar`} className="size-8 rounded-pf-full object-cover" width={32} height={32} loading="lazy" />
                         ) : (
-                          <div className="size-8 rounded-pf-full bg-pf-surface flex items-center justify-center text-[11px] font-semibold text-pf-cyan-400">
+                          <div className="size-8 rounded-pf-full bg-pf-surface flex items-center justify-center text-pf-label font-semibold text-pf-cyan-400">
                             {userInitials(entry)}
                           </div>
                         )}
@@ -289,7 +289,7 @@ export function Component() {
                       <Link
                         to={`/copy/new?address=${encodeURIComponent(entry.username)}`}
                         title="Copy trade this trader"
-                        className="shrink-0 text-[10px] px-2 py-1 rounded border border-pf-cyan-500/30 bg-pf-cyan-500/8 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors font-medium"
+                        className="shrink-0 text-pf-caption px-2 py-1 rounded border border-pf-cyan-500/30 bg-pf-cyan-500/8 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors font-medium"
                       >
                         Copy Trade
                       </Link>

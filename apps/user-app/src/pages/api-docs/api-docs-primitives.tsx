@@ -39,7 +39,7 @@ export const SCOPE_CLS: Record<string, string> = {
 
 export function Badge({ text, cls }: { text: string; cls: string }) {
   return (
-    <span className={`inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-pf-full ${cls}`}>
+    <span className={`inline-flex items-center text-pf-label font-medium px-2 py-0.5 rounded-pf-full ${cls}`}>
       {text}
     </span>
   );
@@ -61,7 +61,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
     <div className="rounded-pf-lg overflow-hidden border border-pf-border">
       {lang && (
         <div className="flex items-center justify-between px-4 py-2 bg-pf-surface border-b border-pf-border">
-          <span className="text-[11px] font-mono text-pf-text-muted">
+          <span className="text-pf-label font-mono text-pf-text-muted">
             {LANG_LABELS[lang as Lang] ?? lang}
           </span>
           <Button
@@ -70,7 +70,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
             size="sm"
             onClick={handleCopy}
             aria-label="Copy code"
-            className="flex items-center gap-1 text-[11px] text-pf-text-muted hover:text-pf-text transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-pf-label text-pf-text-muted hover:text-pf-text transition-colors cursor-pointer"
           >
             {copied
               ? <><Check size={12} className="text-pf-success" /><span className="text-pf-success">Copied</span></>
@@ -90,7 +90,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
 
 export function InlineCode({ children }: { children: string }) {
   return (
-    <code className="bg-pf-overlay px-1.5 py-0.5 rounded text-[11px] font-mono text-pf-cyan-400">
+    <code className="bg-pf-overlay px-1.5 py-0.5 rounded text-pf-label font-mono text-pf-cyan-400">
       {children}
     </code>
   );
@@ -188,7 +188,7 @@ export function PageTitle({
       <div className="flex items-center gap-3 mb-1.5">
         <h1 className="text-2xl font-semibold text-pf-text">{title}</h1>
         {count !== undefined && (
-          <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-muted">
+          <span className="inline-flex items-center text-pf-label font-medium px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-muted">
             {count} endpoint{count !== 1 ? 's' : ''}
           </span>
         )}

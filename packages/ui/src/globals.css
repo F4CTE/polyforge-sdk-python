@@ -95,6 +95,14 @@
   --radius-pf-lg: 12px;
   --radius-pf-full: 9999px;
 
+  /* Type scale — micro sizes used in badges, pills, labels */
+  --font-size-pf-micro: 0.5625rem;  /* 9px — smallest captions */
+  --font-size-pf-caption: 0.625rem; /* 10px — badges, pill counts */
+  --font-size-pf-label: 0.6875rem;  /* 11px — form labels, small UI text */
+  --font-size-pf-body-sm: 0.8125rem; /* 13px — compact body text */
+  --font-size-pf-body: 0.9375rem;   /* 15px — standard reading text */
+  --font-size-pf-subhead: 1.0625rem; /* 17px — sub-headings */
+
   /* Font families */
   --font-sans:
     "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;

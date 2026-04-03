@@ -1245,7 +1245,7 @@ export function Features() {
           >
             Everything you need to trade smarter
           </h2>
-          <p className="text-[17px] text-pf-text-secondary">
+          <p className="text-pf-subhead text-pf-text-secondary">
             From idea to live strategy in minutes, not months.
           </p>
         </div>
@@ -1270,7 +1270,7 @@ export function Features() {
                   {feature.icon}
                 </div>
 
-                <h3 className="text-[17px] font-semibold text-pf-text mb-2.5">
+                <h3 className="text-pf-subhead font-semibold text-pf-text mb-2.5">
                   {feature.title}
                 </h3>
                 <p className="text-sm text-pf-text-secondary leading-7">

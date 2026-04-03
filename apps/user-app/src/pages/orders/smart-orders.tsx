@@ -150,7 +150,7 @@ export function Component() {
         {(Object.keys(TYPE_DESC) as SmartOrderType[]).map((t) => (
           <div key={t} className="p-3 bg-pf-surface border border-pf-border rounded-pf-lg">
             <p className="text-xs font-semibold text-pf-text mb-1">{TYPE_LABEL[t]}</p>
-            <p className="text-[11px] text-pf-text-muted leading-relaxed">{TYPE_DESC[t]}</p>
+            <p className="text-pf-label text-pf-text-muted leading-relaxed">{TYPE_DESC[t]}</p>
           </div>
         ))}
       </div>
@@ -235,7 +235,7 @@ export function Component() {
               {/* Expanded: child orders */}
               {expanded === so.id && so.orders.length > 0 && (
                 <div className="border-t border-pf-border/50 px-4 py-3 bg-pf-surface/50">
-                  <p className="text-[11px] font-medium text-pf-text-muted uppercase tracking-wider mb-2">
+                  <p className="text-pf-label font-medium text-pf-text-muted uppercase tracking-wider mb-2">
                     Child Orders ({so.orders.length})
                   </p>
                   <div className="space-y-1">

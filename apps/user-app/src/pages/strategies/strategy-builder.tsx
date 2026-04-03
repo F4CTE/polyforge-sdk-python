@@ -790,7 +790,7 @@ function DifficultyDots({ difficulty }: { difficulty: TemplateDifficulty }) {
           }`}
         />
       ))}
-      <span className={`ml-1 text-[10px] capitalize ${
+      <span className={`ml-1 text-pf-caption capitalize ${
         difficulty === 'beginner' ? 'text-green-400' :
         difficulty === 'intermediate' ? 'text-amber-400' :
         'text-red-400'
@@ -1163,9 +1163,9 @@ export function Component() {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-pf-text group-hover:text-pf-cyan-400 transition-colors">{t.name}</span>
                   {t.trigger && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-pf-surface-elevated border border-pf-border text-pf-text-muted">{t.trigger}</span>
+                    <span className="text-pf-caption px-1.5 py-0.5 rounded bg-pf-surface-elevated border border-pf-border text-pf-text-muted">{t.trigger}</span>
                   )}
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                  <span className={`text-pf-caption px-1.5 py-0.5 rounded border ${
                     t.difficulty === 'Beginner' ? 'bg-green-500/10 border-green-500/30 text-green-400' :
                     t.difficulty === 'Intermediate' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
                     'bg-red-500/10 border-red-500/30 text-red-400'
@@ -1420,11 +1420,11 @@ export function Component() {
 
                     {/* Win rate badge */}
                     <div className="flex items-center gap-1.5 mb-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full bg-pf-surface border border-pf-border text-[10px] text-pf-text-muted">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full bg-pf-surface border border-pf-border text-pf-caption text-pf-text-muted">
                         <Zap className="size-2.5 text-pf-warning" aria-hidden="true" />
                         Win rate: {template.estimatedWinRate}
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full bg-pf-surface border border-pf-border text-[10px] text-pf-text-muted capitalize">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full bg-pf-surface border border-pf-border text-pf-caption text-pf-text-muted capitalize">
                         {TEMPLATE_CATEGORY_ICONS[template.category]}
                         <span>{TEMPLATE_CATEGORY_LABELS[template.category]}</span>
                       </span>
@@ -1434,14 +1434,14 @@ export function Component() {
                     <p className="text-xs text-pf-text-muted leading-relaxed flex-1 mb-4">{template.description}</p>
 
                     {/* Block count summary */}
-                    <div className="text-[10px] text-pf-text-muted mb-3">
+                    <div className="text-pf-caption text-pf-text-muted mb-3">
                       {template.blocks.length} block{template.blocks.length !== 1 ? 's' : ''} &middot; {template.edges.length} connection{template.edges.length !== 1 ? 's' : ''}
                     </div>
 
                     {/* Confirmation inline or use button */}
                     {confirmTemplate?.id === template.id ? (
                       <div className="bg-pf-warning/8 border border-pf-warning/25 rounded-pf p-3">
-                        <p className="text-[11px] text-pf-warning mb-2 font-medium">This will replace your current canvas. Continue?</p>
+                        <p className="text-pf-label text-pf-warning mb-2 font-medium">This will replace your current canvas. Continue?</p>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -1582,13 +1582,13 @@ export function Component() {
                 >
                   <Target className="size-3.5 text-pf-cyan-400" aria-hidden="true" />
                   Pinned Market
-                  {pinnedMarket && <span className="ml-auto text-[10px] bg-pf-cyan-500/15 text-pf-cyan-400 px-1.5 py-0.5 rounded-pf-full truncate max-w-[90px]">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
+                  {pinnedMarket && <span className="ml-auto text-pf-caption bg-pf-cyan-500/15 text-pf-cyan-400 px-1.5 py-0.5 rounded-pf-full truncate max-w-[90px]">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
                 </Button>
                 {marketPickerOpen && (
                   <div className="px-2 pb-2 space-y-1.5">
                     {pinnedMarket ? (
                       <div className="flex items-center gap-1.5 bg-pf-elevated border border-pf-cyan-500/25 rounded-pf p-2">
-                        <span className="text-[11px] text-pf-text flex-1 truncate">{pinnedMarket.title}</span>
+                        <span className="text-pf-label text-pf-text flex-1 truncate">{pinnedMarket.title}</span>
                         <Button
                           type="button"
                           variant="ghost"

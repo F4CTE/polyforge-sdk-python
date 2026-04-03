@@ -127,7 +127,7 @@ export function OnboardingChecklist() {
       <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-pf-text">Getting Started</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-pf-full bg-pf-cyan-500/15 text-pf-cyan-400 font-medium">
+          <span className="text-pf-caption px-1.5 py-0.5 rounded-pf-full bg-pf-cyan-500/15 text-pf-cyan-400 font-medium">
             {completedCount}/{CHECKLIST_ITEMS.length}
           </span>
         </div>

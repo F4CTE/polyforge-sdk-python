@@ -120,7 +120,7 @@ export function Component() {
                   {col.coverListings.slice(0, 3).map(listing => (
                     <span
                       key={listing.id}
-                      className="px-2 py-0.5 rounded-pf-full text-[11px] bg-pf-overlay text-pf-text-secondary border border-pf-border truncate max-w-[140px]"
+                      className="px-2 py-0.5 rounded-pf-full text-pf-label bg-pf-overlay text-pf-text-secondary border border-pf-border truncate max-w-[140px]"
                       title={listing.title}
                     >
                       {listing.title}

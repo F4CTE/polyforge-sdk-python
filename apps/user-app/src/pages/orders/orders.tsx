@@ -233,7 +233,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
             <div className="flex items-center gap-2">
               <BookOpen className="size-3.5 text-pf-cyan-400" />
               <span className="text-sm font-medium text-pf-text">Journal Note</span>
-              {entry && <span className="text-[10px] text-pf-text-muted">Last updated {formatDate(entry.updatedAt)}</span>}
+              {entry && <span className="text-pf-caption text-pf-text-muted">Last updated {formatDate(entry.updatedAt)}</span>}
             </div>
             <Button type="button" variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close journal panel">
               <X className="size-3.5" />
@@ -281,7 +281,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
             <span className="block text-xs text-pf-text-secondary mb-2">Tags</span>
             <div className="flex flex-wrap items-center gap-1.5">
               {tags.map(t => (
-                <span key={t} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-[11px] bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/30">
+                <span key={t} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-pf-label bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/30">
                   <Tag className="size-2.5" />
                   {t}
                   <Button type="button" variant="ghost" onClick={() => removeTag(t)} aria-label={`Remove tag ${t}`} className="hover:text-pf-danger transition-colors ml-0.5">
@@ -295,9 +295,9 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
                   onChange={e => setTagInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
                   placeholder="+ add tag"
-                  className="h-6 px-2 rounded-pf-full bg-pf-elevated border border-pf-border text-[11px] text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 w-24"
+                  className="h-6 px-2 rounded-pf-full bg-pf-elevated border border-pf-border text-pf-label text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 w-24"
                 />
-                <Button type="button" variant="ghost" onClick={addTag} className="text-[11px] text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors">Add</Button>
+                <Button type="button" variant="ghost" onClick={addTag} className="text-pf-label text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors">Add</Button>
               </div>
             </div>
           </div>
@@ -350,15 +350,15 @@ function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; on
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-pf-text line-clamp-1">{entry.marketTitle || `Order ${entry.orderId.slice(0, 8)}`}</p>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-            <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'}`}>
+            <span className={`inline-flex px-1.5 py-0.5 rounded text-pf-caption font-medium ${entry.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'}`}>
               {entry.side}
             </span>
-            <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${entry.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'}`}>
+            <span className={`inline-flex px-1.5 py-0.5 rounded text-pf-caption font-medium ${entry.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'}`}>
               {entry.outcome}
             </span>
-            <span className="font-mono text-[10px] text-pf-text-muted">{entry.size} @ {entry.price}</span>
+            <span className="font-mono text-pf-caption text-pf-text-muted">{entry.size} @ {entry.price}</span>
             {entry.pnl !== undefined && (
-              <span className={`font-mono text-[10px] font-medium ${entry.pnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
+              <span className={`font-mono text-pf-caption font-medium ${entry.pnl >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
                 {entry.pnl >= 0 ? '+' : ''}{entry.pnl.toFixed(2)} PnL
               </span>
             )}
@@ -384,12 +384,12 @@ function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; on
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex flex-wrap gap-1">
           {entry.tags.map(t => (
-            <span key={t} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full text-[10px] bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/20">
+            <span key={t} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full text-pf-caption bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/20">
               <Tag className="size-2" />{t}
             </span>
           ))}
         </div>
-        <span className="font-mono text-[10px] text-pf-text-muted shrink-0">{formatDate(entry.createdAt)}</span>
+        <span className="font-mono text-pf-caption text-pf-text-muted shrink-0">{formatDate(entry.createdAt)}</span>
       </div>
     </div>
   );
@@ -522,7 +522,7 @@ function CategoryBadge({ category }: { category?: string | null }) {
   const key = category.toLowerCase();
   const cls = colors[key] ?? 'bg-pf-surface text-pf-text-muted border-pf-border';
   return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${cls}`}>
+    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-pf-caption font-medium border ${cls}`}>
       {category}
     </span>
   );
@@ -635,7 +635,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
               <label htmlFor="cond-token-id" className="block text-xs font-medium text-pf-text-secondary mb-1">Token</label>
               <Input id="cond-token-id" value={form.tokenId} readOnly
                 className="w-full h-9 px-3 rounded-pf bg-pf-overlay border border-pf-border text-sm text-pf-text-secondary cursor-not-allowed font-mono text-xs" />
-              <p className="text-[10px] text-pf-text-muted mt-0.5">Auto-filled from selected position</p>
+              <p className="text-pf-caption text-pf-text-muted mt-0.5">Auto-filled from selected position</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
@@ -989,7 +989,7 @@ export function Component() {
           <BookOpen className="size-3.5" />
           Journal
           {Object.keys(journalByOrder).length > 0 && (
-            <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 text-[10px] font-medium">
+            <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 text-pf-caption font-medium">
               {Object.keys(journalByOrder).length}
             </span>
           )}
@@ -1071,7 +1071,7 @@ export function Component() {
                           className={`hover:bg-pf-surface/50 transition-colors cursor-pointer ${isJournalOpen ? 'bg-pf-surface/30' : ''}`}
                         >
                           <td className="px-4 py-3">
-                            <span className="font-mono text-[11px] text-pf-text-muted">{(page - 1) * 25 + i + 1}</span>
+                            <span className="font-mono text-pf-label text-pf-text-muted">{(page - 1) * 25 + i + 1}</span>
                           </td>
                           <td className="px-4 py-3 max-w-[180px]">
                             <span className="text-pf-text text-xs line-clamp-1" title={order.marketQuestion ?? order.marketId ?? ''}>
@@ -1098,7 +1098,7 @@ export function Component() {
                           <td className="px-4 py-3 text-right font-mono text-pf-text-secondary hidden md:table-cell">{fillRatio(order)}</td>
                           <td className="px-4 py-3 text-right font-mono text-pf-text hidden md:table-cell">{order.fillPrice ?? '\u2014'}</td>
                           <td className="px-4 py-3 hidden md:table-cell">
-                            <span className="font-mono text-[11px] text-pf-text-muted">{order.orderType}</span>
+                            <span className="font-mono text-pf-label text-pf-text-muted">{order.orderType}</span>
                           </td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
@@ -1106,7 +1106,7 @@ export function Component() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right hidden sm:table-cell">
-                            <span className="font-mono text-[11px] text-pf-text-muted">{formatDate(order.createdAt)}</span>
+                            <span className="font-mono text-pf-label text-pf-text-muted">{formatDate(order.createdAt)}</span>
                           </td>
                           <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-0.5">
@@ -1242,7 +1242,7 @@ export function Component() {
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="font-mono text-[11px] text-pf-text-muted">{co.marketId.slice(0, 8)}...</span>
+                            <span className="font-mono text-pf-label text-pf-text-muted">{co.marketId.slice(0, 8)}...</span>
                           </td>
                           <td className="px-4 py-3 text-right font-mono text-pf-text">{co.triggerPrice}</td>
                           <td className="px-4 py-3 text-right font-mono text-pf-text">{co.size}</td>
@@ -1266,12 +1266,12 @@ export function Component() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <span className="font-mono text-[11px] text-pf-text-muted">
+                            <span className="font-mono text-pf-label text-pf-text-muted">
                               {co.expiresAt ? formatDate(co.expiresAt) : '\u2014'}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <span className="font-mono text-[11px] text-pf-text-muted">{formatDate(co.createdAt)}</span>
+                            <span className="font-mono text-pf-label text-pf-text-muted">{formatDate(co.createdAt)}</span>
                           </td>
                           <td className="px-4 py-3">
                             {co.status === 'PENDING' && (
@@ -1352,7 +1352,7 @@ export function Component() {
             </div>
             <div className="p-6 space-y-4">
               {([
-                { label: 'Order ID', value: <span className="font-mono text-[11px]">{selectedOrder.id.slice(0, 8)}...</span> },
+                { label: 'Order ID', value: <span className="font-mono text-pf-label">{selectedOrder.id.slice(0, 8)}...</span> },
                 { label: 'Side', value: (
                   <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
                     selectedOrder.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'

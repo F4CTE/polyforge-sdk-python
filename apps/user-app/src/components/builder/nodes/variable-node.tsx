@@ -143,7 +143,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
           <Variable className="size-3" />
-          <span className="text-[11px] font-semibold flex-1 truncate">Variable</span>
+          <span className="text-pf-label font-semibold flex-1 truncate">Variable</span>
           <button
             type="button"
             onClick={onDelete}
@@ -159,7 +159,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
         <div className="px-2.5 py-2 space-y-2">
           {/* Name */}
           <div>
-            <label htmlFor={`${id}-var-name`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+            <label htmlFor={`${id}-var-name`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
               Name
             </label>
             <input
@@ -176,7 +176,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               }`}
             />
             {!nameValid && (
-              <p id={`${id}-name-error`} className="text-[9px] text-pf-danger mt-0.5">
+              <p id={`${id}-name-error`} className="text-pf-micro text-pf-danger mt-0.5">
                 Letters, digits, underscores only
               </p>
             )}
@@ -184,7 +184,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
 
           {/* Expression */}
           <div>
-            <label htmlFor={`${id}-var-expr`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+            <label htmlFor={`${id}-var-expr`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
               Expression
             </label>
             <input
@@ -201,7 +201,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
           {/* Preview */}
           {preview !== null && (
             <div
-              className="text-[11px] font-mono px-2 py-1 rounded-pf-sm"
+              className="text-pf-label font-mono px-2 py-1 rounded-pf-sm"
               style={{ backgroundColor: VARIABLE_COLOR + '15', color: VARIABLE_COLOR }}
             >
               = {preview}

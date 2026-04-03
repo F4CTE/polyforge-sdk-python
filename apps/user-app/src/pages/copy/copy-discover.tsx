@@ -444,7 +444,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                 {t.topCategories.slice(0, 4).map((cat) => (
                   <span
                     key={cat}
-                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-pf-full text-[11px] bg-pf-overlay text-pf-text-secondary border border-pf-border"
+                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-pf-full text-pf-label bg-pf-overlay text-pf-text-secondary border border-pf-border"
                   >
                     {categoryEmoji(cat)} {cat}
                   </span>
@@ -466,7 +466,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                     className="flex items-center gap-2 bg-pf-overlay rounded-pf px-2.5 py-1.5"
                   >
                     <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                      className={`text-pf-caption font-bold px-1.5 py-0.5 rounded shrink-0 ${
                         trade.result === 'win'
                           ? 'bg-pf-success/15 text-pf-success'
                           : 'bg-pf-danger/15 text-pf-danger'
@@ -474,11 +474,11 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                     >
                       {trade.result === 'win' ? 'WIN' : 'LOSS'}
                     </span>
-                    <span className="text-[11px] text-pf-text-secondary truncate flex-1 max-w-[120px]">
+                    <span className="text-pf-label text-pf-text-secondary truncate flex-1 max-w-[120px]">
                       {trade.marketTitle}
                     </span>
                     <span
-                      className={`text-[11px] font-mono shrink-0 ${
+                      className={`text-pf-label font-mono shrink-0 ${
                         pnlIsPositive(trade.pnl) ? 'text-pf-success' : 'text-pf-danger'
                       }`}
                     >
@@ -589,7 +589,7 @@ function TraderCardItem({
           <p className="text-xs text-pf-text-muted truncate">@{trader.username}</p>
         </div>
         <span
-          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-[11px] font-semibold shrink-0 ${rankBadgeClass(trader.rank)}`}
+          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-pf-label font-semibold shrink-0 ${rankBadgeClass(trader.rank)}`}
           title={`Rank #${trader.rank}`}
         >
           {trader.rank <= 3 && <Trophy className="size-3" aria-hidden="true" />}#

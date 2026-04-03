@@ -298,27 +298,27 @@ export function Component() {
                     <Copy className="size-3.5" />
                   </Button>
                 </div>
-                <span className="text-[11px] text-pf-text-muted">{timeAgo(trade.timestamp)}</span>
+                <span className="text-pf-label text-pf-text-muted">{timeAgo(trade.timestamp)}</span>
               </div>
 
               {/* Market name + category */}
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-sm text-pf-text font-medium truncate">{trade.marketName}</span>
-                <span className="px-1.5 py-0.5 rounded-pf-full text-[10px] bg-pf-overlay text-pf-text-muted shrink-0">
+                <span className="px-1.5 py-0.5 rounded-pf-full text-pf-caption bg-pf-overlay text-pf-text-muted shrink-0">
                   {trade.marketCategory}
                 </span>
               </div>
 
               {/* Side + Outcome badges */}
               <div className="flex items-center gap-2 mb-3">
-                <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${
                   trade.side === 'BUY'
                     ? 'bg-pf-success/15 text-pf-success'
                     : 'bg-pf-danger/15 text-pf-danger'
                 }`}>
                   {trade.side}
                 </span>
-                <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${
                   trade.outcome === 'YES'
                     ? 'bg-pf-success/15 text-pf-success'
                     : 'bg-pf-danger/15 text-pf-danger'

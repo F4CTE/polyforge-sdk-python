@@ -1131,7 +1131,7 @@ export function Component() {
               {/* Column headers */}
               <div className="flex items-center justify-between pb-1">
                 <div />
-                <div className="flex gap-2 text-[10px] font-medium text-pf-text-muted uppercase tracking-wider">
+                <div className="flex gap-2 text-pf-caption font-medium text-pf-text-muted uppercase tracking-wider">
                   <span className="w-14 text-center">In-App</span>
                   <span className="w-14 text-center">Email</span>
                   <span className="w-14 text-center">Push</span>
@@ -1142,7 +1142,7 @@ export function Component() {
                 if (events.length === 0) return null;
                 return (
                   <div key={category} className="space-y-1">
-                    <div className="text-[10px] font-semibold text-pf-text-muted uppercase tracking-widest pb-1 border-b border-pf-border-subtle">
+                    <div className="text-pf-caption font-semibold text-pf-text-muted uppercase tracking-widest pb-1 border-b border-pf-border-subtle">
                       {category}
                     </div>
                     {events.map(evtDef => {
@@ -1163,7 +1163,7 @@ export function Component() {
                                 aria-checked={pref[field]}
                                 aria-label={`${evtDef.label} ${field} notification`}
                                 onClick={() => toggleNotifField(evtDef.event, field)}
-                                className={`px-2.5 py-0.5 rounded-pf-full text-[10px] font-medium w-14 transition-colors cursor-pointer ${
+                                className={`px-2.5 py-0.5 rounded-pf-full text-pf-caption font-medium w-14 transition-colors cursor-pointer ${
                                   pref[field]
                                     ? 'bg-pf-cyan-500 text-white'
                                     : 'bg-pf-overlay text-pf-text-muted'
@@ -1685,7 +1685,7 @@ export function Component() {
                 disabled={!drawdownEnabled}
                 className="w-full accent-pf-danger disabled:opacity-50"
               />
-              <div className="flex justify-between text-[10px] text-pf-text-muted mt-1">
+              <div className="flex justify-between text-pf-caption text-pf-text-muted mt-1">
                 <span>1%</span>
                 <span>25%</span>
                 <span>50%</span>
@@ -1848,14 +1848,14 @@ export function Component() {
                       />
                       <div>
                         <span className={`text-xs font-medium block ${scopeBadgeClass(scope.value).split(' ')[1]}`}>{scope.label}</span>
-                        <span className="text-[11px] text-pf-text-muted">{scope.desc}</span>
+                        <span className="text-pf-label text-pf-text-muted">{scope.desc}</span>
                       </div>
                     </label>
                   );
                 })}
               </div>
               {newKeyScopes.size === 0 && (
-                <p className="text-[11px] text-pf-danger mt-1">Select at least one scope.</p>
+                <p className="text-pf-label text-pf-danger mt-1">Select at least one scope.</p>
               )}
             </div>
             <div>
@@ -1967,7 +1967,7 @@ export function Component() {
                           <td className="py-3 pr-4">
                             <div className="flex flex-wrap gap-1">
                               {key.scopes.map(scope => (
-                                <span key={scope} className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${scopeBadgeClass(scope)}`}>
+                                <span key={scope} className={`text-pf-caption px-1.5 py-0.5 rounded font-medium ${scopeBadgeClass(scope)}`}>
                                   {scope}
                                 </span>
                               ))}
@@ -1977,7 +1977,7 @@ export function Component() {
                           <td className="py-3 pr-4 text-xs text-pf-text-muted whitespace-nowrap">
                             <div>{daysAgo(key.lastUsedAt)}</div>
                             {typeof key.usageCount === 'number' && (
-                              <div className="text-[10px] text-pf-text-muted">{key.usageCount.toLocaleString()} requests</div>
+                              <div className="text-pf-caption text-pf-text-muted">{key.usageCount.toLocaleString()} requests</div>
                             )}
                           </td>
                           <td className="py-3 pr-4 font-mono text-xs text-pf-text-muted hidden sm:table-cell whitespace-nowrap">
@@ -1989,9 +1989,9 @@ export function Component() {
                           </td>
                           <td className="py-3 pr-4">
                             {key.revoked || key.active === false ? (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-danger/10 text-pf-danger">Revoked</span>
+                              <span className="text-pf-caption px-1.5 py-0.5 rounded font-medium bg-pf-danger/10 text-pf-danger">Revoked</span>
                             ) : (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-success/10 text-pf-success">Active</span>
+                              <span className="text-pf-caption px-1.5 py-0.5 rounded font-medium bg-pf-success/10 text-pf-success">Active</span>
                             )}
                           </td>
                           <td className="py-3">
@@ -2132,14 +2132,14 @@ export function Component() {
                             {wh.url.length > 50 ? `${wh.url.slice(0, 47)}…` : wh.url}
                           </div>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-overlay text-pf-text-secondary border border-pf-border">
+                            <span className="text-pf-caption px-1.5 py-0.5 rounded font-medium bg-pf-overlay text-pf-text-secondary border border-pf-border">
                               {wh.events.length} event{wh.events.length !== 1 ? 's' : ''}
                             </span>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${wh.active ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-overlay text-pf-text-muted'}`}>
+                            <span className={`text-pf-caption px-1.5 py-0.5 rounded font-medium ${wh.active ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-overlay text-pf-text-muted'}`}>
                               {wh.active ? 'Active' : 'Inactive'}
                             </span>
                             {wh.failureCount > 0 && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-pf-danger/10 text-pf-danger">
+                              <span className="text-pf-caption px-1.5 py-0.5 rounded font-medium bg-pf-danger/10 text-pf-danger">
                                 {wh.failureCount} failure{wh.failureCount !== 1 ? 's' : ''}
                               </span>
                             )}
@@ -2158,7 +2158,7 @@ export function Component() {
                             <History className="size-3.5" />
                             Deliveries
                             {recentFailures > 0 && (
-                              <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-4 px-0.5 rounded-pf-full bg-pf-danger text-white text-[9px] font-bold leading-none">
+                              <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-4 px-0.5 rounded-pf-full bg-pf-danger text-white text-pf-micro font-bold leading-none">
                                 {recentFailures}
                               </span>
                             )}

@@ -311,14 +311,14 @@ export function Component() {
                   <tr key={trade.id} className="hover:bg-pf-surface/50 transition-colors">
                     <td className="px-4 py-3 text-pf-text max-w-[200px] truncate">{trade.marketName}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                      <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${
                         trade.side === 'BUY' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
                       }`}>
                         {trade.side}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                      <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${
                         trade.outcome === 'YES' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
                       }`}>
                         {trade.outcome}

@@ -73,14 +73,14 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
         </button>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-7 h-7 rounded-pf-full bg-pf-cyan-500 text-pf-text-contrast text-[11px] font-bold" role="img" aria-label={`Avatar for ${admin?.displayName ?? 'admin'}`}>
+          <div className="flex items-center justify-center w-7 h-7 rounded-pf-full bg-pf-cyan-500 text-pf-text-contrast text-pf-label font-bold" role="img" aria-label={`Avatar for ${admin?.displayName ?? 'admin'}`}>
             {initials}
           </div>
           <div className="hidden sm:block">
             <div className="text-sm font-medium text-pf-text leading-tight">
               {admin?.displayName}
             </div>
-            <div className="text-[10px] text-pf-text-tertiary leading-tight">
+            <div className="text-pf-caption text-pf-text-tertiary leading-tight">
               {roleLabel}
             </div>
           </div>

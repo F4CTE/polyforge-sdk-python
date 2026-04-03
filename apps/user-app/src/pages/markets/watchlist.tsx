@@ -239,7 +239,7 @@ function AlertBell({ alerts, loading, onClick, active }: AlertBellProps) {
     >
       <Icon className="w-4 h-4" />
       {count > 0 && !active && (
-        <span className="absolute -top-1 -right-1 flex items-center justify-center w-3.5 h-3.5 rounded-pf-full bg-pf-cyan-500 text-[9px] font-bold text-pf-text-contrast leading-none">
+        <span className="absolute -top-1 -right-1 flex items-center justify-center w-3.5 h-3.5 rounded-pf-full bg-pf-cyan-500 text-pf-micro font-bold text-pf-text-contrast leading-none">
           {count > 9 ? '9+' : count}
         </span>
       )}

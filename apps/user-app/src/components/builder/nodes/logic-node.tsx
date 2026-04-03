@@ -120,8 +120,8 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
           {icon}
-          <span className="text-[11px] font-bold flex-1 truncate">{symbol}</span>
-          <span className="text-[9px] opacity-70">{d.label}</span>
+          <span className="text-pf-label font-bold flex-1 truncate">{symbol}</span>
+          <span className="text-pf-micro opacity-70">{d.label}</span>
           <button
             type="button"
             onClick={onDelete}
@@ -138,7 +138,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           <div className="px-2.5 py-2 space-y-2">
             {d.fields.map((field) => (
               <div key={field.key}>
-                <label htmlFor={`${id}-${field.key}`} className="block text-[10px] font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+                <label htmlFor={`${id}-${field.key}`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
                   {field.label}
                 </label>
                 <input
@@ -162,7 +162,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
         {/* No fields message for gates */}
         {d.fields.length === 0 && isCompact && (
           <div className="px-2.5 py-1.5">
-            <span className="text-[10px] text-pf-text-muted italic">
+            <span className="text-pf-caption text-pf-text-muted italic">
               {d.type === 'AND_GATE' && 'True if all inputs are true'}
               {d.type === 'OR_GATE' && 'True if any input is true'}
               {d.type === 'NOT_GATE' && 'Inverts input'}
@@ -173,7 +173,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
         {/* Condition preview for IF block */}
         {d.type === 'IF_THEN_ELSE' && d.config.condition && (
           <div className="px-2.5 pb-2">
-            <div className="flex items-center gap-2 text-[10px]">
+            <div className="flex items-center gap-2 text-pf-caption">
               <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-success/20 text-pf-success font-medium">
                 TRUE
               </span>
@@ -188,7 +188,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
         {/* Delay preview */}
         {d.type === 'DELAY' && d.config.seconds && (
           <div className="px-2.5 pb-2">
-            <span className="text-[10px] text-pf-text-muted">
+            <span className="text-pf-caption text-pf-text-muted">
               Wait {d.config.seconds}s
             </span>
           </div>
