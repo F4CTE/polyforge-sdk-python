@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.11] — 2026-04-03
+
+### Fixed
+- **Design token compliance** — replaced all hardcoded `text-black` with `text-pf-base` and `bg-black/{opacity}` with `bg-pf-base/{opacity}` across 52 files in `packages/ui`, `apps/user-app`, `apps/admin-app`, and `apps/landing`; replaced bare `bg-cyan-500`/`hover:bg-cyan-400` with `bg-pf-cyan-500`/`hover:bg-pf-cyan-400` in landing components; replaced `text-green-400`/`text-red-400` with `text-pf-success`/`text-pf-danger` semantic tokens in admin market listings; replaced all 6 remaining `shadow-lg` with `shadow-pf-lg` in correlation, sentiment, retention, alerts, feed, and public-profile pages
+
+---
+
 ## [6.35.10] — 2026-04-03
 
 ### Fixed
