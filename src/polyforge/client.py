@@ -267,7 +267,7 @@ class PolyforgeClient:
     def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
         body: dict[str, Any] = {"description": description}
         if market_id is not None:
-            body["market_id"] = market_id
+            body["marketId"] = market_id
         return _parse(Strategy, self._post("/api/v1/strategies/from-description", json=body))
 
     def start_strategy(self, strategy_id: str, mode: str = "paper") -> Strategy:
@@ -553,12 +553,12 @@ class PolyforgeClient:
     # -- Social & Signals --
 
     def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
-        data = self._get("/api/v1/whales/feed", params={"min_size": min_size})
+        data = self._get("/api/v1/whales/feed", params={"minSize": min_size})
         items = data["data"]
         return [_parse(WhaleTrade, w) for w in items]
 
     def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
-        data = self._get("/api/v1/news/signals", params={"min_confidence": min_confidence})
+        data = self._get("/api/v1/news/signals", params={"minConfidence": min_confidence})
         items = data["data"]
         return [_parse(NewsSignal, s) for s in items]
 
@@ -779,7 +779,7 @@ class AsyncPolyforgeClient:
     async def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
         body: dict[str, Any] = {"description": description}
         if market_id is not None:
-            body["market_id"] = market_id
+            body["marketId"] = market_id
         return _parse(Strategy, await self._post("/api/v1/strategies/from-description", json=body))
 
     async def start_strategy(self, strategy_id: str, mode: str = "paper") -> Strategy:
@@ -1058,12 +1058,12 @@ class AsyncPolyforgeClient:
     # -- Social & Signals --
 
     async def get_whale_feed(self, *, min_size: int = 10000) -> list[WhaleTrade]:
-        data = await self._get("/api/v1/whales/feed", params={"min_size": min_size})
+        data = await self._get("/api/v1/whales/feed", params={"minSize": min_size})
         items = data["data"]
         return [_parse(WhaleTrade, w) for w in items]
 
     async def get_news_signals(self, *, min_confidence: int = 70) -> list[NewsSignal]:
-        data = await self._get("/api/v1/news/signals", params={"min_confidence": min_confidence})
+        data = await self._get("/api/v1/news/signals", params={"minConfidence": min_confidence})
         items = data["data"]
         return [_parse(NewsSignal, s) for s in items]
 

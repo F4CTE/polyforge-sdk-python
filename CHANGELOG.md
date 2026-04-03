@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.2] — 2026-04-03
+
+### Fixed
+- `create_strategy_from_description`: send `marketId` (camelCase) instead of `market_id` in request body (closes #11)
+- `get_whale_feed`: send `minSize` (camelCase) instead of `min_size` in query params (closes #12)
+- `get_news_signals`: send `minConfidence` (camelCase) instead of `min_confidence` in query params (closes #13)
+
 ## [1.5.1] — 2026-03-30
 
 ### Fixed
