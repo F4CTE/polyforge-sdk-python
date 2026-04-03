@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.13] — 2026-04-03
+
+### Fixed
+- **Design token cleanup** — replaced last `shadow-2xl` with `shadow-pf-2xl` in tooltip-tour.tsx; replaced `text-[11px]` arbitrary font size with `text-pf-label` design token in badge.tsx
+
+---
+
 ## [6.35.12] — 2026-04-03
 
 ### Security
