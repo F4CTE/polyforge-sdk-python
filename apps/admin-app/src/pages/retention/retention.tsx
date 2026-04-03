@@ -118,7 +118,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       <p className="font-semibold text-pf-text mb-2">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2 mb-1">
-          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+          <span className="w-2 h-2 rounded-pf-full shrink-0" style={{ backgroundColor: entry.color }} />
           <span className="text-pf-text-secondary">{entry.name}:</span>
           <span className="text-pf-text font-medium">{fmt(entry.value)}</span>
         </div>

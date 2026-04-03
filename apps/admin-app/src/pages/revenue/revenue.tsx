@@ -465,7 +465,7 @@ export function Component() {
                   <div className="flex items-center gap-2 mb-1.5">
                     {'dotColor' in card && (
                       <span
-                        className="size-2 rounded-full shrink-0"
+                        className="size-2 rounded-pf-full shrink-0"
                         style={{ backgroundColor: (card as { dotColor: string }).dotColor }}
                       />
                     )}
@@ -535,7 +535,7 @@ export function Component() {
                   {breakdown?.sources.map(s => (
                     <div key={s.source} className="flex items-center gap-2 text-xs">
                       <span
-                        className="size-2.5 rounded-full shrink-0"
+                        className="size-2.5 rounded-pf-full shrink-0"
                         style={{ backgroundColor: SOURCE_COLORS[s.source] }}
                       />
                       <span className="text-pf-text-muted truncate">{s.label}</span>
@@ -572,7 +572,7 @@ export function Component() {
                         <td className="py-2.5 pr-2">
                           <div className="flex items-center gap-2">
                             <span
-                              className="size-2 rounded-full shrink-0"
+                              className="size-2 rounded-pf-full shrink-0"
                               style={{ backgroundColor: SOURCE_COLORS[s.source] }}
                             />
                             <span className="text-pf-text">{s.label}</span>
@@ -581,9 +581,9 @@ export function Component() {
                         <td className="py-2.5 text-right font-mono text-pf-text">{fmtDollar(s.revenue)}</td>
                         <td className="py-2.5 pl-3">
                           <div className="flex items-center gap-1.5">
-                            <div className="flex-1 h-1.5 bg-pf-base rounded-full overflow-hidden">
+                            <div className="flex-1 h-1.5 bg-pf-base rounded-pf-full overflow-hidden">
                               <div
-                                className="h-full rounded-full"
+                                className="h-full rounded-pf-full"
                                 style={{
                                   width: `${Math.min(s.pct, 100)}%`,
                                   backgroundColor: SOURCE_COLORS[s.source],
@@ -886,7 +886,7 @@ export function Component() {
                           </td>
                           <td className="px-4 py-3 text-right">
                             <span
-                              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium"
+                              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-xs font-medium"
                               style={{
                                 backgroundColor: `${dotColor}18`,
                                 color: dotColor,
@@ -894,7 +894,7 @@ export function Component() {
                               }}
                             >
                               <span
-                                className="size-1.5 rounded-full"
+                                className="size-1.5 rounded-pf-full"
                                 style={{ backgroundColor: dotColor }}
                               />
                               {user.primarySource.replace(/_/g, ' ')}

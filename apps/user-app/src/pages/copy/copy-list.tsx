@@ -284,9 +284,9 @@ function CorrelationBar({ value }: { value: number }) {
       className="inline-flex items-center gap-1.5 group/corr cursor-default"
       title="How closely your fills match the source trader"
     >
-      <span className="w-16 h-1.5 bg-pf-surface rounded-full overflow-hidden">
+      <span className="w-16 h-1.5 bg-pf-surface rounded-pf-full overflow-hidden">
         <span
-          className={`block h-full rounded-full ${color}`}
+          className={`block h-full rounded-pf-full ${color}`}
           style={{ width: `${pct}%` }}
         />
       </span>
@@ -453,7 +453,7 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
                             className="inline-flex items-center gap-2 group/trader"
                           >
                             <span
-                              className="size-7 rounded-full bg-pf-cyan-500/20 text-pf-cyan-400 text-[11px] font-semibold flex items-center justify-center shrink-0 uppercase"
+                              className="size-7 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 text-[11px] font-semibold flex items-center justify-center shrink-0 uppercase"
                               aria-hidden="true"
                             >
                               {(t.displayName ?? t.username).slice(0, 2)}
@@ -510,12 +510,12 @@ function CardSkeleton() {
     <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 space-y-3 animate-shimmer">
       <div className="flex items-center gap-2">
         <div className="h-4 bg-pf-overlay rounded w-[140px]" />
-        <div className="h-5 w-20 bg-pf-overlay rounded-full ml-auto" />
+        <div className="h-5 w-20 bg-pf-overlay rounded-pf-full ml-auto" />
       </div>
       <div className="h-3 bg-pf-overlay rounded w-[60%]" />
       <div className="flex gap-2">
-        <div className="h-5 w-24 bg-pf-overlay rounded-full" />
-        <div className="h-5 w-16 bg-pf-overlay rounded-full" />
+        <div className="h-5 w-24 bg-pf-overlay rounded-pf-full" />
+        <div className="h-5 w-16 bg-pf-overlay rounded-pf-full" />
       </div>
       <div className="h-3 bg-pf-overlay rounded w-[80%]" />
       <div className="h-3 bg-pf-overlay rounded w-[50%]" />
@@ -654,7 +654,7 @@ export function Component() {
         {!loading && configs.length > 0 && (
           <Link
             to="/copy/new"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
           >
             <Plus className="size-4" /> New Copy Config
           </Link>
@@ -677,7 +677,7 @@ export function Component() {
             variant="ghost"
             key={f.value}
             onClick={() => onFilterChange(f.value)}
-            className={`px-3 py-1.5 text-sm rounded-full border transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 text-sm rounded-pf-full border transition-colors cursor-pointer ${
               filter === f.value
                 ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
                 : 'border-pf-border text-pf-text-secondary hover:text-pf-text'
@@ -746,7 +746,7 @@ export function Component() {
           </p>
           <Link
             to="/copy/new"
-            className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
+            className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
           >
             <Plus className="size-4" /> New Copy Config
           </Link>
@@ -797,10 +797,10 @@ export function Component() {
                   </div>
                   <span
                     data-testid="status-badge"
-                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}
+                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-[11px] font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}
                   >
                     <span
-                      className={`w-2.5 h-2.5 rounded-full ${statusStyle.dot} ${
+                      className={`w-2.5 h-2.5 rounded-pf-full ${statusStyle.dot} ${
                         config.status === 'ACTIVE' ? 'animate-pulse-dot' : ''
                       }`}
                     />
@@ -811,11 +811,11 @@ export function Component() {
                 {/* Mode + Size badges */}
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${modeStyle.bg} ${modeStyle.text}`}
+                    className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${modeStyle.bg} ${modeStyle.text}`}
                   >
                     {config.mode}
                   </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-pf-overlay text-pf-text-muted text-[11px] font-medium">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-muted text-[11px] font-medium">
                     {sizeLabel(config.mode, config.sizeValue)}
                   </span>
                 </div>

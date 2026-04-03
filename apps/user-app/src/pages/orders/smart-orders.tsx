@@ -64,7 +64,7 @@ function StatusBadge({ status }: { status: SmartOrderStatus }) {
   };
   const { cls, icon, label } = map[status];
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cls}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-xs font-medium border ${cls}`}>
       {icon}{label}
     </span>
   );

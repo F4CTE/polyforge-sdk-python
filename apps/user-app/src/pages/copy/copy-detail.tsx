@@ -256,7 +256,7 @@ function EditDialog({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm bg-pf-cyan-500 text-black font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm bg-pf-cyan-500 text-pf-text-contrast font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
           >
             <Check className="size-3.5" />
             {saving ? 'Saving...' : 'Save'}
@@ -393,7 +393,7 @@ export function Component() {
       {/* Config header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="size-10 rounded-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center">
+          <div className="size-10 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center">
             <Copy className="size-5 text-pf-cyan-400" />
           </div>
           <div>
@@ -412,11 +412,11 @@ export function Component() {
               </Button>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${statusStyle.bg} ${statusStyle.text}`}>
-                <span className={`w-2.5 h-2.5 rounded-full ${statusStyle.dot} ${config.status === 'ACTIVE' ? 'animate-pulse-dot' : ''}`} />
+              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${statusStyle.bg} ${statusStyle.text}`}>
+                <span className={`w-2.5 h-2.5 rounded-pf-full ${statusStyle.dot} ${config.status === 'ACTIVE' ? 'animate-pulse-dot' : ''}`} />
                 {config.status}
               </span>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${modeStyle.bg} ${modeStyle.text}`}>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${modeStyle.bg} ${modeStyle.text}`}>
                 {config.mode}
               </span>
             </div>

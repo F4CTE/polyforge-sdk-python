@@ -123,7 +123,7 @@ function toEnhanced(item: FeedItem): FeedItemEnhanced {
 function Initials({ actor }: { actor: FeedActor }) {
   const label = (actor.displayName ?? actor.username).slice(0, 2).toUpperCase();
   return (
-    <div className="size-9 rounded-full bg-pf-surface flex items-center justify-center text-sm font-bold text-pf-cyan-400 shrink-0">
+    <div className="size-9 rounded-pf-full bg-pf-surface flex items-center justify-center text-sm font-bold text-pf-cyan-400 shrink-0">
       {label}
     </div>
   );
@@ -131,7 +131,7 @@ function Initials({ actor }: { actor: FeedActor }) {
 
 function CommentAvatar({ initials }: { initials: string }) {
   return (
-    <div className="size-7 rounded-full bg-pf-elevated border border-pf-border flex items-center justify-center text-[10px] font-bold text-pf-text-secondary shrink-0">
+    <div className="size-7 rounded-pf-full bg-pf-elevated border border-pf-border flex items-center justify-center text-[10px] font-bold text-pf-text-secondary shrink-0">
       {initials.slice(0, 2).toUpperCase()}
     </div>
   );
@@ -142,7 +142,7 @@ function CommentAvatar({ initials }: { initials: string }) {
 function SkeletonRow() {
   return (
     <div className="flex items-start gap-3 px-4 py-4 border-b border-pf-border-subtle last:border-b-0">
-      <div className="size-9 rounded-full bg-pf-overlay animate-pulse shrink-0" />
+      <div className="size-9 rounded-pf-full bg-pf-overlay animate-pulse shrink-0" />
       <div className="flex-1 space-y-2">
         <div className="h-3 w-32 bg-pf-overlay rounded animate-pulse" />
         <div className="h-3 w-64 bg-pf-overlay rounded animate-pulse" />
@@ -155,7 +155,7 @@ function SkeletonRow() {
 function CommentSkeletonRow() {
   return (
     <div className="flex items-start gap-2.5 animate-pulse">
-      <div className="size-7 rounded-full bg-pf-overlay shrink-0" />
+      <div className="size-7 rounded-pf-full bg-pf-overlay shrink-0" />
       <div className="flex-1 space-y-1.5">
         <div className="h-2.5 w-24 bg-pf-overlay rounded" />
         <div className="h-2.5 w-48 bg-pf-overlay rounded" />
@@ -707,13 +707,13 @@ export function Component() {
                     <Link
                       to={`/profile/${actor.username}`}
                       aria-label={`View ${displayName}'s profile`}
-                      className="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-full"
+                      className="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-full"
                     >
                       {actor.avatarUrl ? (
                         <img
                           src={actor.avatarUrl}
                           alt={`${displayName} avatar`}
-                          className="size-9 rounded-full object-cover"
+                          className="size-9 rounded-pf-full object-cover"
                         />
                       ) : (
                         <Initials actor={actor} />
@@ -754,7 +754,7 @@ export function Component() {
                         onClick={() => handleReact(item.id, r.emoji)}
                         aria-pressed={r.userReacted}
                         aria-label={`${r.emoji} ${r.count} reaction${r.count !== 1 ? 's' : ''}${r.userReacted ? ', you reacted' : ''}`}
-                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded-pf-full border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                           r.userReacted
                             ? 'bg-pf-cyan-500/15 border-pf-cyan-500/40 text-pf-cyan-400'
                             : 'bg-pf-elevated border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text'
@@ -779,7 +779,7 @@ export function Component() {
                           onClick={() => setPickerOpen(item.id)}
                           aria-label="Add reaction"
                           aria-expanded={false}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-pf-border text-xs text-pf-text-muted hover:border-pf-border-strong hover:text-pf-text-secondary bg-pf-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                          className="flex items-center gap-1 px-2 py-0.5 rounded-pf-full border border-pf-border text-xs text-pf-text-muted hover:border-pf-border-strong hover:text-pf-text-secondary bg-pf-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
                         >
                           <span aria-hidden="true">+</span>
                           React

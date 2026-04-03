@@ -79,7 +79,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           type="target"
           position={Position.Left}
           id="input"
-          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
           style={{ borderColor: color }}
         />
       )}
@@ -89,14 +89,14 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
             type="target"
             position={Position.Left}
             id="input-a"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
             style={{ borderColor: color, top: '35%' }}
           />
           <Handle
             type="target"
             position={Position.Left}
             id="input-b"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
             style={{ borderColor: color, top: '65%' }}
           />
         </>
@@ -174,11 +174,11 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
         {d.type === 'IF_THEN_ELSE' && d.config.condition && (
           <div className="px-2.5 pb-2">
             <div className="flex items-center gap-2 text-[10px]">
-              <span className="px-1.5 py-0.5 rounded-full bg-pf-success/20 text-pf-success font-medium">
+              <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-success/20 text-pf-success font-medium">
                 TRUE
               </span>
               <span className="text-pf-text-muted">/</span>
-              <span className="px-1.5 py-0.5 rounded-full bg-pf-danger/20 text-pf-danger font-medium">
+              <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-danger/20 text-pf-danger font-medium">
                 FALSE
               </span>
             </div>
@@ -203,14 +203,14 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
             type="source"
             position={Position.Right}
             id="true-out"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
             style={{ borderColor: 'var(--color-pf-success)', top: '35%' }}
           />
           <Handle
             type="source"
             position={Position.Right}
             id="false-out"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
             style={{ borderColor: 'var(--color-pf-danger)', top: '65%' }}
           />
         </>
@@ -219,7 +219,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           type="source"
           position={Position.Right}
           id="output"
-          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
           style={{ borderColor: color }}
         />
       )}

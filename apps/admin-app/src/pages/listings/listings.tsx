@@ -55,7 +55,7 @@ function SkeletonCard() {
     <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-pulse">
       <div className="flex items-start justify-between gap-3">
         <div className="h-5 w-2/3 bg-pf-surface rounded" />
-        <div className="h-5 w-20 bg-pf-surface rounded-full" />
+        <div className="h-5 w-20 bg-pf-surface rounded-pf-full" />
       </div>
       <div className="h-4 w-full bg-pf-surface rounded" />
       <div className="h-4 w-4/5 bg-pf-surface rounded" />
@@ -117,7 +117,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
           </Button>
           <span className="font-semibold text-pf-text truncate">{listing.title}</span>
         </div>
-        <span className="shrink-0 text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 px-2 py-0.5 rounded-full whitespace-nowrap">
+        <span className="shrink-0 text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 px-2 py-0.5 rounded-pf-full whitespace-nowrap">
           ${price} USDC
         </span>
       </div>
@@ -145,7 +145,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
 
       {/* Status + date */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColor(listing.status)}`}>
+        <span className={`text-xs font-medium px-2 py-0.5 rounded-pf-full ${statusColor(listing.status)}`}>
           {listing.status}
         </span>
         <span className="text-xs text-pf-text-tertiary">{formatDate(listing.createdAt)}</span>
@@ -340,7 +340,7 @@ export function Component() {
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-pf-text">Marketplace Listings</h2>
           {pendingCount > 0 && (
-            <span className="flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-full bg-pf-warning text-[10px] font-bold text-black" aria-label={`${pendingCount} pending listings`}>
+            <span className="flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-pf-full bg-pf-warning text-[10px] font-bold text-pf-text-contrast" aria-label={`${pendingCount} pending listings`}>
               {pendingCount}
             </span>
           )}
@@ -375,7 +375,7 @@ export function Component() {
           >
             {tab.label}
             {tab.value === 'PENDING' && pendingCount > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-pf-warning text-[9px] font-bold text-black">
+              <span className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-pf-full bg-pf-warning text-[9px] font-bold text-pf-text-contrast">
                 {pendingCount}
               </span>
             )}

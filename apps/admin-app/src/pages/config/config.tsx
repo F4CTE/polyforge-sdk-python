@@ -149,7 +149,7 @@ function ToggleSwitch({ checked, onChange, danger, disabled, label }: ToggleSwit
       disabled={disabled}
       onClick={() => !disabled && onChange(!checked)}
       className={[
-        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200',
+        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-pf-full transition-colors duration-200',
         trackClass,
         disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
@@ -157,7 +157,7 @@ function ToggleSwitch({ checked, onChange, danger, disabled, label }: ToggleSwit
     >
       <span
         className={[
-          'inline-block h-4 w-4 rounded-full bg-white shadow transition-transform duration-200',
+          'inline-block h-4 w-4 rounded-pf-full bg-white shadow transition-transform duration-200',
           checked ? 'translate-x-6' : 'translate-x-1',
         ].join(' ')}
       />
@@ -184,7 +184,7 @@ function SliderInput({ value, min, max, onChange, label, unit }: SliderInputProp
         value={value}
         aria-label={label}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="flex-1 h-1.5 rounded-full accent-pf-cyan-500 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+        className="flex-1 h-1.5 rounded-pf-full accent-pf-cyan-500 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
       />
       <span className="w-14 text-right text-sm font-medium text-pf-text tabular-nums">
         {value}
@@ -500,7 +500,7 @@ export function Component() {
             className={[
               'inline-flex items-center gap-2 rounded-pf px-4 py-2 text-sm font-semibold transition-all',
               dirty && !saving
-                ? 'bg-pf-cyan-500 text-black hover:brightness-110 cursor-pointer'
+                ? 'bg-pf-cyan-500 text-pf-text-contrast hover:brightness-110 cursor-pointer'
                 : 'bg-pf-elevated border border-pf-border text-pf-text-muted cursor-not-allowed opacity-50',
             ].join(' ')}
           >
@@ -770,7 +770,7 @@ export function Component() {
                       <div className="flex items-center gap-2 shrink-0">
                         <span
                           className={[
-                            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+                            'inline-flex items-center gap-1 rounded-pf-full px-2 py-0.5 text-xs font-medium',
                             enabled
                               ? 'bg-pf-success/15 text-pf-success'
                               : 'bg-pf-border/30 text-pf-text-muted',

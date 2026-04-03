@@ -129,7 +129,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
         type="button"
         onClick={handleSend}
         disabled={loading}
-        className="flex items-center gap-1.5 px-4 py-1.5 rounded-pf-sm bg-pf-cyan-500 text-black text-xs font-semibold hover:bg-pf-cyan-400 transition-colors disabled:opacity-50 cursor-pointer"
+        className="flex items-center gap-1.5 px-4 py-1.5 rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast text-xs font-semibold hover:bg-pf-cyan-400 transition-colors disabled:opacity-50 cursor-pointer"
       >
         <Play size={11} /> {loading ? 'Sending…' : 'Send'}
       </Button>

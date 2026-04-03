@@ -973,7 +973,7 @@ export function Component() {
             variant={activeTab === t.value ? 'default' : 'secondary'}
             size="sm"
             onClick={() => handleTab(t.value)}
-            className="flex items-center gap-1.5 whitespace-nowrap rounded-full"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-pf-full"
           >
             {t.icon}
             {t.label}
@@ -997,7 +997,7 @@ export function Component() {
             <label htmlFor="settings-avatar-url" className="text-xs text-pf-text-secondary mb-1.5 block">Avatar URL</label>
             <div className="flex items-center gap-3">
               <Input id="settings-avatar-url" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://..." className="flex-1" />
-              {avatarUrl && <img src={avatarUrl} alt="Avatar preview" className="w-12 h-12 rounded-full object-cover border border-pf-border" />}
+              {avatarUrl && <img src={avatarUrl} alt="Avatar preview" className="w-12 h-12 rounded-pf-full object-cover border border-pf-border" />}
             </div>
           </div>
           <div className="flex justify-end">
@@ -1030,7 +1030,7 @@ export function Component() {
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop-light backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title" onKeyDown={(e) => { if (e.key === 'Escape') { setDeleteDialogOpen(false); setDeletePassword(''); } }}>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 max-w-md w-full mx-4 space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-full bg-pf-danger/10 flex items-center justify-center">
+                    <div className="size-10 rounded-pf-full bg-pf-danger/10 flex items-center justify-center">
                       <AlertTriangle className="size-5 text-pf-danger" />
                     </div>
                     <div>
@@ -1099,7 +1099,7 @@ export function Component() {
                   variant={emailDigest === opt.value ? 'default' : 'secondary'}
                   size="sm"
                   onClick={() => setEmailDigest(opt.value)}
-                  className="rounded-full"
+                  className="rounded-pf-full"
                 >
                   {opt.label}
                 </Button>
@@ -1119,9 +1119,9 @@ export function Component() {
                     <div className="h-3 w-52 rounded bg-pf-overlay/60" />
                   </div>
                   <div className="flex gap-2">
-                    <div className="h-6 w-14 rounded-full bg-pf-overlay" />
-                    <div className="h-6 w-14 rounded-full bg-pf-overlay" />
-                    <div className="h-6 w-14 rounded-full bg-pf-overlay" />
+                    <div className="h-6 w-14 rounded-pf-full bg-pf-overlay" />
+                    <div className="h-6 w-14 rounded-pf-full bg-pf-overlay" />
+                    <div className="h-6 w-14 rounded-pf-full bg-pf-overlay" />
                   </div>
                 </div>
               ))}
@@ -1163,7 +1163,7 @@ export function Component() {
                                 aria-checked={pref[field]}
                                 aria-label={`${evtDef.label} ${field} notification`}
                                 onClick={() => toggleNotifField(evtDef.event, field)}
-                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium w-14 transition-colors cursor-pointer ${
+                                className={`px-2.5 py-0.5 rounded-pf-full text-[10px] font-medium w-14 transition-colors cursor-pointer ${
                                   pref[field]
                                     ? 'bg-pf-cyan-500 text-white'
                                     : 'bg-pf-overlay text-pf-text-muted'
@@ -1267,7 +1267,7 @@ export function Component() {
               {/* Step 1: QR Code */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pf-cyan-500 text-black text-xs font-bold">1</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-pf-cyan-500 text-pf-text-contrast text-xs font-bold">1</span>
                   <h3 className="text-sm font-semibold text-pf-text">Scan QR Code</h3>
                 </div>
                 <p className="text-xs text-pf-text-secondary ml-7">
@@ -1296,7 +1296,7 @@ export function Component() {
               {/* Step 2: Verify */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pf-cyan-500 text-black text-xs font-bold">2</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-pf-cyan-500 text-pf-text-contrast text-xs font-bold">2</span>
                   <h3 className="text-sm font-semibold text-pf-text">Enter verification code</h3>
                 </div>
                 <div className="ml-7 space-y-3">
@@ -1553,9 +1553,9 @@ export function Component() {
                   <span>Usage</span>
                   <span>{((gasUsage.todayUsage / gasUsage.dailyLimit) * 100).toFixed(1)}%</span>
                 </div>
-                <div className="w-full h-2 bg-pf-overlay rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-pf-overlay rounded-pf-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${
+                    className={`h-full rounded-pf-full transition-all duration-500 ${
                       gasUsage.todayUsage / gasUsage.dailyLimit > 0.8 ? 'bg-pf-danger' : 'bg-pf-cyan-500'
                     }`}
                     style={{ width: `${Math.min(100, (gasUsage.todayUsage / gasUsage.dailyLimit) * 100)}%` }}
@@ -1564,7 +1564,7 @@ export function Component() {
               </div>
 
               <div className="flex items-center gap-2 text-sm">
-                <div className={`w-2 h-2 rounded-full ${gasUsage.sponsorEnabled ? 'bg-pf-success' : 'bg-pf-danger'}`} />
+                <div className={`w-2 h-2 rounded-pf-full ${gasUsage.sponsorEnabled ? 'bg-pf-success' : 'bg-pf-danger'}`} />
                 <span className="text-pf-text-secondary">
                   Gas sponsorship is currently {gasUsage.sponsorEnabled ? 'active' : 'inactive'}
                 </span>
@@ -1639,11 +1639,11 @@ export function Component() {
                 role="switch"
                 aria-checked={drawdownEnabled}
                 onClick={() => setDrawdownEnabled(v => !v)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-pf-full transition-colors ${
                   drawdownEnabled ? 'bg-pf-cyan-500' : 'bg-pf-surface border border-pf-border'
                 }`}
               >
-                <span className={`inline-block size-4 rounded-full bg-white shadow transition-transform ${
+                <span className={`inline-block size-4 rounded-pf-full bg-white shadow transition-transform ${
                   drawdownEnabled ? 'translate-x-6' : 'translate-x-1'
                 }`} />
               </Button>
@@ -1729,11 +1729,11 @@ export function Component() {
                 role="switch"
                 aria-checked={dlEnabled}
                 onClick={() => setDlEnabled(v => !v)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-pf-full transition-colors ${
                   dlEnabled ? 'bg-pf-cyan-500' : 'bg-pf-surface border border-pf-border'
                 }`}
               >
-                <span className={`inline-block size-4 rounded-full bg-white shadow transition-transform ${
+                <span className={`inline-block size-4 rounded-pf-full bg-white shadow transition-transform ${
                   dlEnabled ? 'translate-x-6' : 'translate-x-1'
                 }`} />
               </Button>
@@ -2072,7 +2072,7 @@ export function Component() {
                       }`}
                     >
                       <span className={`size-3 rounded-sm border flex items-center justify-center shrink-0 ${checked ? 'bg-pf-cyan-500 border-pf-cyan-500' : 'border-pf-border'}`}>
-                        {checked && <Check className="size-2 text-black" />}
+                        {checked && <Check className="size-2 text-pf-text-contrast" />}
                       </span>
                       {event.replace(/_/g, ' ')}
                     </Button>
@@ -2158,7 +2158,7 @@ export function Component() {
                             <History className="size-3.5" />
                             Deliveries
                             {recentFailures > 0 && (
-                              <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-4 px-0.5 rounded-full bg-pf-danger text-white text-[9px] font-bold leading-none">
+                              <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-4 px-0.5 rounded-pf-full bg-pf-danger text-white text-[9px] font-bold leading-none">
                                 {recentFailures}
                               </span>
                             )}
@@ -2382,7 +2382,7 @@ export function Component() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium text-pf-text">{session.deviceName}</span>
                         {session.isCurrent && (
-                          <span className="text-pf-success bg-pf-success/10 text-xs px-2 py-0.5 rounded-full">
+                          <span className="text-pf-success bg-pf-success/10 text-xs px-2 py-0.5 rounded-pf-full">
                             Current Session
                           </span>
                         )}

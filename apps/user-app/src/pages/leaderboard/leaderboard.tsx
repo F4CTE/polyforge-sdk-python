@@ -179,7 +179,7 @@ export function Component() {
             variant="ghost"
             key={p.value}
             onClick={() => changePeriod(p.value)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`px-3 py-1.5 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
               period === p.value
                 ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                 : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -198,7 +198,7 @@ export function Component() {
             variant="ghost"
             key={String(cat.value)}
             onClick={() => changeCategory(cat.value)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`px-3 py-1.5 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
               category === cat.value
                 ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                 : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -273,9 +273,9 @@ export function Component() {
                       <div className="flex items-center gap-2">
                       <Link to={`/profile/${entry.username}`} className="flex items-center gap-3 hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors">
                         {entry.avatarUrl ? (
-                          <img src={entry.avatarUrl} alt={`${entry.displayName ?? entry.username} avatar`} className="size-8 rounded-full object-cover" width={32} height={32} loading="lazy" />
+                          <img src={entry.avatarUrl} alt={`${entry.displayName ?? entry.username} avatar`} className="size-8 rounded-pf-full object-cover" width={32} height={32} loading="lazy" />
                         ) : (
-                          <div className="size-8 rounded-full bg-pf-surface flex items-center justify-center text-[11px] font-semibold text-pf-cyan-400">
+                          <div className="size-8 rounded-pf-full bg-pf-surface flex items-center justify-center text-[11px] font-semibold text-pf-cyan-400">
                             {userInitials(entry)}
                           </div>
                         )}

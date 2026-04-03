@@ -314,7 +314,7 @@ export function Component() {
       <div className="p-6 max-w-2xl mx-auto">
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
           <div className="flex items-center gap-4">
-            <div className="size-20 rounded-full bg-pf-overlay animate-pulse" />
+            <div className="size-20 rounded-pf-full bg-pf-overlay animate-pulse" />
             <div className="flex-1 space-y-2">
               <div className="h-5 w-40 bg-pf-overlay rounded animate-pulse" />
               <div className="h-3 w-24 bg-pf-overlay rounded animate-pulse" />
@@ -357,7 +357,7 @@ export function Component() {
           <h1 className="text-2xl font-semibold text-pf-text">{profile.displayName ?? profile.username}</h1>
           {/* Inline score badge */}
           {scoreData?.score && (
-            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-mono font-bold ${scoreBg(scoreData.score.score)} ${scoreColor(scoreData.score.score)}`}>
+            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-pf-full border text-xs font-mono font-bold ${scoreBg(scoreData.score.score)} ${scoreColor(scoreData.score.score)}`}>
               <TrendingUp className="size-3" />
               {scoreData.score.score}
             </div>
@@ -409,9 +409,9 @@ export function Component() {
         {/* Identity */}
         <div className="flex items-center gap-4 mb-4">
           {profile.avatarUrl ? (
-            <img src={profile.avatarUrl} alt={`${profile.displayName ?? profile.username} avatar`} className="size-20 rounded-full object-cover" />
+            <img src={profile.avatarUrl} alt={`${profile.displayName ?? profile.username} avatar`} className="size-20 rounded-pf-full object-cover" />
           ) : (
-            <div className="size-20 rounded-full bg-pf-surface flex items-center justify-center text-2xl font-bold text-pf-cyan-400">
+            <div className="size-20 rounded-pf-full bg-pf-surface flex items-center justify-center text-2xl font-bold text-pf-cyan-400">
               {initials}
             </div>
           )}
@@ -454,7 +454,7 @@ export function Component() {
             <h2 className="text-sm font-semibold text-pf-text">Edge Rating</h2>
           </div>
           <div className="flex items-center gap-6">
-            <div className={`size-16 rounded-full border-2 flex items-center justify-center ${scoreBg(scoreData.score.score)}`}>
+            <div className={`size-16 rounded-pf-full border-2 flex items-center justify-center ${scoreBg(scoreData.score.score)}`}>
               <span className={`text-2xl font-bold font-mono ${scoreColor(scoreData.score.score)}`}>
                 {scoreData.score.score}
               </span>
@@ -524,7 +524,7 @@ export function Component() {
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div
                     key={i}
-                    className="size-11 rounded-full bg-pf-overlay border border-pf-border animate-pulse"
+                    className="size-11 rounded-pf-full bg-pf-overlay border border-pf-border animate-pulse"
                   />
                 ))}
               </div>
@@ -546,7 +546,7 @@ export function Component() {
                     <div
                       key={badge.id}
                       title={tooltipText}
-                      className={`size-11 rounded-full border flex items-center justify-center text-xl shrink-0 cursor-default ${rarityCircleStyle(badge.rarity)}`}
+                      className={`size-11 rounded-pf-full border flex items-center justify-center text-xl shrink-0 cursor-default ${rarityCircleStyle(badge.rarity)}`}
                       aria-label={`${badge.name}: ${badge.description}`}
                     >
                       {badge.emoji}
@@ -558,7 +558,7 @@ export function Component() {
                   <div
                     key={badge.id}
                     title={`${badge.name} — ${badge.description}\nNot yet unlocked`}
-                    className="size-11 rounded-full border border-pf-border bg-pf-overlay flex items-center justify-center shrink-0 opacity-50 cursor-default"
+                    className="size-11 rounded-pf-full border border-pf-border bg-pf-overlay flex items-center justify-center shrink-0 opacity-50 cursor-default"
                     aria-label={`${badge.name} (locked): ${badge.description}`}
                   >
                     <Lock className="size-4 text-pf-text-muted" />
@@ -645,8 +645,8 @@ export function Component() {
                 <div className="h-3.5 w-3/4 bg-pf-overlay rounded animate-pulse" />
                 <div className="h-2.5 w-full bg-pf-overlay rounded animate-pulse" />
                 <div className="flex gap-2 mt-2">
-                  <div className="h-5 w-16 bg-pf-overlay rounded-full animate-pulse" />
-                  <div className="h-5 w-12 bg-pf-overlay rounded-full animate-pulse" />
+                  <div className="h-5 w-16 bg-pf-overlay rounded-pf-full animate-pulse" />
+                  <div className="h-5 w-12 bg-pf-overlay rounded-pf-full animate-pulse" />
                 </div>
               </div>
             ))}
@@ -668,10 +668,10 @@ export function Component() {
                 </div>
 
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="px-1.5 py-0.5 rounded-full bg-pf-cyan-500/10 border border-pf-cyan-500/20 text-[10px] font-mono text-pf-cyan-400">
+                  <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-cyan-500/10 border border-pf-cyan-500/20 text-[10px] font-mono text-pf-cyan-400">
                     {s.winRate.toFixed(0)}% WR
                   </span>
-                  <span className="px-1.5 py-0.5 rounded-full bg-pf-overlay border border-pf-border-subtle text-[10px] font-mono text-pf-text-muted">
+                  <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-overlay border border-pf-border-subtle text-[10px] font-mono text-pf-text-muted">
                     {s.tradeCount} trades
                   </span>
                 </div>
@@ -735,7 +735,7 @@ export function Component() {
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-pf-text truncate">{item.marketQuestion}</div>
                     <div className="flex items-center gap-1.5 mt-1">
-                      <span className={`px-1.5 py-px rounded-full text-[10px] font-semibold ${
+                      <span className={`px-1.5 py-px rounded-pf-full text-[10px] font-semibold ${
                         item.outcome === 'YES'
                           ? 'bg-pf-success/15 text-pf-success border border-pf-success/20'
                           : 'bg-pf-danger/15 text-pf-danger border border-pf-danger/20'

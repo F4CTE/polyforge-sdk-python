@@ -119,8 +119,8 @@ function ArticleSkeleton() {
   return (
     <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
       <div className="flex items-center gap-2">
-        <div className="h-5 w-16 bg-pf-overlay rounded-full" />
-        <div className="h-5 w-16 bg-pf-overlay rounded-full" />
+        <div className="h-5 w-16 bg-pf-overlay rounded-pf-full" />
+        <div className="h-5 w-16 bg-pf-overlay rounded-pf-full" />
         <div className="ml-auto h-3 w-16 bg-pf-overlay rounded" />
       </div>
       <div className="h-4 bg-pf-overlay rounded w-[85%]" />
@@ -300,7 +300,7 @@ export function Component() {
 
         {/* Active market filter chip */}
         {marketId && (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-pf-cyan-500/15 text-pf-cyan-400 border border-pf-cyan-500/30">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-pf-full text-xs font-medium bg-pf-cyan-500/15 text-pf-cyan-400 border border-pf-cyan-500/30">
             {selectedMarketName}
             <Button
               type="button"
@@ -334,7 +334,7 @@ export function Component() {
               variant="ghost"
               key={tab.value}
               onClick={() => changeSentiment(tab.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+              className={`px-3 py-1.5 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
                 sentiment === tab.value
                   ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                   : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -388,14 +388,14 @@ export function Component() {
                   >
                     {/* Top row: badges + time */}
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium border ${sourceColor(article.source)}`}>
+                      <span className={`px-2 py-0.5 rounded-pf-full text-[11px] font-medium border ${sourceColor(article.source)}`}>
                         {article.source}
                       </span>
-                      <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${sentimentColor(article.sentiment)}`}>
+                      <span className={`px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${sentimentColor(article.sentiment)}`}>
                         {article.sentiment}
                       </span>
                       {signals.length > 0 && (
-                        <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-pf-cyan-500/15 text-pf-cyan-400">
+                        <span className="px-2 py-0.5 rounded-pf-full text-[11px] font-medium bg-pf-cyan-500/15 text-pf-cyan-400">
                           {signals.length} signal{signals.length !== 1 ? 's' : ''}
                         </span>
                       )}
@@ -461,9 +461,9 @@ export function Component() {
 
                                 {/* Confidence bar */}
                                 <div className="flex items-center gap-1.5 min-w-[80px]">
-                                  <div className={`h-1.5 rounded-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
+                                  <div className={`h-1.5 rounded-pf-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
                                     <div
-                                      className={`h-full rounded-full ${confidenceColor(signal.confidence)}`}
+                                      className={`h-full rounded-pf-full ${confidenceColor(signal.confidence)}`}
                                       style={{ width: `${signal.confidence}%` }}
                                     />
                                   </div>
@@ -567,9 +567,9 @@ export function Component() {
 
                     {/* Confidence bar */}
                     <div className="flex items-center gap-2 mb-1.5">
-                      <div className={`h-1.5 rounded-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
+                      <div className={`h-1.5 rounded-pf-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
                         <div
-                          className={`h-full rounded-full transition-all duration-500 ${confidenceColor(signal.confidence)}`}
+                          className={`h-full rounded-pf-full transition-all duration-500 ${confidenceColor(signal.confidence)}`}
                           style={{ width: `${signal.confidence}%` }}
                         />
                       </div>

@@ -61,7 +61,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
           API Reference
         </span>
         <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-pf-success shrink-0" aria-hidden="true" />
+          <span className="w-1.5 h-1.5 rounded-pf-full bg-pf-success shrink-0" aria-hidden="true" />
           <Badge text="v1" cls="bg-pf-cyan-500/10 text-pf-cyan-400" />
         </div>
       </div>

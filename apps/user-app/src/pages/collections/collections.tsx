@@ -30,9 +30,9 @@ function CollectionSkeleton() {
       <div className="h-3 bg-pf-overlay rounded w-[70%]" />
       <div className="h-3 bg-pf-overlay rounded w-[80%] mt-1" />
       <div className="flex gap-1.5 mt-2">
-        <div className="h-5 w-20 bg-pf-overlay rounded-full" />
-        <div className="h-5 w-20 bg-pf-overlay rounded-full" />
-        <div className="h-5 w-20 bg-pf-overlay rounded-full" />
+        <div className="h-5 w-20 bg-pf-overlay rounded-pf-full" />
+        <div className="h-5 w-20 bg-pf-overlay rounded-pf-full" />
+        <div className="h-5 w-20 bg-pf-overlay rounded-pf-full" />
       </div>
       <div className="h-8 bg-pf-overlay rounded mt-2" />
     </div>
@@ -120,7 +120,7 @@ export function Component() {
                   {col.coverListings.slice(0, 3).map(listing => (
                     <span
                       key={listing.id}
-                      className="px-2 py-0.5 rounded-full text-[11px] bg-pf-overlay text-pf-text-secondary border border-pf-border truncate max-w-[140px]"
+                      className="px-2 py-0.5 rounded-pf-full text-[11px] bg-pf-overlay text-pf-text-secondary border border-pf-border truncate max-w-[140px]"
                       title={listing.title}
                     >
                       {listing.title}

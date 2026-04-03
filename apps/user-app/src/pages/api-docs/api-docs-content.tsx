@@ -115,8 +115,8 @@ export function renderContent({
           <code className="text-sm font-mono text-pf-cyan-400">https://api.polyforge.app/api/v1</code>
         </div>
         <div className="flex gap-2">
-          <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full bg-pf-overlay text-pf-text-secondary">REST · JSON</span>
-          <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full bg-pf-overlay text-pf-text-secondary">TLS 1.2+</span>
+          <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-secondary">REST · JSON</span>
+          <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-secondary">TLS 1.2+</span>
         </div>
       </div>
       <div className="space-y-3">
@@ -149,7 +149,7 @@ export function renderContent({
           },
         ].map(({ step, title, body }) => (
           <div key={step} className="flex gap-4 p-4 bg-pf-elevated border border-pf-border rounded-pf-lg">
-            <span className="shrink-0 w-6 h-6 rounded-full bg-pf-cyan-500/20 text-pf-cyan-400 text-xs font-bold flex items-center justify-center">{step}</span>
+            <span className="shrink-0 w-6 h-6 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 text-xs font-bold flex items-center justify-center">{step}</span>
             <div className="flex-1 space-y-3">
               <p className="text-sm font-medium text-pf-text">{title}</p>
               {body}

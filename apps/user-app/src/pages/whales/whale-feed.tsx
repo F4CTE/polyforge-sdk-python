@@ -88,12 +88,12 @@ function CardSkeleton() {
     <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
       <div className="flex items-center gap-2">
         <div className="h-3.5 bg-pf-overlay rounded w-[120px]" />
-        <div className="h-5 w-16 bg-pf-overlay rounded-full ml-auto" />
+        <div className="h-5 w-16 bg-pf-overlay rounded-pf-full ml-auto" />
       </div>
       <div className="h-3 bg-pf-overlay rounded w-[80%]" />
       <div className="flex gap-2">
-        <div className="h-5 w-12 bg-pf-overlay rounded-full" />
-        <div className="h-5 w-12 bg-pf-overlay rounded-full" />
+        <div className="h-5 w-12 bg-pf-overlay rounded-pf-full" />
+        <div className="h-5 w-12 bg-pf-overlay rounded-pf-full" />
       </div>
       <div className="h-3 bg-pf-overlay rounded w-[50%]" />
     </div>
@@ -218,7 +218,7 @@ export function Component() {
               variant="ghost"
               key={s.value}
               onClick={() => changeMinSize(s.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+              className={`px-3 py-1.5 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
                 minSize === s.value
                   ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                   : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -304,7 +304,7 @@ export function Component() {
               {/* Market name + category */}
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-sm text-pf-text font-medium truncate">{trade.marketName}</span>
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-pf-overlay text-pf-text-muted shrink-0">
+                <span className="px-1.5 py-0.5 rounded-pf-full text-[10px] bg-pf-overlay text-pf-text-muted shrink-0">
                   {trade.marketCategory}
                 </span>
               </div>

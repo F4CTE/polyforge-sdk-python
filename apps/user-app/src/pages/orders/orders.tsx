@@ -263,7 +263,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
                   type="button"
                   variant="ghost"
                   onClick={() => setMood(m)}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
                     mood === m
                       ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/40'
                       : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -281,7 +281,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
             <span className="block text-xs text-pf-text-secondary mb-2">Tags</span>
             <div className="flex flex-wrap items-center gap-1.5">
               {tags.map(t => (
-                <span key={t} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/30">
+                <span key={t} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-[11px] bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/30">
                   <Tag className="size-2.5" />
                   {t}
                   <Button type="button" variant="ghost" onClick={() => removeTag(t)} aria-label={`Remove tag ${t}`} className="hover:text-pf-danger transition-colors ml-0.5">
@@ -295,7 +295,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
                   onChange={e => setTagInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
                   placeholder="+ add tag"
-                  className="h-6 px-2 rounded-full bg-pf-elevated border border-pf-border text-[11px] text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 w-24"
+                  className="h-6 px-2 rounded-pf-full bg-pf-elevated border border-pf-border text-[11px] text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 w-24"
                 />
                 <Button type="button" variant="ghost" onClick={addTag} className="text-[11px] text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors">Add</Button>
               </div>
@@ -308,7 +308,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-cyan-500 text-black text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               {saving ? <Loader2 className="size-3 animate-spin" /> : null}
               Save Note
@@ -384,7 +384,7 @@ function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; on
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex flex-wrap gap-1">
           {entry.tags.map(t => (
-            <span key={t} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/20">
+            <span key={t} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full text-[10px] bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/20">
               <Tag className="size-2" />{t}
             </span>
           ))}
@@ -443,7 +443,7 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
           type="button"
           variant="ghost"
           onClick={() => setMoodFilter('ALL')}
-          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+          className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
             moodFilter === 'ALL'
               ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
               : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -457,7 +457,7 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
             type="button"
             variant="ghost"
             onClick={() => setMoodFilter(moodFilter === m ? 'ALL' : m)}
-            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
               moodFilter === m
                 ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                 : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -699,7 +699,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
           <div className="flex gap-2 justify-end pt-3 border-t border-pf-border-subtle">
             <Button type="button" variant="secondary" onClick={onClose} className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors">Cancel</Button>
             <Button type="submit" disabled={submitting}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               <Plus className="size-3.5" /> Create
             </Button>
           </div>
@@ -989,7 +989,7 @@ export function Component() {
           <BookOpen className="size-3.5" />
           Journal
           {Object.keys(journalByOrder).length > 0 && (
-            <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-pf-cyan-500/20 text-pf-cyan-400 text-[10px] font-medium">
+            <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 text-[10px] font-medium">
               {Object.keys(journalByOrder).length}
             </span>
           )}
@@ -1007,7 +1007,7 @@ export function Component() {
                 variant="ghost"
                 key={f.value}
                 onClick={() => changeFilter(f.value)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+                className={`px-3 py-1.5 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
                   filter === f.value
                     ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                     : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'

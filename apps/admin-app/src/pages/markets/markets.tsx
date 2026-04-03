@@ -226,7 +226,7 @@ export function Component() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold text-pf-text">Markets</h1>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-pf-elevated text-pf-text-secondary border border-pf-border">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-pf-full text-xs font-semibold bg-pf-elevated text-pf-text-secondary border border-pf-border">
             {total.toLocaleString()}
           </span>
         </div>
@@ -292,7 +292,7 @@ export function Component() {
                 onClick={() => { setStatusTab(tab); setPage(1); }}
                 className={`px-3 py-1 rounded-pf-sm text-sm font-medium transition-colors ${
                   statusTab === tab
-                    ? 'bg-pf-cyan-500 text-black'
+                    ? 'bg-pf-cyan-500 text-pf-text-contrast'
                     : 'text-pf-text-secondary hover:text-pf-text'
                 }`}
               >

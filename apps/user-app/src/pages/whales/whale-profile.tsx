@@ -212,7 +212,7 @@ export function Component() {
       {/* Address + actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="size-10 rounded-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center">
+          <div className="size-10 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center">
             <Fish className="size-5 text-pf-cyan-400" aria-hidden="true" />
           </div>
           <div>

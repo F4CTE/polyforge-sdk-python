@@ -118,7 +118,7 @@ export function Component() {
             type="submit"
             variant="default"
             disabled={generating}
-            className="px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
+            className="px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
           >
             {generating ? 'Generating...' : 'Generate'}
           </Button>

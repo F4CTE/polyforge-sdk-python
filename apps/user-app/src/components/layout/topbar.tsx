@@ -96,12 +96,12 @@ export function Topbar() {
         >
           <Bell size={18} />
           {unread > 0 && (
-            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold text-white bg-pf-danger rounded-full" aria-label={`${unread} unread notifications`}>
+            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold text-white bg-pf-danger rounded-pf-full" aria-label={`${unread} unread notifications`}>
               {unread > 9 ? '9+' : unread}
             </span>
           )}
           {/* WebSocket active indicator */}
-          <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-pf-success animate-pulse-dot" aria-hidden="true" />
+          <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 rounded-pf-full bg-pf-success animate-pulse-dot" aria-hidden="true" />
           <span className="sr-only">Connected</span>
         </button>
 
@@ -134,7 +134,7 @@ export function Topbar() {
                     aria-label={`${n.read ? '' : 'Unread: '}${n.title}`}
                   >
                     <span
-                      className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${
+                      className={`mt-1.5 w-2 h-2 rounded-pf-full shrink-0 ${
                         n.severity === 'error'
                           ? 'bg-pf-danger'
                           : n.severity === 'warning'
@@ -184,7 +184,7 @@ export function Topbar() {
           aria-expanded={menuOpen}
           aria-haspopup="menu"
         >
-          <div className="w-8 h-8 rounded-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-xs font-semibold">
+          <div className="w-8 h-8 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-xs font-semibold">
             {initials}
           </div>
           <span className="text-sm text-pf-text hidden sm:inline">

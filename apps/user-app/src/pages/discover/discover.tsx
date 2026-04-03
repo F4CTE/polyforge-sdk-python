@@ -96,8 +96,8 @@ function CardSkeleton() {
       <div className="h-2.5 bg-pf-overlay rounded w-[90%]" />
       <div className="h-2.5 bg-pf-overlay rounded w-[75%]" />
       <div className="flex gap-1.5">
-        <div className="h-5 w-12 bg-pf-overlay rounded-full" />
-        <div className="h-5 w-12 bg-pf-overlay rounded-full" />
+        <div className="h-5 w-12 bg-pf-overlay rounded-pf-full" />
+        <div className="h-5 w-12 bg-pf-overlay rounded-pf-full" />
       </div>
     </div>
   );
@@ -398,7 +398,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => navigate(`/collections/${col.id}`)}
-                className="bg-pf-elevated border border-pf-border rounded-full px-3 py-1.5 text-sm flex items-center gap-1.5 whitespace-nowrap hover:border-pf-border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+                className="bg-pf-elevated border border-pf-border rounded-pf-full px-3 py-1.5 text-sm flex items-center gap-1.5 whitespace-nowrap hover:border-pf-border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
               >
                 <span role="img" aria-label={col.title}>{col.emoji}</span>
                 <span className="text-pf-text font-medium">{col.title}</span>
@@ -445,7 +445,7 @@ export function Component() {
             variant="ghost"
             key={opt.value}
             onClick={() => changeSort(opt.value)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`px-3 py-1.5 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
               sort === opt.value
                 ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                 : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -464,7 +464,7 @@ export function Component() {
             variant="ghost"
             key={cat.value ?? 'all'}
             onClick={() => changeCategory(cat.value)}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors whitespace-nowrap ${
+            className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors whitespace-nowrap ${
               category === cat.value
                 ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                 : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -502,9 +502,9 @@ export function Component() {
                 {/* Author row */}
                 <div className="flex items-center gap-2 mb-3">
                   {s.author.avatarUrl ? (
-                    <img src={s.author.avatarUrl} alt={`${s.author.displayName ?? s.author.username} avatar`} className="size-7 rounded-full object-cover" width={28} height={28} loading="lazy" />
+                    <img src={s.author.avatarUrl} alt={`${s.author.displayName ?? s.author.username} avatar`} className="size-7 rounded-pf-full object-cover" width={28} height={28} loading="lazy" />
                   ) : (
-                    <div className="size-7 rounded-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-[10px] font-bold text-pf-cyan-400">
+                    <div className="size-7 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-[10px] font-bold text-pf-cyan-400">
                       {authorInitials(s)}
                     </div>
                   )}
@@ -516,7 +516,7 @@ export function Component() {
                     {s.author.displayName ?? s.author.username}
                   </a>
                   {s.author.score != null && s.author.score > 0 && (
-                    <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                    <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full text-[10px] font-mono font-bold border ${
                       s.author.score >= 70 ? 'text-pf-success bg-pf-success/10 border-pf-success/20' :
                       s.author.score >= 40 ? 'text-pf-warning bg-pf-warning/10 border-pf-warning/20' :
                       'text-pf-danger bg-pf-danger/10 border-pf-danger/20'
@@ -542,7 +542,7 @@ export function Component() {
                 {s.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-3">
                     {s.tags.slice(0, 4).map(tag => (
-                      <span key={tag} className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                      <span key={tag} className={`px-1.5 py-0.5 rounded-pf-full text-[10px] font-medium ${
                         tag === 'momentum' ? 'bg-pf-warning/15 text-pf-warning' :
                         tag === 'political' ? 'bg-pf-info/15 text-pf-info' :
                         tag === 'yes-bias' ? 'bg-pf-success/15 text-pf-success' :

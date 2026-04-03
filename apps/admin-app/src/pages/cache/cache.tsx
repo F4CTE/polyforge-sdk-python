@@ -242,7 +242,7 @@ export function Component() {
                       <span className="text-xs text-pf-text-muted">
                         {s.error ? 'stream empty or not found' : `${s.length.toLocaleString()} entries`}
                       </span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                      <span className={`px-2 py-0.5 rounded-pf-full text-[10px] font-medium ${
                         s.error ? 'bg-pf-warning/10 text-pf-warning' : 'bg-pf-success/10 text-pf-success'
                       }`}>
                         {s.error ? 'empty' : 'active'}

@@ -77,7 +77,7 @@ export function Component() {
     <div className="animate-fade-in p-6 max-w-4xl mx-auto space-y-6">
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
         <div className="flex items-center gap-4 mb-4">
-          <div className="size-20 rounded-full bg-pf-surface animate-pulse" />
+          <div className="size-20 rounded-pf-full bg-pf-surface animate-pulse" />
           <div className="space-y-2 flex-1">
             <div className="h-5 bg-pf-surface rounded w-32 animate-pulse" />
             <div className="h-3 bg-pf-surface rounded w-24 animate-pulse" />
@@ -109,9 +109,9 @@ export function Component() {
         {/* Identity */}
         <div className="flex items-center gap-4 mb-4">
           {user.avatarUrl ? (
-            <img src={user.avatarUrl} alt={`${user.displayName ?? user.username} avatar`} className="size-20 rounded-full object-cover" />
+            <img src={user.avatarUrl} alt={`${user.displayName ?? user.username} avatar`} className="size-20 rounded-pf-full object-cover" />
           ) : (
-            <div className="size-20 rounded-full bg-pf-surface flex items-center justify-center text-2xl font-bold text-pf-cyan-400">
+            <div className="size-20 rounded-pf-full bg-pf-surface flex items-center justify-center text-2xl font-bold text-pf-cyan-400">
               {initials}
             </div>
           )}
@@ -131,7 +131,7 @@ export function Component() {
 
         {/* Status chips */}
         <div className="flex flex-wrap gap-2">
-          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-pf-full text-xs font-medium border ${
             user.emailVerified
               ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
               : 'bg-pf-overlay text-pf-text-muted border-pf-border'
@@ -139,7 +139,7 @@ export function Component() {
             <Mail className="size-3" />
             {user.emailVerified ? 'Email Verified' : 'Email Unverified'}
           </span>
-          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-pf-full text-xs font-medium border ${
             user.polymarketConnected
               ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
               : 'bg-pf-overlay text-pf-text-muted border-pf-border'
@@ -147,7 +147,7 @@ export function Component() {
             <Link2 className="size-3" />
             {user.polymarketConnected ? 'Polymarket Connected' : 'Not Connected'}
           </span>
-          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-pf-full text-xs font-medium border ${
             user.totpEnabled
               ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
               : 'bg-pf-overlay text-pf-text-muted border-pf-border'
@@ -169,7 +169,7 @@ export function Component() {
           <>
             {/* Score circle + value */}
             <div className="flex items-center gap-6 mb-4">
-              <div className={`size-16 rounded-full border-2 flex items-center justify-center ${scoreBg(scoreData.score.score)}`}>
+              <div className={`size-16 rounded-pf-full border-2 flex items-center justify-center ${scoreBg(scoreData.score.score)}`}>
                 <span className={`text-2xl font-bold font-mono ${scoreColor(scoreData.score.score)}`}>
                   {scoreData.score.score}
                 </span>

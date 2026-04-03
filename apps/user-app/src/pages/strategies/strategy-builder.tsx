@@ -779,7 +779,7 @@ function DifficultyDots({ difficulty }: { difficulty: TemplateDifficulty }) {
       {[1, 2, 3].map((i) => (
         <span
           key={i}
-          className={`inline-block size-1.5 rounded-full ${
+          className={`inline-block size-1.5 rounded-pf-full ${
             i <= filled
               ? difficulty === 'beginner'
                 ? 'bg-green-400'
@@ -1420,11 +1420,11 @@ export function Component() {
 
                     {/* Win rate badge */}
                     <div className="flex items-center gap-1.5 mb-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pf-surface border border-pf-border text-[10px] text-pf-text-muted">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full bg-pf-surface border border-pf-border text-[10px] text-pf-text-muted">
                         <Zap className="size-2.5 text-pf-warning" aria-hidden="true" />
                         Win rate: {template.estimatedWinRate}
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pf-surface border border-pf-border text-[10px] text-pf-text-muted capitalize">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full bg-pf-surface border border-pf-border text-[10px] text-pf-text-muted capitalize">
                         {TEMPLATE_CATEGORY_ICONS[template.category]}
                         <span>{TEMPLATE_CATEGORY_LABELS[template.category]}</span>
                       </span>
@@ -1504,7 +1504,7 @@ export function Component() {
               {/* Canvas issue banner — unwired blocks and/or misconfigured fields */}
               {(canvasIssues.orphaned > 0 || canvasIssues.misconfigured > 0) && (
                 <div
-                  className={`absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-3 py-1.5 rounded-full text-xs font-medium pointer-events-none border ${
+                  className={`absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-3 py-1.5 rounded-pf-full text-xs font-medium pointer-events-none border ${
                     canvasIssues.misconfigured > 0
                       ? 'bg-pf-danger/10 border-pf-danger/25 text-pf-danger'
                       : 'bg-pf-warning/10 border-pf-warning/25 text-pf-warning'
@@ -1582,7 +1582,7 @@ export function Component() {
                 >
                   <Target className="size-3.5 text-pf-cyan-400" aria-hidden="true" />
                   Pinned Market
-                  {pinnedMarket && <span className="ml-auto text-[10px] bg-pf-cyan-500/15 text-pf-cyan-400 px-1.5 py-0.5 rounded-full truncate max-w-[90px]">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
+                  {pinnedMarket && <span className="ml-auto text-[10px] bg-pf-cyan-500/15 text-pf-cyan-400 px-1.5 py-0.5 rounded-pf-full truncate max-w-[90px]">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
                 </Button>
                 {marketPickerOpen && (
                   <div className="px-2 pb-2 space-y-1.5">

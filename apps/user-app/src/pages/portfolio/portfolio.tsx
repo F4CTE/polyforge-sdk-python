@@ -1038,7 +1038,7 @@ export function Component() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-pf-text">Portfolio</h1>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pf-success/10 text-pf-success text-xs font-medium border border-pf-success/20" title="Gas fees are sponsored — you pay zero network fees">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full bg-pf-success/10 text-pf-success text-xs font-medium border border-pf-success/20" title="Gas fees are sponsored — you pay zero network fees">
             <Fuel className="size-3" />
             Gasless
           </span>
@@ -1048,11 +1048,11 @@ export function Component() {
           <div className="flex items-center gap-1" title={wsConnected ? 'WebSocket connected — live prices active' : 'WebSocket offline'}>
             {wsConnected ? (
               <span className="relative flex size-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pf-success opacity-60" />
-                <span className="relative inline-flex rounded-full size-2 bg-pf-success" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-pf-full bg-pf-success opacity-60" />
+                <span className="relative inline-flex rounded-pf-full size-2 bg-pf-success" />
               </span>
             ) : (
-              <span className="inline-flex rounded-full size-2 bg-pf-text-muted" />
+              <span className="inline-flex rounded-pf-full size-2 bg-pf-text-muted" />
             )}
             <span className={`text-[10px] font-medium ${wsConnected ? 'text-pf-success' : 'text-pf-text-muted'}`}>
               {wsConnected ? 'Live' : 'Offline'}
@@ -1125,15 +1125,15 @@ export function Component() {
               {wsConnected ? (
                 <>
                   <span className="relative flex size-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pf-success opacity-60" />
-                    <span className="relative inline-flex rounded-full size-2 bg-pf-success" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-pf-full bg-pf-success opacity-60" />
+                    <span className="relative inline-flex rounded-pf-full size-2 bg-pf-success" />
                   </span>
                   <span className="text-xs font-medium text-pf-success">Live</span>
                   <Wifi className="size-3 text-pf-success" />
                 </>
               ) : (
                 <>
-                  <span className="inline-flex rounded-full size-2 bg-pf-text-muted" />
+                  <span className="inline-flex rounded-pf-full size-2 bg-pf-text-muted" />
                   <span className="text-xs font-medium text-pf-text-muted">Offline</span>
                   <WifiOff className="size-3 text-pf-text-muted" />
                 </>
@@ -1633,9 +1633,9 @@ export function Component() {
                       </div>
 
                       {/* Progress bar */}
-                      <div className="h-2 rounded-full bg-pf-surface overflow-hidden mb-3">
+                      <div className="h-2 rounded-pf-full bg-pf-surface overflow-hidden mb-3">
                         <div
-                          className={`h-2 rounded-full transition-all duration-500 ${barColor}`}
+                          className={`h-2 rounded-pf-full transition-all duration-500 ${barColor}`}
                           style={{ width: `${progress}%` }}
                         />
                       </div>
@@ -1826,9 +1826,9 @@ export function Component() {
                     {/* Progress bar (only if limit is configured and enabled) */}
                     {limit != null && (
                       <div className="space-y-1.5">
-                        <div className="bg-pf-surface rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-pf-surface rounded-pf-full h-1.5 overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all ${progressColor}`}
+                            className={`h-full rounded-pf-full transition-all ${progressColor}`}
                             style={{ width: `${progress}%` }}
                           />
                         </div>
@@ -2510,7 +2510,7 @@ export function Component() {
                       const pct = ((entry.value / totalAllocation) * 100).toFixed(1);
                       return (
                         <div key={entry.name} className="flex items-center gap-2">
-                          <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                          <span className="size-2.5 rounded-pf-full shrink-0" style={{ backgroundColor: color }} />
                           <span className="flex-1 text-sm text-pf-text capitalize truncate">{entry.name}</span>
                           <span className="text-xs font-mono text-pf-text-secondary shrink-0">
                             ${entry.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}
@@ -2555,7 +2555,7 @@ export function Component() {
                               <td className="py-2 pr-3">
                                 {categoryNorm ? (
                                   <span className="inline-flex items-center gap-1">
-                                    <span className="size-1.5 rounded-full" style={{ backgroundColor: dotColor }} />
+                                    <span className="size-1.5 rounded-pf-full" style={{ backgroundColor: dotColor }} />
                                     <span className="text-pf-text-secondary">{categoryNorm}</span>
                                   </span>
                                 ) : (
@@ -2898,9 +2898,9 @@ export function Component() {
                       const pct = totalValue > 0 ? (colTotal / totalValue) * 100 : 0;
                       return (
                         <div key={cat} className="flex flex-col gap-0.5">
-                          <div className="h-1.5 rounded-full bg-pf-surface overflow-hidden">
+                          <div className="h-1.5 rounded-pf-full bg-pf-surface overflow-hidden">
                             <div
-                              className="h-full rounded-full bg-pf-cyan-500/50 transition-all"
+                              className="h-full rounded-pf-full bg-pf-cyan-500/50 transition-all"
                               style={{ width: `${(colTotal / maxColTotal) * 100}%` }}
                             />
                           </div>
@@ -2959,15 +2959,15 @@ export function Component() {
               const clampedCurrent = Math.min(currentPct, 100);
               const targetPos = Math.min(targetPct, 100);
               return (
-                <div className="relative h-2 rounded-full bg-pf-surface overflow-visible mt-1">
+                <div className="relative h-2 rounded-pf-full bg-pf-surface overflow-visible mt-1">
                   {/* filled bar */}
                   <div
-                    className={`absolute inset-y-0 left-0 rounded-full ${barColor} transition-all`}
+                    className={`absolute inset-y-0 left-0 rounded-pf-full ${barColor} transition-all`}
                     style={{ width: `${clampedCurrent}%` }}
                   />
                   {/* target marker */}
                   <div
-                    className="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-pf-text rounded-full"
+                    className="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-pf-text rounded-pf-full"
                     style={{ left: `${targetPos}%` }}
                     title={`Target: ${targetPct}%`}
                   />
@@ -2998,7 +2998,7 @@ export function Component() {
                   <Lightbulb className="size-4 text-pf-warning" />
                   <span className="text-sm font-semibold text-pf-text">Rebalancing Suggestions</span>
                   {visibleSuggestions.length > 0 && (
-                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-pf-warning/15 text-pf-warning text-[10px] font-semibold">
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-pf-full bg-pf-warning/15 text-pf-warning text-[10px] font-semibold">
                       {visibleSuggestions.length}
                     </span>
                   )}
@@ -3105,9 +3105,9 @@ export function Component() {
                             {exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })} shares &middot; {count} position{count !== 1 ? 's' : ''}
                           </span>
                         </div>
-                        <div className="h-1.5 rounded-full bg-pf-surface overflow-hidden">
+                        <div className="h-1.5 rounded-pf-full bg-pf-surface overflow-hidden">
                           <div
-                            className="h-1.5 rounded-full bg-pf-cyan-500/60"
+                            className="h-1.5 rounded-pf-full bg-pf-cyan-500/60"
                             style={{ width: `${barPct}%` }}
                           />
                         </div>
@@ -3143,9 +3143,9 @@ export function Component() {
                       <div key={m.title} className="flex items-center gap-3 px-4 py-2.5">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-pf-text truncate" title={m.title}>{m.title}</p>
-                          <div className="mt-1 h-1.5 rounded-full bg-pf-surface overflow-hidden">
+                          <div className="mt-1 h-1.5 rounded-pf-full bg-pf-surface overflow-hidden">
                             <div
-                              className={`h-full rounded-full ${m.pnl >= 0 ? 'bg-pf-success/60' : 'bg-pf-danger/60'}`}
+                              className={`h-full rounded-pf-full ${m.pnl >= 0 ? 'bg-pf-success/60' : 'bg-pf-danger/60'}`}
                               style={{ width: `${barPct}%` }}
                             />
                           </div>

@@ -346,7 +346,7 @@ export function Component() {
         <h2 className="text-sm font-semibold text-pf-text">How Referrals Work</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-pf-cyan-500/10 border border-pf-cyan-500/20 flex items-center justify-center text-pf-cyan-400 text-xs font-bold">
+            <div className="flex-shrink-0 w-7 h-7 rounded-pf-full bg-pf-cyan-500/10 border border-pf-cyan-500/20 flex items-center justify-center text-pf-cyan-400 text-xs font-bold">
               1
             </div>
             <div>
@@ -357,7 +357,7 @@ export function Component() {
             </div>
           </div>
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-pf-cyan-500/10 border border-pf-cyan-500/20 flex items-center justify-center text-pf-cyan-400 text-xs font-bold">
+            <div className="flex-shrink-0 w-7 h-7 rounded-pf-full bg-pf-cyan-500/10 border border-pf-cyan-500/20 flex items-center justify-center text-pf-cyan-400 text-xs font-bold">
               2
             </div>
             <div>
@@ -368,7 +368,7 @@ export function Component() {
             </div>
           </div>
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-pf-cyan-500/10 border border-pf-cyan-500/20 flex items-center justify-center text-pf-cyan-400 text-xs font-bold">
+            <div className="flex-shrink-0 w-7 h-7 rounded-pf-full bg-pf-cyan-500/10 border border-pf-cyan-500/20 flex items-center justify-center text-pf-cyan-400 text-xs font-bold">
               3
             </div>
             <div>

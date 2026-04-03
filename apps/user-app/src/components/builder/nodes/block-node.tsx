@@ -201,7 +201,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         <Handle
           type="target"
           position={Position.Left}
-          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
           style={{ borderColor: d.color }}
         />
       )}
@@ -210,7 +210,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {/* "Global" badge — safety/conditions when unwired: active globally */}
         {isGlobal && (
           <div
-            className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap z-10 pointer-events-none"
+            className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-[9px] font-semibold whitespace-nowrap z-10 pointer-events-none"
             style={{ backgroundColor: 'color-mix(in srgb, var(--color-pf-cyan-500) 13%, transparent)', border: '1px solid color-mix(in srgb, var(--color-pf-cyan-500) 33%, transparent)', color: 'var(--color-pf-cyan-500)' }}
             title={isSafety ? 'Safety block — always enforced globally on every tick' : 'Condition block — no connections, acts as a global gate for all execution paths. Wire it to scope it to a specific path.'}
           >
@@ -222,7 +222,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {/* "Not wired" badge — triggers/actions with no edges: inactive */}
         {isInactive && (
           <div
-            className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap z-10 pointer-events-none"
+            className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-[9px] font-semibold whitespace-nowrap z-10 pointer-events-none"
             style={{ backgroundColor: 'color-mix(in srgb, var(--color-pf-gold-500) 13%, transparent)', border: '1px solid color-mix(in srgb, var(--color-pf-gold-500) 33%, transparent)', color: 'var(--color-pf-gold-500)' }}
             title={isTrigger ? 'Trigger has no outgoing connection — wire it to a condition or action to activate it' : 'Action has no incoming connection — wire a trigger or condition to it to activate it'}
           >
@@ -234,7 +234,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {/* "Setup needed" badge — active block with one or more empty required fields */}
         {showSetupBadge && (
           <div
-            className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap z-10 pointer-events-none"
+            className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-[9px] font-semibold whitespace-nowrap z-10 pointer-events-none"
             style={{ backgroundColor: 'color-mix(in srgb, var(--color-pf-danger) 13%, transparent)', border: '1px solid color-mix(in srgb, var(--color-pf-danger) 33%, transparent)', color: 'var(--color-pf-danger)' }}
             title={`${emptyFieldKeys.size} required field${emptyFieldKeys.size !== 1 ? 's' : ''} not filled in`}
           >
@@ -303,7 +303,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                         type="target"
                         position={Position.Left}
                         id={field.key}
-                        className="!w-2 !h-2 !bg-pf-elevated !border-2 !rounded-full"
+                        className="!w-2 !h-2 !bg-pf-elevated !border-2 !rounded-pf-full"
                         style={{
                           top: `${handleTop}px`,
                           borderColor: 'var(--color-pf-purple-500)',
@@ -397,7 +397,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         <Handle
           type="source"
           position={Position.Right}
-          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
           style={{ borderColor: d.color }}
         />
       )}

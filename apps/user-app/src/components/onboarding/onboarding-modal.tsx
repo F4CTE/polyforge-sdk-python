@@ -179,7 +179,7 @@ function ProgressDots({ current }: { current: number }) {
             aria-selected={isCurrent}
             aria-label={`Step ${step.id} of ${TOTAL_STEPS}`}
             className={[
-              'rounded-full transition-all duration-300',
+              'rounded-pf-full transition-all duration-300',
               isComplete || isCurrent
                 ? 'w-6 h-2 bg-pf-cyan-500'
                 : 'w-2 h-2 bg-pf-border',
@@ -428,7 +428,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
               onClick={handlePrimary}
               className={[
                 'px-5 py-2.5 rounded-pf',
-                'bg-pf-cyan-500 text-black text-sm font-semibold',
+                'bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold',
                 'hover:opacity-90 active:scale-95 transition-all',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
               ].join(' ')}

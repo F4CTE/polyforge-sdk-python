@@ -83,7 +83,7 @@ export function Component() {
         <h1 className="text-2xl font-semibold text-pf-text">Support</h1>
         <Link
           to="/support/new"
-          className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
         >
           <Plus className="size-4" />
           New Ticket

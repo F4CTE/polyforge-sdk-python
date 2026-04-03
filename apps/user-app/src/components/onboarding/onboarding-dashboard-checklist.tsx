@@ -243,7 +243,7 @@ export function OnboardingDashboardChecklist() {
 
       {/* ── Progress bar ───────────────────────────────────────────── */}
       <div
-        className="w-full h-1.5 bg-pf-surface rounded-full overflow-hidden mb-4"
+        className="w-full h-1.5 bg-pf-surface rounded-pf-full overflow-hidden mb-4"
         role="progressbar"
         aria-valuenow={completedCount}
         aria-valuemin={0}
@@ -251,7 +251,7 @@ export function OnboardingDashboardChecklist() {
         aria-label={`${completedCount} of ${STEPS.length} steps completed`}
       >
         <div
-          className="h-full bg-pf-cyan-500 rounded-full transition-all duration-500"
+          className="h-full bg-pf-cyan-500 rounded-pf-full transition-all duration-500"
           style={{ width: `${(completedCount / STEPS.length) * 100}%` }}
         />
       </div>

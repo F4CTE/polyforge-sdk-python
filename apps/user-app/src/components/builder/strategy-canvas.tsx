@@ -181,7 +181,7 @@ export function StrategyCanvas() {
       {isEmpty && (
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
           <div className="flex flex-col items-center gap-3 text-center">
-            <div className="w-16 h-16 rounded-full bg-pf-surface border border-pf-border flex items-center justify-center">
+            <div className="w-16 h-16 rounded-pf-full bg-pf-surface border border-pf-border flex items-center justify-center">
               <svg
                 className="size-8 text-pf-text-muted dark:opacity-40 opacity-60"
                 fill="none"

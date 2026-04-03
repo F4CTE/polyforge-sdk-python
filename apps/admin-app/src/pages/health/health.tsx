@@ -94,7 +94,7 @@ function StatusBadge({ status }: { status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN
   if (status === 'UP') {
     return (
       <span className="flex items-center gap-1.5 text-pf-success text-xs font-medium">
-        <span className="animate-pulse bg-pf-success rounded-full w-2 h-2 shrink-0" />
+        <span className="animate-pulse bg-pf-success rounded-pf-full w-2 h-2 shrink-0" />
         UP
       </span>
     );
@@ -117,7 +117,7 @@ function StatusBadge({ status }: { status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN
   }
   return (
     <span className="flex items-center gap-1.5 text-pf-text-tertiary text-xs font-medium">
-      <span className="bg-pf-text-tertiary rounded-full w-2 h-2 shrink-0" />
+      <span className="bg-pf-text-tertiary rounded-pf-full w-2 h-2 shrink-0" />
       UNKNOWN
     </span>
   );
@@ -217,9 +217,9 @@ function DbCard({ db }: { db: DbHealth }) {
             {db.activeConnections} / {db.maxConnections}
           </span>
         </div>
-        <div className="h-1.5 bg-pf-elevated rounded-full overflow-hidden">
+        <div className="h-1.5 bg-pf-elevated rounded-pf-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${connBarColor}`}
+            className={`h-full rounded-pf-full transition-all duration-500 ${connBarColor}`}
             style={{ width: `${connPct}%` }}
           />
         </div>
@@ -471,7 +471,7 @@ export function Component() {
                   >
                     <div className="flex items-center gap-2">
                       <span
-                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                        className={`w-1.5 h-1.5 rounded-pf-full shrink-0 ${
                           service.status === 'UP'
                             ? 'bg-pf-success'
                             : service.status === 'DOWN'

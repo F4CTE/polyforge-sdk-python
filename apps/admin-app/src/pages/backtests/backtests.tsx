@@ -225,7 +225,7 @@ export function Component() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h2 className="text-lg font-semibold text-pf-text flex items-center gap-2">
           Backtests
-          <span className="text-sm font-normal text-pf-text-tertiary px-2 py-0.5 bg-pf-elevated border border-pf-border rounded-full">
+          <span className="text-sm font-normal text-pf-text-tertiary px-2 py-0.5 bg-pf-elevated border border-pf-border rounded-pf-full">
             {total}
           </span>
         </h2>
@@ -240,8 +240,8 @@ export function Component() {
                 onChange={(e) => setAutoRefresh(e.target.checked)}
                 aria-label="Toggle auto-refresh"
               />
-              <span className="block w-full h-full rounded-full bg-pf-border peer-checked:bg-pf-cyan-500 transition-colors" />
-              <span className="absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform peer-checked:translate-x-4" />
+              <span className="block w-full h-full rounded-pf-full bg-pf-border peer-checked:bg-pf-cyan-500 transition-colors" />
+              <span className="absolute top-0.5 left-0.5 w-3 h-3 rounded-pf-full bg-white transition-transform peer-checked:translate-x-4" />
             </span>
             Auto-refresh
             {refreshing && (
@@ -459,11 +459,11 @@ export function Component() {
                       {/* Status badge */}
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusBadgeClass(bt.status)}`}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusBadgeClass(bt.status)}`}
                         >
                           {isRunning && (
                             <span
-                              className="w-1.5 h-1.5 rounded-full bg-pf-cyan-400 animate-pulse"
+                              className="w-1.5 h-1.5 rounded-pf-full bg-pf-cyan-400 animate-pulse"
                               aria-hidden="true"
                             />
                           )}

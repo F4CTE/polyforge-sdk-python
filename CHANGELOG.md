@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.10] — 2026-04-03
+
+### Fixed
+- **Design token: `rounded-full` → `rounded-pf-full` (closes #70)** — replaced all 409 occurrences of `rounded-full` with `rounded-pf-full` across 86 files in user-app, admin-app, landing, and packages/ui; token `--radius-pf-full: 9999px` already defined in `@theme`
+- **Design token: `text-black` → `text-pf-text-contrast` (closes #61)** — added `--color-pf-text-contrast: #000000` to both dark and light themes in `globals.css`; replaced all 73 hardcoded `text-black` instances across 47 files
+
+---
+
 ## [6.35.9] — 2026-04-03
 
 ### Fixed

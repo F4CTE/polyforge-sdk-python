@@ -178,12 +178,12 @@ function CardSkeleton() {
   return (
     <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
       <div className="flex items-center gap-3">
-        <div className="size-10 rounded-full bg-pf-overlay shrink-0" />
+        <div className="size-10 rounded-pf-full bg-pf-overlay shrink-0" />
         <div className="flex-1 space-y-1.5">
           <div className="h-3.5 bg-pf-overlay rounded w-[55%]" />
           <div className="h-3 bg-pf-overlay rounded w-[35%]" />
         </div>
-        <div className="h-5 w-10 bg-pf-overlay rounded-full" />
+        <div className="h-5 w-10 bg-pf-overlay rounded-pf-full" />
       </div>
       <div className="h-3 bg-pf-overlay rounded w-[40%]" />
       <div className="flex gap-3">
@@ -209,7 +209,7 @@ function ComparisonSkeleton({ count }: { count: number }) {
         <div />
         {Array.from({ length: count }).map((_, i) => (
           <div key={i} className="flex flex-col items-center gap-2">
-            <div className="size-12 rounded-full bg-pf-overlay" />
+            <div className="size-12 rounded-pf-full bg-pf-overlay" />
             <div className="h-3.5 bg-pf-overlay rounded w-20" />
             <div className="h-3 bg-pf-overlay rounded w-14" />
           </div>
@@ -373,7 +373,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
           </div>
           {data.map((t) => (
             <div key={t.userId} className="flex flex-col items-center gap-2 text-center">
-              <div className="size-12 rounded-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-base font-bold select-none">
+              <div className="size-12 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-base font-bold select-none">
                 {t.avatarInitials}
               </div>
               <div>
@@ -444,7 +444,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                 {t.topCategories.slice(0, 4).map((cat) => (
                   <span
                     key={cat}
-                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] bg-pf-overlay text-pf-text-secondary border border-pf-border"
+                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-pf-full text-[11px] bg-pf-overlay text-pf-text-secondary border border-pf-border"
                   >
                     {categoryEmoji(cat)} {cat}
                   </span>
@@ -503,7 +503,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                 <Button
                   type="button"
                   onClick={() => navigate(`/copy/setup/${t.userId}`)}
-                  className="w-full px-4 py-2 rounded-pf text-sm font-semibold bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
+                  className="w-full px-4 py-2 rounded-pf text-sm font-semibold bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
                 >
                   Copy @{t.username}
                 </Button>
@@ -564,7 +564,7 @@ function TraderCardItem({
                 : 'bg-pf-overlay border-pf-border-strong'
             }`}
           >
-            {isSelected && <Check className="size-3 text-black" strokeWidth={3} />}
+            {isSelected && <Check className="size-3 text-pf-text-contrast" strokeWidth={3} />}
           </div>
         </div>
       )}
@@ -575,10 +575,10 @@ function TraderCardItem({
           <img
             src={trader.avatarUrl}
             alt={trader.displayName ?? trader.username}
-            className="size-10 rounded-full object-cover shrink-0 bg-pf-overlay"
+            className="size-10 rounded-pf-full object-cover shrink-0 bg-pf-overlay"
           />
         ) : (
-          <div className="size-10 rounded-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-sm font-semibold shrink-0 select-none">
+          <div className="size-10 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-sm font-semibold shrink-0 select-none">
             {initials(trader.displayName ?? trader.username)}
           </div>
         )}
@@ -589,7 +589,7 @@ function TraderCardItem({
           <p className="text-xs text-pf-text-muted truncate">@{trader.username}</p>
         </div>
         <span
-          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0 ${rankBadgeClass(trader.rank)}`}
+          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-[11px] font-semibold shrink-0 ${rankBadgeClass(trader.rank)}`}
           title={`Rank #${trader.rank}`}
         >
           {trader.rank <= 3 && <Trophy className="size-3" aria-hidden="true" />}#
@@ -645,7 +645,7 @@ function TraderCardItem({
             <Button
               type="button"
               onClick={() => navigate(`/copy/new?address=${trader.username}`)}
-              className="px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors shrink-0"
+              className="px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors shrink-0"
             >
               Copy Trade
             </Button>
@@ -868,7 +868,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => setCategory(cat)}
-                className={`px-3 py-1.5 text-sm rounded-full border transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 text-sm rounded-pf-full border transition-colors cursor-pointer ${
                   category === cat
                     ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
                     : 'border-pf-border text-pf-text-secondary hover:text-pf-text'
@@ -1017,7 +1017,7 @@ export function Component() {
               {selectedTraders.map((t) => (
                 <span
                   key={t.userId}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/25"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pf-full text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/25"
                 >
                   @{t.username}
                   <Button
@@ -1047,7 +1047,7 @@ export function Component() {
               <Button
                 type="button"
                 onClick={openComparison}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-pf text-sm font-semibold bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
+                className="flex items-center gap-2 px-4 py-1.5 rounded-pf text-sm font-semibold bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
               >
                 <GitCompare className="size-4" />
                 Compare

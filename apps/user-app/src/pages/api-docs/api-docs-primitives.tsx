@@ -39,7 +39,7 @@ export const SCOPE_CLS: Record<string, string> = {
 
 export function Badge({ text, cls }: { text: string; cls: string }) {
   return (
-    <span className={`inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full ${cls}`}>
+    <span className={`inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-pf-full ${cls}`}>
       {text}
     </span>
   );
@@ -159,7 +159,7 @@ export function LangTabs({
           variant="ghost"
           key={l}
           onClick={() => setLang(l)}
-          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
+          className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors cursor-pointer ${
             lang === l
               ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
               : 'border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text'
@@ -188,7 +188,7 @@ export function PageTitle({
       <div className="flex items-center gap-3 mb-1.5">
         <h1 className="text-2xl font-semibold text-pf-text">{title}</h1>
         {count !== undefined && (
-          <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full bg-pf-overlay text-pf-text-muted">
+          <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-muted">
             {count} endpoint{count !== 1 ? 's' : ''}
           </span>
         )}

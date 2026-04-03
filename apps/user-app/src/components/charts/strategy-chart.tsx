@@ -289,13 +289,13 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
         <div className="flex items-center gap-3 px-3 py-1 border-t border-pf-border">
           {buyDots.length > 0 && (
             <span className="flex items-center gap-1 text-[9px] text-pf-text-muted">
-              <span className="size-2 rounded-full bg-pf-success inline-block" />
+              <span className="size-2 rounded-pf-full bg-pf-success inline-block" />
               {visibleBuyDots.length}/{buyDots.length} BUY
             </span>
           )}
           {sellDots.length > 0 && (
             <span className="flex items-center gap-1 text-[9px] text-pf-text-muted">
-              <span className="size-2 rounded-full bg-pf-danger inline-block" />
+              <span className="size-2 rounded-pf-full bg-pf-danger inline-block" />
               {visibleSellDots.length}/{sellDots.length} SELL
             </span>
           )}

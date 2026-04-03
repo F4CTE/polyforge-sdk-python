@@ -278,12 +278,12 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex gap-4 animate-pulse">
             <div className="flex flex-col items-center">
-              <div className="w-3 h-3 rounded-full bg-pf-border mt-1 shrink-0" />
+              <div className="w-3 h-3 rounded-pf-full bg-pf-border mt-1 shrink-0" />
               {i < 4 && <div className="w-px flex-1 bg-pf-border mt-1" />}
             </div>
             <div className="pb-6 flex-1 space-y-2">
               <div className="flex items-center gap-3">
-                <div className="h-5 w-24 bg-pf-elevated rounded-full" />
+                <div className="h-5 w-24 bg-pf-elevated rounded-pf-full" />
                 <div className="h-3 w-16 bg-pf-elevated rounded" />
               </div>
               <div className="h-4 bg-pf-elevated rounded w-3/4" />
@@ -387,7 +387,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
                 <li key={ev.id} className="flex gap-4 px-5 py-4">
                   {/* Timeline connector */}
                   <div className="flex flex-col items-center shrink-0 pt-0.5">
-                    <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotClass}`} aria-hidden="true" />
+                    <span className={`w-2.5 h-2.5 rounded-pf-full shrink-0 ${dotClass}`} aria-hidden="true" />
                     {!isLast && (
                       <span className="w-px flex-1 bg-pf-border mt-1.5" aria-hidden="true" />
                     )}
@@ -398,7 +398,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
                     {/* Header row: icon + badge + timestamp */}
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                       <Icon size={13} className={iconClass} aria-hidden="true" />
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${badgeClass}`}>
+                      <span className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${badgeClass}`}>
                         {label}
                       </span>
                       <time
@@ -648,7 +648,7 @@ export function Component() {
         <div className="h-4 bg-pf-elevated rounded w-28" />
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-pf-base" />
+            <div className="w-16 h-16 rounded-pf-full bg-pf-base" />
             <div className="space-y-2 flex-1">
               <div className="h-5 bg-pf-base rounded w-48" />
               <div className="h-4 bg-pf-base rounded w-64" />
@@ -706,7 +706,7 @@ export function Component() {
           {/* Avatar + identity */}
           <div className="flex items-start gap-4">
             <div
-              className="w-16 h-16 rounded-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-xl font-bold shrink-0 select-none"
+              className="w-16 h-16 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 flex items-center justify-center text-xl font-bold shrink-0 select-none"
               aria-hidden="true"
             >
               {getInitials(user.displayName, user.username)}
@@ -721,19 +721,19 @@ export function Component() {
               {/* Status + badges */}
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(
+                  className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(
                     isSuspended ? 'SUSPENDED' : user.status,
                   )}`}
                 >
                   {isSuspended ? 'SUSPENDED' : (user.status || 'ACTIVE')}
                 </span>
                 {user.polymarketConnected && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-medium text-cyan-400 bg-cyan-400/10">
+                  <span className="px-2 py-0.5 rounded-pf-full text-xs font-medium text-cyan-400 bg-cyan-400/10">
                     Polymarket Connected
                   </span>
                 )}
                 {(user.totpEnabled) && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-medium text-pf-success bg-pf-success/10">
+                  <span className="px-2 py-0.5 rounded-pf-full text-xs font-medium text-pf-success bg-pf-success/10">
                     2FA Enabled
                   </span>
                 )}
@@ -845,7 +845,7 @@ export function Component() {
                 <h3 className="text-sm font-semibold text-pf-text">Risk Settings</h3>
                 {riskSettings?.enabled !== undefined && (
                   <span
-                    className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${
+                    className={`ml-auto px-2 py-0.5 rounded-pf-full text-xs font-medium ${
                       riskSettings.enabled
                         ? 'text-pf-success bg-pf-success/10'
                         : 'text-pf-text-tertiary bg-pf-base'
@@ -993,7 +993,7 @@ export function Component() {
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(
+                            className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(
                               String(order.status ?? ''),
                             )}`}
                           >
@@ -1074,7 +1074,7 @@ export function Component() {
                           {String(s.name ?? 'Unnamed Strategy')}
                         </span>
                         <span
-                          className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(
+                          className={`shrink-0 px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(
                             String(s.status ?? ''),
                           )}`}
                         >

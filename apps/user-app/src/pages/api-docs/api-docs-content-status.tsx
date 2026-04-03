@@ -43,7 +43,7 @@ function formatTimestamp(iso: string): string {
 
 function StatusDot({ ok }: { ok: boolean }) {
   return (
-    <span className={`inline-flex size-2 rounded-full shrink-0 ${ok ? 'bg-pf-success' : 'bg-pf-danger'}`} />
+    <span className={`inline-flex size-2 rounded-pf-full shrink-0 ${ok ? 'bg-pf-success' : 'bg-pf-danger'}`} />
   );
 }
 

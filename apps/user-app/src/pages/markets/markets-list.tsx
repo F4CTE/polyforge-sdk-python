@@ -212,7 +212,7 @@ function CardSkeleton() {
           <div className="h-3 bg-pf-overlay rounded w-[50%]" />
         </div>
       </div>
-      <div className="h-1.5 bg-pf-overlay rounded-full" />
+      <div className="h-1.5 bg-pf-overlay rounded-pf-full" />
       <div className="grid grid-cols-2 gap-2">
         <div className="h-9 bg-pf-overlay rounded-pf" />
         <div className="h-9 bg-pf-overlay rounded-pf" />
@@ -232,7 +232,7 @@ function SentimentPill({ sentiment }: { sentiment: MarketSentiment | undefined }
   };
   return (
     <span
-      className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${styles[sentiment.direction]}`}
+      className={`inline-flex items-center px-1.5 py-0.5 rounded-pf-full text-[10px] font-semibold uppercase tracking-wide ${styles[sentiment.direction]}`}
       title={`Sentiment score: ${sentiment.score}`}
       aria-label={`Market sentiment: ${sentiment.direction}`}
     >
@@ -303,9 +303,9 @@ const MarketCard = memo(function MarketCard({
       {market.tokens.length <= 2 ? (
         <div className="space-y-2">
           <div>
-            <div className="h-1.5 bg-pf-overlay rounded-full overflow-hidden">
+            <div className="h-1.5 bg-pf-overlay rounded-pf-full overflow-hidden">
               <div
-                className="h-full bg-pf-cyan-500 rounded-full transition-all"
+                className="h-full bg-pf-cyan-500 rounded-pf-full transition-all"
                 style={{ width: `${yesPercent(market) ?? 50}%` }}
               />
             </div>
@@ -328,9 +328,9 @@ const MarketCard = memo(function MarketCard({
           {market.tokens.slice(0, 4).map((token) => (
             <div key={token.id} className="flex items-center gap-2 text-xs">
               <span className="w-20 truncate text-pf-text-secondary">{token.outcome}</span>
-              <div className="flex-1 h-1.5 bg-pf-overlay rounded-full overflow-hidden">
+              <div className="flex-1 h-1.5 bg-pf-overlay rounded-pf-full overflow-hidden">
                 <div
-                  className="h-full bg-pf-cyan-500/60 rounded-full"
+                  className="h-full bg-pf-cyan-500/60 rounded-pf-full"
                   style={{ width: `${tokenPercent(token)}%` }}
                 />
               </div>
@@ -399,7 +399,7 @@ function TrendingCard({ market }: { market: Market }) {
 
       {/* Category badge */}
       <span
-        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}
       >
         {market.category}
       </span>
@@ -411,7 +411,7 @@ function TrendingCard({ market }: { market: Market }) {
 
       {/* Footer badges */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-pf-warning/10 text-pf-warning">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-xs bg-pf-warning/10 text-pf-warning">
           <TrendingUp className="size-3" aria-hidden="true" />
           {formatVolume(market.volume24h)} vol
         </span>
@@ -590,7 +590,7 @@ function AdvancedSearchModal({
                 type="button"
                 variant="ghost"
                 onClick={() => updateFilters((prev) => ({ ...prev, categories: [] }))}
-                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
                   filters.categories.length === 0
                     ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                     : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -604,7 +604,7 @@ function AdvancedSearchModal({
                   type="button"
                   variant="ghost"
                   onClick={() => toggleCategory(cat)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
                     filters.categories.includes(cat)
                       ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                       : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -733,7 +733,7 @@ function AdvancedSearchModal({
                     type="button"
                     variant="ghost"
                     onClick={() => updateFilters((prev) => ({ ...prev, status: s }))}
-                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors capitalize ${
+                    className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors capitalize ${
                       filters.status === s
                         ? s === 'active'
                           ? 'bg-pf-success/15 text-pf-success border-pf-success/30'
@@ -745,7 +745,7 @@ function AdvancedSearchModal({
                   >
                     {s === 'active' && filters.status === 'active' ? 'Active' : s.charAt(0).toUpperCase() + s.slice(1)}
                     {s === 'active' && filters.status === 'active' && (
-                      <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-pf-success align-middle" />
+                      <span className="ml-1 inline-block w-1.5 h-1.5 rounded-pf-full bg-pf-success align-middle" />
                     )}
                   </Button>
                 ))}
@@ -768,7 +768,7 @@ function AdvancedSearchModal({
                         sortDir: prev.sortBy === opt.value && prev.sortDir === 'desc' ? 'asc' : 'desc',
                       }));
                     }}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
                       filters.sortBy === opt.value
                         ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                         : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -801,7 +801,7 @@ function AdvancedSearchModal({
               className="flex items-center gap-2 px-5 py-2 rounded-pf bg-pf-cyan-500 hover:bg-pf-cyan-400 text-pf-bg text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {searchLoading ? (
-                <span className="inline-block w-4 h-4 border-2 border-pf-bg/30 border-t-pf-bg rounded-full animate-spin" aria-hidden="true" />
+                <span className="inline-block w-4 h-4 border-2 border-pf-bg/30 border-t-pf-bg rounded-pf-full animate-spin" aria-hidden="true" />
               ) : (
                 <Search className="size-4" aria-hidden="true" />
               )}
@@ -848,7 +848,7 @@ function AdvancedSearchModal({
                             {market.title}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-pf-full ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}>
                               {market.category}
                             </span>
                             <span className="text-[10px] text-pf-text-muted">{formatVolume(market.volume24h)} vol</span>
@@ -1087,7 +1087,7 @@ export function Component() {
             aria-label="Search markets"
             defaultValue=""
             onChange={(e) => onSearchInput(e.target.value)}
-            className="w-full h-11 pl-11 pr-4 rounded-full bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors"
+            className="w-full h-11 pl-11 pr-4 rounded-pf-full bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors"
           />
         </div>
         {/* Advanced search button */}
@@ -1097,7 +1097,7 @@ export function Component() {
           onClick={() => setShowAdvancedSearch(true)}
           aria-label="Open advanced search"
           title="Advanced Search (Ctrl+F)"
-          className={`relative flex items-center gap-1.5 h-11 px-4 rounded-full border text-sm font-medium transition-colors shrink-0 ${
+          className={`relative flex items-center gap-1.5 h-11 px-4 rounded-pf-full border text-sm font-medium transition-colors shrink-0 ${
             countActiveFilters(advancedFilters) > 0
               ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30 hover:bg-pf-cyan-500/20'
               : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong hover:text-pf-text'
@@ -1106,7 +1106,7 @@ export function Component() {
           <SlidersHorizontal className="size-4" aria-hidden="true" />
           <span>Advanced</span>
           {countActiveFilters(advancedFilters) > 0 && (
-            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pf-cyan-500 text-pf-bg text-[10px] font-bold -mr-1">
+            <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-pf-cyan-500 text-pf-bg text-[10px] font-bold -mr-1">
               {countActiveFilters(advancedFilters)}
             </span>
           )}
@@ -1121,7 +1121,7 @@ export function Component() {
             variant="ghost"
             key={cat}
             onClick={() => { setCategory(cat); setPage(1); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
               category === cat
                 ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                 : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -1182,7 +1182,7 @@ export function Component() {
                   setEndDateFilter(endDateFilter === value ? 'any' : value);
                   setPage(1);
                 }}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-pf-full text-xs font-medium border transition-colors whitespace-nowrap ${
                   endDateFilter === value
                     ? 'bg-pf-warning/15 text-pf-warning border-pf-warning/30'
                     : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -1285,7 +1285,7 @@ export function Component() {
                           </Link>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${catColor?.bg ?? 'bg-pf-overlay'} ${catColor?.text ?? 'text-pf-text-muted'}`}>
                             {CATEGORY_ICONS[market.category]}
                             {market.category}
                           </span>

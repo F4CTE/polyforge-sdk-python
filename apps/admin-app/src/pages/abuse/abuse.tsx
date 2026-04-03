@@ -423,7 +423,7 @@ export function Component() {
         </div>
         {pendingCount > 0 && (
           <span
-            className="inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-full bg-pf-danger text-[10px] font-bold text-white"
+            className="inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-pf-full bg-pf-danger text-[10px] font-bold text-white"
             aria-label={`${pendingCount} pending flagged strategies`}
           >
             {pendingCount}
@@ -477,7 +477,7 @@ export function Component() {
           >
             {tab.label}
             {tab.key === 'pending' && pendingCount > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-full bg-pf-danger text-[9px] font-bold text-white">
+              <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-pf-full bg-pf-danger text-[9px] font-bold text-white">
                 {pendingCount}
               </span>
             )}

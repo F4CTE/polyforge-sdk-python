@@ -75,7 +75,7 @@ export function AppLayout() {
   return (
     <div className="flex h-screen bg-pf-base text-pf-text overflow-hidden">
       {/* Skip to main content */}
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-pf-cyan-500 focus:text-black focus:rounded-pf focus:text-sm focus:font-medium">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-pf-cyan-500 focus:text-pf-text-contrast focus:rounded-pf focus:text-sm focus:font-medium">
         Skip to main content
       </a>
       {/* Desktop sidebar */}

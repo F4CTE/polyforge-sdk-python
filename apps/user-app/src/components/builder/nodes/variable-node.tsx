@@ -166,7 +166,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+        className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
         style={{ borderColor: VARIABLE_COLOR }}
       />
     </>

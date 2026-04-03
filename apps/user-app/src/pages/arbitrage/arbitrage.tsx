@@ -159,7 +159,7 @@ export function Component() {
             type="button"
             variant="ghost"
             onClick={() => setMinMargin(v)}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+            className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
               minMargin === v
                 ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                 : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -241,7 +241,7 @@ export function Component() {
                 variant="success"
                 onClick={() => executeArbitrage(opp)}
                 disabled={executing === opp.marketId}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-success text-black text-xs font-medium hover:bg-pf-success/80 disabled:opacity-50 transition-colors whitespace-nowrap"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-success text-pf-text-contrast text-xs font-medium hover:bg-pf-success/80 disabled:opacity-50 transition-colors whitespace-nowrap"
               >
                 {executing === opp.marketId
                   ? <Loader2 className="size-3 animate-spin" />

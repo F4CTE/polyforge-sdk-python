@@ -53,7 +53,7 @@ function ReviewSkeleton() {
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-3">
         <div className="flex items-center justify-between">
           <div className="h-4 bg-pf-overlay rounded w-28 animate-pulse" />
-          <div className="h-7 bg-pf-overlay rounded-full w-16 animate-pulse" />
+          <div className="h-7 bg-pf-overlay rounded-pf-full w-16 animate-pulse" />
         </div>
         <div className="space-y-2">
           <div className="h-3 bg-pf-overlay rounded w-full animate-pulse" />
@@ -67,7 +67,7 @@ function ReviewSkeleton() {
         <div className="h-4 bg-pf-overlay rounded w-28 animate-pulse mb-4" />
         {[0, 1, 2].map((i) => (
           <div key={i} className="flex items-start gap-2">
-            <div className="h-3 w-3 bg-pf-overlay rounded-full mt-0.5 shrink-0 animate-pulse" />
+            <div className="h-3 w-3 bg-pf-overlay rounded-pf-full mt-0.5 shrink-0 animate-pulse" />
             <div className="h-3 bg-pf-overlay rounded flex-1 animate-pulse" />
           </div>
         ))}
@@ -151,7 +151,7 @@ export function Component() {
               <h2 className="text-sm font-medium text-pf-text uppercase tracking-wide">Portfolio Review</h2>
               <div className="flex items-center gap-2">
                 <span
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${riskPillClass(data.riskLevel)}`}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-pf-full text-xs font-semibold uppercase tracking-wide ${riskPillClass(data.riskLevel)}`}
                   aria-label={`Risk level: ${data.riskLevel}`}
                 >
                   {data.riskLevel} risk
@@ -176,7 +176,7 @@ export function Component() {
                 {data.suggestions.map((suggestion, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-pf-text-secondary">
                     <span
-                      className="mt-1.5 size-1.5 rounded-full bg-pf-cyan-500 shrink-0"
+                      className="mt-1.5 size-1.5 rounded-pf-full bg-pf-cyan-500 shrink-0"
                       aria-hidden="true"
                     />
                     <span className="leading-relaxed">{suggestionText(suggestion)}</span>

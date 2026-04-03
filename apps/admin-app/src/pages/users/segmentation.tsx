@@ -123,7 +123,7 @@ function CohortCardSkeleton() {
       </div>
       <div className="h-3 w-full rounded bg-pf-overlay" />
       <div className="h-8 w-20 rounded bg-pf-overlay" />
-      <div className="h-2 w-full rounded-full bg-pf-overlay" />
+      <div className="h-2 w-full rounded-pf-full bg-pf-overlay" />
       <div className="flex gap-2">
         <div className="h-7 flex-1 rounded-pf bg-pf-overlay" />
         <div className="h-7 flex-1 rounded-pf bg-pf-overlay" />
@@ -200,7 +200,7 @@ function BroadcastDialog({ cohortId, cohortLabel, userCount, onClose }: Broadcas
             variant="default"
             onClick={handleConfirm}
             disabled={loading}
-            className="px-4 py-2 rounded-pf text-sm font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 rounded-pf text-sm font-medium bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Sending…' : 'Confirm'}
           </Button>
@@ -263,9 +263,9 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
           <span>Retention</span>
           <span>{stats.retentionRate}%</span>
         </div>
-        <div className="h-1.5 w-full rounded-full bg-pf-overlay overflow-hidden">
+        <div className="h-1.5 w-full rounded-pf-full bg-pf-overlay overflow-hidden">
           <div
-            className="h-full rounded-full bg-pf-cyan-400 transition-all"
+            className="h-full rounded-pf-full bg-pf-cyan-400 transition-all"
             style={{ width: `${stats.retentionRate}%` }}
             role="meter"
             aria-valuenow={stats.retentionRate}

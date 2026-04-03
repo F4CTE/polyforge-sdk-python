@@ -293,7 +293,7 @@ export function Component() {
                 type="button"
                 onClick={submit}
                 disabled={!canSubmit}
-                className="w-full h-9 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                className="w-full h-9 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 {submitting ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
                 Run Backtest
@@ -370,8 +370,8 @@ export function Component() {
                 </span>
                 <span className="text-xs font-mono text-pf-cyan-400">{selectedRun.progress}%</span>
               </div>
-              <div className="h-1.5 bg-pf-overlay rounded-full overflow-hidden">
-                <div className="h-full bg-pf-cyan-500 rounded-full transition-all" style={{ width: `${selectedRun.progress}%` }} />
+              <div className="h-1.5 bg-pf-overlay rounded-pf-full overflow-hidden">
+                <div className="h-full bg-pf-cyan-500 rounded-pf-full transition-all" style={{ width: `${selectedRun.progress}%` }} />
               </div>
             </div>
           )}
@@ -520,8 +520,8 @@ export function Component() {
                       <td className="px-4 py-3">
                         {run.status === 'RUNNING' ? (
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 h-1.5 bg-pf-overlay rounded-full overflow-hidden">
-                              <div className="h-full bg-pf-cyan-500 rounded-full" style={{ width: `${run.progress}%` }} />
+                            <div className="flex-1 h-1.5 bg-pf-overlay rounded-pf-full overflow-hidden">
+                              <div className="h-full bg-pf-cyan-500 rounded-pf-full" style={{ width: `${run.progress}%` }} />
                             </div>
                             <span className="font-mono text-[11px] text-pf-cyan-400">{run.progress}%</span>
                           </div>

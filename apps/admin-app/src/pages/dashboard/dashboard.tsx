@@ -262,7 +262,7 @@ export function Component() {
                 System Health
               </h2>
               <span
-                className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(health.status)}`}
+                className={`ml-auto px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(health.status)}`}
               >
                 {health.status}
               </span>
@@ -282,7 +282,7 @@ export function Component() {
                     </div>
                   </div>
                   <span
-                    className={`w-2 h-2 rounded-full ${
+                    className={`w-2 h-2 rounded-pf-full ${
                       svc?.status === 'healthy'
                         ? 'bg-pf-success'
                         : svc?.status === 'degraded'
@@ -308,7 +308,7 @@ export function Component() {
                 Database
               </h2>
               <span
-                className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(health.db?.status)}`}
+                className={`ml-auto px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(health.db?.status)}`}
               >
                 {health.db?.status ?? 'UNKNOWN'}
               </span>
@@ -327,7 +327,7 @@ export function Component() {
                 Redis
               </h2>
               <span
-                className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(health.redis?.status)}`}
+                className={`ml-auto px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(health.redis?.status)}`}
               >
                 {health.redis?.status ?? 'UNKNOWN'}
               </span>

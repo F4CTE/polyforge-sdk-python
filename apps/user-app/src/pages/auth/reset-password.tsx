@@ -130,7 +130,7 @@ export function Component() {
                 <Button
                   type="submit"
                   disabled={loading || !token}
-                  className="w-full py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+                  className="w-full py-2.5 bg-pf-cyan-500 text-pf-text-contrast font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
                 >
                   {loading ? 'Resetting...' : 'Reset password'}
                 </Button>
@@ -138,14 +138,14 @@ export function Component() {
             </>
           ) : (
             <div className="text-center">
-              <div className="size-16 rounded-full bg-pf-success/10 flex items-center justify-center mx-auto mb-4">
+              <div className="size-16 rounded-pf-full bg-pf-success/10 flex items-center justify-center mx-auto mb-4">
                 <Check className="size-8 text-pf-success" />
               </div>
               <h1 className="text-xl font-semibold text-pf-text mb-2">Password reset</h1>
               <p className="text-sm text-pf-text-muted mb-6">You can now sign in with your new password.</p>
               <Link
                 to="/login"
-                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-pf-text-contrast font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
               >
                 Sign in
               </Link>

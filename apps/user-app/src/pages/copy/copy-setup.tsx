@@ -198,7 +198,7 @@ export function Component() {
               variant="ghost"
               onClick={() => i < step && setStep(i)}
               disabled={i > step}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-full text-xs font-medium border transition-colors ${
                 i === step
                   ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
                   : i < step
@@ -206,7 +206,7 @@ export function Component() {
                     : 'border-pf-border text-pf-text-muted'
               }`}
             >
-              <span className="size-5 rounded-full bg-pf-overlay flex items-center justify-center text-[10px] font-bold">
+              <span className="size-5 rounded-pf-full bg-pf-overlay flex items-center justify-center text-[10px] font-bold">
                 {i + 1}
               </span>
               {label}
@@ -345,7 +345,7 @@ export function Component() {
                         step="1"
                         value={sizePercent}
                         onChange={(e) => setSizePercent(parseInt(e.target.value))}
-                        className="flex-1 h-1.5 rounded-full bg-pf-border accent-pf-cyan-500"
+                        className="flex-1 h-1.5 rounded-pf-full bg-pf-border accent-pf-cyan-500"
                       />
                       <span className="text-sm font-mono text-pf-cyan-400 w-12 text-right">{sizePercent}%</span>
                     </div>
@@ -549,7 +549,7 @@ export function Component() {
             type="button"
             onClick={nextStep}
             disabled={!canAdvance()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Next <ChevronRight className="size-4" />
           </Button>
@@ -558,7 +558,7 @@ export function Component() {
             type="button"
             onClick={handleSubmit}
             disabled={submitting || !isFormValid}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-40 transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-40 transition-colors"
           >
             <Rocket className="size-4" />
             {submitting ? 'Starting...' : 'Start Copying'}

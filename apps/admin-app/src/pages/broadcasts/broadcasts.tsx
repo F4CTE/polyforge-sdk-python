@@ -233,7 +233,7 @@ export function Component() {
             type="button"
             variant="default"
             onClick={openCompose}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
           >
             <Megaphone size={15} aria-hidden="true" />
             New Broadcast
@@ -301,7 +301,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => handleDraftChange('type', opt.value)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${typePillClass(opt.value, draft.type === opt.value)}`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-pf-full transition-colors ${typePillClass(opt.value, draft.type === opt.value)}`}
                   aria-pressed={draft.type === opt.value}
                 >
                   <TypeIcon type={opt.value} size={12} />
@@ -321,7 +321,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => handleDraftChange('targetAudience', opt.value)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-pf-full transition-colors ${
                     draft.targetAudience === opt.value
                       ? 'border border-pf-cyan-500/40 bg-pf-cyan-500/10 text-pf-cyan-400'
                       : 'border border-pf-border bg-pf-base text-pf-text-secondary hover:text-pf-text hover:border-pf-text-secondary'
@@ -362,7 +362,7 @@ export function Component() {
                   variant="default"
                   onClick={handleConfirmSend}
                   disabled={sending}
-                  className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
                 >
                   <Send size={12} aria-hidden="true" />
                   {sending ? 'Sending...' : 'Confirm Send'}
@@ -387,7 +387,7 @@ export function Component() {
                 type="button"
                 variant="default"
                 onClick={handleSendClick}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
               >
                 <Send size={14} aria-hidden="true" />
                 Send Broadcast
@@ -446,7 +446,7 @@ export function Component() {
                       <span className="truncate block" title={b.title}>{b.title}</span>
                     </td>
                     <td className="px-3 py-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${typeBadgeClass(b.type)}`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-[11px] font-semibold ${typeBadgeClass(b.type)}`}>
                         <TypeIcon type={b.type} size={10} />
                         {b.type}
                       </span>

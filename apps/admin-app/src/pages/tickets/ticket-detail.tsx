@@ -164,14 +164,14 @@ export function Component() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(ticket.status)}`}>
+            <span className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(ticket.status)}`}>
               {ticket.status}
             </span>
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityColor[ticket.priority] ?? ''}`}>
+            <span className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${priorityColor[ticket.priority] ?? ''}`}>
               {ticket.priority}
             </span>
             {ticket.category && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-pf-base text-pf-text-secondary border border-pf-border">
+              <span className="px-2 py-0.5 rounded-pf-full text-xs font-medium bg-pf-base text-pf-text-secondary border border-pf-border">
                 {ticket.category}
               </span>
             )}
@@ -261,7 +261,7 @@ export function Component() {
             type="submit"
             variant="default"
             disabled={sending || !reply.trim()}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send size={14} aria-hidden="true" />
             {sending ? 'Sending...' : 'Reply'}

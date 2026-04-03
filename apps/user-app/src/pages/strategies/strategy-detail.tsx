@@ -936,8 +936,8 @@ export function Component() {
             <div>
               <div className="flex items-center gap-3 mb-1.5">
                 <h1 className="text-2xl font-semibold text-pf-text">{strategy.name}</h1>
-                <span data-testid="status-badge" className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot} ${isActive(status) ? 'animate-pulse-dot' : ''}`} />
+                <span data-testid="status-badge" className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-pf-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
+                  <span className={`w-1.5 h-1.5 rounded-pf-full ${statusStyle.dot} ${isActive(status) ? 'animate-pulse-dot' : ''}`} />
                   {status}
                 </span>
               </div>
@@ -954,7 +954,7 @@ export function Component() {
                     type="button"
                     onClick={() => doAction('start', { mode: 'live' })}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
                   >
                     <Zap className="size-3.5" /> Start Live
                   </Button>
@@ -997,7 +997,7 @@ export function Component() {
                     type="button"
                     onClick={() => doAction('resume')}
                     disabled={actionLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
                   >
                     <Play className="size-3.5" /> Resume
                   </Button>
@@ -1064,7 +1064,7 @@ export function Component() {
               >
                 <Bell className="size-4" />
                 {strategyAlerts.length > 0 && (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-pf-warning text-black text-[9px] font-bold leading-none">
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-pf-full bg-pf-warning text-pf-text-contrast text-[9px] font-bold leading-none">
                     {strategyAlerts.length > 9 ? '9+' : strategyAlerts.length}
                   </span>
                 )}
@@ -1158,7 +1158,7 @@ export function Component() {
                 type="button"
                 onClick={submitListing}
                 disabled={listSubmitting || !listTitle}
-                className="w-full py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-semibold hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+                className="w-full py-2.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
               >
                 {listSubmitting ? 'Publishing...' : 'Publish to Marketplace'}
               </Button>
@@ -1303,7 +1303,7 @@ export function Component() {
                   className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium transition-colors disabled:opacity-40 ${
                     strategy.visibility === 'public'
                       ? 'bg-pf-surface border border-pf-border text-pf-text-secondary hover:border-pf-border-strong'
-                      : 'bg-pf-cyan-500 text-black hover:bg-pf-cyan-400'
+                      : 'bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400'
                   }`}
                 >
                   {togglingVisibility
@@ -1426,7 +1426,7 @@ export function Component() {
                       type="button"
                       onClick={saveAlert}
                       disabled={alertFormSaving}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-warning text-black text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-warning text-pf-text-contrast text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
                     >
                       {alertFormSaving ? 'Saving...' : 'Save Alert'}
                     </Button>
@@ -1469,9 +1469,9 @@ export function Component() {
                         variant="ghost"
                         onClick={() => toggleAlertEnabled(alert)}
                         aria-label={alert.enabled ? 'Disable alert' : 'Enable alert'}
-                        className={`shrink-0 w-8 h-5 rounded-full border transition-colors relative ${alert.enabled ? 'bg-pf-warning/20 border-pf-warning/40' : 'bg-pf-overlay border-pf-border'}`}
+                        className={`shrink-0 w-8 h-5 rounded-pf-full border transition-colors relative ${alert.enabled ? 'bg-pf-warning/20 border-pf-warning/40' : 'bg-pf-overlay border-pf-border'}`}
                       >
-                        <span className={`absolute top-0.5 w-3 h-3 rounded-full transition-all ${alert.enabled ? 'left-4 bg-pf-warning' : 'left-0.5 bg-pf-text-muted'}`} />
+                        <span className={`absolute top-0.5 w-3 h-3 rounded-pf-full transition-all ${alert.enabled ? 'left-4 bg-pf-warning' : 'left-0.5 bg-pf-text-muted'}`} />
                       </Button>
 
                       {/* Label + threshold */}
@@ -1492,7 +1492,7 @@ export function Component() {
 
                       {/* Triggered badge */}
                       {alert.triggeredAt && (
-                        <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-pf-warning/15 text-pf-warning text-[10px] font-semibold">
+                        <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-pf-full bg-pf-warning/15 text-pf-warning text-[10px] font-semibold">
                           <AlertTriangle className="size-2.5" aria-hidden="true" />
                           Triggered
                         </span>
@@ -1532,24 +1532,24 @@ export function Component() {
 
           {/* Meta chips */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+            <span className={`px-2.5 py-1 rounded-pf-full text-xs font-medium ${
               strategy.execMode === 'TICK' || strategy.execMode === 'HYBRID'
                 ? 'bg-pf-purple-500/10 text-pf-purple-500'
                 : 'bg-pf-cyan-500/10 text-pf-cyan-400'
             }`}>
               {execLabel(strategy)}
             </span>
-            <span className="px-2.5 py-1 rounded-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
+            <span className="px-2.5 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
               v{strategy.version}
             </span>
-            <span className="px-2.5 py-1 rounded-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
+            <span className="px-2.5 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
               {strategy.visibility.toLowerCase()}
             </span>
-            <span className="px-2.5 py-1 rounded-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
+            <span className="px-2.5 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
               {totalBlocks} blocks
             </span>
             {strategy.tags.map((tag) => (
-              <span key={tag} className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+              <span key={tag} className={`px-2.5 py-1 rounded-pf-full text-xs font-medium ${
                 tag.toLowerCase() === 'momentum'
                   ? 'bg-pf-gold-500/10 text-pf-gold-500'
                   : tag.toLowerCase() === 'defensive'
@@ -1559,7 +1559,7 @@ export function Component() {
                 {tag}
               </span>
             ))}
-            <span className="px-2.5 py-1 rounded-full text-pf-text-muted text-xs ml-auto">
+            <span className="px-2.5 py-1 rounded-pf-full text-pf-text-muted text-xs ml-auto">
               Updated {formatDate(strategy.updatedAt)}
             </span>
           </div>
@@ -1617,9 +1617,9 @@ export function Component() {
                     >
                       <span className="text-xs text-pf-text font-medium">{child.name}</span>
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${childStyle.bg} ${childStyle.text}`}
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-[10px] font-medium ${childStyle.bg} ${childStyle.text}`}
                       >
-                        <span className={`w-1 h-1 rounded-full ${childStyle.dot}`} />
+                        <span className={`w-1 h-1 rounded-pf-full ${childStyle.dot}`} />
                         {child.status}
                       </span>
                     </Link>
@@ -1701,7 +1701,7 @@ export function Component() {
               className="flex items-center gap-1.5"
             >
               {detailTab === 'live' && wsConnected
-                ? <span className="w-1.5 h-1.5 rounded-full bg-pf-success animate-pulse" />
+                ? <span className="w-1.5 h-1.5 rounded-pf-full bg-pf-success animate-pulse" />
                 : <Wifi className="size-3" />}
               Live
             </Button>
@@ -1758,7 +1758,7 @@ export function Component() {
                 <span className="text-sm font-medium text-pf-text">Live Events</span>
                 {isActive(status) && (
                   <span className="flex items-center gap-1.5 text-xs text-pf-cyan-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-pf-cyan-400 animate-pulse-dot" />
+                    <span className="w-1.5 h-1.5 rounded-pf-full bg-pf-cyan-400 animate-pulse-dot" />
                     Live
                   </span>
                 )}
@@ -1777,7 +1777,7 @@ export function Component() {
                         <span className="font-mono text-pf-text-muted shrink-0 w-16">
                           {formatTime(entry.time)}
                         </span>
-                        <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${LOG_DOT_COLORS[entry.severity]}`} />
+                        <span className={`w-1.5 h-1.5 rounded-pf-full mt-1.5 shrink-0 ${LOG_DOT_COLORS[entry.severity]}`} />
                         <span className={LOG_COLORS[entry.severity]}>{entry.message}</span>
                       </div>
                     ))}
@@ -1800,7 +1800,7 @@ export function Component() {
                 <ul className="space-y-1.5">
                   {execLog.map(ev => (
                     <li key={ev.id} className="flex items-start gap-3 rounded-pf bg-pf-surface px-3 py-2 border border-pf-border-subtle">
-                      <span className={`mt-0.5 flex-shrink-0 h-2 w-2 rounded-full ${
+                      <span className={`mt-0.5 flex-shrink-0 h-2 w-2 rounded-pf-full ${
                         ev.eventType === 'ERROR' ? 'bg-pf-danger' :
                         ev.eventType === 'ORDER_PLACED' ? 'bg-pf-success' :
                         ev.eventType === 'TRIGGERED' ? 'bg-pf-cyan-400' : 'bg-pf-text-muted'
@@ -1888,7 +1888,7 @@ export function Component() {
                                 {ex.fillPrice ? ` @ ${ex.fillPrice}` : ''}
                               </td>
                               <td className="px-3 py-2.5">
-                                <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${statusBadge}`}>
+                                <span className={`inline-flex px-2 py-0.5 rounded-pf-full text-[10px] font-medium ${statusBadge}`}>
                                   {ex.status}
                                 </span>
                               </td>
@@ -1949,7 +1949,7 @@ export function Component() {
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="flex items-start gap-4 px-5 py-4 border-b border-pf-border-subtle last:border-0 bg-pf-elevated animate-pulse">
                       <div className="flex flex-col items-center gap-1 shrink-0 pt-0.5">
-                        <div className="size-3 rounded-full bg-pf-overlay" />
+                        <div className="size-3 rounded-pf-full bg-pf-overlay" />
                         {i < 3 && <div className="w-px h-10 bg-pf-overlay" />}
                       </div>
                       <div className="flex-1 space-y-2 pb-1">
@@ -1960,8 +1960,8 @@ export function Component() {
                         </div>
                         <div className="h-3 w-40 bg-pf-overlay rounded" />
                         <div className="flex gap-2">
-                          <div className="h-4 w-14 bg-pf-overlay rounded-full" />
-                          <div className="h-4 w-14 bg-pf-overlay rounded-full" />
+                          <div className="h-4 w-14 bg-pf-overlay rounded-pf-full" />
+                          <div className="h-4 w-14 bg-pf-overlay rounded-pf-full" />
                         </div>
                       </div>
                     </div>
@@ -1998,7 +1998,7 @@ export function Component() {
                       >
                         {/* Timeline spine */}
                         <div className="flex flex-col items-center shrink-0 pt-0.5" aria-hidden="true">
-                          <span className={`size-3 rounded-full border-2 ${isCurrent ? 'border-pf-cyan-400 bg-pf-cyan-400' : 'border-pf-border-strong bg-pf-surface'}`} />
+                          <span className={`size-3 rounded-pf-full border-2 ${isCurrent ? 'border-pf-cyan-400 bg-pf-cyan-400' : 'border-pf-border-strong bg-pf-surface'}`} />
                           {idx < versions.length - 1 && (
                             <span className="w-px flex-1 min-h-[2rem] bg-pf-border-subtle mt-1" />
                           )}
@@ -2012,7 +2012,7 @@ export function Component() {
                               {v.label}
                             </span>
                             {isCurrent && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-pf-success/10 text-pf-success text-[10px] font-semibold uppercase tracking-wide">
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-pf-full bg-pf-success/10 text-pf-success text-[10px] font-semibold uppercase tracking-wide">
                                 current
                               </span>
                             )}
@@ -2035,19 +2035,19 @@ export function Component() {
                             {v.changes && (
                               <>
                                 {v.changes.added > 0 && (
-                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-pf-success/15 text-pf-success text-[10px] font-semibold">
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full bg-pf-success/15 text-pf-success text-[10px] font-semibold">
                                     <Plus className="size-2.5" aria-hidden="true" />
                                     {v.changes.added} added
                                   </span>
                                 )}
                                 {v.changes.removed > 0 && (
-                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-pf-danger/15 text-pf-danger text-[10px] font-semibold">
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full bg-pf-danger/15 text-pf-danger text-[10px] font-semibold">
                                     <Minus className="size-2.5" aria-hidden="true" />
                                     {v.changes.removed} removed
                                   </span>
                                 )}
                                 {v.changes.modified > 0 && (
-                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-pf-warning/15 text-pf-warning text-[10px] font-semibold">
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full bg-pf-warning/15 text-pf-warning text-[10px] font-semibold">
                                     <Edit2 className="size-2.5" aria-hidden="true" />
                                     {v.changes.modified} modified
                                   </span>
@@ -2125,7 +2125,7 @@ export function Component() {
                   <span className="text-sm font-semibold text-pf-text">Live Execution Feed</span>
                   {wsConnected ? (
                     <span className="flex items-center gap-1.5 text-xs text-pf-success font-medium">
-                      <span className="animate-pulse bg-pf-success rounded-full w-2 h-2" />
+                      <span className="animate-pulse bg-pf-success rounded-pf-full w-2 h-2" />
                       LIVE
                     </span>
                   ) : (
@@ -2392,9 +2392,9 @@ function ReviewsSection({ listingId }: { listingId: string }) {
               <div key={star} className="flex items-center gap-2">
                 <span className="text-xs text-pf-text-muted w-4 text-right shrink-0">{star}</span>
                 <Star className="size-3 text-pf-warning fill-pf-warning shrink-0" />
-                <div className="flex-1 h-2 bg-pf-surface rounded-full overflow-hidden">
+                <div className="flex-1 h-2 bg-pf-surface rounded-pf-full overflow-hidden">
                   <div
-                    className="h-full bg-pf-warning rounded-full transition-all duration-300"
+                    className="h-full bg-pf-warning rounded-pf-full transition-all duration-300"
                     style={{ width: `${(count / maxStarCount) * 100}%` }}
                   />
                 </div>
@@ -2460,7 +2460,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex gap-3 animate-pulse">
-              <div className="size-8 rounded-full bg-pf-overlay shrink-0" />
+              <div className="size-8 rounded-pf-full bg-pf-overlay shrink-0" />
               <div className="flex-1 space-y-2">
                 <div className="h-3 bg-pf-overlay rounded w-[30%]" />
                 <div className="h-3 bg-pf-overlay rounded w-[80%]" />
@@ -2490,13 +2490,13 @@ function ReviewsSection({ listingId }: { listingId: string }) {
                   <img
                     src={review.author.avatarUrl}
                     alt={`${review.author.displayName ?? review.author.username} avatar`}
-                    className="size-8 rounded-full object-cover shrink-0"
+                    className="size-8 rounded-pf-full object-cover shrink-0"
                     width={32}
                     height={32}
                     loading="lazy"
                   />
                 ) : (
-                  <div className="size-8 rounded-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-[10px] font-bold text-pf-cyan-400 shrink-0">
+                  <div className="size-8 rounded-pf-full bg-pf-cyan-500/15 border border-pf-cyan-500/25 flex items-center justify-center text-[10px] font-bold text-pf-cyan-400 shrink-0">
                     {initials}
                   </div>
                 )}

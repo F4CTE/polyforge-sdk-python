@@ -65,7 +65,7 @@ type SortDir = 'asc' | 'desc';
 function LabelPill({ label }: { label: string }) {
   if (label === 'BULLISH') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-pf-success/10 text-pf-success">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-xs font-medium bg-pf-success/10 text-pf-success">
         <TrendingUp size={11} aria-hidden="true" />
         {label}
       </span>
@@ -73,14 +73,14 @@ function LabelPill({ label }: { label: string }) {
   }
   if (label === 'BEARISH') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-pf-danger/10 text-pf-danger">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-xs font-medium bg-pf-danger/10 text-pf-danger">
         <TrendingDown size={11} aria-hidden="true" />
         {label}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-pf-base text-pf-text-secondary border border-pf-border">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-xs font-medium bg-pf-base text-pf-text-secondary border border-pf-border">
       <Minus size={11} aria-hidden="true" />
       {label}
     </span>
@@ -420,12 +420,12 @@ export function Component() {
           </span>
           {loadingSummary
             ? Array.from({ length: 5 }).map((_, i) => (
-                <span key={i} className="h-5 w-16 bg-pf-surface rounded-full animate-pulse inline-block" />
+                <span key={i} className="h-5 w-16 bg-pf-surface rounded-pf-full animate-pulse inline-block" />
               ))
             : summary?.trendingTopics.map((topic) => (
                 <span
                   key={topic}
-                  className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/20"
+                  className="inline-block px-2.5 py-0.5 rounded-pf-full text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/20"
                 >
                   {topic}
                 </span>
@@ -543,9 +543,9 @@ export function Component() {
                         <span className={`font-mono font-medium text-xs ${scoreColor(row.score)}`}>
                           {row.score > 0 ? '+' : ''}{row.score.toFixed(3)}
                         </span>
-                        <div className="mt-1 h-1.5 w-full bg-pf-surface rounded-full overflow-hidden">
+                        <div className="mt-1 h-1.5 w-full bg-pf-surface rounded-pf-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all ${scoreBgColor(row.score)}`}
+                            className={`h-full rounded-pf-full transition-all ${scoreBgColor(row.score)}`}
                             style={{ width: `${pct}%` }}
                             aria-label={`Score ${pct}%`}
                           />

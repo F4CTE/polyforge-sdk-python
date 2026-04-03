@@ -266,7 +266,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                   {meta.label}
                   {count > 0 && (
                     <span
-                      className="ml-0.5 px-1 py-px rounded-full text-[9px] font-semibold leading-none"
+                      className="ml-0.5 px-1 py-px rounded-pf-full text-[9px] font-semibold leading-none"
                       style={{
                         backgroundColor: isActive ? 'color-mix(in srgb, var(--color-pf-text) 25%, transparent)' : meta.color + '30',
                         color: isActive ? 'white' : meta.color,

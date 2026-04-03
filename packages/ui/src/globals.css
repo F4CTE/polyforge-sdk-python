@@ -20,6 +20,7 @@
   --color-pf-text-secondary: #94a3b8;
   --color-pf-text-muted: #64748b;
   --color-pf-text-tertiary: #64748b;
+  --color-pf-text-contrast: #000000;
 
   /* Background aliases */
   --color-pf-bg: #020817;
@@ -345,6 +346,7 @@ body {
   --color-pf-text-secondary: #334155;
   --color-pf-text-muted: #64748b;
   --color-pf-text-tertiary: #64748b;
+  --color-pf-text-contrast: #000000;
 
   /* Cyan overrides — REQUIRED: dark-mode cyan (#06B6D4) fails on light backgrounds (~3.3:1).
      Use darker shades that pass 4.5:1 WCAG AA on white. */

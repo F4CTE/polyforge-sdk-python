@@ -190,7 +190,7 @@ export function Component() {
                     type="button"
                     variant="ghost"
                     onClick={() => setSort(s)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    className={`px-2.5 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
                       sort === s
                         ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                         : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -300,7 +300,7 @@ function ListingCard({
           type="button"
           onClick={onPurchase}
           disabled={purchasing}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-cyan-500 text-black text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
         >
           {purchasing ? (
             <Loader2 className="size-3 animate-spin" />

@@ -27,7 +27,7 @@ export function Hero() {
         {PARTICLES.map((p) => (
           <div
             key={`${p.left}-${p.top}`}
-            className="absolute rounded-full bg-pf-cyan-500/25"
+            className="absolute rounded-pf-full bg-pf-cyan-500/25"
             style={{
               width: p.w,
               height: p.w,
@@ -41,8 +41,8 @@ export function Hero() {
 
       <div className="relative z-10 max-w-[1100px] mx-auto px-6">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 text-[13px] font-medium text-pf-cyan-400 bg-pf-cyan-500/8 border border-pf-cyan-500/20 rounded-full px-3.5 py-1 mb-7">
-          <span className="w-[7px] h-[7px] rounded-full bg-pf-cyan-400 animate-[pulse-dot_2s_infinite]" />
+        <div className="inline-flex items-center gap-2 text-[13px] font-medium text-pf-cyan-400 bg-pf-cyan-500/8 border border-pf-cyan-500/20 rounded-pf-full px-3.5 py-1 mb-7">
+          <span className="w-[7px] h-[7px] rounded-pf-full bg-pf-cyan-400 animate-[pulse-dot_2s_infinite]" />
           Early Access &mdash; Limited Invites
         </div>
 
@@ -66,7 +66,7 @@ export function Hero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
           <a
             href="/signup"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-[15px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-pf-text-contrast font-semibold text-[15px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
           >
             Start Trading Free
           </a>
@@ -87,10 +87,10 @@ export function Hero() {
           ].map((badge) => (
             <span
               key={badge}
-              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-pf-text-secondary bg-pf-surface border border-pf-border-subtle rounded-full px-3.5 py-1.5"
+              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-pf-text-secondary bg-pf-surface border border-pf-border-subtle rounded-pf-full px-3.5 py-1.5"
             >
               <span
-                className="w-1.5 h-1.5 rounded-full bg-cyan-400"
+                className="w-1.5 h-1.5 rounded-pf-full bg-cyan-400"
                 aria-hidden="true"
               />
               {badge}

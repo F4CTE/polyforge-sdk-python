@@ -101,7 +101,7 @@ export function Component() {
           </Link>
           <h1 className="text-2xl font-semibold text-pf-text">Trading Account</h1>
         </div>
-        <span data-testid="trading-status" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${
+        <span data-testid="trading-status" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-full text-xs font-medium border ${
           isConnected
             ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
             : 'bg-pf-overlay text-pf-text-muted border-pf-border'

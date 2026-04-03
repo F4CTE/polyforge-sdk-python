@@ -853,11 +853,11 @@ export function Component() {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 flex-wrap">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full bg-pf-cyan-500/15 text-pf-cyan-400 text-xs font-medium">
+                <span className="px-2 py-0.5 rounded-pf-full bg-pf-cyan-500/15 text-pf-cyan-400 text-xs font-medium">
                   {market.category}
                 </span>
                 {days >= 0 && days <= 7 && (
-                  <span className="px-2 py-0.5 rounded-full bg-pf-warning/15 text-pf-warning text-xs font-medium">
+                  <span className="px-2 py-0.5 rounded-pf-full bg-pf-warning/15 text-pf-warning text-xs font-medium">
                     Closing soon
                   </span>
                 )}
@@ -964,12 +964,12 @@ export function Component() {
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-pf-text">Price History</span>
                 {yesPrice && (
-                  <span className="px-2 py-0.5 rounded-full bg-pf-success/10 border border-pf-success/20 text-[11px] font-mono text-pf-success">
+                  <span className="px-2 py-0.5 rounded-pf-full bg-pf-success/10 border border-pf-success/20 text-[11px] font-mono text-pf-success">
                     YES {yesPrice}
                   </span>
                 )}
                 {noPrice && (
-                  <span className="px-2 py-0.5 rounded-full bg-pf-danger/10 border border-pf-danger/20 text-[11px] font-mono text-pf-danger">
+                  <span className="px-2 py-0.5 rounded-pf-full bg-pf-danger/10 border border-pf-danger/20 text-[11px] font-mono text-pf-danger">
                     NO {noPrice}
                   </span>
                 )}
@@ -1259,7 +1259,7 @@ export function Component() {
                 const askPct = 100 - bidPct;
                 return (
                   <div className="mb-3">
-                    <div className="flex h-1.5 rounded-full overflow-hidden">
+                    <div className="flex h-1.5 rounded-pf-full overflow-hidden">
                       <div className="bg-pf-success/50" style={{ width: `${bidPct}%` }} title={`Bids: ${bidPct.toFixed(0)}%`} />
                       <div className="bg-pf-danger/50 flex-1" title={`Asks: ${askPct.toFixed(0)}%`} />
                     </div>
@@ -1444,11 +1444,11 @@ export function Component() {
                         {/* Legend */}
                         <div className="flex items-center justify-center gap-4 mt-1">
                           <div className="flex items-center gap-1">
-                            <span className="inline-block size-2 rounded-full bg-pf-success" aria-hidden="true" />
+                            <span className="inline-block size-2 rounded-pf-full bg-pf-success" aria-hidden="true" />
                             <span className="text-[10px] text-pf-text-muted">Bids</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="inline-block size-2 rounded-full bg-pf-danger" aria-hidden="true" />
+                            <span className="inline-block size-2 rounded-pf-full bg-pf-danger" aria-hidden="true" />
                             <span className="text-[10px] text-pf-text-muted">Asks</span>
                           </div>
                           <div className="flex items-center gap-1">
@@ -1477,7 +1477,7 @@ export function Component() {
                   <p className="text-xs text-pf-text-muted">Link your Polymarket account to place orders</p>
                   <Link
                     to="/settings/trading-account"
-                    className="mt-1 px-4 py-2 rounded-pf bg-pf-cyan-500 text-black text-xs font-semibold hover:bg-pf-cyan-400 transition-colors"
+                    className="mt-1 px-4 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-xs font-semibold hover:bg-pf-cyan-400 transition-colors"
                   >
                     Connect Wallet
                   </Link>
@@ -1586,7 +1586,7 @@ export function Component() {
                       const suggested = Math.round(f * (portfolioBalance || 1000));
                       setTradeAmount(String(Math.min(suggested, portfolioBalance || 1000)));
                     }}
-                    className="flex-1 h-1.5 rounded-full bg-pf-border accent-pf-cyan-500"
+                    className="flex-1 h-1.5 rounded-pf-full bg-pf-border accent-pf-cyan-500"
                   />
                   <span className="text-xs font-mono text-pf-cyan-400 w-8 text-right">{kellyConfidence}%</span>
                 </div>
@@ -1819,7 +1819,7 @@ export function Component() {
               {/* Loading skeleton */}
               {loadingSentiment ? (
                 <div className="space-y-3">
-                  <div className="h-4 bg-pf-overlay rounded-full animate-pulse" />
+                  <div className="h-4 bg-pf-overlay rounded-pf-full animate-pulse" />
                   <div className="flex gap-2">
                     <div className="flex-1 h-10 bg-pf-overlay rounded-pf animate-pulse" />
                     <div className="flex-1 h-10 bg-pf-overlay rounded-pf animate-pulse" />
@@ -1835,7 +1835,7 @@ export function Component() {
                         <span className="font-semibold text-pf-success">YES {sentiment.yesPercent}%</span>
                         <span className="font-semibold text-pf-danger">{sentiment.noPercent}% NO</span>
                       </div>
-                      <div className="h-4 rounded-full overflow-hidden flex">
+                      <div className="h-4 rounded-pf-full overflow-hidden flex">
                         <div
                           className="bg-pf-success transition-all duration-700 ease-out"
                           style={{ width: `${sentiment.yesPercent}%` }}
@@ -1936,7 +1936,7 @@ export function Component() {
                             step={1}
                             value={confidence}
                             onChange={(e) => setConfidence(parseInt(e.target.value))}
-                            className="w-full h-1.5 rounded-full bg-pf-border accent-pf-cyan-500"
+                            className="w-full h-1.5 rounded-pf-full bg-pf-border accent-pf-cyan-500"
                           />
                           <p className="text-[10px] text-pf-text-muted mt-0.5">
                             {confidence <= 64 ? 'Just a guess' : confidence <= 79 ? 'Fairly confident' : 'Very confident'}
@@ -2046,7 +2046,7 @@ export function Component() {
                       value={alertThreshold}
                       onChange={(e) => setAlertThreshold(parseFloat(e.target.value))}
                       aria-label="Alert threshold"
-                      className="w-full h-1.5 rounded-full bg-pf-border accent-pf-cyan-500"
+                      className="w-full h-1.5 rounded-pf-full bg-pf-border accent-pf-cyan-500"
                     />
                     <div className="flex justify-between text-[10px] text-pf-text-muted mt-0.5">
                       <span>0.01</span>
@@ -2136,14 +2136,14 @@ export function Component() {
                         <div className="flex items-center gap-2 min-w-0">
                           {/* Outcome dot */}
                           <span
-                            className={`size-1.5 rounded-full shrink-0 ${alert.outcome === 'YES' ? 'bg-pf-success' : 'bg-pf-danger'}`}
+                            className={`size-1.5 rounded-pf-full shrink-0 ${alert.outcome === 'YES' ? 'bg-pf-success' : 'bg-pf-danger'}`}
                             aria-hidden="true"
                           />
                           <span className="font-mono text-pf-text truncate">
                             {alert.outcome} {alert.condition} {alert.threshold.toFixed(2)}
                           </span>
                           {alert.triggered && (
-                            <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-pf-warning/15 text-pf-warning border border-pf-warning/20">
+                            <span className="shrink-0 px-1.5 py-0.5 rounded-pf-full text-[10px] font-medium bg-pf-warning/15 text-pf-warning border border-pf-warning/20">
                               Triggered
                             </span>
                           )}
@@ -2218,7 +2218,7 @@ export function Component() {
               <div className="divide-y divide-pf-border">
                 {Array.from({ length: 3 }, (_, i) => (
                   <div key={i} className="flex items-center gap-3 px-6 py-3 animate-pulse">
-                    <div className="size-2 rounded-full bg-pf-overlay shrink-0" />
+                    <div className="size-2 rounded-pf-full bg-pf-overlay shrink-0" />
                     <div className="flex-1 space-y-1.5">
                       <div className="h-3 bg-pf-overlay rounded w-[80%]" />
                       <div className="h-2.5 bg-pf-overlay rounded w-[50%]" />
@@ -2240,7 +2240,7 @@ export function Component() {
                   >
                     {/* Sentiment dot */}
                     <span
-                      className={`size-2 rounded-full shrink-0 ${
+                      className={`size-2 rounded-pf-full shrink-0 ${
                         article.sentiment === 'POSITIVE'
                           ? 'bg-pf-success'
                           : article.sentiment === 'NEGATIVE'
@@ -2260,7 +2260,7 @@ export function Component() {
 
                     {/* Signal count badge */}
                     {(article.signals?.length ?? 0) > 0 && (
-                      <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-pf-cyan-500/15 text-pf-cyan-400">
+                      <span className="shrink-0 px-1.5 py-0.5 rounded-pf-full text-[10px] font-medium bg-pf-cyan-500/15 text-pf-cyan-400">
                         {article.signals!.length} signal{article.signals!.length !== 1 ? 's' : ''}
                       </span>
                     )}

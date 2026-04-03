@@ -201,7 +201,7 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
 
       {/* Severity dot */}
       <span className="mt-1.5 shrink-0">
-        <span className={`block h-2.5 w-2.5 rounded-full ${SEVERITY_DOT[item.severity]}`} />
+        <span className={`block h-2.5 w-2.5 rounded-pf-full ${SEVERITY_DOT[item.severity]}`} />
       </span>
 
       {/* Main content — clickable for read */}
@@ -234,7 +234,7 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
       {/* Right column: unread dot + action link */}
       <span className="flex flex-col items-end gap-2 shrink-0 mt-1">
         {!item.read && (
-          <span className="block h-2 w-2 rounded-full bg-pf-cyan-400" />
+          <span className="block h-2 w-2 rounded-pf-full bg-pf-cyan-400" />
         )}
         {item.actionUrl && (
           <Link

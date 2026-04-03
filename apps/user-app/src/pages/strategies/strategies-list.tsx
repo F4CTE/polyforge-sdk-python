@@ -315,7 +315,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
                 {perfData.map((s) => (
                   <th key={s.strategyId} className="text-left px-5 py-2.5 font-medium text-xs">
                     <span className="flex items-center gap-1.5">
-                      <span className="inline-block w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.color }} aria-hidden="true" />
+                      <span className="inline-block w-2.5 h-2.5 rounded-pf-full shrink-0" style={{ background: s.color }} aria-hidden="true" />
                       <span className="text-pf-text truncate max-w-[120px]">{s.name}</span>
                     </span>
                   </th>
@@ -620,7 +620,7 @@ export function Component() {
           </Button>
           <Link
             to="/strategies/new"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
           >
             <Plus className="size-4" aria-hidden="true" /> New Strategy
           </Link>
@@ -636,7 +636,7 @@ export function Component() {
               variant="ghost"
               key={f.value}
               onClick={() => onFilterChange(f.value)}
-              className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+              className={`px-3 py-1.5 text-sm rounded-pf-full border transition-colors ${
                 filter === f.value
                   ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
                   : 'border-pf-border text-pf-text-secondary hover:text-pf-text'
@@ -672,7 +672,7 @@ export function Component() {
           <p className="text-sm text-pf-text-muted mt-1">Create your first strategy to start trading.</p>
           <Link
             to="/strategies/new"
-            className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-black text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
+            className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
           >
             <Plus className="size-4" aria-hidden="true" /> New Strategy
           </Link>
@@ -762,15 +762,15 @@ export function Component() {
                   <h3 className="text-sm font-medium text-pf-text leading-snug line-clamp-1 group-hover:text-pf-cyan-400 transition-colors">
                     {strategy.name}
                   </h3>
-                  <span data-testid="status-badge" className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}>
-                    <span className={`w-2.5 h-2.5 rounded-full ${statusStyle.dot} ${strategy.status === 'RUNNING' ? 'animate-pulse-dot' : ''}`} />
+                  <span data-testid="status-badge" className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-[11px] font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}>
+                    <span className={`w-2.5 h-2.5 rounded-pf-full ${statusStyle.dot} ${strategy.status === 'RUNNING' ? 'animate-pulse-dot' : ''}`} />
                     {strategy.status}
                   </span>
                 </div>
 
                 {/* Meta chips */}
                 <div className="flex flex-wrap gap-1.5 mb-2">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${
                     strategy.execMode === 'TICK'
                       ? 'bg-pf-purple-500/10 text-pf-purple-500'
                       : strategy.execMode === 'HYBRID'
@@ -779,11 +779,11 @@ export function Component() {
                   }`}>
                     {execLabel(strategy)}
                   </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-pf-overlay text-pf-text-muted text-[11px] font-medium">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-muted text-[11px] font-medium">
                     {blocksCount(strategy)} blocks
                   </span>
                   {strategy.tags.length > 0 && (
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${
                       strategy.tags[0].toLowerCase() === 'momentum'
                         ? 'bg-pf-gold-500/10 text-pf-gold-500'
                         : strategy.tags[0].toLowerCase() === 'defensive'
@@ -793,7 +793,7 @@ export function Component() {
                       {strategy.tags[0]}
                     </span>
                   )}
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-pf-purple-500/10 text-pf-purple-500 text-[11px] font-medium ml-auto">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-pf-full bg-pf-purple-500/10 text-pf-purple-500 text-[11px] font-medium ml-auto">
                     v{strategy.version}
                   </span>
                 </div>
@@ -965,10 +965,10 @@ export function Component() {
                 return (
                   <span
                     key={id}
-                    className="inline-flex items-center gap-1 pl-1.5 pr-1 py-0.5 rounded-full text-[11px] font-medium text-pf-text bg-pf-overlay border border-pf-border"
+                    className="inline-flex items-center gap-1 pl-1.5 pr-1 py-0.5 rounded-pf-full text-[11px] font-medium text-pf-text bg-pf-overlay border border-pf-border"
                   >
                     <span
-                      className="inline-block w-2 h-2 rounded-full shrink-0"
+                      className="inline-block w-2 h-2 rounded-pf-full shrink-0"
                       style={{ background: COMPARE_COLORS[i % COMPARE_COLORS.length] }}
                       aria-hidden="true"
                     />
@@ -1000,7 +1000,7 @@ export function Component() {
               <Button
                 type="button"
                 onClick={openComparison}
-                className="flex items-center gap-1.5 text-sm font-medium px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors"
+                className="flex items-center gap-1.5 text-sm font-medium px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
               >
                 <GitCompare className="size-4" aria-hidden="true" />
                 View Comparison

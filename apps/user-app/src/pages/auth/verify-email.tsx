@@ -99,14 +99,14 @@ export function Component() {
           {/* Verified */}
           {state === 'verified' && (
             <div className="text-center">
-              <div className="size-16 rounded-full bg-pf-success/10 flex items-center justify-center mx-auto mb-4">
+              <div className="size-16 rounded-pf-full bg-pf-success/10 flex items-center justify-center mx-auto mb-4">
                 <Check className="size-8 text-pf-success" />
               </div>
               <h1 className="text-xl font-semibold text-pf-text mb-2">Email verified!</h1>
               <p className="text-sm text-pf-text-muted mb-6">Your account is now active.</p>
               <Link
                 to="/markets"
-                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-black font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-pf-text-contrast font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
               >
                 Go to Markets
               </Link>
@@ -116,7 +116,7 @@ export function Component() {
           {/* Error */}
           {state === 'error' && (
             <div className="text-center">
-              <div className="size-16 rounded-full bg-pf-danger/10 flex items-center justify-center mx-auto mb-4">
+              <div className="size-16 rounded-pf-full bg-pf-danger/10 flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="size-8 text-pf-danger" />
               </div>
               <h1 className="text-xl font-semibold text-pf-text mb-2">Verification failed</h1>
@@ -136,7 +136,7 @@ export function Component() {
           {/* Waiting - no token, just registered */}
           {state === 'waiting' && (
             <div className="text-center">
-              <div className="size-16 rounded-full bg-pf-cyan-500/10 flex items-center justify-center mx-auto mb-4">
+              <div className="size-16 rounded-pf-full bg-pf-cyan-500/10 flex items-center justify-center mx-auto mb-4">
                 <Mail className="size-8 text-pf-cyan-500" />
               </div>
               <h1 className="text-xl font-semibold text-pf-text mb-2">Check your email</h1>

@@ -239,7 +239,7 @@ function AlertBell({ alerts, loading, onClick, active }: AlertBellProps) {
     >
       <Icon className="w-4 h-4" />
       {count > 0 && !active && (
-        <span className="absolute -top-1 -right-1 flex items-center justify-center w-3.5 h-3.5 rounded-full bg-pf-cyan-500 text-[9px] font-bold text-black leading-none">
+        <span className="absolute -top-1 -right-1 flex items-center justify-center w-3.5 h-3.5 rounded-pf-full bg-pf-cyan-500 text-[9px] font-bold text-pf-text-contrast leading-none">
           {count > 9 ? '9+' : count}
         </span>
       )}
@@ -496,7 +496,7 @@ export function Component() {
                 onClick={() => setFilterCategory(cat)}
                 className={`px-3 py-1 text-xs font-medium rounded-pf-sm border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                   filterCategory === cat
-                    ? 'bg-pf-cyan-500 text-black border-pf-cyan-500'
+                    ? 'bg-pf-cyan-500 text-pf-text-contrast border-pf-cyan-500'
                     : 'bg-transparent text-pf-text-secondary border-pf-border hover:border-pf-border-strong hover:text-pf-text'
                 }`}
               >
@@ -519,7 +519,7 @@ export function Component() {
           </p>
           <Button
             onClick={() => navigate('/markets')}
-            className="mt-2 px-4 py-2 bg-pf-cyan-500 text-black text-sm font-semibold rounded-pf hover:brightness-110 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+            className="mt-2 px-4 py-2 bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold rounded-pf hover:brightness-110 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
           >
             Browse Markets
           </Button>
@@ -857,7 +857,7 @@ export function Component() {
                               <Button
                                 onClick={() => submitQuickOrder(market)}
                                 disabled={qo.submitting}
-                                className="px-5 py-2 bg-pf-cyan-500 text-black text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
+                                className="px-5 py-2 bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
                               >
                                 {qo.submitting ? 'Placing…' : `Buy ${qo.outcome}`}
                               </Button>
@@ -1004,7 +1004,7 @@ export function Component() {
                                 <Button
                                   onClick={() => handleAddAlert(market.id)}
                                   disabled={addingAlert}
-                                  className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-pf-cyan-500 text-black text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
+                                  className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
                                 >
                                   <Plus className="w-3.5 h-3.5" aria-hidden="true" />
                                   {addingAlert ? 'Adding…' : 'Add Alert'}
@@ -1063,7 +1063,7 @@ export function Component() {
                                           />
                                         ) : (
                                           <span
-                                            className="w-2 h-2 rounded-full bg-pf-success flex-shrink-0 animate-pulse-dot"
+                                            className="w-2 h-2 rounded-pf-full bg-pf-success flex-shrink-0 animate-pulse-dot"
                                             aria-hidden="true"
                                           />
                                         )}

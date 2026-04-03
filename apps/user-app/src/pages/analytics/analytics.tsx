@@ -165,9 +165,9 @@ function ScoreRow({ label, value, max }: { label: string; value: string; max: nu
         <span className="text-pf-text-secondary">{label}</span>
         <span className="font-mono text-pf-text">{value}</span>
       </div>
-      <div className="h-1.5 bg-pf-overlay rounded-full overflow-hidden">
+      <div className="h-1.5 bg-pf-overlay rounded-pf-full overflow-hidden">
         <div
-          className="h-full bg-pf-cyan-400 rounded-full transition-all duration-500"
+          className="h-full bg-pf-cyan-400 rounded-pf-full transition-all duration-500"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -676,7 +676,7 @@ export function Component() {
                   <ul className="space-y-2">
                     {aiReview.keyInsights.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-pf-text-secondary">
-                        <span className="mt-1.5 size-1.5 rounded-full bg-pf-cyan-400 shrink-0" aria-hidden="true" />
+                        <span className="mt-1.5 size-1.5 rounded-pf-full bg-pf-cyan-400 shrink-0" aria-hidden="true" />
                         {item}
                       </li>
                     ))}
@@ -694,7 +694,7 @@ export function Component() {
                   <ul className="space-y-2">
                     {aiReview.riskFactors.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-pf-text-secondary">
-                        <span className="mt-1.5 size-1.5 rounded-full bg-pf-danger shrink-0" aria-hidden="true" />
+                        <span className="mt-1.5 size-1.5 rounded-pf-full bg-pf-danger shrink-0" aria-hidden="true" />
                         {item}
                       </li>
                     ))}
@@ -712,7 +712,7 @@ export function Component() {
                   <ul className="space-y-2">
                     {aiReview.opportunities.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-pf-text-secondary">
-                        <span className="mt-1.5 size-1.5 rounded-full bg-pf-success shrink-0" aria-hidden="true" />
+                        <span className="mt-1.5 size-1.5 rounded-pf-full bg-pf-success shrink-0" aria-hidden="true" />
                         {item}
                       </li>
                     ))}

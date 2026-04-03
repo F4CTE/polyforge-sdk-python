@@ -21,7 +21,7 @@ const STEPS: TutorialStep[] = [
           Strategies are built by connecting <strong className="text-pf-text">blocks</strong> — each representing a piece of trading logic. Blocks are wired together to define execution flow.
         </p>
         <p className="text-sm text-pf-text-secondary leading-relaxed">
-          Drag blocks from the palette onto the canvas, then connect them by dragging from the <span className="inline-block size-1.5 rounded-full bg-pf-cyan-400 mr-1.5" aria-hidden="true" /> handles on each block.
+          Drag blocks from the palette onto the canvas, then connect them by dragging from the <span className="inline-block size-1.5 rounded-pf-full bg-pf-cyan-400 mr-1.5" aria-hidden="true" /> handles on each block.
         </p>
       </div>
     ),
@@ -196,7 +196,7 @@ export function BuilderTutorial({ forceVisible, onDismiss }: BuilderTutorialProp
               onClick={() => setStep(i)}
               aria-label={`Go to step ${i + 1}`}
               aria-current={i === step ? 'step' : undefined}
-              className={`rounded-full transition-all focus-visible:outline-none h-1.5 ${
+              className={`rounded-pf-full transition-all focus-visible:outline-none h-1.5 ${
                 i === step ? 'w-4 bg-pf-cyan-500' : 'w-1.5 bg-pf-border'
               }`}
             />
@@ -227,7 +227,7 @@ export function BuilderTutorial({ forceVisible, onDismiss }: BuilderTutorialProp
           <button
             type="button"
             onClick={isLast ? dismiss : () => setStep((s) => s + 1)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
           >
             {isLast ? 'Got it' : 'Next'}
             {!isLast && <ChevronRight className="size-3" />}

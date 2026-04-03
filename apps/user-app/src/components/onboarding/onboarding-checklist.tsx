@@ -127,7 +127,7 @@ export function OnboardingChecklist() {
       <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-pf-text">Getting Started</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-pf-cyan-500/15 text-pf-cyan-400 font-medium">
+          <span className="text-[10px] px-1.5 py-0.5 rounded-pf-full bg-pf-cyan-500/15 text-pf-cyan-400 font-medium">
             {completedCount}/{CHECKLIST_ITEMS.length}
           </span>
         </div>
@@ -153,9 +153,9 @@ export function OnboardingChecklist() {
 
       {/* Progress bar */}
       <div className="px-4 pt-2">
-        <div className="w-full h-1.5 bg-pf-overlay rounded-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed`}>
+        <div className="w-full h-1.5 bg-pf-overlay rounded-pf-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed`}>
           <div
-            className="h-full bg-pf-cyan-500 rounded-full transition-all duration-500"
+            className="h-full bg-pf-cyan-500 rounded-pf-full transition-all duration-500"
             style={{ width: `${(completedCount / CHECKLIST_ITEMS.length) * 100}%` }}
           />
         </div>
@@ -172,7 +172,7 @@ export function OnboardingChecklist() {
               <button
                 type="button"
                 onClick={() => toggleItem(item.key)}
-                className="mt-0.5 shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-full"
+                className="mt-0.5 shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-full"
                 aria-label={`Mark "${item.label}" as ${completed[item.key] ? 'incomplete' : 'complete'}`}
               >
                 {completed[item.key] ? (

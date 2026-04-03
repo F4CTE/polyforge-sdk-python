@@ -149,10 +149,10 @@ export function Component() {
           <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium border ${sourceColor(article.source)}`}>
+              <span className={`px-2 py-0.5 rounded-pf-full text-[11px] font-medium border ${sourceColor(article.source)}`}>
                 {article.source}
               </span>
-              <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${sentimentColor(article.sentiment)}`}>
+              <span className={`px-2 py-0.5 rounded-pf-full text-[11px] font-medium ${sentimentColor(article.sentiment)}`}>
                 {article.sentiment}
               </span>
             </div>
@@ -224,9 +224,9 @@ export function Component() {
                         </td>
                         <td className="py-2.5 px-3">
                           <div className="flex items-center gap-2 min-w-[100px]">
-                            <div className={`h-1.5 rounded-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
+                            <div className={`h-1.5 rounded-pf-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
                               <div
-                                className={`h-full rounded-full ${confidenceColor(signal.confidence)}`}
+                                className={`h-full rounded-pf-full ${confidenceColor(signal.confidence)}`}
                                 style={{ width: `${signal.confidence}%` }}
                               />
                             </div>

@@ -432,7 +432,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
               <FlaskConical className="size-3 inline mr-1" />
               Backtest
               {isBacktestActive && (
-                <span className="ml-1.5 inline-flex size-1.5 rounded-full bg-pf-cyan-400 animate-pulse" />
+                <span className="ml-1.5 inline-flex size-1.5 rounded-pf-full bg-pf-cyan-400 animate-pulse" />
               )}
             </button>
             <button
@@ -447,7 +447,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
               <Radio className="size-3 inline mr-1" />
               Live
               {isLiveActive && (
-                <span className={`ml-1.5 inline-flex size-1.5 rounded-full animate-pulse ${
+                <span className={`ml-1.5 inline-flex size-1.5 rounded-pf-full animate-pulse ${
                   live.status === 'PAUSED' ? 'bg-pf-warning' : 'bg-pf-success'
                 }`} />
               )}
@@ -580,7 +580,7 @@ function BacktestTab({
             type="button"
             onClick={onSubmit}
             disabled={submitting || !strategyId || !dateStart || !dateEnd}
-            className="h-8 px-4 rounded-pf-sm bg-pf-cyan-500 text-black text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5 shrink-0"
+            className="h-8 px-4 rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5 shrink-0"
           >
             {submitting ? <Loader2 className="size-3 animate-spin" /> : <Play className="size-3" />}
             Run Backtest
@@ -616,9 +616,9 @@ function BacktestTab({
           </div>
           <span className="text-xs font-mono text-pf-cyan-400">{bt.progress}%</span>
         </div>
-        <div className="h-2 bg-pf-surface rounded-full overflow-hidden" role="progressbar" aria-valuenow={bt.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Backtest progress">
+        <div className="h-2 bg-pf-surface rounded-pf-full overflow-hidden" role="progressbar" aria-valuenow={bt.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Backtest progress">
           <div
-            className="h-full bg-gradient-to-r from-pf-cyan-500 to-pf-cyan-400 rounded-full transition-all duration-500 ease-out"
+            className="h-full bg-gradient-to-r from-pf-cyan-500 to-pf-cyan-400 rounded-pf-full transition-all duration-500 ease-out"
             style={{ width: `${bt.progress}%` }}
           />
         </div>
@@ -802,7 +802,7 @@ function LiveTab({
       {/* Status bar + controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className={`inline-flex size-2 rounded-full ${
+          <span className={`inline-flex size-2 rounded-pf-full ${
             live.status === 'RUNNING' ? 'bg-pf-success animate-pulse' :
             live.status === 'PAUSED' ? 'bg-pf-warning' : 'bg-pf-danger'
           }`} />

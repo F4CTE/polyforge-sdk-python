@@ -178,7 +178,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           type="target"
           position={Position.Left}
           id="input"
-          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
           style={{ borderColor: CALC_COLOR }}
         />
       )}
@@ -188,14 +188,14 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
             type="target"
             position={Position.Left}
             id="input-a"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
             style={{ borderColor: CALC_COLOR, top: '35%' }}
           />
           <Handle
             type="target"
             position={Position.Left}
             id="input-b"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
             style={{ borderColor: CALC_COLOR, top: '65%' }}
           />
         </>
@@ -328,11 +328,11 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {/* Input handle labels */}
           {inputCount === 2 && (
             <div className="flex items-center gap-2 text-[10px] text-pf-text-muted">
-              <span className="px-1.5 py-0.5 rounded-full bg-pf-success/20 text-pf-success font-medium">
+              <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-success/20 text-pf-success font-medium">
                 A
               </span>
               <span>/</span>
-              <span className="px-1.5 py-0.5 rounded-full bg-pf-success/20 text-pf-success font-medium">
+              <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-success/20 text-pf-success font-medium">
                 B
               </span>
             </div>
@@ -345,7 +345,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         type="source"
         position={Position.Right}
         id="output"
-        className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-full"
+        className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
         style={{ borderColor: CALC_COLOR }}
       />
     </>

@@ -45,7 +45,7 @@ function PublicHeader() {
         </Link>
         <Link
           to="/register"
-          className="text-sm font-semibold px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-black hover:bg-pf-cyan-400 transition-colors duration-150"
+          className="text-sm font-semibold px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors duration-150"
         >
           Sign up free
         </Link>

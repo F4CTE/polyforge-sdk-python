@@ -106,7 +106,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
   return (
     <span
       className={[
-        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+        'inline-flex items-center rounded-pf-full px-2 py-0.5 text-xs font-medium',
         className,
       ].join(' ')}
     >
@@ -212,14 +212,14 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
         <StatusBadge status={review.status} />
 
         {review.verifiedPurchase && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-pf-success/30 bg-pf-success/10 px-2 py-0.5 text-xs font-medium text-pf-success">
+          <span className="inline-flex items-center gap-1 rounded-pf-full border border-pf-success/30 bg-pf-success/10 px-2 py-0.5 text-xs font-medium text-pf-success">
             <Check className="h-3 w-3" aria-hidden />
             Verified Purchase
           </span>
         )}
 
         {review.reportCount > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-pf-danger/30 bg-pf-danger/10 px-2 py-0.5 text-xs font-medium text-pf-danger">
+          <span className="inline-flex items-center gap-1 rounded-pf-full border border-pf-danger/30 bg-pf-danger/10 px-2 py-0.5 text-xs font-medium text-pf-danger">
             <AlertTriangle className="h-3 w-3" aria-hidden />
             {review.reportCount} {review.reportCount === 1 ? 'report' : 'reports'}
           </span>
@@ -375,8 +375,8 @@ function ReviewCardSkeleton() {
         <div className="ml-auto h-3 w-16 rounded-pf-sm bg-pf-border" />
       </div>
       <div className="flex gap-2">
-        <div className="h-5 w-16 rounded-full bg-pf-border" />
-        <div className="h-5 w-24 rounded-full bg-pf-border" />
+        <div className="h-5 w-16 rounded-pf-full bg-pf-border" />
+        <div className="h-5 w-24 rounded-pf-full bg-pf-border" />
       </div>
       <div className="space-y-2">
         <div className="h-3.5 w-3/4 rounded-pf-sm bg-pf-border" />
