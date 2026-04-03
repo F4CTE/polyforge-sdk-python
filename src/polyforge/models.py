@@ -24,6 +24,7 @@ class PaginatedResponse(Generic[T]):
     page: int = 1
     limit: int = 10
     has_more: bool = False
+    total_pages: int = 0
 
 
 # ---------------------------------------------------------------------------

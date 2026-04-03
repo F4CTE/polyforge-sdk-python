@@ -242,6 +242,7 @@ class PolyforgeClient:
             page=data["page"],
             limit=data["limit"],
             has_more=data["hasNext"],
+            total_pages=data.get("totalPages", 0),
         )
 
     def get_market(self, market_id: str) -> Market:
@@ -754,6 +755,7 @@ class AsyncPolyforgeClient:
             page=data["page"],
             limit=data["limit"],
             has_more=data["hasNext"],
+            total_pages=data.get("totalPages", 0),
         )
 
     async def get_market(self, market_id: str) -> Market:

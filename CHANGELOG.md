@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.3] — 2026-04-03
+
+### Fixed
+- Add `total_pages` field to `PaginatedResponse` dataclass and populate from `totalPages` in API responses (closes #14)
+
 ## [1.5.1] — 2026-03-30
 
 ### Fixed
