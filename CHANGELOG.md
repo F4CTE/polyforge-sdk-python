@@ -110,6 +110,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.34.1] — 2026-04-03
+
+### Fixed
+- **Global ValidationPipe on internal services** — added `ValidationPipe({ whitelist, forbidNonWhitelisted, transform })` to `bot-service`, `market-data-service`, `notification-service`, `backtest-service`, `order-service`, `paper-order-service`, `signer-service`, and `strategy-engine`; these 8 internal services previously lacked DTO validation, allowing malformed payloads to bypass `class-validator` constraints
+
+---
+
 ## [6.34.0] — 2026-04-02
 
 ### Added

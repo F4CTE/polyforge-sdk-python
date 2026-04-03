@@ -1,5 +1,5 @@
 import { NestFactory } from "@nestjs/core";
-import { RequestMethod } from "@nestjs/common";
+import { RequestMethod, ValidationPipe } from "@nestjs/common";
 import {
   FastifyAdapter,
   NestFastifyApplication,
@@ -43,6 +43,13 @@ async function bootstrap() {
   await app.register(helmet as any, { contentSecurityPolicy: false });
 
   app.useLogger(app.get(Logger));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
   app.setGlobalPrefix("", {
     exclude: [{ path: "health", method: RequestMethod.GET }],
   });

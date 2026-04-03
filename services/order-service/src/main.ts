@@ -3,7 +3,7 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from "@nestjs/platform-fastify";
-import { Logger, RequestMethod } from "@nestjs/common";
+import { Logger, RequestMethod, ValidationPipe } from "@nestjs/common";
 import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 
@@ -42,6 +42,14 @@ async function bootstrap() {
 
   // Security headers via helmet (CSP disabled — gateway manages it)
   await app.register(helmet as any, { contentSecurityPolicy: false });
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   app.setGlobalPrefix("", {
     exclude: [{ path: "health", method: RequestMethod.GET }],
