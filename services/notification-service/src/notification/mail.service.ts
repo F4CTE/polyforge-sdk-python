@@ -19,11 +19,12 @@ export class MailService {
         ignoreTLS: true,
       } as any);
     } else {
-      // SES via SMTP (production)
+      // SES via SMTP (production) — port 587 uses STARTTLS; requireTLS enforces upgrade
       this.transporter = nodemailer.createTransport({
         host: `email-smtp.${process.env.AWS_SES_REGION ?? "us-east-1"}.amazonaws.com`,
         port: 587,
         secure: false,
+        requireTLS: true,
         auth: {
           user: process.env.AWS_SES_SMTP_USER,
           pass: process.env.AWS_SES_SMTP_PASSWORD,

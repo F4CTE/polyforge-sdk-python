@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.8] — 2026-04-03
+
+### Fixed
+- **Cookie sameSite strict** — changed `sameSite` from `'lax'` to `'strict'` in auth-service and admin-auth-service cookie options; prevents CSRF via cross-site navigation for `pf_token`, `pf_refresh`, and `pf_admin_token` cookies
+- **SMTP TLS enforcement** — added `requireTLS: true` to SES SMTP transport in notification-service mail.service; ensures STARTTLS upgrade is mandatory on port 587
+
+---
+
 ## [6.35.7] — 2026-04-03
 
 ### Fixed
