@@ -22,6 +22,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Light-theme token overrides (closes #47)** — added 38 missing `--color-pf-*` custom properties to `.light-theme` in `globals.css` so that every token the dark theme defines also has a light-mode equivalent
 - **Admin sidebar identity colour (closes #41)** — added `--color-pf-admin-sidebar` token (dark: `oklch(0.18 0.01 240)`; light: `oklch(0.96 0.01 240)`) and applied it via `bg-pf-admin-sidebar` class
 - **Replace bare `font-mono` with design-token stack (closes #45)** — replaced all 23 occurrences of `font-mono` across admin-app, user-app, and packages/ui with `font-pf-mono` mapping to `'JetBrains Mono', ui-monospace, monospace`; added `--font-pf-mono` definition and `font-pf-mono` Tailwind utility in `globals.css`
+- **Replace hardcoded Recharts hex colors with design tokens** — replaced all remaining hardcoded hex colours in Recharts chart components (revenue, sentiment, portfolio, backtest, strategy-builder, public-profile) with `var(--color-pf-*)` CSS custom-property references; added `--color-pf-chart-tooltip-bg`, `--color-pf-chart-tooltip-border`, and `--color-pf-chart-grid` tokens to both dark and light themes in `globals.css`
 
 ---
 

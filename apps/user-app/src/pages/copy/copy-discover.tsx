@@ -244,7 +244,7 @@ function MiniSparkline({ data }: { data: number[] }) {
       <path
         d={path}
         fill="none"
-        stroke={isUp ? 'var(--pf-success, #10b981)' : 'var(--pf-danger, #ef4444)'}
+        stroke={isUp ? 'var(--color-pf-success)' : 'var(--color-pf-danger)'}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"

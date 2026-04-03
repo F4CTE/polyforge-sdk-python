@@ -412,14 +412,14 @@ export function Component() {
                       <AreaChart data={equityData.map(p => ({ time: new Date(p.simulatedAt).toLocaleDateString(), value: parseFloat(p.equityCurve) }))}>
                         <defs>
                           <linearGradient id="btGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.2} />
-                            <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
+                            <stop offset="0%" stopColor="var(--color-pf-cyan-400)" stopOpacity={0.2} />
+                            <stop offset="100%" stopColor="var(--color-pf-cyan-400)" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <XAxis dataKey="time" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                         <YAxis tick={{ fontSize: 9 }} tickLine={false} axisLine={false} width={45} tickFormatter={(v: number) => `$${v.toFixed(0)}`} />
-                        <Tooltip formatter={(v: number) => [`$${v.toFixed(2)}`, 'P&L']} contentStyle={{ background: '#0d1926', border: '1px solid #1a2f47', borderRadius: 6, fontSize: 11 }} />
-                        <Area type="monotone" dataKey="value" stroke="#22d3ee" strokeWidth={1.5} fill="url(#btGrad)" dot={false} />
+                        <Tooltip formatter={(v: number) => [`$${v.toFixed(2)}`, 'P&L']} contentStyle={{ background: 'var(--color-pf-chart-tooltip-bg)', border: '1px solid var(--color-pf-chart-tooltip-border)', borderRadius: 6, fontSize: 11 }} />
+                        <Area type="monotone" dataKey="value" stroke="var(--color-pf-cyan-400)" strokeWidth={1.5} fill="url(#btGrad)" dot={false} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>

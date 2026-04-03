@@ -378,7 +378,7 @@ export function Component() {
                 type="number"
                 domain={[0, 100]}
                 tickFormatter={(v) => `${v}%`}
-                tick={{ fontSize: 11, fill: 'var(--pf-text-tertiary, #6b7280)' }}
+                tick={{ fontSize: 11, fill: 'var(--color-pf-text-tertiary)' }}
                 axisLine={false}
                 tickLine={false}
               />
@@ -386,24 +386,24 @@ export function Component() {
                 type="category"
                 dataKey="category"
                 width={90}
-                tick={{ fontSize: 11, fill: 'var(--pf-text-secondary, #9ca3af)' }}
+                tick={{ fontSize: 11, fill: 'var(--color-pf-text-secondary)' }}
                 axisLine={false}
                 tickLine={false}
               />
               <Tooltip content={<CategoryTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-              <Bar dataKey="bullishPct" name="Bullish %" stackId="a" fill="var(--pf-success, #22c55e)" radius={[0, 0, 0, 0]}>
+              <Bar dataKey="bullishPct" name="Bullish %" stackId="a" fill="var(--color-pf-success)" radius={[0, 0, 0, 0]}>
                 {chartData.map((entry) => (
-                  <Cell key={entry.category} fill="var(--pf-success, #22c55e)" />
+                  <Cell key={entry.category} fill="var(--color-pf-success)" />
                 ))}
               </Bar>
-              <Bar dataKey="neutralPct" name="Neutral %" stackId="a" fill="#6b7280" opacity={0.45}>
+              <Bar dataKey="neutralPct" name="Neutral %" stackId="a" fill="var(--color-pf-text-muted)" opacity={0.45}>
                 {chartData.map((entry) => (
-                  <Cell key={entry.category} fill="#6b7280" />
+                  <Cell key={entry.category} fill="var(--color-pf-text-muted)" />
                 ))}
               </Bar>
-              <Bar dataKey="bearishPct" name="Bearish %" stackId="a" fill="var(--pf-danger, #ef4444)" radius={[0, 4, 4, 0]}>
+              <Bar dataKey="bearishPct" name="Bearish %" stackId="a" fill="var(--color-pf-danger)" radius={[0, 4, 4, 0]}>
                 {chartData.map((entry) => (
-                  <Cell key={entry.category} fill="var(--pf-danger, #ef4444)" />
+                  <Cell key={entry.category} fill="var(--color-pf-danger)" />
                 ))}
               </Bar>
             </BarChart>

@@ -89,7 +89,7 @@ interface StrategyPerfData {
 
 /* ─── Constants ──────────────────────────────────────────────────────── */
 
-const COMPARE_COLORS = ['#06b6d4', '#8b5cf6', '#f59e0b', '#10b981'];
+const COMPARE_COLORS = ['var(--color-pf-cyan-500)', 'var(--color-pf-purple-500)', 'var(--color-pf-gold-500)', 'var(--color-pf-success)'];
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 

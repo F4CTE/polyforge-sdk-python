@@ -1066,16 +1066,16 @@ export function Component() {
                       formatter={(value: string) => value === 'yesPrice' ? 'YES' : value === 'noPrice' ? 'NO' : 'Volume'}
                     />
                     {/* Volume bars */}
-                    <Bar yAxisId="volume" dataKey="volume" fill="#06b6d4" opacity={0.15} name="volume" />
+                    <Bar yAxisId="volume" dataKey="volume" fill={cyan500} opacity={0.15} name="volume" />
                     {/* YES price line */}
                     <Line
                       yAxisId="price"
                       type="monotone"
                       dataKey="yesPrice"
-                      stroke="#06b6d4"
+                      stroke={cyan500}
                       strokeWidth={1.5}
                       dot={false}
-                      activeDot={{ r: 3, fill: '#06b6d4' }}
+                      activeDot={{ r: 3, fill: cyan500 }}
                       name="yesPrice"
                     />
                     {/* NO price line */}
@@ -1083,11 +1083,11 @@ export function Component() {
                       yAxisId="price"
                       type="monotone"
                       dataKey="noPrice"
-                      stroke="#6b7280"
+                      stroke={textMuted}
                       strokeWidth={1.5}
                       strokeDasharray="4 2"
                       dot={false}
-                      activeDot={{ r: 3, fill: '#6b7280' }}
+                      activeDot={{ r: 3, fill: textMuted }}
                       name="noPrice"
                     />
                   </ComposedChart>

@@ -68,6 +68,18 @@
   --color-pf-pnl-negative: #ef4444;
   --color-pf-pnl-neutral: #64748b;
 
+  /* Chart palette — for Recharts fill/stroke attributes */
+  --color-pf-chart-1: var(--color-pf-cyan-500);
+  --color-pf-chart-2: var(--color-pf-purple-500);
+  --color-pf-chart-3: var(--color-pf-gold-500);
+  --color-pf-chart-4: var(--color-pf-success);
+  --color-pf-chart-5: var(--color-pf-info);
+  --color-pf-chart-6: var(--color-pf-danger);
+  --color-pf-chart-muted: var(--color-pf-text-muted);
+  --color-pf-chart-grid: rgba(148, 163, 184, 0.15);
+  --color-pf-chart-tooltip-bg: #0d1926;
+  --color-pf-chart-tooltip-border: #1a2f47;
+
   /* Disabled text */
   --color-pf-text-disabled: #475569;
 
@@ -373,6 +385,11 @@ body {
   --color-pf-danger: #dc2626; /* red-600 — 5.6:1 on white ✓ (was #EF4444 = 4.6:1 ~) */
   --color-pf-warning: #d97706; /* amber-600 — 4.5:1 on white ✓ (was #F59E0B = 2.9:1 ✗) */
   --color-pf-info: #2563eb; /* blue-600 — 6.0:1 on white ✓ (was #3B82F6 = 4.5:1 ~) */
+
+  /* Chart palette */
+  --color-pf-chart-tooltip-bg: #ffffff;
+  --color-pf-chart-tooltip-border: #e2e8f0;
+  --color-pf-chart-grid: rgba(100, 116, 139, 0.15);
 
   /* P&L colors — darker variants for AA compliance on light surfaces */
   --color-pf-pnl-positive: #059669; /* emerald-600 — matches success light */

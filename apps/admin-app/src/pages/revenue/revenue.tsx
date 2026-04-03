@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@polyforge/ui';
 import {
@@ -67,41 +67,20 @@ interface MarketplaceStats {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-/** Fallback hex values — used only when CSS variables are unavailable */
-const SOURCE_COLOR_FALLBACKS: Record<SourceKey, string> = {
-  marketplace_listings: '#22d3ee',
-  copy_fees: '#22c55e',
-  strategy_sales: '#8b5cf6',
-  subscription: '#f59e0b',
-  other: '#6b7280',
+const SOURCE_COLORS: Record<SourceKey, string> = {
+  marketplace_listings: 'var(--color-pf-cyan-400)',
+  copy_fees: 'var(--color-pf-success)',
+  strategy_sales: 'var(--color-pf-purple-500)',
+  subscription: 'var(--color-pf-gold-500)',
+  other: 'var(--color-pf-text-muted)',
 };
-
-/** CSS custom-property names for each source key */
-const SOURCE_COLOR_VARS: Record<SourceKey, string> = {
-  marketplace_listings: '--color-pf-cyan-400',
-  copy_fees: '--color-pf-success',
-  strategy_sales: '--color-pf-violet-500',
-  subscription: '--color-pf-warning',
-  other: '--color-pf-text-muted',
-};
-
-function resolveSourceColors(): Record<SourceKey, string> {
-  const s = getComputedStyle(document.documentElement);
-  const keys = Object.keys(SOURCE_COLOR_VARS) as SourceKey[];
-  const result = {} as Record<SourceKey, string>;
-  for (const key of keys) {
-    const resolved = s.getPropertyValue(SOURCE_COLOR_VARS[key]).trim();
-    result[key] = resolved || SOURCE_COLOR_FALLBACKS[key];
-  }
-  return result;
-}
 
 const SOURCE_BG: Record<SourceKey, string> = {
-  marketplace_listings: 'bg-cyan-400/10',
-  copy_fees: 'bg-green-500/10',
-  strategy_sales: 'bg-violet-500/10',
-  subscription: 'bg-amber-500/10',
-  other: 'bg-gray-500/10',
+  marketplace_listings: 'bg-pf-cyan-400/10',
+  copy_fees: 'bg-pf-success/10',
+  strategy_sales: 'bg-pf-purple-500/10',
+  subscription: 'bg-pf-gold-500/10',
+  other: 'bg-pf-text-muted/10',
 };
 
 const PERIODS: { label: string; value: Period }[] = [
@@ -189,8 +168,8 @@ interface DonutLabelProps {
 function DonutCenterLabel({ cx = 0, cy = 0, total }: DonutLabelProps) {
   return (
     <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
-      <tspan x={cx} dy="-0.4em" fontSize={11} fill="var(--color-pf-text-muted)">Total</tspan>
-      <tspan x={cx} dy="1.4em" fontSize={14} fontWeight={700} fill="var(--color-pf-text-secondary)" fontFamily="'JetBrains Mono', ui-monospace, monospace">
+      <tspan x={cx} dy="-0.4em" fontSize={11} fill="var(--color-pf-text-secondary)">Total</tspan>
+      <tspan x={cx} dy="1.4em" fontSize={14} fontWeight={700} fill="var(--color-pf-text)" fontFamily="monospace">
         {fmtDollar(total)}
       </tspan>
     </text>
@@ -232,7 +211,7 @@ function PeriodPills({ periods, active, onChange }: PeriodPillProps) {
 function ChangeBadge({ change }: { change: number }) {
   const positive = change >= 0;
   return (
-    <span className={`inline-flex items-center gap-0.5 text-xs font-medium font-mono ${positive ? 'text-pf-success' : 'text-pf-danger'}`}>
+    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${positive ? 'text-pf-success' : 'text-pf-danger'}`}>
       {positive
         ? <TrendingUp className="size-3" />
         : <TrendingDown className="size-3" />}
@@ -269,9 +248,6 @@ export function Component() {
   // Top users (new)
   const [topUsers, setTopUsers] = useState<TopRevenueUser[]>([]);
   const [loadingTopUsers, setLoadingTopUsers] = useState(true);
-
-  // Resolve design-token CSS variables at runtime for Recharts (which needs string colors)
-  const SOURCE_COLORS = useMemo<Record<SourceKey, string>>(() => resolveSourceColors(), []);
 
   // ── Loaders ──
 
@@ -689,11 +665,11 @@ export function Component() {
                 margin={{ top: 4, right: 48, left: 8, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--color-pf-text-muted)' }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--color-pf-text-secondary)' }} axisLine={false} tickLine={false} />
                 <YAxis
                   yAxisId="left"
                   tickFormatter={fmtDollar}
-                  tick={{ fontSize: 11, fill: 'var(--color-pf-text-muted)' }}
+                  tick={{ fontSize: 11, fill: 'var(--color-pf-text-secondary)' }}
                   axisLine={false}
                   tickLine={false}
                   width={56}
@@ -701,16 +677,16 @@ export function Component() {
                 <YAxis
                   yAxisId="right"
                   orientation="right"
-                  tick={{ fontSize: 11, fill: 'var(--color-pf-text-muted)' }}
+                  tick={{ fontSize: 11, fill: 'var(--color-pf-text-secondary)' }}
                   axisLine={false}
                   tickLine={false}
                   width={40}
                 />
                 <Tooltip content={<MonthlyTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-                <Bar yAxisId="left" dataKey="revenue" name="Revenue" fill={SOURCE_COLORS.marketplace_listings} opacity={0.7} radius={[2, 2, 0, 0]} />
-                <Bar yAxisId="left" dataKey="fees" name="Fees" fill={SOURCE_COLORS.strategy_sales} opacity={0.7} radius={[2, 2, 0, 0]} />
-                <Line yAxisId="right" type="monotone" dataKey="purchases" name="Purchases" stroke={SOURCE_COLORS.subscription} strokeWidth={2} dot={false} />
+                <Bar yAxisId="left" dataKey="revenue" name="Revenue" fill="var(--color-pf-cyan-500)" opacity={0.7} radius={[2, 2, 0, 0]} />
+                <Bar yAxisId="left" dataKey="fees" name="Fees" fill="var(--color-pf-purple-500)" opacity={0.7} radius={[2, 2, 0, 0]} />
+                <Line yAxisId="right" type="monotone" dataKey="purchases" name="Purchases" stroke="var(--color-pf-gold-500)" strokeWidth={2} dot={false} />
               </ComposedChart>
             </ResponsiveContainer>
           )}
@@ -738,8 +714,8 @@ export function Component() {
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={compareData} margin={{ top: 4, right: 16, left: 8, bottom: 0 }} barCategoryGap="30%">
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--color-pf-text-muted)' }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={fmtDollar} tick={{ fontSize: 10, fill: 'var(--color-pf-text-muted)' }} axisLine={false} tickLine={false} width={52} />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--color-pf-text-secondary)' }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={fmtDollar} tick={{ fontSize: 10, fill: 'var(--color-pf-text-secondary)' }} axisLine={false} tickLine={false} width={52} />
                 <Tooltip content={<CompareTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
                 <Bar dataKey="Current" name="Current" radius={[2, 2, 0, 0]} opacity={0.85}>
@@ -796,7 +772,7 @@ export function Component() {
                         <div className="text-sm font-mono font-semibold text-pf-success">
                           {fmt(parseFloat(l.totalRevenue))}
                         </div>
-                        <div className="text-xs text-pf-text-muted font-mono">${parseFloat(l.priceUsdc).toFixed(2)} ea</div>
+                        <div className="text-xs text-pf-text-muted">${parseFloat(l.priceUsdc).toFixed(2)} ea</div>
                       </div>
                     </div>
                   ))}
@@ -822,14 +798,14 @@ export function Component() {
                       <div className="flex-1 min-w-0">
                         <div className="text-sm text-pf-text truncate">{p.listing.title}</div>
                         <div className="text-xs text-pf-text-muted">
-                          {new Date(p.createdAt).toLocaleDateString()} · <span className="font-mono">fee: ${parseFloat(p.platformFee).toFixed(2)}</span>
+                          {new Date(p.createdAt).toLocaleDateString()} · fee: ${parseFloat(p.platformFee).toFixed(2)}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
                         <div className="text-sm font-mono font-semibold text-pf-text">
                           ${parseFloat(p.priceUsdc).toFixed(2)}
                         </div>
-                        <div className="text-xs text-pf-success font-mono">+${parseFloat(p.sellerNet).toFixed(2)} seller</div>
+                        <div className="text-xs text-pf-success">+${parseFloat(p.sellerNet).toFixed(2)} seller</div>
                       </div>
                     </div>
                   ))}
@@ -890,7 +866,7 @@ export function Component() {
                     )
                   : topUsers.map((user, idx) => {
                       const srcKey = user.primarySource as SourceKey;
-                      const dotColor = SOURCE_COLORS[srcKey] ?? SOURCE_COLOR_FALLBACKS.other;
+                      const dotColor = SOURCE_COLORS[srcKey] ?? 'var(--color-pf-text-muted)';
                       return (
                         <tr key={user.userId} className="hover:bg-pf-overlay/40 transition-colors">
                           <td className="px-4 py-3 font-mono text-xs text-pf-text-muted">{idx + 1}</td>

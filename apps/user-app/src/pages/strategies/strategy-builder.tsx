@@ -52,11 +52,11 @@ interface StrategyTemplate {
 }
 
 const SECTION_COLORS_STATIC: Record<string, string> = {
-  safety: '#EF4444',
-  triggers: '#F59E0B',
-  conditions: '#3B82F6',
-  actions: '#22C55E',
-  logic: '#3B82F6',
+  safety: 'var(--color-pf-danger)',
+  triggers: 'var(--color-pf-warning)',
+  conditions: 'var(--color-pf-info)',
+  actions: 'var(--color-pf-success)',
+  logic: 'var(--color-pf-info)',
 };
 
 const STRATEGY_TEMPLATES: StrategyTemplate[] = [
@@ -518,7 +518,7 @@ const STRATEGY_TEMPLATES: StrategyTemplate[] = [
         type: 'AND_GATE',
         label: 'AND',
         section: 'logic',
-        color: '#3B82F6',
+        color: 'var(--color-pf-info)',
         config: {},
         fields: [],
         position: { x: 1050, y: 200 },
@@ -672,7 +672,7 @@ const STRATEGY_TEMPLATES: StrategyTemplate[] = [
         type: 'AND_GATE',
         label: 'AND',
         section: 'logic',
-        color: '#3B82F6',
+        color: 'var(--color-pf-info)',
         config: {},
         fields: [],
         position: { x: 1050, y: 200 },

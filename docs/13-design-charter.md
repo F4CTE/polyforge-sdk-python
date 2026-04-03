@@ -1734,6 +1734,9 @@ The v3.0 UI combines **shadcn's clean, minimal style** with the existing **Polyf
 - Responsive container support via `<ResponsiveContainer>`.
 - Polyforge chart theming: cyan for primary series, gold for secondary, dark backgrounds matching `--pf-bg-surface`.
 - Tooltip and legend styling uses Polyforge text colors and border tokens.
+- **Chart color tokens** (`globals.css`): `--color-pf-chart-1` through `--color-pf-chart-6`, `--color-pf-chart-muted`, `--color-pf-chart-grid`, `--color-pf-chart-tooltip-bg`, `--color-pf-chart-tooltip-border`. Both dark and light theme overrides provided.
+- **Never hardcode hex colors in Recharts `fill`/`stroke` attributes** — use `var(--color-pf-*)` CSS custom properties or the resolved `chartColors` utility from `@polyforge/ui/lib/chart-colors`.
+- Categorical palette order: cyan → purple → gold → success → info → danger.
 
 ### Strategy Builder — React Flow
 

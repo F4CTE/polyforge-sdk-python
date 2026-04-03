@@ -49,12 +49,16 @@ function getTheme() {
   const s = typeof window !== 'undefined'
     ? getComputedStyle(document.documentElement)
     : null;
+  const get = (v: string) => s?.getPropertyValue(v).trim() || '';
   return {
-    cyan:      s?.getPropertyValue('--color-pf-cyan-500').trim()        || '#06B6D4',
-    bgElevated: s?.getPropertyValue('--color-pf-elevated').trim()       || '#111D2E',
-    border:    s?.getPropertyValue('--color-pf-border').trim()          || '#1E3350',
-    textMuted: s?.getPropertyValue('--color-pf-text-muted').trim()      || '#445E7A',
-    textSec:   s?.getPropertyValue('--color-pf-text-secondary').trim()  || '#7A94B4',
+    cyan:       get('--color-pf-cyan-500')       || '#06B6D4',
+    bgElevated: get('--color-pf-elevated')       || '#111D2E',
+    border:     get('--color-pf-border')         || '#1E3350',
+    textMuted:  get('--color-pf-text-muted')     || '#445E7A',
+    textSec:    get('--color-pf-text-secondary') || '#7A94B4',
+    success:    get('--color-pf-success')        || '#10b981',
+    danger:     get('--color-pf-danger')         || '#EF4444',
+    base:       get('--color-pf-base')           || '#0F172A',
   };
 }
 
@@ -153,7 +157,7 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
   const fullDomainMin = allCandles[0]?.ts ?? 0;
   const fullDomainMax = allCandles.at(-1)?.ts ?? 0;
 
-  const { cyan, bgElevated, border, textMuted } = theme.current;
+  const { cyan, bgElevated, border, textMuted, success, danger, base } = theme.current;
 
   // Trade markers — only show those the playhead has reached
   const visibleBuyDots  = trades.filter(t => t.side === 'BUY'  && new Date(t.time).getTime() <= playheadTs);
@@ -237,7 +241,7 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
                   padding: '4px 8px',
                 }}
                 labelFormatter={(ts: number) => formatTooltipDate(ts)}
-                labelStyle={{ color: '#7A94B4', marginBottom: 2 }}
+                labelStyle={{ color: theme.current.textSec, marginBottom: 2 }}
                 itemStyle={{ color: cyan }}
                 formatter={(v: number) => [v.toFixed(3), 'Price']}
               />
@@ -259,8 +263,8 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
                   x={new Date(t.time).getTime()}
                   y={parseFloat(t.price)}
                   r={4}
-                  fill="#22C55E"
-                  stroke="#0F172A"
+                  fill={success}
+                  stroke={base}
                   strokeWidth={1}
                   isFront
                 />
@@ -273,8 +277,8 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
                   x={new Date(t.time).getTime()}
                   y={parseFloat(t.price)}
                   r={4}
-                  fill="#EF4444"
-                  stroke="#0F172A"
+                  fill={danger}
+                  stroke={base}
                   strokeWidth={1}
                   isFront
                 />

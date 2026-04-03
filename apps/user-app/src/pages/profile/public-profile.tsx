@@ -343,7 +343,7 @@ export function Component() {
 
   // Determine chart color based on final cumPnl
   const finalCumPnl = perfData.length > 0 ? perfData[perfData.length - 1].cumPnl : 0;
-  const chartColor = finalCumPnl >= 0 ? '#22c55e' : '#ef4444';
+  const chartColor = finalCumPnl >= 0 ? 'var(--color-pf-success)' : 'var(--color-pf-danger)';
   const chartGradientId = finalCumPnl >= 0 ? 'perfGradientGreen' : 'perfGradientRed';
 
   return (
@@ -610,7 +610,7 @@ export function Component() {
               </defs>
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 10, fill: 'var(--pf-text-muted, #6b7280)' }}
+                tick={{ fontSize: 10, fill: 'var(--color-pf-text-muted)' }}
                 tickLine={false}
                 axisLine={false}
                 interval="preserveStartEnd"
