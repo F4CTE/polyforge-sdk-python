@@ -28,14 +28,16 @@ export function Hero() {
           <div
             key={`${p.left}-${p.top}`}
             className="absolute rounded-pf-full bg-pf-cyan-500/25 hero-particle"
-            style={{
-              width: p.w,
-              height: p.w,
-              left: p.left,
-              top: p.top,
-              '--particle-dur': p.dur,
-              '--particle-delay': p.delay,
-            } as React.CSSProperties}
+            style={
+              {
+                width: p.w,
+                height: p.w,
+                left: p.left,
+                top: p.top,
+                "--particle-dur": p.dur,
+                "--particle-delay": p.delay,
+              } as React.CSSProperties
+            }
           />
         ))}
       </div>
