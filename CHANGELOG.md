@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.0] — 2026-04-03
+
+### Fixed
+- **Security headers via @fastify/helmet (closes #57)** — registered `@fastify/helmet` in all 12 production NestJS services; replaced manual `addHook('onSend')` security header injection in api-service, auth-service, admin-api-service, and admin-auth-service with helmet; CSP disabled at service level (gateway manages it); adds X-Content-Type-Options, X-Frame-Options, HSTS, X-XSS-Protection, Referrer-Policy, X-Permitted-Cross-Domain-Policies, X-Download-Options headers
+
+---
+
 ## [6.34.1] — 2026-04-03
 
 ### Fixed

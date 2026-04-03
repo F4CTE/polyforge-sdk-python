@@ -4,6 +4,7 @@ import {
   NestFastifyApplication,
 } from "@nestjs/platform-fastify";
 import { Logger, RequestMethod } from "@nestjs/common";
+import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 
@@ -30,6 +31,9 @@ async function bootstrap() {
     new FastifyAdapter(),
     { bufferLogs: true },
   );
+
+  // Security headers via helmet (CSP disabled — gateway manages it)
+  await app.register(helmet as any, { contentSecurityPolicy: false });
 
   // R4-04: Global exception filter to strip stack traces in production
   app.useGlobalFilters(new GlobalExceptionFilter());

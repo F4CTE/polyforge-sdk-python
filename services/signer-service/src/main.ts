@@ -4,6 +4,7 @@ import {
   NestFastifyApplication,
 } from "@nestjs/platform-fastify";
 import { Logger, RequestMethod } from "@nestjs/common";
+import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { validateEnv } from "./validate-env";
 
@@ -17,6 +18,9 @@ async function bootstrap() {
     new FastifyAdapter(),
     { bufferLogs: true },
   );
+
+  // Security headers via helmet (CSP disabled — gateway manages it)
+  await app.register(helmet as any, { contentSecurityPolicy: false });
 
   // Health is at /health (no prefix), all other routes are internal-only
   app.setGlobalPrefix("", {

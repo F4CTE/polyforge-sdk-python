@@ -4,6 +4,7 @@ import {
   NestFastifyApplication,
 } from "@nestjs/platform-fastify";
 import { Logger, RequestMethod } from "@nestjs/common";
+import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 
 const PORT = parseInt(process.env.PORT ?? "3007", 10);
@@ -38,6 +39,9 @@ async function bootstrap() {
     new FastifyAdapter(),
     { bufferLogs: true },
   );
+
+  // Security headers via helmet (CSP disabled — gateway manages it)
+  await app.register(helmet as any, { contentSecurityPolicy: false });
 
   app.setGlobalPrefix("", {
     exclude: [{ path: "health", method: RequestMethod.GET }],

@@ -6,6 +6,7 @@ import {
 import { ValidationPipe, RequestMethod } from "@nestjs/common";
 import { Logger } from "nestjs-pino";
 import fastifyCookie from "@fastify/cookie";
+import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 import { PrismaAdminService } from "@polyforge/shared-db";
@@ -59,6 +60,11 @@ async function bootstrap() {
   // Cookie plugin — must be registered before any route handlers
   await app.register(fastifyCookie as any);
 
+  // Security headers via helmet (CSP disabled — gateway manages it)
+  await app.register(helmet as any, {
+    contentSecurityPolicy: false,
+  });
+
   app.useLogger(app.get(Logger));
 
   app.useGlobalPipes(
@@ -95,18 +101,6 @@ async function bootstrap() {
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   });
-
-  // Security headers
-  app
-    .getHttpAdapter()
-    .getInstance()
-    .addHook("onSend", (_req: any, reply: any, _payload: any, done: any) => {
-      reply.header("X-Content-Type-Options", "nosniff");
-      reply.header("X-Frame-Options", "DENY");
-      reply.header("X-XSS-Protection", "1; mode=block");
-      reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
-      done();
-    });
 
   app.setGlobalPrefix("auth/v1", {
     exclude: [{ path: "health", method: RequestMethod.GET }],

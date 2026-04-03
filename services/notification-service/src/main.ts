@@ -5,6 +5,7 @@ import {
   NestFastifyApplication,
 } from "@nestjs/platform-fastify";
 import { Logger } from "nestjs-pino";
+import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 
 const PORT = parseInt(process.env.PORT ?? "3010", 10);
@@ -29,6 +30,9 @@ async function bootstrap() {
     new FastifyAdapter(),
     { bufferLogs: true },
   );
+
+  // Security headers via helmet (CSP disabled — gateway manages it)
+  await app.register(helmet as any, { contentSecurityPolicy: false });
 
   app.useLogger(app.get(Logger));
   app.setGlobalPrefix("", {

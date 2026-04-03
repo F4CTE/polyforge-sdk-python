@@ -12,6 +12,7 @@ import * as path from "path";
 import fastifyCookie from "@fastify/cookie";
 import compress from "@fastify/compress";
 import etag from "@fastify/etag";
+import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 
@@ -84,6 +85,11 @@ async function bootstrap() {
 
   // ETag support for conditional requests (304 Not Modified)
   await app.register(etag as any);
+
+  // Security headers via helmet (CSP disabled — gateway manages it)
+  await app.register(helmet as any, {
+    contentSecurityPolicy: false,
+  });
 
   app.useLogger(app.get(Logger));
 
@@ -169,18 +175,6 @@ async function bootstrap() {
   if (enableSwagger) {
     fs.writeFileSync(outPath, JSON.stringify(document, null, 2), "utf8");
   }
-
-  // Security headers
-  app
-    .getHttpAdapter()
-    .getInstance()
-    .addHook("onSend", (_req: any, reply: any, _payload: any, done: any) => {
-      reply.header("X-Content-Type-Options", "nosniff");
-      reply.header("X-Frame-Options", "DENY");
-      reply.header("X-XSS-Protection", "1; mode=block");
-      reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
-      done();
-    });
 
   // ─── Public OpenAPI / Swagger UI ────────────────────────────────────────────
   // These routes are public (no auth) so AI agents and SDK generators can

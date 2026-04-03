@@ -8,6 +8,7 @@ import { Logger } from 'nestjs-pino';
 import fastifyCookie from '@fastify/cookie';
 import compress from '@fastify/compress';
 import etag from '@fastify/etag';
+import helmet from '@fastify/helmet';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 
@@ -87,6 +88,11 @@ async function bootstrap() {
   // ETag support for conditional requests (304 Not Modified)
   await app.register(etag as any);
 
+  // Security headers via helmet (CSP disabled — gateway manages it)
+  await app.register(helmet as any, {
+    contentSecurityPolicy: false,
+  });
+
   // Logger
   app.useLogger(app.get(Logger));
 
@@ -127,18 +133,6 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
-
-  // Security headers
-  app
-    .getHttpAdapter()
-    .getInstance()
-    .addHook('onSend', (_req: any, reply: any, _payload: any, done: any) => {
-      reply.header('X-Content-Type-Options', 'nosniff');
-      reply.header('X-Frame-Options', 'DENY');
-      reply.header('X-XSS-Protection', '1; mode=block');
-      reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
-      done();
-    });
 
   // Prefix: auth/v1 — Nginx routes /auth/v1/* to this service
   // Health check excluded so it stays at /health

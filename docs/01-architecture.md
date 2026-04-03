@@ -900,7 +900,7 @@ admin.polyforge.app:
   /ws            → admin-api-service WebSocket
 ```
 
-Security headers on all responses: `Strict-Transport-Security`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Content-Security-Policy`.
+Security headers on all responses via `@fastify/helmet` (registered in every NestJS service with CSP disabled — gateway manages CSP): `Strict-Transport-Security`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy`, `X-Permitted-Cross-Domain-Policies`, `X-Download-Options`.
 
 ---
 
