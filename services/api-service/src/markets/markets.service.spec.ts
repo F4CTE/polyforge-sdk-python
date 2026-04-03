@@ -40,6 +40,16 @@ function makePriceHistoryQuery(overrides: Record<string, unknown> = {}) {
   };
 }
 
+// Helper: extract the full SQL text from a Prisma.Sql tagged template call.
+// $queryRaw receives a single Prisma.Sql argument whose `.strings` array holds
+// the static SQL fragments. Joining them gives us the template text for assertions.
+function sqlText(call: unknown[]): string {
+  const arg = call[0] as { strings?: readonly string[] };
+  if (arg?.strings) return arg.strings.join("?");
+  // Fallback for plain string calls (shouldn't happen after migration)
+  return String(arg);
+}
+
 // ─── Suite ───────────────────────────────────────────────────────────────────
 
 describe("MarketsService", () => {
@@ -69,9 +79,10 @@ describe("MarketsService", () => {
   describe("list", () => {
     it("returns a paginated response with markets and tokens included", async () => {
       const markets = [makeMarket()];
-      // Service uses $queryRaw for estimated count and $queryRawUnsafe for data
-      db.$queryRaw.mockResolvedValue([{ reltuples: 1 }] as any);
-      db.$queryRawUnsafe.mockResolvedValue(markets as any);
+      // First $queryRaw call = estimated count, second = data
+      db.$queryRaw
+        .mockResolvedValueOnce([{ reltuples: 1 }] as any)
+        .mockResolvedValueOnce(markets as any);
 
       const result = await service.list(makeMarketQuery() as any);
 
@@ -80,9 +91,10 @@ describe("MarketsService", () => {
     });
 
     it("returns an empty paginated result when there are no markets", async () => {
-      db.$queryRaw.mockResolvedValue([{ reltuples: 0 }] as any);
+      db.$queryRaw
+        .mockResolvedValueOnce([{ reltuples: 0 }] as any)
+        .mockResolvedValueOnce([] as any);
       db.market.count.mockResolvedValue(0);
-      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       const result = await service.list(makeMarketQuery() as any);
 
@@ -92,93 +104,108 @@ describe("MarketsService", () => {
 
     it("adds a search filter when search is provided", async () => {
       db.market.count.mockResolvedValue(0);
-      db.$queryRawUnsafe.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery({ search: "eth" }) as any);
 
-      // With search filter, uses market.count (exact count) and $queryRawUnsafe
-      const rawCall = db.$queryRawUnsafe.mock.calls[0];
-      expect(rawCall[0]).toContain("ILIKE");
+      // search triggers market.count (exact) + $queryRaw (data)
+      // The data call is the last $queryRaw call
+      const calls = db.$queryRaw.mock.calls;
+      const dataCall = calls[calls.length - 1];
+      expect(sqlText(dataCall)).toContain("ILIKE");
     });
 
     it("adds category filter when category is provided", async () => {
       db.market.count.mockResolvedValue(0);
-      db.$queryRawUnsafe.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery({ category: "politics" }) as any);
 
-      const rawCall = db.$queryRawUnsafe.mock.calls[0];
-      expect(rawCall[0]).toContain("LOWER(m.category)");
+      const calls = db.$queryRaw.mock.calls;
+      const dataCall = calls[calls.length - 1];
+      expect(sqlText(dataCall)).toContain("LOWER(m.category)");
     });
 
     it("adds closed filter when closed is provided", async () => {
       db.market.count.mockResolvedValue(0);
-      db.$queryRawUnsafe.mockResolvedValue([] as any);
+      db.$queryRaw.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery({ closed: true }) as any);
 
-      const rawCall = db.$queryRawUnsafe.mock.calls[0];
-      expect(rawCall[0]).toContain("m.closed");
+      const calls = db.$queryRaw.mock.calls;
+      const dataCall = calls[calls.length - 1];
+      expect(sqlText(dataCall)).toContain("m.closed");
     });
 
     it("does NOT add closed filter when closed is undefined", async () => {
-      db.$queryRaw.mockResolvedValue([{ reltuples: 0 }] as any);
+      db.$queryRaw
+        .mockResolvedValueOnce([{ reltuples: 0 }] as any)
+        .mockResolvedValueOnce([] as any);
       db.market.count.mockResolvedValue(0);
-      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery() as any);
 
-      const rawCall = db.$queryRawUnsafe.mock.calls[0];
+      const calls = db.$queryRaw.mock.calls;
+      const dataCall = calls[calls.length - 1];
       // The SELECT clause always includes m.closed, but the WHERE clause should not filter by it
-      expect(rawCall[0]).not.toContain("m.closed =");
+      expect(sqlText(dataCall)).not.toContain("m.closed =");
     });
 
     it("orders by volume24h desc by default", async () => {
-      db.$queryRaw.mockResolvedValue([{ reltuples: 0 }] as any);
+      db.$queryRaw
+        .mockResolvedValueOnce([{ reltuples: 0 }] as any)
+        .mockResolvedValueOnce([] as any);
       db.market.count.mockResolvedValue(0);
-      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery() as any);
 
-      const rawCall = db.$queryRawUnsafe.mock.calls[0];
-      expect(rawCall[0]).toContain("volume24h DESC");
+      const calls = db.$queryRaw.mock.calls;
+      const dataCall = calls[calls.length - 1];
+      expect(sqlText(dataCall)).toContain("volume24h DESC");
     });
 
     it("orders by endDate asc when sort is endDate", async () => {
-      db.$queryRaw.mockResolvedValue([{ reltuples: 0 }] as any);
+      db.$queryRaw
+        .mockResolvedValueOnce([{ reltuples: 0 }] as any)
+        .mockResolvedValueOnce([] as any);
       db.market.count.mockResolvedValue(0);
-      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery({ sort: "endDate" }) as any);
 
-      const rawCall = db.$queryRawUnsafe.mock.calls[0];
-      expect(rawCall[0]).toContain('"endDate" ASC');
+      const calls = db.$queryRaw.mock.calls;
+      const dataCall = calls[calls.length - 1];
+      expect(sqlText(dataCall)).toContain('"endDate" ASC');
     });
 
     it("orders by firstSeenAt desc when sort is firstSeenAt", async () => {
-      db.$queryRaw.mockResolvedValue([{ reltuples: 0 }] as any);
+      db.$queryRaw
+        .mockResolvedValueOnce([{ reltuples: 0 }] as any)
+        .mockResolvedValueOnce([] as any);
       db.market.count.mockResolvedValue(0);
-      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery({ sort: "firstSeenAt" }) as any);
 
-      const rawCall = db.$queryRawUnsafe.mock.calls[0];
-      expect(rawCall[0]).toContain('"firstSeenAt" DESC');
+      const calls = db.$queryRaw.mock.calls;
+      const dataCall = calls[calls.length - 1];
+      expect(sqlText(dataCall)).toContain('"firstSeenAt" DESC');
     });
 
     it("passes correct skip and take for page 3 limit 10", async () => {
-      db.$queryRaw.mockResolvedValue([{ reltuples: 0 }] as any);
+      db.$queryRaw
+        .mockResolvedValueOnce([{ reltuples: 0 }] as any)
+        .mockResolvedValueOnce([] as any);
       db.market.count.mockResolvedValue(0);
-      db.$queryRawUnsafe.mockResolvedValue([] as any);
 
       await service.list(makeMarketQuery({ page: 3, limit: 10 }) as any);
 
-      // The raw query includes LIMIT and OFFSET as params
-      const rawCallArgs = db.$queryRawUnsafe.mock.calls[0];
-      // skip=20, limit=10 — they are passed as the last two params
-      const params = rawCallArgs.slice(1);
-      expect(params[params.length - 2]).toBe(10); // limit
-      expect(params[params.length - 1]).toBe(20); // offset (skip)
+      // With Prisma.sql tagged template, limit and offset are in the `.values` array
+      const calls = db.$queryRaw.mock.calls;
+      const dataCall = calls[calls.length - 1];
+      const arg = dataCall[0] as { values?: unknown[] };
+      const values = arg.values ?? [];
+      // limit=10 and offset=20 should be the last two values
+      expect(values[values.length - 2]).toBe(10); // limit
+      expect(values[values.length - 1]).toBe(20); // offset (skip)
     });
   });
 

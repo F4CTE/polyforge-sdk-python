@@ -121,14 +121,11 @@ export class ScoreCalculatorService {
 
     // ── Consistency (% of profitable 30-day periods) ─────────────────────────
     // Use TimescaleDB time_bucket aggregation instead of loading all snapshots
-    const buckets = await this.prisma.$queryRawUnsafe<
+    const buckets = await this.prisma.$queryRaw<
       Array<{ bucket: Date; total_pnl: string }>
-    >(
-      `SELECT time_bucket('30 days', time) AS bucket, SUM(pnl) AS total_pnl
-       FROM pnl_snapshots WHERE "userId" = $1
-       GROUP BY 1 ORDER BY 1`,
-      userId,
-    );
+    >(Prisma.sql`SELECT time_bucket('30 days', time) AS bucket, SUM(pnl) AS total_pnl
+       FROM pnl_snapshots WHERE "userId" = ${userId}
+       GROUP BY 1 ORDER BY 1`);
 
     let consistency = 0;
     if (buckets.length > 0) {

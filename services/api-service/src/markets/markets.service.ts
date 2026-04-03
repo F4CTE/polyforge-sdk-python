@@ -5,6 +5,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { PrismaService } from "@polyforge/shared-db";
+import { Prisma } from "@prisma/client";
 import { RedisService } from "@polyforge/shared-redis";
 import { paginate, PaginatedResponse } from "../common/dto/pagination.dto";
 import { MarketQueryDto, PriceHistoryQueryDto } from "./dto/market-query.dto";
@@ -98,31 +99,33 @@ export class MarketsService implements OnModuleInit {
 
     // Single raw SQL query — Prisma ORM adds ~5-15s overhead on resource-limited hosts
     // Validate sort parameter against whitelist to prevent SQL injection
-    const orderCol = (this.allowedSortColumns.get(sort ?? "volume") ||
-      this.allowedSortColumns.get("volume"))!;
+    const orderCol = Prisma.raw(
+      (this.allowedSortColumns.get(sort ?? "volume") ||
+        this.allowedSortColumns.get("volume"))!,
+    );
 
-    let whereClause = "WHERE 1=1";
-    const params: any[] = [];
-    let paramIdx = 1;
-
+    // Build dynamic WHERE conditions using Prisma.sql for safe parameterization
+    const conditions: Prisma.Sql[] = [];
     if (search) {
-      whereClause += ` AND (m.title ILIKE $${paramIdx} OR m."seriesSlug" ILIKE $${paramIdx})`;
-      params.push(`%${search}%`);
-      paramIdx++;
+      const pattern = `%${search}%`;
+      conditions.push(
+        Prisma.sql`(m.title ILIKE ${pattern} OR m."seriesSlug" ILIKE ${pattern})`,
+      );
     }
     if (category) {
-      whereClause += ` AND LOWER(m.category) = LOWER($${paramIdx})`;
-      params.push(category);
-      paramIdx++;
+      conditions.push(Prisma.sql`LOWER(m.category) = LOWER(${category})`);
     }
     if (closed !== undefined) {
-      whereClause += ` AND m.closed = $${paramIdx}`;
-      params.push(closed);
-      paramIdx++;
+      conditions.push(Prisma.sql`m.closed = ${closed}`);
     }
 
-    const rows: any[] = await this.prisma.$queryRawUnsafe(
-      `
+    const whereClause =
+      conditions.length > 0
+        ? Prisma.sql`WHERE ${Prisma.join(conditions, " AND ")}`
+        : Prisma.empty;
+
+    const rows: any[] = await this.prisma.$queryRaw(
+      Prisma.sql`
       SELECT
         m.id, m.slug, m.title, m.description, m.category, m.image,
         m."seriesSlug", m."endDate", m.closed, m."negRisk",
@@ -142,11 +145,8 @@ export class MarketsService implements OnModuleInit {
       ${whereClause}
       GROUP BY m.id
       ORDER BY ${orderCol}
-      LIMIT $${paramIdx} OFFSET $${paramIdx + 1}
+      LIMIT ${limit} OFFSET ${skip}
     `,
-      ...params,
-      limit,
-      skip,
     );
 
     const result = paginate(rows, total, page, limit);

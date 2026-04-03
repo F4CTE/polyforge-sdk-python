@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.7] — 2026-04-03
+
+### Fixed
+- **Replace all `$queryRawUnsafe` with safe `$queryRaw` tagged templates** — `score-calculator.service.ts` and `markets.service.ts` now use `Prisma.sql` tagged template literals with `Prisma.raw` (for whitelist-validated ORDER BY) and `Prisma.join` (for dynamic WHERE conditions); eliminates all `$queryRawUnsafe` calls from `api-service`
+
+---
+
 ## [6.35.6] — 2026-04-03
 
 ### Fixed
