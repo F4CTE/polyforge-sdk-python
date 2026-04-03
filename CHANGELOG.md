@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.12] — 2026-04-03
+
+### Security
+- **Eliminate code injection in variable-node expression preview** — replaced `new Function()` dynamic code generation with a safe recursive-descent arithmetic parser in `variable-node.tsx`; the parser only supports numbers, basic operators (+, -, *, /, %), and parentheses — no code execution possible
+
+---
+
 ## [6.35.11] — 2026-04-03
 
 ### Fixed

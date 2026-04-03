@@ -23,22 +23,70 @@ export function isValidVariableName(name: string): boolean {
   return NAME_PATTERN.test(name);
 }
 
+/**
+ * Minimal recursive-descent arithmetic parser.
+ * Supports: +, -, *, /, %, parentheses, unary minus, decimals.
+ * No dynamic code generation — safe from code injection.
+ */
+function safeArithmeticEval(expr: string): number | null {
+  const tokens = expr.match(/(\d+(?:\.\d+)?|[+\-*/%()])/g);
+  if (!tokens) return null;
+  let pos = 0;
+
+  function peek() { return tokens![pos]; }
+  function consume() { return tokens![pos++]; }
+
+  function parseExpr(): number {
+    let left = parseTerm();
+    while (peek() === '+' || peek() === '-') {
+      const op = consume();
+      const right = parseTerm();
+      left = op === '+' ? left + right : left - right;
+    }
+    return left;
+  }
+
+  function parseTerm(): number {
+    let left = parseFactor();
+    while (peek() === '*' || peek() === '/' || peek() === '%') {
+      const op = consume();
+      const right = parseFactor();
+      if (op === '*') left *= right;
+      else if (op === '/') left = right === 0 ? NaN : left / right;
+      else left = right === 0 ? NaN : left % right;
+    }
+    return left;
+  }
+
+  function parseFactor(): number {
+    if (peek() === '-') { consume(); return -parseFactor(); }
+    if (peek() === '(') {
+      consume(); // '('
+      const val = parseExpr();
+      if (peek() === ')') consume();
+      return val;
+    }
+    const tok = consume();
+    const n = Number(tok);
+    return isNaN(n) ? NaN : n;
+  }
+
+  try {
+    const result = parseExpr();
+    if (pos < tokens.length) return null; // leftover tokens → malformed
+    return isFinite(result) ? result : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Try to evaluate a simple expression for preview */
 function tryEvaluate(expression: string): string | null {
   if (!expression.trim()) return null;
-  try {
-    // Only evaluate simple arithmetic expressions (no function calls, no assignments)
-    if (/^[\d\s+\-*/().%]+$/.test(expression)) {
-      // eslint-disable-next-line no-eval
-      const result = new Function(`"use strict"; return (${expression})`)();
-      if (typeof result === 'number' && isFinite(result)) {
-        return String(Math.round(result * 1e6) / 1e6);
-      }
-    }
-  } catch {
-    // Evaluation failed — that's fine, just don't show a preview
-  }
-  return null;
+  if (!/^[\d\s+\-*/().%]+$/.test(expression)) return null;
+  const result = safeArithmeticEval(expression);
+  if (result === null) return null;
+  return String(Math.round(result * 1e6) / 1e6);
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
