@@ -117,6 +117,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.34.1] — 2026-04-03
+
+### Fixed
+- **Design tokens: shadow classes** — replaced 6 `shadow-lg` → `shadow-pf-lg`, 2 `shadow-xl` → `shadow-pf-xl`, 2 `shadow-2xl` → `shadow-pf-2xl` across user-app and admin-app; added missing `shadow-pf-xl` and `shadow-pf-2xl` token definitions to both dark and light themes
+- **Design tokens: overlay backdrops** — replaced 19 `bg-black/{opacity}` instances → `bg-pf-base/{opacity}` across modal backdrops, sidebar overlays, and dialog components in user-app, admin-app, and shared UI; ensures all backdrop colors derive from design tokens
+
+---
+
 ## [6.34.0] — 2026-04-02
 
 ### Added
