@@ -36,33 +36,33 @@ Several fixes from previous sessions were pushed to branches but never merged:
 - #56 (X-Forwarded-For spoofing), #79 (Swagger default off), #80 (placeholder secrets)
 - #76/#77 (dependency CVEs — pnpm overrides)
 
-## Branches Updated (force-pushed to latest main)
+## PRs Updated / Created
 
-### 1. `fix/issue-57-helmet-security-headers` (closes #57) — SECURITY HIGH
+### PR #91 — `fix/issue-57-helmet-security-headers` (closes #57) — SECURITY HIGH
 - Installed `@fastify/helmet` in all 12 production NestJS services
 - Replaced manual `addHook('onSend')` security headers in 4 services
 - Added helmet to 8 services that had zero security headers
 - CSP disabled at service level (gateway manages it)
 - **Lint**: 17/17 PASS (0 errors)
 
-### 2. `fix/issue-58-cors-missing-origin` (closes #58) — SECURITY MEDIUM
+### PR #93 — `fix/issue-58-cors-missing-origin` (closes #58) — SECURITY MEDIUM
 - Fixed CORS origin callback in 4 public-facing services
 - `!origin || allowed` → explicit `!origin → false` branch
 - Server-to-server requests still work but don't get CORS credentials
 - **Lint**: 17/17 PASS (0 errors)
 
-### 3. `fix/issue-78-rate-limiting-missing-services` (closes #78) — SECURITY MEDIUM
+### PR #97 — `fix/issue-78-rate-limiting-missing-services` (closes #78) — SECURITY MEDIUM
 - Registered ThrottlerModule (1000 req/min) + ThrottlerGuard in notification-service and market-data-service
 - Added `@nestjs/throttler` dependency to market-data-service
 - Applied `limit_req zone=api_rl` to user `/api/v1/` (burst=50) and admin `/api/v1/` (burst=20) in gateway nginx
 - **Lint**: 17/17 PASS (0 errors)
 
-### 4. `fix/issues-security-cookie-mail-csp` — SECURITY MEDIUM
+### PR #101 — `fix/issues-security-cookie-mail-csp` — SECURITY MEDIUM
 - Changed `sameSite` from `'lax'` to `'strict'` in auth-service and admin-auth-service
 - Added `requireTLS: true` to SES SMTP transport in notification-service
 - **Lint**: 17/17 PASS (0 errors)
 
-### 5. `fix/issues-design-tokens-batch-3` (closes #70, closes #61) — DESIGN
+### PR #102 (NEW) — `fix/issues-design-tokens-batch-3` (closes #70, closes #61) — DESIGN
 - Replaced 409 `rounded-full` → `rounded-pf-full` across 86 files
 - Added `--color-pf-text-contrast: #000000` to dark and light themes
 - Replaced 73 `text-black` → `text-pf-text-contrast` across 47 files
