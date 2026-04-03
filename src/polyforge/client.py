@@ -146,18 +146,17 @@ def _strip_none(params: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in params.items() if v is not None}
 
 
-<<<<<<< HEAD
 def _encode_path(segment: str) -> str:
     """URL-encode a path parameter to prevent path traversal attacks (CWE-22)."""
     return quote(str(segment), safe="")
-=======
+
+
 _BLOCKED_HOSTNAMES: set[str] = {
     "localhost",
     "metadata.google.internal",
     "metadata.internal",
     "instance-data",
 }
->>>>>>> master
 
 
 def _validate_webhook_url(url: str) -> None:
