@@ -21,11 +21,11 @@ const buttonVariants = cva(
           "text-pf-cyan-500 underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2 rounded-pf-sm",
-        sm: "h-7 px-2.5 py-1 text-xs rounded-pf-sm",
+        default: "h-9 px-4 py-2 rounded-pf",
+        sm: "h-7 px-2.5 py-1 text-xs rounded-pf",
         lg: "h-11 px-6 py-2.5 rounded-pf",
-        icon: "h-9 w-9 rounded-pf-sm",
-        "icon-sm": "h-7 w-7 rounded-pf-sm",
+        icon: "h-9 w-9 rounded-pf",
+        "icon-sm": "h-7 w-7 rounded-pf",
       },
     },
     defaultVariants: {

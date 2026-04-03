@@ -15,6 +15,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Admin chart hardcoded hex (closes #38)** — replaced 20+ hardcoded hex colors in revenue.tsx and sentiment.tsx with CSS variable references via `getComputedStyle` pattern
 - **User App non-token colors (closes #65)** — replaced `amber-*`, `blue-*`, `green-*`, `purple-*`, `red-*` Tailwind classes with `pf-gold-*`, `pf-info`, `pf-success`, `pf-purple-*`, `pf-danger` design tokens across portfolio, orders, backtest, referrals, markets, strategy-builder, alerts, and public-profile pages
 - **Admin bracket notation cleanup (closes #66)** — replaced `text-[var(--color-pf-*)]` bracket notation with proper Tailwind token classes (`text-pf-purple-500`, `hover:text-pf-cyan-300`, etc.) across dashboard, users, orders, retention, logs, and strategies pages
+- **Button border-radius 6px → 8px (closes #50)** — changed default/sm/icon/icon-sm button size variants from `rounded-pf-sm` (6px) to `rounded-pf` (8px) per design charter §2
+- **Focus ring opacity consistency (closes #51)** — added `/40` opacity modifier to `focus-visible:ring-pf-cyan-500` in tabs.tsx and dialog.tsx close button to match all other interactive components
+- **Admin sidebar inline style → Tailwind (closes #67)** — replaced `style={{ borderTop: '3px solid var(--color-pf-danger)' }}` with `border-t-[3px] border-t-pf-danger` class-based styling
 
 ---
 

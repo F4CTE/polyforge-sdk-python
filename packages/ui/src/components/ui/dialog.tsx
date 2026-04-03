@@ -80,7 +80,7 @@ function DialogHeader({ className, children, onClose, ...props }: DialogHeaderPr
           type="button"
           onClick={onClose}
           aria-label="Close dialog"
-          className="ml-4 p-1 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+          className="ml-4 p-1 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
         >
           <X size={16} aria-hidden="true" />
         </button>
