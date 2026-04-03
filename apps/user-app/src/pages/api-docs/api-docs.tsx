@@ -121,7 +121,7 @@ export function Component() {
       {mobileSidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-pf-backdrop-light"
             onClick={() => setMobileSidebarOpen(false)}
             aria-hidden="true"
           />
@@ -192,7 +192,7 @@ export function Component() {
         {/* Mobile app sidebar overlay */}
         {mobileOpen && (
           <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
-            <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+            <div className="absolute inset-0 bg-pf-backdrop-light" onClick={() => setMobileOpen(false)} aria-hidden="true" />
             <div className="relative z-50 h-full w-60">
               <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} />
             </div>

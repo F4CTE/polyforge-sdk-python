@@ -168,7 +168,7 @@ function SortableTh({ col, sortKey, sortDir, onSort, align = 'left', children }:
 function CategoryTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-xs shadow-lg">
+    <div className="bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-xs shadow-pf-lg">
       <p className="font-semibold text-pf-text mb-1">{label}</p>
       {payload.map((entry) => (
         <p key={entry.name} style={{ color: entry.color }}>

@@ -1027,7 +1027,7 @@ export function Component() {
             </Button>
 
             {deleteDialogOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title" onKeyDown={(e) => { if (e.key === 'Escape') { setDeleteDialogOpen(false); setDeletePassword(''); } }}>
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop-light backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title" onKeyDown={(e) => { if (e.key === 'Escape') { setDeleteDialogOpen(false); setDeletePassword(''); } }}>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 max-w-md w-full mx-4 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="size-10 rounded-full bg-pf-danger/10 flex items-center justify-center">

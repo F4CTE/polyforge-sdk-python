@@ -239,7 +239,7 @@ export function Component() {
 
       {/* Add/Edit Dialog */}
       {dialogMode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="admin-dialog-title">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop-light" role="dialog" aria-modal="true" aria-labelledby="admin-dialog-title">
           <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
               <h3 id="admin-dialog-title" className="text-base font-semibold text-pf-text">
@@ -332,7 +332,7 @@ export function Component() {
 
       {/* Delete Confirmation Dialog */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="deactivate-dialog-title">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop-light" role="dialog" aria-modal="true" aria-labelledby="deactivate-dialog-title">
           <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg p-6 w-full max-w-sm mx-4">
             <h3 id="deactivate-dialog-title" className="text-base font-semibold text-pf-text mb-2">
               Deactivate Admin

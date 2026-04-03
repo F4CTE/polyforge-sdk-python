@@ -6,6 +6,9 @@
   --color-pf-surface: #0f172a;
   --color-pf-elevated: #0f172a;
   --color-pf-overlay: #1e293b;
+  --color-pf-backdrop: rgba(0, 0, 0, 0.6);
+  --color-pf-backdrop-light: rgba(0, 0, 0, 0.5);
+  --color-pf-backdrop-subtle: rgba(0, 0, 0, 0.4);
 
   /* Borders — shadcn slate-800/700 */
   --color-pf-border-subtle: #1e293b;
@@ -327,6 +330,9 @@ body {
   --color-pf-surface: #e8edf4;
   --color-pf-elevated: #ffffff;
   --color-pf-overlay: #dde3ec;
+  --color-pf-backdrop: rgba(0, 0, 0, 0.5);
+  --color-pf-backdrop-light: rgba(0, 0, 0, 0.4);
+  --color-pf-backdrop-subtle: rgba(0, 0, 0, 0.3);
   --color-pf-bg: #f1f5f9;
 
   /* Borders — stronger so panels/cards are clearly separated */

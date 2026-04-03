@@ -176,7 +176,7 @@ function BroadcastDialog({ cohortId, cohortLabel, userCount, onClose }: Broadcas
       aria-labelledby="broadcast-dialog-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden="true" />
+      <div className="absolute inset-0 bg-pf-backdrop" onClick={onClose} aria-hidden="true" />
       <div className="relative z-10 w-full max-w-sm rounded-pf-lg bg-pf-elevated border border-pf-border p-6 space-y-4 animate-fade-in">
         <h2 id="broadcast-dialog-title" className="text-base font-semibold text-pf-text">
           Send Broadcast

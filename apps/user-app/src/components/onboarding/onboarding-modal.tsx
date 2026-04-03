@@ -315,7 +315,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
     <div
       className={[
         'fixed inset-0 z-50 flex items-center justify-center p-4',
-        'backdrop-blur-sm bg-black/60',
+        'backdrop-blur-sm bg-pf-backdrop',
         'transition-opacity duration-200',
         overlayOpacity,
       ].join(' ')}

@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.9] — 2026-04-03
+
+### Fixed
+- **Design token violations (batch 2)** — replaced 6 remaining `shadow-lg` with `shadow-pf-lg` across correlation, sentiment, alerts, feed, retention, and public-profile pages; replaced 19 `bg-black/60|50|40` modal backdrop classes with new `bg-pf-backdrop`, `bg-pf-backdrop-light`, and `bg-pf-backdrop-subtle` design tokens; added `--color-pf-backdrop` family to dark and light theme definitions
+
+---
+
 ## [6.35.8] — 2026-04-03
 
 ### Fixed

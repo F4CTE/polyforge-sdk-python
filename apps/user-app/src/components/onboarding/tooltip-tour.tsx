@@ -222,7 +222,7 @@ export function TooltipTour() {
     <>
       {/* Backdrop overlay */}
       <div
-        className="fixed inset-0 z-[9998] bg-black/40 transition-opacity"
+        className="fixed inset-0 z-[9998] bg-pf-backdrop-subtle transition-opacity"
         onClick={closeTour}
         role="presentation"
         aria-hidden="true"

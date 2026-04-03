@@ -245,7 +245,7 @@ export function Component() {
                   className="w-full bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:ring-1 focus:ring-pf-cyan-500/50"
                 />
                 {showDropdown && (
-                  <div className="absolute z-20 w-full top-full mt-1 rounded-pf border border-pf-border bg-pf-elevated shadow-lg overflow-hidden">
+                  <div className="absolute z-20 w-full top-full mt-1 rounded-pf border border-pf-border bg-pf-elevated shadow-pf-lg overflow-hidden">
                     {searchResults.map(m => (
                       <Button
                         key={m.id}

@@ -516,7 +516,7 @@ export function Component() {
       {tooltip.visible && (
         <div
           ref={tooltipRef}
-          className="fixed z-50 pointer-events-none px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text shadow-lg max-w-[240px]"
+          className="fixed z-50 pointer-events-none px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text shadow-pf-lg max-w-[240px]"
           style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}
           aria-hidden="true"
         >

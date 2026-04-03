@@ -81,7 +81,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-start justify-center pt-[10vh] bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-start justify-center pt-[10vh] bg-pf-backdrop backdrop-blur-sm"
       onClick={onClose}
       role="dialog"
       aria-modal="true"

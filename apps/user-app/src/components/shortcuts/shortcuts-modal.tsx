@@ -69,7 +69,7 @@ export function ShortcutsModal({ open, onClose }: ShortcutsModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop backdrop-blur-sm"
       aria-modal="true"
       role="dialog"
       aria-label="Keyboard Shortcuts"

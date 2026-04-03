@@ -2282,7 +2282,7 @@ export function Component() {
 
           {/* Conditional Order Dialog (TP/SL) */}
           {showConditional && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Set Conditional Order">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Set Conditional Order">
               <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg w-full max-w-sm p-6 shadow-pf-lg">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-semibold text-pf-text">
@@ -2355,7 +2355,7 @@ export function Component() {
 
           {/* Run Strategy Dialog */}
           {showRunStrategy && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Run Strategy">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-pf-backdrop backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Run Strategy">
               <div className="animate-scale-in bg-pf-elevated border border-pf-border rounded-pf-lg w-full max-w-md p-6 shadow-pf-lg">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-semibold text-pf-text">Run Strategy on This Market</h2>

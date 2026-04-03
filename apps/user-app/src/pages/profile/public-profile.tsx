@@ -159,7 +159,7 @@ function PerfTooltip({ active, payload, label }: PerfTooltipProps) {
   const val = payload[0].value as number;
   const isPos = val >= 0;
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf px-3 py-2 text-xs shadow-lg">
+    <div className="bg-pf-elevated border border-pf-border rounded-pf px-3 py-2 text-xs shadow-pf-lg">
       <div className="text-pf-text-muted mb-0.5">{label}</div>
       <div className={`font-mono font-semibold ${isPos ? 'text-pf-success' : 'text-pf-danger'}`}>
         {fmtPnl(val)}
