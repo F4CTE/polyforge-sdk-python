@@ -148,18 +148,7 @@ export function StrategyCanvas() {
         />
         <MiniMap
           position="bottom-right"
-          style={{
-            width: 180,
-            height: 120,
-            borderRadius: 12,
-            border: '1px solid var(--color-pf-border)',
-            backgroundColor: isDark
-              ? 'color-mix(in srgb, var(--color-pf-base) 85%, transparent)'
-              : 'color-mix(in srgb, var(--color-pf-surface) 90%, transparent)',
-            backdropFilter: 'blur(8px)',
-            boxShadow: 'var(--shadow-pf-lg)',
-            overflow: 'hidden',
-          }}
+          style={{ width: 180, height: 120 }}
           maskColor={isDark
             ? 'color-mix(in srgb, var(--color-pf-base) 60%, transparent)'
             : 'color-mix(in srgb, var(--color-pf-base) 60%, transparent)'}

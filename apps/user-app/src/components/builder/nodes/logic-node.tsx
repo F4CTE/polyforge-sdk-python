@@ -79,8 +79,8 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           type="target"
           position={Position.Left}
           id="input"
-          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
-          style={{ borderColor: color }}
+          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+          style={{ '--node-color': color } as React.CSSProperties}
         />
       )}
       {inputCount === 2 && (
@@ -89,34 +89,27 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
             type="target"
             position={Position.Left}
             id="input-a"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
-            style={{ borderColor: color, top: '35%' }}
+            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--top"
+            style={{ '--node-color': color } as React.CSSProperties}
           />
           <Handle
             type="target"
             position={Position.Left}
             id="input-b"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
-            style={{ borderColor: color, top: '65%' }}
+            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--bottom"
+            style={{ '--node-color': color } as React.CSSProperties}
           />
         </>
       )}
 
       <div
-        className="rounded-pf-md shadow-pf-md overflow-hidden"
-        style={{
-          width: `${width}px`,
-          backgroundColor: 'var(--color-pf-elevated)',
-          borderWidth: '1px',
-          borderStyle: 'solid',
-          borderColor: color + '60',
-          color: 'var(--color-pf-text)',
-        }}
+        className={`builder-node-card rounded-pf-md shadow-pf-md overflow-hidden ${isCompact ? 'w-[160px]' : 'w-[220px]'}`}
+        style={{ '--node-color': color } as React.CSSProperties}
       >
         {/* Header bar */}
         <div
-          className="flex items-center gap-1.5 px-2.5 py-1.5"
-          style={{ backgroundColor: color, color: 'var(--color-pf-text)' }}
+          className="builder-node-header--solid flex items-center gap-1.5 px-2.5 py-1.5"
+          style={{ '--node-color': color } as React.CSSProperties}
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
           {icon}
@@ -203,15 +196,15 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
             type="source"
             position={Position.Right}
             id="true-out"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
-            style={{ borderColor: 'var(--color-pf-success)', top: '35%' }}
+            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--top"
+            style={{ '--node-color': 'var(--color-pf-success)' } as React.CSSProperties}
           />
           <Handle
             type="source"
             position={Position.Right}
             id="false-out"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
-            style={{ borderColor: 'var(--color-pf-danger)', top: '65%' }}
+            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--bottom"
+            style={{ '--node-color': 'var(--color-pf-danger)' } as React.CSSProperties}
           />
         </>
       ) : (
@@ -219,8 +212,8 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           type="source"
           position={Position.Right}
           id="output"
-          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
-          style={{ borderColor: color }}
+          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+          style={{ '--node-color': color } as React.CSSProperties}
         />
       )}
     </>

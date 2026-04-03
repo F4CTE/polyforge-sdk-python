@@ -1886,6 +1886,35 @@ Calculation blocks display their mathematical nature prominently.
 - Aggregation block shows the function name and window (e.g., `AVG(10)`)
 - Comparison block shows the operator (e.g., `> 0.5`)
 
+### Builder Node CSS Utilities
+
+All builder nodes (block, calc, logic, variable) share common CSS utility classes defined in `apps/user-app/src/globals.css`. These replace inline `style={{...}}` objects with class-based styling driven by a `--node-color` CSS custom property:
+
+| Class | Purpose |
+|-------|---------|
+| `.builder-node-card` | Base card: elevated bg, 1px border using `--node-color` at 38% opacity |
+| `.builder-node-card--executing` | 1.5px border during live/backtest execution |
+| `.builder-node-card--dashed` | Dashed border for inactive (unwired) blocks |
+| `.builder-node-card--setup-needed` | Danger glow when required fields are empty |
+| `.builder-node-header` | Header bar with `--node-color` at 9% bg + 2px bottom border |
+| `.builder-node-header--solid` | Solid `--node-color` background header (calc, logic, variable) |
+| `.builder-handle` | Handle border color from `--node-color` |
+| `.builder-handle--top` | Handle positioned at 35% (dual-input top) |
+| `.builder-handle--bottom` | Handle positioned at 65% (dual-input bottom) |
+| `.builder-badge` | Status badge (Global, Not wired, Setup needed) — uses `--badge-color` |
+| `.builder-preview-chip` | Variable preview chip with `--node-color` tint |
+
+**Usage pattern:** Set `--node-color` on the element via a minimal `style` prop, then apply the utility class:
+
+```tsx
+<div
+  className="builder-node-card w-[200px] rounded-pf-md shadow-pf-md overflow-hidden"
+  style={{ '--node-color': VARIABLE_COLOR } as React.CSSProperties}
+>
+```
+
+Only truly dynamic values (per-instance colors, computed animation strings, field-specific handle `top` offsets) remain as inline styles.
+
 ### Import/Export UI Patterns
 
 **Export:**

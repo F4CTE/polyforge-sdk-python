@@ -117,6 +117,67 @@
   75% { transform: translateY(-20px) rotate(0.5deg); }
 }
 
+/* ─── Builder node utilities ────────────────────────────────────────── */
+
+/* Base card shared by all builder nodes — set --node-color on the element */
+.builder-node-card {
+  background-color: var(--color-pf-elevated);
+  border-width: 1px;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--node-color) 38%, transparent);
+  color: var(--color-pf-text);
+}
+.builder-node-card--executing {
+  border-width: 1.5px;
+}
+.builder-node-card--dashed {
+  border-style: dashed;
+}
+
+/* Node header bar — sits inside the card, colored with --node-color */
+.builder-node-header {
+  background-color: color-mix(in srgb, var(--node-color) 9%, transparent);
+  border-bottom: 2px solid var(--node-color);
+}
+/* Solid header variant (calc, logic, variable) */
+.builder-node-header--solid {
+  background-color: var(--node-color);
+  color: var(--color-pf-text);
+}
+
+/* Handle border picks up --node-color */
+.builder-handle {
+  border-color: var(--node-color) !important;
+}
+
+/* Dual-handle positioning for 2-input nodes */
+.builder-handle--top {
+  top: 35% !important;
+}
+.builder-handle--bottom {
+  top: 65% !important;
+}
+
+/* Status badges (Global, Not wired, Setup needed) — set --badge-color */
+.builder-badge {
+  background-color: color-mix(in srgb, var(--badge-color) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--badge-color) 33%, transparent);
+  color: var(--badge-color);
+}
+
+/* Variable/calc preview chip */
+.builder-preview-chip {
+  background-color: color-mix(in srgb, var(--node-color) 8%, transparent);
+  color: var(--node-color);
+}
+
+/* Setup-needed glow on the card */
+.builder-node-card--setup-needed {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-pf-danger) 18%, transparent),
+    0 0 14px color-mix(in srgb, var(--color-pf-danger) 12%, transparent);
+}
+
 /* ─── Strategy canvas animations ─────────────────────────────────────── */
 @keyframes blockPulse {
   0%, 100% { box-shadow: 0 0 0 1px rgba(6,182,212,0.18), 0 0 8px rgba(6,182,212,0.10); }

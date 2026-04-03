@@ -127,19 +127,13 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
   return (
     <>
       <div
-        className="w-[200px] rounded-pf-md shadow-pf-md overflow-hidden"
-        style={{
-          backgroundColor: 'var(--color-pf-elevated)',
-          borderWidth: '1px',
-          borderStyle: 'solid',
-          borderColor: VARIABLE_COLOR + '60',
-          color: 'var(--color-pf-text)',
-        }}
+        className="builder-node-card w-[200px] rounded-pf-md shadow-pf-md overflow-hidden"
+        style={{ '--node-color': VARIABLE_COLOR } as React.CSSProperties}
       >
         {/* Header bar */}
         <div
-          className="flex items-center gap-1.5 px-2.5 py-1.5"
-          style={{ backgroundColor: VARIABLE_COLOR, color: 'var(--color-pf-text)' }}
+          className="builder-node-header--solid flex items-center gap-1.5 px-2.5 py-1.5"
+          style={{ '--node-color': VARIABLE_COLOR } as React.CSSProperties}
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
           <Variable className="size-3" />
@@ -200,10 +194,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
 
           {/* Preview */}
           {preview !== null && (
-            <div
-              className="text-pf-label font-mono px-2 py-1 rounded-pf-sm"
-              style={{ backgroundColor: VARIABLE_COLOR + '15', color: VARIABLE_COLOR }}
-            >
+            <div className="builder-preview-chip text-pf-label font-mono px-2 py-1 rounded-pf-sm">
               = {preview}
             </div>
           )}
@@ -214,8 +205,8 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
-        style={{ borderColor: VARIABLE_COLOR }}
+        className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+        style={{ '--node-color': VARIABLE_COLOR } as React.CSSProperties}
       />
     </>
   );

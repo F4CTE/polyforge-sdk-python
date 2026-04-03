@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - **Form inputs missing accessibility labels (closes #48)** — added `aria-label` or `htmlFor`/`id` associations to 6 form controls: copy-setup size slider, alerts token radio, markets-list date pickers (×2), market-detail Kelly confidence slider, and block-palette search input
+- **Builder nodes inline styles → CSS classes (closes #40)** — replaced ~30 inline `style={{...}}` objects across `block-node.tsx`, `calc-node.tsx`, `logic-node.tsx`, and `variable-node.tsx` with reusable CSS utility classes (`.builder-node-card`, `.builder-node-header`, `.builder-handle`, `.builder-badge`, `.builder-preview-chip`) driven by a `--node-color` CSS custom property; handle positioning uses `.builder-handle--top` / `.builder-handle--bottom` classes; MiniMap inline styles deduplicated with existing CSS rules in `globals.css`
 
 ---
 

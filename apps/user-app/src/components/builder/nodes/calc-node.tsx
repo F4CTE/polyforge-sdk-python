@@ -178,8 +178,8 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           type="target"
           position={Position.Left}
           id="input"
-          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
-          style={{ borderColor: CALC_COLOR }}
+          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+          style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
         />
       )}
       {inputCount === 2 && (
@@ -188,34 +188,26 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
             type="target"
             position={Position.Left}
             id="input-a"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
-            style={{ borderColor: CALC_COLOR, top: '35%' }}
+            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--top"
+            style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
           />
           <Handle
             type="target"
             position={Position.Left}
             id="input-b"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
-            style={{ borderColor: CALC_COLOR, top: '65%' }}
+            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--bottom"
+            style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
           />
         </>
       )}
 
       <div
-        className="rounded-pf-md shadow-pf-md overflow-hidden"
-        style={{
-          width: '180px',
-          backgroundColor: 'var(--color-pf-elevated)',
-          borderWidth: '1px',
-          borderStyle: 'solid',
-          borderColor: CALC_COLOR + '60',
-          color: 'var(--color-pf-text)',
-        }}
+        className="builder-node-card w-[180px] rounded-pf-md shadow-pf-md overflow-hidden"
+        style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
       >
         {/* Header bar */}
-        <div
-          className="flex items-center gap-1.5 px-2.5 py-1.5"
-          style={{ backgroundColor: CALC_COLOR, color: 'var(--color-pf-text)' }}
+        <div className="builder-node-header--solid flex items-center gap-1.5 px-2.5 py-1.5"
+          style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
           {icon}
@@ -345,8 +337,8 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         type="source"
         position={Position.Right}
         id="output"
-        className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full"
-        style={{ borderColor: CALC_COLOR }}
+        className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+        style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
       />
     </>
   );
