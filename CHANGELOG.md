@@ -18,6 +18,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Button border-radius 6px → 8px (closes #50)** — changed default/sm/icon/icon-sm button size variants from `rounded-pf-sm` (6px) to `rounded-pf` (8px) per design charter §2
 - **Focus ring opacity consistency (closes #51)** — added `/40` opacity modifier to `focus-visible:ring-pf-cyan-500` in tabs.tsx and dialog.tsx close button to match all other interactive components
 - **Admin sidebar inline style → Tailwind (closes #67)** — replaced `style={{ borderTop: '3px solid var(--color-pf-danger)' }}` with `border-t-[3px] border-t-pf-danger` class-based styling
+- **Danger button style alignment (closes #39)** — removed `bg-pf-danger text-white` className overrides from 6 admin-app danger buttons (listings, config, admins, abuse×2, reports); buttons now use the shared `variant="danger"` styling (`bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20`) per design charter §2
 
 ---
 

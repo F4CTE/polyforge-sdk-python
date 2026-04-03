@@ -332,7 +332,7 @@ function MaintenanceConfirmBox({ onConfirm, onCancel }: MaintenanceConfirmProps)
           type="button"
           variant="danger"
           onClick={onConfirm}
-          className="rounded-pf-sm px-3 py-1.5 text-xs font-medium text-white bg-pf-danger hover:brightness-110 transition-all"
+          className="px-3 py-1.5 text-xs font-medium transition-all"
         >
           Yes, enable maintenance
         </Button>

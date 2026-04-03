@@ -355,7 +355,7 @@ export function Component() {
                 variant="danger"
                 onClick={handleDeactivate}
                 disabled={submitting || !deletePassword}
-                className="flex-1 py-2 text-sm font-medium rounded-pf-sm bg-pf-danger text-white hover:bg-pf-danger/80 disabled:opacity-50 transition-colors"
+                className="flex-1 py-2 text-sm font-medium disabled:opacity-50 transition-colors"
               >
                 {submitting ? 'Deactivating...' : 'Deactivate'}
               </Button>

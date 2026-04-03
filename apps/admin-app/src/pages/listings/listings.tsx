@@ -196,7 +196,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
                   variant="danger"
                   disabled={isBusy}
                   onClick={handleRejectConfirm}
-                  className="px-3 py-1 text-xs rounded-pf-sm bg-pf-danger text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="px-3 py-1 text-xs transition-opacity disabled:opacity-50"
                 >
                   Confirm Reject
                 </Button>

@@ -346,9 +346,9 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
               onClick={handleFlagSubmit}
               disabled={!flagReason.trim() || busy}
               className={[
-                'inline-flex items-center gap-1.5 rounded-pf-sm px-3 py-1.5 text-xs font-semibold transition-all',
+                'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all',
                 flagReason.trim()
-                  ? 'bg-pf-danger text-white hover:brightness-110'
+                  ? ''
                   : 'bg-pf-elevated border border-pf-border text-pf-text-muted cursor-not-allowed opacity-50',
               ].join(' ')}
             >

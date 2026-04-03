@@ -274,7 +274,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
               variant="danger"
               onClick={() => handleAction('ban_author')}
               disabled={isActioning}
-              className="px-3 py-1.5 rounded-pf-sm bg-pf-danger text-white text-xs font-medium hover:bg-pf-danger/90 transition-colors disabled:opacity-50"
+              className="px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
             >
               {pending === 'ban_author' ? 'Banning…' : 'Confirm Ban'}
             </Button>
@@ -323,7 +323,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
             variant="danger"
             onClick={() => handleAction('ban_author')}
             disabled={isActioning}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm bg-pf-danger text-white text-xs font-medium hover:bg-pf-danger/90 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
           >
             <Ban size={13} aria-hidden="true" />
             {pending === 'ban_author' ? 'Banning…' : 'Ban Author'}
