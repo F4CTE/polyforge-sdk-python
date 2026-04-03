@@ -238,7 +238,7 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
         type="button"
         variant="ghost"
         onClick={onBack}
-        className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+        className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
       >
         <ChevronLeft className="size-4" aria-hidden="true" />
         Back to Strategies
@@ -311,11 +311,11 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-t border-pf-border">
-                <th className="text-left px-5 py-2.5 text-pf-text-muted font-medium text-xs w-36">Metric</th>
+                <th className="text-left px-5 py-3 text-pf-text-muted font-medium text-xs w-36">Metric</th>
                 {perfData.map((s) => (
-                  <th key={s.strategyId} className="text-left px-5 py-2.5 font-medium text-xs">
-                    <span className="flex items-center gap-1.5">
-                      <span className="inline-block w-2.5 h-2.5 rounded-pf-full shrink-0" style={{ background: s.color }} aria-hidden="true" />
+                  <th key={s.strategyId} className="text-left px-5 py-3 font-medium text-xs">
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block w-3 h-3 rounded-pf-full shrink-0" style={{ background: s.color }} aria-hidden="true" />
                       <span className="text-pf-text truncate max-w-[120px]">{s.name}</span>
                     </span>
                   </th>
@@ -325,45 +325,45 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
             <tbody className="divide-y divide-pf-border">
               {/* Total P&L */}
               <tr>
-                <td className="px-5 py-2.5 text-pf-text-muted text-xs">Total P&L</td>
+                <td className="px-5 py-3 text-pf-text-muted text-xs">Total P&L</td>
                 {perfData.map((s, i) => (
-                  <td key={s.strategyId} className={`px-5 py-2.5 font-mono text-xs rounded-sm ${bestWorstClass(totalPnlNums, i, true)}`}>
+                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs rounded-sm ${bestWorstClass(totalPnlNums, i, true)}`}>
                     {s.stats.totalPnl}
                   </td>
                 ))}
               </tr>
               {/* Win Rate */}
               <tr>
-                <td className="px-5 py-2.5 text-pf-text-muted text-xs">Win Rate</td>
+                <td className="px-5 py-3 text-pf-text-muted text-xs">Win Rate</td>
                 {perfData.map((s, i) => (
-                  <td key={s.strategyId} className={`px-5 py-2.5 font-mono text-xs ${bestWorstClass(winRates, i, true)}`}>
+                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs ${bestWorstClass(winRates, i, true)}`}>
                     {s.stats.winRate}%
                   </td>
                 ))}
               </tr>
               {/* Max Drawdown */}
               <tr>
-                <td className="px-5 py-2.5 text-pf-text-muted text-xs">Max Drawdown</td>
+                <td className="px-5 py-3 text-pf-text-muted text-xs">Max Drawdown</td>
                 {perfData.map((s, i) => (
-                  <td key={s.strategyId} className={`px-5 py-2.5 font-mono text-xs ${bestWorstClass(drawdowns, i, true)}`}>
+                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs ${bestWorstClass(drawdowns, i, true)}`}>
                     {s.stats.maxDrawdown}
                   </td>
                 ))}
               </tr>
               {/* Trade Count */}
               <tr>
-                <td className="px-5 py-2.5 text-pf-text-muted text-xs">Trade Count</td>
+                <td className="px-5 py-3 text-pf-text-muted text-xs">Trade Count</td>
                 {perfData.map((s, i) => (
-                  <td key={s.strategyId} className={`px-5 py-2.5 font-mono text-xs ${bestWorstClass(tradeCounts, i, true)}`}>
+                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs ${bestWorstClass(tradeCounts, i, true)}`}>
                     {s.stats.tradeCount}
                   </td>
                 ))}
               </tr>
               {/* Sharpe Ratio */}
               <tr>
-                <td className="px-5 py-2.5 text-pf-text-muted text-xs">Sharpe Ratio</td>
+                <td className="px-5 py-3 text-pf-text-muted text-xs">Sharpe Ratio</td>
                 {perfData.map((s, i) => (
-                  <td key={s.strategyId} className={`px-5 py-2.5 font-mono text-xs ${bestWorstClass(sharpes, i, true)}`}>
+                  <td key={s.strategyId} className={`px-5 py-3 font-mono text-xs ${bestWorstClass(sharpes, i, true)}`}>
                     {s.stats.sharpeRatio !== undefined ? s.stats.sharpeRatio.toFixed(2) : '—'}
                   </td>
                 ))}
@@ -596,7 +596,7 @@ export function Component() {
               type="button"
               variant="secondary"
               onClick={enterCompareMode}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary font-medium hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary font-medium hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
             >
               <GitCompare className="size-4" aria-hidden="true" /> Compare
             </Button>
@@ -605,7 +605,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={exitCompareMode}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500/10 border border-pf-cyan-500/30 text-sm text-pf-cyan-400 font-medium hover:bg-pf-cyan-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+              className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-cyan-500/10 border border-pf-cyan-500/30 text-sm text-pf-cyan-400 font-medium hover:bg-pf-cyan-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
             >
               <X className="size-4" aria-hidden="true" /> Exit Compare
             </Button>
@@ -614,13 +614,13 @@ export function Component() {
             type="button"
             variant="secondary"
             onClick={handleImport}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary font-medium hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary font-medium hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
           >
             <Upload className="size-4" aria-hidden="true" /> Import Strategy
           </Button>
           <Link
             to="/strategies/new"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+            className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
           >
             <Plus className="size-4" aria-hidden="true" /> New Strategy
           </Link>
@@ -636,7 +636,7 @@ export function Component() {
               variant="ghost"
               key={f.value}
               onClick={() => onFilterChange(f.value)}
-              className={`px-3 py-1.5 text-sm rounded-pf-full border transition-colors ${
+              className={`px-3 py-2 text-sm rounded-pf-full border transition-colors ${
                 filter === f.value
                   ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
                   : 'border-pf-border text-pf-text-secondary hover:text-pf-text'
@@ -672,7 +672,7 @@ export function Component() {
           <p className="text-sm text-pf-text-muted mt-1">Create your first strategy to start trading.</p>
           <Link
             to="/strategies/new"
-            className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
+            className="mt-4 flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 transition-colors"
           >
             <Plus className="size-4" aria-hidden="true" /> New Strategy
           </Link>
@@ -722,7 +722,7 @@ export function Component() {
                   'group bg-pf-elevated border rounded-pf-lg p-5 cursor-pointer transition-all duration-200 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
                   compareMode && isSelected
                     ? 'border-pf-cyan-500/50 shadow-[0_0_0_2px_color-mix(in_srgb,var(--color-pf-cyan-500)_20%,transparent)]'
-                    : 'border-pf-border hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-0.5',
+                    : 'border-pf-border hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1',
                   compareMode && isMaxed
                     ? 'opacity-50 pointer-events-none'
                     : '',
@@ -762,15 +762,15 @@ export function Component() {
                   <h3 className="text-sm font-medium text-pf-text leading-snug line-clamp-1 group-hover:text-pf-cyan-400 transition-colors">
                     {strategy.name}
                   </h3>
-                  <span data-testid="status-badge" className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-pf-label font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}>
-                    <span className={`w-2.5 h-2.5 rounded-pf-full ${statusStyle.dot} ${strategy.status === 'RUNNING' ? 'animate-pulse-dot' : ''}`} />
+                  <span data-testid="status-badge" className={`inline-flex items-center gap-2 px-2 py-1 rounded-pf-full text-pf-label font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}>
+                    <span className={`w-3 h-3 rounded-pf-full ${statusStyle.dot} ${strategy.status === 'RUNNING' ? 'animate-pulse-dot' : ''}`} />
                     {strategy.status}
                   </span>
                 </div>
 
                 {/* Meta chips */}
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${
+                <div className="flex flex-wrap gap-2 mb-2">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-pf-full text-pf-label font-medium ${
                     strategy.execMode === 'TICK'
                       ? 'bg-pf-purple-500/10 text-pf-purple-500'
                       : strategy.execMode === 'HYBRID'
@@ -779,11 +779,11 @@ export function Component() {
                   }`}>
                     {execLabel(strategy)}
                   </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-muted text-pf-label font-medium">
+                  <span className="inline-flex items-center px-2 py-1 rounded-pf-full bg-pf-overlay text-pf-text-muted text-pf-label font-medium">
                     {blocksCount(strategy)} blocks
                   </span>
                   {strategy.tags.length > 0 && (
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${
+                    <span className={`inline-flex items-center px-2 py-1 rounded-pf-full text-pf-label font-medium ${
                       strategy.tags[0].toLowerCase() === 'momentum'
                         ? 'bg-pf-gold-500/10 text-pf-gold-500'
                         : strategy.tags[0].toLowerCase() === 'defensive'
@@ -793,7 +793,7 @@ export function Component() {
                       {strategy.tags[0]}
                     </span>
                   )}
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-pf-full bg-pf-purple-500/10 text-pf-purple-500 text-pf-label font-medium ml-auto">
+                  <span className="inline-flex items-center px-2 py-1 rounded-pf-full bg-pf-purple-500/10 text-pf-purple-500 text-pf-label font-medium ml-auto">
                     v{strategy.version}
                   </span>
                 </div>
@@ -862,7 +862,7 @@ export function Component() {
                             aria-label="Pause strategy"
                             title="Pause strategy"
                           >
-                            <Pause className="size-3.5" />
+                            <Pause className="size-4" />
                           </Button>
                           <Button
                             type="button"
@@ -873,7 +873,7 @@ export function Component() {
                             aria-label="Stop strategy"
                             title="Stop strategy"
                           >
-                            <Square className="size-3.5" />
+                            <Square className="size-4" />
                           </Button>
                         </>
                       )}
@@ -889,7 +889,7 @@ export function Component() {
                             aria-label="Resume strategy"
                             title="Resume strategy"
                           >
-                            <Play className="size-3.5" />
+                            <Play className="size-4" />
                           </Button>
                           <Button
                             type="button"
@@ -900,7 +900,7 @@ export function Component() {
                             aria-label="Stop strategy"
                             title="Stop strategy"
                           >
-                            <Square className="size-3.5" />
+                            <Square className="size-4" />
                           </Button>
                         </>
                       )}
@@ -914,18 +914,18 @@ export function Component() {
                         aria-label="Export strategy"
                         title="Export strategy"
                       >
-                        <Download className="size-3.5" />
+                        <Download className="size-4" />
                       </Button>
 
                       {/* Edit */}
                       <Link
                         to={`/strategies/${strategy.id}/edit`}
                         onClick={(e) => e.stopPropagation()}
-                        className="p-1.5 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
+                        className="p-2 rounded-pf-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay transition-colors"
                         aria-label="Edit strategy"
                         title="Edit strategy"
                       >
-                        <Pencil className="size-3.5" />
+                        <Pencil className="size-4" />
                       </Link>
                     </div>
                   </div>
@@ -958,14 +958,14 @@ export function Component() {
             </span>
 
             {/* Strategy chips */}
-            <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
               {selectedIds.map((id, i) => {
                 const s = strategies.find((x) => x.id === id);
                 if (!s) return null;
                 return (
                   <span
                     key={id}
-                    className="inline-flex items-center gap-1 pl-1.5 pr-1 py-0.5 rounded-pf-full text-pf-label font-medium text-pf-text bg-pf-overlay border border-pf-border"
+                    className="inline-flex items-center gap-1 pl-2 pr-1 py-1 rounded-pf-full text-pf-label font-medium text-pf-text bg-pf-overlay border border-pf-border"
                   >
                     <span
                       className="inline-block w-2 h-2 rounded-pf-full shrink-0"
@@ -978,7 +978,7 @@ export function Component() {
                       variant="ghost"
                       aria-label={`Remove ${s.name} from comparison`}
                       onClick={() => toggleSelect(id)}
-                      className="ml-0.5 text-pf-text-muted hover:text-pf-text transition-colors"
+                      className="ml-1 text-pf-text-muted hover:text-pf-text transition-colors"
                     >
                       <X className="size-3" />
                     </Button>
@@ -993,14 +993,14 @@ export function Component() {
                 type="button"
                 variant="secondary"
                 onClick={() => setSelectedIds([])}
-                className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors px-3 py-1.5 rounded-pf border border-pf-border hover:border-pf-border-strong"
+                className="text-sm text-pf-text-secondary hover:text-pf-text transition-colors px-3 py-2 rounded-pf border border-pf-border hover:border-pf-border-strong"
               >
                 Clear
               </Button>
               <Button
                 type="button"
                 onClick={openComparison}
-                className="flex items-center gap-1.5 text-sm font-medium px-4 py-1.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
+                className="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
               >
                 <GitCompare className="size-4" aria-hidden="true" />
                 View Comparison

@@ -204,7 +204,7 @@ export function Component() {
 
       {/* Platform Activity */}
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-pf-text-tertiary mb-3 px-0.5">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-pf-text-tertiary mb-3 px-1">
           Platform Activity
         </h2>
         {platformStatsError ? (
@@ -262,7 +262,7 @@ export function Component() {
                 System Health
               </h2>
               <span
-                className={`ml-auto px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(health.status)}`}
+                className={`ml-auto px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(health.status)}`}
               >
                 {health.status}
               </span>
@@ -271,7 +271,7 @@ export function Component() {
               {Object.entries(health.services ?? {}).map(([name, svc]) => (
                 <div
                   key={name}
-                  className="flex items-center justify-between p-2.5 rounded-pf-sm bg-pf-base border border-pf-border"
+                  className="flex items-center justify-between p-3 rounded-pf-sm bg-pf-base border border-pf-border"
                 >
                   <div>
                     <div className="text-xs font-medium text-pf-text capitalize">
@@ -308,7 +308,7 @@ export function Component() {
                 Database
               </h2>
               <span
-                className={`ml-auto px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(health.db?.status)}`}
+                className={`ml-auto px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(health.db?.status)}`}
               >
                 {health.db?.status ?? 'UNKNOWN'}
               </span>
@@ -327,7 +327,7 @@ export function Component() {
                 Redis
               </h2>
               <span
-                className={`ml-auto px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(health.redis?.status)}`}
+                className={`ml-auto px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(health.redis?.status)}`}
               >
                 {health.redis?.status ?? 'UNKNOWN'}
               </span>
@@ -345,7 +345,7 @@ export function Component() {
                 <h2 className="text-sm font-semibold text-pf-text">
                   Launch Control
                 </h2>
-                <p className="text-xs text-pf-text-tertiary mt-0.5">
+                <p className="text-xs text-pf-text-tertiary mt-1">
                   Invite-only registration
                 </p>
               </div>
@@ -417,9 +417,9 @@ export function Component() {
                   <tbody className="divide-y divide-pf-border">
                     {rateLimits.topOffenders.slice(0, 10).map((entry) => (
                       <tr key={entry.key}>
-                        <td className="py-1.5 font-mono text-pf-text-secondary truncate max-w-[200px]">{entry.key}</td>
-                        <td className={`py-1.5 text-right font-mono ${entry.hits > 50 ? 'text-pf-danger' : 'text-pf-text'}`}>{entry.hits}</td>
-                        <td className="py-1.5 text-right font-mono text-pf-text-secondary">{entry.ttl}</td>
+                        <td className="py-2 font-mono text-pf-text-secondary truncate max-w-[200px]">{entry.key}</td>
+                        <td className={`py-2 text-right font-mono ${entry.hits > 50 ? 'text-pf-danger' : 'text-pf-text'}`}>{entry.hits}</td>
+                        <td className="py-2 text-right font-mono text-pf-text-secondary">{entry.ttl}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -459,7 +459,7 @@ export function Component() {
                 className="flex items-center justify-between py-2 border-b border-pf-border last:border-0"
               >
                 <div className="flex items-center gap-3">
-                  <span className="px-2 py-0.5 rounded text-pf-label font-medium bg-pf-base text-pf-cyan-500 border border-pf-border">
+                  <span className="px-2 py-1 rounded text-pf-label font-medium bg-pf-base text-pf-cyan-500 border border-pf-border">
                     {log.action}
                   </span>
                   <span className="text-sm text-pf-text-secondary">

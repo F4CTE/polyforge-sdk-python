@@ -58,7 +58,7 @@ export function Component() {
           <h1 className="text-2xl font-semibold text-pf-text">
             Polyforge Admin
           </h1>
-          <div className="flex items-center justify-center gap-1.5 mt-2">
+          <div className="flex items-center justify-center gap-2 mt-2">
             <ShieldCheck size={14} className="text-pf-cyan-500" aria-hidden="true" />
             <span className="text-xs text-pf-text-tertiary">
               Admin Console
@@ -73,7 +73,7 @@ export function Component() {
           className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4 shadow-pf-lg"
         >
           <div>
-            <label htmlFor="email" className="block text-xs font-medium text-pf-text-secondary mb-1.5">
+            <label htmlFor="email" className="block text-xs font-medium text-pf-text-secondary mb-2">
               Email
             </label>
             <Input
@@ -90,7 +90,7 @@ export function Component() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-xs font-medium text-pf-text-secondary mb-1.5">
+            <label htmlFor="password" className="block text-xs font-medium text-pf-text-secondary mb-2">
               Password
             </label>
             <Input
@@ -107,7 +107,7 @@ export function Component() {
 
           {totpRequired && (
             <div>
-              <label htmlFor="totp" className="block text-xs font-medium text-pf-text-secondary mb-1.5">
+              <label htmlFor="totp" className="block text-xs font-medium text-pf-text-secondary mb-2">
                 2FA Code
               </label>
               <Input

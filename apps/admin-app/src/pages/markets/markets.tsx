@@ -53,7 +53,7 @@ const CATEGORIES = [
 const LIMIT = 25;
 
 function statusBadge(status: AdminMarket['status']) {
-  const base = 'inline-flex items-center px-2 py-0.5 rounded-pf-sm text-pf-label font-semibold uppercase tracking-wide';
+  const base = 'inline-flex items-center px-2 py-1 rounded-pf-sm text-pf-label font-semibold uppercase tracking-wide';
   switch (status) {
     case 'ACTIVE':
       return <span className={`${base} bg-green-500/15 text-green-400`}>Active</span>;
@@ -70,7 +70,7 @@ function statusBadge(status: AdminMarket['status']) {
 
 function categoryBadge(category: string) {
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-pf-sm text-pf-label font-medium bg-pf-cyan-500/10 text-pf-cyan-500">
+    <span className="inline-flex items-center px-2 py-1 rounded-pf-sm text-pf-label font-medium bg-pf-cyan-500/10 text-pf-cyan-500">
       {category}
     </span>
   );
@@ -226,7 +226,7 @@ export function Component() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold text-pf-text">Markets</h1>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-pf-full text-xs font-semibold bg-pf-elevated text-pf-text-secondary border border-pf-border">
+          <span className="inline-flex items-center px-3 py-1 rounded-pf-full text-xs font-semibold bg-pf-elevated text-pf-text-secondary border border-pf-border">
             {total.toLocaleString()}
           </span>
         </div>
@@ -235,7 +235,7 @@ export function Component() {
           variant="ghost"
           onClick={fetchMarkets}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors disabled:opacity-50"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           Refresh
@@ -283,7 +283,7 @@ export function Component() {
 
         {/* Status tabs + Category */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1 bg-pf-elevated rounded-pf-sm border border-pf-border p-0.5">
+          <div className="flex items-center gap-1 bg-pf-elevated rounded-pf-sm border border-pf-border p-1">
             {STATUS_TABS.map((tab) => (
               <Button
                 key={tab}
@@ -304,7 +304,7 @@ export function Component() {
           <Select
             value={category}
             onChange={(e) => { setCategory(e.target.value); setPage(1); }}
-            className="px-3 py-1.5 rounded-pf-sm border border-pf-border bg-pf-elevated text-sm text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+            className="px-3 py-2 rounded-pf-sm border border-pf-border bg-pf-elevated text-sm text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
           >
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>{c}</option>
@@ -377,7 +377,7 @@ export function Component() {
                           href={`https://polymarket.com/event/${market.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="shrink-0 text-pf-text-tertiary hover:text-pf-cyan-500 transition-colors mt-0.5"
+                          className="shrink-0 text-pf-text-tertiary hover:text-pf-cyan-500 transition-colors mt-1"
                           title="View on Polymarket"
                         >
                           <ExternalLink size={12} />
@@ -425,7 +425,7 @@ export function Component() {
 
                     {/* Actions */}
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center justify-end gap-2">
                         {/* Star toggle */}
                         <Button
                           type="button"
@@ -434,7 +434,7 @@ export function Component() {
                           onClick={() => handleToggleFeatured(market)}
                           disabled={isUpdating}
                           title={market.featured ? 'Remove from featured' : 'Mark as featured'}
-                          className={`p-1.5 rounded-pf-sm transition-colors disabled:opacity-40 ${
+                          className={`p-2 rounded-pf-sm transition-colors disabled:opacity-40 ${
                             market.featured
                               ? 'text-yellow-400 hover:text-yellow-300'
                               : 'text-pf-text-tertiary hover:text-yellow-400'
@@ -514,7 +514,7 @@ export function Component() {
               variant="ghost"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1 || loading}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors disabled:opacity-40"
+              className="flex items-center gap-1 px-3 py-2 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors disabled:opacity-40"
             >
               <ChevronLeft size={14} />
               Prev
@@ -524,7 +524,7 @@ export function Component() {
               variant="ghost"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || loading}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors disabled:opacity-40"
+              className="flex items-center gap-1 px-3 py-2 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors disabled:opacity-40"
             >
               Next
               <ChevronRight size={14} />

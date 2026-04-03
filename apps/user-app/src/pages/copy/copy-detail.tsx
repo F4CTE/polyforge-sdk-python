@@ -256,9 +256,9 @@ function EditDialog({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm bg-pf-cyan-500 text-pf-text-contrast font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm bg-pf-cyan-500 text-pf-text-contrast font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
           >
-            <Check className="size-3.5" />
+            <Check className="size-4" />
             {saving ? 'Saving...' : 'Save'}
           </Button>
         </div>
@@ -350,7 +350,7 @@ export function Component() {
   if (notFound) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/copy" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 transition-colors mb-6">
+        <Link to="/copy" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to Copy Trading
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -365,7 +365,7 @@ export function Component() {
   if (error || !config) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/copy" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 transition-colors mb-6">
+        <Link to="/copy" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to Copy Trading
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -386,7 +386,7 @@ export function Component() {
   return (
     <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">
       {/* Back link */}
-      <Link to="/copy" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 transition-colors">
+      <Link to="/copy" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 transition-colors">
         <ArrowLeft className="size-4" /> Back to Copy Trading
       </Link>
 
@@ -408,15 +408,15 @@ export function Component() {
                 title="Copy address"
                 aria-label="Copy wallet address"
               >
-                <Copy className="size-3.5" />
+                <Copy className="size-4" />
               </Button>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${statusStyle.bg} ${statusStyle.text}`}>
-                <span className={`w-2.5 h-2.5 rounded-pf-full ${statusStyle.dot} ${config.status === 'ACTIVE' ? 'animate-pulse-dot' : ''}`} />
+              <span className={`inline-flex items-center gap-2 px-2 py-1 rounded-pf-full text-pf-label font-medium ${statusStyle.bg} ${statusStyle.text}`}>
+                <span className={`w-3 h-3 rounded-pf-full ${statusStyle.dot} ${config.status === 'ACTIVE' ? 'animate-pulse-dot' : ''}`} />
                 {config.status}
               </span>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${modeStyle.bg} ${modeStyle.text}`}>
+              <span className={`inline-flex items-center px-2 py-1 rounded-pf-full text-pf-label font-medium ${modeStyle.bg} ${modeStyle.text}`}>
                 {config.mode}
               </span>
             </div>
@@ -429,9 +429,9 @@ export function Component() {
             type="button"
             variant="secondary"
             onClick={() => setShowEdit(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text transition-colors"
           >
-            <Pencil className="size-3.5" /> Edit
+            <Pencil className="size-4" /> Edit
           </Button>
           {config.status === 'ACTIVE' && (
             <Button
@@ -439,9 +439,9 @@ export function Component() {
               variant="ghost"
               onClick={() => doAction('pause')}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-warning/30 text-pf-warning hover:bg-pf-warning/10 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-warning/30 text-pf-warning hover:bg-pf-warning/10 disabled:opacity-40 transition-colors"
             >
-              <Pause className="size-3.5" /> Pause
+              <Pause className="size-4" /> Pause
             </Button>
           )}
           {config.status === 'PAUSED' && (
@@ -450,9 +450,9 @@ export function Component() {
               variant="ghost"
               onClick={() => doAction('resume')}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 disabled:opacity-40 transition-colors"
             >
-              <Play className="size-3.5" /> Resume
+              <Play className="size-4" /> Resume
             </Button>
           )}
           {config.status !== 'STOPPED' && (
@@ -461,9 +461,9 @@ export function Component() {
               variant="danger"
               onClick={() => doAction('stop')}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-danger/30 text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-danger/30 text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors"
             >
-              <Square className="size-3.5" /> Stop
+              <Square className="size-4" /> Stop
             </Button>
           )}
         </div>
@@ -551,14 +551,14 @@ export function Component() {
                     <tr key={trade.id} className="hover:bg-pf-surface/50 transition-colors">
                       <td className="px-4 py-3 text-pf-text max-w-[180px] truncate">{trade.market}</td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${
+                        <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
                           trade.side === 'BUY' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
                         }`}>
                           {trade.side}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${
+                        <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
                           trade.outcome === 'YES' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
                         }`}>
                           {trade.outcome}
@@ -573,7 +573,7 @@ export function Component() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${TRADE_STATUS_STYLES[trade.status]}`}>
+                        <span className={`px-2 py-1 rounded text-pf-label font-semibold ${TRADE_STATUS_STYLES[trade.status]}`}>
                           {trade.status}
                         </span>
                       </td>

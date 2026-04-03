@@ -94,7 +94,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
           value={apiKey}
           onChange={e => setApiKey(e.target.value)}
           placeholder="pf_live_your_key..."
-          className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-1.5 text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500 focus:ring-1 focus:ring-pf-cyan-500/50 font-mono"
+          className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500 focus:ring-1 focus:ring-pf-cyan-500/50 font-mono"
         />
       </div>
 
@@ -107,7 +107,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
             value={pathParams[name] ?? ''}
             onChange={e => setPathParams(prev => ({ ...prev, [name]: e.target.value }))}
             placeholder={name}
-            className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-1.5 text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500 focus:ring-1 focus:ring-pf-cyan-500/50 font-mono"
+            className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500 focus:ring-1 focus:ring-pf-cyan-500/50 font-mono"
           />
         </div>
       ))}
@@ -120,7 +120,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
             value={body}
             onChange={e => setBody(e.target.value)}
             rows={5}
-            className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-1.5 text-xs text-pf-text font-mono focus:outline-none focus:border-pf-cyan-500 focus:ring-1 focus:ring-pf-cyan-500/50 resize-y"
+            className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-xs text-pf-text font-mono focus:outline-none focus:border-pf-cyan-500 focus:ring-1 focus:ring-pf-cyan-500/50 resize-y"
           />
         </div>
       )}
@@ -129,7 +129,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
         type="button"
         onClick={handleSend}
         disabled={loading}
-        className="flex items-center gap-1.5 px-4 py-1.5 rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast text-xs font-semibold hover:bg-pf-cyan-400 transition-colors disabled:opacity-50 cursor-pointer"
+        className="flex items-center gap-2 px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast text-xs font-semibold hover:bg-pf-cyan-400 transition-colors disabled:opacity-50 cursor-pointer"
       >
         <Play size={11} /> {loading ? 'Sending…' : 'Send'}
       </Button>
@@ -222,7 +222,7 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
           )}
 
           {ep.responseNote && (
-            <p className="text-xs text-pf-text-muted bg-pf-elevated border border-pf-border rounded-pf px-3 py-2.5">
+            <p className="text-xs text-pf-text-muted bg-pf-elevated border border-pf-border rounded-pf px-3 py-3">
               {ep.responseNote}
             </p>
           )}
@@ -245,7 +245,7 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
             type="button"
             variant="ghost"
             onClick={() => setTryItOpen(v => !v)}
-            className="text-xs text-pf-cyan-400 hover:text-pf-cyan-300 flex items-center gap-1.5"
+            className="text-xs text-pf-cyan-400 hover:text-pf-cyan-300 flex items-center gap-2"
           >
             <Play size={12} /> {tryItOpen ? 'Close' : 'Try it out'}
           </Button>

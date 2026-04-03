@@ -178,7 +178,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           type="target"
           position={Position.Left}
           id="input"
-          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+          className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
           style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
         />
       )}
@@ -188,14 +188,14 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
             type="target"
             position={Position.Left}
             id="input-a"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--top"
+            className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--top"
             style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
           />
           <Handle
             type="target"
             position={Position.Left}
             id="input-b"
-            className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--bottom"
+            className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle builder-handle--bottom"
             style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
           />
         </>
@@ -206,7 +206,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
       >
         {/* Header bar */}
-        <div className="builder-node-header--solid flex items-center gap-1.5 px-2.5 py-1.5"
+        <div className="builder-node-header--solid flex items-center gap-2 px-3 py-2"
           style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
@@ -216,7 +216,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           <button
             type="button"
             onClick={onDelete}
-            className="p-0.5 rounded hover:bg-white/20 active:bg-white/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            className="p-1 rounded hover:bg-white/20 active:bg-white/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             aria-label="Remove block"
             title="Remove block"
           >
@@ -225,10 +225,10 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         </div>
 
         {/* Config: primary dropdown */}
-        <div className="px-2.5 py-2 space-y-2">
+        <div className="px-3 py-2 space-y-2">
           {dropdownOptions && (
             <div>
-              <label htmlFor={`${id}-${dropdownOptions.key}`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+              <label htmlFor={`${id}-${dropdownOptions.key}`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
                 {d.type === 'MATH' ? 'Operation' : d.type === 'COMPARISON' ? 'Operator' : 'Function'}
               </label>
               <select
@@ -250,7 +250,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {/* Window size for aggregation */}
           {showWindowField && (
             <div>
-              <label htmlFor={`${id}-windowSize`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+              <label htmlFor={`${id}-windowSize`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
                 Window (N ticks)
               </label>
               <input
@@ -269,7 +269,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {showBetweenFields && (
             <>
               <div>
-                <label htmlFor={`${id}-min`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+                <label htmlFor={`${id}-min`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
                   Min
                 </label>
                 <input
@@ -283,7 +283,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 />
               </div>
               <div>
-                <label htmlFor={`${id}-max`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+                <label htmlFor={`${id}-max`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
                   Max
                 </label>
                 <input
@@ -302,7 +302,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {/* Decimals field for abs/round */}
           {showDecimalsField && (
             <div>
-              <label htmlFor={`${id}-decimals`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+              <label htmlFor={`${id}-decimals`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
                 Decimals
               </label>
               <input
@@ -320,11 +320,11 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {/* Input handle labels */}
           {inputCount === 2 && (
             <div className="flex items-center gap-2 text-pf-caption text-pf-text-muted">
-              <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-success/20 text-pf-success font-medium">
+              <span className="px-2 py-1 rounded-pf-full bg-pf-success/20 text-pf-success font-medium">
                 A
               </span>
               <span>/</span>
-              <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-success/20 text-pf-success font-medium">
+              <span className="px-2 py-1 rounded-pf-full bg-pf-success/20 text-pf-success font-medium">
                 B
               </span>
             </div>
@@ -337,7 +337,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         type="source"
         position={Position.Right}
         id="output"
-        className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+        className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
         style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
       />
     </>

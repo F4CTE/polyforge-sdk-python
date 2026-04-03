@@ -173,7 +173,7 @@ export function HowItWorks() {
         <div className="text-center max-w-[600px] mx-auto mb-14">
           <h2
             id="hiw-heading"
-            className="text-[clamp(24px,4vw,34px)] font-bold text-pf-text mb-3.5"
+            className="text-[clamp(24px,4vw,34px)] font-bold text-pf-text mb-4"
           >
             Get started in three steps
           </h2>
@@ -198,7 +198,7 @@ export function HowItWorks() {
                 {step.visual}
               </div>
               <div className="text-center">
-                <h3 className="text-lg font-semibold text-pf-text mb-2.5">
+                <h3 className="text-lg font-semibold text-pf-text mb-3">
                   <span className="sr-only">Step {step.number}: </span>
                   {step.title}
                 </h3>

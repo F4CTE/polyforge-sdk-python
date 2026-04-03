@@ -255,7 +255,7 @@ export function Component() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label htmlFor="backtest-strategy" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Strategy</label>
+              <label htmlFor="backtest-strategy" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-2 block">Strategy</label>
               <Select
                 id="backtest-strategy"
                 value={selectedStratId}
@@ -267,7 +267,7 @@ export function Component() {
               </Select>
             </div>
             <div>
-              <label htmlFor="backtest-start" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Start Date</label>
+              <label htmlFor="backtest-start" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-2 block">Start Date</label>
               <input
                 id="backtest-start"
                 type="date"
@@ -278,7 +278,7 @@ export function Component() {
               />
             </div>
             <div>
-              <label htmlFor="backtest-end" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">End Date</label>
+              <label htmlFor="backtest-end" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-2 block">End Date</label>
               <input
                 id="backtest-end"
                 type="date"
@@ -370,7 +370,7 @@ export function Component() {
                 </span>
                 <span className="text-xs font-mono text-pf-cyan-400">{selectedRun.progress}%</span>
               </div>
-              <div className="h-1.5 bg-pf-overlay rounded-pf-full overflow-hidden">
+              <div className="h-2 bg-pf-overlay rounded-pf-full overflow-hidden">
                 <div className="h-full bg-pf-cyan-500 rounded-pf-full transition-all" style={{ width: `${selectedRun.progress}%` }} />
               </div>
             </div>
@@ -399,7 +399,7 @@ export function Component() {
                 </div>
                 {selectedRun.hasDataGaps && (
                   <div className="col-span-full flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-warning/10 text-pf-warning text-xs">
-                    <AlertTriangle className="size-3.5 shrink-0" />
+                    <AlertTriangle className="size-4 shrink-0" />
                     Results may be affected by data gaps in the selected date range.
                   </div>
                 )}
@@ -449,7 +449,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={() => { setCompareMode(!compareMode); setCompareA(null); setCompareB(null); }}
-              className={`text-xs px-3 py-1.5 rounded-pf border transition-colors ${compareMode ? 'bg-pf-cyan-500/15 border-pf-cyan-500/30 text-pf-cyan-400' : 'border-pf-border text-pf-text-secondary hover:text-pf-text'}`}
+              className={`text-xs px-3 py-2 rounded-pf border transition-colors ${compareMode ? 'bg-pf-cyan-500/15 border-pf-cyan-500/30 text-pf-cyan-400' : 'border-pf-border text-pf-text-secondary hover:text-pf-text'}`}
             >
               {compareMode ? 'Exit Compare' : 'Compare Runs'}
             </Button>
@@ -513,14 +513,14 @@ export function Component() {
                         <span className="font-mono text-pf-label text-pf-text-muted">{dateRangeLabel(run)}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
+                        <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
                           {run.status}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         {run.status === 'RUNNING' ? (
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 h-1.5 bg-pf-overlay rounded-pf-full overflow-hidden">
+                            <div className="flex-1 h-2 bg-pf-overlay rounded-pf-full overflow-hidden">
                               <div className="h-full bg-pf-cyan-500 rounded-pf-full" style={{ width: `${run.progress}%` }} />
                             </div>
                             <span className="font-mono text-pf-label text-pf-cyan-400">{run.progress}%</span>
@@ -547,13 +547,13 @@ export function Component() {
                               type="button"
                               variant="ghost"
                               onClick={() => setCompareA(run.id === compareA ? null : run.id)}
-                              className={`text-pf-caption px-1.5 py-0.5 rounded border transition-colors ${compareA === run.id ? 'bg-pf-info/20 border-pf-info/40 text-pf-info' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
+                              className={`text-pf-caption px-2 py-1 rounded border transition-colors ${compareA === run.id ? 'bg-pf-info/20 border-pf-info/40 text-pf-info' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
                             >A</Button>
                             <Button
                               type="button"
                               variant="ghost"
                               onClick={() => setCompareB(run.id === compareB ? null : run.id)}
-                              className={`text-pf-caption px-1.5 py-0.5 rounded border transition-colors ${compareB === run.id ? 'bg-pf-purple-500/20 border-pf-purple-500/40 text-pf-purple-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
+                              className={`text-pf-caption px-2 py-1 rounded border transition-colors ${compareB === run.id ? 'bg-pf-purple-500/20 border-pf-purple-500/40 text-pf-purple-400' : 'border-pf-border text-pf-text-muted hover:text-pf-text'}`}
                             >B</Button>
                           </div>
                         </td>
@@ -597,9 +597,9 @@ export function Component() {
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-pf-border">
-                        <th className="text-left py-1.5 pr-4 font-medium text-pf-text-muted">Metric</th>
-                        <th className="text-center py-1.5 px-4 font-medium text-pf-info">Run A</th>
-                        <th className="text-center py-1.5 px-4 font-medium text-pf-purple-400">Run B</th>
+                        <th className="text-left py-2 pr-4 font-medium text-pf-text-muted">Metric</th>
+                        <th className="text-center py-2 px-4 font-medium text-pf-info">Run A</th>
+                        <th className="text-center py-2 px-4 font-medium text-pf-purple-400">Run B</th>
                       </tr>
                     </thead>
                     <tbody>

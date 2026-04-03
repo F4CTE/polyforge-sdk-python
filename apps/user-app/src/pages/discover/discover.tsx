@@ -92,10 +92,10 @@ function formatDate(d: string): string {
 function CardSkeleton() {
   return (
     <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
-      <div className="h-3.5 bg-pf-overlay rounded w-[60%]" />
-      <div className="h-2.5 bg-pf-overlay rounded w-[90%]" />
-      <div className="h-2.5 bg-pf-overlay rounded w-[75%]" />
-      <div className="flex gap-1.5">
+      <div className="h-4 bg-pf-overlay rounded w-[60%]" />
+      <div className="h-3 bg-pf-overlay rounded w-[90%]" />
+      <div className="h-3 bg-pf-overlay rounded w-[75%]" />
+      <div className="flex gap-2">
         <div className="h-5 w-12 bg-pf-overlay rounded-pf-full" />
         <div className="h-5 w-12 bg-pf-overlay rounded-pf-full" />
       </div>
@@ -313,7 +313,7 @@ export function Component() {
           <div className="flex items-center gap-2 mb-3">
             <Star className="size-4 text-pf-warning fill-pf-warning" aria-hidden="true" />
             <span className="text-base font-semibold text-pf-text">Featured</span>
-            <Award className="size-3.5 text-pf-warning ml-0.5" aria-hidden="true" />
+            <Award className="size-4 text-pf-warning ml-1" aria-hidden="true" />
             <span className="text-xs text-pf-text-muted ml-1">Hand-picked by the PolyForge team</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -321,11 +321,11 @@ export function Component() {
               <Link
                 key={f.id}
                 to={`/marketplace/${f.id}`}
-                className="group block bg-pf-elevated border border-pf-warning/40 rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-warning/60 hover:shadow-pf-sm hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-warning"
+                className="group block bg-pf-elevated border border-pf-warning/40 rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-warning/60 hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-warning"
               >
                 {/* FEATURED badge + seller */}
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="bg-pf-warning/15 text-pf-warning text-pf-caption font-bold px-1.5 py-0.5 rounded">
+                  <span className="bg-pf-warning/15 text-pf-warning text-pf-caption font-bold px-2 py-1 rounded">
                     FEATURED
                   </span>
                   <span className="text-xs text-pf-text-secondary ml-auto truncate">
@@ -346,7 +346,7 @@ export function Component() {
                 {/* Stats row */}
                 <div className="flex flex-wrap gap-2 text-pf-label text-pf-text-secondary mb-3">
                   {f.winRate != null && (
-                    <span className="flex items-center gap-0.5">
+                    <span className="flex items-center gap-1">
                       <TrendingUp className="size-3" aria-hidden="true" />
                       {f.winRate}% win rate
                     </span>
@@ -366,7 +366,7 @@ export function Component() {
                 <div className="flex items-center gap-3 text-xs text-pf-text-muted">
                   <span className="flex items-center gap-1"><GitFork className="size-3" aria-hidden="true" /> {f.forkCount}</span>
                   <span className="flex items-center gap-1"><Heart className="size-3" aria-hidden="true" /> {f.likeCount}</span>
-                  <span className="ml-auto border border-pf-cyan-500/40 text-pf-cyan-400 text-pf-caption font-medium px-2 py-0.5 rounded hover:bg-pf-cyan-500/10 transition-colors">
+                  <span className="ml-auto border border-pf-cyan-500/40 text-pf-cyan-400 text-pf-caption font-medium px-2 py-1 rounded hover:bg-pf-cyan-500/10 transition-colors">
                     View Strategy
                   </span>
                 </div>
@@ -386,7 +386,7 @@ export function Component() {
             <span className="text-base font-semibold text-pf-text">Collections</span>
             <Link
               to="/collections"
-              className="ml-auto text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors flex items-center gap-0.5"
+              className="ml-auto text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors flex items-center gap-1"
             >
               View all <ChevronRight className="size-3" aria-hidden="true" />
             </Link>
@@ -398,7 +398,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => navigate(`/collections/${col.id}`)}
-                className="bg-pf-elevated border border-pf-border rounded-pf-full px-3 py-1.5 text-sm flex items-center gap-1.5 whitespace-nowrap hover:border-pf-border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+                className="bg-pf-elevated border border-pf-border rounded-pf-full px-3 py-2 text-sm flex items-center gap-2 whitespace-nowrap hover:border-pf-border-strong cursor-pointer transition-colors shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
               >
                 <span role="img" aria-label={col.title}>{col.emoji}</span>
                 <span className="text-pf-text font-medium">{col.title}</span>
@@ -420,19 +420,19 @@ export function Component() {
             aria-label="Search strategies"
             value={searchQuery}
             onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
-            className="w-full pl-10 pr-4 py-2.5 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted"
+            className="w-full pl-10 pr-4 py-3 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted"
           />
         </div>
         {/* Tag filter */}
         <div className="relative">
-          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-pf-text-muted" aria-hidden="true" />
+          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" aria-hidden="true" />
           <Input
             type="text"
             placeholder="Filter by tag..."
             aria-label="Filter by tag"
             value={tagFilter}
             onChange={e => setTagFilter(e.target.value)}
-            className="pl-8 pr-3 py-2.5 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted w-36"
+            className="pl-8 pr-3 py-3 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted w-36"
           />
         </div>
       </div>
@@ -445,7 +445,7 @@ export function Component() {
             variant="ghost"
             key={opt.value}
             onClick={() => changeSort(opt.value)}
-            className={`px-3 py-1.5 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
               sort === opt.value
                 ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                 : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -497,7 +497,7 @@ export function Component() {
               <Link
                 key={s.id}
                 to={`/strategies/${s.id}`}
-                className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+                className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
               >
                 {/* Author row */}
                 <div className="flex items-center gap-2 mb-3">
@@ -516,16 +516,16 @@ export function Component() {
                     {s.author.displayName ?? s.author.username}
                   </a>
                   {s.author.score != null && s.author.score > 0 && (
-                    <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full text-pf-caption font-mono font-bold border ${
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-caption font-mono font-bold border ${
                       s.author.score >= 70 ? 'text-pf-success bg-pf-success/10 border-pf-success/20' :
                       s.author.score >= 40 ? 'text-pf-warning bg-pf-warning/10 border-pf-warning/20' :
                       'text-pf-danger bg-pf-danger/10 border-pf-danger/20'
                     }`}>
-                      <TrendingUp className="size-2.5" />
+                      <TrendingUp className="size-3" />
                       {s.author.score}
                     </span>
                   )}
-                  <span className="ml-auto text-pf-caption px-1.5 py-0.5 rounded bg-pf-overlay text-pf-text-muted">
+                  <span className="ml-auto text-pf-caption px-2 py-1 rounded bg-pf-overlay text-pf-text-muted">
                     {execLabel(s.execMode)}
                   </span>
                 </div>
@@ -542,7 +542,7 @@ export function Component() {
                 {s.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-3">
                     {s.tags.slice(0, 4).map(tag => (
-                      <span key={tag} className={`px-1.5 py-0.5 rounded-pf-full text-pf-caption font-medium ${
+                      <span key={tag} className={`px-2 py-1 rounded-pf-full text-pf-caption font-medium ${
                         tag === 'momentum' ? 'bg-pf-warning/15 text-pf-warning' :
                         tag === 'political' ? 'bg-pf-info/15 text-pf-info' :
                         tag === 'yes-bias' ? 'bg-pf-success/15 text-pf-success' :
@@ -577,13 +577,13 @@ export function Component() {
                     }`}
                   >
                     <Heart
-                      className="size-3.5"
+                      className="size-4"
                       aria-hidden="true"
                       fill={isLiked ? 'currentColor' : 'none'}
                     />
                     {likeCount}
                   </Button>
-                  <span className="flex items-center gap-1"><GitFork className="size-3.5" aria-hidden="true" /> {s.forkCount}</span>
+                  <span className="flex items-center gap-1"><GitFork className="size-4" aria-hidden="true" /> {s.forkCount}</span>
                   <span className="ml-auto text-pf-label text-pf-text-muted">&bull;</span>
                   <span className="font-mono text-pf-label">{formatDate(s.createdAt)}</span>
                 </div>

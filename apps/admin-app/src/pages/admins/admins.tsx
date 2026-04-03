@@ -141,7 +141,7 @@ export function Component() {
           type="button"
           variant="default"
           onClick={openAdd}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
         >
           <Plus size={14} aria-hidden="true" />
           Add Admin
@@ -187,7 +187,7 @@ export function Component() {
                     <td className="px-4 py-3 font-medium text-pf-text">{a.displayName}</td>
                     <td className="px-4 py-3 text-pf-text-secondary">{a.email}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${
+                      <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${
                         a.role === 'SUPER_ADMIN'
                           ? 'text-pf-warning bg-pf-warning/10'
                           : a.role === 'ADMIN'
@@ -205,7 +205,7 @@ export function Component() {
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => openEdit(a)}
-                          className="p-1.5 rounded hover:bg-pf-base text-pf-text-tertiary hover:text-pf-text cursor-pointer transition-colors"
+                          className="p-2 rounded hover:bg-pf-base text-pf-text-tertiary hover:text-pf-text cursor-pointer transition-colors"
                           aria-label="Edit admin"
                           title="Edit admin"
                         >
@@ -220,7 +220,7 @@ export function Component() {
                               setDeleteConfirmId(a.id);
                               setDeletePassword('');
                             }}
-                            className="p-1.5 rounded hover:bg-pf-danger/10 text-pf-text-tertiary hover:text-pf-danger cursor-pointer transition-colors"
+                            className="p-2 rounded hover:bg-pf-danger/10 text-pf-text-tertiary hover:text-pf-danger cursor-pointer transition-colors"
                             aria-label="Deactivate admin"
                             title="Deactivate admin"
                           >

@@ -160,7 +160,7 @@ function PerfTooltip({ active, payload, label }: PerfTooltipProps) {
   const isPos = val >= 0;
   return (
     <div className="bg-pf-elevated border border-pf-border rounded-pf px-3 py-2 text-xs shadow-pf-lg">
-      <div className="text-pf-text-muted mb-0.5">{label}</div>
+      <div className="text-pf-text-muted mb-1">{label}</div>
       <div className={`font-mono font-semibold ${isPos ? 'text-pf-success' : 'text-pf-danger'}`}>
         {fmtPnl(val)}
       </div>
@@ -357,7 +357,7 @@ export function Component() {
           <h1 className="text-2xl font-semibold text-pf-text">{profile.displayName ?? profile.username}</h1>
           {/* Inline score badge */}
           {scoreData?.score && (
-            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-pf-full border text-xs font-mono font-bold ${scoreBg(scoreData.score.score)} ${scoreColor(scoreData.score.score)}`}>
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-pf-full border text-xs font-mono font-bold ${scoreBg(scoreData.score.score)} ${scoreColor(scoreData.score.score)}`}>
               <TrendingUp className="size-3" />
               {scoreData.score.score}
             </div>
@@ -365,8 +365,8 @@ export function Component() {
         </div>
         {isOwn ? (
           <Link to="/settings"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text-secondary hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors">
-            <Settings className="size-3.5" aria-hidden="true" />
+            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text-secondary hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors">
+            <Settings className="size-4" aria-hidden="true" />
             Edit Profile
           </Link>
         ) : (
@@ -380,18 +380,18 @@ export function Component() {
               onClick={toggleFollow}
               disabled={followLoading}
               aria-label={profile.isFollowing ? 'Unfollow this user' : 'Follow this user'}
-              className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+              className={`group flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
                 profile.isFollowing
                   ? 'bg-pf-elevated text-pf-text-secondary border border-pf-border hover:border-pf-danger hover:text-pf-danger'
                   : 'bg-pf-cyan-500/15 text-pf-cyan-400 border border-pf-cyan-500/30 hover:bg-pf-cyan-500/25'
               }`}
             >
               {followLoading ? (
-                <Loader2 className="size-3.5 animate-spin" />
+                <Loader2 className="size-4 animate-spin" />
               ) : profile.isFollowing ? (
-                <UserMinus className="size-3.5" />
+                <UserMinus className="size-4" />
               ) : (
-                <UserPlus className="size-3.5" />
+                <UserPlus className="size-4" />
               )}
               {profile.isFollowing ? (
                 <span>
@@ -509,9 +509,9 @@ export function Component() {
                   className="ml-auto flex items-center gap-1 text-xs text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf"
                 >
                   {showAllBadges ? (
-                    <><ChevronUp className="size-3.5" />Hide locked</>
+                    <><ChevronUp className="size-4" />Hide locked</>
                   ) : (
-                    <><ChevronDown className="size-3.5" />Show all</>
+                    <><ChevronDown className="size-4" />Show all</>
                   )}
                 </Button>
               )}
@@ -642,8 +642,8 @@ export function Component() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="rounded-pf bg-pf-surface border border-pf-border-subtle p-3 space-y-2">
-                <div className="h-3.5 w-3/4 bg-pf-overlay rounded animate-pulse" />
-                <div className="h-2.5 w-full bg-pf-overlay rounded animate-pulse" />
+                <div className="h-4 w-3/4 bg-pf-overlay rounded animate-pulse" />
+                <div className="h-3 w-full bg-pf-overlay rounded animate-pulse" />
                 <div className="flex gap-2 mt-2">
                   <div className="h-5 w-16 bg-pf-overlay rounded-pf-full animate-pulse" />
                   <div className="h-5 w-12 bg-pf-overlay rounded-pf-full animate-pulse" />
@@ -664,25 +664,25 @@ export function Component() {
               >
                 <div className="min-w-0">
                   <div className="text-xs font-semibold text-pf-text truncate">{s.name}</div>
-                  <div className="text-pf-label text-pf-text-muted truncate mt-0.5">{s.description}</div>
+                  <div className="text-pf-label text-pf-text-muted truncate mt-1">{s.description}</div>
                 </div>
 
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-cyan-500/10 border border-pf-cyan-500/20 text-pf-caption font-mono text-pf-cyan-400">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2 py-1 rounded-pf-full bg-pf-cyan-500/10 border border-pf-cyan-500/20 text-pf-caption font-mono text-pf-cyan-400">
                     {s.winRate.toFixed(0)}% WR
                   </span>
-                  <span className="px-1.5 py-0.5 rounded-pf-full bg-pf-overlay border border-pf-border-subtle text-pf-caption font-mono text-pf-text-muted">
+                  <span className="px-2 py-1 rounded-pf-full bg-pf-overlay border border-pf-border-subtle text-pf-caption font-mono text-pf-text-muted">
                     {s.tradeCount} trades
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between mt-auto">
                   <div className="flex items-center gap-3 text-pf-caption text-pf-text-muted">
-                    <span className="flex items-center gap-0.5">
+                    <span className="flex items-center gap-1">
                       <GitFork className="size-3" />
                       {s.forkCount}
                     </span>
-                    <span className="flex items-center gap-0.5">
+                    <span className="flex items-center gap-1">
                       <Heart className="size-3" />
                       {s.likeCount}
                     </span>
@@ -692,7 +692,7 @@ export function Component() {
                   </div>
                   <Link
                     to={`/marketplace/${s.id}`}
-                    className="px-2 py-0.5 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/25 text-pf-caption font-medium text-pf-cyan-400 hover:bg-pf-cyan-500/25 transition-colors"
+                    className="px-2 py-1 rounded-pf bg-pf-cyan-500/15 border border-pf-cyan-500/25 text-pf-caption font-medium text-pf-cyan-400 hover:bg-pf-cyan-500/25 transition-colors"
                   >
                     View
                   </Link>
@@ -714,9 +714,9 @@ export function Component() {
           <div className="space-y-2">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 py-2 border-b border-pf-border-subtle last:border-0">
-                <div className="flex-1 space-y-1.5">
+                <div className="flex-1 space-y-2">
                   <div className="h-3 w-[85%] bg-pf-overlay rounded animate-pulse" />
-                  <div className="h-2.5 w-24 bg-pf-overlay rounded animate-pulse" />
+                  <div className="h-3 w-24 bg-pf-overlay rounded animate-pulse" />
                 </div>
                 <div className="h-5 w-14 bg-pf-overlay rounded animate-pulse" />
               </div>
@@ -734,8 +734,8 @@ export function Component() {
                 <div key={item.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-pf-text truncate">{item.marketQuestion}</div>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <span className={`px-1.5 py-px rounded-pf-full text-pf-caption font-semibold ${
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`px-2 py-px rounded-pf-full text-pf-caption font-semibold ${
                         item.outcome === 'YES'
                           ? 'bg-pf-success/15 text-pf-success border border-pf-success/20'
                           : 'bg-pf-danger/15 text-pf-danger border border-pf-danger/20'
@@ -749,7 +749,7 @@ export function Component() {
                     <div className={`text-xs font-mono font-semibold ${isPos ? 'text-pf-success' : 'text-pf-danger'}`}>
                       {fmtPnl(item.pnl)}
                     </div>
-                    <div className="text-pf-caption text-pf-text-muted mt-0.5">{relativeTime(item.resolvedAt)}</div>
+                    <div className="text-pf-caption text-pf-text-muted mt-1">{relativeTime(item.resolvedAt)}</div>
                   </div>
                 </div>
               );

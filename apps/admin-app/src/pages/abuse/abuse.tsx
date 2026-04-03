@@ -182,7 +182,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
     <div className="rounded-pf-md border border-pf-border bg-pf-surface p-5 space-y-4">
       {/* Header row */}
       <div className="flex flex-wrap items-start gap-2">
-        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-sm text-xs font-semibold uppercase tracking-wide ${SEVERITY_STYLES[strategy.severity]}`}>
+        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-sm text-xs font-semibold uppercase tracking-wide ${SEVERITY_STYLES[strategy.severity]}`}>
           {strategy.severity === 'critical' && <AlertTriangle size={11} aria-hidden="true" />}
           {strategy.severity}
         </span>
@@ -206,7 +206,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
 
       {/* Abuse type + flagged time */}
       <div className="flex flex-wrap items-center gap-3">
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-pf-text-secondary">
+        <span className="inline-flex items-center gap-2 text-xs font-medium text-pf-text-secondary">
           {meta.icon}
           {meta.label}
         </span>
@@ -265,7 +265,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
               type="button"
               variant="secondary"
               onClick={() => setConfirmBan(false)}
-              className="px-3 py-1.5 rounded-pf-sm border border-pf-border text-xs text-pf-text-secondary hover:bg-pf-elevated transition-colors"
+              className="px-3 py-2 rounded-pf-sm border border-pf-border text-xs text-pf-text-secondary hover:bg-pf-elevated transition-colors"
             >
               Cancel
             </Button>
@@ -274,7 +274,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
               variant="danger"
               onClick={() => handleAction('ban_author')}
               disabled={isActioning}
-              className="px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
+              className="px-3 py-2 text-xs font-medium transition-colors disabled:opacity-50"
             >
               {pending === 'ban_author' ? 'Banning…' : 'Confirm Ban'}
             </Button>
@@ -290,7 +290,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
             variant="success"
             onClick={() => handleAction('clear')}
             disabled={isActioning}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm border border-pf-success/40 text-xs font-medium text-pf-success hover:bg-pf-success/10 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-pf-success/40 text-xs font-medium text-pf-success hover:bg-pf-success/10 transition-colors disabled:opacity-50"
           >
             <ShieldCheck size={13} aria-hidden="true" />
             {pending === 'clear' ? 'Clearing…' : 'Clear — No Abuse'}
@@ -301,7 +301,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
             variant="ghost"
             onClick={() => handleAction('warn')}
             disabled={isActioning}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm border border-pf-warning/40 text-xs font-medium text-pf-warning hover:bg-pf-warning/10 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-pf-warning/40 text-xs font-medium text-pf-warning hover:bg-pf-warning/10 transition-colors disabled:opacity-50"
           >
             <AlertTriangle size={13} aria-hidden="true" />
             {pending === 'warn' ? 'Warning…' : 'Warn Author'}
@@ -312,7 +312,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
             variant="danger"
             onClick={() => handleAction('delist')}
             disabled={isActioning}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm border border-pf-danger/40 text-xs font-medium text-pf-danger hover:bg-pf-danger/10 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-pf-danger/40 text-xs font-medium text-pf-danger hover:bg-pf-danger/10 transition-colors disabled:opacity-50"
           >
             <Eye size={13} aria-hidden="true" />
             {pending === 'delist' ? 'Delisting…' : 'Delist Strategy'}
@@ -323,7 +323,7 @@ function FlaggedCard({ strategy, onAction }: FlaggedCardProps) {
             variant="danger"
             onClick={() => handleAction('ban_author')}
             disabled={isActioning}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors disabled:opacity-50"
           >
             <Ban size={13} aria-hidden="true" />
             {pending === 'ban_author' ? 'Banning…' : 'Ban Author'}
@@ -423,7 +423,7 @@ export function Component() {
         </div>
         {pendingCount > 0 && (
           <span
-            className="inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-pf-full bg-pf-danger text-pf-caption font-bold text-white"
+            className="inline-flex items-center justify-center min-w-[22px] h-5 px-2 rounded-pf-full bg-pf-danger text-pf-caption font-bold text-white"
             aria-label={`${pendingCount} pending flagged strategies`}
           >
             {pendingCount}
@@ -477,7 +477,7 @@ export function Component() {
           >
             {tab.label}
             {tab.key === 'pending' && pendingCount > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-pf-full bg-pf-danger text-pf-micro font-bold text-white">
+              <span className="ml-2 inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-pf-full bg-pf-danger text-pf-micro font-bold text-white">
                 {pendingCount}
               </span>
             )}

@@ -5,10 +5,10 @@ export function ProductPreview() {
       aria-label="Product dashboard preview"
     >
       <div className="max-w-[1100px] mx-auto px-6">
-        <div className="dark bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden transition-transform duration-400 shadow-pf-lg [transform:perspective(1200px)_rotateX(2deg)]">
+        <div className="dark bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden transition-transform duration-300 shadow-pf-lg [transform:perspective(1200px)_rotateX(2deg)]">
           {/* Browser chrome */}
           <div
-            className="flex items-center gap-1.5 px-4 py-3 border-b border-pf-border-subtle bg-pf-elevated"
+            className="flex items-center gap-2 px-4 py-3 border-b border-pf-border-subtle bg-pf-elevated"
             aria-hidden="true"
           >
             <span className="w-[11px] h-[11px] rounded-pf-full bg-pf-danger" />

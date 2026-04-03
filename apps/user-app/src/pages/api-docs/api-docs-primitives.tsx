@@ -39,7 +39,7 @@ export const SCOPE_CLS: Record<string, string> = {
 
 export function Badge({ text, cls }: { text: string; cls: string }) {
   return (
-    <span className={`inline-flex items-center text-pf-label font-medium px-2 py-0.5 rounded-pf-full ${cls}`}>
+    <span className={`inline-flex items-center text-pf-label font-medium px-2 py-1 rounded-pf-full ${cls}`}>
       {text}
     </span>
   );
@@ -79,7 +79,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
           </Button>
         </div>
       )}
-      <pre className="bg-pf-base px-4 py-3.5 text-[11.5px] font-mono text-pf-text overflow-x-auto whitespace-pre leading-relaxed">
+      <pre className="bg-pf-base px-4 py-4 text-[11.5px] font-mono text-pf-text overflow-x-auto whitespace-pre leading-relaxed">
         {code.trim()}
       </pre>
     </div>
@@ -90,7 +90,7 @@ export function Code({ code, lang }: { code: string; lang?: string }) {
 
 export function InlineCode({ children }: { children: string }) {
   return (
-    <code className="bg-pf-overlay px-1.5 py-0.5 rounded text-pf-label font-mono text-pf-cyan-400">
+    <code className="bg-pf-overlay px-2 py-1 rounded text-pf-label font-mono text-pf-cyan-400">
       {children}
     </code>
   );
@@ -152,7 +152,7 @@ export function LangTabs({
   available: Lang[];
 }) {
   return (
-    <div className="flex flex-wrap gap-1.5 mb-3">
+    <div className="flex flex-wrap gap-2 mb-3">
       {available.map(l => (
         <Button
           type="button"
@@ -185,10 +185,10 @@ export function PageTitle({
 }) {
   return (
     <div className="pb-5 mb-6 border-b border-pf-border-subtle">
-      <div className="flex items-center gap-3 mb-1.5">
+      <div className="flex items-center gap-3 mb-2">
         <h1 className="text-2xl font-semibold text-pf-text">{title}</h1>
         {count !== undefined && (
-          <span className="inline-flex items-center text-pf-label font-medium px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-muted">
+          <span className="inline-flex items-center text-pf-label font-medium px-2 py-1 rounded-pf-full bg-pf-overlay text-pf-text-muted">
             {count} endpoint{count !== 1 ? 's' : ''}
           </span>
         )}

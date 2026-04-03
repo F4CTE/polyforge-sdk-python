@@ -225,7 +225,7 @@ export function Component() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h2 className="text-lg font-semibold text-pf-text flex items-center gap-2">
           Backtests
-          <span className="text-sm font-normal text-pf-text-tertiary px-2 py-0.5 bg-pf-elevated border border-pf-border rounded-pf-full">
+          <span className="text-sm font-normal text-pf-text-tertiary px-2 py-1 bg-pf-elevated border border-pf-border rounded-pf-full">
             {total}
           </span>
         </h2>
@@ -241,7 +241,7 @@ export function Component() {
                 aria-label="Toggle auto-refresh"
               />
               <span className="block w-full h-full rounded-pf-full bg-pf-border peer-checked:bg-pf-cyan-500 transition-colors" />
-              <span className="absolute top-0.5 left-0.5 w-3 h-3 rounded-pf-full bg-white transition-transform peer-checked:translate-x-4" />
+              <span className="absolute top-1 left-1 w-3 h-3 rounded-pf-full bg-white transition-transform peer-checked:translate-x-4" />
             </span>
             Auto-refresh
             {refreshing && (
@@ -256,7 +256,7 @@ export function Component() {
             onClick={() => load({ silent: true })}
             disabled={loading || refreshing}
             aria-label="Refresh backtests"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm bg-pf-elevated border border-pf-border text-pf-text-secondary hover:text-pf-text hover:border-pf-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-xs rounded-pf-sm bg-pf-elevated border border-pf-border text-pf-text-secondary hover:text-pf-text hover:border-pf-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <RefreshCw
               size={12}
@@ -459,11 +459,11 @@ export function Component() {
                       {/* Status badge */}
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusBadgeClass(bt.status)}`}
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-xs font-medium ${statusBadgeClass(bt.status)}`}
                         >
                           {isRunning && (
                             <span
-                              className="w-1.5 h-1.5 rounded-pf-full bg-pf-cyan-400 animate-pulse"
+                              className="w-2 h-2 rounded-pf-full bg-pf-cyan-400 animate-pulse"
                               aria-hidden="true"
                             />
                           )}
@@ -552,7 +552,7 @@ export function Component() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 aria-label="Previous page"
-                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft size={16} />
               </Button>
@@ -563,7 +563,7 @@ export function Component() {
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 aria-label="Next page"
-                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight size={16} />
               </Button>

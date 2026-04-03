@@ -337,7 +337,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
           </Select>
           <ChevronRight
             size={12}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 text-pf-text-muted pointer-events-none"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-pf-text-muted pointer-events-none"
             aria-hidden="true"
           />
         </div>
@@ -354,7 +354,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
               type="button"
               variant="ghost"
               onClick={() => setDateRange(r)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-pf-sm transition-colors ${
+              className={`px-3 py-1 text-xs font-medium rounded-pf-sm transition-colors ${
                 dateRange === r
                   ? 'bg-pf-cyan-500 text-white'
                   : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-base'
@@ -386,19 +386,19 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
               return (
                 <li key={ev.id} className="flex gap-4 px-5 py-4">
                   {/* Timeline connector */}
-                  <div className="flex flex-col items-center shrink-0 pt-0.5">
-                    <span className={`w-2.5 h-2.5 rounded-pf-full shrink-0 ${dotClass}`} aria-hidden="true" />
+                  <div className="flex flex-col items-center shrink-0 pt-1">
+                    <span className={`w-3 h-3 rounded-pf-full shrink-0 ${dotClass}`} aria-hidden="true" />
                     {!isLast && (
-                      <span className="w-px flex-1 bg-pf-border mt-1.5" aria-hidden="true" />
+                      <span className="w-px flex-1 bg-pf-border mt-2" aria-hidden="true" />
                     )}
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 min-w-0 pb-0.5">
+                  <div className="flex-1 min-w-0 pb-1">
                     {/* Header row: icon + badge + timestamp */}
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                       <Icon size={13} className={iconClass} aria-hidden="true" />
-                      <span className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${badgeClass}`}>
+                      <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${badgeClass}`}>
                         {label}
                       </span>
                       <time
@@ -422,11 +422,11 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
 
                     {/* Metadata chips */}
                     {ev.metadata && Object.keys(ev.metadata).length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-2">
+                      <div className="flex flex-wrap gap-2 mt-2">
                         {Object.entries(ev.metadata).map(([k, v]) => (
                           <span
                             key={k}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-sm bg-pf-base border border-pf-border text-xs text-pf-text-secondary"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-sm bg-pf-base border border-pf-border text-xs text-pf-text-secondary"
                           >
                             <span className="text-pf-text-muted capitalize">
                               {k.replace(/([A-Z])/g, ' $1').trim()}:
@@ -453,7 +453,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
                 variant="ghost"
                 onClick={() => fetchActivity(page + 1, true)}
                 disabled={loading}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base hover:text-pf-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base hover:text-pf-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? (
                   <RotateCcw size={13} className="animate-spin" aria-hidden="true" />
@@ -694,7 +694,7 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/users"
-        className="inline-flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded-pf-sm"
+        className="inline-flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 rounded-pf-sm"
       >
         <ChevronLeft size={16} aria-hidden="true" />
         Back to users
@@ -721,19 +721,19 @@ export function Component() {
               {/* Status + badges */}
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <span
-                  className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(
+                  className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(
                     isSuspended ? 'SUSPENDED' : user.status,
                   )}`}
                 >
                   {isSuspended ? 'SUSPENDED' : (user.status || 'ACTIVE')}
                 </span>
                 {user.polymarketConnected && (
-                  <span className="px-2 py-0.5 rounded-pf-full text-xs font-medium text-cyan-400 bg-cyan-400/10">
+                  <span className="px-2 py-1 rounded-pf-full text-xs font-medium text-cyan-400 bg-cyan-400/10">
                     Polymarket Connected
                   </span>
                 )}
                 {(user.totpEnabled) && (
-                  <span className="px-2 py-0.5 rounded-pf-full text-xs font-medium text-pf-success bg-pf-success/10">
+                  <span className="px-2 py-1 rounded-pf-full text-xs font-medium text-pf-success bg-pf-success/10">
                     2FA Enabled
                   </span>
                 )}
@@ -749,7 +749,7 @@ export function Component() {
                 variant="success"
                 onClick={handleUnsuspend}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-success text-pf-success hover:bg-pf-success/10 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-pf-success text-pf-success hover:bg-pf-success/10 disabled:opacity-50 transition-colors"
               >
                 <UserCheck size={14} aria-hidden="true" />
                 Unsuspend
@@ -760,7 +760,7 @@ export function Component() {
                 variant="danger"
                 onClick={handleSuspend}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-danger text-pf-danger hover:bg-pf-danger/10 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-pf-danger text-pf-danger hover:bg-pf-danger/10 disabled:opacity-50 transition-colors"
               >
                 <Ban size={14} aria-hidden="true" />
                 Suspend
@@ -771,7 +771,7 @@ export function Component() {
               variant="ghost"
               onClick={handleResetPassword}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base hover:text-pf-text disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-base hover:text-pf-text disabled:opacity-50 transition-colors"
             >
               <RotateCcw size={14} aria-hidden="true" />
               Reset Password
@@ -782,13 +782,13 @@ export function Component() {
         {/* Stat pills */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-5 border-t border-pf-border">
           <div className="bg-pf-base border border-pf-border rounded-pf-sm px-4 py-3 text-center">
-            <div className="text-xs text-pf-text-tertiary mb-0.5">Trades</div>
+            <div className="text-xs text-pf-text-tertiary mb-1">Trades</div>
             <div className="text-lg font-bold text-pf-text">
               {(user.tradeCount ?? 0).toLocaleString()}
             </div>
           </div>
           <div className="bg-pf-base border border-pf-border rounded-pf-sm px-4 py-3 text-center">
-            <div className="text-xs text-pf-text-tertiary mb-0.5">Total P&amp;L</div>
+            <div className="text-xs text-pf-text-tertiary mb-1">Total P&amp;L</div>
             <div
               className={`text-lg font-bold ${
                 typeof user.totalPnl === 'number' && user.totalPnl < 0
@@ -800,11 +800,11 @@ export function Component() {
             </div>
           </div>
           <div className="bg-pf-base border border-pf-border rounded-pf-sm px-4 py-3 text-center">
-            <div className="text-xs text-pf-text-tertiary mb-0.5">Win Rate</div>
+            <div className="text-xs text-pf-text-tertiary mb-1">Win Rate</div>
             <div className="text-lg font-bold text-pf-text">{fmtWinRate(user.winRate)}</div>
           </div>
           <div className="bg-pf-base border border-pf-border rounded-pf-sm px-4 py-3 text-center">
-            <div className="text-xs text-pf-text-tertiary mb-0.5">Followers</div>
+            <div className="text-xs text-pf-text-tertiary mb-1">Followers</div>
             <div className="text-lg font-bold text-pf-text">
               {(user.followerCount ?? 0).toLocaleString()}
             </div>
@@ -823,7 +823,7 @@ export function Component() {
               role="tab"
               aria-selected={activeTab === key}
               onClick={() => handleTabChange(key)}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded-t-pf-sm -mb-px border-b-2 shrink-0 ${
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded-t-pf-sm -mb-px border-b-2 shrink-0 ${
                 activeTab === key
                   ? 'border-pf-cyan-500 text-pf-cyan-500'
                   : 'border-transparent text-pf-text-secondary hover:text-pf-text'
@@ -845,7 +845,7 @@ export function Component() {
                 <h3 className="text-sm font-semibold text-pf-text">Risk Settings</h3>
                 {riskSettings?.enabled !== undefined && (
                   <span
-                    className={`ml-auto px-2 py-0.5 rounded-pf-full text-xs font-medium ${
+                    className={`ml-auto px-2 py-1 rounded-pf-full text-xs font-medium ${
                       riskSettings.enabled
                         ? 'text-pf-success bg-pf-success/10'
                         : 'text-pf-text-tertiary bg-pf-base'
@@ -858,7 +858,7 @@ export function Component() {
               {riskSettings ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                   <div>
-                    <div className="text-xs text-pf-text-tertiary mb-0.5">Daily Loss Limit</div>
+                    <div className="text-xs text-pf-text-tertiary mb-1">Daily Loss Limit</div>
                     <div className="text-pf-text font-medium">
                       {riskSettings.dailyLossLimit !== undefined
                         ? `$${Number(riskSettings.dailyLossLimit).toLocaleString()}`
@@ -866,7 +866,7 @@ export function Component() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-pf-text-tertiary mb-0.5">Max Position Size</div>
+                    <div className="text-xs text-pf-text-tertiary mb-1">Max Position Size</div>
                     <div className="text-pf-text font-medium">
                       {riskSettings.maxPositionSize !== undefined
                         ? `$${Number(riskSettings.maxPositionSize).toLocaleString()}`
@@ -874,7 +874,7 @@ export function Component() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-pf-text-tertiary mb-0.5">Max Open Positions</div>
+                    <div className="text-xs text-pf-text-tertiary mb-1">Max Open Positions</div>
                     <div className="text-pf-text font-medium">
                       {riskSettings.maxOpenPositions ?? '—'}
                     </div>
@@ -890,31 +890,31 @@ export function Component() {
               <h3 className="text-sm font-semibold text-pf-text mb-4">Account Details</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <div className="text-xs text-pf-text-tertiary mb-0.5">Joined</div>
+                  <div className="text-xs text-pf-text-tertiary mb-1">Joined</div>
                   <div className="text-pf-text">{formatDate(user.createdAt)}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-pf-text-tertiary mb-0.5">Last Active</div>
+                  <div className="text-xs text-pf-text-tertiary mb-1">Last Active</div>
                   <div className="text-pf-text">
                     {user.lastSeen ? formatDateTime(user.lastSeen) : '—'}
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-pf-text-tertiary mb-0.5">Role</div>
+                  <div className="text-xs text-pf-text-tertiary mb-1">Role</div>
                   <div className="text-pf-text capitalize">{user.role}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-pf-text-tertiary mb-0.5">Following</div>
+                  <div className="text-xs text-pf-text-tertiary mb-1">Following</div>
                   <div className="text-pf-text">{(user.followingCount ?? 0).toLocaleString()}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-pf-text-tertiary mb-0.5">Polymarket</div>
+                  <div className="text-xs text-pf-text-tertiary mb-1">Polymarket</div>
                   <div className="text-pf-text">
                     {user.polymarketConnected ? 'Connected' : 'Not connected'}
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-pf-text-tertiary mb-0.5">2FA</div>
+                  <div className="text-xs text-pf-text-tertiary mb-1">2FA</div>
                   <div className="text-pf-text">
                     {user.totpEnabled ? 'Enabled' : 'Disabled'}
                   </div>
@@ -971,7 +971,7 @@ export function Component() {
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            className={`px-2 py-1 rounded text-xs font-medium ${
                               String(order.side).toUpperCase() === 'BUY'
                                 ? 'text-pf-success bg-pf-success/10'
                                 : 'text-pf-danger bg-pf-danger/10'
@@ -993,7 +993,7 @@ export function Component() {
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(
+                            className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(
                               String(order.status ?? ''),
                             )}`}
                           >
@@ -1021,7 +1021,7 @@ export function Component() {
                     onClick={() => handleOrdersPage(ordersPage - 1)}
                     disabled={ordersPage === 1 || ordersLoading}
                     aria-label="Previous page"
-                    className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronLeft size={16} />
                   </Button>
@@ -1032,7 +1032,7 @@ export function Component() {
                     onClick={() => handleOrdersPage(ordersPage + 1)}
                     disabled={ordersPage === ordersPageCount || ordersLoading}
                     aria-label="Next page"
-                    className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronRight size={16} />
                   </Button>
@@ -1074,7 +1074,7 @@ export function Component() {
                           {String(s.name ?? 'Unnamed Strategy')}
                         </span>
                         <span
-                          className={`shrink-0 px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(
+                          className={`shrink-0 px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(
                             String(s.status ?? ''),
                           )}`}
                         >
@@ -1085,7 +1085,7 @@ export function Component() {
                         Created {s.createdAt ? formatDate(s.createdAt) : '—'}
                       </div>
                       {s.tradeCount !== undefined && (
-                        <div className="text-xs text-pf-text-tertiary mt-0.5">
+                        <div className="text-xs text-pf-text-tertiary mt-1">
                           {s.tradeCount.toLocaleString()} trades
                         </div>
                       )}
@@ -1116,7 +1116,7 @@ export function Component() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                   <div>
-                    <div className="text-xs text-pf-text-tertiary mb-0.5">Daily Loss Limit</div>
+                    <div className="text-xs text-pf-text-tertiary mb-1">Daily Loss Limit</div>
                     <div className="text-pf-text font-medium">
                       {riskSettings.dailyLossLimit !== undefined
                         ? `$${Number(riskSettings.dailyLossLimit).toLocaleString()}`
@@ -1124,7 +1124,7 @@ export function Component() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-pf-text-tertiary mb-0.5">Max Position Size</div>
+                    <div className="text-xs text-pf-text-tertiary mb-1">Max Position Size</div>
                     <div className="text-pf-text font-medium">
                       {riskSettings.maxPositionSize !== undefined
                         ? `$${Number(riskSettings.maxPositionSize).toLocaleString()}`
@@ -1132,13 +1132,13 @@ export function Component() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-pf-text-tertiary mb-0.5">Max Open Positions</div>
+                    <div className="text-xs text-pf-text-tertiary mb-1">Max Open Positions</div>
                     <div className="text-pf-text font-medium">
                       {riskSettings.maxOpenPositions ?? '—'}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-pf-text-tertiary mb-0.5">Risk Controls</div>
+                    <div className="text-xs text-pf-text-tertiary mb-1">Risk Controls</div>
                     <div
                       className={`font-medium ${
                         riskSettings.enabled ? 'text-pf-success' : 'text-pf-text-tertiary'

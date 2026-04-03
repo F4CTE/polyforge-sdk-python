@@ -243,7 +243,7 @@ export function OnboardingDashboardChecklist() {
 
       {/* ── Progress bar ───────────────────────────────────────────── */}
       <div
-        className="w-full h-1.5 bg-pf-surface rounded-pf-full overflow-hidden mb-4"
+        className="w-full h-2 bg-pf-surface rounded-pf-full overflow-hidden mb-4"
         role="progressbar"
         aria-valuenow={completedCount}
         aria-valuemin={0}
@@ -251,7 +251,7 @@ export function OnboardingDashboardChecklist() {
         aria-label={`${completedCount} of ${STEPS.length} steps completed`}
       >
         <div
-          className="h-full bg-pf-cyan-500 rounded-pf-full transition-all duration-500"
+          className="h-full bg-pf-cyan-500 rounded-pf-full transition-all duration-300"
           style={{ width: `${(completedCount / STEPS.length) * 100}%` }}
         />
       </div>
@@ -274,7 +274,7 @@ export function OnboardingDashboardChecklist() {
               return (
                 <div
                   key={step.id}
-                  className="flex items-center gap-2.5 px-2 py-1.5 rounded-pf opacity-50"
+                  className="flex items-center gap-3 px-2 py-2 rounded-pf opacity-50"
                 >
                   <CheckCircle2 className="size-4 text-pf-success shrink-0" aria-hidden="true" />
                   <span className="text-sm text-pf-text-secondary line-through leading-none">
@@ -289,14 +289,14 @@ export function OnboardingDashboardChecklist() {
                 <Link
                   key={step.id}
                   to={step.href}
-                  className="flex items-center gap-2.5 px-2 py-2 rounded-pf bg-pf-cyan-500/5 border border-pf-cyan-500/20 transition-colors hover:bg-pf-cyan-500/10 group"
+                  className="flex items-center gap-3 px-2 py-2 rounded-pf bg-pf-cyan-500/5 border border-pf-cyan-500/20 transition-colors hover:bg-pf-cyan-500/10 group"
                 >
                   <Circle className="size-4 text-pf-cyan-400 shrink-0" aria-hidden="true" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-pf-text leading-none">{step.label}</p>
-                    <p className="text-xs text-pf-text-secondary mt-0.5">{step.description}</p>
+                    <p className="text-xs text-pf-text-secondary mt-1">{step.description}</p>
                   </div>
-                  <ArrowRight className="size-4 text-pf-cyan-400 shrink-0 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+                  <ArrowRight className="size-4 text-pf-cyan-400 shrink-0 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                 </Link>
               );
             }
@@ -305,7 +305,7 @@ export function OnboardingDashboardChecklist() {
             return (
               <div
                 key={step.id}
-                className="flex items-center gap-2.5 px-2 py-1.5 rounded-pf opacity-40"
+                className="flex items-center gap-3 px-2 py-2 rounded-pf opacity-40"
               >
                 <Circle className="size-4 text-pf-text-muted shrink-0" aria-hidden="true" />
                 <span className="text-sm text-pf-text-secondary leading-none">{step.label}</span>

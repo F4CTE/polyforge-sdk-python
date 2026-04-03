@@ -96,17 +96,17 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to="/settings" className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors" aria-label="Back to settings">
+          <Link to="/settings" className="p-2 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors" aria-label="Back to settings">
             <ArrowLeft className="size-4" aria-hidden="true" />
           </Link>
           <h1 className="text-2xl font-semibold text-pf-text">Trading Account</h1>
         </div>
-        <span data-testid="trading-status" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-full text-xs font-medium border ${
+        <span data-testid="trading-status" className={`flex items-center gap-2 px-3 py-2 rounded-pf-full text-xs font-medium border ${
           isConnected
             ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
             : 'bg-pf-overlay text-pf-text-muted border-pf-border'
         }`}>
-          {isConnected ? <CheckCircle className="size-3.5" /> : <XCircle className="size-3.5" />}
+          {isConnected ? <CheckCircle className="size-4" /> : <XCircle className="size-4" />}
           {isConnected ? 'Connected' : 'Not Connected'}
         </span>
       </div>
@@ -131,7 +131,7 @@ export function Component() {
               Enter your Polymarket API credentials to enable live trading. These are encrypted at rest.
             </p>
             <div>
-              <label htmlFor="trading-private-key" className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="trading-private-key" className="text-xs text-pf-text-secondary mb-2 block">
                 Private Key <span className="text-pf-danger">*</span>
               </label>
               <div className="relative">
@@ -142,13 +142,13 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label htmlFor="trading-api-key" className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="trading-api-key" className="text-xs text-pf-text-secondary mb-2 block">
                 API Key <span className="text-pf-danger">*</span>
               </label>
               <Input id="trading-api-key" type="text" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="API Key" aria-required="true" className="w-full" />
             </div>
             <div>
-              <label htmlFor="trading-api-secret" className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="trading-api-secret" className="text-xs text-pf-text-secondary mb-2 block">
                 API Secret <span className="text-pf-danger">*</span>
               </label>
               <div className="relative">
@@ -159,7 +159,7 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label htmlFor="trading-api-passphrase" className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="trading-api-passphrase" className="text-xs text-pf-text-secondary mb-2 block">
                 API Passphrase <span className="text-pf-danger">*</span>
               </label>
               <div className="relative">
@@ -170,7 +170,7 @@ export function Component() {
               </div>
             </div>
             <div>
-              <label htmlFor="trading-safe-address" className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="trading-safe-address" className="text-xs text-pf-text-secondary mb-2 block">
                 Safe Address <span className="text-pf-text-muted text-pf-caption">(optional)</span>
               </label>
               <Input id="trading-safe-address" type="text" value={safeAddress} onChange={e => setSafeAddress(e.target.value)} placeholder="0x..." className="w-full font-mono" />

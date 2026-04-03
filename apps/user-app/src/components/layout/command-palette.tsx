@@ -108,7 +108,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             placeholder="Search markets, strategies..."
             className="flex-1 bg-transparent text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:ring-1 focus:ring-pf-cyan-500/30 rounded"
           />
-          <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-pf-label text-pf-text-muted border border-pf-border font-mono">
+          <kbd className="hidden sm:inline-flex items-center px-2 py-1 rounded text-pf-label text-pf-text-muted border border-pf-border font-mono">
             Esc
           </kbd>
           <button type="button" onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-pf-text-muted hover:text-pf-text transition-colors" aria-label="Close command palette">
@@ -125,8 +125,8 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             <div className="px-4 py-8 text-center">
               <p className="text-xs text-pf-text-muted">Type to search markets and strategies</p>
               <p className="text-pf-label text-pf-text-muted mt-1 opacity-60">
-                <kbd className="px-1 py-0.5 rounded border border-pf-border font-mono text-pf-caption">↑↓</kbd> navigate ·{' '}
-                <kbd className="px-1 py-0.5 rounded border border-pf-border font-mono text-pf-caption">Enter</kbd> open
+                <kbd className="px-1 py-1 rounded border border-pf-border font-mono text-pf-caption">↑↓</kbd> navigate ·{' '}
+                <kbd className="px-1 py-1 rounded border border-pf-border font-mono text-pf-caption">Enter</kbd> open
               </p>
             </div>
           )}
@@ -147,16 +147,16 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                 i === activeIndex ? 'bg-pf-cyan-500/10' : 'hover:bg-pf-surface'
               }`}
             >
-              <span className={`p-1.5 rounded-pf-sm shrink-0 ${
+              <span className={`p-2 rounded-pf-sm shrink-0 ${
                 r.type === 'market' ? 'bg-pf-cyan-500/10 text-pf-cyan-400' : 'bg-pf-purple-500/10 text-pf-purple-400'
               }`}>
-                {r.type === 'market' ? <BarChart3 className="size-3.5" /> : <Zap className="size-3.5" />}
+                {r.type === 'market' ? <BarChart3 className="size-4" /> : <Zap className="size-4" />}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="text-sm text-pf-text truncate">{r.title}</div>
                 {r.sub && <div className="text-pf-label text-pf-text-muted capitalize">{r.sub}</div>}
               </div>
-              <span className={`text-pf-caption font-medium px-1.5 py-0.5 rounded shrink-0 ${
+              <span className={`text-pf-caption font-medium px-2 py-1 rounded shrink-0 ${
                 r.type === 'market' ? 'bg-pf-cyan-500/10 text-pf-cyan-400' : 'bg-pf-purple-500/10 text-pf-purple-400'
               }`}>
                 {r.type === 'market' ? 'Market' : 'Strategy'}

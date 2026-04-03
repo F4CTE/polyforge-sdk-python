@@ -184,7 +184,7 @@ export function Component() {
               <tbody>
                 {invites.map((inv) => (
                   <tr key={inv.code} className="border-b border-pf-border last:border-0">
-                    <td className="px-3 py-2.5">
+                    <td className="px-3 py-3">
                       <div className="flex items-center gap-2">
                         <code className="text-sm font-mono text-pf-text">{inv.code}</code>
                         <Button
@@ -199,17 +199,17 @@ export function Component() {
                         </Button>
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-right text-pf-text-secondary">
+                    <td className="px-3 py-3 text-right text-pf-text-secondary">
                       {inv.remainingUses}
                     </td>
-                    <td className="px-3 py-2.5 text-right text-pf-text-tertiary">
+                    <td className="px-3 py-3 text-right text-pf-text-tertiary">
                       {inv.ttl > 0 ? `${Math.ceil(inv.ttl / 86400)}d` : 'No expiry'}
                     </td>
-                    <td className="px-3 py-2.5 text-right">
+                    <td className="px-3 py-3 text-right">
                       {confirmRevokeCode === inv.code ? (
-                        <div className="flex items-center justify-end gap-1.5 text-xs">
-                          <Button type="button" variant="danger" onClick={() => handleDelete(inv.code)} className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors">Revoke</Button>
-                          <Button type="button" variant="secondary" onClick={() => setConfirmRevokeCode(null)} className="px-2 py-0.5 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base transition-colors">Cancel</Button>
+                        <div className="flex items-center justify-end gap-2 text-xs">
+                          <Button type="button" variant="danger" onClick={() => handleDelete(inv.code)} className="px-2 py-1 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors">Revoke</Button>
+                          <Button type="button" variant="secondary" onClick={() => setConfirmRevokeCode(null)} className="px-2 py-1 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base transition-colors">Cancel</Button>
                         </div>
                       ) : (
                         <Button

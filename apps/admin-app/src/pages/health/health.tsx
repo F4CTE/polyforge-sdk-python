@@ -93,7 +93,7 @@ function getOverallStatus(data: HealthResponse): 'ok' | 'degraded' | 'down' {
 function StatusBadge({ status }: { status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN' }) {
   if (status === 'UP') {
     return (
-      <span className="flex items-center gap-1.5 text-pf-success text-xs font-medium">
+      <span className="flex items-center gap-2 text-pf-success text-xs font-medium">
         <span className="animate-pulse bg-pf-success rounded-pf-full w-2 h-2 shrink-0" />
         UP
       </span>
@@ -101,7 +101,7 @@ function StatusBadge({ status }: { status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN
   }
   if (status === 'DOWN') {
     return (
-      <span className="flex items-center gap-1.5 text-pf-danger text-xs font-medium">
+      <span className="flex items-center gap-2 text-pf-danger text-xs font-medium">
         <XCircle size={14} className="shrink-0" />
         DOWN
       </span>
@@ -109,14 +109,14 @@ function StatusBadge({ status }: { status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN
   }
   if (status === 'DEGRADED') {
     return (
-      <span className="flex items-center gap-1.5 text-pf-warning text-xs font-medium">
+      <span className="flex items-center gap-2 text-pf-warning text-xs font-medium">
         <AlertTriangle size={14} className="shrink-0" />
         DEGRADED
       </span>
     );
   }
   return (
-    <span className="flex items-center gap-1.5 text-pf-text-tertiary text-xs font-medium">
+    <span className="flex items-center gap-2 text-pf-text-tertiary text-xs font-medium">
       <span className="bg-pf-text-tertiary rounded-pf-full w-2 h-2 shrink-0" />
       UNKNOWN
     </span>
@@ -148,13 +148,13 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div>
           <span className="text-pf-text-tertiary">Latency</span>
-          <div className="text-pf-text font-medium mt-0.5">
+          <div className="text-pf-text font-medium mt-1">
             {service.latencyMs !== null ? `${service.latencyMs}ms` : '—'}
           </div>
         </div>
         <div>
           <span className="text-pf-text-tertiary">Uptime</span>
-          <div className="text-pf-text font-medium mt-0.5">
+          <div className="text-pf-text font-medium mt-1">
             {formatUptime(service.uptime)}
           </div>
         </div>
@@ -192,15 +192,15 @@ function DbCard({ db }: { db: DbHealth }) {
       <div className="grid grid-cols-2 gap-3 text-xs">
         <div>
           <span className="text-pf-text-tertiary">Latency</span>
-          <div className="text-pf-text font-medium mt-0.5">
+          <div className="text-pf-text font-medium mt-1">
             {db.latencyMs !== null ? `${db.latencyMs}ms` : '—'}
           </div>
         </div>
         <div>
           <span className="text-pf-text-tertiary">Migrations Pending</span>
-          <div className="mt-0.5">
+          <div className="mt-1">
             {db.pendingMigrations > 0 ? (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-pf-caption font-bold bg-pf-danger/15 text-pf-danger">
+              <span className="inline-flex items-center px-2 py-1 rounded text-pf-caption font-bold bg-pf-danger/15 text-pf-danger">
                 {db.pendingMigrations}
               </span>
             ) : (
@@ -211,15 +211,15 @@ function DbCard({ db }: { db: DbHealth }) {
       </div>
 
       <div>
-        <div className="flex items-center justify-between text-xs mb-1.5">
+        <div className="flex items-center justify-between text-xs mb-2">
           <span className="text-pf-text-tertiary">Connections</span>
           <span className="text-pf-text font-medium">
             {db.activeConnections} / {db.maxConnections}
           </span>
         </div>
-        <div className="h-1.5 bg-pf-elevated rounded-pf-full overflow-hidden">
+        <div className="h-2 bg-pf-elevated rounded-pf-full overflow-hidden">
           <div
-            className={`h-full rounded-pf-full transition-all duration-500 ${connBarColor}`}
+            className={`h-full rounded-pf-full transition-all duration-300 ${connBarColor}`}
             style={{ width: `${connPct}%` }}
           />
         </div>
@@ -243,13 +243,13 @@ function RedisCard({ db }: { db: DbHealth }) {
       <div className="grid grid-cols-2 gap-3 text-xs">
         <div>
           <span className="text-pf-text-tertiary">Latency</span>
-          <div className="text-pf-text font-medium mt-0.5">
+          <div className="text-pf-text font-medium mt-1">
             {db.redisLatencyMs !== null ? `${db.redisLatencyMs}ms` : '—'}
           </div>
         </div>
         <div>
           <span className="text-pf-text-tertiary">Memory</span>
-          <div className="text-pf-text font-medium mt-0.5">
+          <div className="text-pf-text font-medium mt-1">
             {db.redisMemoryMb !== null ? `${db.redisMemoryMb.toFixed(1)} MB` : '—'}
           </div>
         </div>
@@ -267,7 +267,7 @@ function QueueDepthCell({ depth }: { depth: number }) {
         : 'text-pf-success bg-pf-success/10';
 
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colorClass}`}>
+    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${colorClass}`}>
       {depth.toLocaleString()}
     </span>
   );
@@ -314,7 +314,7 @@ export function Component() {
           <div>
             <h1 className="text-xl font-semibold text-pf-text">System Health</h1>
             {lastUpdated && (
-              <p className="text-xs text-pf-text-tertiary mt-0.5">
+              <p className="text-xs text-pf-text-tertiary mt-1">
                 Last updated {lastUpdated.toLocaleTimeString()}
               </p>
             )}
@@ -471,7 +471,7 @@ export function Component() {
                   >
                     <div className="flex items-center gap-2">
                       <span
-                        className={`w-1.5 h-1.5 rounded-pf-full shrink-0 ${
+                        className={`w-2 h-2 rounded-pf-full shrink-0 ${
                           service.status === 'UP'
                             ? 'bg-pf-success'
                             : service.status === 'DOWN'

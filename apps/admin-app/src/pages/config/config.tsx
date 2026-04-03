@@ -184,7 +184,7 @@ function SliderInput({ value, min, max, onChange, label, unit }: SliderInputProp
         value={value}
         aria-label={label}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="flex-1 h-1.5 rounded-pf-full accent-pf-cyan-500 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+        className="flex-1 h-2 rounded-pf-full accent-pf-cyan-500 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
       />
       <span className="w-14 text-right text-sm font-medium text-pf-text tabular-nums">
         {value}
@@ -218,7 +218,7 @@ function NumberField({ value, min, max, step = 1, onChange, label, prefix, suffi
         aria-label={label}
         onChange={(e) => onChange(Number(e.target.value))}
         className={[
-          'w-28 rounded-pf-sm border border-pf-border bg-pf-surface px-3 py-1.5',
+          'w-28 rounded-pf-sm border border-pf-border bg-pf-surface px-3 py-2',
           'text-sm text-pf-text tabular-nums',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
           'placeholder:text-pf-text-muted',
@@ -255,7 +255,7 @@ function FieldRow({ label, description, children }: FieldRowProps) {
       <div className="min-w-0">
         <p className="text-sm font-medium text-pf-text leading-tight">{label}</p>
         {description && (
-          <p className="text-xs text-pf-text-muted mt-0.5 leading-tight">{description}</p>
+          <p className="text-xs text-pf-text-muted mt-1 leading-tight">{description}</p>
         )}
       </div>
       <div className="shrink-0">{children}</div>
@@ -308,7 +308,7 @@ function MaintenanceConfirmBox({ onConfirm, onCancel }: MaintenanceConfirmProps)
       className="mt-3 rounded-pf-lg border border-pf-warning/40 bg-pf-warning/10 p-4 space-y-3"
     >
       <div className="flex items-start gap-2">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-pf-warning" aria-hidden />
+        <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-pf-warning" aria-hidden />
         <div>
           <p id="maintenance-confirm-heading" className="text-sm font-semibold text-pf-warning">
             Enable maintenance mode?
@@ -324,7 +324,7 @@ function MaintenanceConfirmBox({ onConfirm, onCancel }: MaintenanceConfirmProps)
           type="button"
           variant="secondary"
           onClick={onCancel}
-          className="rounded-pf-sm px-3 py-1.5 text-xs font-medium text-pf-text-secondary border border-pf-border hover:border-pf-border-strong transition-colors"
+          className="rounded-pf-sm px-3 py-2 text-xs font-medium text-pf-text-secondary border border-pf-border hover:border-pf-border-strong transition-colors"
         >
           Cancel
         </Button>
@@ -332,7 +332,7 @@ function MaintenanceConfirmBox({ onConfirm, onCancel }: MaintenanceConfirmProps)
           type="button"
           variant="danger"
           onClick={onConfirm}
-          className="px-3 py-1.5 text-xs font-medium transition-all"
+          className="px-3 py-2 text-xs font-medium transition-all"
         >
           Yes, enable maintenance
         </Button>
@@ -485,7 +485,7 @@ export function Component() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-pf-text leading-tight">Platform Config</h1>
-              <p className="text-xs text-pf-text-muted mt-0.5">
+              <p className="text-xs text-pf-text-muted mt-1">
                 Last saved:{' '}
                 <span className="text-pf-text-secondary">{lastSavedDisplay}</span>
               </p>
@@ -513,7 +513,7 @@ export function Component() {
         {dirty && (
           <div
             role="status"
-            className="flex items-center gap-2 rounded-pf-sm border border-pf-warning/40 bg-pf-warning/10 px-4 py-2.5 text-sm text-pf-warning"
+            className="flex items-center gap-2 rounded-pf-sm border border-pf-warning/40 bg-pf-warning/10 px-4 py-3 text-sm text-pf-warning"
           >
             <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
             <span>
@@ -760,7 +760,7 @@ export function Component() {
                       <div className="flex items-center gap-2 min-w-0">
                         {!enabled && (
                           <Lock
-                            className="h-3.5 w-3.5 shrink-0 text-pf-text-muted"
+                            className="h-4 w-4 shrink-0 text-pf-text-muted"
                             aria-hidden
                           />
                         )}
@@ -770,7 +770,7 @@ export function Component() {
                       <div className="flex items-center gap-2 shrink-0">
                         <span
                           className={[
-                            'inline-flex items-center gap-1 rounded-pf-full px-2 py-0.5 text-xs font-medium',
+                            'inline-flex items-center gap-1 rounded-pf-full px-2 py-1 text-xs font-medium',
                             enabled
                               ? 'bg-pf-success/15 text-pf-success'
                               : 'bg-pf-border/30 text-pf-text-muted',

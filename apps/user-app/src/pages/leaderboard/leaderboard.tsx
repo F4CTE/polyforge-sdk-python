@@ -70,9 +70,9 @@ function pnlSign(pnl: string): string {
 }
 
 function rankMedal(rank: number): React.ReactNode {
-  if (rank === 1) return <Trophy className="size-3.5 text-pf-gold-400" aria-label="Gold medal" />;
-  if (rank === 2) return <Trophy className="size-3.5 text-pf-text-secondary" aria-label="Silver medal" />;
-  if (rank === 3) return <Trophy className="size-3.5 text-pf-gold-600" aria-label="Bronze medal" />;
+  if (rank === 1) return <Trophy className="size-4 text-pf-gold-400" aria-label="Gold medal" />;
+  if (rank === 2) return <Trophy className="size-4 text-pf-text-secondary" aria-label="Silver medal" />;
+  if (rank === 3) return <Trophy className="size-4 text-pf-gold-600" aria-label="Bronze medal" />;
   return null;
 }
 
@@ -179,7 +179,7 @@ export function Component() {
             variant="ghost"
             key={p.value}
             onClick={() => changePeriod(p.value)}
-            className={`px-3 py-1.5 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
               period === p.value
                 ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                 : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -198,7 +198,7 @@ export function Component() {
             variant="ghost"
             key={String(cat.value)}
             onClick={() => changeCategory(cat.value)}
-            className={`px-3 py-1.5 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
+            className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
               category === cat.value
                 ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                 : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -214,7 +214,7 @@ export function Component() {
         <Select
           value={String(minTrades)}
           onChange={e => changeMinTrades(Number(e.target.value))}
-          className="bg-pf-elevated border border-pf-border rounded-pf text-xs text-pf-text-secondary px-2 py-1.5"
+          className="bg-pf-elevated border border-pf-border rounded-pf text-xs text-pf-text-secondary px-2 py-2"
           aria-label="Minimum trades filter"
         >
           {MIN_TRADES_OPTIONS.map(opt => (
@@ -297,7 +297,7 @@ export function Component() {
                     </td>
                     <td className="px-4 py-3 text-right hidden sm:table-cell">
                       {entry.score != null ? (
-                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono font-bold ${
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono font-bold ${
                           entry.score >= 80 ? 'text-pf-success bg-pf-success/10' :
                           entry.score >= 60 ? 'text-pf-cyan-400 bg-pf-cyan-500/10' :
                           entry.score >= 40 ? 'text-pf-warning bg-pf-warning/10' :

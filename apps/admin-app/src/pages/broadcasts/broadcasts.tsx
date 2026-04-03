@@ -301,7 +301,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => handleDraftChange('type', opt.value)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-pf-full transition-colors ${typePillClass(opt.value, draft.type === opt.value)}`}
+                  className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-pf-full transition-colors ${typePillClass(opt.value, draft.type === opt.value)}`}
                   aria-pressed={draft.type === opt.value}
                 >
                   <TypeIcon type={opt.value} size={12} />
@@ -321,7 +321,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => handleDraftChange('targetAudience', opt.value)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-pf-full transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-pf-full transition-colors ${
                     draft.targetAudience === opt.value
                       ? 'border border-pf-cyan-500/40 bg-pf-cyan-500/10 text-pf-cyan-400'
                       : 'border border-pf-border bg-pf-base text-pf-text-secondary hover:text-pf-text hover:border-pf-text-secondary'
@@ -334,12 +334,12 @@ export function Component() {
               ))}
             </div>
             {selectedAudience && (
-              <p className="mt-1.5 text-pf-label text-pf-text-tertiary">{selectedAudience.description}</p>
+              <p className="mt-2 text-pf-label text-pf-text-tertiary">{selectedAudience.description}</p>
             )}
           </div>
 
           {/* Reach estimate */}
-          <div className="flex items-center gap-1.5 text-xs text-pf-text-secondary">
+          <div className="flex items-center gap-2 text-xs text-pf-text-secondary">
             <Users size={12} className="text-pf-cyan-500" aria-hidden="true" />
             Estimated reach: <span className="font-semibold text-pf-text">~{estimatedReach.toLocaleString()} users</span>
           </div>
@@ -348,10 +348,10 @@ export function Component() {
           {confirmSend && (
             <div className="rounded-pf-sm border border-amber-500/30 bg-amber-500/5 p-4">
               <div className="flex items-start gap-2 mb-3">
-                <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
+                <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-1" aria-hidden="true" />
                 <div>
                   <p className="text-sm font-semibold text-amber-400">Confirm broadcast</p>
-                  <p className="text-xs text-pf-text-secondary mt-0.5">
+                  <p className="text-xs text-pf-text-secondary mt-1">
                     You are about to send to <span className="font-semibold text-pf-text">~{estimatedReach.toLocaleString()} users</span>. This cannot be undone.
                   </p>
                 </div>
@@ -362,7 +362,7 @@ export function Component() {
                   variant="default"
                   onClick={handleConfirmSend}
                   disabled={sending}
-                  className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
                 >
                   <Send size={12} aria-hidden="true" />
                   {sending ? 'Sending...' : 'Confirm Send'}
@@ -372,7 +372,7 @@ export function Component() {
                   variant="secondary"
                   onClick={() => setConfirmSend(false)}
                   disabled={sending}
-                  className="px-4 py-1.5 text-xs font-medium rounded-pf-sm border border-pf-border bg-pf-base text-pf-text-secondary hover:text-pf-text hover:border-pf-text-secondary transition-colors"
+                  className="px-4 py-2 text-xs font-medium rounded-pf-sm border border-pf-border bg-pf-base text-pf-text-secondary hover:text-pf-text hover:border-pf-text-secondary transition-colors"
                 >
                   Cancel
                 </Button>
@@ -446,7 +446,7 @@ export function Component() {
                       <span className="truncate block" title={b.title}>{b.title}</span>
                     </td>
                     <td className="px-3 py-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-pf-label font-semibold ${typeBadgeClass(b.type)}`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label font-semibold ${typeBadgeClass(b.type)}`}>
                         <TypeIcon type={b.type} size={10} />
                         {b.type}
                       </span>
@@ -459,12 +459,12 @@ export function Component() {
                     <td className="px-3 py-3 text-pf-text-tertiary text-xs whitespace-nowrap">{formatDate(b.sentAt)}</td>
                     <td className="px-3 py-3 text-right">
                       {deleteId === b.id ? (
-                        <div className="flex items-center justify-end gap-1.5 text-xs">
+                        <div className="flex items-center justify-end gap-2 text-xs">
                           <Button
                             type="button"
                             variant="danger"
                             onClick={() => handleDelete(b.id)}
-                            className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
+                            className="px-2 py-1 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 transition-colors"
                           >
                             Delete
                           </Button>
@@ -472,7 +472,7 @@ export function Component() {
                             type="button"
                             variant="secondary"
                             onClick={() => setDeleteId(null)}
-                            className="px-2 py-0.5 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base transition-colors"
+                            className="px-2 py-1 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base transition-colors"
                           >
                             Cancel
                           </Button>

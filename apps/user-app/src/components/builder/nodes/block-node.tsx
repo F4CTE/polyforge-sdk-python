@@ -197,7 +197,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         <Handle
           type="target"
           position={Position.Left}
-          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+          className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
           style={{ '--node-color': d.color } as React.CSSProperties}
         />
       )}
@@ -206,11 +206,11 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {/* "Global" badge — safety/conditions when unwired: active globally */}
         {isGlobal && (
           <div
-            className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-pf-micro font-semibold whitespace-nowrap z-10 pointer-events-none"
+            className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-micro font-semibold whitespace-nowrap z-10 pointer-events-none"
             style={{ '--badge-color': 'var(--color-pf-cyan-500)' } as React.CSSProperties}
             title={isSafety ? 'Safety block — always enforced globally on every tick' : 'Condition block — no connections, acts as a global gate for all execution paths. Wire it to scope it to a specific path.'}
           >
-            <Globe className="size-2.5" />
+            <Globe className="size-3" />
             Global
           </div>
         )}
@@ -218,11 +218,11 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {/* "Not wired" badge — triggers/actions with no edges: inactive */}
         {isInactive && (
           <div
-            className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-pf-micro font-semibold whitespace-nowrap z-10 pointer-events-none"
+            className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-micro font-semibold whitespace-nowrap z-10 pointer-events-none"
             style={{ '--badge-color': 'var(--color-pf-gold-500)' } as React.CSSProperties}
             title={isTrigger ? 'Trigger has no outgoing connection — wire it to a condition or action to activate it' : 'Action has no incoming connection — wire a trigger or condition to it to activate it'}
           >
-            <Unlink className="size-2.5" />
+            <Unlink className="size-3" />
             Not wired
           </div>
         )}
@@ -230,11 +230,11 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {/* "Setup needed" badge — active block with one or more empty required fields */}
         {showSetupBadge && (
           <div
-            className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-pf-micro font-semibold whitespace-nowrap z-10 pointer-events-none"
+            className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-micro font-semibold whitespace-nowrap z-10 pointer-events-none"
             style={{ '--badge-color': 'var(--color-pf-danger)' } as React.CSSProperties}
             title={`${emptyFieldKeys.size} required field${emptyFieldKeys.size !== 1 ? 's' : ''} not filled in`}
           >
-            <AlertTriangle className="size-2.5" />
+            <AlertTriangle className="size-3" />
             Setup needed
           </div>
         )}
@@ -269,7 +269,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
             <button
               type="button"
               onClick={onDelete}
-              className="p-0.5 rounded hover:bg-pf-danger/20 active:bg-pf-danger/30 text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+              className="p-1 rounded hover:bg-pf-danger/20 active:bg-pf-danger/30 text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
               aria-label="Remove block"
               title="Remove block"
             >
@@ -301,10 +301,10 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                         } as React.CSSProperties}
                       />
                     )}
-                    <label className={`flex items-center gap-1 text-pf-caption font-medium mb-0.5 uppercase tracking-wider ${isEmpty ? 'text-pf-danger/80' : 'text-pf-text-muted'}`}>
+                    <label className={`flex items-center gap-1 text-pf-caption font-medium mb-1 uppercase tracking-wider ${isEmpty ? 'text-pf-danger/80' : 'text-pf-text-muted'}`}>
                       {field.wireable && (
                         <Link2
-                          className={`size-2.5 shrink-0 ${isWired ? 'text-pf-purple-500 opacity-100' : 'text-pf-text-muted opacity-50'}`}
+                          className={`size-3 shrink-0 ${isWired ? 'text-pf-purple-500 opacity-100' : 'text-pf-text-muted opacity-50'}`}
                           aria-label="This field can receive a value from a Variable or Calc node"
                         />
                       )}
@@ -333,7 +333,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                       renderSelectField(field)
                     ) : isWired ? (
                       // Field is driven by a connected Variable/Calc node — show chip instead of input
-                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-pf-sm bg-pf-purple-500/10 border border-pf-purple-500/30">
+                      <div className="flex items-center gap-2 px-2 py-1 rounded-pf-sm bg-pf-purple-500/10 border border-pf-purple-500/30">
                         <Link2 className="size-3 shrink-0 text-pf-purple-500" />
                         <span className="text-xs text-pf-purple-500 font-mono truncate">
                           {wireableConnections.get(field.key)}
@@ -359,7 +359,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                         />
                         {(d.config[field.key] ?? '').startsWith('$') && (
                           <span
-                            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-pf-micro text-pf-purple-500/70 pointer-events-none"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-pf-micro text-pf-purple-500/70 pointer-events-none"
                             title={`Variable: ${d.config[field.key]}`}
                           >
                             var
@@ -387,7 +387,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         <Handle
           type="source"
           position={Position.Right}
-          className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+          className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
           style={{ '--node-color': d.color } as React.CSSProperties}
         />
       )}

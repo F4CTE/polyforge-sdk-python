@@ -107,7 +107,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
             disabled={isBusy}
             aria-label={listing.featured ? `Remove featured from ${listing.title}` : `Feature listing ${listing.title}`}
             aria-pressed={listing.featured}
-            className="shrink-0 p-0.5 rounded transition-colors hover:bg-pf-base disabled:opacity-50"
+            className="shrink-0 p-1 rounded transition-colors hover:bg-pf-base disabled:opacity-50"
           >
             <Star
               size={15}
@@ -117,7 +117,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
           </Button>
           <span className="font-semibold text-pf-text truncate">{listing.title}</span>
         </div>
-        <span className="shrink-0 text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 px-2 py-0.5 rounded-pf-full whitespace-nowrap">
+        <span className="shrink-0 text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 px-2 py-1 rounded-pf-full whitespace-nowrap">
           ${price} USDC
         </span>
       </div>
@@ -137,7 +137,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
       <div className="text-xs text-pf-text-tertiary flex gap-4">
         <span>{listing.purchaseCount} purchases</span>
         <span>{listing.forkCount} forks</span>
-        <span className="flex items-center gap-0.5">
+        <span className="flex items-center gap-1">
           <Star size={11} className="text-pf-warning fill-pf-warning" aria-hidden="true" />
           {avgRating}
         </span>
@@ -145,7 +145,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
 
       {/* Status + date */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-pf-full ${statusColor(listing.status)}`}>
+        <span className={`text-xs font-medium px-2 py-1 rounded-pf-full ${statusColor(listing.status)}`}>
           {listing.status}
         </span>
         <span className="text-xs text-pf-text-tertiary">{formatDate(listing.createdAt)}</span>
@@ -165,7 +165,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
               variant="success"
               disabled={isBusy}
               onClick={() => onApprove(listing.id)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-2 text-xs rounded-pf-sm bg-pf-success/10 text-pf-success hover:bg-pf-success/20 transition-colors disabled:opacity-50"
             >
               <Check size={13} aria-hidden="true" />
               Approve
@@ -175,7 +175,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
               variant="danger"
               disabled={isBusy}
               onClick={() => setRejectOpen((o) => !o)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm border border-pf-danger/40 text-pf-danger hover:bg-pf-danger/10 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-2 text-xs rounded-pf-sm border border-pf-danger/40 text-pf-danger hover:bg-pf-danger/10 transition-colors disabled:opacity-50"
             >
               <X size={13} aria-hidden="true" />
               Reject
@@ -188,7 +188,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
                 onChange={(e) => setAdminNote(e.target.value)}
                 placeholder="Reason for rejection (optional)"
                 rows={2}
-                className="w-full text-xs bg-pf-base border border-pf-border rounded-pf-sm px-2 py-1.5 text-pf-text placeholder:text-pf-text-muted resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-danger/40"
+                className="w-full text-xs bg-pf-base border border-pf-border rounded-pf-sm px-2 py-2 text-pf-text placeholder:text-pf-text-muted resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-danger/40"
               />
               <div className="flex gap-2">
                 <Button
@@ -221,7 +221,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
             variant="danger"
             disabled={isBusy}
             onClick={() => onDelist(listing.id)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm border border-pf-danger/40 text-pf-danger hover:bg-pf-danger/10 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 text-xs rounded-pf-sm border border-pf-danger/40 text-pf-danger hover:bg-pf-danger/10 transition-colors disabled:opacity-50"
           >
             <X size={13} aria-hidden="true" />
             Delist
@@ -340,7 +340,7 @@ export function Component() {
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-pf-text">Marketplace Listings</h2>
           {pendingCount > 0 && (
-            <span className="flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-pf-full bg-pf-warning text-pf-caption font-bold text-pf-text-contrast" aria-label={`${pendingCount} pending listings`}>
+            <span className="flex items-center justify-center min-w-[22px] h-5 px-2 rounded-pf-full bg-pf-warning text-pf-caption font-bold text-pf-text-contrast" aria-label={`${pendingCount} pending listings`}>
               {pendingCount}
             </span>
           )}
@@ -350,7 +350,7 @@ export function Component() {
           variant="ghost"
           onClick={() => load(true)}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 text-xs rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text transition-colors disabled:opacity-50"
         >
           <RefreshCw size={13} aria-hidden="true" className={loading ? 'animate-spin' : ''} />
           Refresh
@@ -375,7 +375,7 @@ export function Component() {
           >
             {tab.label}
             {tab.value === 'PENDING' && pendingCount > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-pf-full bg-pf-warning text-pf-micro font-bold text-pf-text-contrast">
+              <span className="ml-2 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-pf-full bg-pf-warning text-pf-micro font-bold text-pf-text-contrast">
                 {pendingCount}
               </span>
             )}
@@ -433,7 +433,7 @@ export function Component() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
               aria-label="Previous page"
-              className="p-1.5 rounded hover:bg-pf-elevated text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded hover:bg-pf-elevated text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={16} />
             </Button>
@@ -444,7 +444,7 @@ export function Component() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               aria-label="Next page"
-              className="p-1.5 rounded hover:bg-pf-elevated text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded hover:bg-pf-elevated text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={16} />
             </Button>

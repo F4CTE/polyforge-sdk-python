@@ -29,7 +29,7 @@ export function Testimonials() {
         <div className="text-center max-w-[600px] mx-auto mb-14">
           <h2
             id="testimonials-heading"
-            className="text-[clamp(24px,4vw,34px)] font-bold text-pf-text mb-3.5"
+            className="text-[clamp(24px,4vw,34px)] font-bold text-pf-text mb-4"
           >
             Trusted by traders
           </h2>
@@ -66,7 +66,7 @@ export function Testimonials() {
                   <div className="text-sm font-semibold text-pf-text">
                     {t.name}
                   </div>
-                  <div className="text-xs text-pf-text-muted mt-0.5">
+                  <div className="text-xs text-pf-text-muted mt-1">
                     {t.role}
                   </div>
                 </cite>

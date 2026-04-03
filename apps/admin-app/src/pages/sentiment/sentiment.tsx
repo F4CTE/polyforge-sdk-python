@@ -65,7 +65,7 @@ type SortDir = 'asc' | 'desc';
 function LabelPill({ label }: { label: string }) {
   if (label === 'BULLISH') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-xs font-medium bg-pf-success/10 text-pf-success">
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-xs font-medium bg-pf-success/10 text-pf-success">
         <TrendingUp size={11} aria-hidden="true" />
         {label}
       </span>
@@ -73,14 +73,14 @@ function LabelPill({ label }: { label: string }) {
   }
   if (label === 'BEARISH') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-xs font-medium bg-pf-danger/10 text-pf-danger">
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-xs font-medium bg-pf-danger/10 text-pf-danger">
         <TrendingDown size={11} aria-hidden="true" />
         {label}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-xs font-medium bg-pf-base text-pf-text-secondary border border-pf-border">
+    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-xs font-medium bg-pf-base text-pf-text-secondary border border-pf-border">
       <Minus size={11} aria-hidden="true" />
       {label}
     </span>
@@ -309,7 +309,7 @@ export function Component() {
           onClick={() => { loadRows(true, period); loadSummary(); loadCategory(); }}
           disabled={refreshing}
           aria-label="Refresh sentiment data"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text disabled:opacity-50 transition-colors"
         >
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} aria-hidden="true" />
           Refresh
@@ -353,9 +353,9 @@ export function Component() {
           <BarChart2 size={15} className="text-pf-text-tertiary" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-pf-text">Sentiment by Category</h3>
           <div className="ml-auto flex items-center gap-3 text-xs text-pf-text-tertiary">
-            <span className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-pf-success" />Bullish</span>
-            <span className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-pf-text-muted opacity-50" />Neutral</span>
-            <span className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-pf-danger" />Bearish</span>
+            <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-sm bg-pf-success" />Bullish</span>
+            <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-sm bg-pf-text-muted opacity-50" />Neutral</span>
+            <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-sm bg-pf-danger" />Bearish</span>
           </div>
         </div>
 
@@ -414,7 +414,7 @@ export function Component() {
       {/* ── Trending topics ── */}
       {(loadingSummary || (summary?.trendingTopics && summary.trendingTopics.length > 0)) && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="flex items-center gap-1.5 text-xs font-medium text-pf-text-tertiary">
+          <span className="flex items-center gap-2 text-xs font-medium text-pf-text-tertiary">
             <Hash size={12} aria-hidden="true" />
             Trending:
           </span>
@@ -425,7 +425,7 @@ export function Component() {
             : summary?.trendingTopics.map((topic) => (
                 <span
                   key={topic}
-                  className="inline-block px-2.5 py-0.5 rounded-pf-full text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/20"
+                  className="inline-block px-3 py-1 rounded-pf-full text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/20"
                 >
                   {topic}
                 </span>
@@ -443,7 +443,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`px-3 py-2 text-xs font-medium transition-colors ${
                 period === p
                   ? 'bg-pf-cyan-500/10 text-pf-cyan-500'
                   : 'text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text'
@@ -463,7 +463,7 @@ export function Component() {
               type="button"
               variant="ghost"
               onClick={() => setLabelFilter(val)}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`px-3 py-2 text-xs font-medium transition-colors ${
                 labelFilter === val
                   ? 'bg-pf-cyan-500/10 text-pf-cyan-500'
                   : 'text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text'
@@ -543,7 +543,7 @@ export function Component() {
                         <span className={`font-mono font-medium text-xs ${scoreColor(row.score)}`}>
                           {row.score > 0 ? '+' : ''}{row.score.toFixed(3)}
                         </span>
-                        <div className="mt-1 h-1.5 w-full bg-pf-surface rounded-pf-full overflow-hidden">
+                        <div className="mt-1 h-2 w-full bg-pf-surface rounded-pf-full overflow-hidden">
                           <div
                             className={`h-full rounded-pf-full transition-all ${scoreBgColor(row.score)}`}
                             style={{ width: `${pct}%` }}
@@ -557,13 +557,13 @@ export function Component() {
                         <div className="flex flex-col gap-1">
                           <LabelPill label={row.label} />
                           <div className="flex items-center gap-1">
-                            <span className="text-pf-caption px-1.5 py-px rounded bg-pf-success/10 text-pf-success font-mono">
+                            <span className="text-pf-caption px-2 py-px rounded bg-pf-success/10 text-pf-success font-mono">
                               B:{row.bullishCount}
                             </span>
-                            <span className="text-pf-caption px-1.5 py-px rounded bg-pf-base border border-pf-border text-pf-text-secondary font-mono">
+                            <span className="text-pf-caption px-2 py-px rounded bg-pf-base border border-pf-border text-pf-text-secondary font-mono">
                               N:{Math.max(0, neutralCount)}
                             </span>
-                            <span className="text-pf-caption px-1.5 py-px rounded bg-pf-danger/10 text-pf-danger font-mono">
+                            <span className="text-pf-caption px-2 py-px rounded bg-pf-danger/10 text-pf-danger font-mono">
                               Be:{row.bearishCount}
                             </span>
                           </div>

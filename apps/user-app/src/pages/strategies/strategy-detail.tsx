@@ -884,9 +884,9 @@ export function Component() {
       {/* Back */}
       <Link
         to="/strategies"
-        className="inline-flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
+        className="inline-flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
       >
-        <ArrowLeft className="size-3.5" aria-hidden="true" /> Strategies
+        <ArrowLeft className="size-4" aria-hidden="true" /> Strategies
       </Link>
 
       {/* Loading */}
@@ -934,10 +934,10 @@ export function Component() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
-              <div className="flex items-center gap-3 mb-1.5">
+              <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-2xl font-semibold text-pf-text">{strategy.name}</h1>
-                <span data-testid="status-badge" className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-pf-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
-                  <span className={`w-1.5 h-1.5 rounded-pf-full ${statusStyle.dot} ${isActive(status) ? 'animate-pulse-dot' : ''}`} />
+                <span data-testid="status-badge" className={`inline-flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
+                  <span className={`w-2 h-2 rounded-pf-full ${statusStyle.dot} ${isActive(status) ? 'animate-pulse-dot' : ''}`} />
                   {status}
                 </span>
               </div>
@@ -956,7 +956,7 @@ export function Component() {
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
                   >
-                    <Zap className="size-3.5" /> Start Live
+                    <Zap className="size-4" /> Start Live
                   </Button>
                   <Button
                     type="button"
@@ -965,7 +965,7 @@ export function Component() {
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
                   >
-                    <FileText className="size-3.5" /> Start Paper
+                    <FileText className="size-4" /> Start Paper
                   </Button>
                 </>
               )}
@@ -978,7 +978,7 @@ export function Component() {
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
                   >
-                    <Pause className="size-3.5" /> Pause
+                    <Pause className="size-4" /> Pause
                   </Button>
                   <Button
                     type="button"
@@ -987,7 +987,7 @@ export function Component() {
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors text-sm"
                   >
-                    <Square className="size-3.5" /> Stop
+                    <Square className="size-4" /> Stop
                   </Button>
                 </>
               )}
@@ -999,7 +999,7 @@ export function Component() {
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
                   >
-                    <Play className="size-3.5" /> Resume
+                    <Play className="size-4" /> Resume
                   </Button>
                   <Button
                     type="button"
@@ -1008,7 +1008,7 @@ export function Component() {
                     disabled={actionLoading}
                     className="flex items-center gap-2 px-3 py-2 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-40 transition-colors text-sm"
                   >
-                    <Square className="size-3.5" /> Stop
+                    <Square className="size-4" /> Stop
                   </Button>
                 </>
               )}
@@ -1035,7 +1035,7 @@ export function Component() {
                 type="button"
                 variant="secondary"
                 onClick={() => exportStrategyJson(strategy)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:border-pf-border-strong transition-colors"
                 aria-label="Export strategy as JSON"
                 title="Export JSON"
               >
@@ -1140,7 +1140,7 @@ export function Component() {
                       placeholder="0"
                       className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
                     />
-                    <p className="text-pf-caption text-pf-text-muted mt-0.5">0 = Free</p>
+                    <p className="text-pf-caption text-pf-text-muted mt-1">0 = Free</p>
                   </div>
                   <div className="flex-1">
                     <label className="block text-xs font-medium text-pf-text-secondary mb-1">Tags (comma-separated)</label>
@@ -1158,7 +1158,7 @@ export function Component() {
                 type="button"
                 onClick={submitListing}
                 disabled={listSubmitting || !listTitle}
-                className="w-full py-2.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
+                className="w-full py-3 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold hover:bg-pf-cyan-400 disabled:opacity-40 transition-colors"
               >
                 {listSubmitting ? 'Publishing...' : 'Publish to Marketplace'}
               </Button>
@@ -1187,7 +1187,7 @@ export function Component() {
 
               {/* Public link row */}
               <div>
-                <p className="text-xs font-medium text-pf-text-secondary mb-1.5">Public link</p>
+                <p className="text-xs font-medium text-pf-text-secondary mb-2">Public link</p>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-9 flex items-center px-3 rounded-pf bg-pf-surface border border-pf-border overflow-hidden">
                     {loadingShare ? (
@@ -1203,9 +1203,9 @@ export function Component() {
                     variant="secondary"
                     onClick={copyShareUrl}
                     disabled={!shareUrl || loadingShare}
-                    className="flex items-center gap-1.5 px-3 h-9 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors shrink-0"
+                    className="flex items-center gap-2 px-3 h-9 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors shrink-0"
                   >
-                    {copying ? <Check className="size-3.5 text-pf-success" /> : <Copy className="size-3.5" />}
+                    {copying ? <Check className="size-4 text-pf-success" /> : <Copy className="size-4" />}
                     {copying ? 'Copied!' : 'Copy'}
                   </Button>
                 </div>
@@ -1227,7 +1227,7 @@ export function Component() {
                       'noopener,noreferrer',
                     );
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 transition-colors"
                 >
                   <span className="font-bold text-sm leading-none">𝕏</span>
                   Twitter
@@ -1237,16 +1237,16 @@ export function Component() {
                   variant="secondary"
                   onClick={copyShareUrl}
                   disabled={!shareUrl || loadingShare}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 transition-colors"
                 >
-                  {copying ? <Check className="size-3.5 text-pf-success" /> : <Copy className="size-3.5" />}
+                  {copying ? <Check className="size-4 text-pf-success" /> : <Copy className="size-4" />}
                   Copy link
                 </Button>
               </div>
 
               {/* Preview card */}
               <div>
-                <p className="text-xs font-medium text-pf-text-secondary mb-1.5">Preview card</p>
+                <p className="text-xs font-medium text-pf-text-secondary mb-2">Preview card</p>
                 <div className="border border-pf-border rounded-pf bg-pf-surface p-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="size-4 text-pf-cyan-400 shrink-0" />
@@ -1255,7 +1255,7 @@ export function Component() {
                   <p className="text-xs text-pf-text-muted">
                     by @{strategy.id.slice(0, 8)}
                   </p>
-                  <div className="flex items-center gap-4 py-1.5 border-t border-b border-pf-border-subtle">
+                  <div className="flex items-center gap-4 py-2 border-t border-b border-pf-border-subtle">
                     {stratPnl && parseFloat(stratPnl.winRate) > 0 && (
                       <div className="text-center">
                         <p className="text-pf-caption text-pf-text-muted">Win Rate</p>
@@ -1285,11 +1285,11 @@ export function Component() {
 
               {/* Visibility toggle */}
               <div className="flex items-center gap-3 pt-1 border-t border-pf-border-subtle">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   {strategy.visibility === 'public' ? (
-                    <Globe className="size-3.5 text-pf-success" />
+                    <Globe className="size-4 text-pf-success" />
                   ) : (
-                    <Lock className="size-3.5 text-pf-text-muted" />
+                    <Lock className="size-4 text-pf-text-muted" />
                   )}
                   <span className="text-xs text-pf-text-secondary">
                     {strategy.visibility === 'public' ? 'Public' : 'Private'}
@@ -1300,7 +1300,7 @@ export function Component() {
                   variant="ghost"
                   onClick={toggleVisibility}
                   disabled={togglingVisibility}
-                  className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium transition-colors disabled:opacity-40 ${
+                  className={`ml-auto flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium transition-colors disabled:opacity-40 ${
                     strategy.visibility === 'public'
                       ? 'bg-pf-surface border border-pf-border text-pf-text-secondary hover:border-pf-border-strong'
                       : 'bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400'
@@ -1343,9 +1343,9 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => openAlertForm()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-warning/50 hover:text-pf-warning transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-warning/50 hover:text-pf-warning transition-colors"
                 >
-                  <BellPlus className="size-3.5" />
+                  <BellPlus className="size-4" />
                   Add Alert
                 </Button>
               )}
@@ -1394,16 +1394,16 @@ export function Component() {
 
                     {/* Notify via */}
                     <div>
-                      <label className="block text-xs font-medium text-pf-text-secondary mb-1.5">Notify via</label>
+                      <label className="block text-xs font-medium text-pf-text-secondary mb-2">Notify via</label>
                       <div className="flex items-center gap-4">
                         <label className="flex items-center gap-2 cursor-pointer select-none">
                           <input
                             type="checkbox"
                             checked={alertEmail}
                             onChange={(e) => setAlertEmail(e.target.checked)}
-                            className="w-3.5 h-3.5 accent-pf-warning rounded"
+                            className="w-4 h-4 accent-pf-warning rounded"
                           />
-                          <Mail className="size-3.5 text-pf-text-secondary" />
+                          <Mail className="size-4 text-pf-text-secondary" />
                           <span className="text-xs text-pf-text-secondary">Email</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -1411,9 +1411,9 @@ export function Component() {
                             type="checkbox"
                             checked={alertPush}
                             onChange={(e) => setAlertPush(e.target.checked)}
-                            className="w-3.5 h-3.5 accent-pf-warning rounded"
+                            className="w-4 h-4 accent-pf-warning rounded"
                           />
-                          <Bell className="size-3.5 text-pf-text-secondary" />
+                          <Bell className="size-4 text-pf-text-secondary" />
                           <span className="text-xs text-pf-text-secondary">Push</span>
                         </label>
                       </div>
@@ -1426,7 +1426,7 @@ export function Component() {
                       type="button"
                       onClick={saveAlert}
                       disabled={alertFormSaving}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-warning text-pf-text-contrast text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+                      className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-warning text-pf-text-contrast text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
                     >
                       {alertFormSaving ? 'Saving...' : 'Save Alert'}
                     </Button>
@@ -1435,7 +1435,7 @@ export function Component() {
                       variant="secondary"
                       onClick={cancelAlertForm}
                       disabled={alertFormSaving}
-                      className="px-3 py-1.5 rounded-pf border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
+                      className="px-3 py-2 rounded-pf border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong disabled:opacity-40 transition-colors"
                     >
                       Cancel
                     </Button>
@@ -1461,7 +1461,7 @@ export function Component() {
                   {strategyAlerts.map((alert) => (
                     <div
                       key={alert.id}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-pf border transition-colors ${alert.enabled ? 'border-pf-border bg-pf-surface' : 'border-pf-border-subtle bg-pf-surface/50 opacity-60'}`}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-pf border transition-colors ${alert.enabled ? 'border-pf-border bg-pf-surface' : 'border-pf-border-subtle bg-pf-surface/50 opacity-60'}`}
                     >
                       {/* Enabled toggle */}
                       <Button
@@ -1471,7 +1471,7 @@ export function Component() {
                         aria-label={alert.enabled ? 'Disable alert' : 'Enable alert'}
                         className={`shrink-0 w-8 h-5 rounded-pf-full border transition-colors relative ${alert.enabled ? 'bg-pf-warning/20 border-pf-warning/40' : 'bg-pf-overlay border-pf-border'}`}
                       >
-                        <span className={`absolute top-0.5 w-3 h-3 rounded-pf-full transition-all ${alert.enabled ? 'left-4 bg-pf-warning' : 'left-0.5 bg-pf-text-muted'}`} />
+                        <span className={`absolute top-1 w-3 h-3 rounded-pf-full transition-all ${alert.enabled ? 'left-4 bg-pf-warning' : 'left-1 bg-pf-text-muted'}`} />
                       </Button>
 
                       {/* Label + threshold */}
@@ -1480,20 +1480,20 @@ export function Component() {
                           {ALERT_TYPE_LABELS[alert.type]}
                         </span>
                         {alert.type !== 'strategy_offline' && (
-                          <span className="ml-1.5 text-xs font-mono text-pf-text-secondary">{alert.threshold}</span>
+                          <span className="ml-2 text-xs font-mono text-pf-text-secondary">{alert.threshold}</span>
                         )}
                       </div>
 
                       {/* Channel icons */}
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {alert.notifyEmail && <Mail className="size-3.5 text-pf-text-muted" aria-label="Email notifications" />}
-                        {alert.notifyPush && <Bell className="size-3.5 text-pf-text-muted" aria-label="Push notifications" />}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {alert.notifyEmail && <Mail className="size-4 text-pf-text-muted" aria-label="Email notifications" />}
+                        {alert.notifyPush && <Bell className="size-4 text-pf-text-muted" aria-label="Push notifications" />}
                       </div>
 
                       {/* Triggered badge */}
                       {alert.triggeredAt && (
-                        <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-pf-full bg-pf-warning/15 text-pf-warning text-pf-caption font-semibold">
-                          <AlertTriangle className="size-2.5" aria-hidden="true" />
+                        <span className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-warning/15 text-pf-warning text-pf-caption font-semibold">
+                          <AlertTriangle className="size-3" aria-hidden="true" />
                           Triggered
                         </span>
                       )}
@@ -1508,7 +1508,7 @@ export function Component() {
                         title="Edit"
                         className="shrink-0"
                       >
-                        <Edit2 className="size-3.5" />
+                        <Edit2 className="size-4" />
                       </Button>
 
                       {/* Delete */}
@@ -1521,7 +1521,7 @@ export function Component() {
                         title="Delete"
                         className="shrink-0"
                       >
-                        <Trash2 className="size-3.5" />
+                        <Trash2 className="size-4" />
                       </Button>
                     </div>
                   ))}
@@ -1532,24 +1532,24 @@ export function Component() {
 
           {/* Meta chips */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`px-2.5 py-1 rounded-pf-full text-xs font-medium ${
+            <span className={`px-3 py-1 rounded-pf-full text-xs font-medium ${
               strategy.execMode === 'TICK' || strategy.execMode === 'HYBRID'
                 ? 'bg-pf-purple-500/10 text-pf-purple-500'
                 : 'bg-pf-cyan-500/10 text-pf-cyan-400'
             }`}>
               {execLabel(strategy)}
             </span>
-            <span className="px-2.5 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
+            <span className="px-3 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
               v{strategy.version}
             </span>
-            <span className="px-2.5 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
+            <span className="px-3 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
               {strategy.visibility.toLowerCase()}
             </span>
-            <span className="px-2.5 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
+            <span className="px-3 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary text-xs font-medium">
               {totalBlocks} blocks
             </span>
             {strategy.tags.map((tag) => (
-              <span key={tag} className={`px-2.5 py-1 rounded-pf-full text-xs font-medium ${
+              <span key={tag} className={`px-3 py-1 rounded-pf-full text-xs font-medium ${
                 tag.toLowerCase() === 'momentum'
                   ? 'bg-pf-gold-500/10 text-pf-gold-500'
                   : tag.toLowerCase() === 'defensive'
@@ -1559,7 +1559,7 @@ export function Component() {
                 {tag}
               </span>
             ))}
-            <span className="px-2.5 py-1 rounded-pf-full text-pf-text-muted text-xs ml-auto">
+            <span className="px-3 py-1 rounded-pf-full text-pf-text-muted text-xs ml-auto">
               Updated {formatDate(strategy.updatedAt)}
             </span>
           </div>
@@ -1567,14 +1567,14 @@ export function Component() {
           {/* Strategy P&L summary */}
           {stratPnl && parseFloat(stratPnl.totalPnl) !== 0 && (
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border">
                 <span className="text-xs text-pf-text-muted">Strategy P&L</span>
                 <span className={`text-sm font-mono font-semibold ${parseFloat(stratPnl.totalPnl) >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
                   {parseFloat(stratPnl.totalPnl) >= 0 ? '+' : ''}${parseFloat(stratPnl.totalPnl).toFixed(2)}
                 </span>
               </div>
               {parseFloat(stratPnl.winRate) > 0 && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border">
                   <span className="text-xs text-pf-text-muted">Win Rate</span>
                   <span className="text-sm font-mono font-semibold text-pf-cyan-400">
                     {(parseFloat(stratPnl.winRate) * 100).toFixed(1)}%
@@ -1587,7 +1587,7 @@ export function Component() {
           {/* Parent strategy link */}
           {parentStrategy && (
             <div className="flex items-center gap-2 px-3 py-2 bg-pf-elevated border border-pf-border rounded-pf-lg">
-              <GitBranch className="size-3.5 text-pf-text-muted" />
+              <GitBranch className="size-4 text-pf-text-muted" />
               <span className="text-xs text-pf-text-muted">Part of:</span>
               <Link
                 to={`/strategies/${parentStrategy.id}`}
@@ -1617,7 +1617,7 @@ export function Component() {
                     >
                       <span className="text-xs text-pf-text font-medium">{child.name}</span>
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-pf-caption font-medium ${childStyle.bg} ${childStyle.text}`}
+                        className={`inline-flex items-center gap-2 px-2 py-1 rounded-pf-full text-pf-caption font-medium ${childStyle.bg} ${childStyle.text}`}
                       >
                         <span className={`w-1 h-1 rounded-pf-full ${childStyle.dot}`} />
                         {child.status}
@@ -1680,9 +1680,9 @@ export function Component() {
               variant={detailTab === 'versions' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setDetailTab('versions')}
-              className="flex items-center gap-1.5"
+              className="flex items-center gap-2"
             >
-              <History className="size-3.5" aria-hidden="true" />
+              <History className="size-4" aria-hidden="true" />
               History
             </Button>
             <Button
@@ -1698,10 +1698,10 @@ export function Component() {
               variant={detailTab === 'live' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setDetailTab('live')}
-              className="flex items-center gap-1.5"
+              className="flex items-center gap-2"
             >
               {detailTab === 'live' && wsConnected
-                ? <span className="w-1.5 h-1.5 rounded-pf-full bg-pf-success animate-pulse" />
+                ? <span className="w-2 h-2 rounded-pf-full bg-pf-success animate-pulse" />
                 : <Wifi className="size-3" />}
               Live
             </Button>
@@ -1729,7 +1729,7 @@ export function Component() {
                       {blocks.map((b, i) => (
                         <span
                           key={i}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pf-sm border text-xs font-medium ${SECTION_STYLES[key]}`}
+                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-pf-sm border text-xs font-medium ${SECTION_STYLES[key]}`}
                         >
                           {SECTION_ICONS[key]}
                           {blockLabel(b.type)}
@@ -1744,7 +1744,7 @@ export function Component() {
                   <p className="text-sm text-pf-text-muted mb-3">No blocks configured.</p>
                   <Link
                     to={`/strategies/${strategy.id}/edit`}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong transition-colors"
                   >
                     <Pencil className="size-3" /> Edit Strategy
                   </Link>
@@ -1757,8 +1757,8 @@ export function Component() {
               <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
                 <span className="text-sm font-medium text-pf-text">Live Events</span>
                 {isActive(status) && (
-                  <span className="flex items-center gap-1.5 text-xs text-pf-cyan-400">
-                    <span className="w-1.5 h-1.5 rounded-pf-full bg-pf-cyan-400 animate-pulse-dot" />
+                  <span className="flex items-center gap-2 text-xs text-pf-cyan-400">
+                    <span className="w-2 h-2 rounded-pf-full bg-pf-cyan-400 animate-pulse-dot" />
                     Live
                   </span>
                 )}
@@ -1771,13 +1771,13 @@ export function Component() {
                     <p className="text-xs">Check the <a href={`/orders?strategy=${strategy?.id}`} className="text-pf-cyan-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm">Orders</a> page for trade activity.</p>
                   </div>
                 ) : (
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {liveLog.map((entry, i) => (
                       <div key={i} className="flex items-start gap-2 text-xs">
                         <span className="font-mono text-pf-text-muted shrink-0 w-16">
                           {formatTime(entry.time)}
                         </span>
-                        <span className={`w-1.5 h-1.5 rounded-pf-full mt-1.5 shrink-0 ${LOG_DOT_COLORS[entry.severity]}`} />
+                        <span className={`w-2 h-2 rounded-pf-full mt-2 shrink-0 ${LOG_DOT_COLORS[entry.severity]}`} />
                         <span className={LOG_COLORS[entry.severity]}>{entry.message}</span>
                       </div>
                     ))}
@@ -1797,10 +1797,10 @@ export function Component() {
                   <p className="text-xs mt-1">Events appear when the strategy runs.</p>
                 </div>
               ) : (
-                <ul className="space-y-1.5">
+                <ul className="space-y-2">
                   {execLog.map(ev => (
                     <li key={ev.id} className="flex items-start gap-3 rounded-pf bg-pf-surface px-3 py-2 border border-pf-border-subtle">
-                      <span className={`mt-0.5 flex-shrink-0 h-2 w-2 rounded-pf-full ${
+                      <span className={`mt-1 flex-shrink-0 h-2 w-2 rounded-pf-full ${
                         ev.eventType === 'ERROR' ? 'bg-pf-danger' :
                         ev.eventType === 'ORDER_PLACED' ? 'bg-pf-success' :
                         ev.eventType === 'TRIGGERED' ? 'bg-pf-cyan-400' : 'bg-pf-text-muted'
@@ -1813,7 +1813,7 @@ export function Component() {
                           </span>
                         </div>
                         {ev.payload && Object.keys(ev.payload).length > 0 && (
-                          <p className="text-pf-label text-pf-text-secondary mt-0.5 font-mono truncate">
+                          <p className="text-pf-label text-pf-text-secondary mt-1 font-mono truncate">
                             {JSON.stringify(ev.payload).slice(0, 120)}
                           </p>
                         )}
@@ -1853,13 +1853,13 @@ export function Component() {
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="border-b border-pf-border bg-pf-surface">
-                          <th className="px-3 py-2.5 text-left font-medium text-pf-text-muted">Date</th>
-                          <th className="px-3 py-2.5 text-left font-medium text-pf-text-muted">Side</th>
-                          <th className="px-3 py-2.5 text-left font-medium text-pf-text-muted">Outcome</th>
-                          <th className="px-3 py-2.5 text-right font-medium text-pf-text-muted">Size</th>
-                          <th className="px-3 py-2.5 text-right font-medium text-pf-text-muted">Price</th>
-                          <th className="px-3 py-2.5 text-right font-medium text-pf-text-muted">Fill</th>
-                          <th className="px-3 py-2.5 text-left font-medium text-pf-text-muted">Status</th>
+                          <th className="px-3 py-3 text-left font-medium text-pf-text-muted">Date</th>
+                          <th className="px-3 py-3 text-left font-medium text-pf-text-muted">Side</th>
+                          <th className="px-3 py-3 text-left font-medium text-pf-text-muted">Outcome</th>
+                          <th className="px-3 py-3 text-right font-medium text-pf-text-muted">Size</th>
+                          <th className="px-3 py-3 text-right font-medium text-pf-text-muted">Price</th>
+                          <th className="px-3 py-3 text-right font-medium text-pf-text-muted">Fill</th>
+                          <th className="px-3 py-3 text-left font-medium text-pf-text-muted">Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-pf-border-subtle">
@@ -1872,23 +1872,23 @@ export function Component() {
                             'bg-pf-overlay text-pf-text-muted';
                           return (
                             <tr key={ex.id} className="hover:bg-pf-surface/50 transition-colors">
-                              <td className="px-3 py-2.5 font-mono text-pf-text-secondary whitespace-nowrap">
+                              <td className="px-3 py-3 font-mono text-pf-text-secondary whitespace-nowrap">
                                 {new Date(ex.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                               </td>
-                              <td className="px-3 py-2.5">
+                              <td className="px-3 py-3">
                                 <span className={`font-semibold ${ex.side === 'BUY' ? 'text-pf-success' : 'text-pf-danger'}`}>
                                   {ex.side}
                                 </span>
                               </td>
-                              <td className="px-3 py-2.5 text-pf-text font-mono">{ex.outcome}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-pf-text">{ex.size}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-pf-text">{ex.price}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-pf-text-secondary">
+                              <td className="px-3 py-3 text-pf-text font-mono">{ex.outcome}</td>
+                              <td className="px-3 py-3 text-right font-mono text-pf-text">{ex.size}</td>
+                              <td className="px-3 py-3 text-right font-mono text-pf-text">{ex.price}</td>
+                              <td className="px-3 py-3 text-right font-mono text-pf-text-secondary">
                                 {ex.fillSize ?? '—'}
                                 {ex.fillPrice ? ` @ ${ex.fillPrice}` : ''}
                               </td>
-                              <td className="px-3 py-2.5">
-                                <span className={`inline-flex px-2 py-0.5 rounded-pf-full text-pf-caption font-medium ${statusBadge}`}>
+                              <td className="px-3 py-3">
+                                <span className={`inline-flex px-2 py-1 rounded-pf-full text-pf-caption font-medium ${statusBadge}`}>
                                   {ex.status}
                                 </span>
                               </td>
@@ -1948,7 +1948,7 @@ export function Component() {
                 <div className="space-y-0 rounded-pf border border-pf-border overflow-hidden">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="flex items-start gap-4 px-5 py-4 border-b border-pf-border-subtle last:border-0 bg-pf-elevated animate-pulse">
-                      <div className="flex flex-col items-center gap-1 shrink-0 pt-0.5">
+                      <div className="flex flex-col items-center gap-1 shrink-0 pt-1">
                         <div className="size-3 rounded-pf-full bg-pf-overlay" />
                         {i < 3 && <div className="w-px h-10 bg-pf-overlay" />}
                       </div>
@@ -1997,7 +1997,7 @@ export function Component() {
                         aria-label={`Version ${v.label}`}
                       >
                         {/* Timeline spine */}
-                        <div className="flex flex-col items-center shrink-0 pt-0.5" aria-hidden="true">
+                        <div className="flex flex-col items-center shrink-0 pt-1" aria-hidden="true">
                           <span className={`size-3 rounded-pf-full border-2 ${isCurrent ? 'border-pf-cyan-400 bg-pf-cyan-400' : 'border-pf-border-strong bg-pf-surface'}`} />
                           {idx < versions.length - 1 && (
                             <span className="w-px flex-1 min-h-[2rem] bg-pf-border-subtle mt-1" />
@@ -2005,14 +2005,14 @@ export function Component() {
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 min-w-0 space-y-1.5">
+                        <div className="flex-1 min-w-0 space-y-2">
                           {/* Top row: badge + date + current pill */}
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-sm text-xs font-bold tabular-nums ${isCurrent ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'bg-pf-overlay text-pf-text-muted'}`}>
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-sm text-xs font-bold tabular-nums ${isCurrent ? 'bg-pf-cyan-500/15 text-pf-cyan-400' : 'bg-pf-overlay text-pf-text-muted'}`}>
                               {v.label}
                             </span>
                             {isCurrent && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-pf-full bg-pf-success/10 text-pf-success text-pf-caption font-semibold uppercase tracking-wide">
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-success/10 text-pf-success text-pf-caption font-semibold uppercase tracking-wide">
                                 current
                               </span>
                             )}
@@ -2035,20 +2035,20 @@ export function Component() {
                             {v.changes && (
                               <>
                                 {v.changes.added > 0 && (
-                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full bg-pf-success/15 text-pf-success text-pf-caption font-semibold">
-                                    <Plus className="size-2.5" aria-hidden="true" />
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-success/15 text-pf-success text-pf-caption font-semibold">
+                                    <Plus className="size-3" aria-hidden="true" />
                                     {v.changes.added} added
                                   </span>
                                 )}
                                 {v.changes.removed > 0 && (
-                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full bg-pf-danger/15 text-pf-danger text-pf-caption font-semibold">
-                                    <Minus className="size-2.5" aria-hidden="true" />
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-danger/15 text-pf-danger text-pf-caption font-semibold">
+                                    <Minus className="size-3" aria-hidden="true" />
                                     {v.changes.removed} removed
                                   </span>
                                 )}
                                 {v.changes.modified > 0 && (
-                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full bg-pf-warning/15 text-pf-warning text-pf-caption font-semibold">
-                                    <Edit2 className="size-2.5" aria-hidden="true" />
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-warning/15 text-pf-warning text-pf-caption font-semibold">
+                                    <Edit2 className="size-3" aria-hidden="true" />
                                     {v.changes.modified} modified
                                   </span>
                                 )}
@@ -2100,7 +2100,7 @@ export function Component() {
                                     setRollingBack(null);
                                   }
                                 }}
-                                className="flex items-center gap-1.5"
+                                className="flex items-center gap-2"
                               >
                                 <RotateCcw className="size-3" aria-hidden="true" />
                                 {isRestoring ? 'Restoring...' : `Restore this version`}
@@ -2124,12 +2124,12 @@ export function Component() {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-pf-text">Live Execution Feed</span>
                   {wsConnected ? (
-                    <span className="flex items-center gap-1.5 text-xs text-pf-success font-medium">
+                    <span className="flex items-center gap-2 text-xs text-pf-success font-medium">
                       <span className="animate-pulse bg-pf-success rounded-pf-full w-2 h-2" />
                       LIVE
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1.5 text-xs text-pf-text-muted">
+                    <span className="flex items-center gap-2 text-xs text-pf-text-muted">
                       <WifiOff className="size-3" />
                       Disconnected
                     </span>
@@ -2140,7 +2140,7 @@ export function Component() {
                   variant="secondary"
                   size="sm"
                   onClick={() => setLiveEvents([])}
-                  className="flex items-center gap-1.5"
+                  className="flex items-center gap-2"
                 >
                   <Trash2 className="size-3" />
                   Clear
@@ -2172,10 +2172,10 @@ export function Component() {
                                                      { Icon: AlertTriangle, color: 'text-pf-warning'  };
                     const { Icon, color } = iconProps;
                     return (
-                      <div key={ev.id} className="flex items-start gap-3 py-2.5 px-4 animate-fade-in last:border-0">
-                        <Icon className={`size-4 flex-shrink-0 mt-0.5 ${color}`} />
+                      <div key={ev.id} className="flex items-start gap-3 py-3 px-4 animate-fade-in last:border-0">
+                        <Icon className={`size-4 flex-shrink-0 mt-1 ${color}`} />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2 mb-0.5">
+                          <div className="flex items-center justify-between gap-2 mb-1">
                             <span className={`text-xs font-bold ${color}`}>{ev.type.replace(/_/g, ' ')}</span>
                             <span className="text-pf-caption text-pf-text-muted flex-shrink-0">{relativeDate(ev.timestamp)}</span>
                           </div>
@@ -2255,7 +2255,7 @@ function StarRow({
 }) {
   const display = hovered ?? rating;
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-center gap-1">
       {[1, 2, 3, 4, 5].map((n) => {
         const filled = n <= display;
         return (
@@ -2387,7 +2387,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
           </div>
 
           {/* Bar breakdown */}
-          <div className="flex-1 space-y-1.5">
+          <div className="flex-1 space-y-2">
             {starCounts.map(({ star, count }) => (
               <div key={star} className="flex items-center gap-2">
                 <span className="text-xs text-pf-text-muted w-4 text-right shrink-0">{star}</span>
@@ -2515,7 +2515,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
                     </span>
                   </div>
                   <StarRow rating={review.rating} />
-                  <p className="text-sm text-pf-text-secondary mt-1.5 leading-relaxed">
+                  <p className="text-sm text-pf-text-secondary mt-2 leading-relaxed">
                     {review.comment}
                   </p>
                 </div>

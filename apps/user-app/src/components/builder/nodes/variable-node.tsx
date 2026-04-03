@@ -132,7 +132,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
       >
         {/* Header bar */}
         <div
-          className="builder-node-header--solid flex items-center gap-1.5 px-2.5 py-1.5"
+          className="builder-node-header--solid flex items-center gap-2 px-3 py-2"
           style={{ '--node-color': VARIABLE_COLOR } as React.CSSProperties}
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
@@ -141,7 +141,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
           <button
             type="button"
             onClick={onDelete}
-            className="p-0.5 rounded hover:bg-white/20 active:bg-white/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            className="p-1 rounded hover:bg-white/20 active:bg-white/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             aria-label="Remove variable"
             title="Remove variable"
           >
@@ -150,10 +150,10 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
         </div>
 
         {/* Fields */}
-        <div className="px-2.5 py-2 space-y-2">
+        <div className="px-3 py-2 space-y-2">
           {/* Name */}
           <div>
-            <label htmlFor={`${id}-var-name`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+            <label htmlFor={`${id}-var-name`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
               Name
             </label>
             <input
@@ -170,7 +170,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               }`}
             />
             {!nameValid && (
-              <p id={`${id}-name-error`} className="text-pf-micro text-pf-danger mt-0.5">
+              <p id={`${id}-name-error`} className="text-pf-micro text-pf-danger mt-1">
                 Letters, digits, underscores only
               </p>
             )}
@@ -178,7 +178,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
 
           {/* Expression */}
           <div>
-            <label htmlFor={`${id}-var-expr`} className="block text-pf-caption font-medium text-pf-text-muted mb-0.5 uppercase tracking-wider">
+            <label htmlFor={`${id}-var-expr`} className="block text-pf-caption font-medium text-pf-text-muted mb-1 uppercase tracking-wider">
               Expression
             </label>
             <input
@@ -205,7 +205,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-2.5 !h-2.5 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
+        className="!w-3 !h-3 !bg-pf-elevated !border-2 !rounded-pf-full builder-handle"
         style={{ '--node-color': VARIABLE_COLOR } as React.CSSProperties}
       />
     </>

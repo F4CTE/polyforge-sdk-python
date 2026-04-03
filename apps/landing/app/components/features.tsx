@@ -1241,7 +1241,7 @@ export function Features() {
         <div className="text-center max-w-[600px] mx-auto mb-14">
           <h2
             id="features-heading"
-            className="text-[clamp(24px,4vw,34px)] font-bold text-pf-text mb-3.5"
+            className="text-[clamp(24px,4vw,34px)] font-bold text-pf-text mb-4"
           >
             Everything you need to trade smarter
           </h2>
@@ -1254,7 +1254,7 @@ export function Features() {
           {features.map((feature) => (
             <article
               key={feature.title}
-              className={`bg-pf-surface bg-gradient-to-br ${feature.gradientClass} to-pf-surface border border-pf-border-subtle rounded-pf-lg transition-all duration-250 hover:border-pf-cyan-500/30 hover:shadow-pf-md`}
+              className={`bg-pf-surface bg-gradient-to-br ${feature.gradientClass} to-pf-surface border border-pf-border-subtle rounded-pf-lg transition-all duration-200 hover:border-pf-cyan-500/30 hover:shadow-pf-md`}
             >
               {/* Visual preview */}
               <div
@@ -1270,7 +1270,7 @@ export function Features() {
                   {feature.icon}
                 </div>
 
-                <h3 className="text-pf-subhead font-semibold text-pf-text mb-2.5">
+                <h3 className="text-pf-subhead font-semibold text-pf-text mb-3">
                   {feature.title}
                 </h3>
                 <p className="text-sm text-pf-text-secondary leading-7">

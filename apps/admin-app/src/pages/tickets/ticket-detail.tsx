@@ -146,7 +146,7 @@ export function Component() {
       {/* Back */}
       <Button type="button" variant="ghost"
         onClick={() => navigate('/tickets')}
-        className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+        className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
       >
         <ArrowLeft size={16} aria-hidden="true" />
         Back to tickets
@@ -159,19 +159,19 @@ export function Component() {
             <h2 className="text-lg font-semibold text-pf-text">
               {ticket.subject}
             </h2>
-            <p className="text-sm text-pf-text-tertiary mt-0.5">
+            <p className="text-sm text-pf-text-tertiary mt-1">
               {ticket.username ?? ticket.userId} - {formatDateTime(ticket.createdAt)}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(ticket.status)}`}>
+            <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(ticket.status)}`}>
               {ticket.status}
             </span>
-            <span className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${priorityColor[ticket.priority] ?? ''}`}>
+            <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${priorityColor[ticket.priority] ?? ''}`}>
               {ticket.priority}
             </span>
             {ticket.category && (
-              <span className="px-2 py-0.5 rounded-pf-full text-xs font-medium bg-pf-base text-pf-text-secondary border border-pf-border">
+              <span className="px-2 py-1 rounded-pf-full text-xs font-medium bg-pf-base text-pf-text-secondary border border-pf-border">
                 {ticket.category}
               </span>
             )}
@@ -186,7 +186,7 @@ export function Component() {
               id="ticket-status"
               value={statusValue}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className="px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
+              className="px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
             >
               <option value="OPEN">Open</option>
               <option value="IN_PROGRESS">In Progress</option>
@@ -200,7 +200,7 @@ export function Component() {
               id="ticket-assign"
               value={assignedTo}
               onChange={(e) => handleAssign(e.target.value)}
-              className="px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
+              className="px-3 py-2 text-sm rounded-pf-sm border border-pf-border bg-pf-base text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500"
             >
               <option value="">Unassigned</option>
               {admins.map((a) => (
@@ -261,7 +261,7 @@ export function Component() {
             type="submit"
             variant="default"
             disabled={sending || !reply.trim()}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send size={14} aria-hidden="true" />
             {sending ? 'Sending...' : 'Reply'}

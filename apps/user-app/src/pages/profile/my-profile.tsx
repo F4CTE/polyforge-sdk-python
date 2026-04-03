@@ -97,9 +97,9 @@ export function Component() {
         <h1 className="text-2xl font-semibold text-pf-text">My Profile</h1>
         <Link
           to="/settings"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text-secondary hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text-secondary hover:border-pf-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
         >
-          <Settings className="size-3.5" aria-hidden="true" />
+          <Settings className="size-4" aria-hidden="true" />
           Edit Profile
         </Link>
       </div>
@@ -131,7 +131,7 @@ export function Component() {
 
         {/* Status chips */}
         <div className="flex flex-wrap gap-2">
-          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-pf-full text-xs font-medium border ${
+          <span className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
             user.emailVerified
               ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
               : 'bg-pf-overlay text-pf-text-muted border-pf-border'
@@ -139,7 +139,7 @@ export function Component() {
             <Mail className="size-3" />
             {user.emailVerified ? 'Email Verified' : 'Email Unverified'}
           </span>
-          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-pf-full text-xs font-medium border ${
+          <span className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
             user.polymarketConnected
               ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
               : 'bg-pf-overlay text-pf-text-muted border-pf-border'
@@ -147,7 +147,7 @@ export function Component() {
             <Link2 className="size-3" />
             {user.polymarketConnected ? 'Polymarket Connected' : 'Not Connected'}
           </span>
-          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-pf-full text-xs font-medium border ${
+          <span className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
             user.totpEnabled
               ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
               : 'bg-pf-overlay text-pf-text-muted border-pf-border'
@@ -222,7 +222,7 @@ export function Component() {
             {badges.map(badge => (
               <div
                 key={badge.id}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border-subtle"
+                className="flex items-center gap-3 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border-subtle"
               >
                 <span className="text-lg">{BADGE_ICONS[badge.type] ?? <Target className="size-4" />}</span>
                 <div className="min-w-0">

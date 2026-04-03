@@ -266,14 +266,14 @@ export function Component() {
                         {user.username ?? ''}
                       </Link>
                       {user.suspended && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded text-pf-caption font-medium text-pf-danger bg-pf-danger/10">
+                        <span className="ml-2 px-2 py-1 rounded text-pf-caption font-medium text-pf-danger bg-pf-danger/10">
                           SUSPENDED
                         </span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-pf-text-secondary">{user.email ?? ''}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(computeUserStatus(user))}`}>
+                      <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(computeUserStatus(user))}`}>
                         {computeUserStatus(user)}
                       </span>
                     </td>
@@ -344,7 +344,7 @@ export function Component() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 aria-label="Previous page"
-                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft size={16} />
               </Button>
@@ -355,7 +355,7 @@ export function Component() {
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 aria-label="Next page"
-                className="p-1.5 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded hover:bg-pf-base text-pf-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight size={16} />
               </Button>

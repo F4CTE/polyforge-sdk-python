@@ -298,7 +298,7 @@ export function Component() {
           type="button"
           variant="ghost"
           onClick={handleRefresh}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated transition-colors"
           aria-label="Refresh retention data"
         >
           <RefreshCw size={14} aria-hidden="true" />
@@ -399,7 +399,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => setTrendDays(opt.value)}
-                  className={`px-2.5 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
                     trendDays === opt.value
                       ? 'bg-pf-cyan-500/20 text-pf-cyan-500 border border-pf-cyan-500/40'
                       : 'border border-pf-border text-pf-text-secondary hover:text-pf-text hover:bg-pf-base'

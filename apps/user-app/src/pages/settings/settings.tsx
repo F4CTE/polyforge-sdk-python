@@ -88,15 +88,15 @@ interface Session {
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
 const TABS: { label: string; value: Tab; icon: React.ReactNode }[] = [
-  { label: 'Profile', value: 'profile', icon: <User className="size-3.5" /> },
-  { label: 'Notifications', value: 'notifications', icon: <Bell className="size-3.5" /> },
-  { label: 'Password', value: 'password', icon: <Lock className="size-3.5" /> },
-  { label: '2FA', value: '2fa', icon: <Shield className="size-3.5" /> },
-  { label: 'API Keys', value: 'apikeys', icon: <Key className="size-3.5" /> },
-  { label: 'Gas Usage', value: 'gas', icon: <Fuel className="size-3.5" /> },
-  { label: 'Risk', value: 'risk', icon: <ShieldAlert className="size-3.5" /> },
-  { label: 'Webhooks', value: 'webhooks', icon: <Webhook className="size-3.5" /> },
-  { label: 'Sessions', value: 'sessions', icon: <Monitor className="size-3.5" /> },
+  { label: 'Profile', value: 'profile', icon: <User className="size-4" /> },
+  { label: 'Notifications', value: 'notifications', icon: <Bell className="size-4" /> },
+  { label: 'Password', value: 'password', icon: <Lock className="size-4" /> },
+  { label: '2FA', value: '2fa', icon: <Shield className="size-4" /> },
+  { label: 'API Keys', value: 'apikeys', icon: <Key className="size-4" /> },
+  { label: 'Gas Usage', value: 'gas', icon: <Fuel className="size-4" /> },
+  { label: 'Risk', value: 'risk', icon: <ShieldAlert className="size-4" /> },
+  { label: 'Webhooks', value: 'webhooks', icon: <Webhook className="size-4" /> },
+  { label: 'Sessions', value: 'sessions', icon: <Monitor className="size-4" /> },
 ];
 
 interface NotificationPreference {
@@ -960,7 +960,7 @@ export function Component() {
           >
             Manage Trading Account &rarr;
           </Link>
-          <p className="text-xs text-pf-text-muted mt-0.5">Connect or manage your Polymarket wallet</p>
+          <p className="text-xs text-pf-text-muted mt-1">Connect or manage your Polymarket wallet</p>
         </div>
       </div>
 
@@ -973,7 +973,7 @@ export function Component() {
             variant={activeTab === t.value ? 'default' : 'secondary'}
             size="sm"
             onClick={() => handleTab(t.value)}
-            className="flex items-center gap-1.5 whitespace-nowrap rounded-pf-full"
+            className="flex items-center gap-2 whitespace-nowrap rounded-pf-full"
           >
             {t.icon}
             {t.label}
@@ -986,15 +986,15 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
           <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Public Profile</h2>
           <div>
-            <label htmlFor="settings-display-name" className="text-xs text-pf-text-secondary mb-1.5 block">Display Name</label>
+            <label htmlFor="settings-display-name" className="text-xs text-pf-text-secondary mb-2 block">Display Name</label>
             <Input id="settings-display-name" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your display name" className="w-full" />
           </div>
           <div>
-            <label htmlFor="settings-bio" className="text-xs text-pf-text-secondary mb-1.5 block">Bio</label>
+            <label htmlFor="settings-bio" className="text-xs text-pf-text-secondary mb-2 block">Bio</label>
             <Textarea id="settings-bio" value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="Tell others about yourself..." className="w-full resize-y" />
           </div>
           <div>
-            <label htmlFor="settings-avatar-url" className="text-xs text-pf-text-secondary mb-1.5 block">Avatar URL</label>
+            <label htmlFor="settings-avatar-url" className="text-xs text-pf-text-secondary mb-2 block">Avatar URL</label>
             <div className="flex items-center gap-3">
               <Input id="settings-avatar-url" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://..." className="flex-1" />
               {avatarUrl && <img src={avatarUrl} alt="Avatar preview" className="w-12 h-12 rounded-pf-full object-cover border border-pf-border" />}
@@ -1045,7 +1045,7 @@ export function Component() {
                     </p>
                   </div>
                   <div>
-                    <label htmlFor="settings-delete-password" className="text-xs text-pf-text-secondary mb-1.5 block">Enter your password to confirm</label>
+                    <label htmlFor="settings-delete-password" className="text-xs text-pf-text-secondary mb-2 block">Enter your password to confirm</label>
                     <Input
                       id="settings-delete-password"
                       type="password"
@@ -1114,8 +1114,8 @@ export function Component() {
             <div className="space-y-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="flex items-center justify-between py-3 animate-pulse">
-                  <div className="space-y-1.5">
-                    <div className="h-3.5 w-32 rounded bg-pf-overlay" />
+                  <div className="space-y-2">
+                    <div className="h-4 w-32 rounded bg-pf-overlay" />
                     <div className="h-3 w-52 rounded bg-pf-overlay/60" />
                   </div>
                   <div className="flex gap-2">
@@ -1148,10 +1148,10 @@ export function Component() {
                     {events.map(evtDef => {
                       const pref = notifPrefs.find(p => p.event === evtDef.event) ?? { event: evtDef.event, inApp: true, email: false, push: false };
                       return (
-                        <div key={evtDef.event} className="flex items-center justify-between py-2.5">
+                        <div key={evtDef.event} className="flex items-center justify-between py-3">
                           <div className="flex-1 pr-4">
                             <div className="text-sm font-medium text-pf-text">{evtDef.label}</div>
-                            <div className="text-xs text-pf-text-muted mt-0.5">{evtDef.desc}</div>
+                            <div className="text-xs text-pf-text-muted mt-1">{evtDef.desc}</div>
                           </div>
                           <div className="flex gap-2 shrink-0">
                             {(['inApp', 'email', 'push'] as const).map(field => (
@@ -1163,7 +1163,7 @@ export function Component() {
                                 aria-checked={pref[field]}
                                 aria-label={`${evtDef.label} ${field} notification`}
                                 onClick={() => toggleNotifField(evtDef.event, field)}
-                                className={`px-2.5 py-0.5 rounded-pf-full text-pf-caption font-medium w-14 transition-colors cursor-pointer ${
+                                className={`px-3 py-1 rounded-pf-full text-pf-caption font-medium w-14 transition-colors cursor-pointer ${
                                   pref[field]
                                     ? 'bg-pf-cyan-500 text-white'
                                     : 'bg-pf-overlay text-pf-text-muted'
@@ -1196,7 +1196,7 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
           <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Change Password</h2>
           <div>
-            <label htmlFor="settings-current-password" className="text-xs text-pf-text-secondary mb-1.5 block">Current Password</label>
+            <label htmlFor="settings-current-password" className="text-xs text-pf-text-secondary mb-2 block">Current Password</label>
             <div className="relative">
               <Input id="settings-current-password" type={showCurrentPw ? 'text' : 'password'} autoComplete="current-password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="w-full pr-10" />
               <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Toggle password visibility">
@@ -1205,7 +1205,7 @@ export function Component() {
             </div>
           </div>
           <div>
-            <label htmlFor="settings-new-password" className="text-xs text-pf-text-secondary mb-1.5 block">New Password</label>
+            <label htmlFor="settings-new-password" className="text-xs text-pf-text-secondary mb-2 block">New Password</label>
             <div className="relative">
               <Input id="settings-new-password" type={showNewPw ? 'text' : 'password'} autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full pr-10" />
               <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Toggle password visibility">
@@ -1214,7 +1214,7 @@ export function Component() {
             </div>
           </div>
           <div>
-            <label htmlFor="settings-confirm-password" className="text-xs text-pf-text-secondary mb-1.5 block">Confirm New Password</label>
+            <label htmlFor="settings-confirm-password" className="text-xs text-pf-text-secondary mb-2 block">Confirm New Password</label>
             <Input id="settings-confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full" />
             {confirmPassword && newPassword !== confirmPassword && (
               <span className="text-xs text-pf-danger mt-1 block">Passwords do not match</span>
@@ -1238,7 +1238,7 @@ export function Component() {
           {twoFaView === 'disabled' && (
             <div className="space-y-5">
               <div className="flex items-start gap-4 p-4 rounded-pf bg-pf-surface border border-pf-border">
-                <Shield className="size-8 text-pf-text-muted shrink-0 mt-0.5" />
+                <Shield className="size-8 text-pf-text-muted shrink-0 mt-1" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-pf-text">Protect your account with an authenticator app</p>
                   <p className="text-xs text-pf-text-secondary">
@@ -1344,7 +1344,7 @@ export function Component() {
               </div>
               <div className="p-4 bg-pf-warning/5 border border-pf-warning/30 rounded-pf space-y-3">
                 <div className="flex items-start gap-2">
-                  <KeyRound className="size-4 text-pf-warning shrink-0 mt-0.5" />
+                  <KeyRound className="size-4 text-pf-warning shrink-0 mt-1" />
                   <p className="text-xs text-pf-warning font-medium">
                     Save these backup codes somewhere safe. Each can only be used once. If you lose access to
                     your authenticator, you can use a backup code to sign in.
@@ -1365,7 +1365,7 @@ export function Component() {
                     onClick={() => twoFaDownloadCodes(twoFaBackupCodes)}
                     className="flex items-center gap-2"
                   >
-                    <Download className="size-3.5" />
+                    <Download className="size-4" />
                     Download Backup Codes
                   </Button>
                   <Button
@@ -1375,7 +1375,7 @@ export function Component() {
                     onClick={() => twoFaCopyAll(twoFaBackupCodes)}
                     className="flex items-center gap-2"
                   >
-                    {twoFaCopied ? <Check className="size-3.5 text-pf-success" /> : <Copy className="size-3.5" />}
+                    {twoFaCopied ? <Check className="size-4 text-pf-success" /> : <Copy className="size-4" />}
                     {twoFaCopied ? 'Copied!' : 'Copy All'}
                   </Button>
                 </div>
@@ -1404,7 +1404,7 @@ export function Component() {
               <div className="space-y-3">
                 <div>
                   <p className="text-sm font-medium text-pf-text">Backup Codes</p>
-                  <p className="text-xs text-pf-text-secondary mt-0.5">
+                  <p className="text-xs text-pf-text-secondary mt-1">
                     Generate a new set of backup codes. Your old codes will be invalidated immediately.
                   </p>
                 </div>
@@ -1421,8 +1421,8 @@ export function Component() {
 
                 {twoFaRegenCodes.length > 0 && (
                   <div className="p-4 bg-pf-warning/5 border border-pf-warning/30 rounded-pf space-y-3">
-                    <p className="text-xs text-pf-warning font-medium flex items-center gap-1.5">
-                      <KeyRound className="size-3.5" />
+                    <p className="text-xs text-pf-warning font-medium flex items-center gap-2">
+                      <KeyRound className="size-4" />
                       New backup codes — save these now, they won't be shown again
                     </p>
                     <div className="grid grid-cols-2 gap-2">
@@ -1440,7 +1440,7 @@ export function Component() {
                         onClick={() => twoFaDownloadCodes(twoFaRegenCodes)}
                         className="flex items-center gap-2"
                       >
-                        <Download className="size-3.5" />
+                        <Download className="size-4" />
                         Download
                       </Button>
                       <Button
@@ -1450,7 +1450,7 @@ export function Component() {
                         onClick={() => twoFaCopyAll(twoFaRegenCodes)}
                         className="flex items-center gap-2"
                       >
-                        {twoFaCopied ? <Check className="size-3.5 text-pf-success" /> : <Copy className="size-3.5" />}
+                        {twoFaCopied ? <Check className="size-4 text-pf-success" /> : <Copy className="size-4" />}
                         {twoFaCopied ? 'Copied!' : 'Copy All'}
                       </Button>
                     </div>
@@ -1549,13 +1549,13 @@ export function Component() {
 
               {/* Usage bar */}
               <div>
-                <div className="flex justify-between text-xs text-pf-text-secondary mb-1.5">
+                <div className="flex justify-between text-xs text-pf-text-secondary mb-2">
                   <span>Usage</span>
                   <span>{((gasUsage.todayUsage / gasUsage.dailyLimit) * 100).toFixed(1)}%</span>
                 </div>
                 <div className="w-full h-2 bg-pf-overlay rounded-pf-full overflow-hidden">
                   <div
-                    className={`h-full rounded-pf-full transition-all duration-500 ${
+                    className={`h-full rounded-pf-full transition-all duration-300 ${
                       gasUsage.todayUsage / gasUsage.dailyLimit > 0.8 ? 'bg-pf-danger' : 'bg-pf-cyan-500'
                     }`}
                     style={{ width: `${Math.min(100, (gasUsage.todayUsage / gasUsage.dailyLimit) * 100)}%` }}
@@ -1592,10 +1592,10 @@ export function Component() {
           {/* Circuit Breaker Tripped Banner */}
           {circuitBreakerTripped && (
             <div className="flex items-start gap-3 p-4 rounded-pf-lg bg-pf-danger/10 border border-pf-danger/30">
-              <ShieldAlert className="size-5 text-pf-danger shrink-0 mt-0.5" />
+              <ShieldAlert className="size-5 text-pf-danger shrink-0 mt-1" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-pf-danger">Circuit Breaker Tripped</p>
-                <p className="text-xs text-pf-text-secondary mt-0.5">
+                <p className="text-xs text-pf-text-secondary mt-1">
                   All running strategies were paused due to drawdown exceeding your threshold.
                   {circuitBreakerTrippedAt && (
                     <span> Triggered {new Date(circuitBreakerTrippedAt).toLocaleString()}.</span>
@@ -1608,7 +1608,7 @@ export function Component() {
                 size="sm"
                 onClick={resetCircuitBreaker}
                 disabled={riskResetting}
-                className="flex items-center gap-1.5 shrink-0"
+                className="flex items-center gap-2 shrink-0"
               >
                 {riskResetting ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3" />}
                 Reset
@@ -1631,7 +1631,7 @@ export function Component() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-pf-text font-medium">Enable Circuit Breaker</p>
-                <p className="text-xs text-pf-text-muted mt-0.5">Pause all strategies when drawdown threshold is hit</p>
+                <p className="text-xs text-pf-text-muted mt-1">Pause all strategies when drawdown threshold is hit</p>
               </div>
               <Button
                 type="button"
@@ -1651,7 +1651,7 @@ export function Component() {
 
             {/* Lookback window */}
             <div>
-              <label htmlFor="settings-lookback" className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="settings-lookback" className="text-xs text-pf-text-secondary mb-2 block">
                 Lookback Window
               </label>
               <Select
@@ -1671,7 +1671,7 @@ export function Component() {
 
             {/* Threshold */}
             <div>
-              <label htmlFor="settings-threshold" className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="settings-threshold" className="text-xs text-pf-text-secondary mb-2 block">
                 Loss Threshold: <span className="font-mono text-pf-danger">{drawdownThresholdPct}%</span>
               </label>
               <input
@@ -1721,7 +1721,7 @@ export function Component() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-pf-text font-medium">Enable Risk Controls</p>
-                <p className="text-xs text-pf-text-muted mt-0.5">When off, all limits below are ignored</p>
+                <p className="text-xs text-pf-text-muted mt-1">When off, all limits below are ignored</p>
               </div>
               <Button
                 type="button"
@@ -1741,7 +1741,7 @@ export function Component() {
 
             {/* Daily Loss Limit input */}
             <div>
-              <label htmlFor="settings-dl-limit" className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="settings-dl-limit" className="text-xs text-pf-text-secondary mb-2 block">
                 Daily Loss Limit (USDC)
               </label>
               <Input
@@ -1755,14 +1755,14 @@ export function Component() {
                 disabled={!dlEnabled}
                 className="w-full"
               />
-              <p className="text-xs text-pf-text-muted mt-1.5">
+              <p className="text-xs text-pf-text-muted mt-2">
                 Trading is paused automatically if your daily P&amp;L drops below this threshold.
               </p>
             </div>
 
             {/* Max Position Size input */}
             <div>
-              <label htmlFor="settings-dl-position" className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="settings-dl-position" className="text-xs text-pf-text-secondary mb-2 block">
                 Max Position Size (USDC)
               </label>
               <Input
@@ -1776,12 +1776,12 @@ export function Component() {
                 disabled={!dlEnabled}
                 className="w-full"
               />
-              <p className="text-xs text-pf-text-muted mt-1.5">Maximum size for any single position.</p>
+              <p className="text-xs text-pf-text-muted mt-2">Maximum size for any single position.</p>
             </div>
 
             {/* Max Open Positions input */}
             <div>
-              <label htmlFor="settings-dl-open" className="text-xs text-pf-text-secondary mb-1.5 block">
+              <label htmlFor="settings-dl-open" className="text-xs text-pf-text-secondary mb-2 block">
                 Max Open Positions
               </label>
               <Input
@@ -1796,7 +1796,7 @@ export function Component() {
                 disabled={!dlEnabled}
                 className="w-full"
               />
-              <p className="text-xs text-pf-text-muted mt-1.5">Maximum number of concurrent open positions (1–50).</p>
+              <p className="text-xs text-pf-text-muted mt-2">Maximum number of concurrent open positions (1–50).</p>
             </div>
 
             <div className="flex justify-end pt-2 border-t border-pf-border">
@@ -1822,7 +1822,7 @@ export function Component() {
           <div className="space-y-4">
             <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Generate API Key</h2>
             <div>
-              <label htmlFor="settings-key-name" className="text-xs text-pf-text-secondary mb-1.5 block">Key Name</label>
+              <label htmlFor="settings-key-name" className="text-xs text-pf-text-secondary mb-2 block">Key Name</label>
               <Input id="settings-key-name" value={newKeyName} onChange={e => setNewKeyName(e.target.value)} placeholder="My Integration" className="w-full" />
             </div>
             <div>
@@ -1833,7 +1833,7 @@ export function Component() {
                 {SCOPES.map(scope => {
                   const checked = newKeyScopes.has(scope.value);
                   return (
-                    <label key={scope.value} className={`flex items-start gap-2.5 p-2.5 rounded-pf border cursor-pointer transition-colors ${
+                    <label key={scope.value} className={`flex items-start gap-3 p-3 rounded-pf border cursor-pointer transition-colors ${
                       checked ? 'border-pf-cyan-500/50 bg-pf-cyan-500/5' : 'border-pf-border bg-pf-surface hover:border-pf-border-muted'
                     }`}>
                       <input
@@ -1844,7 +1844,7 @@ export function Component() {
                           if (e.target.checked) next.add(scope.value); else next.delete(scope.value);
                           return next;
                         })}
-                        className="mt-0.5 rounded border-pf-border shrink-0"
+                        className="mt-1 rounded border-pf-border shrink-0"
                       />
                       <div>
                         <span className={`text-xs font-medium block ${scopeBadgeClass(scope.value).split(' ')[1]}`}>{scope.label}</span>
@@ -1859,7 +1859,7 @@ export function Component() {
               )}
             </div>
             <div>
-              <label htmlFor="settings-key-expiration" className="text-xs text-pf-text-secondary mb-1.5 block">Expiration (optional)</label>
+              <label htmlFor="settings-key-expiration" className="text-xs text-pf-text-secondary mb-2 block">Expiration (optional)</label>
               <Input id="settings-key-expiration" type="date" lang="en" value={newKeyExpiration} onChange={e => setNewKeyExpiration(e.target.value)} className="w-full max-w-[220px]" />
             </div>
             <Button type="button" variant="default" onClick={createApiKey} disabled={apiKeysCreating || !newKeyName.trim() || newKeyScopes.size === 0} className="flex items-center gap-2">
@@ -1872,15 +1872,15 @@ export function Component() {
           {(createdKey?.secret || createdKey?.key || createdKey?.token) && (
             <div className="space-y-2">
               <div className="bg-pf-warning/10 border border-pf-warning/30 rounded-pf p-3 space-y-2">
-                <p className="text-xs text-pf-warning font-medium flex items-center gap-1.5">
-                  <Shield className="size-3.5 shrink-0" />
+                <p className="text-xs text-pf-warning font-medium flex items-center gap-2">
+                  <Shield className="size-4 shrink-0" />
                   Copy this secret now — it won&apos;t be shown again
                 </p>
                 <code className="block font-mono text-sm text-pf-warning break-all">
                   {createdKey.secret ?? createdKey.token ?? createdKey.key}
                 </code>
                 <div className="flex items-center gap-2 pt-1">
-                  <Button type="button" variant="secondary" size="sm" onClick={() => copyKey((createdKey.secret ?? createdKey.token ?? createdKey.key)!)} className="flex items-center gap-1.5">
+                  <Button type="button" variant="secondary" size="sm" onClick={() => copyKey((createdKey.secret ?? createdKey.token ?? createdKey.key)!)} className="flex items-center gap-2">
                     <Copy className="size-3" /> Copy Secret
                   </Button>
                   <Button type="button" variant="ghost" size="sm" onClick={() => setCreatedKey(null)}>
@@ -1895,13 +1895,13 @@ export function Component() {
           {rotatedSecret && (
             <div className="space-y-2">
               <div className="bg-pf-warning/10 border border-pf-warning/30 rounded-pf p-3 space-y-2">
-                <p className="text-xs text-pf-warning font-medium flex items-center gap-1.5">
-                  <RotateCcw className="size-3.5 shrink-0" />
+                <p className="text-xs text-pf-warning font-medium flex items-center gap-2">
+                  <RotateCcw className="size-4 shrink-0" />
                   New secret — copy it now, it won&apos;t be shown again
                 </p>
                 <code className="block font-mono text-sm text-pf-warning break-all">{rotatedSecret.secret}</code>
                 <div className="flex items-center gap-2 pt-1">
-                  <Button type="button" variant="secondary" size="sm" onClick={() => copySecret(rotatedSecret.secret)} className="flex items-center gap-1.5">
+                  <Button type="button" variant="secondary" size="sm" onClick={() => copySecret(rotatedSecret.secret)} className="flex items-center gap-2">
                     {secretCopied ? <><Check className="size-3" /> Copied!</> : <><Copy className="size-3" /> Copy Secret</>}
                   </Button>
                   <Button type="button" variant="ghost" size="sm" onClick={() => { setRotatedSecret(null); setSecretCopied(false); }}>
@@ -1948,7 +1948,7 @@ export function Component() {
                         <tr key={key.id} className="align-top">
                           <td className="py-3 pr-4 text-pf-text font-medium">{key.name}</td>
                           <td className="py-3 pr-4">
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-2">
                               <code className="font-mono text-xs text-pf-text-secondary">{displayPrefix}</code>
                               <Button
                                 type="button"
@@ -1967,7 +1967,7 @@ export function Component() {
                           <td className="py-3 pr-4">
                             <div className="flex flex-wrap gap-1">
                               {key.scopes.map(scope => (
-                                <span key={scope} className={`text-pf-caption px-1.5 py-0.5 rounded font-medium ${scopeBadgeClass(scope)}`}>
+                                <span key={scope} className={`text-pf-caption px-2 py-1 rounded font-medium ${scopeBadgeClass(scope)}`}>
                                   {scope}
                                 </span>
                               ))}
@@ -1989,9 +1989,9 @@ export function Component() {
                           </td>
                           <td className="py-3 pr-4">
                             {key.revoked || key.active === false ? (
-                              <span className="text-pf-caption px-1.5 py-0.5 rounded font-medium bg-pf-danger/10 text-pf-danger">Revoked</span>
+                              <span className="text-pf-caption px-2 py-1 rounded font-medium bg-pf-danger/10 text-pf-danger">Revoked</span>
                             ) : (
-                              <span className="text-pf-caption px-1.5 py-0.5 rounded font-medium bg-pf-success/10 text-pf-success">Active</span>
+                              <span className="text-pf-caption px-2 py-1 rounded font-medium bg-pf-success/10 text-pf-success">Active</span>
                             )}
                           </td>
                           <td className="py-3">
@@ -2006,8 +2006,8 @@ export function Component() {
                                 title="Rotate key"
                               >
                                 {rotatingKeyId === key.id
-                                  ? <Loader2 className="size-3.5 animate-spin" />
-                                  : <RotateCcw className="size-3.5" />}
+                                  ? <Loader2 className="size-4 animate-spin" />
+                                  : <RotateCcw className="size-4" />}
                               </Button>
                               <Button
                                 type="button"
@@ -2018,7 +2018,7 @@ export function Component() {
                                 aria-label={`Revoke API key ${key.name}`}
                                 title="Revoke key"
                               >
-                                <Trash2 className="size-3.5" />
+                                <Trash2 className="size-4" />
                               </Button>
                             </div>
                           </td>
@@ -2039,7 +2039,7 @@ export function Component() {
           <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
             <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Add Webhook</h2>
             <div>
-              <label htmlFor="webhook-url" className="text-xs text-pf-text-secondary mb-1.5 block">HTTPS URL</label>
+              <label htmlFor="webhook-url" className="text-xs text-pf-text-secondary mb-2 block">HTTPS URL</label>
               <Input
                 id="webhook-url"
                 type="url"
@@ -2065,7 +2065,7 @@ export function Component() {
                       onClick={() => setWebhookEvents(prev =>
                         checked ? prev.filter(e => e !== event) : [...prev, event]
                       )}
-                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-pf text-xs font-medium border transition-colors text-left ${
+                      className={`flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium border transition-colors text-left ${
                         checked
                           ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                           : 'bg-pf-surface text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -2132,14 +2132,14 @@ export function Component() {
                             {wh.url.length > 50 ? `${wh.url.slice(0, 47)}…` : wh.url}
                           </div>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-pf-caption px-1.5 py-0.5 rounded font-medium bg-pf-overlay text-pf-text-secondary border border-pf-border">
+                            <span className="text-pf-caption px-2 py-1 rounded font-medium bg-pf-overlay text-pf-text-secondary border border-pf-border">
                               {wh.events.length} event{wh.events.length !== 1 ? 's' : ''}
                             </span>
-                            <span className={`text-pf-caption px-1.5 py-0.5 rounded font-medium ${wh.active ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-overlay text-pf-text-muted'}`}>
+                            <span className={`text-pf-caption px-2 py-1 rounded font-medium ${wh.active ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-overlay text-pf-text-muted'}`}>
                               {wh.active ? 'Active' : 'Inactive'}
                             </span>
                             {wh.failureCount > 0 && (
-                              <span className="text-pf-caption px-1.5 py-0.5 rounded font-medium bg-pf-danger/10 text-pf-danger">
+                              <span className="text-pf-caption px-2 py-1 rounded font-medium bg-pf-danger/10 text-pf-danger">
                                 {wh.failureCount} failure{wh.failureCount !== 1 ? 's' : ''}
                               </span>
                             )}
@@ -2155,10 +2155,10 @@ export function Component() {
                             aria-label={`${isExpanded ? 'Hide' : 'Show'} deliveries for ${wh.url}`}
                             className="relative flex items-center gap-1"
                           >
-                            <History className="size-3.5" />
+                            <History className="size-4" />
                             Deliveries
                             {recentFailures > 0 && (
-                              <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-4 px-0.5 rounded-pf-full bg-pf-danger text-white text-pf-micro font-bold leading-none">
+                              <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-pf-full bg-pf-danger text-white text-pf-micro font-bold leading-none">
                                 {recentFailures}
                               </span>
                             )}
@@ -2173,7 +2173,7 @@ export function Component() {
                             aria-label={`Test webhook ${wh.url}`}
                             className="flex items-center gap-1"
                           >
-                            {webhookTesting === wh.id ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+                            {webhookTesting === wh.id ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                             Test
                           </Button>
                           <Button
@@ -2192,7 +2192,7 @@ export function Component() {
                       {isExpanded && (
                         <div className="bg-pf-surface/50 border-t border-pf-border-subtle rounded-b-pf-lg">
                           {/* Panel header */}
-                          <div className="flex items-center justify-between px-4 py-2.5 border-b border-pf-border-subtle">
+                          <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
                             <span className="text-xs font-semibold text-pf-text uppercase tracking-wider">Recent Deliveries</span>
                             <Button
                               type="button"
@@ -2201,7 +2201,7 @@ export function Component() {
                               onClick={() => { setExpandedWebhookId(null); setExpandedDeliveryId(null); }}
                               aria-label="Close deliveries"
                             >
-                              <X className="size-3.5" />
+                              <X className="size-4" />
                             </Button>
                           </div>
 
@@ -2242,12 +2242,12 @@ export function Component() {
                                             {relativeTime(del.attemptedAt)}
                                           </td>
                                           <td className="px-4 py-2">
-                                            <span className="px-1.5 py-0.5 rounded font-mono bg-pf-overlay text-pf-text-secondary border border-pf-border">
+                                            <span className="px-2 py-1 rounded font-mono bg-pf-overlay text-pf-text-secondary border border-pf-border">
                                               {del.event}
                                             </span>
                                           </td>
                                           <td className="px-4 py-2">
-                                            <span className={`px-1.5 py-0.5 rounded font-medium ${statusClass}`}>
+                                            <span className={`px-2 py-1 rounded font-medium ${statusClass}`}>
                                               {del.statusCode ?? 'Failed'}
                                             </span>
                                           </td>
@@ -2264,7 +2264,7 @@ export function Component() {
                                                 aria-label="View request/response"
                                                 className="flex items-center gap-1"
                                               >
-                                                <Code className="size-3.5" />
+                                                <Code className="size-4" />
                                                 View
                                               </Button>
                                               {!del.success && (
@@ -2276,7 +2276,7 @@ export function Component() {
                                                   aria-label="Retry delivery"
                                                   className="flex items-center gap-1"
                                                 >
-                                                  <RefreshCw className="size-3.5" />
+                                                  <RefreshCw className="size-4" />
                                                   Retry
                                                 </Button>
                                               )}
@@ -2329,7 +2329,7 @@ export function Component() {
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold text-pf-text">Active Sessions</h2>
-                  <p className="text-xs text-pf-text-muted mt-0.5">
+                  <p className="text-xs text-pf-text-muted mt-1">
                     {sessionsLoading ? 'Loading…' : `${sessions.length} session${sessions.length !== 1 ? 's' : ''} total`}
                   </p>
                 </div>
@@ -2342,7 +2342,7 @@ export function Component() {
                 disabled={revokingAll || sessions.filter(s => !s.isCurrent).length === 0}
                 className="flex items-center gap-2"
               >
-                {revokingAll ? <Loader2 className="size-3.5 animate-spin" /> : <LogOut className="size-3.5" />}
+                {revokingAll ? <Loader2 className="size-4 animate-spin" /> : <LogOut className="size-4" />}
                 Revoke All Other Sessions
               </Button>
             </div>
@@ -2356,7 +2356,7 @@ export function Component() {
                   <div key={i} className="flex items-start gap-3 py-3 animate-pulse">
                     <div className="size-9 rounded-pf bg-pf-overlay shrink-0" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-3.5 bg-pf-overlay rounded w-40" />
+                      <div className="h-4 bg-pf-overlay rounded w-40" />
                       <div className="h-3 bg-pf-overlay rounded w-28" />
                       <div className="h-3 bg-pf-overlay rounded w-24" />
                     </div>
@@ -2372,7 +2372,7 @@ export function Component() {
               <div className="divide-y divide-pf-border-subtle">
                 {sessions.map(session => (
                   <div key={session.id} className="flex items-start gap-3 py-3">
-                    <div className="size-9 rounded-pf bg-pf-overlay flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="size-9 rounded-pf bg-pf-overlay flex items-center justify-center shrink-0 mt-1">
                       {isMobileDevice(session.deviceName)
                         ? <Smartphone className="size-4 text-pf-text-secondary" />
                         : <Monitor className="size-4 text-pf-text-secondary" />
@@ -2382,19 +2382,19 @@ export function Component() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium text-pf-text">{session.deviceName}</span>
                         {session.isCurrent && (
-                          <span className="text-pf-success bg-pf-success/10 text-xs px-2 py-0.5 rounded-pf-full">
+                          <span className="text-pf-success bg-pf-success/10 text-xs px-2 py-1 rounded-pf-full">
                             Current Session
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-pf-text-muted mt-0.5">{session.ipAddress}</p>
+                      <p className="text-xs text-pf-text-muted mt-1">{session.ipAddress}</p>
                       {session.location && (
-                        <p className="flex items-center gap-1 text-xs text-pf-text-muted mt-0.5">
+                        <p className="flex items-center gap-1 text-xs text-pf-text-muted mt-1">
                           <MapPin className="size-3 shrink-0" />
                           {session.location}
                         </p>
                       )}
-                      <p className="text-xs text-pf-text-muted mt-0.5">
+                      <p className="text-xs text-pf-text-muted mt-1">
                         Last active: {sessionRelativeTime(session.lastActiveAt)}
                       </p>
                     </div>
@@ -2405,7 +2405,7 @@ export function Component() {
                         size="sm"
                         onClick={() => revokeSession(session.id)}
                         disabled={revokingSessionId === session.id}
-                        className="flex items-center gap-1.5 shrink-0 mt-0.5"
+                        className="flex items-center gap-2 shrink-0 mt-1"
                       >
                         {revokingSessionId === session.id ? <Loader2 className="size-3 animate-spin" /> : <LogOut className="size-3" />}
                         Revoke

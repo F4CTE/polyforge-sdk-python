@@ -146,7 +146,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onBlur={(e) => setName(e.target.value)}
               placeholder="My Strategy"
               aria-required="true"
-              className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
             />
           </div>
 
@@ -162,7 +162,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onBlur={(e) => setDescription(e.target.value)}
               placeholder="What does this strategy do?"
               aria-label="Strategy description"
-              className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors resize-none"
+              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors resize-none"
             />
           </div>
 
@@ -175,7 +175,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               value={execMode}
               onChange={(e) => setExecMode(e.target.value)}
               aria-label="Execution mode"
-              className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
             >
               <option value="TICK">Tick - evaluate on timer</option>
               <option value="EVENT">Event - evaluate on price change</option>
@@ -197,7 +197,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 placeholder="1000"
                 min={200}
                 aria-label="Tick interval in milliseconds"
-                className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
               />
             </div>
           )}
@@ -211,7 +211,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               value={visibility}
               onChange={(e) => setVisibility(e.target.value)}
               aria-label="Strategy visibility"
-              className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
             >
               <option value="PRIVATE">Private</option>
               <option value="UNLISTED">Unlisted</option>
@@ -231,7 +231,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onBlur={(e) => setTags(e.target.value)}
               placeholder="momentum, politics"
               aria-label="Strategy tags, comma-separated"
-              className="w-full px-2.5 py-1.5 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
             />
           </div>
         </div>
@@ -266,7 +266,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                   {meta.label}
                   {count > 0 && (
                     <span
-                      className="ml-0.5 px-1 py-px rounded-pf-full text-pf-micro font-semibold leading-none"
+                      className="ml-1 px-1 py-px rounded-pf-full text-pf-micro font-semibold leading-none"
                       style={{
                         backgroundColor: isActive ? 'color-mix(in srgb, var(--color-pf-text) 25%, transparent)' : meta.color + '30',
                         color: isActive ? 'white' : meta.color,
@@ -296,7 +296,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 onClick={addVariable}
                 className="flex items-center gap-2 w-full px-3 py-2 rounded-pf-sm text-xs font-medium text-white transition-colors hover:opacity-90 bg-pf-purple-500"
               >
-                <Plus className="size-3.5" />
+                <Plus className="size-4" />
                 Add Variable
               </button>
               {sectionCount('variables') > 0 && (
@@ -309,14 +309,14 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
             <div className="space-y-1">
               {/* Search input */}
               <div className="relative mb-2">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-pf-text-muted" />
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
                 <input
                   type="text"
                   placeholder="Search blocks..."
                   value={paletteSearch}
                   onChange={e => setPaletteSearch(e.target.value)}
                   aria-label="Search blocks"
-                  className="w-full pl-7 pr-2 py-1.5 text-xs bg-pf-surface border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                  className="w-full pl-7 pr-2 py-2 text-xs bg-pf-surface border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
                 />
               </div>
               {(() => {
@@ -343,15 +343,15 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                     onDragStart={(e) => onDragStart(e, def, activeSection as BlockSection)}
                     onClick={() => onBlockClick(def)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onBlockClick(def); } }}
-                    className="group flex items-start gap-2 px-2.5 py-2 rounded-pf-sm cursor-pointer hover:bg-pf-overlay/60 transition-colors border border-transparent hover:border-pf-border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                    className="group flex items-start gap-2 px-3 py-2 rounded-pf-sm cursor-pointer hover:bg-pf-overlay/60 transition-colors border border-transparent hover:border-pf-border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
                   >
-                    <GripVertical className="size-3 text-pf-text-muted/40 mt-0.5 shrink-0 cursor-grab group-hover:text-pf-text-muted" />
+                    <GripVertical className="size-3 text-pf-text-muted/40 mt-1 shrink-0 cursor-grab group-hover:text-pf-text-muted" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-pf-text">{def.label}</span>
                         <ChevronRight className="size-3 text-pf-text-muted/0 group-hover:text-pf-text-muted/60 transition-all" />
                       </div>
-                      <p className="text-pf-caption text-pf-text-muted leading-snug mt-0.5">
+                      <p className="text-pf-caption text-pf-text-muted leading-snug mt-1">
                         {def.description}
                       </p>
                     </div>

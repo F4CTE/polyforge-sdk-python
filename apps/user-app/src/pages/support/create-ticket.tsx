@@ -73,7 +73,7 @@ export function Component() {
           variant="ghost"
           size="icon"
           onClick={() => navigate('/support')}
-          className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+          className="p-2 rounded-pf text-pf-text-muted hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
           aria-label="Back to support"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
@@ -84,7 +84,7 @@ export function Component() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
         <div>
-          <label htmlFor="ticket-subject" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Subject</label>
+          <label htmlFor="ticket-subject" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-2 block">Subject</label>
           <Input
             id="ticket-subject"
             type="text"
@@ -101,7 +101,7 @@ export function Component() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="ticket-category" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Category</label>
+            <label htmlFor="ticket-category" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-2 block">Category</label>
             <Select
               id="ticket-category"
               value={category}
@@ -112,7 +112,7 @@ export function Component() {
             </Select>
           </div>
           <div>
-            <label htmlFor="ticket-priority" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Priority</label>
+            <label htmlFor="ticket-priority" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-2 block">Priority</label>
             <Select
               id="ticket-priority"
               value={priority}
@@ -125,7 +125,7 @@ export function Component() {
         </div>
 
         <div>
-          <label htmlFor="ticket-body" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Description</label>
+          <label htmlFor="ticket-body" className="text-xs text-pf-text-secondary uppercase tracking-wider mb-2 block">Description</label>
           <Textarea
             id="ticket-body"
             value={body}
@@ -135,7 +135,7 @@ export function Component() {
             rows={6}
             aria-required="true"
             aria-describedby={bodyError ? 'ticket-body-error' : undefined}
-            className={`w-full px-3 py-2.5 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors resize-y ${bodyError ? 'border-pf-danger/50' : 'border-pf-border'}`}
+            className={`w-full px-3 py-3 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors resize-y ${bodyError ? 'border-pf-danger/50' : 'border-pf-border'}`}
           />
           {bodyError && <p id="ticket-body-error" className="mt-1 text-xs text-pf-danger">{bodyError}</p>}
         </div>
@@ -148,7 +148,7 @@ export function Component() {
           <Button
             type="submit"
             disabled={!canSubmit}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            className="flex items-center gap-2 px-5 py-3 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
           >
             {submitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             Submit Ticket

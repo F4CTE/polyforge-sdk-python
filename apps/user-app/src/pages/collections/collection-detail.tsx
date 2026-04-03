@@ -37,9 +37,9 @@ interface Listing {
 function ListingSkeleton() {
   return (
     <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
-      <div className="h-3.5 bg-pf-overlay rounded w-[60%]" />
-      <div className="h-2.5 bg-pf-overlay rounded w-[90%]" />
-      <div className="h-2.5 bg-pf-overlay rounded w-[75%]" />
+      <div className="h-4 bg-pf-overlay rounded w-[60%]" />
+      <div className="h-3 bg-pf-overlay rounded w-[90%]" />
+      <div className="h-3 bg-pf-overlay rounded w-[75%]" />
       <div className="flex gap-2 mt-2">
         <div className="h-7 flex-1 bg-pf-overlay rounded" />
         <div className="h-7 flex-1 bg-pf-overlay rounded" />
@@ -84,7 +84,7 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/collections"
-        className="inline-flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+        className="inline-flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
       >
         <ChevronLeft className="size-4" aria-hidden="true" />
         All Collections
@@ -97,7 +97,7 @@ export function Component() {
             <div className="size-14 bg-pf-overlay rounded-xl" />
             <div className="space-y-2 flex-1">
               <div className="h-6 bg-pf-overlay rounded w-[40%]" />
-              <div className="h-3.5 bg-pf-overlay rounded w-[60%]" />
+              <div className="h-4 bg-pf-overlay rounded w-[60%]" />
             </div>
           </div>
         </div>
@@ -111,11 +111,11 @@ export function Component() {
             <p className="text-sm text-pf-text-muted mt-1 max-w-prose">{collection.description}</p>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-pf-text-secondary mt-3">
               <span className="flex items-center gap-1">
-                <Library className="size-3.5" aria-hidden="true" />
+                <Library className="size-4" aria-hidden="true" />
                 {collection.listingCount} strategies
               </span>
               <span className="flex items-center gap-1">
-                <Star className="size-3.5" aria-hidden="true" />
+                <Star className="size-4" aria-hidden="true" />
                 Avg win rate {collection.avgWinRate}%
               </span>
               <span>${collection.totalVolume} total volume</span>
@@ -145,7 +145,7 @@ export function Component() {
               {listings.map(listing => (
                 <div
                   key={listing.id}
-                  className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-0.5 transition-all duration-200 flex flex-col"
+                  className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 transition-all duration-200 flex flex-col"
                 >
                   {/* Seller */}
                   <div className="flex items-center gap-2 mb-2">
@@ -172,10 +172,10 @@ export function Component() {
                   <div className="flex flex-wrap gap-2 text-pf-label text-pf-text-secondary mb-3">
                     {listing.winRate != null && <span>{listing.winRate}% win</span>}
                     {listing.tradeCount != null && <span>{listing.tradeCount} trades</span>}
-                    <span className="flex items-center gap-0.5 ml-auto">
+                    <span className="flex items-center gap-1 ml-auto">
                       <GitFork className="size-3" aria-hidden="true" /> {listing.forkCount}
                     </span>
-                    <span className="flex items-center gap-0.5">
+                    <span className="flex items-center gap-1">
                       <Star className="size-3" aria-hidden="true" /> {listing.likeCount}
                     </span>
                   </div>
@@ -184,13 +184,13 @@ export function Component() {
                   <div className="flex gap-2 mt-auto">
                     <Link
                       to={`/marketplace/${listing.id}`}
-                      className="flex-1 text-center py-1.5 rounded-pf-sm text-xs font-medium border border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text transition-colors"
+                      className="flex-1 text-center py-2 rounded-pf-sm text-xs font-medium border border-pf-border text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text transition-colors"
                     >
                       View
                     </Link>
                     <Link
                       to={`/marketplace/${listing.id}?action=fork`}
-                      className="flex-1 text-center py-1.5 rounded-pf-sm text-xs font-medium border border-pf-cyan-500/40 text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors flex items-center justify-center gap-1"
+                      className="flex-1 text-center py-2 rounded-pf-sm text-xs font-medium border border-pf-cyan-500/40 text-pf-cyan-400 hover:bg-pf-cyan-500/10 transition-colors flex items-center justify-center gap-1"
                     >
                       <GitFork className="size-3" aria-hidden="true" /> Fork
                     </Link>

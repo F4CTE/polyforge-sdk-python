@@ -236,10 +236,10 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
     >
       {/* Header */}
       <div className="flex items-start gap-2">
-        <Icon size={18} className={`${definition.iconColor} shrink-0 mt-0.5`} aria-hidden="true" />
+        <Icon size={18} className={`${definition.iconColor} shrink-0 mt-1`} aria-hidden="true" />
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-pf-text">{definition.label}</h3>
-          <p className="text-xs text-pf-text-muted mt-0.5 leading-snug">{definition.description}</p>
+          <p className="text-xs text-pf-text-muted mt-1 leading-snug">{definition.description}</p>
         </div>
       </div>
 
@@ -251,7 +251,7 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
         <span className="text-xs text-pf-text-muted">
           {stats.pctOfTotal.toFixed(1)}% of total
         </span>
-        <span className={`ml-auto flex items-center gap-0.5 text-xs font-medium ${trendColor}`}>
+        <span className={`ml-auto flex items-center gap-1 text-xs font-medium ${trendColor}`}>
           <TrendIcon size={13} aria-hidden="true" />
           {stats.trendPct > 0 ? '+' : ''}{stats.trendPct.toFixed(1)}%
         </span>
@@ -263,7 +263,7 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
           <span>Retention</span>
           <span>{stats.retentionRate}%</span>
         </div>
-        <div className="h-1.5 w-full rounded-pf-full bg-pf-overlay overflow-hidden">
+        <div className="h-2 w-full rounded-pf-full bg-pf-overlay overflow-hidden">
           <div
             className="h-full rounded-pf-full bg-pf-cyan-400 transition-all"
             style={{ width: `${stats.retentionRate}%` }}
@@ -282,7 +282,7 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
           type="button"
           variant="ghost"
           onClick={() => onViewUsers(definition.id)}
-          className="flex-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 hover:bg-pf-cyan-500/20 border border-pf-cyan-400/20 transition-colors"
+          className="flex-1 px-3 py-2 rounded-pf text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 hover:bg-pf-cyan-500/20 border border-pf-cyan-400/20 transition-colors"
         >
           View Users
         </Button>
@@ -290,7 +290,7 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
           type="button"
           variant="ghost"
           onClick={() => onBroadcast(definition.id)}
-          className="flex-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-overlay text-pf-text-secondary hover:text-pf-text hover:bg-pf-border border border-pf-border transition-colors"
+          className="flex-1 px-3 py-2 rounded-pf text-xs font-medium bg-pf-overlay text-pf-text-secondary hover:text-pf-text hover:bg-pf-border border border-pf-border transition-colors"
         >
           Send Broadcast
         </Button>
@@ -371,7 +371,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
         type="button"
         variant="ghost"
         onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors rounded-pf-sm"
+        className="inline-flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors rounded-pf-sm"
       >
         <ChevronLeft size={16} aria-hidden="true" />
         All Cohorts
@@ -400,7 +400,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
           ].map((item) => (
             <div key={item.label} className="rounded-pf-lg bg-pf-elevated border border-pf-border px-4 py-3">
               <div className="text-pf-label text-pf-text-muted uppercase tracking-wide">{item.label}</div>
-              <div className="text-lg font-bold text-pf-text mt-0.5 tabular-nums">{item.value}</div>
+              <div className="text-lg font-bold text-pf-text mt-1 tabular-nums">{item.value}</div>
             </div>
           ))}
         </div>
@@ -426,7 +426,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
             variant="ghost"
             onClick={handleExportCsv}
             disabled={users.length === 0}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf text-xs font-medium text-pf-text-secondary hover:text-pf-text bg-pf-overlay hover:bg-pf-border border border-pf-border transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-pf text-xs font-medium text-pf-text-secondary hover:text-pf-text bg-pf-overlay hover:bg-pf-border border border-pf-border transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Download size={13} aria-hidden="true" />
             Export CSV
@@ -437,22 +437,22 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-pf-border bg-pf-surface">
-                <th className="px-4 py-2.5 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
                   Username
                 </th>
-                <th className="px-4 py-2.5 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
                   Email
                 </th>
-                <th className="px-4 py-2.5 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
                   Joined
                 </th>
-                <th className="px-4 py-2.5 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
                   Last Active
                 </th>
-                <th className="px-4 py-2.5 text-right text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-3 text-right text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
                   Trades
                 </th>
-                <th className="px-4 py-2.5 text-right text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
+                <th className="px-4 py-3 text-right text-pf-label font-semibold text-pf-text-muted uppercase tracking-wide">
                   Volume
                 </th>
               </tr>
@@ -509,7 +509,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
                 variant="ghost"
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page <= 1}
-                className="px-3 py-1.5 rounded-pf-sm text-xs text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay border border-pf-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-2 rounded-pf-sm text-xs text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay border border-pf-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </Button>
@@ -518,7 +518,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
                 variant="ghost"
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page >= totalPages}
-                className="px-3 py-1.5 rounded-pf-sm text-xs text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay border border-pf-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-2 rounded-pf-sm text-xs text-pf-text-secondary hover:text-pf-text hover:bg-pf-overlay border border-pf-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </Button>
@@ -619,10 +619,10 @@ export function Component() {
     <div className="p-6 space-y-6 animate-fade-in">
       {/* Page Header */}
       <div className="flex items-start gap-3">
-        <PieChart size={24} className="text-pf-cyan-400 shrink-0 mt-0.5" aria-hidden="true" />
+        <PieChart size={24} className="text-pf-cyan-400 shrink-0 mt-1" aria-hidden="true" />
         <div>
           <h1 className="text-xl font-bold text-pf-text">User Segmentation</h1>
-          <p className="text-sm text-pf-text-secondary mt-0.5">
+          <p className="text-sm text-pf-text-secondary mt-1">
             Understand and act on user cohorts
           </p>
         </div>

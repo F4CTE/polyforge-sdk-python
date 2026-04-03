@@ -258,7 +258,7 @@ function CategoryBadge({ category }: { category?: string | null }) {
   const key = category.toLowerCase();
   const cls = colors[key] ?? 'bg-pf-surface text-pf-text-muted border-pf-border';
   return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-pf-caption font-medium border ${cls}`}>
+    <span className={`inline-flex items-center px-2 py-1 rounded text-pf-caption font-medium border ${cls}`}>
       {category}
     </span>
   );
@@ -375,9 +375,9 @@ function HeatmapGrid({ data }: { data: DailyHeatmapEntry[] }) {
       <div className="overflow-x-auto pb-2">
         <div className="flex gap-3 min-w-max">
           {/* Day-of-week labels column */}
-          <div className="flex flex-col justify-start pt-5 gap-0.5 shrink-0">
+          <div className="flex flex-col justify-start pt-5 gap-1 shrink-0">
             {DAY_LABELS.map(label => (
-              <div key={label} className="h-2.5 flex items-center">
+              <div key={label} className="h-3 flex items-center">
                 <span className="text-pf-micro text-pf-text-muted w-6 text-right pr-1 leading-none">{label}</span>
               </div>
             ))}
@@ -385,20 +385,20 @@ function HeatmapGrid({ data }: { data: DailyHeatmapEntry[] }) {
 
           {/* Month columns */}
           {months.map((month, mi) => (
-            <div key={`${month.label}-${mi}`} className="flex flex-col gap-0.5">
+            <div key={`${month.label}-${mi}`} className="flex flex-col gap-1">
               {/* Month label */}
               <div className="text-pf-caption text-pf-text-muted mb-1 leading-none">{month.label}</div>
               {/* Week columns rendered as rows of days */}
-              <div className="flex gap-0.5">
+              <div className="flex gap-1">
                 {month.weeks.map((week, wi) => (
-                  <div key={wi} className="flex flex-col gap-0.5">
+                  <div key={wi} className="flex flex-col gap-1">
                     {week.map((cell, di) => (
                       cell === null
-                        ? <div key={di} className="w-2.5 h-2.5" />
+                        ? <div key={di} className="w-3 h-3" />
                         : (
                           <div
                             key={di}
-                            className={`w-2.5 h-2.5 rounded-sm cursor-pointer ${dayColor(cell.pnl)}`}
+                            className={`w-3 h-3 rounded-sm cursor-pointer ${dayColor(cell.pnl)}`}
                             title={formatDateLabel(cell.date, cell.pnl)}
                           />
                         )
@@ -433,15 +433,15 @@ function HeatmapGrid({ data }: { data: DailyHeatmapEntry[] }) {
       )}
 
       {/* Legend */}
-      <div className="flex items-center gap-1.5 mt-3">
+      <div className="flex items-center gap-2 mt-3">
         <span className="text-pf-caption text-pf-text-muted">Less</span>
-        <div className="w-2.5 h-2.5 rounded-sm bg-pf-overlay" title="No activity" />
-        <div className="w-2.5 h-2.5 rounded-sm bg-pf-danger" title="Loss > $100" />
-        <div className="w-2.5 h-2.5 rounded-sm bg-pf-danger/60" title="Loss $25–$100" />
-        <div className="w-2.5 h-2.5 rounded-sm bg-pf-danger/25" title="Loss < $25" />
-        <div className="w-2.5 h-2.5 rounded-sm bg-pf-success/25" title="Profit < $25" />
-        <div className="w-2.5 h-2.5 rounded-sm bg-pf-success/60" title="Profit $25–$100" />
-        <div className="w-2.5 h-2.5 rounded-sm bg-pf-success" title="Profit > $100" />
+        <div className="w-3 h-3 rounded-sm bg-pf-overlay" title="No activity" />
+        <div className="w-3 h-3 rounded-sm bg-pf-danger" title="Loss > $100" />
+        <div className="w-3 h-3 rounded-sm bg-pf-danger/60" title="Loss $25–$100" />
+        <div className="w-3 h-3 rounded-sm bg-pf-danger/25" title="Loss < $25" />
+        <div className="w-3 h-3 rounded-sm bg-pf-success/25" title="Profit < $25" />
+        <div className="w-3 h-3 rounded-sm bg-pf-success/60" title="Profit $25–$100" />
+        <div className="w-3 h-3 rounded-sm bg-pf-success" title="Profit > $100" />
         <span className="text-pf-caption text-pf-text-muted">More</span>
       </div>
     </div>
@@ -1038,7 +1038,7 @@ export function Component() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-pf-text">Portfolio</h1>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full bg-pf-success/10 text-pf-success text-xs font-medium border border-pf-success/20" title="Gas fees are sponsored — you pay zero network fees">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-success/10 text-pf-success text-xs font-medium border border-pf-success/20" title="Gas fees are sponsored — you pay zero network fees">
             <Fuel className="size-3" />
             Gasless
           </span>
@@ -1063,7 +1063,7 @@ export function Component() {
             variant="secondary"
             size="sm"
             onClick={exportCsv}
-            className="flex items-center gap-1.5"
+            className="flex items-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export CSV
@@ -1112,7 +1112,7 @@ export function Component() {
 
         return (
           <div
-            className={`flex flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-2.5 rounded-pf-lg border transition-colors ${
+            className={`flex flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-3 rounded-pf-lg border transition-colors ${
               pnlFlashing
                 ? 'bg-pf-elevated/80 border-pf-border-hover'
                 : 'bg-pf-elevated border-pf-border'
@@ -1121,7 +1121,7 @@ export function Component() {
             aria-label="Live portfolio P&L"
           >
             {/* Connection indicator */}
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               {wsConnected ? (
                 <>
                   <span className="relative flex size-2">
@@ -1143,7 +1143,7 @@ export function Component() {
             <span className="w-px h-4 bg-pf-border shrink-0 hidden sm:block" />
 
             {/* Total P&L */}
-            <div className="flex items-baseline gap-1.5 shrink-0">
+            <div className="flex items-baseline gap-2 shrink-0">
               <span className="text-xs text-pf-text-secondary">Total P&L</span>
               <span className={`text-sm font-mono font-semibold ${colorClass(totalPnlNum)}`}>
                 {fmtPnl(totalPnlNum)}
@@ -1161,7 +1161,7 @@ export function Component() {
             {dayPnlNum != null && (
               <>
                 <span className="w-px h-4 bg-pf-border shrink-0 hidden sm:block" />
-                <div className="flex items-baseline gap-1.5 shrink-0">
+                <div className="flex items-baseline gap-2 shrink-0">
                   <span className="text-xs text-pf-text-secondary">Today</span>
                   <span className={`text-sm font-mono font-semibold ${colorClass(dayPnlNum)}`}>
                     {fmtPnl(dayPnlNum)}
@@ -1178,7 +1178,7 @@ export function Component() {
             <span className="w-px h-4 bg-pf-border shrink-0 hidden sm:block" />
 
             {/* Unrealised P&L */}
-            <div className="flex items-baseline gap-1.5 shrink-0">
+            <div className="flex items-baseline gap-2 shrink-0">
               <span className="text-xs text-pf-text-secondary">Unrealised</span>
               <span className={`text-sm font-mono font-semibold ${colorClass(unrealisedNum)}`}>
                 {fmtPnl(unrealisedNum)}
@@ -1191,10 +1191,10 @@ export function Component() {
       {/* Circuit Breaker Banner */}
       {circuitBreakerTripped && (
         <div className="flex items-start gap-3 p-4 rounded-pf-lg bg-pf-danger/10 border border-pf-danger/30">
-          <ShieldAlert className="size-5 text-pf-danger shrink-0 mt-0.5" />
+          <ShieldAlert className="size-5 text-pf-danger shrink-0 mt-1" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-pf-danger">Circuit Breaker Active</p>
-            <p className="text-xs text-pf-text-secondary mt-0.5">
+            <p className="text-xs text-pf-text-secondary mt-1">
               All strategies have been paused due to drawdown exceeding your risk threshold.
               {circuitBreakerTrippedAt && (
                 <span> Triggered {new Date(circuitBreakerTrippedAt).toLocaleString()}.</span>
@@ -1235,7 +1235,7 @@ export function Component() {
                       : winRatePct(pnl?.winRate ?? '0')}
                   </span>
                   {parseFloat(pnl?.winRate ?? '0') === 0 && (portfolio?.positions ?? []).length > 0 && (
-                    <span className="text-pf-caption text-pf-text-muted mt-0.5 block">No resolved trades yet</span>
+                    <span className="text-pf-caption text-pf-text-muted mt-1 block">No resolved trades yet</span>
                   )}
                 </div>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 border-l-pf-text">
@@ -1281,9 +1281,9 @@ export function Component() {
                   size="sm"
                   disabled={exportingTax || taxData.length === 0}
                   onClick={() => downloadTaxCsv(taxData, taxYear)}
-                  className="flex items-center gap-1.5"
+                  className="flex items-center gap-2"
                 >
-                  <Download className="size-3.5" />
+                  <Download className="size-4" />
                   {exportingTax ? 'Exporting…' : 'Download CSV'}
                 </Button>
               </div>
@@ -1357,7 +1357,7 @@ export function Component() {
                               {entry.realizedGain >= 0 ? '+' : ''}{entry.realizedGain.toFixed(2)}
                             </td>
                             <td className="px-3 py-2 text-center">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-pf-caption font-medium border ${entry.type === 'SHORT_TERM' ? 'bg-pf-gold-500/10 text-pf-gold-500 border-pf-gold-500/25' : 'bg-pf-success/10 text-pf-success border-pf-success/25'}`}>
+                              <span className={`inline-flex items-center px-2 py-1 rounded text-pf-caption font-medium border ${entry.type === 'SHORT_TERM' ? 'bg-pf-gold-500/10 text-pf-gold-500 border-pf-gold-500/25' : 'bg-pf-success/10 text-pf-success border-pf-success/25'}`}>
                                 {entry.type === 'SHORT_TERM' ? 'Short' : 'Long'}
                               </span>
                             </td>
@@ -1372,12 +1372,12 @@ export function Component() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setTaxExpanded(prev => !prev)}
-                      className="flex items-center gap-1.5 mt-2"
+                      className="flex items-center gap-2 mt-2"
                     >
                       {taxExpanded ? (
-                        <><ChevronUp className="size-3.5" /> Show fewer</>
+                        <><ChevronUp className="size-4" /> Show fewer</>
                       ) : (
-                        <><ChevronDown className="size-3.5" /> Show all {taxData.length} transactions</>
+                        <><ChevronDown className="size-4" /> Show all {taxData.length} transactions</>
                       )}
                     </Button>
                   )}
@@ -1461,7 +1461,7 @@ export function Component() {
                         variant="secondary"
                         size="sm"
                         onClick={openNewGoalForm}
-                        className="flex items-center gap-1.5"
+                        className="flex items-center gap-2"
                       >
                         <Target className="size-3" />
                         {goals.length === 0 ? 'Set Goal' : 'Add Another Goal'}
@@ -1587,12 +1587,12 @@ export function Component() {
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <p className="text-sm font-medium text-pf-text">{activeGoal.label}</p>
-                          <p className="text-xs text-pf-text-muted flex items-center gap-1 mt-0.5">
+                          <p className="text-xs text-pf-text-muted flex items-center gap-1 mt-1">
                             <CalendarDays className="size-3" />
                             Ends {endLabel}
                           </p>
                         </div>
-                        <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                        <div className="flex items-center gap-2 ml-2 shrink-0">
                           <Button
                             type="button"
                             variant="ghost"
@@ -1600,7 +1600,7 @@ export function Component() {
                             aria-label="Edit goal"
                             onClick={() => openEditGoalForm(activeGoal)}
                           >
-                            <Pencil className="size-3.5" />
+                            <Pencil className="size-4" />
                           </Button>
                           <Button
                             type="button"
@@ -1609,14 +1609,14 @@ export function Component() {
                             aria-label="Delete goal"
                             onClick={() => deleteGoal(activeGoal.id)}
                           >
-                            <Trash2 className="size-3.5" />
+                            <Trash2 className="size-4" />
                           </Button>
                         </div>
                       </div>
 
                       {/* Achievement banner */}
                       {isAchieved && (
-                        <div className="flex items-center gap-2 bg-pf-success/10 border border-pf-success/30 rounded-pf p-2.5 mb-3">
+                        <div className="flex items-center gap-2 bg-pf-success/10 border border-pf-success/30 rounded-pf p-3 mb-3">
                           <Trophy className="size-4 text-pf-success shrink-0" />
                           <span className="text-sm font-semibold text-pf-success">Goal achieved!</span>
                         </div>
@@ -1635,7 +1635,7 @@ export function Component() {
                       {/* Progress bar */}
                       <div className="h-2 rounded-pf-full bg-pf-surface overflow-hidden mb-3">
                         <div
-                          className={`h-2 rounded-pf-full transition-all duration-500 ${barColor}`}
+                          className={`h-2 rounded-pf-full transition-all duration-300 ${barColor}`}
                           style={{ width: `${progress}%` }}
                         />
                       </div>
@@ -1746,12 +1746,12 @@ export function Component() {
                 variant="secondary"
                 size="sm"
                 onClick={handleCopyLink}
-                className="flex items-center gap-1.5"
+                className="flex items-center gap-2"
               >
                 {linkCopied ? (
-                  <Check className="size-3.5 text-pf-success" />
+                  <Check className="size-4 text-pf-success" />
                 ) : (
-                  <Copy className="size-3.5" />
+                  <Copy className="size-4" />
                 )}
                 {linkCopied ? 'Copied!' : 'Copy Share Link'}
               </Button>
@@ -1760,7 +1760,7 @@ export function Component() {
                 variant="secondary"
                 size="sm"
                 onClick={handleShareOnX}
-                className="flex items-center gap-1.5"
+                className="flex items-center gap-2"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63Zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -1772,9 +1772,9 @@ export function Component() {
                 variant="secondary"
                 size="sm"
                 onClick={handleDownloadCard}
-                className="flex items-center gap-1.5"
+                className="flex items-center gap-2"
               >
-                <Download className="size-3.5" />
+                <Download className="size-4" />
                 Download Card
               </Button>
             </div>
@@ -1825,8 +1825,8 @@ export function Component() {
 
                     {/* Progress bar (only if limit is configured and enabled) */}
                     {limit != null && (
-                      <div className="space-y-1.5">
-                        <div className="bg-pf-surface rounded-pf-full h-1.5 overflow-hidden">
+                      <div className="space-y-2">
+                        <div className="bg-pf-surface rounded-pf-full h-2 overflow-hidden">
                           <div
                             className={`h-full rounded-pf-full transition-all ${progressColor}`}
                             style={{ width: `${progress}%` }}
@@ -1981,28 +1981,28 @@ export function Component() {
                             onClick={() => setExpandedId(isExpanded ? null : pos.id)}
                           >
                             <td className="px-4 py-3 max-w-[200px]">
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-2">
                                 {isExpanded
                                   ? <ChevronUp className="size-3 text-pf-text-muted shrink-0" />
                                   : <ChevronDown className="size-3 text-pf-text-muted shrink-0" />}
                                 <span className="text-pf-text line-clamp-1" title={pos.marketTitle}>{pos.marketTitle}</span>
                               </div>
-                              <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                              <div className="flex items-center gap-1 mt-1 flex-wrap">
                                 <CategoryBadge category={(pos as any).marketCategory} />
                                 {hasRule && rule.stopLoss != null && (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-pf-caption font-mono font-medium bg-pf-danger/10 text-pf-danger border border-pf-danger/20">
+                                  <span className="inline-flex items-center px-2 py-1 rounded text-pf-caption font-mono font-medium bg-pf-danger/10 text-pf-danger border border-pf-danger/20">
                                     SL: {rule.stopLoss.toFixed(2)}
                                   </span>
                                 )}
                                 {hasRule && rule.takeProfit != null && (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-pf-caption font-mono font-medium bg-pf-success/10 text-pf-success border border-pf-success/20">
+                                  <span className="inline-flex items-center px-2 py-1 rounded text-pf-caption font-mono font-medium bg-pf-success/10 text-pf-success border border-pf-success/20">
                                     TP: {rule.takeProfit.toFixed(2)}
                                   </span>
                                 )}
                               </div>
                             </td>
                             <td className="px-4 py-3">
-                              <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                              <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
                                 pos.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                               }`}>
                                 {pos.side}
@@ -2030,7 +2030,7 @@ export function Component() {
                                 if (livePrice != null && flash != null) {
                                   const isUp = flash === 'up';
                                   return (
-                                    <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-mono font-medium transition-colors ${
+                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono font-medium transition-colors ${
                                       isUp
                                         ? 'bg-pf-success/10 text-pf-success'
                                         : 'bg-pf-danger/10 text-pf-danger'
@@ -2047,7 +2047,7 @@ export function Component() {
                                   const prevStatic = staticPrice ?? livePrice;
                                   const isUp = livePrice >= prevStatic;
                                   return (
-                                    <span className={`inline-flex items-center gap-0.5 text-xs font-mono font-medium ${
+                                    <span className={`inline-flex items-center gap-1 text-xs font-mono font-medium ${
                                       isUp ? 'text-pf-success' : 'text-pf-danger'
                                     }`}>
                                       {isUp
@@ -2066,7 +2066,7 @@ export function Component() {
                             </td>
                             <td className="px-4 py-3 text-right">
                               <span
-                                className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                                className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
                                   pos.resolutionStatus === 'UNRESOLVED'
                                     ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
                                     : 'bg-pf-overlay text-pf-text-muted'
@@ -2087,7 +2087,7 @@ export function Component() {
                                     aria-label={isTriggered ? 'Rule triggered' : hasRule ? 'Edit auto-close rule' : 'Set auto-close'}
                                     onClick={e => { e.stopPropagation(); openAutoClosePanel(pos.id); }}
                                   >
-                                    <SlidersHorizontal className={`size-3.5 ${isTriggered ? 'text-pf-success' : hasRule ? 'text-pf-cyan-400' : ''}`} />
+                                    <SlidersHorizontal className={`size-4 ${isTriggered ? 'text-pf-success' : hasRule ? 'text-pf-cyan-400' : ''}`} />
                                   </Button>
                                 )}
                                 {pos.resolutionStatus === 'UNRESOLVED' && (
@@ -2274,7 +2274,7 @@ export function Component() {
                                       {/* Error */}
                                       {acErrors[pos.id] && (
                                         <div className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-danger/10 border border-pf-danger/25">
-                                          <AlertTriangle className="size-3.5 text-pf-danger shrink-0" />
+                                          <AlertTriangle className="size-4 text-pf-danger shrink-0" />
                                           <p className="text-xs text-pf-danger">{acErrors[pos.id]}</p>
                                         </div>
                                       )}
@@ -2287,7 +2287,7 @@ export function Component() {
                                           size="sm"
                                           disabled={acSubmitting[pos.id]}
                                           onClick={e => { e.stopPropagation(); saveAutoCloseRule(pos); }}
-                                          className="flex items-center gap-1.5"
+                                          className="flex items-center gap-2"
                                         >
                                           {acSubmitting[pos.id] && <Loader2 className="size-3 animate-spin" />}
                                           Save Rules
@@ -2307,7 +2307,7 @@ export function Component() {
 
                                       {/* Disclaimer */}
                                       <div className="flex items-start gap-2 pt-1">
-                                        <AlertTriangle className="size-3.5 text-pf-text-muted shrink-0 mt-0.5" />
+                                        <AlertTriangle className="size-4 text-pf-text-muted shrink-0 mt-1" />
                                         <p className="text-xs text-pf-text-muted">Rules execute as market orders on Polymarket</p>
                                       </div>
                                     </div>
@@ -2323,7 +2323,7 @@ export function Component() {
                                   <div className="flex flex-wrap items-start gap-6">
                                     {/* P&L prominent display */}
                                     <div className="flex flex-col">
-                                      <span className="text-pf-caption text-pf-text-muted uppercase tracking-wider mb-0.5">Unrealized P&L</span>
+                                      <span className="text-pf-caption text-pf-text-muted uppercase tracking-wider mb-1">Unrealized P&L</span>
                                       <span className={`text-2xl font-mono font-bold ${pnlNum >= 0 ? 'text-pf-success' : 'text-pf-danger'}`}>
                                         {formatPnl(pos.unrealizedPnl)}
                                       </span>
@@ -2333,29 +2333,29 @@ export function Component() {
                                     {/* Detail stats */}
                                     <div className="flex flex-wrap gap-4 text-xs">
                                       <div>
-                                        <p className="text-pf-text-muted mb-0.5">Entry Price</p>
+                                        <p className="text-pf-text-muted mb-1">Entry Price</p>
                                         <p className="font-mono text-pf-text">{entryPrice.toFixed(3)}</p>
                                       </div>
                                       <div>
-                                        <p className="text-pf-text-muted mb-0.5">Current Price</p>
+                                        <p className="text-pf-text-muted mb-1">Current Price</p>
                                         <p className="font-mono text-pf-cyan-400">
                                           {currentPrice > 0 ? currentPrice.toFixed(3) : '—'}
                                         </p>
                                       </div>
                                       {timeHeld && (
                                         <div>
-                                          <p className="text-pf-text-muted mb-0.5 flex items-center gap-1">
+                                          <p className="text-pf-text-muted mb-1 flex items-center gap-1">
                                             <Clock className="size-3" /> Time Held
                                           </p>
                                           <p className="font-mono text-pf-text">{timeHeld}</p>
                                         </div>
                                       )}
                                       <div>
-                                        <p className="text-pf-text-muted mb-0.5">Max Gain</p>
+                                        <p className="text-pf-text-muted mb-1">Max Gain</p>
                                         <p className="font-mono text-pf-success">+${maxGain}</p>
                                       </div>
                                       <div>
-                                        <p className="text-pf-text-muted mb-0.5">Max Loss</p>
+                                        <p className="text-pf-text-muted mb-1">Max Loss</p>
                                         <p className="font-mono text-pf-danger">-${maxLoss}</p>
                                       </div>
                                     </div>
@@ -2385,9 +2385,9 @@ export function Component() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-pf-border bg-pf-surface-elevated">
-                        <th className="text-left px-4 py-2.5 text-xs font-medium text-pf-text-muted">Market</th>
-                        <th className="text-right px-4 py-2.5 text-xs font-medium text-pf-text-muted">Outcome</th>
-                        <th className="text-right px-4 py-2.5 text-xs font-medium text-pf-text-muted">Realized P&L</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-pf-text-muted">Market</th>
+                        <th className="text-right px-4 py-3 text-xs font-medium text-pf-text-muted">Outcome</th>
+                        <th className="text-right px-4 py-3 text-xs font-medium text-pf-text-muted">Realized P&L</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2396,9 +2396,9 @@ export function Component() {
                         const isWin = pnl > 0;
                         return (
                           <tr key={i} className="border-b border-pf-border-subtle last:border-0">
-                            <td className="px-4 py-2.5 text-pf-text text-xs">{pos.market?.title ?? pos.marketTitle ?? pos.marketId}</td>
-                            <td className="px-4 py-2.5 text-right text-xs font-mono text-pf-text-secondary">{pos.outcome ?? '-'}</td>
-                            <td className={`px-4 py-2.5 text-right text-xs font-mono font-semibold ${isWin ? 'text-pf-success' : 'text-pf-danger'}`}>
+                            <td className="px-4 py-3 text-pf-text text-xs">{pos.market?.title ?? pos.marketTitle ?? pos.marketId}</td>
+                            <td className="px-4 py-3 text-right text-xs font-mono text-pf-text-secondary">{pos.outcome ?? '-'}</td>
+                            <td className={`px-4 py-3 text-right text-xs font-mono font-semibold ${isWin ? 'text-pf-success' : 'text-pf-danger'}`}>
                               {isWin ? '+' : ''}{pnl.toFixed(2)}
                             </td>
                           </tr>
@@ -2510,7 +2510,7 @@ export function Component() {
                       const pct = ((entry.value / totalAllocation) * 100).toFixed(1);
                       return (
                         <div key={entry.name} className="flex items-center gap-2">
-                          <span className="size-2.5 rounded-pf-full shrink-0" style={{ backgroundColor: color }} />
+                          <span className="size-3 rounded-pf-full shrink-0" style={{ backgroundColor: color }} />
                           <span className="flex-1 text-sm text-pf-text capitalize truncate">{entry.name}</span>
                           <span className="text-xs font-mono text-pf-text-secondary shrink-0">
                             ${entry.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}
@@ -2555,7 +2555,7 @@ export function Component() {
                               <td className="py-2 pr-3">
                                 {categoryNorm ? (
                                   <span className="inline-flex items-center gap-1">
-                                    <span className="size-1.5 rounded-pf-full" style={{ backgroundColor: dotColor }} />
+                                    <span className="size-2 rounded-pf-full" style={{ backgroundColor: dotColor }} />
                                     <span className="text-pf-text-secondary">{categoryNorm}</span>
                                   </span>
                                 ) : (
@@ -2563,7 +2563,7 @@ export function Component() {
                                 )}
                               </td>
                               <td className="py-2 pr-3">
-                                <span className={`inline-flex px-1.5 py-0.5 rounded font-medium ${
+                                <span className={`inline-flex px-2 py-1 rounded font-medium ${
                                   pos.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                                 }`}>
                                   {pos.side}
@@ -2780,7 +2780,7 @@ export function Component() {
                     <ShieldAlert className="size-4 text-pf-cyan-400" />
                     <div>
                       <span className="text-sm font-semibold text-pf-text">Risk Concentration</span>
-                      <p className="text-pf-label text-pf-text-muted mt-0.5">Exposure by category and outcome</p>
+                      <p className="text-pf-label text-pf-text-muted mt-1">Exposure by category and outcome</p>
                     </div>
                   </div>
                 </div>
@@ -2793,7 +2793,7 @@ export function Component() {
                       key={`warn-${c.category}-${c.outcome}`}
                       className="flex items-center gap-2 mt-3 px-3 py-2 rounded-pf bg-pf-warning/10 border border-pf-warning/30"
                     >
-                      <AlertTriangle className="size-3.5 text-pf-warning shrink-0" />
+                      <AlertTriangle className="size-4 text-pf-warning shrink-0" />
                       <p className="text-xs text-pf-gold-300">
                         High concentration in{' '}
                         <span className="font-semibold capitalize">{c.category}</span>{' '}
@@ -2807,7 +2807,7 @@ export function Component() {
                 {/* Grid */}
                 <div className="mt-4 overflow-x-auto">
                   <div
-                    className="grid gap-1.5 min-w-max"
+                    className="grid gap-2 min-w-max"
                     style={{ gridTemplateColumns: `60px repeat(${RISK_CATEGORIES.length}, minmax(88px, 1fr))` }}
                   >
                     {/* Column headers */}
@@ -2826,7 +2826,7 @@ export function Component() {
                           key={`row-lbl-${outcome}`}
                           className="flex items-center justify-center"
                         >
-                          <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                          <span className={`text-xs font-semibold px-2 py-1 rounded ${
                             outcome === 'YES'
                               ? 'text-pf-success bg-pf-success/10'
                               : 'text-pf-danger bg-pf-danger/10'
@@ -2864,15 +2864,15 @@ export function Component() {
                             <div
                               key={`${outcome}-${cat}`}
                               title={tooltipText}
-                              className={`${bgClass} rounded-pf border border-pf-border-subtle h-14 relative p-1.5 cursor-default transition-opacity hover:opacity-80`}
+                              className={`${bgClass} rounded-pf border border-pf-border-subtle h-14 relative p-2 cursor-default transition-opacity hover:opacity-80`}
                             >
                               {/* Dollar value */}
                               <p className="text-pf-text font-mono text-xs leading-tight">{formatCellValue(cell.totalValue)}</p>
                               {/* Position count */}
-                              <p className="text-pf-text-muted text-pf-caption leading-tight mt-0.5">{cell.positionCount} pos</p>
+                              <p className="text-pf-text-muted text-pf-caption leading-tight mt-1">{cell.positionCount} pos</p>
                               {/* P&L badge bottom-right */}
                               <span
-                                className={`absolute bottom-1 right-1.5 text-pf-micro font-mono font-semibold ${
+                                className={`absolute bottom-1 right-2 text-pf-micro font-mono font-semibold ${
                                   cell.pnl > 0 ? 'text-pf-success' : cell.pnl < 0 ? 'text-pf-danger' : 'text-pf-text-muted'
                                 }`}
                               >
@@ -2889,7 +2889,7 @@ export function Component() {
                 {/* Summary row — column totals */}
                 <div className="mt-3 overflow-x-auto">
                   <div
-                    className="grid gap-1.5 min-w-max"
+                    className="grid gap-2 min-w-max"
                     style={{ gridTemplateColumns: `60px repeat(${RISK_CATEGORIES.length}, minmax(88px, 1fr))` }}
                   >
                     <div className="text-pf-caption text-pf-text-muted flex items-center justify-center">Total</div>
@@ -2897,8 +2897,8 @@ export function Component() {
                       const colTotal = colTotals[i];
                       const pct = totalValue > 0 ? (colTotal / totalValue) * 100 : 0;
                       return (
-                        <div key={cat} className="flex flex-col gap-0.5">
-                          <div className="h-1.5 rounded-pf-full bg-pf-surface overflow-hidden">
+                        <div key={cat} className="flex flex-col gap-1">
+                          <div className="h-2 rounded-pf-full bg-pf-surface overflow-hidden">
                             <div
                               className="h-full rounded-pf-full bg-pf-cyan-500/50 transition-all"
                               style={{ width: `${(colTotal / maxColTotal) * 100}%` }}
@@ -2914,7 +2914,7 @@ export function Component() {
                 </div>
 
                 {/* Legend */}
-                <div className="flex items-center gap-1.5 mt-4 flex-wrap">
+                <div className="flex items-center gap-2 mt-4 flex-wrap">
                   <span className="text-pf-caption text-pf-text-muted">Low</span>
                   <div className="w-5 h-3 rounded-sm bg-pf-overlay/20 border border-pf-border-subtle" />
                   <div className="w-5 h-3 rounded-sm bg-pf-cyan-500/10 border border-pf-border-subtle" />
@@ -2932,10 +2932,10 @@ export function Component() {
             const visibleSuggestions = suggestions.filter(s => !dismissedIds.includes(s.id));
 
             function SuggestionTypeIcon({ type }: { type: RebalanceSuggestion['type'] }) {
-              if (type === 'reduce') return <TrendingDown className="size-3.5 shrink-0" />;
-              if (type === 'diversify') return <Shuffle className="size-3.5 shrink-0" />;
-              if (type === 'close') return <X className="size-3.5 shrink-0" />;
-              return <Shield className="size-3.5 shrink-0" />;
+              if (type === 'reduce') return <TrendingDown className="size-4 shrink-0" />;
+              if (type === 'diversify') return <Shuffle className="size-4 shrink-0" />;
+              if (type === 'close') return <X className="size-4 shrink-0" />;
+              return <Shield className="size-4 shrink-0" />;
             }
 
             function PriorityBadge({ priority }: { priority: RebalanceSuggestion['priority'] }) {
@@ -2945,7 +2945,7 @@ export function Component() {
                 'bg-pf-success/10 text-pf-success';
               const label = priority === 'high' ? 'High' : priority === 'medium' ? 'Medium' : 'Low';
               return (
-                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-pf-caption font-semibold uppercase tracking-wide ${cls}`}>
+                <span className={`inline-flex items-center px-2 py-1 rounded text-pf-caption font-semibold uppercase tracking-wide ${cls}`}>
                   {label}
                 </span>
               );
@@ -2967,7 +2967,7 @@ export function Component() {
                   />
                   {/* target marker */}
                   <div
-                    className="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-pf-text rounded-pf-full"
+                    className="absolute top-1/2 -translate-y-1/2 w-1 h-3 bg-pf-text rounded-pf-full"
                     style={{ left: `${targetPos}%` }}
                     title={`Target: ${targetPct}%`}
                   />
@@ -3038,12 +3038,12 @@ export function Component() {
                             onClick={() => dismissSuggestion(s.id)}
                             className="shrink-0"
                           >
-                            <X className="size-3.5" />
+                            <X className="size-4" />
                           </Button>
                         </div>
 
                         {/* Description */}
-                        <p className="text-xs text-pf-text-muted mt-1.5 leading-relaxed">{s.description}</p>
+                        <p className="text-xs text-pf-text-muted mt-2 leading-relaxed">{s.description}</p>
 
                         {/* Current → Target bar */}
                         <div className="mt-3">
@@ -3105,9 +3105,9 @@ export function Component() {
                             {exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })} shares &middot; {count} position{count !== 1 ? 's' : ''}
                           </span>
                         </div>
-                        <div className="h-1.5 rounded-pf-full bg-pf-surface overflow-hidden">
+                        <div className="h-2 rounded-pf-full bg-pf-surface overflow-hidden">
                           <div
-                            className="h-1.5 rounded-pf-full bg-pf-cyan-500/60"
+                            className="h-2 rounded-pf-full bg-pf-cyan-500/60"
                             style={{ width: `${barPct}%` }}
                           />
                         </div>
@@ -3140,10 +3140,10 @@ export function Component() {
                     const maxAbs = Math.max(...sorted.map(x => Math.abs(x.pnl)), 1);
                     const barPct = Math.round((Math.abs(m.pnl) / maxAbs) * 100);
                     return (
-                      <div key={m.title} className="flex items-center gap-3 px-4 py-2.5">
+                      <div key={m.title} className="flex items-center gap-3 px-4 py-3">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-pf-text truncate" title={m.title}>{m.title}</p>
-                          <div className="mt-1 h-1.5 rounded-pf-full bg-pf-surface overflow-hidden">
+                          <div className="mt-1 h-2 rounded-pf-full bg-pf-surface overflow-hidden">
                             <div
                               className={`h-full rounded-pf-full ${m.pnl >= 0 ? 'bg-pf-success/60' : 'bg-pf-danger/60'}`}
                               style={{ width: `${barPct}%` }}
@@ -3201,9 +3201,9 @@ export function Component() {
                     size="sm"
                     onClick={() => setShowResetConfirm(true)}
                     disabled={resettingPaper}
-                    className="flex items-center gap-1.5"
+                    className="flex items-center gap-2"
                   >
-                    <RefreshCw className={`size-3.5 ${resettingPaper ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`size-4 ${resettingPaper ? 'animate-spin' : ''}`} />
                     Reset Paper Account
                   </Button>
                   {showResetConfirm && (
@@ -3255,7 +3255,7 @@ export function Component() {
                               <span className="text-pf-text" title={pos.tokenId}>{formatTokenId(pos.tokenId)}</span>
                             </td>
                             <td className="px-4 py-3">
-                              <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                              <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
                                 pos.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                               }`}>
                                 {pos.side}

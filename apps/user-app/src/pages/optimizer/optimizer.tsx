@@ -67,7 +67,7 @@ function ReviewSkeleton() {
         <div className="h-4 bg-pf-overlay rounded w-28 animate-pulse mb-4" />
         {[0, 1, 2].map((i) => (
           <div key={i} className="flex items-start gap-2">
-            <div className="h-3 w-3 bg-pf-overlay rounded-pf-full mt-0.5 shrink-0 animate-pulse" />
+            <div className="h-3 w-3 bg-pf-overlay rounded-pf-full mt-1 shrink-0 animate-pulse" />
             <div className="h-3 bg-pf-overlay rounded flex-1 animate-pulse" />
           </div>
         ))}
@@ -118,10 +118,10 @@ export function Component() {
           type="button"
           onClick={load}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text-secondary hover:border-pf-border-strong hover:text-pf-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
           aria-label="Refresh analysis"
         >
-          <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh Analysis
         </Button>
       </div>
@@ -151,7 +151,7 @@ export function Component() {
               <h2 className="text-sm font-medium text-pf-text uppercase tracking-wide">Portfolio Review</h2>
               <div className="flex items-center gap-2">
                 <span
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-pf-full text-xs font-semibold uppercase tracking-wide ${riskPillClass(data.riskLevel)}`}
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-pf-full text-xs font-semibold uppercase tracking-wide ${riskPillClass(data.riskLevel)}`}
                   aria-label={`Risk level: ${data.riskLevel}`}
                 >
                   {data.riskLevel} risk
@@ -172,11 +172,11 @@ export function Component() {
           {data.suggestions.length > 0 && (
             <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
               <h2 className="text-sm font-medium text-pf-text uppercase tracking-wide mb-4">Suggestions</h2>
-              <ul className="space-y-2.5" aria-label="Portfolio suggestions">
+              <ul className="space-y-3" aria-label="Portfolio suggestions">
                 {data.suggestions.map((suggestion, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-pf-text-secondary">
                     <span
-                      className="mt-1.5 size-1.5 rounded-pf-full bg-pf-cyan-500 shrink-0"
+                      className="mt-2 size-2 rounded-pf-full bg-pf-cyan-500 shrink-0"
                       aria-hidden="true"
                     />
                     <span className="leading-relaxed">{suggestionText(suggestion)}</span>

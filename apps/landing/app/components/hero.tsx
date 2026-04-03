@@ -42,7 +42,7 @@ export function Hero() {
 
       <div className="relative z-10 max-w-[1100px] mx-auto px-6">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 text-pf-body-sm font-medium text-pf-cyan-400 bg-pf-cyan-500/8 border border-pf-cyan-500/20 rounded-pf-full px-3.5 py-1 mb-7">
+        <div className="inline-flex items-center gap-2 text-pf-body-sm font-medium text-pf-cyan-400 bg-pf-cyan-500/8 border border-pf-cyan-500/20 rounded-pf-full px-4 py-1 mb-7">
           <span className="w-[7px] h-[7px] rounded-pf-full bg-pf-cyan-400 animate-[pulse-dot_2s_infinite]" />
           Early Access &mdash; Limited Invites
         </div>
@@ -88,10 +88,10 @@ export function Hero() {
           ].map((badge) => (
             <span
               key={badge}
-              className="inline-flex items-center gap-1.5 text-pf-body-sm font-medium text-pf-text-secondary bg-pf-surface border border-pf-border-subtle rounded-pf-full px-3.5 py-1.5"
+              className="inline-flex items-center gap-2 text-pf-body-sm font-medium text-pf-text-secondary bg-pf-surface border border-pf-border-subtle rounded-pf-full px-4 py-2"
             >
               <span
-                className="w-1.5 h-1.5 rounded-pf-full bg-pf-cyan-400"
+                className="w-2 h-2 rounded-pf-full bg-pf-cyan-400"
                 aria-hidden="true"
               />
               {badge}

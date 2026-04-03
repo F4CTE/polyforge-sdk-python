@@ -160,14 +160,14 @@ function ScoreRow({ label, value, max }: { label: string; value: string; max: nu
   const pct = Number.isFinite(numeric) ? Math.min(Math.max((numeric / max) * 100, 0), 100) : 0;
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">
         <span className="text-pf-text-secondary">{label}</span>
         <span className="font-mono text-pf-text">{value}</span>
       </div>
-      <div className="h-1.5 bg-pf-overlay rounded-pf-full overflow-hidden">
+      <div className="h-2 bg-pf-overlay rounded-pf-full overflow-hidden">
         <div
-          className="h-full bg-pf-cyan-400 rounded-pf-full transition-all duration-500"
+          className="h-full bg-pf-cyan-400 rounded-pf-full transition-all duration-300"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -389,7 +389,7 @@ export function Component() {
             type="button"
             onClick={exportCsv}
             disabled={exportingCsv}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors disabled:opacity-50"
             aria-label="Export analytics as CSV"
           >
             {exportingCsv
@@ -410,7 +410,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => setPeriod(p.value)}
-                className={`px-3 py-1.5 rounded text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-400/40 ${
+                className={`px-3 py-2 rounded text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-400/40 ${
                   period === p.value
                     ? 'bg-pf-cyan-400/15 text-pf-cyan-400'
                     : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface'
@@ -517,7 +517,7 @@ export function Component() {
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-pf-border">
             <h2 className="text-sm font-medium text-pf-text">Category Performance</h2>
-            <p className="text-xs text-pf-text-muted mt-0.5">Brier score by category — lower is better.</p>
+            <p className="text-xs text-pf-text-muted mt-1">Brier score by category — lower is better.</p>
           </div>
           {loadingAccuracy ? (
             <div className="p-4 space-y-2">
@@ -564,7 +564,7 @@ export function Component() {
 
         {/* Score Breakdown */}
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
-          <h2 className="text-sm font-medium text-pf-text mb-0.5">Score Breakdown</h2>
+          <h2 className="text-sm font-medium text-pf-text mb-1">Score Breakdown</h2>
           <p className="text-xs text-pf-text-muted mb-6">Key trading performance metrics.</p>
           {loadingScore ? (
             <div className="space-y-4">
@@ -619,10 +619,10 @@ export function Component() {
               variant="ghost"
               onClick={loadAiReview}
               disabled={loadingAiReview}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface border border-pf-border transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-2 rounded text-xs font-medium text-pf-text-secondary hover:text-pf-text hover:bg-pf-surface border border-pf-border transition-colors disabled:opacity-50"
               aria-label="Refresh AI review"
             >
-              <RefreshCw className={`size-3.5 ${loadingAiReview ? 'animate-spin' : ''}`} aria-hidden="true" />
+              <RefreshCw className={`size-4 ${loadingAiReview ? 'animate-spin' : ''}`} aria-hidden="true" />
               Refresh
             </Button>
           </div>
@@ -667,8 +667,8 @@ export function Component() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 {/* Key Insights */}
                 <div>
-                  <div className="flex items-center gap-1.5 mb-3">
-                    <TrendingUp className="size-3.5 text-pf-cyan-400" aria-hidden="true" />
+                  <div className="flex items-center gap-2 mb-3">
+                    <TrendingUp className="size-4 text-pf-cyan-400" aria-hidden="true" />
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-pf-cyan-400">
                       Key Insights
                     </h3>
@@ -676,7 +676,7 @@ export function Component() {
                   <ul className="space-y-2">
                     {aiReview.keyInsights.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-pf-text-secondary">
-                        <span className="mt-1.5 size-1.5 rounded-pf-full bg-pf-cyan-400 shrink-0" aria-hidden="true" />
+                        <span className="mt-2 size-2 rounded-pf-full bg-pf-cyan-400 shrink-0" aria-hidden="true" />
                         {item}
                       </li>
                     ))}
@@ -685,8 +685,8 @@ export function Component() {
 
                 {/* Risk Factors */}
                 <div>
-                  <div className="flex items-center gap-1.5 mb-3">
-                    <Shield className="size-3.5 text-pf-danger" aria-hidden="true" />
+                  <div className="flex items-center gap-2 mb-3">
+                    <Shield className="size-4 text-pf-danger" aria-hidden="true" />
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-pf-danger">
                       Risk Factors
                     </h3>
@@ -694,7 +694,7 @@ export function Component() {
                   <ul className="space-y-2">
                     {aiReview.riskFactors.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-pf-text-secondary">
-                        <span className="mt-1.5 size-1.5 rounded-pf-full bg-pf-danger shrink-0" aria-hidden="true" />
+                        <span className="mt-2 size-2 rounded-pf-full bg-pf-danger shrink-0" aria-hidden="true" />
                         {item}
                       </li>
                     ))}
@@ -703,8 +703,8 @@ export function Component() {
 
                 {/* Opportunities */}
                 <div>
-                  <div className="flex items-center gap-1.5 mb-3">
-                    <Sparkles className="size-3.5 text-pf-success" aria-hidden="true" />
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="size-4 text-pf-success" aria-hidden="true" />
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-pf-success">
                       Opportunities
                     </h3>
@@ -712,7 +712,7 @@ export function Component() {
                   <ul className="space-y-2">
                     {aiReview.opportunities.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-pf-text-secondary">
-                        <span className="mt-1.5 size-1.5 rounded-pf-full bg-pf-success shrink-0" aria-hidden="true" />
+                        <span className="mt-2 size-2 rounded-pf-full bg-pf-success shrink-0" aria-hidden="true" />
                         {item}
                       </li>
                     ))}
@@ -750,7 +750,7 @@ export function Component() {
             type="button"
             onClick={submitAiQuery}
             disabled={loadingAiQuery || !aiQuery.trim()}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium bg-pf-cyan-400/15 text-pf-cyan-400 border border-pf-cyan-400/30 hover:bg-pf-cyan-400/25 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium bg-pf-cyan-400/15 text-pf-cyan-400 border border-pf-cyan-400/30 hover:bg-pf-cyan-400/25 transition-colors disabled:opacity-50"
             aria-label="Send question to AI"
           >
             {loadingAiQuery ? (
@@ -765,7 +765,7 @@ export function Component() {
         {/* AI response */}
         {aiAnswer && (
           <div className="bg-pf-surface border border-pf-border rounded-pf-sm p-4 flex items-start gap-3">
-            <Bot className="size-4 text-pf-cyan-400 mt-0.5 shrink-0" aria-hidden="true" />
+            <Bot className="size-4 text-pf-cyan-400 mt-1 shrink-0" aria-hidden="true" />
             <p className="text-sm text-pf-text-secondary leading-relaxed">{aiAnswer.response}</p>
           </div>
         )}

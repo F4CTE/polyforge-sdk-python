@@ -136,7 +136,7 @@ export function Component() {
           type="button"
           onClick={load}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors disabled:opacity-50"
         >
           {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           Refresh
@@ -176,7 +176,7 @@ export function Component() {
                 placeholder="Search strategies…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 bg-pf-surface border border-pf-border rounded-pf text-sm text-pf-text placeholder-pf-text-muted focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/30"
+                className="w-full pl-9 pr-3 py-2 bg-pf-surface border border-pf-border rounded-pf text-sm text-pf-text placeholder-pf-text-muted focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/30"
               />
             </div>
 
@@ -190,7 +190,7 @@ export function Component() {
                     type="button"
                     variant="ghost"
                     onClick={() => setSort(s)}
-                    className={`px-2.5 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
+                    className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
                       sort === s
                         ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                         : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -254,7 +254,7 @@ function ListingCard({
   return (
     <div className="flex flex-col bg-pf-elevated border border-pf-border rounded-pf-lg p-4 hover:border-pf-border-strong transition-colors">
       {/* Title + seller */}
-      <div className="flex-1 space-y-1.5 min-w-0">
+      <div className="flex-1 space-y-2 min-w-0">
         <p className="text-sm font-semibold text-pf-text line-clamp-2">{listing.title}</p>
         <p className="text-xs text-pf-text-muted">
           by <span className="text-pf-text-secondary">{listing.seller.name}</span>
@@ -272,7 +272,7 @@ function ListingCard({
           {listing.tags.slice(0, 4).map((t) => (
             <span
               key={t}
-              className="px-1.5 py-0.5 bg-pf-surface border border-pf-border rounded text-pf-caption text-pf-text-muted"
+              className="px-2 py-1 bg-pf-surface border border-pf-border rounded text-pf-caption text-pf-text-muted"
             >
               {t}
             </span>
@@ -300,7 +300,7 @@ function ListingCard({
           type="button"
           onClick={onPurchase}
           disabled={purchasing}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-50 transition-colors"
         >
           {purchasing ? (
             <Loader2 className="size-3 animate-spin" />

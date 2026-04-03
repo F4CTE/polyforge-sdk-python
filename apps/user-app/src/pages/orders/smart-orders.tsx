@@ -64,7 +64,7 @@ function StatusBadge({ status }: { status: SmartOrderStatus }) {
   };
   const { cls, icon, label } = map[status];
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-xs font-medium border ${cls}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-xs font-medium border ${cls}`}>
       {icon}{label}
     </span>
   );
@@ -137,7 +137,7 @@ export function Component() {
             variant="secondary"
             onClick={load}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors disabled:opacity-50"
           >
             {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
             Refresh
@@ -191,7 +191,7 @@ export function Component() {
                 </Button>
 
                 {/* Type badge */}
-                <span className="shrink-0 px-2 py-0.5 rounded text-xs font-semibold bg-pf-surface border border-pf-border text-pf-text-secondary">
+                <span className="shrink-0 px-2 py-1 rounded text-xs font-semibold bg-pf-surface border border-pf-border text-pf-text-secondary">
                   {TYPE_LABEL[so.type]}
                 </span>
 
@@ -221,7 +221,7 @@ export function Component() {
                     variant="danger"
                     onClick={() => cancel(so.id)}
                     disabled={cancelling === so.id}
-                    className="shrink-0 p-1.5 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-50 transition-colors"
+                    className="shrink-0 p-2 rounded-pf text-pf-danger hover:bg-pf-danger/10 disabled:opacity-50 transition-colors"
                     aria-label="Cancel"
                     title="Cancel smart order"
                   >

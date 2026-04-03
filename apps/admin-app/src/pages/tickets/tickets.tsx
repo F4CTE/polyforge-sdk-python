@@ -121,18 +121,18 @@ export function Component() {
                     <td className="px-4 py-3 font-medium text-pf-text">{t.subject}</td>
                     <td className="px-4 py-3 text-pf-text-secondary">{t.username ?? (t.userId ? t.userId.slice(0, 8) : '')}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(t.status)}`}>
+                      <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(t.status)}`}>
                         {t.status}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${priorityColor[t.priority] ?? ''}`}>
+                      <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${priorityColor[t.priority] ?? ''}`}>
                         {t.priority}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       {t.assignedTo ? (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
                           <div className="w-5 h-5 rounded-pf-full bg-pf-cyan-500/20 flex items-center justify-center text-pf-micro font-bold text-pf-cyan-500">
                             {t.assignedToName?.[0]?.toUpperCase() ?? 'A'}
                           </div>

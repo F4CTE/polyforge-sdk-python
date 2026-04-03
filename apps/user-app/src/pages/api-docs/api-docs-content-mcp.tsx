@@ -15,12 +15,12 @@ export function McpSection() {
       {/* Protocol info */}
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs text-pf-text-muted uppercase tracking-wider mb-0.5">Transport</p>
+          <p className="text-xs text-pf-text-muted uppercase tracking-wider mb-1">Transport</p>
           <code className="text-sm font-mono text-pf-cyan-400">stdio (MCP 1.0)</code>
         </div>
         <div className="flex flex-wrap gap-2">
           {['Claude Desktop','Claude Code','Cursor','Windsurf','Zed','Continue'].map(c => (
-            <span key={c} className="inline-flex items-center text-pf-label font-medium px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-secondary">{c}</span>
+            <span key={c} className="inline-flex items-center text-pf-label font-medium px-2 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary">{c}</span>
           ))}
         </div>
       </div>
@@ -60,7 +60,7 @@ export function McpSection() {
       </Sub>
 
       <Sub title="Available tools (23)">
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {['list_markets','get_market','list_strategies','get_strategy',
             'create_strategy','create_strategy_from_description','start_strategy',
             'stop_strategy','get_strategy_templates','export_strategy',
@@ -82,7 +82,7 @@ export function McpSection() {
             '"Show me whale trades over $50,000 from the last hour"',
             '"What\'s my portfolio P&L this week?"',
           ].map(p => (
-            <p key={p} className="text-xs text-pf-text-secondary bg-pf-elevated border border-pf-border rounded-pf px-3.5 py-2.5 font-mono hover:border-pf-border-strong transition-all duration-200">{p}</p>
+            <p key={p} className="text-xs text-pf-text-secondary bg-pf-elevated border border-pf-border rounded-pf px-4 py-3 font-mono hover:border-pf-border-strong transition-all duration-200">{p}</p>
           ))}
         </div>
       </Sub>

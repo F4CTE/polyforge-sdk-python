@@ -108,7 +108,7 @@ export function ShortcutsModal({ open, onClose }: ShortcutsModalProps) {
                     <span className="flex items-center gap-1 flex-shrink-0">
                       {shortcut.keys.map((key, ki) => (
                         <span key={ki} className="flex items-center gap-1">
-                          <kbd className="inline-flex items-center px-1.5 py-0.5 rounded bg-pf-elevated border border-pf-border text-xs font-mono text-pf-text">
+                          <kbd className="inline-flex items-center px-2 py-1 rounded bg-pf-elevated border border-pf-border text-xs font-mono text-pf-text">
                             {key}
                           </kbd>
                           {ki < shortcut.keys.length - 1 && (

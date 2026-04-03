@@ -306,7 +306,9 @@ text-pf-subhead   17px  (1.0625rem)  — sub-headings
 
 > **Note (v3.0+):** Les tokens de spacing utilisent désormais le préfixe `--spacing-pf-*` (Tailwind v4). `--spacing-pf-5` vaut **24px** (aligné sur la grille 4px × 6), pas 20px.
 
-Tous les spacings sont des multiples de 4px.
+Tous les spacings sont des multiples de 4px. Les valeurs `.5` de Tailwind (`0.5`, `1.5`, `2.5`, `3.5`) sont **interdites** — utiliser le multiple de 4px le plus proche (`1`, `2`, `3`, `4`).
+
+> **Enforcement (v6.35.16):** Toutes les 1 691 occurrences de spacing `.5` ont été remplacées par des équivalents 4px-grid.
 
 ```
 --spacing-pf-1    4px
@@ -958,6 +960,9 @@ transition: opacity var(--pf-duration-slow) ease,
 
 - Jamais d'animation `infinite` autre que `pf-pulse` sur les dots de statut
 - Durée maximale d'une transition : 350ms
+- Seules les trois durées standard sont autorisées dans Tailwind : `duration-100`, `duration-200`, `duration-300`
+
+> **Enforcement (v6.35.16):** Toutes les durées arbitraires (150ms, 250ms, 400ms, 500ms, 700ms) ont été remplacées par les tokens standard.
 - Pas d'animations sur les tableaux de données — la densité prime sur l'effet
 
 ---

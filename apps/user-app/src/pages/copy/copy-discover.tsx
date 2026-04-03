@@ -179,8 +179,8 @@ function CardSkeleton() {
     <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
       <div className="flex items-center gap-3">
         <div className="size-10 rounded-pf-full bg-pf-overlay shrink-0" />
-        <div className="flex-1 space-y-1.5">
-          <div className="h-3.5 bg-pf-overlay rounded w-[55%]" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 bg-pf-overlay rounded w-[55%]" />
           <div className="h-3 bg-pf-overlay rounded w-[35%]" />
         </div>
         <div className="h-5 w-10 bg-pf-overlay rounded-pf-full" />
@@ -210,7 +210,7 @@ function ComparisonSkeleton({ count }: { count: number }) {
         {Array.from({ length: count }).map((_, i) => (
           <div key={i} className="flex flex-col items-center gap-2">
             <div className="size-12 rounded-pf-full bg-pf-overlay" />
-            <div className="h-3.5 bg-pf-overlay rounded w-20" />
+            <div className="h-4 bg-pf-overlay rounded w-20" />
             <div className="h-3 bg-pf-overlay rounded w-14" />
           </div>
         ))}
@@ -219,9 +219,9 @@ function ComparisonSkeleton({ count }: { count: number }) {
       {[1, 2, 3, 4, 5, 6, 7, 8].map((r) => (
         <div key={r} className="grid gap-4 border-t border-pf-border-subtle pt-3"
           style={{ gridTemplateColumns: `180px repeat(${count}, 1fr)` }}>
-          <div className="h-3.5 bg-pf-overlay rounded w-28" />
+          <div className="h-4 bg-pf-overlay rounded w-28" />
           {Array.from({ length: count }).map((_, i) => (
-            <div key={i} className="h-3.5 bg-pf-overlay rounded w-16 mx-auto" />
+            <div key={i} className="h-4 bg-pf-overlay rounded w-16 mx-auto" />
           ))}
         </div>
       ))}
@@ -334,7 +334,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
           type="button"
           variant="ghost"
           onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors mb-2"
+          className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors mb-2"
         >
           <ChevronLeft className="size-4" />
           Back to traders
@@ -356,7 +356,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
           type="button"
           variant="ghost"
           onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
+          className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors"
         >
           <ChevronLeft className="size-4" />
           Back to traders
@@ -405,7 +405,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                   return (
                     <div key={t.userId} className="flex items-center justify-center">
                       <span
-                        className={`text-sm font-mono font-semibold px-2 py-0.5 rounded ${
+                        className={`text-sm font-mono font-semibold px-2 py-1 rounded ${
                           isBest
                             ? 'bg-pf-success/10 text-pf-success'
                             : isWorst
@@ -444,7 +444,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                 {t.topCategories.slice(0, 4).map((cat) => (
                   <span
                     key={cat}
-                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-pf-full text-pf-label bg-pf-overlay text-pf-text-secondary border border-pf-border"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label bg-pf-overlay text-pf-text-secondary border border-pf-border"
                   >
                     {categoryEmoji(cat)} {cat}
                   </span>
@@ -463,10 +463,10 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                 {t.recentTrades.slice(0, 3).map((trade, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 bg-pf-overlay rounded-pf px-2.5 py-1.5"
+                    className="flex items-center gap-2 bg-pf-overlay rounded-pf px-3 py-2"
                   >
                     <span
-                      className={`text-pf-caption font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                      className={`text-pf-caption font-bold px-2 py-1 rounded shrink-0 ${
                         trade.result === 'win'
                           ? 'bg-pf-success/15 text-pf-success'
                           : 'bg-pf-danger/15 text-pf-danger'
@@ -589,7 +589,7 @@ function TraderCardItem({
           <p className="text-xs text-pf-text-muted truncate">@{trader.username}</p>
         </div>
         <span
-          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-pf-label font-semibold shrink-0 ${rankBadgeClass(trader.rank)}`}
+          className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label font-semibold shrink-0 ${rankBadgeClass(trader.rank)}`}
           title={`Rank #${trader.rank}`}
         >
           {trader.rank <= 3 && <Trophy className="size-3" aria-hidden="true" />}#
@@ -599,8 +599,8 @@ function TraderCardItem({
 
       {/* Edge Score badge */}
       {trader.score !== undefined && (
-        <div className="flex items-center gap-1.5">
-          <TrendingUp className="size-3.5 text-pf-text-muted" aria-hidden="true" />
+        <div className="flex items-center gap-2">
+          <TrendingUp className="size-4 text-pf-text-muted" aria-hidden="true" />
           <span className="text-xs text-pf-text-secondary">Edge Score</span>
           <span className={`text-xs font-mono font-bold ${scoreColor(trader.score)}`}>
             {trader.score}
@@ -610,19 +610,19 @@ function TraderCardItem({
 
       {/* Stats row */}
       <div className="flex items-center gap-4 text-xs">
-        <span className="flex flex-col gap-0.5">
+        <span className="flex flex-col gap-1">
           <span className="text-pf-text-muted">P&amp;L</span>
           <span className={`font-mono font-semibold ${positive ? 'text-pf-success' : 'text-pf-danger'}`}>
             {trader.pnl}
           </span>
         </span>
         <span className="text-pf-border-strong">|</span>
-        <span className="flex flex-col gap-0.5">
+        <span className="flex flex-col gap-1">
           <span className="text-pf-text-muted">Win Rate</span>
           <span className="font-mono text-pf-text">{trader.winRate}</span>
         </span>
         <span className="text-pf-border-strong">|</span>
-        <span className="flex flex-col gap-0.5">
+        <span className="flex flex-col gap-1">
           <span className="text-pf-text-muted">Trades</span>
           <span className="font-mono text-pf-text">{trader.tradeCount}</span>
         </span>
@@ -633,19 +633,19 @@ function TraderCardItem({
         <div className="flex items-center gap-2 pt-1 border-t border-pf-border-subtle">
           <Link
             to={`/profile/${trader.username}`}
-            className="flex-1 text-center px-3 py-1.5 rounded-pf text-xs font-medium text-pf-text-secondary bg-pf-overlay hover:bg-pf-surface hover:text-pf-text transition-colors"
+            className="flex-1 text-center px-3 py-2 rounded-pf text-xs font-medium text-pf-text-secondary bg-pf-overlay hover:bg-pf-surface hover:text-pf-text transition-colors"
           >
             View Profile
           </Link>
           {isCopying ? (
-            <span className="flex items-center gap-1 px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-success/10 text-pf-success border border-pf-success/20 shrink-0">
+            <span className="flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-medium bg-pf-success/10 text-pf-success border border-pf-success/20 shrink-0">
               Already Copying
             </span>
           ) : (
             <Button
               type="button"
               onClick={() => navigate(`/copy/new?address=${trader.username}`)}
-              className="px-3 py-1.5 rounded-pf text-xs font-medium bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors shrink-0"
+              className="px-3 py-2 rounded-pf text-xs font-medium bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors shrink-0"
             >
               Copy Trade
             </Button>
@@ -809,10 +809,10 @@ export function Component() {
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <Users className="size-6 text-pf-cyan-400 mt-0.5 shrink-0" aria-hidden="true" />
+          <Users className="size-6 text-pf-cyan-400 mt-1 shrink-0" aria-hidden="true" />
           <div>
             <h1 className="text-2xl font-semibold text-pf-text">Discover Traders</h1>
-            <p className="text-sm text-pf-text-muted mt-0.5">Find top performers to copy</p>
+            <p className="text-sm text-pf-text-muted mt-1">Find top performers to copy</p>
           </div>
         </div>
 
@@ -822,7 +822,7 @@ export function Component() {
             type="button"
             variant="secondary"
             onClick={enterCompareMode}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-pf text-sm font-medium border border-pf-border text-pf-text-secondary bg-pf-elevated hover:text-pf-text hover:border-pf-border-strong transition-colors shrink-0"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf text-sm font-medium border border-pf-border text-pf-text-secondary bg-pf-elevated hover:text-pf-text hover:border-pf-border-strong transition-colors shrink-0"
           >
             <GitCompare className="size-4" />
             Compare
@@ -832,7 +832,7 @@ export function Component() {
             type="button"
             variant="ghost"
             onClick={exitCompareMode}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-pf text-sm font-medium border border-pf-cyan-500/30 text-pf-cyan-400 bg-pf-cyan-500/10 hover:bg-pf-cyan-500/20 transition-colors shrink-0"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf text-sm font-medium border border-pf-cyan-500/30 text-pf-cyan-400 bg-pf-cyan-500/10 hover:bg-pf-cyan-500/20 transition-colors shrink-0"
           >
             <X className="size-4" />
             Exit Compare
@@ -842,7 +842,7 @@ export function Component() {
 
       {/* Compare mode hint banner */}
       {compareMode && !showComparison && (
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-pf bg-pf-cyan-500/8 border border-pf-cyan-500/20 text-sm text-pf-cyan-400">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-cyan-500/8 border border-pf-cyan-500/20 text-sm text-pf-cyan-400">
           <GitCompare className="size-4 shrink-0" />
           Select 2–3 traders to compare side by side. Click a card to select it.
         </div>
@@ -868,7 +868,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 onClick={() => setCategory(cat)}
-                className={`px-3 py-1.5 text-sm rounded-pf-full border transition-colors cursor-pointer ${
+                className={`px-3 py-2 text-sm rounded-pf-full border transition-colors cursor-pointer ${
                   category === cat
                     ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 text-pf-cyan-400'
                     : 'border-pf-border text-pf-text-secondary hover:text-pf-text'
@@ -889,7 +889,7 @@ export function Component() {
                 id="win-rate-filter"
                 value={winRate}
                 onChange={(e) => setWinRate(e.target.value as WinRateFilter)}
-                className="px-2.5 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus:outline-none focus:border-pf-cyan-500/50 transition-colors cursor-pointer"
+                className="px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus:outline-none focus:border-pf-cyan-500/50 transition-colors cursor-pointer"
               >
                 {WIN_RATE_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -907,7 +907,7 @@ export function Component() {
                 id="min-trades-filter"
                 value={minTrades}
                 onChange={(e) => setMinTrades(e.target.value as MinTradesFilter)}
-                className="px-2.5 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus:outline-none focus:border-pf-cyan-500/50 transition-colors cursor-pointer"
+                className="px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus:outline-none focus:border-pf-cyan-500/50 transition-colors cursor-pointer"
               >
                 {MIN_TRADES_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -1017,7 +1017,7 @@ export function Component() {
               {selectedTraders.map((t) => (
                 <span
                   key={t.userId}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pf-full text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/25"
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium bg-pf-cyan-500/10 text-pf-cyan-400 border border-pf-cyan-500/25"
                 >
                   @{t.username}
                   <Button
@@ -1040,14 +1040,14 @@ export function Component() {
                 type="button"
                 variant="secondary"
                 onClick={() => setSelectedIds([])}
-                className="px-3 py-1.5 rounded-pf text-sm text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong bg-pf-elevated transition-colors"
+                className="px-3 py-2 rounded-pf text-sm text-pf-text-secondary hover:text-pf-text border border-pf-border hover:border-pf-border-strong bg-pf-elevated transition-colors"
               >
                 Clear
               </Button>
               <Button
                 type="button"
                 onClick={openComparison}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-pf text-sm font-semibold bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-pf text-sm font-semibold bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors"
               >
                 <GitCompare className="size-4" />
                 Compare

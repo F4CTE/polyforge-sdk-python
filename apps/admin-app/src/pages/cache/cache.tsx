@@ -102,12 +102,12 @@ export function Component() {
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 bg-pf-surface border border-pf-border rounded-pf-sm p-0.5">
+        <div className="flex items-center gap-1 bg-pf-surface border border-pf-border rounded-pf-sm p-1">
           <Button
             type="button"
             variant="ghost"
             onClick={() => setTab('cache')}
-            className={`px-3 py-1.5 text-sm rounded transition-colors ${tab === 'cache' ? 'bg-pf-elevated text-pf-text font-medium' : 'text-pf-text-secondary hover:text-pf-text'}`}
+            className={`px-3 py-2 text-sm rounded transition-colors ${tab === 'cache' ? 'bg-pf-elevated text-pf-text font-medium' : 'text-pf-text-secondary hover:text-pf-text'}`}
           >
             Cache
           </Button>
@@ -115,7 +115,7 @@ export function Component() {
             type="button"
             variant="ghost"
             onClick={() => setTab('streams')}
-            className={`px-3 py-1.5 text-sm rounded transition-colors ${tab === 'streams' ? 'bg-pf-elevated text-pf-text font-medium' : 'text-pf-text-secondary hover:text-pf-text'}`}
+            className={`px-3 py-2 text-sm rounded transition-colors ${tab === 'streams' ? 'bg-pf-elevated text-pf-text font-medium' : 'text-pf-text-secondary hover:text-pf-text'}`}
           >
             Streams
           </Button>
@@ -124,7 +124,7 @@ export function Component() {
           type="button"
           variant="ghost"
           onClick={tab === 'cache' ? loadStats : loadStreams}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-pf-sm border border-pf-border text-pf-text-secondary hover:bg-pf-elevated transition-colors"
           aria-label="Refresh"
         >
           <RefreshCw size={14} aria-hidden="true" />
@@ -204,9 +204,9 @@ export function Component() {
                   <tbody>
                     {stats.patterns.map((p) => (
                       <tr key={p.pattern} className="border-b border-pf-border last:border-0">
-                        <td className="px-3 py-2.5 font-mono text-xs text-pf-text">{p.pattern}</td>
-                        <td className="px-3 py-2.5 text-right text-pf-text-secondary">{p.keyCount.toLocaleString()}</td>
-                        <td className="px-3 py-2.5 text-right text-pf-text-secondary">{(p.hitRate * 100).toFixed(1)}%</td>
+                        <td className="px-3 py-3 font-mono text-xs text-pf-text">{p.pattern}</td>
+                        <td className="px-3 py-3 text-right text-pf-text-secondary">{p.keyCount.toLocaleString()}</td>
+                        <td className="px-3 py-3 text-right text-pf-text-secondary">{(p.hitRate * 100).toFixed(1)}%</td>
                       </tr>
                     ))}
                   </tbody>
@@ -242,7 +242,7 @@ export function Component() {
                       <span className="text-xs text-pf-text-muted">
                         {s.error ? 'stream empty or not found' : `${s.length.toLocaleString()} entries`}
                       </span>
-                      <span className={`px-2 py-0.5 rounded-pf-full text-pf-caption font-medium ${
+                      <span className={`px-2 py-1 rounded-pf-full text-pf-caption font-medium ${
                         s.error ? 'bg-pf-warning/10 text-pf-warning' : 'bg-pf-success/10 text-pf-success'
                       }`}>
                         {s.error ? 'empty' : 'active'}
@@ -252,7 +252,7 @@ export function Component() {
                   {!s.error && s.groups.length > 0 && (
                     <div className="grid grid-cols-3 gap-2">
                       {s.groups.map((g, gi) => (
-                        <div key={gi} className="bg-pf-base border border-pf-border rounded-pf-sm p-2.5">
+                        <div key={gi} className="bg-pf-base border border-pf-border rounded-pf-sm p-3">
                           <p className="font-mono text-pf-label text-pf-text truncate">{String(g.name)}</p>
                           <div className="flex items-center gap-3 mt-1">
                             <span className="text-pf-caption text-pf-text-muted">{g.consumers} consumer{g.consumers !== 1 ? 's' : ''}</span>

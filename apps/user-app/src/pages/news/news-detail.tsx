@@ -122,9 +122,9 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/news"
-        className="inline-flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
+        className="inline-flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
       >
-        <ArrowLeft className="size-3.5" aria-hidden="true" /> News
+        <ArrowLeft className="size-4" aria-hidden="true" /> News
       </Link>
 
       {loading && <DetailSkeleton />}
@@ -149,10 +149,10 @@ export function Component() {
           <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-4">
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`px-2 py-0.5 rounded-pf-full text-pf-label font-medium border ${sourceColor(article.source)}`}>
+              <span className={`px-2 py-1 rounded-pf-full text-pf-label font-medium border ${sourceColor(article.source)}`}>
                 {article.source}
               </span>
-              <span className={`px-2 py-0.5 rounded-pf-full text-pf-label font-medium ${sentimentColor(article.sentiment)}`}>
+              <span className={`px-2 py-1 rounded-pf-full text-pf-label font-medium ${sentimentColor(article.sentiment)}`}>
                 {article.sentiment}
               </span>
             </div>
@@ -171,9 +171,9 @@ export function Component() {
               href={article.url?.startsWith('https://') ? article.url : '#'}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
             >
-              <ExternalLink className="size-3.5" aria-hidden="true" /> Read full article
+              <ExternalLink className="size-4" aria-hidden="true" /> Read full article
             </a>
           </div>
 
@@ -203,28 +203,28 @@ export function Component() {
                   <tbody>
                     {article.signals.map(signal => (
                       <tr key={signal.id} className="border-b border-pf-border-subtle last:border-b-0 hover:bg-pf-surface/50 transition-colors">
-                        <td className="py-2.5 px-3 text-pf-text font-medium">{signal.marketName}</td>
-                        <td className="py-2.5 px-3">
+                        <td className="py-3 px-3 text-pf-text font-medium">{signal.marketName}</td>
+                        <td className="py-3 px-3">
                           <span className={`inline-flex items-center gap-1 font-semibold ${
                             signal.direction === 'BUY' ? 'text-pf-success' : 'text-pf-danger'
                           }`}>
                             {signal.direction === 'BUY'
-                              ? <ArrowUpRight className="size-3.5" />
-                              : <ArrowDownRight className="size-3.5" />
+                              ? <ArrowUpRight className="size-4" />
+                              : <ArrowDownRight className="size-4" />
                             }
                             {signal.direction}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3">
-                          <span className={`px-1.5 py-0.5 rounded text-pf-caption font-semibold ${
+                        <td className="py-3 px-3">
+                          <span className={`px-2 py-1 rounded text-pf-caption font-semibold ${
                             signal.outcome === 'YES' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
                           }`}>
                             {signal.outcome}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3">
+                        <td className="py-3 px-3">
                           <div className="flex items-center gap-2 min-w-[100px]">
-                            <div className={`h-1.5 rounded-pf-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
+                            <div className={`h-2 rounded-pf-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
                               <div
                                 className={`h-full rounded-pf-full ${confidenceColor(signal.confidence)}`}
                                 style={{ width: `${signal.confidence}%` }}
@@ -233,11 +233,11 @@ export function Component() {
                             <span className="font-mono text-pf-text-muted w-7 text-right">{signal.confidence}%</span>
                           </div>
                         </td>
-                        <td className="py-2.5 px-3 text-pf-text-secondary max-w-[200px] truncate">{signal.reasoning}</td>
-                        <td className="py-2.5 px-3 text-right">
+                        <td className="py-3 px-3 text-pf-text-secondary max-w-[200px] truncate">{signal.reasoning}</td>
+                        <td className="py-3 px-3 text-right">
                           <Link
                             to={`/markets/${signal.marketId}`}
-                            className="px-2.5 py-1 rounded-pf-sm text-pf-label font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
+                            className="px-3 py-1 rounded-pf-sm text-pf-label font-medium border border-pf-cyan-500/30 text-pf-cyan-400 hover:bg-pf-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors"
                           >
                             Trade
                           </Link>

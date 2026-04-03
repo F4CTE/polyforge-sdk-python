@@ -147,7 +147,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
         <button
           type="button"
           onClick={onToggle}
-          className="ml-auto p-1.5 rounded-pf-sm hover:bg-pf-elevated border border-pf-border text-pf-text-secondary hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
+          className="ml-auto p-2 rounded-pf-sm hover:bg-pf-elevated border border-pf-border text-pf-text-secondary hover:text-pf-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
@@ -161,7 +161,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
           return (
             <div key={section.title} className="mb-2">
               {!collapsed && (
-                <div className="px-2 py-1.5 text-pf-caption font-semibold uppercase tracking-wider text-pf-text-tertiary">
+                <div className="px-2 py-2 text-pf-caption font-semibold uppercase tracking-wider text-pf-text-tertiary">
                   {section.title}
                 </div>
               )}
@@ -172,7 +172,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                   title={collapsed ? item.label : undefined}
                   onClick={onNavigate}
                   className={({ isActive }) =>
-                    `flex items-center gap-2.5 px-2.5 py-2 rounded-pf-sm text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
+                    `flex items-center gap-3 px-3 py-2 rounded-pf-sm text-sm transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
                       isActive
                         ? 'bg-pf-cyan-500/10 text-pf-cyan-500 font-medium'
                         : 'text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text'
@@ -182,7 +182,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                   <span className="shrink-0 relative">
                     {item.icon}
                     {collapsed && item.label === 'Tickets' && openTickets > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-pf-full bg-pf-cyan-500 text-pf-micro font-bold text-pf-text-contrast" aria-label={`${openTickets} open tickets`}>
+                      <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[14px] h-4 px-1 rounded-pf-full bg-pf-cyan-500 text-pf-micro font-bold text-pf-text-contrast" aria-label={`${openTickets} open tickets`}>
                         {openTickets}
                       </span>
                     )}
@@ -191,7 +191,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                     <>
                       <span className="truncate">{item.label}</span>
                       {item.label === 'Tickets' && openTickets > 0 && (
-                        <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-pf-full bg-pf-cyan-500 text-pf-caption font-bold text-pf-text-contrast" aria-label={`${openTickets} open tickets`}>
+                        <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-2 rounded-pf-full bg-pf-cyan-500 text-pf-caption font-bold text-pf-text-contrast" aria-label={`${openTickets} open tickets`}>
                           {openTickets}
                         </span>
                       )}
@@ -215,9 +215,9 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
               <div className="text-sm font-medium text-pf-text truncate">
                 {admin?.displayName}
               </div>
-              <div className="flex items-center gap-1.5 text-pf-label text-pf-text-tertiary">
+              <div className="flex items-center gap-2 text-pf-label text-pf-text-tertiary">
                 {roleLabel}
-                <span className="px-1.5 py-0.5 rounded-pf-sm bg-pf-danger/[0.12] text-pf-danger text-pf-caption font-semibold uppercase tracking-wider">
+                <span className="px-2 py-1 rounded-pf-sm bg-pf-danger/[0.12] text-pf-danger text-pf-caption font-semibold uppercase tracking-wider">
                   Admin
                 </span>
               </div>

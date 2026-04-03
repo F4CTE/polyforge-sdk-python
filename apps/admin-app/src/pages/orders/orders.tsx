@@ -137,8 +137,8 @@ export function Component() {
                     <span className="font-medium">{entry.username}</span>
                     <span className="text-pf-text-tertiary"> - Intent {entry.intentId.slice(0, 8)}</span>
                   </div>
-                  <div className="text-xs text-pf-danger mt-0.5 truncate">{entry.lastError}</div>
-                  <div className="text-pf-label text-pf-text-tertiary mt-0.5">
+                  <div className="text-xs text-pf-danger mt-1 truncate">{entry.lastError}</div>
+                  <div className="text-pf-label text-pf-text-tertiary mt-1">
                     {entry.attempts} attempts - {formatDateTime(entry.enqueuedAt)}
                   </div>
                 </div>
@@ -152,7 +152,7 @@ export function Component() {
                         type="button"
                         variant="danger"
                         onClick={() => confirmAction?.type === 'replay' ? handleReplay(entry.intentId) : handleDiscard(entry.intentId)}
-                        className="px-2 py-0.5 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors"
+                        className="px-2 py-1 rounded bg-pf-danger/10 text-pf-danger hover:bg-pf-danger/20 cursor-pointer transition-colors"
                       >
                         Confirm
                       </Button>
@@ -160,7 +160,7 @@ export function Component() {
                         type="button"
                         variant="secondary"
                         onClick={() => setConfirmAction(null)}
-                        className="px-2 py-0.5 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base cursor-pointer transition-colors"
+                        className="px-2 py-1 rounded bg-pf-elevated text-pf-text-secondary hover:bg-pf-base cursor-pointer transition-colors"
                       >
                         Cancel
                       </Button>
@@ -242,7 +242,7 @@ export function Component() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-pf-full text-xs font-medium ${statusColor(o.status)}`}>
+                      <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(o.status)}`}>
                         {o.status}
                       </span>
                     </td>

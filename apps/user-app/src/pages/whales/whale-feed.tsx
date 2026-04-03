@@ -87,7 +87,7 @@ function CardSkeleton() {
   return (
     <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
       <div className="flex items-center gap-2">
-        <div className="h-3.5 bg-pf-overlay rounded w-[120px]" />
+        <div className="h-4 bg-pf-overlay rounded w-[120px]" />
         <div className="h-5 w-16 bg-pf-overlay rounded-pf-full ml-auto" />
       </div>
       <div className="h-3 bg-pf-overlay rounded w-[80%]" />
@@ -211,14 +211,14 @@ export function Component() {
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Min size dropdown */}
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           {MIN_SIZES.map(s => (
             <Button
               type="button"
               variant="ghost"
               key={s.value}
               onClick={() => changeMinSize(s.value)}
-              className={`px-3 py-1.5 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
+              className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
                 minSize === s.value
                   ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                   : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -234,7 +234,7 @@ export function Component() {
           value={category}
           onChange={e => changeCategory(e.target.value)}
           aria-label="Filter by category"
-          className="px-3 py-1.5 rounded-pf-sm text-xs bg-pf-elevated text-pf-text-secondary border border-pf-border hover:border-pf-border-strong transition-colors"
+          className="px-3 py-2 rounded-pf-sm text-xs bg-pf-elevated text-pf-text-secondary border border-pf-border hover:border-pf-border-strong transition-colors"
         >
           <option value="">All Categories</option>
           <option value="crypto">Crypto</option>
@@ -246,14 +246,14 @@ export function Component() {
 
         {/* Wallet search */}
         <div className="relative flex-1 min-w-[200px] max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-pf-text-muted" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
           <Input
             type="text"
             placeholder="Search wallet..."
             aria-label="Search wallet address"
             value={walletSearch}
             onChange={e => { setWalletSearch(e.target.value); setPage(1); }}
-            className="w-full pl-8 pr-3 py-1.5 rounded-pf-sm text-xs bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted"
+            className="w-full pl-8 pr-3 py-2 rounded-pf-sm text-xs bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted"
           />
         </div>
       </div>
@@ -295,7 +295,7 @@ export function Component() {
                     title="Copy address"
                     aria-label="Copy wallet address"
                   >
-                    <Copy className="size-3.5" />
+                    <Copy className="size-4" />
                   </Button>
                 </div>
                 <span className="text-pf-label text-pf-text-muted">{timeAgo(trade.timestamp)}</span>
@@ -304,21 +304,21 @@ export function Component() {
               {/* Market name + category */}
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-sm text-pf-text font-medium truncate">{trade.marketName}</span>
-                <span className="px-1.5 py-0.5 rounded-pf-full text-pf-caption bg-pf-overlay text-pf-text-muted shrink-0">
+                <span className="px-2 py-1 rounded-pf-full text-pf-caption bg-pf-overlay text-pf-text-muted shrink-0">
                   {trade.marketCategory}
                 </span>
               </div>
 
               {/* Side + Outcome badges */}
               <div className="flex items-center gap-2 mb-3">
-                <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${
+                <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
                   trade.side === 'BUY'
                     ? 'bg-pf-success/15 text-pf-success'
                     : 'bg-pf-danger/15 text-pf-danger'
                 }`}>
                   {trade.side}
                 </span>
-                <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${
+                <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
                   trade.outcome === 'YES'
                     ? 'bg-pf-success/15 text-pf-success'
                     : 'bg-pf-danger/15 text-pf-danger'
@@ -343,23 +343,23 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => toggleFollow(trade.walletAddress)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border cursor-pointer transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border cursor-pointer transition-colors ${
                     followingSet.has(trade.walletAddress)
                       ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                       : 'text-pf-cyan-400 border-pf-cyan-500/30 hover:bg-pf-cyan-500/10'
                   }`}
                 >
                   {followingSet.has(trade.walletAddress) ? (
-                    <><UserCheck className="size-3.5" /> Following</>
+                    <><UserCheck className="size-4" /> Following</>
                   ) : (
-                    <><UserPlus className="size-3.5" /> Follow</>
+                    <><UserPlus className="size-4" /> Follow</>
                   )}
                 </Button>
                 <Link
                   to={`/copy/new?wallet=${trade.walletAddress}`}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border border-pf-success/30 text-pf-success hover:bg-pf-success/10 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border border-pf-success/30 text-pf-success hover:bg-pf-success/10 transition-colors"
                 >
-                  <Copy className="size-3.5" /> Copy
+                  <Copy className="size-4" /> Copy
                 </Link>
               </div>
             </div>

@@ -193,7 +193,7 @@ function PeriodPills({ periods, active, onChange }: PeriodPillProps) {
           type="button"
           variant="ghost"
           onClick={() => onChange(p.value)}
-          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+          className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
             active === p.value
               ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
               : 'text-pf-text-muted hover:text-pf-text border border-transparent'
@@ -211,7 +211,7 @@ function PeriodPills({ periods, active, onChange }: PeriodPillProps) {
 function ChangeBadge({ change }: { change: number }) {
   const positive = change >= 0;
   return (
-    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${positive ? 'text-pf-success' : 'text-pf-danger'}`}>
+    <span className={`inline-flex items-center gap-1 text-xs font-medium ${positive ? 'text-pf-success' : 'text-pf-danger'}`}>
       {positive
         ? <TrendingUp className="size-3" />
         : <TrendingDown className="size-3" />}
@@ -397,7 +397,7 @@ export function Component() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-pf-text">Admin Revenue</h1>
-          <p className="text-sm text-pf-text-muted mt-0.5">
+          <p className="text-sm text-pf-text-muted mt-1">
             Platform earnings across marketplace listings, copy trading, and strategy sales
           </p>
         </div>
@@ -408,7 +408,7 @@ export function Component() {
             variant="ghost"
             onClick={refreshAll}
             disabled={loading || loadingBreakdown}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`size-4 ${loading || loadingBreakdown ? 'animate-spin' : ''}`} />
             Refresh
@@ -428,7 +428,7 @@ export function Component() {
           : statCards.map(card => (
               <div key={card.label} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`p-1.5 rounded-pf-sm ${card.bg} ${card.color}`}>{card.icon}</div>
+                  <div className={`p-2 rounded-pf-sm ${card.bg} ${card.color}`}>{card.icon}</div>
                   <span className="text-xs text-pf-text-muted font-medium uppercase tracking-wide">{card.label}</span>
                 </div>
                 <div className="text-2xl font-bold text-pf-text font-mono">{card.value}</div>
@@ -462,7 +462,7 @@ export function Component() {
               ))
             : breakdownStatCards.map((card, idx) => (
                 <div key={card.label} className="bg-pf-base border border-pf-border rounded-pf p-3">
-                  <div className="flex items-center gap-2 mb-1.5">
+                  <div className="flex items-center gap-2 mb-2">
                     {'dotColor' in card && (
                       <span
                         className="size-2 rounded-pf-full shrink-0"
@@ -535,7 +535,7 @@ export function Component() {
                   {breakdown?.sources.map(s => (
                     <div key={s.source} className="flex items-center gap-2 text-xs">
                       <span
-                        className="size-2.5 rounded-pf-full shrink-0"
+                        className="size-3 rounded-pf-full shrink-0"
                         style={{ backgroundColor: SOURCE_COLORS[s.source] }}
                       />
                       <span className="text-pf-text-muted truncate">{s.label}</span>
@@ -569,7 +569,7 @@ export function Component() {
                   <tbody className="divide-y divide-pf-border-subtle">
                     {(breakdown?.sources ?? []).map(s => (
                       <tr key={s.source} className="hover:bg-pf-overlay/40 transition-colors">
-                        <td className="py-2.5 pr-2">
+                        <td className="py-3 pr-2">
                           <div className="flex items-center gap-2">
                             <span
                               className="size-2 rounded-pf-full shrink-0"
@@ -578,10 +578,10 @@ export function Component() {
                             <span className="text-pf-text">{s.label}</span>
                           </div>
                         </td>
-                        <td className="py-2.5 text-right font-mono text-pf-text">{fmtDollar(s.revenue)}</td>
-                        <td className="py-2.5 pl-3">
-                          <div className="flex items-center gap-1.5">
-                            <div className="flex-1 h-1.5 bg-pf-base rounded-pf-full overflow-hidden">
+                        <td className="py-3 text-right font-mono text-pf-text">{fmtDollar(s.revenue)}</td>
+                        <td className="py-3 pl-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-pf-base rounded-pf-full overflow-hidden">
                               <div
                                 className="h-full rounded-pf-full"
                                 style={{
@@ -595,10 +595,10 @@ export function Component() {
                             </span>
                           </div>
                         </td>
-                        <td className="py-2.5 text-right">
+                        <td className="py-3 text-right">
                           <ChangeBadge change={s.change} />
                         </td>
-                        <td className="py-2.5 text-right font-mono text-pf-text-muted">
+                        <td className="py-3 text-right font-mono text-pf-text-muted">
                           {fmtNum(s.transactionCount)}
                         </td>
                       </tr>
@@ -629,7 +629,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => setMonthlyPeriod(p)}
-                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
                     monthlyPeriod === p
                       ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
                       : 'text-pf-text-muted hover:text-pf-text border border-transparent'
@@ -644,7 +644,7 @@ export function Component() {
               variant="ghost"
               onClick={() => loadMonthly(monthlyPeriod)}
               disabled={loadingMonthly}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-pf-text-secondary hover:text-pf-text border border-pf-border bg-pf-base transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-1 rounded text-xs text-pf-text-secondary hover:text-pf-text border border-pf-border bg-pf-base transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`size-3 ${loadingMonthly ? 'animate-spin' : ''}`} />
               Refresh
@@ -761,8 +761,8 @@ export function Component() {
                         <div className="text-xs text-pf-text-muted">
                           by {l.seller.displayName ?? l.seller.username} · {l.purchaseCount} sales · {l.forkCount} forks
                           {l.avgRating && (
-                            <span className="ml-1 inline-flex items-center gap-0.5">
-                              <Star className="size-2.5 fill-pf-warning text-pf-warning" />
+                            <span className="ml-1 inline-flex items-center gap-1">
+                              <Star className="size-3 fill-pf-warning text-pf-warning" />
                               {parseFloat(l.avgRating).toFixed(1)} ({l.ratingCount})
                             </span>
                           )}
@@ -829,7 +829,7 @@ export function Component() {
             variant="ghost"
             onClick={() => loadTopUsers(period)}
             disabled={loadingTopUsers}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-pf-text-secondary hover:text-pf-text border border-pf-border bg-pf-base transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-1 rounded text-xs text-pf-text-secondary hover:text-pf-text border border-pf-border bg-pf-base transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`size-3 ${loadingTopUsers ? 'animate-spin' : ''}`} />
             Refresh
@@ -840,11 +840,11 @@ export function Component() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-pf-text-muted border-b border-pf-border">
-                <th className="text-left px-4 py-2.5 font-medium w-10">#</th>
-                <th className="text-left px-2 py-2.5 font-medium">Username</th>
-                <th className="text-right px-2 py-2.5 font-medium">Revenue Generated</th>
-                <th className="text-right px-2 py-2.5 font-medium">Trade Volume</th>
-                <th className="text-right px-4 py-2.5 font-medium">Primary Source</th>
+                <th className="text-left px-4 py-3 font-medium w-10">#</th>
+                <th className="text-left px-2 py-3 font-medium">Username</th>
+                <th className="text-right px-2 py-3 font-medium">Revenue Generated</th>
+                <th className="text-right px-2 py-3 font-medium">Trade Volume</th>
+                <th className="text-right px-4 py-3 font-medium">Primary Source</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-pf-border-subtle">
@@ -886,7 +886,7 @@ export function Component() {
                           </td>
                           <td className="px-4 py-3 text-right">
                             <span
-                              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pf-full text-xs font-medium"
+                              className="inline-flex items-center gap-2 px-2 py-1 rounded-pf-full text-xs font-medium"
                               style={{
                                 backgroundColor: `${dotColor}18`,
                                 color: dotColor,
@@ -894,7 +894,7 @@ export function Component() {
                               }}
                             >
                               <span
-                                className="size-1.5 rounded-pf-full"
+                                className="size-2 rounded-pf-full"
                                 style={{ backgroundColor: dotColor }}
                               />
                               {user.primarySource.replace(/_/g, ' ')}

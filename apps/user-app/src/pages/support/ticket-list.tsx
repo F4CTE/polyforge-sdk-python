@@ -136,12 +136,12 @@ export function Component() {
                         </Link>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
+                        <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
                           {ticket.status.replace(/_/g, ' ')}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${ps.bg} ${ps.text}`}>
+                        <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ps.bg} ${ps.text}`}>
                           {ticket.priority}
                         </span>
                       </td>

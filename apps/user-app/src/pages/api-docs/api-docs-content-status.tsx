@@ -50,7 +50,7 @@ function StatusDot({ ok }: { ok: boolean }) {
 function ServiceCard({ svc }: { svc: ServiceEntry }) {
   return (
     <div className="flex items-center justify-between px-4 py-3 bg-pf-elevated border border-pf-border rounded-pf-lg hover:border-pf-border-strong transition-colors">
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
         <StatusDot ok={svc.ok} />
         <span className="text-sm text-pf-text">{svc.label}</span>
       </div>
@@ -117,7 +117,7 @@ export function StatusSection() {
             ? 'bg-pf-success/5 border-pf-success/20'
             : 'bg-pf-danger/5 border-pf-danger/20'
         }`}>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             {allOk
               ? <CheckCircle2 className="size-4 text-pf-success" />
               : <AlertCircle  className="size-4 text-pf-danger" />
@@ -169,7 +169,7 @@ export function StatusSection() {
           variant="ghost"
           onClick={() => fetchStatus(true)}
           disabled={refreshing}
-          className="flex items-center gap-1.5 hover:text-pf-text transition-colors disabled:opacity-50 cursor-pointer"
+          className="flex items-center gap-2 hover:text-pf-text transition-colors disabled:opacity-50 cursor-pointer"
         >
           <RefreshCw className={`size-3 ${refreshing ? 'animate-spin' : ''}`} />
           Refresh

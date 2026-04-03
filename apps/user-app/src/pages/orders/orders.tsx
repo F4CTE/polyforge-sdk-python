@@ -231,12 +231,12 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <BookOpen className="size-3.5 text-pf-cyan-400" />
+              <BookOpen className="size-4 text-pf-cyan-400" />
               <span className="text-sm font-medium text-pf-text">Journal Note</span>
               {entry && <span className="text-pf-caption text-pf-text-muted">Last updated {formatDate(entry.updatedAt)}</span>}
             </div>
             <Button type="button" variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close journal panel">
-              <X className="size-3.5" />
+              <X className="size-4" />
             </Button>
           </div>
 
@@ -256,14 +256,14 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
           {/* Mood selector */}
           <div>
             <span className="block text-xs text-pf-text-secondary mb-2">Mood</span>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {MOOD_KEYS.map(m => (
                 <Button
                   key={m}
                   type="button"
                   variant="ghost"
                   onClick={() => setMood(m)}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
                     mood === m
                       ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/40'
                       : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -279,13 +279,13 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
           {/* Tags */}
           <div>
             <span className="block text-xs text-pf-text-secondary mb-2">Tags</span>
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-2">
               {tags.map(t => (
-                <span key={t} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full text-pf-label bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/30">
-                  <Tag className="size-2.5" />
+                <span key={t} className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/30">
+                  <Tag className="size-3" />
                   {t}
-                  <Button type="button" variant="ghost" onClick={() => removeTag(t)} aria-label={`Remove tag ${t}`} className="hover:text-pf-danger transition-colors ml-0.5">
-                    <X className="size-2.5" />
+                  <Button type="button" variant="ghost" onClick={() => removeTag(t)} aria-label={`Remove tag ${t}`} className="hover:text-pf-danger transition-colors ml-1">
+                    <X className="size-3" />
                   </Button>
                 </span>
               ))}
@@ -308,7 +308,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               {saving ? <Loader2 className="size-3 animate-spin" /> : null}
               Save Note
@@ -319,7 +319,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
                 variant="danger"
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-danger/10 text-pf-danger text-xs font-medium border border-pf-danger/20 hover:bg-pf-danger/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-danger/10 text-pf-danger text-xs font-medium border border-pf-danger/20 hover:bg-pf-danger/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {deleting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
                 Delete
@@ -349,11 +349,11 @@ function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; on
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-pf-text line-clamp-1">{entry.marketTitle || `Order ${entry.orderId.slice(0, 8)}`}</p>
-          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-            <span className={`inline-flex px-1.5 py-0.5 rounded text-pf-caption font-medium ${entry.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'}`}>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <span className={`inline-flex px-2 py-1 rounded text-pf-caption font-medium ${entry.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'}`}>
               {entry.side}
             </span>
-            <span className={`inline-flex px-1.5 py-0.5 rounded text-pf-caption font-medium ${entry.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'}`}>
+            <span className={`inline-flex px-2 py-1 rounded text-pf-caption font-medium ${entry.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'}`}>
               {entry.outcome}
             </span>
             <span className="font-mono text-pf-caption text-pf-text-muted">{entry.size} @ {entry.price}</span>
@@ -366,10 +366,10 @@ function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; on
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <Button type="button" variant="ghost" size="icon-sm" onClick={onEdit} aria-label="Edit journal note">
-            <Edit2 className="size-3.5" />
+            <Edit2 className="size-4" />
           </Button>
           <Button type="button" variant="ghost" size="icon-sm" onClick={onDelete} aria-label="Delete journal note">
-            <Trash2 className="size-3.5" />
+            <Trash2 className="size-4" />
           </Button>
         </div>
       </div>
@@ -384,7 +384,7 @@ function JournalEntryCard({ entry, onEdit, onDelete }: { entry: JournalEntry; on
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex flex-wrap gap-1">
           {entry.tags.map(t => (
-            <span key={t} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-pf-full text-pf-caption bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/20">
+            <span key={t} className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-caption bg-pf-purple-500/10 text-pf-purple-400 border border-pf-purple-500/20">
               <Tag className="size-2" />{t}
             </span>
           ))}
@@ -417,7 +417,7 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
       {/* Search + filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-pf-text-muted pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted pointer-events-none" />
           <Input
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -438,7 +438,7 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
       </div>
 
       {/* Mood filter pills */}
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         <Button
           type="button"
           variant="ghost"
@@ -522,7 +522,7 @@ function CategoryBadge({ category }: { category?: string | null }) {
   const key = category.toLowerCase();
   const cls = colors[key] ?? 'bg-pf-surface text-pf-text-muted border-pf-border';
   return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-pf-caption font-medium border ${cls}`}>
+    <span className={`inline-flex items-center px-2 py-1 rounded text-pf-caption font-medium border ${cls}`}>
       {category}
     </span>
   );
@@ -635,7 +635,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
               <label htmlFor="cond-token-id" className="block text-xs font-medium text-pf-text-secondary mb-1">Token</label>
               <Input id="cond-token-id" value={form.tokenId} readOnly
                 className="w-full h-9 px-3 rounded-pf bg-pf-overlay border border-pf-border text-sm text-pf-text-secondary cursor-not-allowed font-mono text-xs" />
-              <p className="text-pf-caption text-pf-text-muted mt-0.5">Auto-filled from selected position</p>
+              <p className="text-pf-caption text-pf-text-muted mt-1">Auto-filled from selected position</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
@@ -700,7 +700,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
             <Button type="button" variant="secondary" onClick={onClose} className="px-4 py-2 text-sm text-pf-text-secondary hover:text-pf-text transition-colors">Cancel</Button>
             <Button type="submit" disabled={submitting}
               className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast text-sm font-medium hover:bg-pf-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-              <Plus className="size-3.5" /> Create
+              <Plus className="size-4" /> Create
             </Button>
           </div>
         </form>
@@ -921,7 +921,7 @@ export function Component() {
             <Button
               type="button"
               onClick={() => setShowCreateDialog(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-cyan-500/15 text-pf-cyan-400 text-xs font-medium border border-pf-cyan-500/30 hover:bg-pf-cyan-500/25 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-cyan-500/15 text-pf-cyan-400 text-xs font-medium border border-pf-cyan-500/30 hover:bg-pf-cyan-500/25 transition-colors"
             >
               <Plus className="size-3" /> New Conditional
             </Button>
@@ -934,7 +934,7 @@ export function Component() {
                 variant="secondary"
                 onClick={exportCsv}
                 disabled={exportingCsv}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-xs text-pf-text-secondary hover:text-pf-text hover:border-pf-border-hover transition-colors disabled:opacity-50"
               >
                 {exportingCsv
                   ? <Loader2 className="size-3 animate-spin" aria-hidden="true" />
@@ -958,7 +958,7 @@ export function Component() {
           role="tab"
           aria-selected={viewTab === 'orders'}
           onClick={() => setViewTab('orders')}
-          className={`px-3 py-1.5 rounded-t text-sm font-medium transition-colors ${
+          className={`px-3 py-2 rounded-t text-sm font-medium transition-colors ${
             viewTab === 'orders' ? 'text-pf-cyan-400 border-b-2 border-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'
           }`}
         >
@@ -970,7 +970,7 @@ export function Component() {
           role="tab"
           aria-selected={viewTab === 'conditional'}
           onClick={() => setViewTab('conditional')}
-          className={`px-3 py-1.5 rounded-t text-sm font-medium transition-colors ${
+          className={`px-3 py-2 rounded-t text-sm font-medium transition-colors ${
             viewTab === 'conditional' ? 'text-pf-cyan-400 border-b-2 border-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'
           }`}
         >
@@ -982,11 +982,11 @@ export function Component() {
           role="tab"
           aria-selected={viewTab === 'journal'}
           onClick={() => setViewTab('journal')}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-t text-sm font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 px-3 py-2 rounded-t text-sm font-medium transition-colors ${
             viewTab === 'journal' ? 'text-pf-cyan-400 border-b-2 border-pf-cyan-400' : 'text-pf-text-secondary hover:text-pf-text'
           }`}
         >
-          <BookOpen className="size-3.5" />
+          <BookOpen className="size-4" />
           Journal
           {Object.keys(journalByOrder).length > 0 && (
             <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-pf-full bg-pf-cyan-500/20 text-pf-cyan-400 text-pf-caption font-medium">
@@ -1007,7 +1007,7 @@ export function Component() {
                 variant="ghost"
                 key={f.value}
                 onClick={() => changeFilter(f.value)}
-                className={`px-3 py-1.5 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
+                className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
                   filter === f.value
                     ? 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30'
                     : 'bg-pf-elevated text-pf-text-secondary border-pf-border hover:border-pf-border-strong'
@@ -1080,14 +1080,14 @@ export function Component() {
                             <CategoryBadge category={order.marketCategory} />
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
                               order.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                             }`}>
                               {order.side}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
                               order.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                             }`}>
                               {order.outcome}
@@ -1101,7 +1101,7 @@ export function Component() {
                             <span className="font-mono text-pf-label text-pf-text-muted">{order.orderType}</span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
+                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
                               {order.status}
                             </span>
                           </td>
@@ -1109,7 +1109,7 @@ export function Component() {
                             <span className="font-mono text-pf-label text-pf-text-muted">{formatDate(order.createdAt)}</span>
                           </td>
                           <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-0.5">
+                            <div className="flex items-center justify-end gap-1">
                               <Button
                                 type="button"
                                 variant="ghost"
@@ -1123,7 +1123,7 @@ export function Component() {
                                     : 'text-pf-text-muted hover:text-pf-cyan-400'
                                 }`}
                               >
-                                <BookOpen className={`size-3.5 ${hasNote ? 'fill-pf-cyan-400/20' : ''}`} />
+                                <BookOpen className={`size-4 ${hasNote ? 'fill-pf-cyan-400/20' : ''}`} />
                               </Button>
                               {['PENDING', 'SUBMITTED', 'LIVE'].includes(order.status) && (
                                 <Button
@@ -1135,7 +1135,7 @@ export function Component() {
                                   aria-label="Cancel order"
                                   className="p-1 rounded text-pf-text-muted hover:text-pf-danger transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40"
                                 >
-                                  <Trash2 className="size-3.5" />
+                                  <Trash2 className="size-4" />
                                 </Button>
                               )}
                             </div>
@@ -1237,7 +1237,7 @@ export function Component() {
                       return (
                         <tr key={co.id} className="hover:bg-pf-surface/50 transition-colors">
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${ts.bg} ${ts.text}`}>
+                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ts.bg} ${ts.text}`}>
                               {ts.label}
                             </span>
                           </td>
@@ -1247,21 +1247,21 @@ export function Component() {
                           <td className="px-4 py-3 text-right font-mono text-pf-text">{co.triggerPrice}</td>
                           <td className="px-4 py-3 text-right font-mono text-pf-text">{co.size}</td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
                               co.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                             }`}>
                               {co.side}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
                               co.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                             }`}>
                               {co.outcome}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${cs.bg} ${cs.text}`}>
+                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${cs.bg} ${cs.text}`}>
                               {co.status}
                             </span>
                           </td>
@@ -1282,7 +1282,7 @@ export function Component() {
                                 onClick={() => cancelConditional(co.id)}
                                 aria-label="Cancel conditional order"
                               >
-                                <Trash2 className="size-3.5" />
+                                <Trash2 className="size-4" />
                               </Button>
                             )}
                           </td>
@@ -1354,12 +1354,12 @@ export function Component() {
               {([
                 { label: 'Order ID', value: <span className="font-mono text-pf-label">{selectedOrder.id.slice(0, 8)}...</span> },
                 { label: 'Side', value: (
-                  <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                  <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
                     selectedOrder.side === 'BUY' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                   }`}>{selectedOrder.side}</span>
                 )},
                 { label: 'Outcome', value: (
-                  <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                  <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
                     selectedOrder.outcome === 'YES' ? 'bg-pf-success/10 text-pf-success' : 'bg-pf-danger/10 text-pf-danger'
                   }`}>{selectedOrder.outcome}</span>
                 )},
@@ -1370,7 +1370,7 @@ export function Component() {
                 { label: 'Type', value: selectedOrder.orderType },
                 { label: 'Status', value: (() => {
                   const ss = STATUS_STYLES[selectedOrder.status] ?? STATUS_STYLES.PENDING;
-                  return <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>{selectedOrder.status}</span>;
+                  return <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>{selectedOrder.status}</span>;
                 })() },
                 { label: 'Created', value: <span className="font-mono text-xs">{formatDate(selectedOrder.placedAt ?? selectedOrder.createdAt)}</span> },
               ] as { label: string; value: React.ReactNode }[]).map(row => (

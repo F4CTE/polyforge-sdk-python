@@ -25,7 +25,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         </select>
         <ChevronDown
           size={14}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-pf-text-secondary pointer-events-none"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-pf-text-secondary pointer-events-none"
           aria-hidden="true"
         />
       </div>

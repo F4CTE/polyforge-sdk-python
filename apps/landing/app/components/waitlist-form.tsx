@@ -60,7 +60,7 @@ export function WaitlistForm({ className = "" }: WaitlistFormProps) {
         role="status"
         aria-live="polite"
       >
-        <p className="text-sm text-pf-success flex items-center justify-center gap-1.5">
+        <p className="text-sm text-pf-success flex items-center justify-center gap-2">
           <svg
             width="16"
             height="16"
@@ -123,7 +123,7 @@ export function WaitlistForm({ className = "" }: WaitlistFormProps) {
               viewBox="0 0 16 16"
               fill="none"
               aria-hidden="true"
-              className="ml-1.5 animate-spin"
+              className="ml-2 animate-spin"
             >
               <circle
                 cx="8"
@@ -138,7 +138,7 @@ export function WaitlistForm({ className = "" }: WaitlistFormProps) {
           )}
         </button>
       </div>
-      <p className="text-pf-body-sm text-pf-text-muted mt-2.5 text-center">
+      <p className="text-pf-body-sm text-pf-text-muted mt-3 text-center">
         Join the early-access list &mdash; no spam, ever.
       </p>
       {status === "error" && errorMsg && (

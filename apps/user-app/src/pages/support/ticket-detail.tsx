@@ -164,7 +164,7 @@ export function Component() {
           <div>
             <h1 className="text-2xl font-semibold text-pf-text">{ticket.subject}</h1>
             <div className="flex items-center gap-3 mt-1 text-xs text-pf-text-muted">
-              <span className={`inline-flex px-2 py-0.5 rounded font-medium ${ss.bg} ${ss.text}`}>
+              <span className={`inline-flex px-2 py-1 rounded font-medium ${ss.bg} ${ss.text}`}>
                 {ticket.status.replace(/_/g, ' ')}
               </span>
               <span>{ticket.priority}</span>
@@ -191,7 +191,7 @@ export function Component() {
               size="sm"
               onClick={() => setShowCloseConfirm(true)}
               disabled={closing}
-              className="flex items-center gap-1.5"
+              className="flex items-center gap-2"
             >
               {closing ? <Loader2 className="size-3 animate-spin" /> : <Lock className="size-3" />}
               Close Ticket
@@ -219,7 +219,7 @@ export function Component() {
                   {msg.senderName}
                 </span>
                 {msg.isAdmin && (
-                  <span className="text-pf-caption px-1.5 py-0.5 rounded bg-pf-cyan-500/15 text-pf-cyan-400 font-medium">Staff</span>
+                  <span className="text-pf-caption px-2 py-1 rounded bg-pf-cyan-500/15 text-pf-cyan-400 font-medium">Staff</span>
                 )}
                 <span className="text-pf-label text-pf-text-muted ml-auto font-mono">
                   {formatDateTime(msg.createdAt)}
@@ -233,7 +233,7 @@ export function Component() {
       </div>
 
       {/* Auto-polling indicator */}
-      <div className="flex items-center gap-1.5 text-pf-label text-pf-text-muted">
+      <div className="flex items-center gap-2 text-pf-label text-pf-text-muted">
         <RefreshCw className="size-3" />
         Auto-updating every 15s
       </div>

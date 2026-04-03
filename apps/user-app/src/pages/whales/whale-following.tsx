@@ -42,7 +42,7 @@ function pnlSign(pnl: string): string {
 function CardSkeleton() {
   return (
     <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
-      <div className="h-3.5 bg-pf-overlay rounded w-[50%]" />
+      <div className="h-4 bg-pf-overlay rounded w-[50%]" />
       <div className="flex gap-4">
         <div className="h-3 bg-pf-overlay rounded w-[25%]" />
         <div className="h-3 bg-pf-overlay rounded w-[25%]" />
@@ -89,7 +89,7 @@ export function Component() {
   return (
     <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">
       {/* Back link */}
-      <Link to="/whales" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
+      <Link to="/whales" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
         <ArrowLeft className="size-4" aria-hidden="true" /> Back to feed
       </Link>
 
@@ -135,10 +135,10 @@ export function Component() {
                   type="button"
                   variant="danger"
                   onClick={() => unfollow(wallet.walletAddress)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf-sm text-xs font-medium border border-pf-danger/30 text-pf-danger hover:bg-pf-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border border-pf-danger/30 text-pf-danger hover:bg-pf-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 transition-colors"
                   aria-label={`Unfollow wallet ${truncateAddress(wallet.walletAddress)}`}
                 >
-                  <UserMinus className="size-3.5" /> Unfollow
+                  <UserMinus className="size-4" /> Unfollow
                 </Button>
               </div>
 

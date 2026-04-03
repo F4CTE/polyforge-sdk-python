@@ -775,11 +775,11 @@ const TEMPLATE_CATEGORY_LABELS: Record<string, string> = {
 function DifficultyDots({ difficulty }: { difficulty: TemplateDifficulty }) {
   const filled = difficulty === 'beginner' ? 1 : difficulty === 'intermediate' ? 2 : 3;
   return (
-    <span className="flex items-center gap-0.5" aria-label={`Difficulty: ${difficulty}`}>
+    <span className="flex items-center gap-1" aria-label={`Difficulty: ${difficulty}`}>
       {[1, 2, 3].map((i) => (
         <span
           key={i}
-          className={`inline-block size-1.5 rounded-pf-full ${
+          className={`inline-block size-2 rounded-pf-full ${
             i <= filled
               ? difficulty === 'beginner'
                 ? 'bg-pf-success'
@@ -1163,15 +1163,15 @@ export function Component() {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-pf-text group-hover:text-pf-cyan-400 transition-colors">{t.name}</span>
                   {t.trigger && (
-                    <span className="text-pf-caption px-1.5 py-0.5 rounded bg-pf-surface-elevated border border-pf-border text-pf-text-muted">{t.trigger}</span>
+                    <span className="text-pf-caption px-2 py-1 rounded bg-pf-surface-elevated border border-pf-border text-pf-text-muted">{t.trigger}</span>
                   )}
-                  <span className={`text-pf-caption px-1.5 py-0.5 rounded border ${
+                  <span className={`text-pf-caption px-2 py-1 rounded border ${
                     t.difficulty === 'Beginner' ? 'bg-pf-success/10 border-pf-success/30 text-pf-success' :
                     t.difficulty === 'Intermediate' ? 'bg-pf-warning/10 border-pf-warning/30 text-pf-warning' :
                     'bg-pf-danger/10 border-pf-danger/30 text-pf-danger'
                   }`}>{t.difficulty}</span>
                 </div>
-                <p className="text-xs text-pf-text-muted mt-0.5">{t.description}</p>
+                <p className="text-xs text-pf-text-muted mt-1">{t.description}</p>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-pf-text-muted group-hover:text-pf-cyan-400 flex-shrink-0 transition-colors"><polyline points="9 18 15 12 9 6"/></svg>
             </Button>
@@ -1197,10 +1197,10 @@ export function Component() {
   return (
     <div className="relative flex flex-col h-full overflow-hidden">
       {/* ─── Top bar ──────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-pf-border-subtle bg-pf-elevated/50 shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-pf-border-subtle bg-pf-elevated/50 shrink-0">
         <Link
           to="/strategies"
-          className="flex items-center gap-1.5 text-xs text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
+          className="flex items-center gap-2 text-xs text-pf-text-secondary hover:text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors"
         >
           <ArrowLeft className="size-3" aria-hidden="true" />
           Strategies
@@ -1292,7 +1292,7 @@ export function Component() {
             aria-label={`Undo (${historyLength} step${historyLength !== 1 ? 's' : ''})`}
             title={`Undo (Ctrl+Z) — ${historyLength} step${historyLength !== 1 ? 's' : ''}`}
           >
-            <RotateCcw className="size-3.5" />
+            <RotateCcw className="size-4" />
           </Button>
 
           {/* Redo */}
@@ -1305,7 +1305,7 @@ export function Component() {
             aria-label={`Redo (${futureLength} step${futureLength !== 1 ? 's' : ''})`}
             title={`Redo (Ctrl+Y) — ${futureLength} step${futureLength !== 1 ? 's' : ''}`}
           >
-            <RotateCw className="size-3.5" />
+            <RotateCw className="size-4" />
           </Button>
 
           <div className="w-px h-4 bg-pf-border-subtle" />
@@ -1317,7 +1317,7 @@ export function Component() {
             onClick={onQuickTest}
             disabled={quickTesting || !strategyId}
             title="Run a 7-day quick backtest"
-            className="flex items-center gap-1.5"
+            className="flex items-center gap-2"
           >
             {quickTesting ? (
               <Loader2 className="size-3 animate-spin" />
@@ -1329,7 +1329,7 @@ export function Component() {
 
           <Link
             to="/strategies"
-            className="px-3 py-1.5 text-xs text-pf-text-secondary hover:text-pf-text rounded-pf-sm hover:bg-pf-overlay transition-colors"
+            className="px-3 py-2 text-xs text-pf-text-secondary hover:text-pf-text rounded-pf-sm hover:bg-pf-overlay transition-colors"
           >
             Cancel
           </Link>
@@ -1340,7 +1340,7 @@ export function Component() {
             size="sm"
             onClick={onSave}
             disabled={saving}
-            className="flex items-center gap-1.5"
+            className="flex items-center gap-2"
           >
             {saving ? (
               <Loader2 className="size-3 animate-spin" />
@@ -1367,7 +1367,7 @@ export function Component() {
                 <LayoutTemplate className="size-4 text-pf-cyan-400" aria-hidden="true" />
                 Strategy Templates
               </h2>
-              <p className="text-xs text-pf-text-muted mt-0.5">Start faster with a pre-built strategy</p>
+              <p className="text-xs text-pf-text-muted mt-1">Start faster with a pre-built strategy</p>
             </div>
             <Button
               type="button"
@@ -1381,7 +1381,7 @@ export function Component() {
           </div>
 
           {/* Category filter tabs */}
-          <div className="flex items-center gap-1.5 px-6 py-3 border-b border-pf-border-subtle bg-pf-elevated/50 shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-2 px-6 py-3 border-b border-pf-border-subtle bg-pf-elevated/50 shrink-0 overflow-x-auto">
             {(['all', 'momentum', 'mean-reversion', 'event-based', 'sentiment'] as const).map((cat) => (
               <Button
                 key={cat}
@@ -1389,7 +1389,7 @@ export function Component() {
                 variant={templateCategory === cat ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setTemplateCategory(cat)}
-                className="flex items-center gap-1.5 whitespace-nowrap"
+                className="flex items-center gap-2 whitespace-nowrap"
               >
                 {cat !== 'all' && (
                   <span aria-hidden="true" className="opacity-70">{TEMPLATE_CATEGORY_ICONS[cat]}</span>
@@ -1411,7 +1411,7 @@ export function Component() {
                   >
                     {/* Card header */}
                     <div className="flex items-start gap-3 mb-3">
-                      <span className="text-2xl leading-none mt-0.5 shrink-0" aria-hidden="true">{template.emoji}</span>
+                      <span className="text-2xl leading-none mt-1 shrink-0" aria-hidden="true">{template.emoji}</span>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-semibold text-pf-text truncate">{template.name}</h3>
                         <DifficultyDots difficulty={template.difficulty} />
@@ -1419,12 +1419,12 @@ export function Component() {
                     </div>
 
                     {/* Win rate badge */}
-                    <div className="flex items-center gap-1.5 mb-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full bg-pf-surface border border-pf-border text-pf-caption text-pf-text-muted">
-                        <Zap className="size-2.5 text-pf-warning" aria-hidden="true" />
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-surface border border-pf-border text-pf-caption text-pf-text-muted">
+                        <Zap className="size-3 text-pf-warning" aria-hidden="true" />
                         Win rate: {template.estimatedWinRate}
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pf-full bg-pf-surface border border-pf-border text-pf-caption text-pf-text-muted capitalize">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-pf-full bg-pf-surface border border-pf-border text-pf-caption text-pf-text-muted capitalize">
                         {TEMPLATE_CATEGORY_ICONS[template.category]}
                         <span>{TEMPLATE_CATEGORY_LABELS[template.category]}</span>
                       </span>
@@ -1504,7 +1504,7 @@ export function Component() {
               {/* Canvas issue banner — unwired blocks and/or misconfigured fields */}
               {(canvasIssues.orphaned > 0 || canvasIssues.misconfigured > 0) && (
                 <div
-                  className={`absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-3 py-1.5 rounded-pf-full text-xs font-medium pointer-events-none border ${
+                  className={`absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-3 py-2 rounded-pf-full text-xs font-medium pointer-events-none border ${
                     canvasIssues.misconfigured > 0
                       ? 'bg-pf-danger/10 border-pf-danger/25 text-pf-danger'
                       : 'bg-pf-warning/10 border-pf-warning/25 text-pf-warning'
@@ -1578,16 +1578,16 @@ export function Component() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setMarketPickerOpen(p => !p)}
-                  className="w-full flex items-center gap-1.5 justify-start"
+                  className="w-full flex items-center gap-2 justify-start"
                 >
-                  <Target className="size-3.5 text-pf-cyan-400" aria-hidden="true" />
+                  <Target className="size-4 text-pf-cyan-400" aria-hidden="true" />
                   Pinned Market
-                  {pinnedMarket && <span className="ml-auto text-pf-caption bg-pf-cyan-500/15 text-pf-cyan-400 px-1.5 py-0.5 rounded-pf-full truncate max-w-[90px]">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
+                  {pinnedMarket && <span className="ml-auto text-pf-caption bg-pf-cyan-500/15 text-pf-cyan-400 px-2 py-1 rounded-pf-full truncate max-w-[90px]">{pinnedMarket.title.slice(0, 20)}{pinnedMarket.title.length > 20 ? '…' : ''}</span>}
                 </Button>
                 {marketPickerOpen && (
-                  <div className="px-2 pb-2 space-y-1.5">
+                  <div className="px-2 pb-2 space-y-2">
                     {pinnedMarket ? (
-                      <div className="flex items-center gap-1.5 bg-pf-elevated border border-pf-cyan-500/25 rounded-pf p-2">
+                      <div className="flex items-center gap-2 bg-pf-elevated border border-pf-cyan-500/25 rounded-pf p-2">
                         <span className="text-pf-label text-pf-text flex-1 truncate">{pinnedMarket.title}</span>
                         <Button
                           type="button"
@@ -1609,7 +1609,7 @@ export function Component() {
                           className="w-full"
                         />
                         {marketResults.length > 0 && (
-                          <div className="max-h-40 overflow-y-auto space-y-0.5">
+                          <div className="max-h-40 overflow-y-auto space-y-1">
                             {marketResults.map(m => (
                               <Button
                                 key={m.id}

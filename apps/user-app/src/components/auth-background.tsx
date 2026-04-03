@@ -35,8 +35,8 @@ export function AuthBackground() {
 
       {/* Floating circles (data points) */}
       <div className="absolute top-[30%] left-1/4 w-2 h-2 rounded-pf-full bg-pf-cyan-500 opacity-[0.12] animate-[float_15s_ease-in-out_infinite]" />
-      <div className="absolute top-1/2 right-1/4 w-1.5 h-1.5 rounded-pf-full bg-pf-cyan-400 opacity-[0.10] animate-[float_19s_ease-in-out_infinite_reverse]" />
-      <div className="absolute top-[80%] left-[60%] w-2.5 h-2.5 rounded-pf-full bg-pf-cyan-500 opacity-[0.08] animate-[float_23s_ease-in-out_infinite]" />
+      <div className="absolute top-1/2 right-1/4 w-2 h-2 rounded-pf-full bg-pf-cyan-400 opacity-[0.10] animate-[float_19s_ease-in-out_infinite_reverse]" />
+      <div className="absolute top-[80%] left-[60%] w-3 h-3 rounded-pf-full bg-pf-cyan-500 opacity-[0.08] animate-[float_23s_ease-in-out_infinite]" />
       <div className="absolute top-[10%] right-[35%] w-1 h-1 rounded-pf-full bg-pf-cyan-300 opacity-[0.15] animate-[float_17s_ease-in-out_infinite_reverse]" />
 
       {/* Diagonal accent lines */}

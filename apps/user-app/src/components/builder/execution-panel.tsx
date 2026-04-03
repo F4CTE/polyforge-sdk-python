@@ -412,7 +412,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
     <div className="flex flex-col border-t border-pf-border bg-pf-elevated shrink-0">
       {/* ─── Header / toggle bar ──────────────────────────────────── */}
       <div
-        className="flex items-center justify-between px-4 py-1.5 cursor-pointer hover:bg-pf-surface/50 transition-colors select-none"
+        className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-pf-surface/50 transition-colors select-none"
         onClick={onToggle}
         role="button"
         tabIndex={0}
@@ -423,7 +423,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onTabChange('backtest'); if (!expanded) onToggle(); }}
-              className={`px-2.5 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
+              className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
                 activeTab === 'backtest'
                   ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
                   : 'text-pf-text-muted hover:text-pf-text-secondary'
@@ -432,13 +432,13 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
               <FlaskConical className="size-3 inline mr-1" />
               Backtest
               {isBacktestActive && (
-                <span className="ml-1.5 inline-flex size-1.5 rounded-pf-full bg-pf-cyan-400 animate-pulse" />
+                <span className="ml-2 inline-flex size-2 rounded-pf-full bg-pf-cyan-400 animate-pulse" />
               )}
             </button>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onTabChange('live'); if (!expanded) onToggle(); }}
-              className={`px-2.5 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
+              className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
                 activeTab === 'live'
                   ? 'bg-pf-cyan-500/10 text-pf-cyan-400'
                   : 'text-pf-text-muted hover:text-pf-text-secondary'
@@ -447,7 +447,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
               <Radio className="size-3 inline mr-1" />
               Live
               {isLiveActive && (
-                <span className={`ml-1.5 inline-flex size-1.5 rounded-pf-full animate-pulse ${
+                <span className={`ml-2 inline-flex size-2 rounded-pf-full animate-pulse ${
                   live.status === 'PAUSED' ? 'bg-pf-warning' : 'bg-pf-success'
                 }`} />
               )}
@@ -471,7 +471,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
             </span>
           )}
         </div>
-        {expanded ? <ChevronDown className="size-3.5 text-pf-text-muted" /> : <ChevronUp className="size-3.5 text-pf-text-muted" />}
+        {expanded ? <ChevronDown className="size-4 text-pf-text-muted" /> : <ChevronUp className="size-4 text-pf-text-muted" />}
       </div>
 
       {/* ─── Panel content ────────────────────────────────────────── */}
@@ -561,7 +561,7 @@ function BacktestTab({
               value={dateStart}
               onChange={e => setDateStart(e.target.value)}
               aria-label="Start date"
-              className="w-full h-8 px-2.5 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+              className="w-full h-8 px-3 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
             />
           </div>
           <div className="flex-1 min-w-[140px]">
@@ -573,14 +573,14 @@ function BacktestTab({
               value={dateEnd}
               onChange={e => setDateEnd(e.target.value)}
               aria-label="End date"
-              className="w-full h-8 px-2.5 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+              className="w-full h-8 px-3 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
             />
           </div>
           <button
             type="button"
             onClick={onSubmit}
             disabled={submitting || !strategyId || !dateStart || !dateEnd}
-            className="h-8 px-4 rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5 shrink-0"
+            className="h-8 px-4 rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast text-xs font-medium hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shrink-0"
           >
             {submitting ? <Loader2 className="size-3 animate-spin" /> : <Play className="size-3" />}
             Run Backtest
@@ -609,7 +609,7 @@ function BacktestTab({
       <div className="pt-2 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Loader2 className="size-3.5 animate-spin text-pf-cyan-400" />
+            <Loader2 className="size-4 animate-spin text-pf-cyan-400" />
             <span className="text-xs text-pf-text-secondary">
               {bt.status === 'QUEUED' ? 'Waiting in queue...' : 'Running backtest...'}
             </span>
@@ -618,7 +618,7 @@ function BacktestTab({
         </div>
         <div className="h-2 bg-pf-surface rounded-pf-full overflow-hidden" role="progressbar" aria-valuenow={bt.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Backtest progress">
           <div
-            className="h-full bg-gradient-to-r from-pf-cyan-500 to-pf-cyan-400 rounded-pf-full transition-all duration-500 ease-out"
+            className="h-full bg-gradient-to-r from-pf-cyan-500 to-pf-cyan-400 rounded-pf-full transition-all duration-300 ease-out"
             style={{ width: `${bt.progress}%` }}
           />
         </div>
@@ -630,7 +630,7 @@ function BacktestTab({
     return (
       <div className="pt-2 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-pf-success flex items-center gap-1.5">
+          <span className="text-xs font-medium text-pf-success flex items-center gap-2">
             <BarChart3 className="size-3" /> Backtest Complete
           </span>
           <button
@@ -638,7 +638,7 @@ function BacktestTab({
             onClick={onReset}
             className="text-pf-caption text-pf-text-muted hover:text-pf-text-secondary flex items-center gap-1 transition-colors"
           >
-            <RotateCcw className="size-2.5" /> New Run
+            <RotateCcw className="size-3" /> New Run
           </button>
         </div>
 
@@ -678,7 +678,7 @@ function BacktestTab({
         </div>
 
         {bt.hasDataGaps && (
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-pf-sm bg-pf-warning/10 text-pf-warning text-pf-label">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm bg-pf-warning/10 text-pf-warning text-pf-label">
             <AlertTriangle className="size-3 shrink-0" />
             Results may be affected by data gaps in the selected date range.
           </div>
@@ -701,8 +701,8 @@ function BacktestTab({
   // FAILED
   return (
     <div className="pt-2 space-y-3">
-      <div className="flex items-center gap-2 px-2.5 py-2 rounded-pf-sm bg-pf-danger/10 text-pf-danger text-xs">
-        <XCircle className="size-3.5 shrink-0" />
+      <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm bg-pf-danger/10 text-pf-danger text-xs">
+        <XCircle className="size-4 shrink-0" />
         {bt.error ?? 'Backtest failed'}
       </div>
       <button
@@ -710,7 +710,7 @@ function BacktestTab({
         onClick={onReset}
         className="text-pf-caption text-pf-text-muted hover:text-pf-text-secondary flex items-center gap-1 transition-colors"
       >
-        <RotateCcw className="size-2.5" /> Try Again
+        <RotateCcw className="size-3" /> Try Again
       </button>
     </div>
   );
@@ -762,7 +762,7 @@ function LiveTab({
             type="button"
             onClick={() => onStart('PAPER')}
             disabled={!strategyId}
-            className="flex-1 h-8 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-cyan-500/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+            className="flex-1 h-8 rounded-pf-sm bg-pf-elevated border border-pf-border text-xs font-medium text-pf-text hover:border-pf-cyan-500/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             <Play className="size-3" />
             Paper Trade
@@ -771,7 +771,7 @@ function LiveTab({
             type="button"
             onClick={() => onStart('LIVE')}
             disabled={!strategyId}
-            className="flex-1 h-8 rounded-pf-sm bg-pf-success/10 border border-pf-success/30 text-xs font-medium text-pf-success hover:bg-pf-success/20 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+            className="flex-1 h-8 rounded-pf-sm bg-pf-success/10 border border-pf-success/30 text-xs font-medium text-pf-success hover:bg-pf-success/20 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             <Play className="size-3" />
             Live Trade
@@ -810,18 +810,18 @@ function LiveTab({
             {live.mode === 'PAPER' ? 'Paper' : 'Live'} — {live.status}
           </span>
           {live.lastTick && (
-            <span className="text-pf-caption text-pf-text-muted flex items-center gap-0.5">
-              <Clock className="size-2.5" />
+            <span className="text-pf-caption text-pf-text-muted flex items-center gap-1">
+              <Clock className="size-3" />
               {new Date(live.lastTick).toLocaleTimeString()}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           {live.status === 'RUNNING' && (
             <button
               type="button"
               onClick={onPause}
-              className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-warning hover:bg-pf-warning/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+              className="p-2 rounded-pf-sm text-pf-text-muted hover:text-pf-warning hover:bg-pf-warning/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
               title="Pause"
               aria-label="Pause execution"
             >
@@ -832,7 +832,7 @@ function LiveTab({
             <button
               type="button"
               onClick={onResume}
-              className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-success hover:bg-pf-success/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+              className="p-2 rounded-pf-sm text-pf-text-muted hover:text-pf-success hover:bg-pf-success/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
               title="Resume"
               aria-label="Resume execution"
             >
@@ -842,7 +842,7 @@ function LiveTab({
           <button
             type="button"
             onClick={onStop}
-            className="p-1.5 rounded-pf-sm text-pf-text-muted hover:text-pf-danger hover:bg-pf-danger/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+            className="p-2 rounded-pf-sm text-pf-text-muted hover:text-pf-danger hover:bg-pf-danger/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
             title="Stop"
             aria-label="Stop execution"
           >
@@ -852,7 +852,7 @@ function LiveTab({
       </div>
 
       {live.error && (
-        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-pf-sm bg-pf-danger/10 text-pf-danger text-pf-label">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm bg-pf-danger/10 text-pf-danger text-pf-label">
           <XCircle className="size-3 shrink-0" />
           {live.error}
         </div>
@@ -879,7 +879,7 @@ function LiveTab({
       {/* Recent trades */}
       {live.recentTrades.length > 0 && (
         <div>
-          <span className="text-pf-caption text-pf-text-secondary uppercase tracking-wider mb-1.5 block">Recent Trades</span>
+          <span className="text-pf-caption text-pf-text-secondary uppercase tracking-wider mb-2 block">Recent Trades</span>
           <div className="bg-pf-surface rounded-pf-sm overflow-hidden max-h-[120px] overflow-y-auto">
             <table className="w-full text-pf-label" aria-label="Trade history">
               <thead>
@@ -922,7 +922,7 @@ function MetricCard({ label, value, color, icon }: { label: string; value: strin
   return (
     <div className="bg-pf-surface rounded-pf-sm p-2">
       <span className="text-pf-caption text-pf-text-muted flex items-center gap-1">{icon}{label}</span>
-      <span className={`text-sm font-mono font-semibold ${color} block mt-0.5`}>{value}</span>
+      <span className={`text-sm font-mono font-semibold ${color} block mt-1`}>{value}</span>
     </div>
   );
 }
@@ -943,12 +943,12 @@ function MarketBindingsSection({
   return (
     <div className="space-y-2">
       <span className="text-pf-caption text-pf-text-secondary uppercase tracking-wider flex items-center gap-1">
-        <Search className="size-2.5" /> Market Bindings
+        <Search className="size-3" /> Market Bindings
       </span>
       <div className="flex flex-wrap gap-2">
         {marketSlots.map(slot => (
           <div key={slot.slot} className="flex-1 min-w-[200px] relative">
-            <label htmlFor={`ep-market-${slot.slot}`} className="text-pf-caption text-pf-text-muted mb-0.5 block">{slot.label || slot.slot}</label>
+            <label htmlFor={`ep-market-${slot.slot}`} className="text-pf-caption text-pf-text-muted mb-1 block">{slot.label || slot.slot}</label>
             <input
               id={`ep-market-${slot.slot}`}
               type="text"
@@ -964,7 +964,7 @@ function MarketBindingsSection({
               <span className="absolute right-2 top-[22px] text-pf-micro text-pf-cyan-400 font-mono">bound</span>
             )}
             {(marketResults[slot.slot] ?? []).length > 0 && (
-              <div className="absolute z-50 w-full mt-0.5 bg-pf-elevated border border-pf-border rounded-pf-sm max-h-32 overflow-y-auto shadow-pf-lg">
+              <div className="absolute z-50 w-full mt-1 bg-pf-elevated border border-pf-border rounded-pf-sm max-h-32 overflow-y-auto shadow-pf-lg">
                 {marketResults[slot.slot].map((m) => (
                   <button
                     type="button"
@@ -974,7 +974,7 @@ function MarketBindingsSection({
                       setMarketSearch(prev => ({ ...prev, [slot.slot]: (m.title ?? m.question) as string }));
                       setMarketResults(prev => ({ ...prev, [slot.slot]: [] }));
                     }}
-                    className="w-full text-left px-2 py-1.5 text-pf-label text-pf-text hover:bg-pf-surface transition-colors border-b border-pf-border-subtle last:border-b-0"
+                    className="w-full text-left px-2 py-2 text-pf-label text-pf-text hover:bg-pf-surface transition-colors border-b border-pf-border-subtle last:border-b-0"
                   >
                     {(m.title ?? m.question) as string}
                   </button>

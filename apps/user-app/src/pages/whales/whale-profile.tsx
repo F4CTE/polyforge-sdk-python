@@ -156,7 +156,7 @@ export function Component() {
   if (notFound) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/whales" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors mb-6">
+        <Link to="/whales" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to feed
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -171,7 +171,7 @@ export function Component() {
   if (error || !profile) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/whales" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors mb-6">
+        <Link to="/whales" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to feed
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -190,7 +190,7 @@ export function Component() {
   if (!stats) {
     return (
       <div className="animate-fade-in p-6 max-w-5xl mx-auto">
-        <Link to="/whales" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors mb-6">
+        <Link to="/whales" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors mb-6">
           <ArrowLeft className="size-4" /> Back to feed
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -205,7 +205,7 @@ export function Component() {
   return (
     <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">
       {/* Back link */}
-      <Link to="/whales" className="flex items-center gap-1.5 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
+      <Link to="/whales" className="flex items-center gap-2 text-sm text-pf-text-secondary hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm transition-colors">
         <ArrowLeft className="size-4" /> Back to feed
       </Link>
 
@@ -237,13 +237,13 @@ export function Component() {
             type="button"
             variant={following ? 'default' : 'secondary'}
             onClick={toggleFollow}
-            className="flex items-center gap-1.5"
+            className="flex items-center gap-2"
           >
             {following ? <><UserCheck className="size-4" /> Following</> : <><UserPlus className="size-4" /> Follow</>}
           </Button>
           <Link
             to={`/copy/new?wallet=${address}`}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-success/30 text-pf-success hover:bg-pf-success/10 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-pf-success/30 text-pf-success hover:bg-pf-success/10 transition-colors"
           >
             <Copy className="size-4" /> Copy This Whale
           </Link>
@@ -311,14 +311,14 @@ export function Component() {
                   <tr key={trade.id} className="hover:bg-pf-surface/50 transition-colors">
                     <td className="px-4 py-3 text-pf-text max-w-[200px] truncate">{trade.marketName}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${
+                      <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
                         trade.side === 'BUY' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
                       }`}>
                         {trade.side}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded text-pf-label font-semibold ${
+                      <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
                         trade.outcome === 'YES' ? 'bg-pf-success/15 text-pf-success' : 'bg-pf-danger/15 text-pf-danger'
                       }`}>
                         {trade.outcome}

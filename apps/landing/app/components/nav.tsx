@@ -181,31 +181,31 @@ export function Nav() {
         <div className="hidden md:flex gap-6 mr-auto">
           <a
             href="#features"
-            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-150"
+            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-100"
           >
             Features
           </a>
           <a
             href="#how-it-works"
-            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-150"
+            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-100"
           >
             How it works
           </a>
           <a
             href="/terms"
-            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-150"
+            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-100"
           >
             Terms
           </a>
           <a
             href="/api-docs"
-            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-150"
+            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-100"
           >
             API Docs
           </a>
           <a
             href="/privacy"
-            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-150"
+            className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm transition-colors duration-100"
           >
             Privacy
           </a>
@@ -230,7 +230,7 @@ export function Nav() {
         <button
           ref={menuButtonRef}
           type="button"
-          className="flex md:hidden flex-col items-center justify-center gap-1.5 w-11 h-11 bg-transparent border-none cursor-pointer ml-auto hover:bg-pf-text/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
+          className="flex md:hidden flex-col items-center justify-center gap-2 w-11 h-11 bg-transparent border-none cursor-pointer ml-auto hover:bg-pf-text/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav-menu"
@@ -255,15 +255,15 @@ export function Nav() {
           ) : (
             <>
               <span
-                className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm"
+                className="block w-[22px] h-1 bg-pf-text-secondary rounded-sm"
                 aria-hidden="true"
               />
               <span
-                className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm"
+                className="block w-[22px] h-1 bg-pf-text-secondary rounded-sm"
                 aria-hidden="true"
               />
               <span
-                className="block w-[22px] h-0.5 bg-pf-text-secondary rounded-sm"
+                className="block w-[22px] h-1 bg-pf-text-secondary rounded-sm"
                 aria-hidden="true"
               />
             </>

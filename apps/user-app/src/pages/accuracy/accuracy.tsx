@@ -71,7 +71,7 @@ function StatCard({
 
   return (
     <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 relative">
-      <div className="flex items-center gap-1.5 mb-2">
+      <div className="flex items-center gap-2 mb-2">
         <span className="text-xs font-medium uppercase tracking-wider text-pf-text-secondary">{label}</span>
         {tooltip && (
           <Button
@@ -85,14 +85,14 @@ function StatCard({
             aria-label={`Info: ${label}`}
             className="text-pf-text-muted hover:text-pf-text-secondary transition-colors focus-visible:outline-none"
           >
-            <Info className="size-3.5" />
+            <Info className="size-4" />
           </Button>
         )}
       </div>
       <span className="text-3xl font-mono font-semibold text-pf-text">{value}</span>
       {sub && <p className="text-xs text-pf-text-muted mt-1">{sub}</p>}
       {showTip && tooltip && (
-        <div className="absolute top-full left-0 z-20 mt-2 w-56 rounded-pf-sm bg-pf-elevated border border-pf-border shadow-pf-lg p-2.5 text-xs text-pf-text-secondary leading-relaxed">
+        <div className="absolute top-full left-0 z-20 mt-2 w-56 rounded-pf-sm bg-pf-elevated border border-pf-border shadow-pf-lg p-3 text-xs text-pf-text-secondary leading-relaxed">
           {tooltip}
         </div>
       )}

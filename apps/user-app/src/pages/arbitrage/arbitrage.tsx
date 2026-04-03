@@ -131,7 +131,7 @@ export function Component() {
           type="button"
           onClick={load}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text-secondary hover:text-pf-text hover:border-pf-border-strong transition-colors disabled:opacity-50"
         >
           {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           Refresh
@@ -140,7 +140,7 @@ export function Component() {
 
       {/* How it works */}
       <div className="flex items-start gap-3 p-4 rounded-pf-lg bg-pf-surface border border-pf-border">
-        <Info className="size-4 text-pf-cyan-400 shrink-0 mt-0.5" />
+        <Info className="size-4 text-pf-cyan-400 shrink-0 mt-1" />
         <p className="text-xs text-pf-text-secondary leading-relaxed">
           <span className="text-pf-text font-medium">How merge arbitrage works: </span>
           In a binary market, YES + NO = $1.00 at resolution. If the live prices sum to less than $1.00,
@@ -211,7 +211,7 @@ export function Component() {
                 >
                   {opp.marketTitle}
                 </Link>
-                <div className="flex items-center gap-2 mt-0.5">
+                <div className="flex items-center gap-2 mt-1">
                   {opp.category && (
                     <span className="text-pf-caption text-pf-text-muted">{opp.category}</span>
                   )}
@@ -241,7 +241,7 @@ export function Component() {
                 variant="success"
                 onClick={() => executeArbitrage(opp)}
                 disabled={executing === opp.marketId}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-pf bg-pf-success text-pf-text-contrast text-xs font-medium hover:bg-pf-success/80 disabled:opacity-50 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 px-3 py-2 rounded-pf bg-pf-success text-pf-text-contrast text-xs font-medium hover:bg-pf-success/80 disabled:opacity-50 transition-colors whitespace-nowrap"
               >
                 {executing === opp.marketId
                   ? <Loader2 className="size-3 animate-spin" />

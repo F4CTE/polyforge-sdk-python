@@ -86,7 +86,7 @@ export function Component() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* New password */}
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-pf-text mb-1.5">New password</label>
+                  <label htmlFor="password" className="block text-sm font-medium text-pf-text mb-2">New password</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
                     <Input
@@ -100,7 +100,7 @@ export function Component() {
                       placeholder="At least 8 characters"
                       aria-invalid={!!passwordError}
                       aria-describedby={passwordError ? 'reset-password-error' : undefined}
-                      className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                     />
                   </div>
                   {passwordError && <p id="reset-password-error" role="alert" className="mt-1 text-xs text-pf-danger">{passwordError}</p>}
@@ -108,7 +108,7 @@ export function Component() {
 
                 {/* Confirm password */}
                 <div>
-                  <label htmlFor="confirm" className="block text-sm font-medium text-pf-text mb-1.5">Confirm password</label>
+                  <label htmlFor="confirm" className="block text-sm font-medium text-pf-text mb-2">Confirm password</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-pf-text-muted" />
                     <Input
@@ -121,7 +121,7 @@ export function Component() {
                       placeholder="Repeat password"
                       aria-invalid={!!confirmError}
                       aria-describedby={confirmError ? 'reset-confirm-error' : undefined}
-                      className="w-full pl-10 pr-4 py-2.5 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
                     />
                   </div>
                   {confirmError && <p id="reset-confirm-error" role="alert" className="mt-1 text-xs text-pf-danger">{confirmError}</p>}
@@ -130,7 +130,7 @@ export function Component() {
                 <Button
                   type="submit"
                   disabled={loading || !token}
-                  className="w-full py-2.5 bg-pf-cyan-500 text-pf-text-contrast font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+                  className="w-full py-3 bg-pf-cyan-500 text-pf-text-contrast font-semibold rounded-pf hover:bg-pf-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
                 >
                   {loading ? 'Resetting...' : 'Reset password'}
                 </Button>
@@ -145,7 +145,7 @@ export function Component() {
               <p className="text-sm text-pf-text-muted mb-6">You can now sign in with your new password.</p>
               <Link
                 to="/login"
-                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-pf-text-contrast font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+                className="inline-block px-6 py-3 bg-pf-cyan-500 text-pf-text-contrast font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
               >
                 Sign in
               </Link>

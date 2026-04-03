@@ -115,7 +115,7 @@ export function Component() {
                   </td>
                   <td className="px-4 py-3 text-sm text-pf-text-secondary">{u.email}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex px-1.5 py-0.5 rounded text-xs font-medium ${
+                    <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
                       u.emailVerified
                         ? 'bg-pf-success/10 text-pf-success'
                         : 'bg-pf-warning/10 text-pf-warning'

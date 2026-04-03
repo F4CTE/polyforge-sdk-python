@@ -67,7 +67,7 @@ function StatusBadge({ status }: { status: ReferralEntry['status'] }) {
   };
   const { label, className } = map[status];
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${className}`}>
+    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${className}`}>
       {label}
     </span>
   );
@@ -351,7 +351,7 @@ export function Component() {
             </div>
             <div>
               <p className="text-sm font-medium text-pf-text">Share your unique referral link</p>
-              <p className="text-xs text-pf-text-secondary mt-0.5">
+              <p className="text-xs text-pf-text-secondary mt-1">
                 Send it to friends via social, email, or direct message
               </p>
             </div>
@@ -362,7 +362,7 @@ export function Component() {
             </div>
             <div>
               <p className="text-sm font-medium text-pf-text">Friend signs up and connects Polymarket</p>
-              <p className="text-xs text-pf-text-secondary mt-0.5">
+              <p className="text-xs text-pf-text-secondary mt-1">
                 They create an account using your link
               </p>
             </div>
@@ -373,7 +373,7 @@ export function Component() {
             </div>
             <div>
               <p className="text-sm font-medium text-pf-text">You earn $5 USDC when they trade</p>
-              <p className="text-xs text-pf-text-secondary mt-0.5">
+              <p className="text-xs text-pf-text-secondary mt-1">
                 Credits are awarded when they place their first trade
               </p>
             </div>

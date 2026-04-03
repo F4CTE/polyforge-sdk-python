@@ -195,14 +195,14 @@ function FeatureCardRow({ feature, asBullet }: { feature: FeatureCard; asBullet?
   if (asBullet) {
     return (
       <li className="flex items-start gap-3">
-        <span className="mt-0.5">{feature.icon}</span>
+        <span className="mt-1">{feature.icon}</span>
         <span className="text-pf-text-secondary text-sm leading-snug">{feature.title}</span>
       </li>
     );
   }
 
   return (
-    <div className="flex flex-col gap-1.5 rounded-pf-lg border border-pf-border bg-pf-surface p-4 flex-1 min-w-0">
+    <div className="flex flex-col gap-2 rounded-pf-lg border border-pf-border bg-pf-surface p-4 flex-1 min-w-0">
       <div className="flex items-center gap-2">
         {feature.icon}
         <span className="text-pf-text text-sm font-semibold">{feature.title}</span>
@@ -427,7 +427,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
             <button
               onClick={handlePrimary}
               className={[
-                'px-5 py-2.5 rounded-pf',
+                'px-5 py-3 rounded-pf',
                 'bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold',
                 'hover:opacity-90 active:scale-95 transition-all',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',

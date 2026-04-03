@@ -127,7 +127,7 @@ export function OnboardingChecklist() {
       <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-pf-text">Getting Started</span>
-          <span className="text-pf-caption px-1.5 py-0.5 rounded-pf-full bg-pf-cyan-500/15 text-pf-cyan-400 font-medium">
+          <span className="text-pf-caption px-2 py-1 rounded-pf-full bg-pf-cyan-500/15 text-pf-cyan-400 font-medium">
             {completedCount}/{CHECKLIST_ITEMS.length}
           </span>
         </div>
@@ -153,9 +153,9 @@ export function OnboardingChecklist() {
 
       {/* Progress bar */}
       <div className="px-4 pt-2">
-        <div className="w-full h-1.5 bg-pf-overlay rounded-pf-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed`}>
+        <div className="w-full h-2 bg-pf-overlay rounded-pf-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed`}>
           <div
-            className="h-full bg-pf-cyan-500 rounded-pf-full transition-all duration-500"
+            className="h-full bg-pf-cyan-500 rounded-pf-full transition-all duration-300"
             style={{ width: `${(completedCount / CHECKLIST_ITEMS.length) * 100}%` }}
           />
         </div>
@@ -167,12 +167,12 @@ export function OnboardingChecklist() {
           {CHECKLIST_ITEMS.map(item => (
             <div
               key={item.key}
-              className="flex items-start gap-2.5 py-2 group"
+              className="flex items-start gap-3 py-2 group"
             >
               <button
                 type="button"
                 onClick={() => toggleItem(item.key)}
-                className="mt-0.5 shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-full"
+                className="mt-1 shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-full"
                 aria-label={`Mark "${item.label}" as ${completed[item.key] ? 'incomplete' : 'complete'}`}
               >
                 {completed[item.key] ? (
@@ -194,7 +194,7 @@ export function OnboardingChecklist() {
                   {item.label}
                 </button>
                 {!completed[item.key] && (
-                  <p className="text-xs text-pf-text-secondary mt-0.5 leading-relaxed">{item.description}</p>
+                  <p className="text-xs text-pf-text-secondary mt-1 leading-relaxed">{item.description}</p>
                 )}
               </div>
             </div>
@@ -204,7 +204,7 @@ export function OnboardingChecklist() {
 
       {/* Footer — "Take a tour" link */}
       {!collapsed && (
-        <div className="px-4 py-2.5 border-t border-pf-border-subtle">
+        <div className="px-4 py-3 border-t border-pf-border-subtle">
           <button
             type="button"
             onClick={() => {

@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.16] — 2026-04-03
+
+### Fixed
+- **Align all spacing to 4px grid (closes #42)** — replaced 1,691 off-grid `.5` Tailwind spacing values (`0.5`→`1`, `1.5`→`2`, `2.5`→`3`, `3.5`→`4`) across 114 files in user-app, admin-app, landing, and packages/ui
+- **Standardize transition durations to design tokens (closes #49)** — replaced all non-standard durations (`150ms`→`100ms`, `250ms`→`200ms`, `400ms`/`500ms`/`700ms`→`300ms`) to align with `--duration-pf-fast` (100ms), `--duration-pf-normal` (200ms), `--duration-pf-slow` (300ms)
+- **Remove unused design tokens (closes #52)** — removed `--color-pf-cyan-100`, `--color-pf-cyan-200`, `--color-pf-cyan-700`, and `--color-pf-text-disabled` from both dark and light themes; aliased `--color-pf-text-tertiary` to `--color-pf-text-muted` to eliminate duplicate values
+
+---
+
 ## [6.35.15] — 2026-04-03
 
 ### Fixed

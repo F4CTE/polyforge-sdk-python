@@ -118,13 +118,13 @@ export function Footer() {
           <div className="shrink-0 min-w-[220px]">
             <a
               href="/"
-              className="inline-flex items-center gap-2 text-pf-subhead font-bold text-pf-text mb-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
+              className="inline-flex items-center gap-2 text-pf-subhead font-bold text-pf-text mb-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
               aria-label="Polyforge home"
             >
               <PolyforgeIcon className="text-pf-cyan-400" />
               <span>Polyforge</span>
             </a>
-            <p className="text-sm text-pf-text-muted mt-1.5">
+            <p className="text-sm text-pf-text-muted mt-2">
               Algorithmic trading for prediction markets.
             </p>
             <div className="flex gap-3 mt-5">
@@ -151,10 +151,10 @@ export function Footer() {
           >
             {footerLinks.map((col) => (
               <div key={col.title} className="min-w-[120px]">
-                <p className="text-xs font-semibold uppercase tracking-wider text-pf-text-muted mb-3.5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-pf-text-muted mb-4">
                   {col.title}
                 </p>
-                <ul className="flex flex-col gap-2.5">
+                <ul className="flex flex-col gap-3">
                   {col.links.map((link) => {
                     const isExternal = link.href.startsWith("http");
                     return (

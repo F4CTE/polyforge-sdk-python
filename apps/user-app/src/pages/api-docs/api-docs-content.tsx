@@ -115,8 +115,8 @@ export function renderContent({
           <code className="text-sm font-mono text-pf-cyan-400">https://api.polyforge.app/api/v1</code>
         </div>
         <div className="flex gap-2">
-          <span className="inline-flex items-center text-pf-label font-medium px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-secondary">REST · JSON</span>
-          <span className="inline-flex items-center text-pf-label font-medium px-2 py-0.5 rounded-pf-full bg-pf-overlay text-pf-text-secondary">TLS 1.2+</span>
+          <span className="inline-flex items-center text-pf-label font-medium px-2 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary">REST · JSON</span>
+          <span className="inline-flex items-center text-pf-label font-medium px-2 py-1 rounded-pf-full bg-pf-overlay text-pf-text-secondary">TLS 1.2+</span>
         </div>
       </div>
       <div className="space-y-3">
@@ -177,7 +177,7 @@ export function renderContent({
           ] as { scope: string; cls: string; desc: string }[]).map(s => (
             <div key={s.scope} className="flex items-start gap-3 p-3 bg-pf-elevated border border-pf-border rounded-pf-lg hover:border-pf-border-strong transition-all duration-200">
               <Badge text={s.scope} cls={s.cls} />
-              <p className="text-xs text-pf-text-secondary leading-relaxed pt-0.5">{s.desc}</p>
+              <p className="text-xs text-pf-text-secondary leading-relaxed pt-1">{s.desc}</p>
             </div>
           ))}
         </div>
@@ -355,7 +355,7 @@ export function renderContent({
         {lang === 'py' && <Code code={`import hmac, hashlib\n\ndef verify_webhook(raw_body: bytes, signature: str, secret: str) -> bool:\n    expected = 'sha256=' + hmac.new(\n        secret.encode(), raw_body, hashlib.sha256\n    ).hexdigest()\n    return hmac.compare_digest(expected, signature)`} lang="py" />}
       </Sub>
       <Sub title="Webhook events">
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {['ORDER_FILLED','ORDER_CANCELLED','STRATEGY_STARTED','STRATEGY_STOPPED',
             'STRATEGY_ERROR','BACKTEST_COMPLETED','PRICE_ALERT','WHALE_TRADE',
             'NEWS_SIGNAL','MARKET_RESOLVED'].map(ev => (
@@ -396,7 +396,7 @@ export function renderContent({
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-pf-text-muted bg-pf-elevated border border-pf-border rounded-pf px-3 py-2.5">
+      <p className="text-xs text-pf-text-muted bg-pf-elevated border border-pf-border rounded-pf px-3 py-3">
         Auth endpoints (register, forgot-password) have tighter per-IP limits.
         The SSE endpoint does not count toward the rate limit while the connection is held open.
       </p>

@@ -61,7 +61,7 @@ function formatRelativeTime(iso: string): string {
 
 function StarDisplay({ rating }: { rating: number }) {
   return (
-    <span className="inline-flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
+    <span className="inline-flex items-center gap-1" aria-label={`${rating} out of 5 stars`}>
       {Array.from({ length: 5 }).map((_, i) => (
         <span
           key={i}
@@ -106,7 +106,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
   return (
     <span
       className={[
-        'inline-flex items-center rounded-pf-full px-2 py-0.5 text-xs font-medium',
+        'inline-flex items-center rounded-pf-full px-2 py-1 text-xs font-medium',
         className,
       ].join(' ')}
     >
@@ -212,14 +212,14 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
         <StatusBadge status={review.status} />
 
         {review.verifiedPurchase && (
-          <span className="inline-flex items-center gap-1 rounded-pf-full border border-pf-success/30 bg-pf-success/10 px-2 py-0.5 text-xs font-medium text-pf-success">
+          <span className="inline-flex items-center gap-1 rounded-pf-full border border-pf-success/30 bg-pf-success/10 px-2 py-1 text-xs font-medium text-pf-success">
             <Check className="h-3 w-3" aria-hidden />
             Verified Purchase
           </span>
         )}
 
         {review.reportCount > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-pf-full border border-pf-danger/30 bg-pf-danger/10 px-2 py-0.5 text-xs font-medium text-pf-danger">
+          <span className="inline-flex items-center gap-1 rounded-pf-full border border-pf-danger/30 bg-pf-danger/10 px-2 py-1 text-xs font-medium text-pf-danger">
             <AlertTriangle className="h-3 w-3" aria-hidden />
             {review.reportCount} {review.reportCount === 1 ? 'report' : 'reports'}
           </span>
@@ -248,14 +248,14 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           onClick={handleApprove}
           disabled={busy}
           className={[
-            'inline-flex items-center gap-1.5 rounded-pf-sm border px-3 py-1.5 text-xs font-medium transition-colors',
+            'inline-flex items-center gap-2 rounded-pf-sm border px-3 py-2 text-xs font-medium transition-colors',
             review.status === 'approved'
               ? 'border-pf-success/40 bg-pf-success/10 text-pf-success'
               : 'border-pf-border bg-pf-surface text-pf-text-secondary hover:border-pf-success/40 hover:text-pf-success',
           ].join(' ')}
           aria-pressed={review.status === 'approved'}
         >
-          <Check className="h-3.5 w-3.5" aria-hidden />
+          <Check className="h-4 w-4" aria-hidden />
           Approve
         </Button>
 
@@ -265,14 +265,14 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           onClick={handleReject}
           disabled={busy}
           className={[
-            'inline-flex items-center gap-1.5 rounded-pf-sm border px-3 py-1.5 text-xs font-medium transition-colors',
+            'inline-flex items-center gap-2 rounded-pf-sm border px-3 py-2 text-xs font-medium transition-colors',
             review.status === 'rejected'
               ? 'border-pf-border/60 bg-pf-border/10 text-pf-text-muted'
               : 'border-pf-border bg-pf-surface text-pf-text-secondary hover:border-pf-danger/40 hover:text-pf-danger',
           ].join(' ')}
           aria-pressed={review.status === 'rejected'}
         >
-          <X className="h-3.5 w-3.5" aria-hidden />
+          <X className="h-4 w-4" aria-hidden />
           Reject
         </Button>
 
@@ -282,7 +282,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           onClick={handleFlagToggle}
           disabled={busy}
           className={[
-            'inline-flex items-center gap-1.5 rounded-pf-sm border px-3 py-1.5 text-xs font-medium transition-colors',
+            'inline-flex items-center gap-2 rounded-pf-sm border px-3 py-2 text-xs font-medium transition-colors',
             review.status === 'flagged' || flagging
               ? 'border-pf-danger/40 bg-pf-danger/10 text-pf-danger'
               : 'border-pf-border bg-pf-surface text-pf-text-secondary hover:border-pf-danger/40 hover:text-pf-danger',
@@ -290,7 +290,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           aria-pressed={flagging}
           aria-expanded={flagging}
         >
-          <Flag className="h-3.5 w-3.5" aria-hidden />
+          <Flag className="h-4 w-4" aria-hidden />
           Flag
         </Button>
 
@@ -299,12 +299,12 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           target="_blank"
           rel="noopener noreferrer"
           className={[
-            'ml-auto inline-flex items-center gap-1.5 rounded-pf-sm border border-pf-border px-3 py-1.5 text-xs font-medium text-pf-text-secondary',
+            'ml-auto inline-flex items-center gap-2 rounded-pf-sm border border-pf-border px-3 py-2 text-xs font-medium text-pf-text-secondary',
             'hover:text-pf-cyan-400 hover:border-pf-cyan-400/40 transition-colors',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
           ].join(' ')}
         >
-          <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+          <ExternalLink className="h-4 w-4" aria-hidden />
           View Strategy
         </a>
       </div>
@@ -336,7 +336,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
               type="button"
               variant="secondary"
               onClick={() => { setFlagging(false); setFlagReason(''); }}
-              className="rounded-pf-sm border border-pf-border px-3 py-1.5 text-xs font-medium text-pf-text-secondary hover:border-pf-border-strong transition-colors"
+              className="rounded-pf-sm border border-pf-border px-3 py-2 text-xs font-medium text-pf-text-secondary hover:border-pf-border-strong transition-colors"
             >
               Cancel
             </Button>
@@ -346,7 +346,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
               onClick={handleFlagSubmit}
               disabled={!flagReason.trim() || busy}
               className={[
-                'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all',
+                'inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold transition-all',
                 flagReason.trim()
                   ? ''
                   : 'bg-pf-elevated border border-pf-border text-pf-text-muted cursor-not-allowed opacity-50',
@@ -379,7 +379,7 @@ function ReviewCardSkeleton() {
         <div className="h-5 w-24 rounded-pf-full bg-pf-border" />
       </div>
       <div className="space-y-2">
-        <div className="h-3.5 w-3/4 rounded-pf-sm bg-pf-border" />
+        <div className="h-4 w-3/4 rounded-pf-sm bg-pf-border" />
         <div className="h-3 w-full rounded-pf-sm bg-pf-border" />
         <div className="h-3 w-5/6 rounded-pf-sm bg-pf-border" />
       </div>
@@ -419,7 +419,7 @@ function StatTile({ label, value, accent, danger }: StatTileProps) {
       : 'text-pf-text';
 
   return (
-    <div className="rounded-pf-lg border border-pf-border bg-pf-elevated px-4 py-3 space-y-0.5">
+    <div className="rounded-pf-lg border border-pf-border bg-pf-elevated px-4 py-3 space-y-1">
       <p className="text-pf-label font-semibold uppercase tracking-wider text-pf-text-muted">
         {label}
       </p>
@@ -600,7 +600,7 @@ function ReviewsTab() {
         <div
           role="tablist"
           aria-label="Filter by review status"
-          className="flex flex-wrap gap-1.5"
+          className="flex flex-wrap gap-2"
         >
           {STATUS_TABS.map((tab) => (
             <Button
@@ -611,7 +611,7 @@ function ReviewsTab() {
               variant="ghost"
               onClick={() => setStatus(tab.value)}
               className={[
-                'rounded-pf-sm px-3 py-1.5 text-xs font-medium transition-colors',
+                'rounded-pf-sm px-3 py-2 text-xs font-medium transition-colors',
                 status === tab.value
                   ? 'bg-pf-elevated border border-pf-border text-pf-text'
                   : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated/50',
@@ -630,7 +630,7 @@ function ReviewsTab() {
             onChange={(e) => setMinReports(Number(e.target.value) as MinReports)}
             aria-label="Minimum report count filter"
             className={[
-              'rounded-pf-sm border border-pf-border bg-pf-surface px-3 py-1.5 text-xs text-pf-text',
+              'rounded-pf-sm border border-pf-border bg-pf-surface px-3 py-2 text-xs text-pf-text',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
             ].join(' ')}
           >
@@ -644,7 +644,7 @@ function ReviewsTab() {
           {/* Search */}
           <div className="relative flex-1 min-w-[180px] max-w-xs">
             <Search
-              className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-pf-text-muted"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pf-text-muted"
               aria-hidden
             />
             <Input
@@ -654,7 +654,7 @@ function ReviewsTab() {
               placeholder="Search strategy or author…"
               aria-label="Search reviews by strategy name or author"
               className={[
-                'w-full rounded-pf-sm border border-pf-border bg-pf-surface py-1.5 pl-8 pr-3 text-xs text-pf-text',
+                'w-full rounded-pf-sm border border-pf-border bg-pf-surface py-2 pl-8 pr-3 text-xs text-pf-text',
                 'placeholder:text-pf-text-muted',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
               ].join(' ')}
@@ -746,7 +746,7 @@ export function Component() {
             <h1 className="text-xl font-bold text-pf-text leading-tight">
               Content Moderation
             </h1>
-            <p className="text-xs text-pf-text-muted mt-0.5">
+            <p className="text-xs text-pf-text-muted mt-1">
               Moderate strategy marketplace reviews and ratings
             </p>
           </div>
@@ -769,7 +769,7 @@ export function Component() {
               variant="ghost"
               onClick={() => setActiveTab(tab.id)}
               className={[
-                'inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors -mb-px border-b-2 rounded-t-pf-sm',
+                'inline-flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors -mb-px border-b-2 rounded-t-pf-sm',
                 activeTab === tab.id
                   ? 'border-pf-cyan-400 text-pf-text'
                   : 'border-transparent text-pf-text-secondary hover:text-pf-text hover:border-pf-border',

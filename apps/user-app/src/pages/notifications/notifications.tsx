@@ -190,18 +190,18 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
           aria-label="Delete notification"
           onClick={() => onDelete(item.id, item.source)}
           className={[
-            'absolute top-2 right-2 p-0.5 rounded text-pf-text-muted',
+            'absolute top-2 right-2 p-1 rounded text-pf-text-muted',
             'hover:text-pf-danger transition-colors',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-400',
           ].join(' ')}
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="h-4 w-4" />
         </Button>
       )}
 
       {/* Severity dot */}
-      <span className="mt-1.5 shrink-0">
-        <span className={`block h-2.5 w-2.5 rounded-pf-full ${SEVERITY_DOT[item.severity]}`} />
+      <span className="mt-2 shrink-0">
+        <span className={`block h-3 w-3 rounded-pf-full ${SEVERITY_DOT[item.severity]}`} />
       </span>
 
       {/* Main content — clickable for read */}
@@ -215,14 +215,14 @@ function NotificationCard({ item, onRead, onDelete }: NotificationCardProps) {
         ].join(' ')}
       >
         {/* Title row with category icon */}
-        <span className="flex items-center gap-1.5">
+        <span className="flex items-center gap-2">
           <CategoryIcon category={item.category} />
           <span className="font-medium text-pf-text-primary leading-snug truncate">
             {item.title}
           </span>
         </span>
 
-        <span className="block text-sm text-pf-text-muted mt-0.5 leading-relaxed">
+        <span className="block text-sm text-pf-text-muted mt-1 leading-relaxed">
           {item.body}
         </span>
 
@@ -380,7 +380,7 @@ export function Component() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-pf-text-primary">Notifications</h1>
-          <p className="text-sm text-pf-text-muted mt-0.5">
+          <p className="text-sm text-pf-text-muted mt-1">
             Real-time alerts and system messages
           </p>
         </div>
@@ -395,7 +395,7 @@ export function Component() {
             disabled={refreshing}
             aria-label="Refresh notifications"
             className={[
-              'p-1.5 rounded text-pf-text-muted hover:text-pf-text-primary',
+              'p-2 rounded text-pf-text-muted hover:text-pf-text-primary',
               'transition-colors focus-visible:outline-none focus-visible:ring-2',
               'focus-visible:ring-pf-cyan-400 disabled:opacity-50',
             ].join(' ')}

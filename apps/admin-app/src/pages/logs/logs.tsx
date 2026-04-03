@@ -77,7 +77,7 @@ export function Component() {
             role="tab"
             aria-selected={tab === t.key}
             aria-controls={`tabpanel-${t.key}`}
-            className={`px-4 py-1.5 text-sm rounded-pf-sm transition-colors ${
+            className={`px-4 py-2 text-sm rounded-pf-sm transition-colors ${
               tab === t.key
                 ? 'bg-pf-cyan-500/10 text-pf-cyan-500 font-medium'
                 : 'text-pf-text-secondary hover:text-pf-text'
@@ -147,7 +147,7 @@ export function Component() {
                     {tab === 'audit' && (
                       <>
                         <td className="px-4 py-3">
-                          <span className="px-2 py-0.5 rounded text-pf-label font-medium bg-pf-base text-pf-cyan-500 border border-pf-border">
+                          <span className="px-2 py-1 rounded text-pf-label font-medium bg-pf-base text-pf-cyan-500 border border-pf-border">
                             {log.action}
                           </span>
                         </td>
@@ -161,7 +161,7 @@ export function Component() {
                     {tab === 'events' && (
                       <>
                         <td className="px-4 py-3">
-                          <span className="px-2 py-0.5 rounded text-pf-label font-medium bg-pf-purple-500/10 text-pf-purple-500">
+                          <span className="px-2 py-1 rounded text-pf-label font-medium bg-pf-purple-500/10 text-pf-purple-500">
                             {log.type}
                           </span>
                         </td>

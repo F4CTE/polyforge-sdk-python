@@ -106,7 +106,7 @@ export function Component() {
               <p className="text-sm text-pf-text-muted mb-6">Your account is now active.</p>
               <Link
                 to="/markets"
-                className="inline-block px-6 py-2.5 bg-pf-cyan-500 text-pf-text-contrast font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+                className="inline-block px-6 py-3 bg-pf-cyan-500 text-pf-text-contrast font-semibold rounded-pf hover:bg-pf-cyan-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
               >
                 Go to Markets
               </Link>
@@ -126,7 +126,7 @@ export function Component() {
                 variant="secondary"
                 onClick={handleResend}
                 disabled={resending}
-                className="inline-block px-6 py-2.5 border border-pf-border text-pf-text font-medium rounded-pf hover:bg-pf-border/30 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                className="inline-block px-6 py-3 border border-pf-border text-pf-text font-medium rounded-pf hover:bg-pf-border/30 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
               >
                 {resending ? 'Sending...' : 'Resend email'}
               </Button>
@@ -158,7 +158,7 @@ export function Component() {
                 variant="secondary"
                 onClick={handleResend}
                 disabled={resending}
-                className="w-full py-2.5 border border-pf-border text-pf-text font-medium rounded-pf hover:bg-pf-border/30 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
+                className="w-full py-3 border border-pf-border text-pf-text font-medium rounded-pf hover:bg-pf-border/30 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50"
               >
                 {resending ? 'Sending...' : 'Resend email'}
               </Button>

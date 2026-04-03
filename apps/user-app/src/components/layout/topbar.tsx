@@ -101,7 +101,7 @@ export function Topbar() {
             </span>
           )}
           {/* WebSocket active indicator */}
-          <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 rounded-pf-full bg-pf-success animate-pulse-dot" aria-hidden="true" />
+          <span className="absolute bottom-1 right-1 w-2 h-2 rounded-pf-full bg-pf-success animate-pulse-dot" aria-hidden="true" />
           <span className="sr-only">Connected</span>
         </button>
 
@@ -134,7 +134,7 @@ export function Topbar() {
                     aria-label={`${n.read ? '' : 'Unread: '}${n.title}`}
                   >
                     <span
-                      className={`mt-1.5 w-2 h-2 rounded-pf-full shrink-0 ${
+                      className={`mt-2 w-2 h-2 rounded-pf-full shrink-0 ${
                         n.severity === 'error'
                           ? 'bg-pf-danger'
                           : n.severity === 'warning'

@@ -34,13 +34,13 @@ function OutcomeBadge({ outcome }: { outcome: string }) {
   const upper = outcome.toUpperCase();
   if (upper === 'YES') {
     return (
-      <span className="text-pf-caption px-1.5 py-0.5 rounded border border-pf-success/30 bg-pf-success/10 text-pf-success font-semibold">
+      <span className="text-pf-caption px-2 py-1 rounded border border-pf-success/30 bg-pf-success/10 text-pf-success font-semibold">
         YES
       </span>
     );
   }
   return (
-    <span className="text-pf-caption px-1.5 py-0.5 rounded border border-pf-danger/30 bg-pf-danger/10 text-pf-danger font-semibold">
+    <span className="text-pf-caption px-2 py-1 rounded border border-pf-danger/30 bg-pf-danger/10 text-pf-danger font-semibold">
       NO
     </span>
   );
@@ -205,14 +205,14 @@ export function Component() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-xl font-bold text-pf-text">Price Alerts</h1>
-            <p className="text-sm text-pf-text-secondary mt-0.5">
+            <p className="text-sm text-pf-text-secondary mt-1">
               {loading ? '...' : `${alerts.length} alert${alerts.length !== 1 ? 's' : ''}`}
             </p>
           </div>
           <Button
             type="button"
             onClick={() => { setFormOpen(v => !v); if (formOpen) resetForm(); }}
-            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors font-medium"
+            className="flex items-center gap-2 text-sm px-3 py-2 rounded-pf-sm bg-pf-cyan-500/10 text-pf-cyan-400 hover:bg-pf-cyan-500/20 transition-colors font-medium"
           >
             <span className="text-base leading-none">＋</span>
             New Alert
@@ -331,7 +331,7 @@ export function Component() {
             </div>
 
             {/* Persistent toggle */}
-            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <label className="flex items-center gap-3 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={persistent}
@@ -381,7 +381,7 @@ export function Component() {
               return (
                 <div
                   key={alert.id}
-                  className="flex items-center gap-3 rounded-pf border border-pf-border bg-pf-surface px-3 py-2.5 hover:border-pf-border-hover transition-colors"
+                  className="flex items-center gap-3 rounded-pf border border-pf-border bg-pf-surface px-3 py-3 hover:border-pf-border-hover transition-colors"
                 >
                   {/* Direction arrow */}
                   <span
@@ -398,7 +398,7 @@ export function Component() {
                     <p className="text-sm text-pf-text font-medium truncate" title={title}>
                       {title}
                     </p>
-                    <p className="text-xs text-pf-text-muted mt-0.5">
+                    <p className="text-xs text-pf-text-muted mt-1">
                       {alert.direction === 'above' ? 'Rises above' : 'Falls below'}{' '}
                       <span className="font-mono font-semibold text-pf-text">{priceCents}</span>
                       {' · '}{created}
@@ -406,18 +406,18 @@ export function Component() {
                   </div>
 
                   {/* Badges */}
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     {alert.triggered ? (
-                      <span className="text-pf-caption px-1.5 py-0.5 rounded border border-pf-warning/30 bg-pf-warning/10 text-pf-warning font-semibold">
+                      <span className="text-pf-caption px-2 py-1 rounded border border-pf-warning/30 bg-pf-warning/10 text-pf-warning font-semibold">
                         Triggered
                       </span>
                     ) : (
-                      <span className="text-pf-caption px-1.5 py-0.5 rounded border border-pf-cyan-500/30 bg-pf-cyan-500/10 text-pf-cyan-400 font-semibold">
+                      <span className="text-pf-caption px-2 py-1 rounded border border-pf-cyan-500/30 bg-pf-cyan-500/10 text-pf-cyan-400 font-semibold">
                         Active
                       </span>
                     )}
                     {alert.persistent && (
-                      <span className="text-pf-caption px-1.5 py-0.5 rounded border border-pf-border bg-pf-elevated text-pf-text-muted font-medium">
+                      <span className="text-pf-caption px-2 py-1 rounded border border-pf-border bg-pf-elevated text-pf-text-muted font-medium">
                         Persistent
                       </span>
                     )}
@@ -429,7 +429,7 @@ export function Component() {
                     variant="ghost"
                     size="icon-sm"
                     onClick={() => deleteAlert(alert.id)}
-                    className="p-1.5 rounded-pf text-pf-text-muted hover:text-pf-danger transition-colors shrink-0"
+                    className="p-2 rounded-pf text-pf-text-muted hover:text-pf-danger transition-colors shrink-0"
                     aria-label="Delete alert"
                   >
                     <Trash2 size={14} aria-hidden="true" />

@@ -276,10 +276,10 @@ export function Component() {
     <div className="animate-fade-in p-6 max-w-6xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <GitMerge className="size-5 text-pf-text-muted mt-0.5 shrink-0" aria-hidden="true" />
+        <GitMerge className="size-5 text-pf-text-muted mt-1 shrink-0" aria-hidden="true" />
         <div>
           <h1 className="text-2xl font-semibold text-pf-text">Market Correlation</h1>
-          <p className="text-sm text-pf-text-muted mt-0.5">
+          <p className="text-sm text-pf-text-muted mt-1">
             How Polymarket categories move together
           </p>
         </div>
@@ -317,7 +317,7 @@ export function Component() {
               {categories.map((cat, j) => (
                 <div
                   key={`col-${cat}`}
-                  className={`h-[72px] w-[72px] flex items-end justify-center pb-1.5 transition-colors duration-150 ${
+                  className={`h-[72px] w-[72px] flex items-end justify-center pb-2 transition-colors duration-100 ${
                     highlightCol === j ? 'text-pf-cyan-400' : 'text-pf-text-secondary'
                   }`}
                   aria-hidden="true"
@@ -337,7 +337,7 @@ export function Component() {
                   {/* Row header */}
                   <div
                     key={`row-label-${rowCat}`}
-                    className={`h-[72px] w-20 flex items-center justify-end pr-2 transition-colors duration-150 ${
+                    className={`h-[72px] w-20 flex items-center justify-end pr-2 transition-colors duration-100 ${
                       highlightRow === i ? 'text-pf-cyan-400' : 'text-pf-text-secondary'
                     }`}
                     aria-hidden="true"
@@ -372,7 +372,7 @@ export function Component() {
                     return (
                       <div
                         key={`cell-${i}-${j}`}
-                        className={`h-[72px] w-[72px] rounded flex items-center justify-center cursor-default transition-all duration-150 ${cellBg} ${
+                        className={`h-[72px] w-[72px] rounded flex items-center justify-center cursor-default transition-all duration-100 ${cellBg} ${
                           isHighlighted ? 'ring-1 ring-pf-cyan-400/50 scale-[1.04]' : ''
                         }`}
                         role="gridcell"
@@ -419,7 +419,7 @@ export function Component() {
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-pf-border">
           <h2 className="text-sm font-medium text-pf-text">Top Correlated Market Pairs</h2>
-          <p className="text-xs text-pf-text-muted mt-0.5">
+          <p className="text-xs text-pf-text-muted mt-1">
             Select two different categories to see the most correlated individual market pairs between them.
           </p>
         </div>
@@ -443,8 +443,8 @@ export function Component() {
             disabled={loadingMatrix}
           />
           {categoryA && categoryB && categoryA === categoryB && (
-            <div className="flex items-center gap-1.5 text-xs text-pf-warning self-end pb-0.5">
-              <Info className="size-3.5" aria-hidden="true" />
+            <div className="flex items-center gap-2 text-xs text-pf-warning self-end pb-1">
+              <Info className="size-4" aria-hidden="true" />
               Select two different categories
             </div>
           )}
@@ -495,7 +495,7 @@ export function Component() {
                       </Link>
                     </td>
                     <td className="px-6 py-3 text-right">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-semibold ${correlationBadgeClass(pair.correlation)}`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono font-semibold ${correlationBadgeClass(pair.correlation)}`}>
                         {pair.correlation >= 0.3 && <TrendingUp className="size-3" aria-hidden="true" />}
                         {pair.correlation <= -0.3 && <TrendingDown className="size-3" aria-hidden="true" />}
                         {formatCorr(pair.correlation)}
@@ -531,7 +531,7 @@ export function Component() {
 
 function LegendItem({ bgClass, label }: { bgClass: string; label: string }) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-2">
       <div className={`size-3 rounded-sm ${bgClass}`} aria-hidden="true" />
       <span className="text-pf-label text-pf-text-muted">{label}</span>
     </div>

@@ -173,7 +173,7 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
   return (
     <div className="rounded-pf-sm bg-pf-elevated border border-pf-border overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-pf-border">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-pf-border">
         <span className="text-pf-caption font-medium text-pf-text-secondary uppercase tracking-wider truncate max-w-[70%]">
           {label}
         </span>
