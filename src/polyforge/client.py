@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import ipaddress
 import json as _json
 import logging as _log
+import socket
 from dataclasses import fields
 from typing import Any, AsyncIterator, Iterator, TypeVar, get_type_hints
 
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 import httpx
 
@@ -144,14 +146,67 @@ def _strip_none(params: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in params.items() if v is not None}
 
 
+<<<<<<< HEAD
+def _encode_path(segment: str) -> str:
+    """URL-encode a path parameter to prevent path traversal attacks (CWE-22)."""
+    return quote(str(segment), safe="")
+=======
+_BLOCKED_HOSTNAMES: set[str] = {
+    "localhost",
+    "metadata.google.internal",
+    "metadata.internal",
+    "instance-data",
+}
+>>>>>>> master
+
+
 def _validate_webhook_url(url: str) -> None:
-    """Validate webhook URL to prevent SSRF attacks."""
+    """Validate webhook URL to prevent SSRF attacks.
+
+    Blocks private, loopback, link-local, and reserved IP addresses as well as
+    known cloud metadata hostnames.  Only HTTPS URLs are allowed.
+    """
     parsed = urlparse(url)
+
+    # --- scheme check ---
     if parsed.scheme != "https":
         raise ValueError("Webhook URL must use HTTPS")
-    blocked = {"127.0.0.1", "localhost", "0.0.0.0", "169.254.169.254"}
-    if parsed.hostname in blocked:
+
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("Webhook URL must contain a valid hostname")
+
+    # --- blocked hostname check ---
+    if hostname.lower() in _BLOCKED_HOSTNAMES:
         raise ValueError("Webhook URL cannot point to localhost or internal addresses")
+
+    # --- resolve hostname and validate each resulting IP ---
+    try:
+        addrinfos = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        raise ValueError(f"Could not resolve webhook hostname: {hostname}")
+
+    for family, _, _, _, sockaddr in addrinfos:
+        ip_str = sockaddr[0]
+        try:
+            addr = ipaddress.ip_address(ip_str)
+        except ValueError:
+            raise ValueError(f"Invalid IP resolved for webhook hostname: {ip_str}")
+
+        if addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_reserved:
+            raise ValueError(
+                "Webhook URL cannot point to private, loopback, link-local, "
+                f"or reserved addresses (resolved to {addr})"
+            )
+
+        # Block IPv4-mapped IPv6 addresses that wrap private IPv4 ranges
+        if isinstance(addr, ipaddress.IPv6Address) and addr.ipv4_mapped:
+            mapped = addr.ipv4_mapped
+            if mapped.is_private or mapped.is_loopback or mapped.is_link_local or mapped.is_reserved:
+                raise ValueError(
+                    "Webhook URL cannot point to private/loopback addresses "
+                    f"via IPv4-mapped IPv6 (resolved to {addr})"
+                )
 
 
 # ---------------------------------------------------------------------------
@@ -242,10 +297,11 @@ class PolyforgeClient:
             page=data["page"],
             limit=data["limit"],
             has_more=data["hasNext"],
+            total_pages=data.get("totalPages", 0),
         )
 
     def get_market(self, market_id: str) -> Market:
-        return _parse(Market, self._get(f"/api/v1/markets/{market_id}"))
+        return _parse(Market, self._get(f"/api/v1/markets/{_encode_path(market_id)}"))
 
     # -- Strategies --
 
@@ -256,7 +312,7 @@ class PolyforgeClient:
         return [_parse(Strategy, s) for s in items]
 
     def get_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, self._get(f"/api/v1/strategies/{strategy_id}"))
+        return _parse(Strategy, self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}"))
 
     def create_strategy(self, name: str, description: str | None = None, market_id: str | None = None) -> Strategy:
         body: dict[str, Any] = {"name": name, "description": description or ""}
@@ -271,10 +327,10 @@ class PolyforgeClient:
         return _parse(Strategy, self._post("/api/v1/strategies/from-description", json=body))
 
     def start_strategy(self, strategy_id: str, mode: str = "paper") -> Strategy:
-        return _parse(Strategy, self._post(f"/api/v1/strategies/{strategy_id}/start", json={"mode": mode}))
+        return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode}))
 
     def stop_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, self._post(f"/api/v1/strategies/{strategy_id}/stop"))
+        return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
 
     def get_strategy_templates(self) -> list[StrategyTemplate]:
         data = self._get("/api/v1/strategies/templates")
@@ -283,7 +339,7 @@ class PolyforgeClient:
         return [_parse(StrategyTemplate, t) for t in items]
 
     def export_strategy(self, strategy_id: str) -> dict:
-        return self._get(f"/api/v1/strategies/{strategy_id}/export")
+        return self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/export")
 
     def update_strategy(self, strategy_id: str, name: str | None = None, description: str | None = None, market_id: str | None = None) -> Strategy:
         body: dict[str, Any] = {}
@@ -293,22 +349,22 @@ class PolyforgeClient:
             body["description"] = description
         if market_id is not None:
             body["marketId"] = market_id
-        return _parse(Strategy, self._patch(f"/api/v1/strategies/{strategy_id}", json=body))
+        return _parse(Strategy, self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     def delete_strategy(self, strategy_id: str) -> None:
-        self._delete(f"/api/v1/strategies/{strategy_id}")
+        self._delete(f"/api/v1/strategies/{_encode_path(strategy_id)}")
 
     def import_strategy(self, data: dict) -> Strategy:
         return _parse(Strategy, self._post("/api/v1/strategies/import", json={"data": data}))
 
     def pause_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, self._post(f"/api/v1/strategies/{strategy_id}/pause"))
+        return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/pause"))
 
     def resume_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, self._post(f"/api/v1/strategies/{strategy_id}/resume"))
+        return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/resume"))
 
     def fork_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, self._post(f"/api/v1/strategies/{strategy_id}/fork"))
+        return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/fork"))
 
     # -- Portfolio & Orders --
 
@@ -365,7 +421,7 @@ class PolyforgeClient:
 
     def cancel_order(self, order_id: str) -> dict:
         """Cancel a pending or live order."""
-        return self._delete(f"/api/v1/orders/{order_id}")
+        return self._delete(f"/api/v1/orders/{_encode_path(order_id)}")
 
     def close_position(self, token_id: str, size: float | None = None) -> PlaceOrderResponse:
         """Close an open position (sell all shares at market price)."""
@@ -475,7 +531,7 @@ class PolyforgeClient:
 
     def cancel_smart_order(self, smart_order_id: str) -> dict:
         """Cancel a pending or active smart order."""
-        return self._delete(f"/api/v1/orders/smart/{smart_order_id}")
+        return self._delete(f"/api/v1/orders/smart/{_encode_path(smart_order_id)}")
 
     # -- Marketplace --
 
@@ -494,11 +550,11 @@ class PolyforgeClient:
 
     def get_marketplace_listing(self, listing_id: str) -> dict:
         """Get a single marketplace listing by ID."""
-        return self._get(f"/api/v1/marketplace/{listing_id}")
+        return self._get(f"/api/v1/marketplace/{_encode_path(listing_id)}")
 
     def purchase_strategy(self, listing_id: str) -> MarketplacePurchaseResult:
         """Purchase a marketplace strategy and receive a private fork."""
-        data = self._post(f"/api/v1/marketplace/{listing_id}/purchase")
+        data = self._post(f"/api/v1/marketplace/{_encode_path(listing_id)}/purchase")
         return MarketplacePurchaseResult(
             purchase_id=data["purchaseId"],
             forked_strategy_id=data["forkedStrategyId"],
@@ -525,7 +581,7 @@ class PolyforgeClient:
         """
         with self._client.stream(
             "GET",
-            f"/api/v1/strategies/{strategy_id}/events",
+            f"/api/v1/strategies/{_encode_path(strategy_id)}/events",
             headers={"Accept": "text/event-stream"},
         ) as response:
             _raise_for_status(response)
@@ -624,7 +680,7 @@ class PolyforgeClient:
         )
 
     def get_market_sentiment(self, market_id: str) -> MarketSentiment:
-        data = self._get(f"/api/v1/news/sentiment/{market_id}")
+        data = self._get(f"/api/v1/news/sentiment/{_encode_path(market_id)}")
         return MarketSentiment(
             market_id=data.get("marketId", ""),
             score=data.get("score", 0.0),
@@ -754,10 +810,11 @@ class AsyncPolyforgeClient:
             page=data["page"],
             limit=data["limit"],
             has_more=data["hasNext"],
+            total_pages=data.get("totalPages", 0),
         )
 
     async def get_market(self, market_id: str) -> Market:
-        return _parse(Market, await self._get(f"/api/v1/markets/{market_id}"))
+        return _parse(Market, await self._get(f"/api/v1/markets/{_encode_path(market_id)}"))
 
     # -- Strategies --
 
@@ -768,7 +825,7 @@ class AsyncPolyforgeClient:
         return [_parse(Strategy, s) for s in items]
 
     async def get_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, await self._get(f"/api/v1/strategies/{strategy_id}"))
+        return _parse(Strategy, await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}"))
 
     async def create_strategy(self, name: str, description: str | None = None, market_id: str | None = None) -> Strategy:
         body: dict[str, Any] = {"name": name, "description": description or ""}
@@ -783,10 +840,10 @@ class AsyncPolyforgeClient:
         return _parse(Strategy, await self._post("/api/v1/strategies/from-description", json=body))
 
     async def start_strategy(self, strategy_id: str, mode: str = "paper") -> Strategy:
-        return _parse(Strategy, await self._post(f"/api/v1/strategies/{strategy_id}/start", json={"mode": mode}))
+        return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode}))
 
     async def stop_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, await self._post(f"/api/v1/strategies/{strategy_id}/stop"))
+        return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
 
     async def get_strategy_templates(self) -> list[StrategyTemplate]:
         data = await self._get("/api/v1/strategies/templates")
@@ -795,7 +852,7 @@ class AsyncPolyforgeClient:
         return [_parse(StrategyTemplate, t) for t in items]
 
     async def export_strategy(self, strategy_id: str) -> dict:
-        return await self._get(f"/api/v1/strategies/{strategy_id}/export")
+        return await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}/export")
 
     async def update_strategy(self, strategy_id: str, name: str | None = None, description: str | None = None, market_id: str | None = None) -> Strategy:
         body: dict[str, Any] = {}
@@ -805,22 +862,22 @@ class AsyncPolyforgeClient:
             body["description"] = description
         if market_id is not None:
             body["marketId"] = market_id
-        return _parse(Strategy, await self._patch(f"/api/v1/strategies/{strategy_id}", json=body))
+        return _parse(Strategy, await self._patch(f"/api/v1/strategies/{_encode_path(strategy_id)}", json=body))
 
     async def delete_strategy(self, strategy_id: str) -> None:
-        await self._delete(f"/api/v1/strategies/{strategy_id}")
+        await self._delete(f"/api/v1/strategies/{_encode_path(strategy_id)}")
 
     async def import_strategy(self, data: dict) -> Strategy:
         return _parse(Strategy, await self._post("/api/v1/strategies/import", json={"data": data}))
 
     async def pause_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, await self._post(f"/api/v1/strategies/{strategy_id}/pause"))
+        return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/pause"))
 
     async def resume_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, await self._post(f"/api/v1/strategies/{strategy_id}/resume"))
+        return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/resume"))
 
     async def fork_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, await self._post(f"/api/v1/strategies/{strategy_id}/fork"))
+        return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/fork"))
 
     # -- Portfolio & Orders --
 
@@ -877,7 +934,7 @@ class AsyncPolyforgeClient:
 
     async def cancel_order(self, order_id: str) -> dict:
         """Cancel a pending or live order."""
-        return await self._delete(f"/api/v1/orders/{order_id}")
+        return await self._delete(f"/api/v1/orders/{_encode_path(order_id)}")
 
     async def close_position(self, token_id: str, size: float | None = None) -> PlaceOrderResponse:
         """Close an open position (sell all shares at market price)."""
@@ -983,7 +1040,7 @@ class AsyncPolyforgeClient:
 
     async def cancel_smart_order(self, smart_order_id: str) -> dict:
         """Cancel a pending or active smart order."""
-        return await self._delete(f"/api/v1/orders/smart/{smart_order_id}")
+        return await self._delete(f"/api/v1/orders/smart/{_encode_path(smart_order_id)}")
 
     # -- Marketplace --
 
@@ -1002,11 +1059,11 @@ class AsyncPolyforgeClient:
 
     async def get_marketplace_listing(self, listing_id: str) -> dict:
         """Get a single marketplace listing by ID."""
-        return await self._get(f"/api/v1/marketplace/{listing_id}")
+        return await self._get(f"/api/v1/marketplace/{_encode_path(listing_id)}")
 
     async def purchase_strategy(self, listing_id: str) -> MarketplacePurchaseResult:
         """Purchase a marketplace strategy and receive a private fork."""
-        data = await self._post(f"/api/v1/marketplace/{listing_id}/purchase")
+        data = await self._post(f"/api/v1/marketplace/{_encode_path(listing_id)}/purchase")
         return MarketplacePurchaseResult(
             purchase_id=data["purchaseId"],
             forked_strategy_id=data["forkedStrategyId"],
@@ -1030,7 +1087,7 @@ class AsyncPolyforgeClient:
         """
         async with self._client.stream(
             "GET",
-            f"/api/v1/strategies/{strategy_id}/events",
+            f"/api/v1/strategies/{_encode_path(strategy_id)}/events",
             headers={"Accept": "text/event-stream"},
         ) as response:
             _raise_for_status(response)
@@ -1129,7 +1186,7 @@ class AsyncPolyforgeClient:
         )
 
     async def get_market_sentiment(self, market_id: str) -> MarketSentiment:
-        data = await self._get(f"/api/v1/news/sentiment/{market_id}")
+        data = await self._get(f"/api/v1/news/sentiment/{_encode_path(market_id)}")
         return MarketSentiment(
             market_id=data.get("marketId", ""),
             score=data.get("score", 0.0),
