@@ -162,12 +162,15 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
 
-  // ENABLE_SWAGGER: dedicated opt-in flag (defaults to true in non-production).
-  // Avoids relying solely on NODE_ENV for a security-sensitive control.
-  const enableSwagger =
-    process.env.ENABLE_SWAGGER !== undefined
-      ? process.env.ENABLE_SWAGGER === "true"
-      : process.env.NODE_ENV !== "production";
+  // ENABLE_SWAGGER: explicit opt-in only (defaults to false).
+  // Must be set to "true" to expose API docs — prevents accidental exposure.
+  const enableSwagger = process.env.ENABLE_SWAGGER === "true";
+
+  if (enableSwagger && process.env.NODE_ENV === "production") {
+    process.stderr.write(
+      "[api-service] WARNING: Swagger is enabled in production — ensure this is intentional\n",
+    );
+  }
 
   // Write swagger.json alongside the compiled output — consumed by
   // Postman, SDK generators, and the admin builder stats page.

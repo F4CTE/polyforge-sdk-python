@@ -11,6 +11,7 @@
 |---|---|---|
 | `NODE_ENV` | `development` | `development` \| `production` \| `test`. Controls rate-limit strictness: production uses tight per-route limits (5–10 req/hr); dev/test uses relaxed limits (500–10000) to support E2E testing. |
 | `LOG_LEVEL` | `debug` | `debug` \| `info` \| `warn` \| `error` |
+| `ENABLE_SWAGGER` | `true` (in `.env.example`) | Set to `"true"` to enable Swagger/OpenAPI docs at `/api/v1/docs`, `/api/v1/swagger`, and `/api/v1/docs/openapi.json`. Defaults to **disabled** if unset. Emits a warning if enabled with `NODE_ENV=production`. |
 
 ---
 

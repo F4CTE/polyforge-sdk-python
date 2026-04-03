@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.35.1] — 2026-04-02
+
+### Fixed
+- **Swagger/OpenAPI default changed to opt-in** — `ENABLE_SWAGGER` must now be explicitly set to `"true"` to expose API documentation; previously defaulted to enabled in non-production environments; adds startup warning if Swagger is enabled with `NODE_ENV=production` (closes #79)
+
+---
+
 ## [6.35.0] — 2026-04-03
 
 ### Fixed
