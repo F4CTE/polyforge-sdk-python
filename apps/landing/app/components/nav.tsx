@@ -25,11 +25,11 @@ function ThemeToggle() {
     if (next) {
       document.documentElement.classList.add("light");
       document.documentElement.classList.remove("dark");
-      localStorage.setItem("pf-landing-theme", "light");
+      localStorage.setItem("pf-theme", "light");
     } else {
       document.documentElement.classList.remove("light");
       document.documentElement.classList.add("dark");
-      localStorage.setItem("pf-landing-theme", "dark");
+      localStorage.setItem("pf-theme", "dark");
     }
   }
 

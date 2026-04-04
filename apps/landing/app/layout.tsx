@@ -120,7 +120,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
   try {
-    if (localStorage.getItem('pf-landing-theme') === 'light') {
+    if (localStorage.getItem('pf-theme') === 'light') {
       document.documentElement.classList.remove('dark');
       document.documentElement.classList.add('light');
     }

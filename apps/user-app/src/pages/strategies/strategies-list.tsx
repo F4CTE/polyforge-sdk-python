@@ -95,8 +95,8 @@ const COMPARE_COLORS = ['var(--color-pf-cyan-500)', 'var(--color-pf-purple-500)'
 
 function statusGradient(status: StrategyStatus): string {
   switch (status) {
-    case 'RUNNING':  return 'var(--color-pf-success)';
-    case 'PAPER':    return 'var(--color-pf-cyan-500)';
+    case 'RUNNING':  return 'var(--color-pf-cyan-500)';
+    case 'PAPER':    return 'var(--color-pf-purple-500)';
     case 'PAUSED':   return 'var(--color-pf-warning)';
     case 'ERROR':    return 'var(--color-pf-danger)';
     case 'IDLE':
@@ -105,8 +105,8 @@ function statusGradient(status: StrategyStatus): string {
 }
 
 const STATUS_STYLES: Record<StrategyStatus, { dot: string; bg: string; text: string }> = {
-  RUNNING:  { dot: 'bg-pf-success', bg: 'bg-pf-success/10', text: 'text-pf-success' },
-  PAPER:    { dot: 'bg-pf-cyan-400',    bg: 'bg-pf-cyan-500/10',    text: 'text-pf-cyan-400' },
+  RUNNING:  { dot: 'bg-pf-cyan-500',   bg: 'bg-pf-cyan-500/10',   text: 'text-pf-cyan-500' },
+  PAPER:    { dot: 'bg-pf-purple-500', bg: 'bg-pf-purple-500/10', text: 'text-pf-purple-500' },
   PAUSED:   { dot: 'bg-pf-warning',   bg: 'bg-pf-warning/10',   text: 'text-pf-warning' },
   IDLE:     { dot: 'bg-pf-text-muted',    bg: 'bg-pf-overlay',    text: 'text-pf-text-muted' },
   ERROR:    { dot: 'bg-pf-danger',     bg: 'bg-pf-danger/10',     text: 'text-pf-danger' },
