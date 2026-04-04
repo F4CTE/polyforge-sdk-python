@@ -110,6 +110,7 @@ All encryption keys are **required** — services will fail to start if unset. G
 | Variable | Dev default | Description |
 |---|---|---|
 | `CHAIN_ID` | `137` | Polygon mainnet. Do not change. |
+| `SIGNING_MODE` | _(auto)_ | `stub` \| `production`. Controls whether `signer-service` uses a stub signer (fake signatures for dev) or real EIP-712 signing. Defaults to `stub` when `NODE_ENV=development`, `production` otherwise. **Setting `stub` when `NODE_ENV=production` is a fatal error.** |
 
 ---
 

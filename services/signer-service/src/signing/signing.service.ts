@@ -30,18 +30,20 @@ const FEE_RATE_CACHE_TTL = 300; // 5 minutes
 /**
  * Signs Polymarket CLOB orders using the user's stored credentials.
  *
- * In dev: uses a stub signer that produces deterministic fake signatures
- *         (mock-polymarket accepts any payload).
- * In prod: uses @polymarket/clob-client for real EIP712 signing.
+ * Signing mode is controlled by the SIGNING_MODE env variable:
+ *   - "stub":       uses a stub signer that produces fake signatures (dev only)
+ *   - "production": uses @polymarket/clob-client for real EIP712 signing
+ *   - Defaults to "stub" when NODE_ENV=development, "production" otherwise
  *
- * SECURITY: Decrypted credentials are held in memory only for the duration
+ * SECURITY: SIGNING_MODE=stub is rejected when NODE_ENV=production.
+ * Decrypted credentials are held in memory only for the duration
  * of a single signing call. They are never logged or cached.
  */
 @Injectable()
 export class SigningService implements OnModuleInit {
   private readonly logger = new Logger(SigningService.name);
   private readonly chainId: number;
-  private readonly isDev: boolean;
+  private readonly isStubMode: boolean;
   private readonly clobApiUrl: string;
 
   constructor(
@@ -51,7 +53,20 @@ export class SigningService implements OnModuleInit {
     private readonly redis: RedisService,
   ) {
     this.chainId = parseInt(this.config.get<string>("CHAIN_ID") ?? "137", 10);
-    this.isDev = this.config.get<string>("NODE_ENV") === "development";
+
+    const nodeEnv = this.config.get<string>("NODE_ENV");
+    const signingMode =
+      this.config.get<string>("SIGNING_MODE") ??
+      (nodeEnv === "development" ? "stub" : "production");
+
+    if (nodeEnv === "production" && signingMode === "stub") {
+      throw new Error(
+        "FATAL: Cannot use stub signer in production (NODE_ENV=production + SIGNING_MODE=stub). " +
+          "Remove SIGNING_MODE=stub or set SIGNING_MODE=production.",
+      );
+    }
+
+    this.isStubMode = signingMode === "stub";
     this.clobApiUrl =
       this.config.get<string>("CLOB_API_URL") ?? "https://clob.polymarket.com";
   }
@@ -70,13 +85,24 @@ export class SigningService implements OnModuleInit {
   }
 
   onModuleInit() {
-    if (this.isDev && this.chainId === 137) {
+    if (this.isStubMode) {
       this.logger.warn(
-        "Running in dev mode with MAINNET chain ID (137) — use 80002 for testnet",
+        [
+          "╔══════════════════════════════════════════════════════════╗",
+          "║  STUB SIGNER ACTIVE — orders will NOT reach Polymarket  ║",
+          "║  Set SIGNING_MODE=production for real signing              ║",
+          "╚══════════════════════════════════════════════════════════╝",
+        ].join("\n"),
       );
     }
 
-    if (!this.isDev) {
+    if (this.isStubMode && this.chainId === 137) {
+      this.logger.warn(
+        "Running in stub mode with MAINNET chain ID (137) — use 80002 for testnet",
+      );
+    }
+
+    if (!this.isStubMode) {
       // Verify CLOB credentials are configured for production
       if (!this.clobApiUrl || this.clobApiUrl.includes("mock")) {
         throw new Error("Production requires real CLOB_API_URL");
@@ -112,7 +138,7 @@ export class SigningService implements OnModuleInit {
     try {
       let order: Record<string, unknown>;
 
-      if (this.isDev) {
+      if (this.isStubMode) {
         this.logger.warn(
           "DEV MODE: Using stub signer — orders will NOT be submitted to Polymarket",
         );
@@ -282,7 +308,7 @@ export class SigningService implements OnModuleInit {
    * In dev mode, returns 0.
    */
   private async fetchNonce(walletAddress: string): Promise<number> {
-    if (this.isDev) return 0;
+    if (this.isStubMode) return 0;
 
     const cacheKey = `polymarket:nonce:${walletAddress}`;
     const cached = await this.redis.get(cacheKey);
@@ -314,7 +340,7 @@ export class SigningService implements OnModuleInit {
    * In dev mode, returns "0".
    */
   private async fetchFeeRate(tokenId: string): Promise<string> {
-    if (this.isDev) return "0";
+    if (this.isStubMode) return "0";
 
     const cacheKey = `polymarket:feeRate:${tokenId}`;
     const cached = await this.redis.get(cacheKey);
@@ -351,7 +377,7 @@ export class SigningService implements OnModuleInit {
     try {
       let txHash: string;
 
-      if (this.isDev) {
+      if (this.isStubMode) {
         this.logger.warn(
           "DEV MODE: Using stub redemption — positions will NOT be redeemed on Polymarket",
         );
@@ -390,7 +416,7 @@ export class SigningService implements OnModuleInit {
     tokenId: string,
     amount: string,
   ): Promise<{ txHash: string }> {
-    if (this.isDev) {
+    if (this.isStubMode) {
       this.logger.warn("DEV MODE: Stub split");
       return { txHash: `dev-split-${Date.now()}` };
     }
@@ -404,7 +430,7 @@ export class SigningService implements OnModuleInit {
     tokenId: string,
     amount: string,
   ): Promise<{ txHash: string }> {
-    if (this.isDev) {
+    if (this.isStubMode) {
       this.logger.warn("DEV MODE: Stub merge");
       return { txHash: `dev-merge-${Date.now()}` };
     }
