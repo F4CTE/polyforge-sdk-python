@@ -536,12 +536,7 @@ const features = [
           strokeOpacity="0.08"
           strokeWidth="0.5"
         />
-        <text
-          x="18"
-          y="24"
-          fill="var(--color-pf-text-muted)"
-          fontSize="6"
-        >
+        <text x="18" y="24" fill="var(--color-pf-text-muted)" fontSize="6">
           Breaking: Fed holds...
         </text>
         <rect
@@ -556,12 +551,7 @@ const features = [
           strokeOpacity="0.08"
           strokeWidth="0.5"
         />
-        <text
-          x="18"
-          y="48"
-          fill="var(--color-pf-text-muted)"
-          fontSize="6"
-        >
+        <text x="18" y="48" fill="var(--color-pf-text-muted)" fontSize="6">
           Trump announces...
         </text>
         {/* Arrow to AI */}
@@ -657,20 +647,10 @@ const features = [
           strokeOpacity="0.15"
           strokeWidth="0.5"
         />
-        <text
-          x="18"
-          y="82"
-          fill="var(--color-pf-success)"
-          fontSize="7"
-        >
+        <text x="18" y="82" fill="var(--color-pf-success)" fontSize="7">
           Confidence: 87%
         </text>
-        <text
-          x="130"
-          y="82"
-          fill="var(--color-pf-text-muted)"
-          fontSize="6"
-        >
+        <text x="130" y="82" fill="var(--color-pf-text-muted)" fontSize="6">
           Market: US Election
         </text>
       </svg>
@@ -725,12 +705,7 @@ const features = [
           strokeWidth="1"
           strokeDasharray="4 3"
         />
-        <text
-          x="187"
-          y="28"
-          fill="var(--color-pf-success)"
-          fontSize="6"
-        >
+        <text x="187" y="28" fill="var(--color-pf-success)" fontSize="6">
           TP 0.85
         </text>
         {/* SL line */}
@@ -744,12 +719,7 @@ const features = [
           strokeWidth="1"
           strokeDasharray="4 3"
         />
-        <text
-          x="187"
-          y="78"
-          fill="var(--color-pf-danger)"
-          fontSize="6"
-        >
+        <text x="187" y="78" fill="var(--color-pf-danger)" fontSize="6">
           SL 0.55
         </text>
         {/* Trailing stop */}
@@ -761,12 +731,7 @@ const features = [
           strokeDasharray="3 2"
           fill="none"
         />
-        <text
-          x="187"
-          y="48"
-          fill="var(--color-pf-gold-400)"
-          fontSize="6"
-        >
+        <text x="187" y="48" fill="var(--color-pf-gold-400)" fontSize="6">
           Trail
         </text>
         {/* Labels */}
@@ -929,12 +894,7 @@ const features = [
         >
           0x8f..3a bought
         </text>
-        <text
-          x="38"
-          y="28"
-          fill="var(--color-pf-success)"
-          fontSize="7"
-        >
+        <text x="38" y="28" fill="var(--color-pf-success)" fontSize="7">
           $52K YES
         </text>
         <text
@@ -988,12 +948,7 @@ const features = [
         >
           0xd4..b7 sold
         </text>
-        <text
-          x="38"
-          y="60"
-          fill="var(--color-pf-danger)"
-          fontSize="7"
-        >
+        <text x="38" y="60" fill="var(--color-pf-danger)" fontSize="7">
           $31K NO
         </text>
         <text
@@ -1047,12 +1002,7 @@ const features = [
         >
           0xa1..9c bought
         </text>
-        <text
-          x="38"
-          y="92"
-          fill="var(--color-pf-success)"
-          fontSize="7"
-        >
+        <text x="38" y="92" fill="var(--color-pf-success)" fontSize="7">
           $88K YES
         </text>
         <text
@@ -1140,45 +1090,20 @@ const features = [
           strokeOpacity="0.06"
           strokeWidth="1"
         />
-        <text
-          x="20"
-          y="39"
-          fill="var(--color-pf-text-muted)"
-          fontSize="6.5"
-        >
+        <text x="20" y="39" fill="var(--color-pf-text-muted)" fontSize="6.5">
           import {"{"} PolyforgeClient {"}"} from
         </text>
-        <text
-          x="20"
-          y="50"
-          fill="var(--color-pf-purple-400)"
-          fontSize="6.5"
-        >
+        <text x="20" y="50" fill="var(--color-pf-purple-400)" fontSize="6.5">
           &apos;@polyforge/sdk&apos;;
         </text>
-        <text
-          x="20"
-          y="63"
-          fill="var(--color-pf-cyan-400)"
-          fontSize="6.5"
-        >
+        <text x="20" y="63" fill="var(--color-pf-cyan-400)" fontSize="6.5">
           for await (const event of
         </text>
-        <text
-          x="20"
-          y="74"
-          fill="var(--color-pf-cyan-400)"
-          fontSize="6.5"
-        >
+        <text x="20" y="74" fill="var(--color-pf-cyan-400)" fontSize="6.5">
           {" "}
           client.watchStrategy(id)) {"{"}
         </text>
-        <text
-          x="20"
-          y="85"
-          fill="var(--color-pf-success)"
-          fontSize="6.5"
-        >
+        <text x="20" y="85" fill="var(--color-pf-success)" fontSize="6.5">
           {" "}
           console.log(event.type); {"}"}
         </text>
