@@ -15,13 +15,21 @@ async function bootstrap() {
   const scenario = process.env.SCENARIO ?? "normal";
   console.log(`[mock-polymarket] Starting in scenario: ${scenario}`);
 
+  // Dev-only CORS: allow the local nginx gateway + Vite dev server only.
+  // Never use wildcard — even in dev, scoping origins prevents accidental
+  // exposure if this container is port-forwarded or run in a shared environment.
+  const devCorsOptions = {
+    origin: ["http://localhost", "http://localhost:4200", "http://localhost:3000"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  };
+
   // ── CLOB REST + WS Feed (shares ScenarioService via module) ─────────────
   const clobApp = await NestFactory.create<NestFastifyApplication>(
     ClobAppModule,
     new FastifyAdapter({ logger: false }),
     { logger: ["error", "warn"] },
   );
-  clobApp.enableCors();
+  clobApp.enableCors(devCorsOptions);
   await clobApp.listen(CLOB_PORT, "0.0.0.0");
   console.log(`[mock-polymarket] CLOB REST API  → http://0.0.0.0:${CLOB_PORT}`);
 
@@ -31,7 +39,7 @@ async function bootstrap() {
     new FastifyAdapter({ logger: false }),
     { logger: ["error", "warn"] },
   );
-  gammaApp.enableCors();
+  gammaApp.enableCors(devCorsOptions);
   await gammaApp.listen(GAMMA_PORT, "0.0.0.0");
   console.log(
     `[mock-polymarket] Gamma API       → http://0.0.0.0:${GAMMA_PORT}`,
@@ -43,7 +51,7 @@ async function bootstrap() {
     new FastifyAdapter({ logger: false }),
     { logger: ["error", "warn"] },
   );
-  dataApp.enableCors();
+  dataApp.enableCors(devCorsOptions);
   await dataApp.listen(DATA_PORT, "0.0.0.0");
   console.log(
     `[mock-polymarket] Data API        → http://0.0.0.0:${DATA_PORT}`,
