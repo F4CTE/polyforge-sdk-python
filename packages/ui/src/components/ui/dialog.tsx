@@ -17,10 +17,10 @@ function Dialog({ open, onOpenChange, children }: DialogProps) {
       if (e.key === "Escape") onOpenChange(false);
     }
     document.addEventListener("keydown", handleKey);
-    document.body.style.overflow = "hidden";
+    document.body.classList.add("overflow-hidden");
     return () => {
       document.removeEventListener("keydown", handleKey);
-      document.body.style.overflow = "";
+      document.body.classList.remove("overflow-hidden");
     };
   }, [open, onOpenChange]);
 

@@ -40,6 +40,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Landing globals.css: hardcoded rgba() in glow effects (closes #166)** — `.hero-glow`, `.cta-glow`, `.cta-dots` now use `color-mix(in srgb, var(--color-pf-cyan-500) N%, transparent)`
 - **User-app globals.css: hardcoded rgba() in React Flow overrides and animations (closes #168)** — minimap shadows, controls shadow, `blockPulse`, `blockFired`, `safetyPulse` keyframes now reference `var(--color-pf-cyan-500)` / `var(--color-pf-danger)` via `color-mix()`
 
+### Fixed (Design)
+- **Dialog uses imperative document.body.style.overflow instead of class toggle (closes #165)** — replaced `document.body.style.overflow = "hidden"` with `document.body.classList.add("overflow-hidden")` in `packages/ui/src/components/ui/dialog.tsx`
+
 ---
 
 ## [6.35.16] — 2026-04-03
