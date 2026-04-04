@@ -108,13 +108,14 @@ export class TotpService {
       );
     }
 
-    // Generate 10 backup codes
+    // Generate 10 backup codes — 80-bit entropy (10 bytes), bcrypt-hashed at cost 10
+    // bcrypt makes offline cracking infeasible; 80-bit keyspace prevents brute-force
     const backupCodes = Array.from(
       { length: BACKUP_CODE_COUNT },
-      () => randomBytes(4).toString('hex').toUpperCase(), // 8-char hex codes
+      () => randomBytes(10).toString('hex').toUpperCase(), // 20-char hex, 2^80 combinations
     );
-    const backupCodeHashes = backupCodes.map((c) =>
-      createHash('sha256').update(c).digest('hex'),
+    const backupCodeHashes = await Promise.all(
+      backupCodes.map((c) => bcrypt.hash(c, 10)),
     );
 
     // Encrypt the TOTP secret for storage
@@ -204,17 +205,31 @@ export class TotpService {
       // invalid code format — fall through to backup code check
     }
 
-    // Try backup codes (constant-time comparison)
+    // Try backup codes — hybrid: bcrypt for new codes ($2b$ prefix), SHA-256 for legacy
     if (!valid) {
-      const codeHash = createHash('sha256')
-        .update(code.toUpperCase())
-        .digest('hex');
-      const input = Buffer.from(codeHash, 'hex');
+      const upperCode = code.toUpperCase();
       let matchIdx = -1;
       for (let i = 0; i < user.totpBackupCodes.length; i++) {
-        const stored = Buffer.from(user.totpBackupCodes[i], 'hex');
-        if (stored.length === input.length && timingSafeEqual(stored, input)) {
-          matchIdx = i;
+        const stored = user.totpBackupCodes[i];
+        if (stored.startsWith('$2')) {
+          // bcrypt hash (new format — 80-bit entropy, cost 10)
+          if (await bcrypt.compare(upperCode, stored)) {
+            matchIdx = i;
+            break;
+          }
+        } else {
+          // Legacy SHA-256 hash — constant-time comparison
+          const legacyHash = createHash('sha256')
+            .update(upperCode)
+            .digest('hex');
+          const inputBuf = Buffer.from(legacyHash, 'hex');
+          const storedBuf = Buffer.from(stored, 'hex');
+          if (
+            storedBuf.length === inputBuf.length &&
+            timingSafeEqual(storedBuf, inputBuf)
+          ) {
+            matchIdx = i;
+          }
         }
       }
       if (matchIdx >= 0) {

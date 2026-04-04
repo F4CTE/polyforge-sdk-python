@@ -111,6 +111,23 @@ export class AuthService implements OnModuleInit {
       );
     }
 
+    // SECURITY: Per-admin brute-force counter — matches 5-minute setup window TTL
+    const confirmFailKey = `admin:totp:confirm:fail:${adminId}`;
+    const client = this.redis.getClient();
+    const failCount = parseInt((await client.get(confirmFailKey)) ?? "0", 10);
+    if (failCount >= 5) {
+      // Invalidate the pending setup to prevent continued guessing
+      await this.redis.del(`totp:pending:admin:${adminId}`).catch(() => {});
+      throw new HttpException(
+        {
+          code: "TOTP_CONFIRM_LOCKED",
+          message:
+            "Too many failed attempts. TOTP setup cancelled. Please start again.",
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
     const otplib = await import("otplib");
     const authenticator =
       (otplib as any).authenticator ??
@@ -124,11 +141,17 @@ export class AuthService implements OnModuleInit {
     }
 
     if (!isValid) {
+      const newCount = await client.incr(confirmFailKey);
+      // TTL matches TOTP setup window (5 min); set only on first failure
+      if (newCount === 1) await client.expire(confirmFailKey, 300);
       throw new HttpException(
         { code: "TOTP_INVALID", message: "Invalid 2FA code" },
         HttpStatus.BAD_REQUEST,
       );
     }
+
+    // Clear failure counter on successful confirmation
+    await client.del(confirmFailKey).catch(() => {});
 
     // Encrypt the TOTP secret for storage
     const encryptedSecret = this.encrypt(pendingSecret);
