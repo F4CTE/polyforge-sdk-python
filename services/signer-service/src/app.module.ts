@@ -16,7 +16,7 @@ import { HealthController } from "./health/health.controller";
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     JwtModule.register({}),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 1000 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 120 }]),
     LoggerModule,
     RedisModule,
     EncryptionModule,

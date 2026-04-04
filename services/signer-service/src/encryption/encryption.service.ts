@@ -135,7 +135,9 @@ export class EncryptionService {
     const iv = Buffer.from(dekIvRaw);
     const tag = encryptedDek.subarray(encryptedDek.length - TAG_LEN);
     const ct = encryptedDek.subarray(0, encryptedDek.length - TAG_LEN);
-    const decipher = crypto.createDecipheriv("aes-256-gcm", kek, iv);
+    const decipher = crypto.createDecipheriv("aes-256-gcm", kek, iv, {
+      authTagLength: TAG_LEN,
+    });
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(ct), decipher.final()]);
   }
@@ -210,7 +212,9 @@ export class EncryptionService {
     const ct = Buffer.from(ctRaw);
     const iv = Buffer.from(ivRaw);
     const tag = Buffer.from(tagRaw);
-    const decipher = crypto.createDecipheriv("aes-256-gcm", dek, iv);
+    const decipher = crypto.createDecipheriv("aes-256-gcm", dek, iv, {
+      authTagLength: TAG_LEN,
+    });
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(ct), decipher.final()]);
   }

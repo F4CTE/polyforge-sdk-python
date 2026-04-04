@@ -51,7 +51,7 @@ export class SigningService implements OnModuleInit {
     private readonly redis: RedisService,
   ) {
     this.chainId = parseInt(this.config.get<string>("CHAIN_ID") ?? "137", 10);
-    this.isDev = this.config.get<string>("NODE_ENV") !== "production";
+    this.isDev = this.config.get<string>("NODE_ENV") === "development";
     this.clobApiUrl =
       this.config.get<string>("CLOB_API_URL") ?? "https://clob.polymarket.com";
   }

@@ -6,12 +6,14 @@ import {
   UseGuards,
   ValidationPipe,
 } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { SigningService } from "./signing.service";
 import { SignOrderDto } from "./dto/sign-order.dto";
 import { InternalAuthGuard } from "../common/internal-auth.guard";
 
 @Controller("sign")
 @UseGuards(InternalAuthGuard)
+@Throttle({ default: { ttl: 60000, limit: 30 } })
 export class SigningController {
   constructor(private readonly signing: SigningService) {}
 

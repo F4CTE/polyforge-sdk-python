@@ -148,9 +148,9 @@ export class GasSponsorService {
   getSponsorAddress(): string | null {
     if (!this.isActive()) return null;
 
-    const isDev = this.config.get<string>("NODE_ENV") !== "production";
+    const isDev = this.config.get<string>("NODE_ENV") === "development";
     if (isDev) {
-      return "0x00000000000000000000000000000000GasSponsor";
+      return "0x0000000000000000000000000000000000000000";
     }
 
     // In production, derive address from private key using ethers
