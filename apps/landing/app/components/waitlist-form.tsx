@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, type FormEvent, type ChangeEvent } from "react";
+import { Check, Loader2 } from "lucide-react";
 
 const API = "/auth/v1/waitlist";
 
@@ -61,21 +62,7 @@ export function WaitlistForm({ className = "" }: WaitlistFormProps) {
         aria-live="polite"
       >
         <p className="text-sm text-pf-success flex items-center justify-center gap-2">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M3 8l3.5 3.5L13 5"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <Check size={16} aria-hidden="true" />
           {errorMsg === "already"
             ? "You\u2019re already on the list \u2014 check your inbox!"
             : "You\u2019re on the list! We\u2019ll be in touch soon."}
@@ -117,24 +104,7 @@ export function WaitlistForm({ className = "" }: WaitlistFormProps) {
         >
           <span>Request access</span>
           {status === "loading" && (
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-              className="ml-2 animate-spin"
-            >
-              <circle
-                cx="8"
-                cy="8"
-                r="6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeDasharray="28"
-                strokeDashoffset="10"
-              />
-            </svg>
+            <Loader2 size={16} className="ml-2 animate-spin" aria-hidden="true" />
           )}
         </button>
       </div>

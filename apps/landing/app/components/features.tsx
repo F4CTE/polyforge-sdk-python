@@ -1,52 +1,20 @@
+import {
+  LayoutGrid,
+  Activity,
+  Users,
+  Lightbulb,
+  TrendingUp,
+  ZoomIn,
+  Code2,
+} from "lucide-react";
+
 const features = [
   {
     title: "Strategy Builder",
     description:
       "Build no-code automated trading strategies with our visual block editor. Set conditions, triggers, and position limits.",
     gradientClass: "from-pf-cyan-500/[0.04]",
-    icon: (
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <rect
-          x="3"
-          y="3"
-          width="8"
-          height="8"
-          rx="2"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        />
-        <rect
-          x="13"
-          y="3"
-          width="8"
-          height="8"
-          rx="2"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        />
-        <rect
-          x="3"
-          y="13"
-          width="8"
-          height="8"
-          rx="2"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        />
-        <path
-          d="M17 13v8M13 17h8"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
+    icon: <LayoutGrid size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect
@@ -201,23 +169,7 @@ const features = [
     description:
       "Test against historical data, simulate with real-time prices. Prove your edge before risking capital with detailed P&L curves, Sharpe ratio, and drawdown analytics.",
     gradientClass: "from-pf-cyan-400/[0.04]",
-    icon: (
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <polyline
-          points="22 12 18 12 15 21 9 3 6 12 2 12"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
+    icon: <Activity size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <line
@@ -315,29 +267,7 @@ const features = [
     description:
       "Follow top performers and mirror their trades automatically. Browse the leaderboard and copy with one click.",
     gradientClass: "from-pf-success/[0.03]",
-    icon: (
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.5" />
-        <path
-          d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.85"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
+    icon: <Users size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* Whale wallet */}
@@ -488,39 +418,7 @@ const features = [
     description:
       "Test your strategies against historical market data before going live. See P&L curves and win rates.",
     gradientClass: "from-pf-purple-500/[0.04]",
-    icon: (
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M12 2a4 4 0 0 1 4 4c0 1.1-.4 2.1-1.2 2.8L12 11l-2.8-2.2A4 4 0 0 1 12 2z"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        />
-        <path
-          d="M8 14h8"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M9 18h6"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M10 22h4"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
+    icon: <Lightbulb size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* News feed */}
@@ -661,29 +559,7 @@ const features = [
     description:
       "Get notified on price movements, whale trades, and strategy signals via webhooks, email, or in-app alerts.",
     gradientClass: "from-pf-cyan-500/[0.03]",
-    icon: (
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M3 3v18h18"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M7 14l4-4 4 4 4-4"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
+    icon: <TrendingUp size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* Price line */}
@@ -827,29 +703,7 @@ const features = [
     description:
       "Buy, sell, and fork proven strategies from top traders. Rate and review what you use.",
     gradientClass: "from-pf-gold-400/[0.03]",
-    icon: (
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5" />
-        <path
-          d="M21 21l-4.35-4.35"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M11 8v6M8 11h6"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
+    icon: <ZoomIn size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* Whale alert row 1 */}
@@ -1022,30 +876,7 @@ const features = [
     description:
       "Get AI-powered insights on your portfolio, risk exposure, and trading opportunities.",
     gradientClass: "from-pf-purple-400/[0.04]",
-    icon: (
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <polyline
-          points="16 18 22 12 16 6"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <polyline
-          points="8 6 2 12 8 18"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
+    icon: <Code2 size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect

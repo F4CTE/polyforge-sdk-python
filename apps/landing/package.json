@@ -11,7 +11,8 @@
     "next": "^15.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@polyforge/ui": "workspace:*"
+    "@polyforge/ui": "workspace:*",
+    "lucide-react": "^0.474.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
