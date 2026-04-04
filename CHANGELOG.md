@@ -56,6 +56,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Order book depth uses hardcoded rgba() (closes #122)** — `depthColor()` in `market-detail.tsx` now uses `color-mix(in srgb, var(--color-pf-danger|success) N%, transparent)` instead of raw `rgba()` values
 - **Revenue/Sentiment charts use hardcoded rgba() and wrong fallbacks (closes #123)** — fixed incorrect fallback hex in revenue.tsx tooltip (`#1e2130`→`#0f172a`, `#2d3348`→`#1e293b`); replaced `rgba(255,255,255,0.06)` grid strokes with `var(--color-pf-chart-grid)`; replaced sentiment cursor fill with `var(--color-pf-chart-grid)`
 
+### Fixed (Design — Brand Voice)
+- **Landing CTA uses vague social proof (closes #152)** — "Join thousands of traders…" → "Automate your Polymarket edge — paper trade free, go live when ready."
+- **Testimonials use non-analytical brand voice (closes #127)** — "incredible" → "precise" (Alex Kowalski); "game-changer" → "cut my decision latency by 60%" (Marcus Chen)
+
 ---
 
 ## [6.35.16] — 2026-04-03

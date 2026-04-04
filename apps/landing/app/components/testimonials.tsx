@@ -3,7 +3,7 @@ const testimonials = [
     initials: "AK",
     name: "Alex Kowalski",
     role: "Quantitative Analyst",
-    text: "The visual canvas builder is incredible. I wired up IF/THEN blocks, logic gates, and variables into a full strategy in under an hour. Backtesting gave me the confidence to go live, and the advanced orders keep my risk locked down.",
+    text: "The visual canvas builder is precise. I wired up IF/THEN blocks, logic gates, and variables into a full strategy in under an hour. Backtesting gave me the confidence to go live, and the advanced orders keep my risk locked down.",
   },
   {
     initials: "SR",
@@ -15,7 +15,7 @@ const testimonials = [
     initials: "MC",
     name: "Marcus Chen",
     role: "Crypto Fund Analyst",
-    text: "The AI signals pipeline is a game-changer. It picks up breaking news, matches it to markets I care about, and generates trade signals before I even see the headline. I just review and approve. My hit rate has never been higher.",
+    text: "The AI signals pipeline cut my decision latency by 60%. It picks up breaking news, matches it to markets I care about, and generates trade signals before I even see the headline. I just review and approve. My hit rate has never been higher.",
   },
 ];
 

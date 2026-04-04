@@ -22,8 +22,8 @@ export function CtaBanner() {
             Ready to gain your edge?
           </h2>
           <p className="relative text-base text-pf-text-secondary max-w-[480px] mx-auto mb-8 leading-relaxed">
-            Join thousands of traders who use PolyForge to make smarter
-            predictions.
+            Automate your Polymarket edge — paper trade free, go live when
+            ready.
           </p>
 
           <a
