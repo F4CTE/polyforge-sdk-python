@@ -3,6 +3,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { Button, Input } from '@polyforge/ui';
+import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
 import {
   LineChart as LineChartIcon,
   Bot,
@@ -202,17 +203,7 @@ export function Component() {
   // CSV export state
   const [exportingCsv, setExportingCsv] = useState(false);
 
-  const themeColors = useMemo(() => {
-    const s = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
-    return {
-      textMuted: s?.getPropertyValue('--color-pf-text-muted').trim() || '#445E7A',
-      bgElevated: s?.getPropertyValue('--color-pf-elevated').trim() || '#111D2E',
-      borderColor: s?.getPropertyValue('--color-pf-border').trim() || '#1E3350',
-      textSecondary: s?.getPropertyValue('--color-pf-text-secondary').trim() || '#7A94B4',
-      success: s?.getPropertyValue('--color-pf-success').trim() || '#10B981',
-      danger: s?.getPropertyValue('--color-pf-danger').trim() || '#EF4444',
-    };
-  }, []);
+  const themeColors = useMemo(() => resolveChartTheme(), []);
   const { textMuted, bgElevated, borderColor, textSecondary, success, danger } = themeColors;
 
   const loadPnl = useCallback(async (p: Period) => {

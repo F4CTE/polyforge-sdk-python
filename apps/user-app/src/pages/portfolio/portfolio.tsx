@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button, Input, Select } from '@polyforge/ui';
+import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -460,15 +461,7 @@ export function Component() {
   const [edgeScore, setEdgeScore] = useState<number | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  const themeColors = useMemo(() => {
-    const s = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
-    return {
-      textMuted: s?.getPropertyValue('--color-pf-text-muted').trim() || '#445E7A',
-      bgElevated: s?.getPropertyValue('--color-pf-elevated').trim() || '#111D2E',
-      borderColor: s?.getPropertyValue('--color-pf-border').trim() || '#1E3350',
-      textPrimary: s?.getPropertyValue('--color-pf-text').trim() || '#E8EDF5',
-    };
-  }, [isDark]);
+  const themeColors = useMemo(() => resolveChartTheme(), [isDark]);
   const { textMuted, bgElevated, borderColor, textPrimary } = themeColors;
 
   const [tab, setTab] = useState<Tab>('live');
@@ -1026,9 +1019,7 @@ export function Component() {
   }, [pnl?.snapshots]);
   const isProfitable = parseFloat(pnl?.totalPnl ?? '0') >= 0;
   const chartColor = useMemo(() => {
-    const s = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
-    const success = s?.getPropertyValue('--color-pf-success').trim() || '#10B981';
-    const danger = s?.getPropertyValue('--color-pf-danger').trim() || '#EF4444';
+    const { success, danger } = resolveChartTheme();
     return isProfitable ? success : danger;
   }, [isProfitable, isDark]);
 

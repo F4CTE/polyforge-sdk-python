@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Target, Info } from 'lucide-react';
 import { Button } from '@polyforge/ui';
+import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
 import {
   ScatterChart,
   Scatter,
@@ -107,16 +108,7 @@ export function Component() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const themeColors = useMemo(() => {
-    const s = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
-    return {
-      textMuted: s?.getPropertyValue('--color-pf-text-muted').trim() || '#445E7A',
-      bgElevated: s?.getPropertyValue('--color-pf-elevated').trim() || '#111D2E',
-      borderColor: s?.getPropertyValue('--color-pf-border').trim() || '#1E3350',
-      textSecondary: s?.getPropertyValue('--color-pf-text-secondary').trim() || '#7A94B4',
-      cyan500: s?.getPropertyValue('--color-pf-cyan-500').trim() || '#06B6D4',
-    };
-  }, []);
+  const themeColors = useMemo(() => resolveChartTheme(), []);
   const { textMuted, bgElevated, borderColor, textSecondary, cyan500 } = themeColors;
 
   useEffect(() => {

@@ -43,6 +43,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed (Design)
 - **Dialog uses imperative document.body.style.overflow instead of class toggle (closes #165)** — replaced `document.body.style.overflow = "hidden"` with `document.body.classList.add("overflow-hidden")` in `packages/ui/src/components/ui/dialog.tsx`
 
+### Fixed (Design / Code Quality)
+- **Recharts color resolution duplicated across 5 pages (closes #148)** — added `resolveChartTheme()` to `packages/ui/src/lib/chart-colors.ts`; analytics, accuracy, market-detail, portfolio (×2) and strategy-chart now import and call the shared function instead of duplicating `getComputedStyle` blocks
+
 ---
 
 ## [6.35.16] — 2026-04-03

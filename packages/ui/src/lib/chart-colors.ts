@@ -27,6 +27,33 @@ export const chartColors = {
   pnlNeutral: "var(--color-pf-pnl-neutral)",
 } as const;
 
+/**
+ * Resolves the common Recharts theme colors from CSS custom properties at runtime.
+ * Recharts renders to SVG — CSS `var()` strings don't work in SVG fill/stroke
+ * attributes, so we must read actual computed values via getComputedStyle.
+ *
+ * Call inside a `useMemo(() => resolveChartTheme(), [isDark])` to avoid
+ * triggering layout-thrashing getComputedStyle calls on every render.
+ */
+export function resolveChartTheme() {
+  const s = typeof window !== "undefined"
+    ? getComputedStyle(document.documentElement)
+    : null;
+  const get = (v: string, fallback: string) =>
+    s?.getPropertyValue(v).trim() || fallback;
+  return {
+    cyan500:       get("--color-pf-cyan-500",       "#06b6d4"),
+    success:       get("--color-pf-success",        "#10b981"),
+    danger:        get("--color-pf-danger",         "#ef4444"),
+    textMuted:     get("--color-pf-text-muted",     "#64748b"),
+    textSecondary: get("--color-pf-text-secondary", "#94a3b8"),
+    textPrimary:   get("--color-pf-text",           "#e2e8f0"),
+    bgElevated:    get("--color-pf-elevated",       "#0f172a"),
+    borderColor:   get("--color-pf-border",         "#1e293b"),
+    base:          get("--color-pf-base",           "#020817"),
+  };
+}
+
 /** Default categorical palette for multi-series charts. */
 export const chartPalette = [
   chartColors.cyan,
