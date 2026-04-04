@@ -11,9 +11,9 @@ export function ProductPreview() {
             className="flex items-center gap-2 px-4 py-3 border-b border-pf-border-subtle bg-pf-elevated"
             aria-hidden="true"
           >
-            <span className="w-[11px] h-[11px] rounded-pf-full bg-pf-danger" />
-            <span className="w-[11px] h-[11px] rounded-pf-full bg-pf-warning" />
-            <span className="w-[11px] h-[11px] rounded-pf-full bg-pf-success" />
+            <span className="w-3 h-3 rounded-pf-full bg-pf-danger" />
+            <span className="w-3 h-3 rounded-pf-full bg-pf-warning" />
+            <span className="w-3 h-3 rounded-pf-full bg-pf-success" />
             <span className="flex-1 text-center text-pf-label font-mono text-pf-text-muted bg-white/4 rounded px-3 py-1 ml-2">
               app.polyforge.app/dashboard
             </span>

@@ -356,6 +356,8 @@ Grille interne       : 12 colonnes, gap 16px
 
 ## 5. Composants PrimeNG — configuration
 
+> **⚠️ DEPRECATED (v3.0+):** This section applies to the legacy Angular/PrimeNG stack which has been fully replaced. The current stack uses React 19 + shadcn/ui + Tailwind CSS v4. See §32 (v3.0 React Migration) for current component conventions. Do **not** use `providePrimeNG`, `p-*` components, or `polyforge.theme.ts`.
+
 ### Theme preset (PrimeNG 17+)
 
 Polyforge utilise le preset **Aura** de PrimeNG comme base, surcharger avec un theme custom.
@@ -719,6 +721,8 @@ export const PolyforgeTheme = definePreset(Aura, {
 
 ## 6. Iconographie
 
+> **⚠️ DEPRECATED (v3.0+):** PrimeIcons and `pi pi-*` classes have been replaced by **Lucide React** (`lucide-react`). Import icons as named React components: `import { Loader2, ChevronDown } from 'lucide-react'`. Do not use `pi pi-*` classes.
+
 ### Bibliothèque principale : PrimeIcons
 
 PrimeNG vient avec PrimeIcons. Utiliser en priorité.
@@ -759,6 +763,8 @@ PrimeNG vient avec PrimeIcons. Utiliser en priorité.
 ---
 
 ## 7. Data visualization
+
+> **⚠️ DEPRECATED (v3.0+):** Chart.js and `PrimeNG Charts` have been replaced by **Recharts**. Use `resolveChartTheme()` from `packages/ui/src/lib/chart-colors.ts` for token-aware color resolution. See §32 and existing chart components in `apps/admin-app/src/pages/` for current patterns.
 
 ### Bibliothèque : PrimeNG Charts (Chart.js)
 
@@ -855,6 +861,8 @@ Les prix live utilisent une animation de "pulse" sur le chiffre quand il change 
 
 ## 8. États & feedback
 
+> **⚠️ DEPRECATED (v3.0+):** PrimeNG-specific state implementations (p-toast, p-badge) in this section are replaced by Sonner (toasts) and the shared `Badge` component from `packages/ui`. Token names have changed from `--pf-*` to `--color-pf-*`. See §32 and §24 for current patterns.
+
 ### Badges de statut de stratégie
 
 | Statut | Background | Texte | Dot |
@@ -921,6 +929,8 @@ Chaque liste ou tableau vide doit afficher un empty state. Jamais un composant v
 ---
 
 ## 9. Animations & transitions
+
+> **⚠️ DEPRECATED (v3.0+):** Angular animation syntax in this section is not applicable. Use Tailwind CSS transition/animation utilities and the duration tokens `--duration-pf-fast` (100ms), `--duration-pf-normal` (200ms), `--duration-pf-slow` (300ms) defined in `globals.css`. See §32.
 
 ### Principe : subtil et fonctionnel
 
@@ -997,6 +1007,8 @@ Loading    : logomark anime (pulse/rotation) sur l'ecran de chargement
 
 ## 11. Application aux deux frontends
 
+> **⚠️ DEPRECATED (v3.0+):** Angular/PrimeNG configuration in this section (`angular.json`, `app.config.ts`, `providePrimeNG`) does not apply. The current stack is React + Vite. See `apps/user-app/src/main.tsx` and `apps/admin-app/src/main.tsx` for current bootstrap configuration.
+
 ### User App (`apps/user-app`)
 
 Même thème, toutes les fonctionnalités visuelles décrites ci-dessus.
@@ -1053,6 +1065,8 @@ Même design system, mais avec une variation subtile pour distinguer visuellemen
 ---
 
 ## 12. Fichiers de configuration
+
+> **⚠️ DEPRECATED (v3.0+):** The `tokens.css` file and variable naming convention (`--pf-bg-*`, `--pf-text-*`, `--pf-border-*`) described here are obsolete. Current tokens use `--color-pf-*` naming (e.g. `--color-pf-base`, `--color-pf-text`, `--color-pf-border`) and live in `packages/ui/src/globals.css` under the `@theme` block. The `polyforge.theme.ts` and `chart.config.ts` files no longer exist.
 
 ### Structure des fichiers de style
 

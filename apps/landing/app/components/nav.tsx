@@ -255,15 +255,15 @@ export function Nav() {
           ) : (
             <>
               <span
-                className="block w-[22px] h-1 bg-pf-text-secondary rounded-sm"
+                className="block w-6 h-1 bg-pf-text-secondary rounded-sm"
                 aria-hidden="true"
               />
               <span
-                className="block w-[22px] h-1 bg-pf-text-secondary rounded-sm"
+                className="block w-6 h-1 bg-pf-text-secondary rounded-sm"
                 aria-hidden="true"
               />
               <span
-                className="block w-[22px] h-1 bg-pf-text-secondary rounded-sm"
+                className="block w-6 h-1 bg-pf-text-secondary rounded-sm"
                 aria-hidden="true"
               />
             </>

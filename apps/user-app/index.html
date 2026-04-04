@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Polyforge</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="description" content="Polyforge — Algorithmic trading for prediction markets" />
+  <meta property="og:image" content="/og-image.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,7 +16,10 @@
 </head>
 <body>
   <div id="root">
-    <!-- Loading screen -->
+    <!-- Loading screen (design-token exception: hardcoded colors intentional here — CSS variables
+         are not available before the Tailwind/React bundle loads, so raw hex values are required
+         to avoid a flash of unstyled content; #020817 = --color-pf-base, #06b6d4 = --color-pf-cyan-500,
+         #64748b = --color-pf-text-muted) -->
     <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#020817">
       <div style="text-align:center">
         <div style="position:relative;width:48px;height:48px;margin:0 auto">

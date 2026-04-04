@@ -10,7 +10,7 @@ const PARTICLES = [
 export function Hero() {
   return (
     <section
-      className="relative overflow-hidden pt-16 sm:pt-[100px] pb-12 sm:pb-20 text-center"
+      className="relative overflow-hidden pt-16 sm:pt-24 pb-12 sm:pb-20 text-center"
       aria-labelledby="hero-heading"
     >
       {/* Glow */}
@@ -45,7 +45,7 @@ export function Hero() {
       <div className="relative z-10 max-w-[1100px] mx-auto px-6">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 text-pf-body-sm font-medium text-pf-cyan-400 bg-pf-cyan-500/8 border border-pf-cyan-500/20 rounded-pf-full px-4 py-1 mb-7">
-          <span className="w-[7px] h-[7px] rounded-pf-full bg-pf-cyan-400 animate-[pulse-dot_2s_infinite]" />
+          <span className="w-2 h-2 rounded-pf-full bg-pf-cyan-400 animate-[pulse-dot_2s_infinite]" />
           Early Access &mdash; Limited Invites
         </div>
 
