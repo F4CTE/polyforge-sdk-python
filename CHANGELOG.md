@@ -23,6 +23,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Add deprecation notices to design charter §5–12 (closes #128)** — added `> ⚠️ DEPRECATED (v3.0+)` banners to Angular/PrimeNG sections (5: PrimeNG components, 6: PrimeIcons→Lucide, 7: Chart.js→Recharts, 8: p-toast/p-badge, 9: Angular animations, 11: angular.json, 12: tokens.css variable naming); each banner points to §32 and current equivalents
 
 ### Security
+- **docker-compose NODE_ENV no longer defaults to development (closes #196)** — replaced `${NODE_ENV:-development}` with `${NODE_ENV:?NODE_ENV must be set}` across all 9 service definitions in `docker-compose.infra.yml`; deployment now fails fast if NODE_ENV is not explicitly set, preventing silent activation of dev stubs, relaxed rate limits, and Swagger exposure
 - **Gas sponsor private key no longer held in memory (closes #134)** — replaced `this.sponsorPrivateKey` class field with on-demand `getSponsorPrivateKey()` that reads from ConfigService per call, reducing exposure window from process lifetime to single function scope
 - **Pin swagger-ui-dist with SRI hashes (closes #137)** — pinned CDN-loaded swagger-ui-dist to v5.32.1 and added `integrity` + `crossorigin` attributes to both CSS and JS tags to prevent supply-chain attacks via CDN compromise
 - **Remove unsafe-inline from production CSP style-src (closes #138)** — removed `'unsafe-inline'` from `style-src` directive in both user and admin server blocks in `nginx.prod.conf` to prevent CSS injection and data exfiltration
