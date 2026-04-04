@@ -54,3 +54,26 @@ export {
 
 export { Skeleton } from './components/ui/skeleton';
 export { Spinner } from './components/ui/spinner';
+
+export { Progress } from './components/ui/progress';
+export type { ProgressProps } from './components/ui/progress';
+
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from './components/ui/dropdown-menu';
+export type {
+  DropdownMenuProps,
+  DropdownMenuTriggerProps,
+  DropdownMenuContentProps,
+  DropdownMenuItemProps,
+} from './components/ui/dropdown-menu';
+
+export { Tooltip } from './components/ui/tooltip';
+export type { TooltipProps } from './components/ui/tooltip';
+
+export { Chip, chipVariants } from './components/ui/chip';
+export type { ChipProps } from './components/ui/chip';
