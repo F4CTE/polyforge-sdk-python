@@ -28,7 +28,7 @@ export function CtaBanner() {
 
           <a
             href="/signup"
-            className="relative inline-flex items-center justify-center px-8 py-4 rounded-lg bg-pf-cyan-500 hover:bg-pf-cyan-400 text-pf-text-contrast font-semibold text-base transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+            className="relative inline-flex items-center justify-center px-8 py-4 rounded-pf bg-pf-cyan-500 hover:bg-pf-cyan-400 text-pf-text-contrast font-semibold text-base transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
           >
             Get Started Free &rarr;
           </a>

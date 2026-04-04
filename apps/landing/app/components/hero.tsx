@@ -69,13 +69,13 @@ export function Hero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
           <a
             href="/signup"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-pf-cyan-500 hover:bg-pf-cyan-400 text-pf-text-contrast font-semibold text-pf-body transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-pf bg-pf-cyan-500 hover:bg-pf-cyan-400 text-pf-text-contrast font-semibold text-pf-body transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
           >
             Start Trading Free
           </a>
           <a
             href="#how-it-works"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-lg border border-pf-cyan-500/40 hover:border-pf-cyan-500/70 text-pf-cyan-400 hover:text-pf-cyan-300 font-semibold text-pf-body transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-pf border border-pf-cyan-500/40 hover:border-pf-cyan-500/70 text-pf-cyan-400 hover:text-pf-cyan-300 font-semibold text-pf-body transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
           >
             See How It Works
           </a>

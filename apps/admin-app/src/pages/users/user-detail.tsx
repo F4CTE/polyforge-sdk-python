@@ -728,7 +728,7 @@ export function Component() {
                   {isSuspended ? 'SUSPENDED' : (user.status || 'ACTIVE')}
                 </span>
                 {user.polymarketConnected && (
-                  <span className="px-2 py-1 rounded-pf-full text-xs font-medium text-cyan-400 bg-cyan-400/10">
+                  <span className="px-2 py-1 rounded-pf-full text-xs font-medium text-pf-cyan-400 bg-pf-cyan-400/10">
                     Polymarket Connected
                   </span>
                 )}

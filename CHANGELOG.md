@@ -33,6 +33,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Badge border-radius 9999px conflicts with charter 4px spec (closes #163)** — `rounded-pf-full` → `rounded-[4px]` in `packages/ui/src/components/ui/badge.tsx`, aligning with design charter §5
 - **Admin App orders/markets missing font-mono on financial data (closes #162)** — added `font-mono` to size/price columns in orders.tsx and volume/YES-NO price cells in markets.tsx
 
+### Fixed (Design)
+- **Landing: font-serif in testimonials violates charter §3 (closes #161)** — `font-serif` → `font-sans` on decorative quotation mark in `testimonials.tsx`
+- **Landing: CTA/hero buttons use rounded-lg instead of rounded-pf token (closes #149)** — `rounded-lg` → `rounded-pf` in `cta-banner.tsx` and `hero.tsx` (3 buttons total)
+- **User/Admin: non-prefixed cyan-* classes bypass WCAG light-mode overrides (closes #167)** — `cyan-*` → `pf-cyan-*` in portfolio.tsx, orders.tsx (user-app) and user-detail.tsx (admin-app)
+- **Landing globals.css: hardcoded rgba() in glow effects (closes #166)** — `.hero-glow`, `.cta-glow`, `.cta-dots` now use `color-mix(in srgb, var(--color-pf-cyan-500) N%, transparent)`
+- **User-app globals.css: hardcoded rgba() in React Flow overrides and animations (closes #168)** — minimap shadows, controls shadow, `blockPulse`, `blockFired`, `safetyPulse` keyframes now reference `var(--color-pf-cyan-500)` / `var(--color-pf-danger)` via `color-mix()`
+
 ---
 
 ## [6.35.16] — 2026-04-03

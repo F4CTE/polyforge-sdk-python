@@ -39,8 +39,8 @@
 .hero-glow {
   background: radial-gradient(
     ellipse,
-    rgba(6, 182, 212, 0.14) 0%,
-    rgba(6, 182, 212, 0.04) 40%,
+    color-mix(in srgb, var(--color-pf-cyan-500) 14%, transparent) 0%,
+    color-mix(in srgb, var(--color-pf-cyan-500)  4%, transparent) 40%,
     transparent 65%
   );
 }
@@ -48,14 +48,14 @@
 .cta-glow {
   background: radial-gradient(
     ellipse,
-    rgba(6, 182, 212, 0.12) 0%,
-    rgba(6, 182, 212, 0.04) 40%,
+    color-mix(in srgb, var(--color-pf-cyan-500) 12%, transparent) 0%,
+    color-mix(in srgb, var(--color-pf-cyan-500)  4%, transparent) 40%,
     transparent 65%
   );
 }
 
 .cta-dots {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-image: radial-gradient(color-mix(in srgb, white 3%, transparent) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 

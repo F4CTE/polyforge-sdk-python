@@ -253,7 +253,7 @@ function CategoryBadge({ category }: { category?: string | null }) {
     politics: 'bg-pf-info/15 text-pf-info border-pf-info/30',
     sports: 'bg-pf-success/15 text-pf-success border-pf-success/30',
     entertainment: 'bg-pf-purple-500/15 text-pf-purple-400 border-pf-purple-500/30',
-    science: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
+    science: 'bg-pf-cyan-500/15 text-pf-cyan-400 border-pf-cyan-500/30',
   };
   const key = category.toLowerCase();
   const cls = colors[key] ?? 'bg-pf-surface text-pf-text-muted border-pf-border';

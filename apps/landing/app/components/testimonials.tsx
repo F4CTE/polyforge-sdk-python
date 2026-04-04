@@ -45,7 +45,7 @@ export function Testimonials() {
               className="animate-fade-in bg-pf-base border border-pf-border-subtle rounded-pf-lg p-6 sm:p-8 transition-all duration-200 hover:border-pf-cyan-500/20"
             >
               <div
-                className="text-5xl font-extrabold leading-none text-pf-cyan-500/15 -mb-2 font-serif"
+                className="text-5xl font-extrabold leading-none text-pf-cyan-500/15 -mb-2 font-sans"
                 aria-hidden="true"
               >
                 &ldquo;
