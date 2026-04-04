@@ -18,10 +18,12 @@ import { AdminLoginDto } from "./dto/login.dto";
 
 const ADMIN_COOKIE = "pf_admin_token";
 
+// Default Secure=true so staging over HTTPS always uses Secure cookies.
+// Set COOKIE_SECURE=false only for local HTTP dev (see .env.example).
 function cookieOpts() {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.COOKIE_SECURE !== "false",
     sameSite: "strict" as const,
     path: "/",
     maxAge: 60 * 60, // 1 hour — matches JWT expiry

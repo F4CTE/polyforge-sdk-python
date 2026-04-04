@@ -60,7 +60,10 @@ export class InternalJwtGuard implements CanActivate {
       request.servicePayload = payload;
       return true;
     } catch (err) {
-      this.logger.warn("Internal JWT validation failed", err);
+      // Log message only — full error object may contain decoded JWT payload with PII (email, role)
+      this.logger.warn(
+        `Internal JWT validation failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
       throw new UnauthorizedException("Invalid internal service token");
     }
   }

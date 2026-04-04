@@ -26,6 +26,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Add deprecation notices to design charter §5–12 (closes #128)** — added `> ⚠️ DEPRECATED (v3.0+)` banners to Angular/PrimeNG sections (5: PrimeNG components, 6: PrimeIcons→Lucide, 7: Chart.js→Recharts, 8: p-toast/p-badge, 9: Angular animations, 11: angular.json, 12: tokens.css variable naming); each banner points to §32 and current equivalents
 
 ### Security
+- **Cookie Secure flag defaults to true regardless of NODE_ENV (closes #231)** — `auth-service` and `admin-auth-service` now use `COOKIE_SECURE !== 'false'` instead of `NODE_ENV === 'production'`; staging deployments over HTTPS now issue Secure cookies; added `COOKIE_SECURE=false` to `.env.example` for local HTTP dev
+- **Internal JWT errors log message-only to prevent PII leak (closes #234)** — `shared-auth InternalAuthGuard` now logs `err.message` instead of the full error object, preventing serialized JWT payloads (which may contain admin email/role) from appearing in CloudWatch logs
 - **AI endpoints rate-limited to prevent LLM cost amplification (closes #223)** — `POST /ai/query` throttled to 20/min; `GET /ai/portfolio-review` throttled to 5/min; consistent with marketplace (5/min) and orders (30/min) patterns
 - **ParseUUIDPipe on api-keys DELETE :id (closes #220)** — rejects non-UUID `id` parameters at the validation layer before reaching Prisma; consistent with webhooks and admins controllers
 - **Pin PgBouncer Docker image to specific version (closes #230)** — `docker-compose.prod.yml`: both `pgbouncer` and `pgbouncer-admin` images pinned from `edoburu/pgbouncer:latest` to `edoburu/pgbouncer:1.23.1`; eliminates silent upgrade risk on `docker compose pull`

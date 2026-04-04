@@ -36,12 +36,9 @@ const REFRESH_COOKIE = 'pf_refresh';
 const ACCESS_COOKIE_MAX_AGE = 15 * 60; // 15 minutes
 const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
 
-// COOKIE_SECURE defaults to true unless explicitly set to 'false' — prevents accidental
-// insecure cookies if NODE_ENV is misconfigured in production.
-const COOKIE_SECURE =
-  process.env.COOKIE_SECURE !== undefined
-    ? process.env.COOKIE_SECURE !== 'false'
-    : process.env.NODE_ENV === 'production';
+// COOKIE_SECURE defaults to true so staging deployments over HTTPS always send Secure cookies.
+// Set COOKIE_SECURE=false only for local HTTP dev (see .env.example).
+const COOKIE_SECURE = process.env.COOKIE_SECURE !== 'false';
 
 function cookieOpts(maxAge: number) {
   return {
