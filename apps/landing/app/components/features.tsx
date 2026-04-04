@@ -67,7 +67,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-cyan-300)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
         >
           IF Price
         </text>
@@ -89,7 +88,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-cyan-300)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
         >
           IF Volume
         </text>
@@ -126,7 +124,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-gold-400)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
         >
           AND
         </text>
@@ -156,7 +153,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-purple-400)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
         >
           Size = 5%
         </text>
@@ -185,7 +181,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-success)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
         >
           Execute
         </text>
@@ -195,7 +190,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-text-muted)"
           fontSize="6"
-          fontFamily="Inter, sans-serif"
         >
           50+ blocks available
         </text>
@@ -289,7 +283,6 @@ const features = [
           textAnchor="end"
           fill="var(--color-pf-success)"
           fontSize="8"
-          fontFamily="JetBrains Mono, monospace"
         >
           +34.2%
         </text>
@@ -311,7 +304,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-gold-400)"
           fontSize="6"
-          fontFamily="Inter, sans-serif"
         >
           Paper Mode
         </text>
@@ -367,7 +359,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-success)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
           fontWeight="600"
         >
           Whale
@@ -378,7 +369,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-text-muted)"
           fontSize="6"
-          fontFamily="JetBrains Mono, monospace"
         >
           0x8f..3a
         </text>
@@ -413,7 +403,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-cyan-300)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
           fontWeight="600"
         >
           You
@@ -424,7 +413,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-text-muted)"
           fontSize="6"
-          fontFamily="JetBrains Mono, monospace"
         >
           Mirrored
         </text>
@@ -447,7 +435,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-cyan-300)"
           fontSize="6"
-          fontFamily="Inter, sans-serif"
         >
           % Mode
         </text>
@@ -469,7 +456,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-cyan-300)"
           fontSize="6"
-          fontFamily="Inter, sans-serif"
         >
           Fixed
         </text>
@@ -491,7 +477,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-cyan-300)"
           fontSize="6"
-          fontFamily="Inter, sans-serif"
         >
           Mirror
         </text>
@@ -556,7 +541,6 @@ const features = [
           y="24"
           fill="var(--color-pf-text-muted)"
           fontSize="6"
-          fontFamily="Inter, sans-serif"
         >
           Breaking: Fed holds...
         </text>
@@ -577,7 +561,6 @@ const features = [
           y="48"
           fill="var(--color-pf-text-muted)"
           fontSize="6"
-          fontFamily="Inter, sans-serif"
         >
           Trump announces...
         </text>
@@ -608,7 +591,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-purple-400)"
           fontSize="8"
-          fontFamily="Inter, sans-serif"
           fontWeight="600"
         >
           AI
@@ -619,7 +601,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-text-muted)"
           fontSize="5"
-          fontFamily="Inter, sans-serif"
         >
           Claude + GPT
         </text>
@@ -650,7 +631,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-success)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
           fontWeight="600"
         >
           BUY
@@ -661,7 +641,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-text-muted)"
           fontSize="5"
-          fontFamily="Inter, sans-serif"
         >
           Signal
         </text>
@@ -683,7 +662,6 @@ const features = [
           y="82"
           fill="var(--color-pf-success)"
           fontSize="7"
-          fontFamily="JetBrains Mono, monospace"
         >
           Confidence: 87%
         </text>
@@ -692,7 +670,6 @@ const features = [
           y="82"
           fill="var(--color-pf-text-muted)"
           fontSize="6"
-          fontFamily="Inter, sans-serif"
         >
           Market: US Election
         </text>
@@ -753,7 +730,6 @@ const features = [
           y="28"
           fill="var(--color-pf-success)"
           fontSize="6"
-          fontFamily="JetBrains Mono, monospace"
         >
           TP 0.85
         </text>
@@ -773,7 +749,6 @@ const features = [
           y="78"
           fill="var(--color-pf-danger)"
           fontSize="6"
-          fontFamily="JetBrains Mono, monospace"
         >
           SL 0.55
         </text>
@@ -791,7 +766,6 @@ const features = [
           y="48"
           fill="var(--color-pf-gold-400)"
           fontSize="6"
-          fontFamily="JetBrains Mono, monospace"
         >
           Trail
         </text>
@@ -814,7 +788,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-success)"
           fontSize="5.5"
-          fontFamily="Inter, sans-serif"
         >
           TP/SL
         </text>
@@ -836,7 +809,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-gold-400)"
           fontSize="5.5"
-          fontFamily="Inter, sans-serif"
         >
           Trailing
         </text>
@@ -858,7 +830,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-cyan-300)"
           fontSize="5.5"
-          fontFamily="Inter, sans-serif"
         >
           Limit
         </text>
@@ -880,7 +851,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-purple-400)"
           fontSize="5.5"
-          fontFamily="Inter, sans-serif"
         >
           Pegged
         </text>
@@ -946,7 +916,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-success)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
           fontWeight="700"
         >
           W
@@ -956,7 +925,6 @@ const features = [
           y="18"
           fill="var(--color-pf-text)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
           fontWeight="600"
         >
           0x8f..3a bought
@@ -966,7 +934,6 @@ const features = [
           y="28"
           fill="var(--color-pf-success)"
           fontSize="7"
-          fontFamily="JetBrains Mono, monospace"
         >
           $52K YES
         </text>
@@ -976,7 +943,6 @@ const features = [
           textAnchor="end"
           fill="var(--color-pf-text-muted)"
           fontSize="6"
-          fontFamily="Inter, sans-serif"
         >
           2m ago
         </text>
@@ -1009,7 +975,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-danger)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
           fontWeight="700"
         >
           W
@@ -1019,7 +984,6 @@ const features = [
           y="50"
           fill="var(--color-pf-text)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
           fontWeight="600"
         >
           0xd4..b7 sold
@@ -1029,7 +993,6 @@ const features = [
           y="60"
           fill="var(--color-pf-danger)"
           fontSize="7"
-          fontFamily="JetBrains Mono, monospace"
         >
           $31K NO
         </text>
@@ -1039,7 +1002,6 @@ const features = [
           textAnchor="end"
           fill="var(--color-pf-text-muted)"
           fontSize="6"
-          fontFamily="Inter, sans-serif"
         >
           5m ago
         </text>
@@ -1072,7 +1034,6 @@ const features = [
           textAnchor="middle"
           fill="var(--color-pf-success)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
           fontWeight="700"
         >
           W
@@ -1082,7 +1043,6 @@ const features = [
           y="82"
           fill="var(--color-pf-text)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
           fontWeight="600"
         >
           0xa1..9c bought
@@ -1092,7 +1052,6 @@ const features = [
           y="92"
           fill="var(--color-pf-success)"
           fontSize="7"
-          fontFamily="JetBrains Mono, monospace"
         >
           $88K YES
         </text>
@@ -1102,7 +1061,6 @@ const features = [
           textAnchor="end"
           fill="var(--color-pf-text-muted)"
           fontSize="6"
-          fontFamily="Inter, sans-serif"
         >
           8m ago
         </text>
@@ -1187,7 +1145,6 @@ const features = [
           y="39"
           fill="var(--color-pf-text-muted)"
           fontSize="6.5"
-          fontFamily="JetBrains Mono, monospace"
         >
           import {"{"} PolyforgeClient {"}"} from
         </text>
@@ -1196,7 +1153,6 @@ const features = [
           y="50"
           fill="var(--color-pf-purple-400)"
           fontSize="6.5"
-          fontFamily="JetBrains Mono, monospace"
         >
           &apos;@polyforge/sdk&apos;;
         </text>
@@ -1205,7 +1161,6 @@ const features = [
           y="63"
           fill="var(--color-pf-cyan-400)"
           fontSize="6.5"
-          fontFamily="JetBrains Mono, monospace"
         >
           for await (const event of
         </text>
@@ -1214,7 +1169,6 @@ const features = [
           y="74"
           fill="var(--color-pf-cyan-400)"
           fontSize="6.5"
-          fontFamily="JetBrains Mono, monospace"
         >
           {" "}
           client.watchStrategy(id)) {"{"}
@@ -1224,7 +1178,6 @@ const features = [
           y="85"
           fill="var(--color-pf-success)"
           fontSize="6.5"
-          fontFamily="JetBrains Mono, monospace"
         >
           {" "}
           console.log(event.type); {"}"}

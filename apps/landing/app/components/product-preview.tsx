@@ -53,7 +53,6 @@ export function ProductPreview() {
                 y="32"
                 fill="var(--color-pf-cyan-300)"
                 fontSize="13"
-                fontFamily="Inter, sans-serif"
                 fontWeight="700"
               >
                 Polyforge
@@ -72,7 +71,6 @@ export function ProductPreview() {
                 y="76"
                 fill="var(--color-pf-cyan-400)"
                 fontSize="11"
-                fontFamily="Inter, sans-serif"
                 fontWeight="500"
               >
                 Dashboard
@@ -89,7 +87,6 @@ export function ProductPreview() {
                 y="112"
                 fill="var(--color-pf-text-muted)"
                 fontSize="11"
-                fontFamily="Inter, sans-serif"
               >
                 Markets
               </text>
@@ -105,7 +102,6 @@ export function ProductPreview() {
                 y="144"
                 fill="var(--color-pf-text-muted)"
                 fontSize="11"
-                fontFamily="Inter, sans-serif"
               >
                 Strategies
               </text>
@@ -121,7 +117,6 @@ export function ProductPreview() {
                 y="176"
                 fill="var(--color-pf-text-muted)"
                 fontSize="11"
-                fontFamily="Inter, sans-serif"
               >
                 Whale Tracker
               </text>
@@ -137,7 +132,6 @@ export function ProductPreview() {
                 y="208"
                 fill="var(--color-pf-text-muted)"
                 fontSize="11"
-                fontFamily="Inter, sans-serif"
               >
                 Copy Trading
               </text>
@@ -153,7 +147,6 @@ export function ProductPreview() {
                 y="240"
                 fill="var(--color-pf-text-muted)"
                 fontSize="11"
-                fontFamily="Inter, sans-serif"
               >
                 AI Signals
               </text>
@@ -169,7 +162,6 @@ export function ProductPreview() {
                 y="272"
                 fill="var(--color-pf-text-muted)"
                 fontSize="11"
-                fontFamily="Inter, sans-serif"
               >
                 Orders
               </text>
@@ -185,7 +177,6 @@ export function ProductPreview() {
                 y="304"
                 fill="var(--color-pf-text-muted)"
                 fontSize="11"
-                fontFamily="Inter, sans-serif"
               >
                 Portfolio
               </text>
@@ -201,7 +192,6 @@ export function ProductPreview() {
                 y="336"
                 fill="var(--color-pf-text-muted)"
                 fontSize="11"
-                fontFamily="Inter, sans-serif"
               >
                 API Keys
               </text>
@@ -226,7 +216,6 @@ export function ProductPreview() {
                 y="32"
                 fill="var(--color-pf-text)"
                 fontSize="14"
-                fontFamily="Inter, sans-serif"
                 fontWeight="600"
               >
                 Portfolio Overview
@@ -249,7 +238,6 @@ export function ProductPreview() {
                 textAnchor="middle"
                 fill="var(--color-pf-cyan-400)"
                 fontSize="10"
-                fontFamily="Inter, sans-serif"
                 fontWeight="500"
               >
                 Deploy
@@ -272,7 +260,6 @@ export function ProductPreview() {
                 y="76"
                 fill="var(--color-pf-text-muted)"
                 fontSize="10"
-                fontFamily="Inter, sans-serif"
               >
                 {"Total P&L"}
               </text>
@@ -281,7 +268,6 @@ export function ProductPreview() {
                 y="102"
                 fill="var(--color-pf-success)"
                 fontSize="22"
-                fontFamily="JetBrains Mono, monospace"
                 fontWeight="700"
               >
                 +$2,847
@@ -291,7 +277,6 @@ export function ProductPreview() {
                 y="122"
                 fill="var(--color-pf-success)"
                 fontSize="10"
-                fontFamily="JetBrains Mono, monospace"
               >
                 +18.3% all time
               </text>
@@ -319,7 +304,6 @@ export function ProductPreview() {
                 y="76"
                 fill="var(--color-pf-text-muted)"
                 fontSize="10"
-                fontFamily="Inter, sans-serif"
               >
                 Win Rate
               </text>
@@ -328,7 +312,6 @@ export function ProductPreview() {
                 y="102"
                 fill="var(--color-pf-text)"
                 fontSize="22"
-                fontFamily="JetBrains Mono, monospace"
                 fontWeight="700"
               >
                 67.2%
@@ -338,7 +321,6 @@ export function ProductPreview() {
                 y="122"
                 fill="var(--color-pf-text-muted)"
                 fontSize="10"
-                fontFamily="JetBrains Mono, monospace"
               >
                 142 / 212 trades
               </text>
@@ -360,7 +342,6 @@ export function ProductPreview() {
                 y="76"
                 fill="var(--color-pf-text-muted)"
                 fontSize="10"
-                fontFamily="Inter, sans-serif"
               >
                 Active
               </text>
@@ -369,7 +350,6 @@ export function ProductPreview() {
                 y="102"
                 fill="var(--color-pf-text)"
                 fontSize="22"
-                fontFamily="JetBrains Mono, monospace"
                 fontWeight="700"
               >
                 3
@@ -379,7 +359,6 @@ export function ProductPreview() {
                 y="122"
                 fill="var(--color-pf-cyan-400)"
                 fontSize="10"
-                fontFamily="JetBrains Mono, monospace"
               >
                 strategies live
               </text>
@@ -409,7 +388,6 @@ export function ProductPreview() {
                 y="201"
                 fill="var(--color-pf-text)"
                 fontSize="12"
-                fontFamily="Inter, sans-serif"
                 fontWeight="600"
               >
                 Momentum Alpha v3
@@ -419,7 +397,6 @@ export function ProductPreview() {
                 y="201"
                 fill="var(--color-pf-success)"
                 fontSize="11"
-                fontFamily="JetBrains Mono, monospace"
                 textAnchor="end"
               >
                 +$412
@@ -429,7 +406,6 @@ export function ProductPreview() {
                 y="222"
                 fill="var(--color-pf-text-muted)"
                 fontSize="9"
-                fontFamily="Inter, sans-serif"
               >
                 {"Polymarket  \u00b7  12 active positions  \u00b7  Sharpe 1.84"}
               </text>
@@ -466,7 +442,6 @@ export function ProductPreview() {
                 y="297"
                 fill="var(--color-pf-text)"
                 fontSize="12"
-                fontFamily="Inter, sans-serif"
                 fontWeight="600"
               >
                 Mean Reversion v1
@@ -476,7 +451,6 @@ export function ProductPreview() {
                 y="297"
                 fill="var(--color-pf-success)"
                 fontSize="11"
-                fontFamily="JetBrains Mono, monospace"
                 textAnchor="end"
               >
                 +$189
@@ -486,7 +460,6 @@ export function ProductPreview() {
                 y="318"
                 fill="var(--color-pf-text-muted)"
                 fontSize="9"
-                fontFamily="Inter, sans-serif"
               >
                 {"Polymarket  \u00b7  6 active positions  \u00b7  Sharpe 1.42"}
               </text>
@@ -515,7 +488,6 @@ export function ProductPreview() {
                 y="196"
                 fill="var(--color-pf-text)"
                 fontSize="11"
-                fontFamily="Inter, sans-serif"
                 fontWeight="500"
               >
                 US Election 2028
@@ -525,7 +497,6 @@ export function ProductPreview() {
                 y="214"
                 fill="var(--color-pf-text-muted)"
                 fontSize="9"
-                fontFamily="Inter, sans-serif"
               >
                 {"YES 0.42  \u00b7  NO 0.58"}
               </text>
@@ -534,7 +505,6 @@ export function ProductPreview() {
                 y="196"
                 fill="var(--color-pf-cyan-400)"
                 fontSize="10"
-                fontFamily="JetBrains Mono, monospace"
                 textAnchor="end"
               >
                 $1.2M vol
@@ -574,7 +544,6 @@ export function ProductPreview() {
                 y="280"
                 fill="var(--color-pf-text)"
                 fontSize="11"
-                fontFamily="Inter, sans-serif"
                 fontWeight="500"
               >
                 {"BTC > $150k by Dec"}
@@ -584,7 +553,6 @@ export function ProductPreview() {
                 y="298"
                 fill="var(--color-pf-text-muted)"
                 fontSize="9"
-                fontFamily="Inter, sans-serif"
               >
                 {"YES 0.31  \u00b7  NO 0.69"}
               </text>
@@ -593,7 +561,6 @@ export function ProductPreview() {
                 y="280"
                 fill="var(--color-pf-cyan-400)"
                 fontSize="10"
-                fontFamily="JetBrains Mono, monospace"
                 textAnchor="end"
               >
                 $840K vol
@@ -633,7 +600,6 @@ export function ProductPreview() {
                 y="364"
                 fill="var(--color-pf-text)"
                 fontSize="11"
-                fontFamily="Inter, sans-serif"
                 fontWeight="500"
               >
                 Fed Rate Cut Jul
@@ -643,7 +609,6 @@ export function ProductPreview() {
                 y="382"
                 fill="var(--color-pf-text-muted)"
                 fontSize="9"
-                fontFamily="Inter, sans-serif"
               >
                 {"YES 0.73  \u00b7  NO 0.27"}
               </text>
@@ -652,7 +617,6 @@ export function ProductPreview() {
                 y="364"
                 fill="var(--color-pf-cyan-400)"
                 fontSize="10"
-                fontFamily="JetBrains Mono, monospace"
                 textAnchor="end"
               >
                 $620K vol

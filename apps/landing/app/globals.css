@@ -73,3 +73,8 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* SVG text inherits the page font stack (Inter via Tailwind font-sans) */
+svg text {
+  font-family: inherit;
+}

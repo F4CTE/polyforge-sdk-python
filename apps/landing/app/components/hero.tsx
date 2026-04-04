@@ -192,7 +192,6 @@ export function Hero() {
               textAnchor="middle"
               fill="var(--color-pf-cyan-300)"
               fontSize="10"
-              fontFamily="Inter, sans-serif"
               fontWeight="600"
             >
               ENTRY SIGNAL
@@ -203,7 +202,6 @@ export function Hero() {
               textAnchor="middle"
               fill="var(--color-pf-text-muted)"
               fontSize="9"
-              fontFamily="Inter, sans-serif"
             >
               {"Price > 0.65"}
             </text>
@@ -227,7 +225,6 @@ export function Hero() {
               textAnchor="middle"
               fill="var(--color-pf-cyan-300)"
               fontSize="10"
-              fontFamily="Inter, sans-serif"
               fontWeight="600"
             >
               VOLUME CHECK
@@ -238,7 +235,6 @@ export function Hero() {
               textAnchor="middle"
               fill="var(--color-pf-text-muted)"
               fontSize="9"
-              fontFamily="Inter, sans-serif"
             >
               {"Vol > 10k / 24h"}
             </text>
@@ -262,7 +258,6 @@ export function Hero() {
               textAnchor="middle"
               fill="var(--color-pf-cyan-300)"
               fontSize="10"
-              fontFamily="Inter, sans-serif"
               fontWeight="600"
             >
               RISK MANAGER
@@ -273,7 +268,6 @@ export function Hero() {
               textAnchor="middle"
               fill="var(--color-pf-text-muted)"
               fontSize="9"
-              fontFamily="Inter, sans-serif"
             >
               Max 5% per trade
             </text>
@@ -297,7 +291,6 @@ export function Hero() {
               textAnchor="middle"
               fill="var(--color-pf-cyan-300)"
               fontSize="10"
-              fontFamily="Inter, sans-serif"
               fontWeight="600"
             >
               POSITION SIZE
@@ -308,7 +301,6 @@ export function Hero() {
               textAnchor="middle"
               fill="var(--color-pf-text-muted)"
               fontSize="9"
-              fontFamily="Inter, sans-serif"
             >
               Kelly criterion
             </text>
@@ -332,7 +324,6 @@ export function Hero() {
               textAnchor="middle"
               fill="var(--color-pf-success)"
               fontSize="10"
-              fontFamily="Inter, sans-serif"
               fontWeight="600"
             >
               EXECUTE
@@ -343,7 +334,6 @@ export function Hero() {
               textAnchor="middle"
               fill="var(--color-pf-text-muted)"
               fontSize="9"
-              fontFamily="Inter, sans-serif"
             >
               Buy YES @ market
             </text>

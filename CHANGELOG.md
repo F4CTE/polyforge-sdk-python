@@ -12,6 +12,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **DropdownMenu component (closes #164)** — `packages/ui/src/components/ui/dropdown-menu.tsx`: fully custom context-based dropdown with `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, and `DropdownMenuSeparator`; supports keyboard navigation (Arrow Up/Down, Enter/Space, Escape) and click-outside close
 - **Tooltip component (closes #164)** — `packages/ui/src/components/ui/tooltip.tsx`: hover/focus tooltip with `top|bottom|left|right` placement, opacity/scale animation, and `role="tooltip"` with `aria-describedby` linking
 - **Chip component (closes #164)** — `packages/ui/src/components/ui/chip.tsx`: closable tag with `default|success|danger|warning` variant colors using design tokens; optional remove button with `aria-label="Remove"` using Lucide `X` icon
+
+### Fixed (Design / Code Quality)
+- **Remove 95 inline fontFamily attributes from landing SVGs (closes #150)** — moved all `fontFamily="Inter, sans-serif"` and `fontFamily="JetBrains Mono, monospace"` SVG attributes from `features.tsx`, `hero.tsx`, `how-it-works.tsx`, and `product-preview.tsx` to a single `svg text { font-family: inherit; }` rule in `apps/landing/app/globals.css`, so SVG text inherits the page font stack via Tailwind's `font-sans`
 ### Security
 - **Gas sponsor private key no longer held in memory (closes #134)** — replaced `this.sponsorPrivateKey` class field with on-demand `getSponsorPrivateKey()` that reads from ConfigService per call, reducing exposure window from process lifetime to single function scope
 - **Pin swagger-ui-dist with SRI hashes (closes #137)** — pinned CDN-loaded swagger-ui-dist to v5.32.1 and added `integrity` + `crossorigin` attributes to both CSS and JS tags to prevent supply-chain attacks via CDN compromise

@@ -105,7 +105,6 @@ const steps = [
           textAnchor="middle"
           fill="var(--color-pf-success)"
           fontSize="7"
-          fontFamily="JetBrains Mono, monospace"
         >
           +34%
         </text>
@@ -157,7 +156,6 @@ const steps = [
           textAnchor="middle"
           fill="var(--color-pf-text-muted)"
           fontSize="7"
-          fontFamily="Inter, sans-serif"
         >
           Running
         </text>
