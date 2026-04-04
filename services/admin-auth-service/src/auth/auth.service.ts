@@ -383,7 +383,7 @@ export class AuthService implements OnModuleInit {
     let payload: AdminJwtPayload;
     try {
       payload = this.jwtService.verify<AdminJwtPayload>(token, {
-        secret: process.env.ADMIN_JWT_SECRET!,
+        secret: this.config.getOrThrow<string>("ADMIN_JWT_SECRET"),
       });
     } catch {
       throw new HttpException(
