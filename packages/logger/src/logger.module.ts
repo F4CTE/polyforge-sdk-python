@@ -24,6 +24,8 @@ import { LoggerModule as PinoLoggerModule } from "nestjs-pino";
           "req.body.password",
           "req.body.privateKey",
           "req.body.apiSecret",
+          "req.body.apiKey",
+          "req.body.apiPassphrase",
         ],
       },
     }),
