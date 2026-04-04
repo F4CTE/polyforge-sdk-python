@@ -111,20 +111,20 @@ Light mode : --color-pf-cyan-400 → #0891b2 (cyan-600, 4.6:1 AA ✓)
 ─────────────────────────────────────────────────────────────
 ACCENT — GOLD (financial data, trust, premium)
 ─────────────────────────────────────────────────────────────
---pf-gold-300       #FCD34D
---pf-gold-400       #FBBF24
---pf-gold-500       #F59E0B   ← Accent financier
---pf-gold-600       #D97706
---pf-gold-glow      rgba(245,158,11,0.15)
+--color-pf-gold-300       #FCD34D
+--color-pf-gold-400       #FBBF24
+--color-pf-gold-500       #F59E0B   ← Accent financier
+--color-pf-gold-600       #D97706
+--color-pf-gold-glow      rgba(245,158,11,0.15)
 
 ─────────────────────────────────────────────────────────────
 ACCENT — PURPLE (premium features, tech, AI)
 ─────────────────────────────────────────────────────────────
---pf-purple-300     #C4B5FD
---pf-purple-400     #A78BFA
---pf-purple-500     #8B5CF6   ← Premium / AI accent
---pf-purple-600     #7C3AED
---pf-purple-glow    rgba(139,92,246,0.15)
+--color-pf-purple-300     #C4B5FD
+--color-pf-purple-400     #A78BFA
+--color-pf-purple-500     #8B5CF6   ← Premium / AI accent
+--color-pf-purple-600     #7C3AED
+--color-pf-purple-glow    rgba(139,92,246,0.15)
 
 ─────────────────────────────────────────────────────────────
 SÉMANTIQUE
@@ -1719,7 +1719,7 @@ All styling uses **Tailwind CSS v4** with the `@theme` directive for design toke
   --color-pf-bg-surface:   #0D1421;
   --color-pf-bg-elevated:  #111D2E;
   --color-pf-cyan-500:     #06B6D4;
-  --color-pf-gold-500:     #EAB308;
+  --color-pf-gold-500:     #F59E0B;
   /* ... full Polyforge palette mapped to Tailwind tokens */
 }
 ```

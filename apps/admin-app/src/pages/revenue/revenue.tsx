@@ -513,8 +513,8 @@ export function Component() {
                     <Tooltip
                       formatter={(value: number) => [fmtDollar(value), '']}
                       contentStyle={{
-                        backgroundColor: 'var(--color-pf-surface, #0f172a)',
-                        border: '1px solid var(--color-pf-border, #1e293b)',
+                        backgroundColor: 'var(--color-pf-surface)',
+                        border: '1px solid var(--color-pf-border)',
                         borderRadius: '6px',
                         fontSize: 12,
                       }}
