@@ -411,7 +411,12 @@ export class AuthService implements OnModuleInit {
     const tag = Buffer.from(tagHex, "hex");
     const ciphertext = Buffer.from(ciphertextHex, "hex");
 
-    const decipher = createDecipheriv(ALGORITHM, this.encryptionKey, iv);
+    if (tag.length !== 16) {
+      throw new Error("Invalid auth tag length");
+    }
+    const decipher = createDecipheriv(ALGORITHM, this.encryptionKey, iv, {
+      authTagLength: 16,
+    });
     decipher.setAuthTag(tag);
     return decipher.update(ciphertext) + decipher.final("utf8");
   }
