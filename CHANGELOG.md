@@ -60,6 +60,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Landing CTA uses vague social proof (closes #152)** — "Join thousands of traders…" → "Automate your Polymarket edge — paper trade free, go live when ready."
 - **Testimonials use non-analytical brand voice (closes #127)** — "incredible" → "precise" (Alex Kowalski); "game-changer" → "cut my decision latency by 60%" (Marcus Chen)
 
+### Added (Design — Components)
+- **Button loading state variant (closes #131)** — added `loading` prop to shared Button component; renders `Loader2` spinner icon, applies `pointer-events-none opacity-70`, and sets `disabled` automatically
+
 ---
 
 ## [6.35.16] — 2026-04-03
