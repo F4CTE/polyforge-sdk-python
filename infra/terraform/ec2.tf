@@ -34,6 +34,16 @@ resource "aws_instance" "main" {
   # Disable accidental termination in production
   disable_api_termination = true
 
+  # Enforce IMDSv2 — prevents SSRF attacks from stealing instance credentials via
+  # unauthenticated GET requests to 169.254.169.254 (IMDSv1).
+  # IMDSv2 requires a PUT request with a TTL header before any GET, which HTTP
+  # redirect-based SSRF cannot replicate.  (closes #144)
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+  }
+
   # User data: bootstrap Docker, clone repo, fetch secrets, start services
   user_data = base64encode(templatefile("${path.module}/templates/user_data.sh.tpl", {
     aws_region    = var.aws_region

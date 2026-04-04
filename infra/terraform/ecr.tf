@@ -25,7 +25,7 @@ resource "aws_ecr_repository" "services" {
   for_each = toset(local.services)
 
   name                 = "polyforge-${each.key}"
-  image_tag_mutability = "MUTABLE"   # Allow re-tagging (e.g. latest)
+  image_tag_mutability = "IMMUTABLE"  # Prevent tag overwrites; deploy by SHA digest (closes #146)
 
   image_scanning_configuration {
     scan_on_push = true  # Free ECR basic scanning on every push

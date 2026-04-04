@@ -19,6 +19,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **nginx: proxy_set_header Host $host forwards unvalidated host (closes #155)** — dev nginx uses hardcoded `localhost`; prod nginx uses `$server_name` (literal matched name)
 - **mock-polymarket: wildcard CORS (closes #156)** — `enableCors()` replaced with explicit allowed-origins list (localhost:80, :4200, :3000)
 - **gitignore: .env.prod not excluded (closes #139)** — `.env.prod` added alongside other `.env.*` patterns
+- **infra: EC2 instance allows IMDSv1 — SSRF credential theft risk (closes #144)** — `metadata_options` block added to `aws_instance.main` with `http_tokens = "required"` and `http_put_response_hop_limit = 1`, enforcing IMDSv2 exclusively
+- **infra: ECR repositories use mutable image tags (closes #146)** — `image_tag_mutability` changed from `MUTABLE` to `IMMUTABLE` across all 13 ECR repos; production deployments must reference immutable SHA digests
+- **infra: public subnets auto-assign public IPs (closes #147)** — `map_public_ip_on_launch` set to `false` on both public subnets; EC2 already uses an Elastic IP and no other resource should receive a random public IP
 
 ---
 
