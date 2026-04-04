@@ -187,9 +187,21 @@ export class AuthService implements OnModuleInit {
 
   async disableTotp(
     adminId: string,
+    sessionId: string,
     password: string,
     totpCode: string,
   ): Promise<void> {
+    // SECURITY: Verify session is still live in Redis before allowing
+    // a sensitive operation. A revoked session (deactivated admin, forced
+    // logout) must not be able to disable 2FA.
+    const sessionValid = await this.redis.get(`admin:session:${sessionId}`);
+    if (!sessionValid) {
+      throw new HttpException(
+        { code: "SESSION_REVOKED", message: "Session has been revoked" },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
     const admin = await this.adminDb.admin.findUnique({
       where: { id: adminId },
     });

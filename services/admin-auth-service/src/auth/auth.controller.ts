@@ -141,7 +141,14 @@ export class AuthController {
     @Req() req: FastifyRequest,
     @Body() body: { password: string; totpCode: string },
   ) {
-    const adminId = extractAdminId(req, this.authService);
-    await this.authService.disableTotp(adminId, body.password, body.totpCode);
+    const token = (req as any).cookies?.[ADMIN_COOKIE];
+    if (!token) throw new UnauthorizedException("Not authenticated");
+    const payload = this.authService.verifyToken(token);
+    await this.authService.disableTotp(
+      payload.sub,
+      payload.sessionId as string,
+      body.password,
+      body.totpCode,
+    );
   }
 }
