@@ -267,7 +267,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
           type: blockDef.type,
           label: blockDef.label,
           section: 'calc',
-          color: '#10B981',
+          color: SECTION_COLORS.calc,
           config: Object.fromEntries(blockDef.fields.map((f) => [f.key, ''])),
           fields: blockDef.fields,
         },
@@ -514,7 +514,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
             type: cb.type,
             label: def?.label ?? cb.type,
             section: 'calc',
-            color: '#10B981',
+            color: SECTION_COLORS.calc,
             config: Object.fromEntries(
               Object.entries(rawCbConfig).map(([k, v]) => [k, String(v)]),
             ),
