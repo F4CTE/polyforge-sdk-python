@@ -5,11 +5,45 @@ import {
   UnprocessableEntityException,
   Logger,
 } from "@nestjs/common";
+import { isIPv4 } from "net";
 import { randomBytes, createHmac } from "crypto";
 import { PrismaService } from "@polyforge/shared-db";
 import { CreateWebhookDto } from "./dto/create-webhook.dto";
 
 const MAX_WEBHOOKS_PER_USER = 10;
+
+/**
+ * Returns true if the hostname resolves to a private/internal address that
+ * webhook delivery must never reach (SSRF protection).
+ *
+ * Uses numeric range checks for IPv4 to correctly cover full RFC 1918 blocks:
+ *   10.0.0.0/8, 172.16.0.0/12 (172.16–172.31), 192.168.0.0/16,
+ *   127.0.0.0/8 (loopback), 169.254.0.0/16 (link-local),
+ *   100.64.0.0/10 (CGNAT / AWS internal).
+ */
+function isPrivateHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  if (
+    h === "localhost" ||
+    h === "0.0.0.0" ||
+    h === "metadata.google.internal"
+  )
+    return true;
+  if (h === "[::1]" || h === "::1" || h.startsWith("fe80:")) return true;
+  if (h.endsWith(".internal") || h.endsWith(".local")) return true;
+
+  if (isIPv4(h)) {
+    const parts = h.split(".").map(Number);
+    const [a, b] = parts;
+    if (a === 10) return true; // 10.0.0.0/8
+    if (a === 127) return true; // 127.0.0.0/8 loopback
+    if (a === 169 && b === 254) return true; // 169.254.0.0/16 link-local
+    if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
+    if (a === 192 && b === 168) return true; // 192.168.0.0/16
+    if (a === 100 && b >= 64 && b <= 127) return true; // 100.64.0.0/10 CGNAT
+  }
+  return false;
+}
 
 @Injectable()
 export class WebhooksService {
@@ -156,28 +190,19 @@ export class WebhooksService {
     secret: string,
     payload: unknown,
   ): Promise<{ success: boolean; statusCode?: number; error?: string }> {
-    // SECURITY: Block internal/private network URLs to prevent SSRF
+    // SECURITY: Block internal/private network URLs to prevent SSRF.
+    // Uses numeric range checks instead of string-prefix matching to correctly
+    // cover the full RFC 1918 172.16.0.0/12 block (172.16–172.31).
     try {
       const parsed = new URL(url);
-      const blockedPrefixes = [
-        "localhost",
-        "127.",
-        "0.0.0.0",
-        "10.",
-        "172.16.",
-        "172.17.",
-        "172.18.",
-        "172.19.",
-        "172.20.",
-        "192.168.",
-        "169.254.",
-        "[::1]",
-      ];
-      if (
-        blockedPrefixes.some((p) => parsed.hostname.startsWith(p)) ||
-        parsed.hostname.endsWith(".internal") ||
-        parsed.protocol !== "https:"
-      ) {
+      if (parsed.protocol !== "https:") {
+        return {
+          success: false,
+          statusCode: 0,
+          error: "Internal or non-HTTPS URLs are not allowed",
+        };
+      }
+      if (isPrivateHost(parsed.hostname)) {
         return {
           success: false,
           statusCode: 0,
@@ -201,6 +226,7 @@ export class WebhooksService {
         },
         body,
         signal: AbortSignal.timeout(5000),
+        redirect: "error",
       });
 
       if (!res.ok) {
