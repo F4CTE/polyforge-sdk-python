@@ -29,6 +29,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Use timing-safe comparison for WhatsApp verify token (closes #135)** — replaced `===` string comparison with `crypto.timingSafeEqual` in `whatsapp.service.ts` webhook verification to prevent timing oracle attacks
 - **Replace $executeRawUnsafe with Prisma.sql tagged template (closes #136)** — switched from `$executeRawUnsafe` to `$executeRaw(Prisma.sql\`...\`)` in `prisma/seed.ts` to use Prisma's built-in query parameterization
 
+### Fixed (Design)
+- **Badge border-radius 9999px conflicts with charter 4px spec (closes #163)** — `rounded-pf-full` → `rounded-[4px]` in `packages/ui/src/components/ui/badge.tsx`, aligning with design charter §5
+- **Admin App orders/markets missing font-mono on financial data (closes #162)** — added `font-mono` to size/price columns in orders.tsx and volume/YES-NO price cells in markets.tsx
+
 ---
 
 ## [6.35.16] — 2026-04-03

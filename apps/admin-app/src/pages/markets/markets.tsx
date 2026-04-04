@@ -397,8 +397,8 @@ export function Component() {
 
                     {/* Volume */}
                     <td className="px-4 py-3 text-right whitespace-nowrap">
-                      <div className="text-pf-text font-medium">{formatVolume(market.volume24h)}</div>
-                      <div className="text-pf-label text-pf-text-tertiary">{formatVolume(market.totalVolume)} total</div>
+                      <div className="text-pf-text font-mono font-medium">{formatVolume(market.volume24h)}</div>
+                      <div className="text-pf-label text-pf-text-tertiary font-mono">{formatVolume(market.totalVolume)} total</div>
                     </td>
 
                     {/* Participants */}
@@ -408,8 +408,8 @@ export function Component() {
 
                     {/* YES / NO */}
                     <td className="px-4 py-3 text-right whitespace-nowrap">
-                      <div className="text-pf-success font-medium">{(parseFloat(market.yesPrice) * 100).toFixed(0)}¢</div>
-                      <div className="text-pf-danger font-medium">{(parseFloat(market.noPrice) * 100).toFixed(0)}¢</div>
+                      <div className="text-pf-success font-mono font-medium">{(parseFloat(market.yesPrice) * 100).toFixed(0)}¢</div>
+                      <div className="text-pf-danger font-mono font-medium">{(parseFloat(market.noPrice) * 100).toFixed(0)}¢</div>
                     </td>
 
                     {/* End Date */}

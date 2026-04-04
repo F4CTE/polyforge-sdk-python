@@ -246,8 +246,8 @@ export function Component() {
                         {o.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-pf-text">{o.size}</td>
-                    <td className="px-4 py-3 text-right text-pf-text">{o.price}</td>
+                    <td className="px-4 py-3 text-right text-pf-text font-mono">{o.size}</td>
+                    <td className="px-4 py-3 text-right text-pf-text font-mono">{o.price}</td>
                     <td className="px-4 py-3 text-pf-text-tertiary">{formatDateTime(o.createdAt)}</td>
                   </tr>
                 ))
