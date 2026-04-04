@@ -4,6 +4,7 @@ import {
   Post,
   Delete,
   Param,
+  ParseUUIDPipe,
   Body,
   UseGuards,
 } from "@nestjs/common";
@@ -30,7 +31,7 @@ export class ApiKeysController {
   }
 
   @Delete(":id")
-  revoke(@CurrentUser() user: any, @Param("id") id: string) {
+  revoke(@CurrentUser() user: any, @Param("id", ParseUUIDPipe) id: string) {
     return this.keys.revoke(user.sub, id);
   }
 }
