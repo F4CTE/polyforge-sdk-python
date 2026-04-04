@@ -195,9 +195,9 @@ services:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       REDIS_URL: redis://:devredispass@redis:6379
-      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
-      ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
-      MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
+      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
+      ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required — run: openssl rand -hex 32}
+      MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required — run: openssl rand -hex 32}
       POLY_BUILDER_API_KEY: ${POLY_BUILDER_API_KEY:-dev-builder-api-key}
       POLY_BUILDER_SECRET: ${POLY_BUILDER_SECRET:-dev-builder-secret}
       POLY_BUILDER_PASSPHRASE: ${POLY_BUILDER_PASSPHRASE:-dev-builder-passphrase}
@@ -223,7 +223,7 @@ services:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       REDIS_URL: redis://:devredispass@redis:6379
-      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
+      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
       PORT: "3006"
     ports:
       - "3006:3006"
@@ -243,7 +243,7 @@ services:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       REDIS_URL: redis://:devredispass@redis:6379
-      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
+      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
       SIGNER_SERVICE_URL: http://signer-service:3012
       CLOB_API_URL: http://mock-polymarket:3099
       PORT: "3007"
@@ -267,9 +267,9 @@ services:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       REDIS_URL: redis://:devredispass@redis:6379
-      JWT_SECRET: ${USER_JWT_SECRET:-dev-user-jwt-secret-change-in-production}
-      USER_JWT_SECRET: ${USER_JWT_SECRET:-dev-user-jwt-secret-change-in-production}
-      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
+      JWT_SECRET: ${USER_JWT_SECRET:?USER_JWT_SECRET is required — run: openssl rand -base64 32}
+      USER_JWT_SECRET: ${USER_JWT_SECRET:?USER_JWT_SECRET is required — run: openssl rand -base64 32}
+      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
       STRATEGY_ENGINE_URL: http://strategy-engine:3006
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -373,8 +373,8 @@ services:
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       REDIS_URL: redis://:devredispass@redis:6379
       STRATEGY_ENGINE_URL: http://strategy-engine:3006
-      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
-      BOT_JWT_SECRET: ${BOT_JWT_SECRET:-dev-bot-jwt-secret-change-in-production}
+      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
+      BOT_JWT_SECRET: ${BOT_JWT_SECRET:?BOT_JWT_SECRET is required — run: openssl rand -base64 32}
       # NOTE: Production should use Docker secrets or an external secret manager
       # for bot tokens instead of plain environment variables.
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-dev-disabled}
@@ -406,8 +406,8 @@ services:
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       ADMIN_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
       REDIS_URL: redis://:devredispass@redis:6379
-      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-dev-admin-secret}
-      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required — run: openssl rand -base64 32}
+      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
       STRATEGY_ENGINE_URL: http://strategy-engine:3006
       BUILDER_TIER: ${BUILDER_TIER:-UNVERIFIED}
       EMAIL_DRIVER: ${EMAIL_DRIVER:-mailhog}
@@ -440,10 +440,10 @@ services:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       REDIS_URL: redis://:devredispass@redis:6379
-      USER_JWT_SECRET: ${USER_JWT_SECRET:-dev-user-jwt-secret-change-in-production}
-      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:-dev-internal-jwt-secret}
-      MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
-      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
+      USER_JWT_SECRET: ${USER_JWT_SECRET:?USER_JWT_SECRET is required — run: openssl rand -base64 32}
+      INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
+      MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required — run: openssl rand -hex 32}
+      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:?TOTP_ENCRYPTION_KEY is required — run: openssl rand -hex 32}
       EMAIL_DRIVER: ${EMAIL_DRIVER:-mailhog}
       MAILHOG_HOST: mailhog
       MAILHOG_PORT: "1025"
@@ -473,8 +473,8 @@ services:
       ADMIN_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
       ADMIN_DIRECT_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
       REDIS_URL: redis://:devredispass@redis:6379
-      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-dev-admin-jwt-secret-change-in-production}
-      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required — run: openssl rand -base64 32}
+      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:?TOTP_ENCRYPTION_KEY is required — run: openssl rand -hex 32}
       ADMIN_AUTH_SERVICE_PORT: "3003"
       NODE_ENV: ${NODE_ENV:-development}
     ports:

@@ -47,7 +47,7 @@ Used **exclusively** by `admin-auth-service` and `admin-api-service`. No user-fa
 
 ## JWT Secrets
 
-Dev values are placeholder strings. In production, all are fetched from AWS Secrets Manager at boot — never stored in environment files.
+All JWT secrets are **required** — services will fail to start if unset. Generate dev values with `openssl rand -base64 32`. In production, all are fetched from AWS Secrets Manager at boot — never stored in environment files.
 
 | Variable | Description |
 |---|---|
@@ -60,7 +60,7 @@ Dev values are placeholder strings. In production, all are fetched from AWS Secr
 
 ## Encryption
 
-Dev values are 32-byte hex zero strings. In production, real random values are stored in AWS Secrets Manager.
+All encryption keys are **required** — services will fail to start if unset. Generate dev values with `openssl rand -hex 32`. In production, real random values are stored in AWS Secrets Manager.
 
 | Variable | Description |
 |---|---|

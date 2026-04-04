@@ -8,6 +8,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased] — 2026-04-04
 
 ### Security
+- **Remove predictable JWT secret defaults from docker-compose.infra.yml (closes #133)** — replaced all `:-dev-*` fallback values for `INTERNAL_JWT_SECRET`, `USER_JWT_SECRET`, `BOT_JWT_SECRET`, and `ADMIN_JWT_SECRET` with `:?` (required variable) syntax that fails fast if the variable is not set; unified `ADMIN_JWT_SECRET` reference across admin-api-service and admin-auth-service
+- **Remove all-zeros encryption key defaults from docker-compose.infra.yml (closes #132)** — replaced `:-0000...0000` fallback values for `MASTER_ENCRYPTION_KEY`, `ENCRYPTION_KEY`, and `TOTP_ENCRYPTION_KEY` with `:?` (required variable) syntax; updated `.env.example` to use `CHANGE_ME` placeholders with generation instructions instead of all-zeros values
 - **signer-service: dev stub activates on staging/QA (closes #157)** — `isDev` guard changed from `!== 'production'` to `=== 'development'`; staging, QA, and preview environments now use real EIP712 signing
 - **signer-service: GCM decryption missing explicit authTagLength (closes #143)** — `createDecipheriv('aes-256-gcm', ...)` now passes `{ authTagLength: 16 }` to both `decryptDek` and `decryptField`, preventing potential truncated-tag acceptance
 - **signer-service: global rate limit 1000/min too permissive (closes #158)** — ThrottlerModule global limit reduced to 120/min; SigningController overrides to 30/min
