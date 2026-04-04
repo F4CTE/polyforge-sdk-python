@@ -135,7 +135,7 @@ services:
     image: redis:7-alpine
     command: >-
       redis-server
-      --requirepass devredispass
+      --requirepass ${REDIS_PASSWORD:-devredispass}
       --appendonly yes
       --appendfsync everysec
       --maxmemory 256mb
@@ -147,7 +147,7 @@ services:
       - "127.0.0.1:6379:6379"
     networks: [internal, signer-only]
     environment:
-      REDIS_PASSWORD: devredispass
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-devredispass}
     healthcheck:
       test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep PONG"]
       interval: 5s
@@ -194,7 +194,7 @@ services:
       # SECURITY: Signer uses direct DB connection (not pgbouncer) for credential operations
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      REDIS_URL: redis://:devredispass@redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
       ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required — run: openssl rand -hex 32}
       MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required — run: openssl rand -hex 32}
@@ -222,7 +222,7 @@ services:
     environment:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      REDIS_URL: redis://:devredispass@redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
       PORT: "3006"
     ports:
@@ -242,7 +242,7 @@ services:
     environment:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      REDIS_URL: redis://:devredispass@redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
       SIGNER_SERVICE_URL: http://signer-service:3012
       CLOB_API_URL: http://mock-polymarket:3099
@@ -266,7 +266,7 @@ services:
     environment:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      REDIS_URL: redis://:devredispass@redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       JWT_SECRET: ${USER_JWT_SECRET:?USER_JWT_SECRET is required — run: openssl rand -base64 32}
       USER_JWT_SECRET: ${USER_JWT_SECRET:?USER_JWT_SECRET is required — run: openssl rand -base64 32}
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
@@ -297,7 +297,7 @@ services:
     environment:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      REDIS_URL: redis://:devredispass@redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       PORT: "3008"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -318,7 +318,7 @@ services:
     environment:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      REDIS_URL: redis://:devredispass@redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       PORT: "3009"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -339,7 +339,7 @@ services:
     environment:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      REDIS_URL: redis://:devredispass@redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       EMAIL_DRIVER: mailhog
       MAILHOG_HOST: mailhog
       MAILHOG_PORT: "1025"
@@ -371,7 +371,7 @@ services:
     environment:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      REDIS_URL: redis://:devredispass@redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       STRATEGY_ENGINE_URL: http://strategy-engine:3006
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
       BOT_JWT_SECRET: ${BOT_JWT_SECRET:?BOT_JWT_SECRET is required — run: openssl rand -base64 32}
@@ -405,7 +405,7 @@ services:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       ADMIN_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
-      REDIS_URL: redis://:devredispass@redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required — run: openssl rand -base64 32}
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
       STRATEGY_ENGINE_URL: http://strategy-engine:3006
@@ -439,7 +439,7 @@ services:
     environment:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      REDIS_URL: redis://:devredispass@redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       USER_JWT_SECRET: ${USER_JWT_SECRET:?USER_JWT_SECRET is required — run: openssl rand -base64 32}
       INTERNAL_JWT_SECRET: ${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required — run: openssl rand -base64 32}
       MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required — run: openssl rand -hex 32}
@@ -472,7 +472,7 @@ services:
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       ADMIN_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
       ADMIN_DIRECT_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
-      REDIS_URL: redis://:devredispass@redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required — run: openssl rand -base64 32}
       TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:?TOTP_ENCRYPTION_KEY is required — run: openssl rand -hex 32}
       ADMIN_AUTH_SERVICE_PORT: "3003"
@@ -542,7 +542,7 @@ services:
     environment:
       DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      REDIS_URL: redis://:devredispass@redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       CLOB_WS_URL: wss://ws-subscriptions-clob.polymarket.com/ws/market
       GAMMA_API_URL: https://gamma-api.polymarket.com
       PORT: "3005"
