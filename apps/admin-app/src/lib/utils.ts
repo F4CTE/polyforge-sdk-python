@@ -75,6 +75,6 @@ export function statusColor(status: string | undefined | null): string {
 export const priorityColor: Record<string, string> = {
   LOW: 'text-pf-text-secondary bg-pf-elevated',
   MEDIUM: 'text-pf-warning bg-pf-warning/10',
-  HIGH: 'text-orange-400 bg-orange-400/10',
+  HIGH: 'text-pf-gold-500 bg-pf-gold-500/10',
   URGENT: 'text-pf-danger bg-pf-danger/10',
 };

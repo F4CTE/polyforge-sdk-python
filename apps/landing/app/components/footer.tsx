@@ -1,24 +1,4 @@
-function PolyforgeIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        fill="none"
-        opacity="0.4"
-      />
-      <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="currentColor" />
-    </svg>
-  );
-}
+import { PolyforgeLogomark } from "@polyforge/ui";
 
 const socialLinks = [
   {
@@ -121,7 +101,7 @@ export function Footer() {
               className="inline-flex items-center gap-2 text-pf-subhead font-bold text-pf-text mb-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
               aria-label="Polyforge home"
             >
-              <PolyforgeIcon className="text-pf-cyan-400" />
+              <PolyforgeLogomark size={24} className="text-pf-cyan-400" />
               <span>Polyforge</span>
             </a>
             <p className="text-sm text-pf-text-muted mt-2">

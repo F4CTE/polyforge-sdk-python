@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Moon, Sun, X } from "lucide-react";
+import { PolyforgeLogomark } from "@polyforge/ui";
 
 const MOBILE_NAV_LINKS = [
   { href: "#features", label: "Features" },
@@ -12,27 +12,6 @@ const MOBILE_NAV_LINKS = [
   { href: "/login", label: "Sign in" },
 ] as const;
 
-function PolyforgeIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      width="26"
-      height="26"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        fill="none"
-        opacity="0.4"
-      />
-      <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="currentColor" />
-    </svg>
-  );
-}
 
 function ThemeToggle() {
   const [isLight, setIsLight] = useState(false);
@@ -63,9 +42,39 @@ function ThemeToggle() {
       className="inline-flex items-center justify-center w-9 h-9 rounded-pf-sm border border-pf-border-subtle text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 transition-colors"
     >
       {isLight ? (
-        <Moon size={18} aria-hidden="true" />
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
       ) : (
-        <Sun size={18} aria-hidden="true" />
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
       )}
     </button>
   );
@@ -145,7 +154,7 @@ export function Nav() {
           className="flex items-center gap-2 text-pf-subhead font-bold text-pf-text shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"
           aria-label="Polyforge home"
         >
-          <PolyforgeIcon className="text-pf-cyan-400" />
+          <PolyforgeLogomark size={26} className="text-pf-cyan-400" />
           <span>Polyforge</span>
         </a>
 
@@ -208,7 +217,21 @@ export function Nav() {
           onClick={toggleMobile}
         >
           {mobileOpen ? (
-            <X size={22} className="text-pf-text-secondary" aria-hidden="true" />
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 22 22"
+              fill="none"
+              className="text-pf-text-secondary"
+              aria-hidden="true"
+            >
+              <path
+                d="M5 5L17 17M17 5L5 17"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
           ) : (
             <>
               <span

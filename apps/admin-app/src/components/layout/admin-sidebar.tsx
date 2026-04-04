@@ -1,4 +1,5 @@
 import { NavLink, Link } from 'react-router';
+import { PolyforgeLogomark } from '@polyforge/ui';
 import {
   LayoutDashboard,
   Users,
@@ -124,19 +125,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
       {/* Brand */}
       <div className="flex items-center gap-2 h-14 px-3 border-b border-pf-border shrink-0">
         <Link to="/dashboard" className="flex items-center gap-2 min-w-0" aria-label="Polyforge Admin home">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="shrink-0" aria-hidden="true">
-            <path
-              d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
-              stroke="var(--color-pf-cyan-500)"
-              strokeWidth="1.2"
-              fill="none"
-              opacity="0.4"
-            />
-            <path
-              d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z"
-              fill="var(--color-pf-cyan-500)"
-            />
-          </svg>
+          <PolyforgeLogomark size={28} className="shrink-0 text-pf-cyan-500" />
           {!collapsed && (
             <span className="text-sm font-semibold text-pf-text whitespace-nowrap">
               Polyforge{' '}

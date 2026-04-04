@@ -985,7 +985,7 @@ Le nom **Polyforge** évoque la forge (création, précision, chaleur) et les ma
 
 ### Logo actuel (v2.4.0)
 
-Le logomark est un **polygone (hexagone outline) + bolt** rendu en SVG. Il est utilisé dans toutes les applications (user-app, admin-app, landing) ainsi que sur l'ecran de chargement anime.
+Le logomark est un **polygone (hexagone outline) + bolt** rendu en SVG. Il est disponible en tant que composant partagé `<PolyforgeLogomark>` exporté depuis `@polyforge/ui` (`packages/ui/src/components/polyforge-logomark.tsx`). Ce composant accepte les props `size` (défaut 24) et `className` pour la couleur via `currentColor`. Il est utilisé dans toutes les applications (user-app, admin-app, landing) ainsi que sur l'ecran de chargement anime.
 
 ```
 Logomark   : hexagone outline + bolt SVG

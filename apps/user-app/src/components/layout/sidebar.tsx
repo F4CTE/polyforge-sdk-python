@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router';
+import { PolyforgeLogomark } from '@polyforge/ui';
 import {
   BarChart3,
   Zap,
@@ -127,25 +128,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 h-14 border-b border-pf-border">
         <Link to="/markets" className="flex items-center gap-3 min-w-0">
-          <div className="text-pf-cyan-500">
-            <svg
-              className="shrink-0"
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 2L20.66 7V17L12 22L3.34 17V7L12 2Z"
-                stroke="currentColor"
-                strokeWidth="1.2"
-                fill="none"
-                opacity="0.4"
-              />
-              <path d="M13 5L7.5 13H11L10 19L16.5 11H13L13 5Z" fill="currentColor" />
-            </svg>
-          </div>
+          <PolyforgeLogomark size={28} className="shrink-0 text-pf-cyan-500" />
           {!collapsed && (
             <span className="text-pf-text font-semibold text-base tracking-tight">
               Polyforge
