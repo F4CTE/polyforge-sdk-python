@@ -312,6 +312,8 @@
 - Sharpe ratio
 - Equity curve chart (P&L over time)
 - Warning displayed if the date range contains data gaps: "⚠ Data gaps detected — results may be inaccurate"
+- **"Simulated" badge** displayed above metrics for completed runs (compliance requirement)
+- Footnote disclaimer: "Simulated performance based on historical data. Past results do not guarantee future performance. Trading involves risk of loss."
 
 ### Quick Mode
 - Available from the strategy builder
@@ -335,6 +337,7 @@
 - Line chart of P&L over time
 - Filter by period: 7d, 30d, 90d, all time
 - Filter by specific strategy
+- Risk disclaimer displayed at bottom of portfolio and strategy detail pages: "Past performance does not guarantee future results. Trading on prediction markets involves risk of loss." (compliance requirement)
 
 ### Market Resolution
 - When a market resolves, positions show a "Redeem" button

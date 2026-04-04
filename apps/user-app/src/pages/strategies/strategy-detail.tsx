@@ -2553,6 +2553,11 @@ function ReviewsSection({ listingId }: { listingId: string }) {
           </Button>
         </div>
       )}
+
+      {/* Risk disclaimer — compliance (CLAUDE.md hard rule) */}
+      <p className="text-xs text-pf-text-muted mt-4 italic">
+        Past performance does not guarantee future results. Trading on prediction markets involves risk of loss.
+      </p>
     </div>
   );
 }

@@ -378,6 +378,11 @@ export function Component() {
 
           {selectedRun.status === 'COMPLETED' && (
             <>
+              {/* Simulated results badge — compliance (CLAUDE.md hard rule) */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-medium bg-pf-warning/10 text-pf-warning px-2 py-0.5 rounded-pf-sm">Simulated</span>
+                <span className="text-xs text-pf-text-muted">Results based on historical data replay</span>
+              </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-pf-surface rounded-pf p-3">
                   <span className="text-xs text-pf-text-muted block">Total P&L</span>
@@ -428,6 +433,10 @@ export function Component() {
               {loadingEquity && (
                 <div className="mt-4 h-40 bg-pf-overlay rounded-pf animate-pulse" />
               )}
+              {/* Simulated performance disclaimer — compliance (CLAUDE.md hard rule) */}
+              <p className="text-xs text-pf-text-muted mt-4 italic">
+                Simulated performance based on historical data. Past results do not guarantee future performance. Trading involves risk of loss.
+              </p>
             </>
           )}
 
