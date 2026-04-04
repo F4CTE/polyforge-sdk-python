@@ -199,16 +199,11 @@ function bookDepth(entries: OrderBookEntry[], index: number): number {
 }
 
 function depthColor(pct: number, side: 'ask' | 'bid'): string {
-  // pct is 0-100
-  if (side === 'ask') {
-    if (pct > 66) return 'rgba(239,68,68,0.35)';  // deep red
-    if (pct > 33) return 'rgba(239,68,68,0.20)';  // medium red
-    return 'rgba(239,68,68,0.10)';                  // light red
-  } else {
-    if (pct > 66) return 'rgba(34,197,94,0.35)';  // deep green
-    if (pct > 33) return 'rgba(34,197,94,0.20)';  // medium green
-    return 'rgba(34,197,94,0.10)';                  // light green
-  }
+  // pct is 0-100 — use design tokens with opacity via color-mix
+  const token = side === 'ask' ? 'var(--color-pf-danger)' : 'var(--color-pf-success)';
+  if (pct > 66) return `color-mix(in srgb, ${token} 35%, transparent)`;
+  if (pct > 33) return `color-mix(in srgb, ${token} 20%, transparent)`;
+  return `color-mix(in srgb, ${token} 10%, transparent)`;
 }
 
 function buildDepthData(bids: OrderBookEntry[], asks: OrderBookEntry[]): DepthLevel[] {

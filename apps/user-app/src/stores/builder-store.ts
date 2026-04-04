@@ -116,20 +116,20 @@ interface BuilderState {
 }
 
 const SECTION_COLORS: Record<BlockSection, string> = {
-  safety: '#EF4444',
-  triggers: '#F59E0B',
-  conditions: '#3B82F6',
-  actions: '#22C55E',
-  logic: '#3B82F6',
-  calc: '#10B981',
+  safety: 'var(--color-pf-danger)',
+  triggers: 'var(--color-pf-warning)',
+  conditions: 'var(--color-pf-info)',
+  actions: 'var(--color-pf-status-active)',
+  logic: 'var(--color-pf-info)',
+  calc: 'var(--color-pf-success)',
 };
 
 const LOGIC_COLORS: Record<string, string> = {
-  IF_THEN_ELSE: '#F59E0B',
-  AND_GATE: '#3B82F6',
-  OR_GATE: '#3B82F6',
-  NOT_GATE: '#3B82F6',
-  DELAY: '#6B7280',
+  IF_THEN_ELSE: 'var(--color-pf-warning)',
+  AND_GATE: 'var(--color-pf-info)',
+  OR_GATE: 'var(--color-pf-info)',
+  NOT_GATE: 'var(--color-pf-info)',
+  DELAY: 'var(--color-pf-text-muted)',
 };
 
 const VARIABLE_COLUMN_X = 0;
@@ -242,7 +242,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
           type: blockDef.type,
           label: blockDef.label,
           section: 'logic',
-          color: LOGIC_COLORS[blockDef.type] ?? '#3B82F6',
+          color: LOGIC_COLORS[blockDef.type] ?? 'var(--color-pf-info)',
           config: Object.fromEntries(blockDef.fields.map((f) => [f.key, ''])),
           fields: blockDef.fields,
           outputs: blockDef.outputs,
@@ -480,7 +480,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
             type: lb.type,
             label: def?.label ?? lb.type,
             section: 'logic',
-            color: LOGIC_COLORS[lb.type] ?? '#3B82F6',
+            color: LOGIC_COLORS[lb.type] ?? 'var(--color-pf-info)',
             config: Object.fromEntries(
               Object.entries(rawLbConfig).map(([k, v]) => [k, String(v)]),
             ),

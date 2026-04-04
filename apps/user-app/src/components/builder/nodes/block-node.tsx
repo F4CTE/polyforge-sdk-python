@@ -122,7 +122,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   const borderColor = hasFired
     ? 'color-mix(in srgb, var(--color-pf-cyan-500) 90%, transparent)'
     : isExecuting
-    ? d.color + '60'
+    ? `color-mix(in srgb, ${d.color} 38%, transparent)`
     : isInactive
     ? 'color-mix(in srgb, var(--color-pf-warning) 27%, transparent)'
     : showSetupBadge

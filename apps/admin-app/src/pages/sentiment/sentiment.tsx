@@ -390,7 +390,7 @@ export function Component() {
                 axisLine={false}
                 tickLine={false}
               />
-              <Tooltip content={<CategoryTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+              <Tooltip content={<CategoryTooltip />} cursor={{ fill: 'var(--color-pf-chart-grid)' }} />
               <Bar dataKey="bullishPct" name="Bullish %" stackId="a" fill="var(--color-pf-success)" radius={[0, 0, 0, 0]}>
                 {chartData.map((entry) => (
                   <Cell key={entry.category} fill="var(--color-pf-success)" />

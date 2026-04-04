@@ -51,6 +51,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Input/Textarea/Select conflicting :focus and :focus-visible styles (closes #130)** — removed `:focus` pseudo-class rules from all three form components in `packages/ui/src/components/ui/`; now use `focus-visible` exclusively (with `focus-visible:border-pf-cyan-500` added to match Button pattern), consistent with charter §22 and accessibility best practices
 - **Raw text-white / bg-white bypass design token system (closes #129)** — replaced 27 instances across admin-app and user-app: `text-white` → `text-pf-text` on buttons/badges; `bg-white` → `bg-pf-text` on toggle knobs; `bg-white/20|30` / `ring-white/50` → `bg-pf-text/20|30` / `ring-pf-text/50` on builder node delete buttons; `bg-white` on QR code container annotated as intentional (scanner requirement)
 
+### Fixed (Design — Chart & Builder Hardcoded Colors)
+- **Builder store SECTION_COLORS/LOGIC_COLORS use hardcoded hex (closes #121)** — replaced all hex values in `builder-store.ts` with `var(--color-pf-*)` CSS variable references; updated `block-node.tsx` executing border from hex concatenation to `color-mix()` for token compatibility
+- **Order book depth uses hardcoded rgba() (closes #122)** — `depthColor()` in `market-detail.tsx` now uses `color-mix(in srgb, var(--color-pf-danger|success) N%, transparent)` instead of raw `rgba()` values
+- **Revenue/Sentiment charts use hardcoded rgba() and wrong fallbacks (closes #123)** — fixed incorrect fallback hex in revenue.tsx tooltip (`#1e2130`→`#0f172a`, `#2d3348`→`#1e293b`); replaced `rgba(255,255,255,0.06)` grid strokes with `var(--color-pf-chart-grid)`; replaced sentiment cursor fill with `var(--color-pf-chart-grid)`
+
 ---
 
 ## [6.35.16] — 2026-04-03

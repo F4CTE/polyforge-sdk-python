@@ -513,8 +513,8 @@ export function Component() {
                     <Tooltip
                       formatter={(value: number) => [fmtDollar(value), '']}
                       contentStyle={{
-                        backgroundColor: 'var(--color-pf-surface, #1e2130)',
-                        border: '1px solid var(--color-pf-border, #2d3348)',
+                        backgroundColor: 'var(--color-pf-surface, #0f172a)',
+                        border: '1px solid var(--color-pf-border, #1e293b)',
                         borderRadius: '6px',
                         fontSize: 12,
                       }}
@@ -664,7 +664,7 @@ export function Component() {
                 data={monthlyData.map(d => ({ ...d, label: fmtMonth(d.month) }))}
                 margin={{ top: 4, right: 48, left: 8, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-pf-chart-grid)" />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--color-pf-text-secondary)' }} axisLine={false} tickLine={false} />
                 <YAxis
                   yAxisId="left"
@@ -713,7 +713,7 @@ export function Component() {
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={compareData} margin={{ top: 4, right: 16, left: 8, bottom: 0 }} barCategoryGap="30%">
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-pf-chart-grid)" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--color-pf-text-secondary)' }} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={fmtDollar} tick={{ fontSize: 10, fill: 'var(--color-pf-text-secondary)' }} axisLine={false} tickLine={false} width={52} />
                 <Tooltip content={<CompareTooltip />} />
