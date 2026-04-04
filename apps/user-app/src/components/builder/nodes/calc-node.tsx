@@ -216,7 +216,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           <button
             type="button"
             onClick={onDelete}
-            className="p-1 rounded hover:bg-white/20 active:bg-white/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            className="p-1 rounded hover:bg-pf-text/20 active:bg-pf-text/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-text/50"
             aria-label="Remove block"
             title="Remove block"
           >

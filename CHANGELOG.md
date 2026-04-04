@@ -46,6 +46,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed (Design / Code Quality)
 - **Recharts color resolution duplicated across 5 pages (closes #148)** — added `resolveChartTheme()` to `packages/ui/src/lib/chart-colors.ts`; analytics, accuracy, market-detail, portfolio (×2) and strategy-chart now import and call the shared function instead of duplicating `getComputedStyle` blocks
 
+### Fixed (Design / Accessibility)
+- **Missing design tokens from charter (closes #125)** — added `--color-pf-cyan-100`, `--color-pf-cyan-200`, `--color-pf-gold-glow`, `--color-pf-purple-glow`, and `--color-pf-text-disabled` to `@theme` block in `packages/ui/src/globals.css`; reordered cyan shades numerically (50→100→200→300)
+- **Input/Textarea/Select conflicting :focus and :focus-visible styles (closes #130)** — removed `:focus` pseudo-class rules from all three form components in `packages/ui/src/components/ui/`; now use `focus-visible` exclusively (with `focus-visible:border-pf-cyan-500` added to match Button pattern), consistent with charter §22 and accessibility best practices
+- **Raw text-white / bg-white bypass design token system (closes #129)** — replaced 27 instances across admin-app and user-app: `text-white` → `text-pf-text` on buttons/badges; `bg-white` → `bg-pf-text` on toggle knobs; `bg-white/20|30` / `ring-white/50` → `bg-pf-text/20|30` / `ring-pf-text/50` on builder node delete buttons; `bg-white` on QR code container annotated as intentional (scanner requirement)
+
 ---
 
 ## [6.35.16] — 2026-04-03

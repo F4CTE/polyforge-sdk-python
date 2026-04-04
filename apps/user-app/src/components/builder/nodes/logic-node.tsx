@@ -118,7 +118,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
           <button
             type="button"
             onClick={onDelete}
-            className="p-1 rounded hover:bg-white/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            className="p-1 rounded hover:bg-pf-text/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-text/50"
             aria-label="Remove block"
             title="Remove block"
           >

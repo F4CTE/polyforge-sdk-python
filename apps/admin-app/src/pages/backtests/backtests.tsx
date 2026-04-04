@@ -241,7 +241,7 @@ export function Component() {
                 aria-label="Toggle auto-refresh"
               />
               <span className="block w-full h-full rounded-pf-full bg-pf-border peer-checked:bg-pf-cyan-500 transition-colors" />
-              <span className="absolute top-1 left-1 w-3 h-3 rounded-pf-full bg-white transition-transform peer-checked:translate-x-4" />
+              <span className="absolute top-1 left-1 w-3 h-3 rounded-pf-full bg-pf-text transition-transform peer-checked:translate-x-4" />
             </span>
             Auto-refresh
             {refreshing && (

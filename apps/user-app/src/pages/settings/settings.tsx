@@ -1165,7 +1165,7 @@ export function Component() {
                                 onClick={() => toggleNotifField(evtDef.event, field)}
                                 className={`px-3 py-1 rounded-pf-full text-pf-caption font-medium w-14 transition-colors cursor-pointer ${
                                   pref[field]
-                                    ? 'bg-pf-cyan-500 text-white'
+                                    ? 'bg-pf-cyan-500 text-pf-text'
                                     : 'bg-pf-overlay text-pf-text-muted'
                                 }`}
                               >
@@ -1275,7 +1275,7 @@ export function Component() {
                 </p>
                 <div className="ml-7 space-y-3">
                   {twoFaQrCodeUrl.startsWith('data:') ? (
-                    <div className="inline-block bg-white p-3 rounded-pf-lg border border-pf-border">
+                    <div className="inline-block bg-white p-3 rounded-pf-lg border border-pf-border">{/* bg-white intentional: QR codes require white background for scanner compatibility */}
                       <img src={twoFaQrCodeUrl} alt="TOTP QR Code" className="w-44 h-44" />
                     </div>
                   ) : (
@@ -1643,7 +1643,7 @@ export function Component() {
                   drawdownEnabled ? 'bg-pf-cyan-500' : 'bg-pf-surface border border-pf-border'
                 }`}
               >
-                <span className={`inline-block size-4 rounded-pf-full bg-white shadow transition-transform ${
+                <span className={`inline-block size-4 rounded-pf-full bg-pf-text shadow transition-transform ${
                   drawdownEnabled ? 'translate-x-6' : 'translate-x-1'
                 }`} />
               </Button>
@@ -1733,7 +1733,7 @@ export function Component() {
                   dlEnabled ? 'bg-pf-cyan-500' : 'bg-pf-surface border border-pf-border'
                 }`}
               >
-                <span className={`inline-block size-4 rounded-pf-full bg-white shadow transition-transform ${
+                <span className={`inline-block size-4 rounded-pf-full bg-pf-text shadow transition-transform ${
                   dlEnabled ? 'translate-x-6' : 'translate-x-1'
                 }`} />
               </Button>
@@ -2158,7 +2158,7 @@ export function Component() {
                             <History className="size-4" />
                             Deliveries
                             {recentFailures > 0 && (
-                              <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-pf-full bg-pf-danger text-white text-pf-micro font-bold leading-none">
+                              <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-pf-full bg-pf-danger text-pf-text text-pf-micro font-bold leading-none">
                                 {recentFailures}
                               </span>
                             )}

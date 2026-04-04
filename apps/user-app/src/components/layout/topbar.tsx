@@ -96,7 +96,7 @@ export function Topbar() {
         >
           <Bell size={18} />
           {unread > 0 && (
-            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-pf-caption font-bold text-white bg-pf-danger rounded-pf-full" aria-label={`${unread} unread notifications`}>
+            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-pf-caption font-bold text-pf-text bg-pf-danger rounded-pf-full" aria-label={`${unread} unread notifications`}>
               {unread > 9 ? '9+' : unread}
             </span>
           )}

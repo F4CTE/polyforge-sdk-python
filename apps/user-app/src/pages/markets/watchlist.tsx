@@ -763,8 +763,8 @@ export function Component() {
                                       className={`px-4 py-2 text-sm font-semibold transition-colors duration-100 focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                                         qo.outcome === o
                                           ? o === 'YES'
-                                            ? 'bg-pf-success text-white'
-                                            : 'bg-pf-danger text-white'
+                                            ? 'bg-pf-success text-pf-text'
+                                            : 'bg-pf-danger text-pf-text'
                                           : 'bg-pf-elevated text-pf-text-secondary hover:text-pf-text'
                                       }`}
                                     >
@@ -927,8 +927,8 @@ export function Component() {
                                         className={`px-4 py-2 text-sm font-semibold transition-colors duration-100 focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                                           alertOutcome === o
                                             ? o === 'YES'
-                                              ? 'bg-pf-success text-white'
-                                              : 'bg-pf-danger text-white'
+                                              ? 'bg-pf-success text-pf-text'
+                                              : 'bg-pf-danger text-pf-text'
                                             : 'bg-pf-elevated text-pf-text-secondary hover:text-pf-text'
                                         }`}
                                       >

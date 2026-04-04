@@ -925,7 +925,7 @@ export function Component() {
                 type="button"
                 variant="success"
                 onClick={() => setShowRunStrategy(true)}
-                className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-success text-white text-sm font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base"
+                className="flex items-center gap-2 px-4 py-3 rounded-pf bg-pf-success text-pf-text text-sm font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-success/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base"
               >
                 <Play className="size-4" /> Run Strategy
               </Button>
@@ -1628,7 +1628,7 @@ export function Component() {
                 type="button"
                 onClick={placeOrder}
                 disabled={placingOrder || !tradeAmount || parseFloat(tradeAmount || '0') <= 0 || (!isMarketOrder && (!tradePrice || parseFloat(tradePrice || '0') <= 0))}
-                className={`w-full mt-3 py-3 min-h-[44px] rounded-pf text-sm font-semibold text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
+                className={`w-full mt-3 py-3 min-h-[44px] rounded-pf text-sm font-semibold text-pf-text transition-opacity disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
                   tradeSide === 'BUY'
                     ? 'bg-pf-cyan-500 hover:bg-pf-cyan-600'
                     : 'bg-pf-danger hover:bg-pf-danger/90'
@@ -2334,7 +2334,7 @@ export function Component() {
                       variant={condType === 'TAKE_PROFIT' ? 'success' : 'danger'}
                       onClick={submitConditional}
                       disabled={!condSize || !condTriggerPrice || condSubmitting}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-pf text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${
+                      className={`flex items-center gap-2 px-4 py-2 rounded-pf text-pf-text text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity ${
                         condType === 'TAKE_PROFIT' ? 'bg-pf-success' : 'bg-pf-danger'
                       }`}
                     >
@@ -2406,7 +2406,7 @@ export function Component() {
                       variant="success"
                       onClick={onStartStrategy}
                       disabled={!selectedStrategyId}
-                      className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-success text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                      className="flex items-center gap-2 px-4 py-2 rounded-pf bg-pf-success text-pf-text text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                     >
                       <Play className="size-4" /> Start Strategy
                     </Button>

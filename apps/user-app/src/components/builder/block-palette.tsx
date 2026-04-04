@@ -257,7 +257,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                   aria-pressed={isActive}
                   className={`flex items-center gap-1 px-2 py-1 rounded-pf-sm text-pf-label font-medium transition-all shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/50 ${
                     isActive
-                      ? 'text-white shadow-pf-xs'
+                      ? 'text-pf-text shadow-pf-xs'
                       : 'text-pf-text-muted hover:text-pf-text-secondary bg-transparent hover:bg-pf-overlay'
                   }`}
                   style={isActive ? { backgroundColor: meta.color + 'CC' } : undefined}
@@ -294,7 +294,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               <button
                 type="button"
                 onClick={addVariable}
-                className="flex items-center gap-2 w-full px-3 py-2 rounded-pf-sm text-xs font-medium text-white transition-colors hover:opacity-90 bg-pf-purple-500"
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-pf-sm text-xs font-medium text-pf-text transition-colors hover:opacity-90 bg-pf-purple-500"
               >
                 <Plus className="size-4" />
                 Add Variable

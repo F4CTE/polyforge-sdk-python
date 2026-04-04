@@ -752,7 +752,7 @@ export function Component() {
                       ].join(' ')}
                       style={isSelected ? { background: chipColor, borderColor: chipColor } : {}}
                     >
-                      {isSelected && <Check className="size-3 text-white" aria-hidden="true" />}
+                      {isSelected && <Check className="size-3 text-pf-text" aria-hidden="true" />}
                     </Button>
                   </div>
                 )}

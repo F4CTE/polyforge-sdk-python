@@ -43,7 +43,7 @@ interface CohortRow {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function retentionColor(pct: number): string {
-  if (pct >= 80) return 'bg-pf-success text-white';
+  if (pct >= 80) return 'bg-pf-success text-pf-text';
   if (pct >= 60) return 'bg-pf-success/60 text-pf-success';
   if (pct >= 40) return 'bg-pf-success/30 text-pf-text';
   if (pct >= 20) return 'bg-pf-warning/30 text-pf-text';

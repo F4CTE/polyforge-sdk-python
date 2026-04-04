@@ -356,7 +356,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
               onClick={() => setDateRange(r)}
               className={`px-3 py-1 text-xs font-medium rounded-pf-sm transition-colors ${
                 dateRange === r
-                  ? 'bg-pf-cyan-500 text-white'
+                  ? 'bg-pf-cyan-500 text-pf-text'
                   : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-base'
               }`}
             >

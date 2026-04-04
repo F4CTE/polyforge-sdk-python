@@ -157,7 +157,7 @@ function ToggleSwitch({ checked, onChange, danger, disabled, label }: ToggleSwit
     >
       <span
         className={[
-          'inline-block h-4 w-4 rounded-pf-full bg-white shadow transition-transform duration-200',
+          'inline-block h-4 w-4 rounded-pf-full bg-pf-text shadow transition-transform duration-200',
           checked ? 'translate-x-6' : 'translate-x-1',
         ].join(' ')}
       />
