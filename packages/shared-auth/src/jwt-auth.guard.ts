@@ -181,6 +181,18 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
       request.user
     ) {
       const token = authHeader.slice(7);
+
+      // Pwchange check on cache-miss path — mirrors the cache-hit check above.
+      // Without this, a fresh token (not yet cached) bypasses invalidation entirely.
+      if (this.redis && request.user.sub) {
+        const pwChanged = await this.redis.get(`pwchange:${request.user.sub}`);
+        if (pwChanged) {
+          throw new UnauthorizedException(
+            "Password was changed — please re-authenticate",
+          );
+        }
+      }
+
       setCachedJwtUser(token, request.user);
     }
 
