@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-04-04
+
+### Security
+- **signer-service: dev stub activates on staging/QA (closes #157)** — `isDev` guard changed from `!== 'production'` to `=== 'development'`; staging, QA, and preview environments now use real EIP712 signing
+- **signer-service: GCM decryption missing explicit authTagLength (closes #143)** — `createDecipheriv('aes-256-gcm', ...)` now passes `{ authTagLength: 16 }` to both `decryptDek` and `decryptField`, preventing potential truncated-tag acceptance
+- **signer-service: global rate limit 1000/min too permissive (closes #158)** — ThrottlerModule global limit reduced to 120/min; SigningController overrides to 30/min
+- **signer-service: gas sponsor returned invalid Ethereum address in dev (closes #159)** — placeholder `0x...GasSponsor` (48 chars) replaced with valid 20-byte zero address `0x0000000000000000000000000000000000000000`
+- **logger: apiKey and apiPassphrase missing from pino redact list (closes #160)** — both fields now redacted as `[Redacted]` in all structured request logs across services
+- **nginx: H2C smuggling via WebSocket upgrade map (closes #145)** — map changed from `default upgrade` to `~*websocket upgrade / default close`, blocking non-WebSocket Upgrade headers from being forwarded to backends
+- **nginx: proxy_set_header Host $host forwards unvalidated host (closes #155)** — dev nginx uses hardcoded `localhost`; prod nginx uses `$server_name` (literal matched name)
+- **mock-polymarket: wildcard CORS (closes #156)** — `enableCors()` replaced with explicit allowed-origins list (localhost:80, :4200, :3000)
+- **gitignore: .env.prod not excluded (closes #139)** — `.env.prod` added alongside other `.env.*` patterns
+
+---
+
 ## [6.35.16] — 2026-04-03
 
 ### Fixed
