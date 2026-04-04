@@ -72,7 +72,7 @@ async function bootstrap() {
   validateEnv();
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter(),
+    new FastifyAdapter({ trustProxy: true }),
     { bufferLogs: true },
   );
 
