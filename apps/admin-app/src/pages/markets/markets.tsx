@@ -433,6 +433,7 @@ export function Component() {
                           size="icon-sm"
                           onClick={() => handleToggleFeatured(market)}
                           disabled={isUpdating}
+                          aria-label={market.featured ? 'Remove from featured' : 'Mark as featured'}
                           title={market.featured ? 'Remove from featured' : 'Mark as featured'}
                           className={`p-2 rounded-pf-sm transition-colors disabled:opacity-40 ${
                             market.featured

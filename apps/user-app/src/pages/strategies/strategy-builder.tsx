@@ -1594,6 +1594,7 @@ export function Component() {
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => { setMarketId(''); setPinnedMarket(null); }}
+                          aria-label="Unpin market"
                           title="Unpin market"
                         >
                           <X className="size-3" />

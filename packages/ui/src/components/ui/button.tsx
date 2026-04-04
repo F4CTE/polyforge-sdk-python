@@ -36,14 +36,26 @@ const buttonVariants = cva(
   }
 );
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  loading?: boolean;
-}
+type BaseButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
+  VariantProps<typeof buttonVariants> & {
+    loading?: boolean;
+  };
+
+/** Non-icon buttons: aria-label is optional */
+type NonIconButtonProps = BaseButtonProps & {
+  size?: Exclude<NonNullable<BaseButtonProps["size"]>, "icon" | "icon-sm">;
+};
+
+/** Icon-only buttons: aria-label is required (WCAG 4.1.2) */
+type IconButtonProps = BaseButtonProps & {
+  size: "icon" | "icon-sm";
+  "aria-label": string;
+};
+
+export type ButtonProps = NonIconButtonProps | IconButtonProps;
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, loading, children, disabled, ...props }, ref) => {
+  ({ className, variant, size, loading, children, disabled, ...props }: ButtonProps, ref) => {
     return (
       <button
         className={cn(buttonVariants({ variant, size, className }), loading && "pointer-events-none opacity-70")}
