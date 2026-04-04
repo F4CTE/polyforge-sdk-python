@@ -11,6 +11,9 @@ const PLACEHOLDER_PREFIXES = [
   "sk-ant-xxx",
   "sk-xxx",
   "dev-builder-",
+  "devpass",
+  "devredis",
+  "<GENERATE_ME>",
 ];
 
 const ALL_ZEROS_64 =
