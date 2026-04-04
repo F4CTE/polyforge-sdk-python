@@ -22,6 +22,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **infra: EC2 instance allows IMDSv1 — SSRF credential theft risk (closes #144)** — `metadata_options` block added to `aws_instance.main` with `http_tokens = "required"` and `http_put_response_hop_limit = 1`, enforcing IMDSv2 exclusively
 - **infra: ECR repositories use mutable image tags (closes #146)** — `image_tag_mutability` changed from `MUTABLE` to `IMMUTABLE` across all 13 ECR repos; production deployments must reference immutable SHA digests
 - **infra: public subnets auto-assign public IPs (closes #147)** — `map_public_ip_on_launch` set to `false` on both public subnets; EC2 already uses an Elastic IP and no other resource should receive a random public IP
+- **Add .env.prod to .gitignore (closes #139 duplicate)** — added `.env.prod`, `.env.production`, and `.env.staging` patterns to prevent accidental commit of production secrets
+- **Use timing-safe comparison for WhatsApp verify token (closes #135)** — replaced `===` string comparison with `crypto.timingSafeEqual` in `whatsapp.service.ts` webhook verification to prevent timing oracle attacks
+- **Replace $executeRawUnsafe with Prisma.sql tagged template (closes #136)** — switched from `$executeRawUnsafe` to `$executeRaw(Prisma.sql\`...\`)` in `prisma/seed.ts` to use Prisma's built-in query parameterization
 
 ---
 

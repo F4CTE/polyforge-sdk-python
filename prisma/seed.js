@@ -1210,9 +1210,9 @@ async function main() {
         // Since composite PK includes time and userId, and strategy-level snapshots share
         // the same time+userId, we need to insert them individually with raw SQL
         for (const snap of pnlSnapshots) {
-            await prisma.$executeRawUnsafe(`INSERT INTO pnl_snapshots (time, "userId", "strategyId", pnl, "realizedPnl", "positionCount")
-         VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT DO NOTHING`, snap.time, snap.userId, snap.strategyId, snap.pnl, snap.realizedPnl, snap.positionCount);
+            await prisma.$executeRaw(client_1.Prisma.sql`INSERT INTO pnl_snapshots (time, "userId", "strategyId", pnl, "realizedPnl", "positionCount")
+         VALUES (${snap.time}, ${snap.userId}, ${snap.strategyId}, ${snap.pnl}, ${snap.realizedPnl}, ${snap.positionCount})
+         ON CONFLICT DO NOTHING`);
         }
         console.log(`  ✓ ${pnlSnapshots.length} P&L snapshots for alice (30 days portfolio + 30 days momentum strategy)`);
     }

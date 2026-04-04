@@ -9,6 +9,7 @@ import {
   Req,
   Res,
 } from "@nestjs/common";
+import crypto from "node:crypto";
 import { CommandsService } from "./commands.service";
 import { LinkingService } from "./linking.service";
 
@@ -63,7 +64,13 @@ export class WhatsAppService implements OnModuleInit {
     const token = query["hub.verify_token"];
     const challenge = query["hub.challenge"];
 
-    if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    const tokenBuf = Buffer.from(token ?? "");
+    const verifyBuf = Buffer.from(VERIFY_TOKEN);
+    const tokensMatch =
+      tokenBuf.length === verifyBuf.length &&
+      crypto.timingSafeEqual(tokenBuf, verifyBuf);
+
+    if (mode === "subscribe" && tokensMatch) {
       this.logger.log("WhatsApp webhook verified");
       return { status: 200, body: challenge ?? "" };
     }

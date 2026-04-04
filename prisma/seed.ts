@@ -18,7 +18,7 @@
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaPg } = require('@prisma/adapter-pg');
-import { PrismaClient } from '.prisma/client';
+import { Prisma, PrismaClient } from '.prisma/client';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const bcrypt = require('bcrypt');
 
@@ -1320,16 +1320,10 @@ async function main() {
     // Since composite PK includes time and userId, and strategy-level snapshots share
     // the same time+userId, we need to insert them individually with raw SQL
     for (const snap of pnlSnapshots) {
-      await prisma.$executeRawUnsafe(
-        `INSERT INTO pnl_snapshots (time, "userId", "strategyId", pnl, "realizedPnl", "positionCount")
-         VALUES ($1, $2, $3, $4, $5, $6)
+      await prisma.$executeRaw(
+        Prisma.sql`INSERT INTO pnl_snapshots (time, "userId", "strategyId", pnl, "realizedPnl", "positionCount")
+         VALUES (${snap.time}, ${snap.userId}, ${snap.strategyId}, ${snap.pnl}, ${snap.realizedPnl}, ${snap.positionCount})
          ON CONFLICT DO NOTHING`,
-        snap.time,
-        snap.userId,
-        snap.strategyId,
-        snap.pnl,
-        snap.realizedPnl,
-        snap.positionCount,
       );
     }
 
