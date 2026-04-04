@@ -101,7 +101,7 @@ services:
   # Pools connections to AWS RDS — reduces RDS connection count.
 
   pgbouncer:
-    image: edoburu/pgbouncer:latest
+    image: edoburu/pgbouncer:1.23.1  # pinned — verify tag at hub.docker.com/r/edoburu/pgbouncer/tags
     <<: *common
     environment:
       DATABASE_URL: "${DATABASE_DIRECT_URL}"     # RDS connection string from .env.prod
@@ -126,7 +126,7 @@ services:
   # ─── PgBouncer (admin DB) ──────────────────────────────────────────────────
 
   pgbouncer-admin:
-    image: edoburu/pgbouncer:latest
+    image: edoburu/pgbouncer:1.23.1  # pinned — verify tag at hub.docker.com/r/edoburu/pgbouncer/tags
     <<: *common
     environment:
       DATABASE_URL: "${ADMIN_DATABASE_DIRECT_URL}"
