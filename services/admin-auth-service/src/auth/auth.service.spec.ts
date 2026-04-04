@@ -347,11 +347,12 @@ describe("AdminAuthService", () => {
         totpSecret: "encrypted",
       });
       adminDb.admin.findUnique.mockResolvedValue(admin);
+      redis.get.mockResolvedValue("1"); // session is live
 
       // Mock the private decrypt method to return a valid secret
       vi.spyOn(service as any, "decrypt").mockReturnValue("JBSWY3DPEHPK3PXP");
 
-      await service.disableTotp(admin.id, "Passw0rd!", "123456");
+      await service.disableTotp(admin.id, "test-session-id", "Passw0rd!", "123456");
 
       expect(adminDb.admin.update).toHaveBeenCalledWith({
         where: { id: admin.id },
@@ -365,8 +366,9 @@ describe("AdminAuthService", () => {
     it("throws ADMIN_NOT_FOUND (404) when admin does not exist", async () => {
       adminDb.admin.findUnique.mockResolvedValue(null);
 
+      redis.get.mockResolvedValue("1"); // session is live
       await expect(
-        service.disableTotp("nonexistent", "password", "000000"),
+        service.disableTotp("nonexistent", "test-session-id", "password", "000000"),
       ).rejects.toMatchObject({
         response: { code: "ADMIN_NOT_FOUND" },
         status: HttpStatus.NOT_FOUND,
@@ -377,8 +379,9 @@ describe("AdminAuthService", () => {
       const admin = await adminFactory({ totpEnabled: false });
       adminDb.admin.findUnique.mockResolvedValue(admin);
 
+      redis.get.mockResolvedValue("1"); // session is live
       await expect(
-        service.disableTotp(admin.id, "password", "000000"),
+        service.disableTotp(admin.id, "test-session-id", "password", "000000"),
       ).rejects.toMatchObject({
         response: { code: "TOTP_NOT_ENABLED" },
         status: HttpStatus.BAD_REQUEST,

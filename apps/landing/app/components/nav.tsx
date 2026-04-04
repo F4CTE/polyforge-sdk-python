@@ -12,7 +12,6 @@ const MOBILE_NAV_LINKS = [
   { href: "/login", label: "Sign in" },
 ] as const;
 
-
 function ThemeToggle() {
   const [isLight, setIsLight] = useState(false);
 

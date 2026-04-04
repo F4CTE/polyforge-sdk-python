@@ -104,7 +104,11 @@ export function WaitlistForm({ className = "" }: WaitlistFormProps) {
         >
           <span>Request access</span>
           {status === "loading" && (
-            <Loader2 size={16} className="ml-2 animate-spin" aria-hidden="true" />
+            <Loader2
+              size={16}
+              className="ml-2 animate-spin"
+              aria-hidden="true"
+            />
           )}
         </button>
       </div>
