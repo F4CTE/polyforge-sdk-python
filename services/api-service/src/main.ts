@@ -195,10 +195,10 @@ async function bootstrap() {
     fastify.get("/api/v1/docs", (_req: any, reply: any) => {
       reply.type("text/html").send(`<!DOCTYPE html>
 <html><head><title>Polyforge API</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.32.1/swagger-ui.css" integrity="sha384-F7uqyyVZgBbuOv+8gNy6ZGJB8Rf12CczPWm130Pxrau0cyZlj1Dl18cDOWpQSrGh" crossorigin="anonymous">
 </head><body>
 <div id="swagger-ui"></div>
-<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui-bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.32.1/swagger-ui-bundle.js" integrity="sha384-SlhRXPBpOIwNajIYH/STl3rsa6P/qCR82bZVQk1pDmWr/+Mh9g/RhaUJ1JBmM99R" crossorigin="anonymous"></script>
 <script>SwaggerUIBundle({url:'/api/v1/docs/openapi.json',dom_id:'#swagger-ui'})</script>
 </body></html>`);
     });

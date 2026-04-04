@@ -34,7 +34,6 @@ export class GasSponsorService {
   private readonly logger = new Logger(GasSponsorService.name);
   private readonly enabled: boolean;
   private readonly dailyLimitMatic: number;
-  private readonly sponsorPrivateKey: string;
 
   /**
    * Gas estimate in MATIC used for sponsorship cost pre-approval checks.
@@ -59,15 +58,12 @@ export class GasSponsorService {
     this.dailyLimitMatic = parseFloat(
       this.config.get<string>("GAS_DAILY_LIMIT_MATIC") ?? "0.5",
     );
-    this.sponsorPrivateKey =
-      this.config.get<string>("GAS_SPONSOR_PRIVATE_KEY") ?? "";
-
     // Configurable gas estimate — should eventually be replaced with a gas oracle
     this.gasEstimateMatic = parseFloat(
       this.config.get<string>("GAS_ESTIMATE_MATIC") ?? "0.002",
     );
 
-    if (this.enabled && !this.sponsorPrivateKey) {
+    if (this.enabled && !this.getSponsorPrivateKey()) {
       this.logger.warn(
         "GAS_SPONSOR_ENABLED=true but GAS_SPONSOR_PRIVATE_KEY is not set. " +
           "Gas sponsorship will be inactive until a key is provided.",
@@ -80,9 +76,14 @@ export class GasSponsorService {
     );
   }
 
+  /** Read the private key on demand — never held in memory longer than needed */
+  private getSponsorPrivateKey(): string {
+    return this.config.get<string>("GAS_SPONSOR_PRIVATE_KEY") ?? "";
+  }
+
   /** Whether the sponsor wallet is configured and enabled */
   isActive(): boolean {
-    return this.enabled && this.sponsorPrivateKey.length > 0;
+    return this.enabled && this.getSponsorPrivateKey().length > 0;
   }
 
   /**
@@ -158,7 +159,7 @@ export class GasSponsorService {
       // Dynamic import to avoid hard dependency in dev
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { Wallet } = require("ethers");
-      const wallet = new Wallet(this.sponsorPrivateKey);
+      const wallet = new Wallet(this.getSponsorPrivateKey());
       return wallet.address;
     } catch (err) {
       this.logger.error("Failed to derive sponsor wallet address", err);
