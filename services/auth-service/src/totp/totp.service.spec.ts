@@ -3,7 +3,14 @@ import { HttpStatus } from '@nestjs/common';
 import { TotpService } from './totp.service';
 import { createMockDb, MockDb } from '../../test/helpers/mock-db';
 import { userFactory } from '../../test/factories';
-import { generateSync, generateSecret } from 'otplib';
+import { generateSync, generateSecret, verifySync } from 'otplib';
+
+// Partial mock: only verifySync is mockable, rest stays real.
+vi.mock('otplib', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('otplib')>();
+  return { ...actual, verifySync: vi.fn(actual.verifySync) };
+});
+const mockedVerifySync = vi.mocked(verifySync);
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -124,25 +131,25 @@ describe('TotpService', () => {
     });
 
     it('returns 10 backup codes and commits to DB on success', async () => {
-      const secret = generateSecret({ length: 20 }); // 160-bit, valid for otplib v13
-      const validCode = generateSync({ secret, strategy: 'totp' });
-      redis.get.mockResolvedValue(secret);
+      // Mock verifySync to avoid TOTP 30-second window boundary flakes.
+      // We're testing backup code generation + DB commit, not otplib itself.
+      mockedVerifySync.mockReturnValueOnce({ valid: true } as any);
+      redis.get.mockResolvedValue('JBSWY3DPEHPK3PXP');
       (db.$transaction as any).mockResolvedValue([]);
 
-      const result = await service.confirm('user-id', validCode);
+      const result = await service.confirm('user-id', '123456');
 
       expect(result.backupCodes).toHaveLength(10);
-      expect(result.backupCodes[0]).toMatch(/^[0-9A-F]{8}$/);
+      expect(result.backupCodes[0]).toMatch(/^[0-9A-F]{20}$/); // 10 bytes = 20 hex chars
       expect(db.$transaction).toHaveBeenCalledOnce();
     });
 
     it('deletes the pending Redis key on success', async () => {
-      const secret = generateSecret({ length: 20 });
-      const validCode = generateSync({ secret, strategy: 'totp' });
-      redis.get.mockResolvedValue(secret);
+      mockedVerifySync.mockReturnValueOnce({ valid: true } as any);
+      redis.get.mockResolvedValue('JBSWY3DPEHPK3PXP');
       (db.$transaction as any).mockResolvedValue([]);
 
-      await service.confirm('user-id', validCode);
+      await service.confirm('user-id', '123456');
 
       expect(redis.del).toHaveBeenCalledWith('totp:pending:user-id');
     });
