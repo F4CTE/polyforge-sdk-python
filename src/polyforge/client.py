@@ -320,13 +320,13 @@ class PolyforgeClient:
         return _parse(Strategy, self._post("/api/v1/strategies", json=body))
 
     def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
-        body: dict[str, Any] = {"description": description}
+        body: dict[str, Any] = {"query": description}
         if market_id is not None:
             body["marketId"] = market_id
         return _parse(Strategy, self._post("/api/v1/strategies/from-description", json=body))
 
     def start_strategy(self, strategy_id: str, mode: str = "paper") -> Strategy:
-        return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode}))
+        return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode.upper()}))
 
     def stop_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
@@ -364,6 +364,42 @@ class PolyforgeClient:
 
     def fork_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/fork"))
+
+    def run_backtest(
+        self,
+        strategy_id: str,
+        *,
+        date_range_start: str | None = None,
+        date_range_end: str | None = None,
+        quick_mode: bool | None = None,
+        strategy_blocks: dict[str, Any] | None = None,
+        market_bindings: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        """Create and run a backtest for a strategy.
+
+        Args:
+            strategy_id: ID of the strategy to backtest.
+            date_range_start: ISO 8601 start of the date range (e.g. ``"2025-01-01"``).
+            date_range_end: ISO 8601 end of the date range (e.g. ``"2025-12-31"``).
+            quick_mode: If True, run a fast approximate backtest.
+            strategy_blocks: Optional override for strategy block config.
+            market_bindings: Optional market binding overrides.
+
+        Returns:
+            Raw backtest result dict from the platform.
+        """
+        body: dict[str, Any] = {"strategyId": strategy_id}
+        if date_range_start is not None:
+            body["dateRangeStart"] = date_range_start
+        if date_range_end is not None:
+            body["dateRangeEnd"] = date_range_end
+        if quick_mode is not None:
+            body["quickMode"] = quick_mode
+        if strategy_blocks is not None:
+            body["strategyBlocks"] = strategy_blocks
+        if market_bindings is not None:
+            body["marketBindings"] = market_bindings
+        return self._post("/api/v1/backtests", json=body)
 
     # -- Portfolio & Orders --
 
@@ -642,7 +678,7 @@ class PolyforgeClient:
     # -- AI --
 
     def ai_query(self, query: str) -> AiQueryResponse:
-        return _parse(AiQueryResponse, self._post("/api/v1/ai/query", json={"query": query}))
+        return _parse(AiQueryResponse, self._post("/api/v1/ai/query", json={"question": query}))
 
     # -- Accuracy & Portfolio Review --
 
@@ -833,13 +869,13 @@ class AsyncPolyforgeClient:
         return _parse(Strategy, await self._post("/api/v1/strategies", json=body))
 
     async def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
-        body: dict[str, Any] = {"description": description}
+        body: dict[str, Any] = {"query": description}
         if market_id is not None:
             body["marketId"] = market_id
         return _parse(Strategy, await self._post("/api/v1/strategies/from-description", json=body))
 
     async def start_strategy(self, strategy_id: str, mode: str = "paper") -> Strategy:
-        return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode}))
+        return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode.upper()}))
 
     async def stop_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
@@ -877,6 +913,42 @@ class AsyncPolyforgeClient:
 
     async def fork_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/fork"))
+
+    async def run_backtest(
+        self,
+        strategy_id: str,
+        *,
+        date_range_start: str | None = None,
+        date_range_end: str | None = None,
+        quick_mode: bool | None = None,
+        strategy_blocks: dict[str, Any] | None = None,
+        market_bindings: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        """Create and run a backtest for a strategy.
+
+        Args:
+            strategy_id: ID of the strategy to backtest.
+            date_range_start: ISO 8601 start of the date range (e.g. ``"2025-01-01"``).
+            date_range_end: ISO 8601 end of the date range (e.g. ``"2025-12-31"``).
+            quick_mode: If True, run a fast approximate backtest.
+            strategy_blocks: Optional override for strategy block config.
+            market_bindings: Optional market binding overrides.
+
+        Returns:
+            Raw backtest result dict from the platform.
+        """
+        body: dict[str, Any] = {"strategyId": strategy_id}
+        if date_range_start is not None:
+            body["dateRangeStart"] = date_range_start
+        if date_range_end is not None:
+            body["dateRangeEnd"] = date_range_end
+        if quick_mode is not None:
+            body["quickMode"] = quick_mode
+        if strategy_blocks is not None:
+            body["strategyBlocks"] = strategy_blocks
+        if market_bindings is not None:
+            body["marketBindings"] = market_bindings
+        return await self._post("/api/v1/backtests", json=body)
 
     # -- Portfolio & Orders --
 
@@ -1148,7 +1220,7 @@ class AsyncPolyforgeClient:
     # -- AI --
 
     async def ai_query(self, query: str) -> AiQueryResponse:
-        return _parse(AiQueryResponse, await self._post("/api/v1/ai/query", json={"query": query}))
+        return _parse(AiQueryResponse, await self._post("/api/v1/ai/query", json={"question": query}))
 
     # -- Accuracy & Portfolio Review --
 

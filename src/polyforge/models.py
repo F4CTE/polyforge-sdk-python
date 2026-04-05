@@ -224,6 +224,24 @@ class CopyConfig:
     created_at: str = ""
 
 
+class WebhookEvent:
+    """Constants for webhook event names (dot.notation as expected by the platform).
+
+    Usage::
+
+        client.create_webhook(url="https://...", events=[WebhookEvent.ORDER_FILLED])
+    """
+
+    ORDER_FILLED = "order.filled"
+    ORDER_PLACED = "order.placed"
+    ORDER_CANCELLED = "order.cancelled"
+    STRATEGY_STARTED = "strategy.started"
+    STRATEGY_STOPPED = "strategy.stopped"
+    STRATEGY_ERROR = "strategy.error"
+    BACKTEST_COMPLETED = "backtest.completed"
+    BACKTEST_FAILED = "backtest.failed"
+
+
 @dataclass
 class Webhook:
     """A webhook endpoint registration."""

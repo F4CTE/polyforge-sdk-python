@@ -5,6 +5,13 @@
 ### Security
 - **CI**: switch from self-hosted runner to `ubuntu-latest` for `pull_request` events and add `permissions: contents: read` to restrict GITHUB_TOKEN scope (closes #68)
 
+### Fixed
+- **#48** `ai_query()`: request body field renamed `query` → `question` to match platform `AiQueryDto` (affects both sync and async clients)
+- **#49** `run_backtest()`: request body fields renamed `startDate` → `dateRangeStart` and `endDate` → `dateRangeEnd`; removed non-whitelisted `initialBalance` field; added `quickMode`, `strategyBlocks`, `marketBindings` optional parameters (affects both sync and async clients)
+- **#42** `WebhookEvent` class: event value strings converted from `SCREAMING_SNAKE_CASE` to `dot.notation` (e.g. `ORDER_FILLED = "order.filled"`) to match platform webhook registration contract
+- **#39** `create_strategy_from_description()`: request body field renamed `description` → `query` to match platform endpoint (affects both sync and async clients)
+- **#40** `start_strategy()`: mode value is now uppercased before sending (`mode.upper()`) so that default `"paper"` and user-supplied `"live"` are sent as `"PAPER"` / `"LIVE"` as required by the platform enum (affects both sync and async clients)
+
 ## [1.5.2] — 2026-04-03
 
 ### Fixed
