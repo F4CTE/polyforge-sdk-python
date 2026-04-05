@@ -37,11 +37,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
-      # Rust toolchain lives in the user profile — add to PATH for the
-      # runner service account which inherits a minimal environment.
+      # Rust toolchain installed under the interactive user profile.
+      # The runner service runs as SYSTEM, so we hardcode the path.
       - name: Add Rust to PATH
-        shell: bash
-        run: echo "$USERPROFILE/.cargo/bin" >> "$GITHUB_PATH"
+        shell: pwsh
+        run: echo "C:\Users\User\.cargo\bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -94,8 +94,8 @@ jobs:
           cache: pnpm
 
       - name: Add Rust to PATH
-        shell: bash
-        run: echo "$USERPROFILE/.cargo/bin" >> "$GITHUB_PATH"
+        shell: pwsh
+        run: echo "C:\Users\User\.cargo\bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
