@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
 } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import {
   JwtAuthGuard,
@@ -25,6 +26,7 @@ export class LpController {
 
   @Post("provide")
   @HttpCode(HttpStatus.CREATED)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("TRADE")
   provideLiquidity(@CurrentUser() user: any, @Body() dto: ProvideLiquidityDto) {

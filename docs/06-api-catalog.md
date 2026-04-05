@@ -2517,6 +2517,7 @@ Get the aggregated sentiment score for a specific market, computed from the last
 Place two-sided quotes on a market (BUY at mid minus half-spread, SELL at mid plus half-spread). Creates two pending Order records and publishes intents to the Redis order stream.
 
 **Auth:** User JWT or API Key (TRADE scope)
+**Rate limit:** 10 req/min per account (each call creates 2 order records)
 
 **Request:**
 ```json
