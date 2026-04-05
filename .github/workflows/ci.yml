@@ -37,23 +37,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
-      # The runner service runs as SYSTEM. WSL bash is broken for SYSTEM,
-      # so we use pwsh to configure Rust. Downloads rustup if missing,
-      # sets default toolchain, and adds cargo to PATH.
-      - name: Set up Rust toolchain
-        shell: pwsh
-        run: |
-          $cargoDir = "$env:USERPROFILE\.cargo"
-          if (-not (Test-Path "$cargoDir\bin\rustup.exe")) {
-            Write-Host "Installing Rust via rustup-init..."
-            $url = "https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe"
-            Invoke-WebRequest -Uri $url -OutFile "$env:TEMP\rustup-init.exe" -UseBasicParsing
-            & "$env:TEMP\rustup-init.exe" -y --default-toolchain stable --profile minimal 2>&1
-          } else {
-            Write-Host "Rust already installed, ensuring default toolchain..."
-            & "$cargoDir\bin\rustup.exe" default stable 2>&1
-          }
-          echo "$cargoDir\bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+      # Rust/WASM packages have pre-built artifacts checked in.
+      # Build scripts skip gracefully when cargo/wasm-pack aren't available.
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
