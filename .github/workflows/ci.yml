@@ -22,7 +22,7 @@ jobs:
   # ── 1. Lint ──────────────────────────────────────────────────────────────────
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, polyforge]
     steps:
       - uses: actions/checkout@v4
 
@@ -47,7 +47,7 @@ jobs:
   # ── 2. Typecheck ─────────────────────────────────────────────────────────────
   typecheck:
     name: Typecheck
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, polyforge]
     steps:
       - uses: actions/checkout@v4
 
@@ -75,7 +75,7 @@ jobs:
   # ── 3. Test ──────────────────────────────────────────────────────────────────
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, polyforge]
     steps:
       - uses: actions/checkout@v4
 
@@ -114,7 +114,7 @@ jobs:
   # ── 4. Build ─────────────────────────────────────────────────────────────────
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, polyforge]
     needs: [lint, typecheck, test]
     steps:
       - uses: actions/checkout@v4
@@ -153,7 +153,7 @@ jobs:
   # Runs after build to catch integration issues across services.
   e2e:
     name: E2E
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, polyforge]
     needs: [build]
     env:
       DIRECT_DATABASE_URL: 'postgresql://poly:devpass@localhost:5432/polyforge'
@@ -161,14 +161,6 @@ jobs:
       NODE_ENV: development
     steps:
       - uses: actions/checkout@v4
-
-      # ── Free disk space for Docker builds ────────────────────────────────
-      # GitHub runners have ~14GB free; building 18 Docker images needs more.
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
-          sudo docker image prune -af
-          df -h /
 
       - uses: pnpm/action-setup@v4
 
@@ -260,7 +252,7 @@ jobs:
   # ── 6. Dependency Audit ──────────────────────────────────────────────────────
   audit:
     name: Dependency Audit
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, polyforge]
     needs: [build]
     continue-on-error: true  # Non-blocking warning
     steps:
@@ -279,6 +271,10 @@ jobs:
   # Triggers on manual dispatch only (workflow_dispatch).
   # Builds all Docker images (including Rust NAPI/WASM stages), pushes to ECR,
   # runs migrations, and deploys to EC2 via SSH.
+  #
+  # NOTE: Deploy stays on ubuntu-latest (GitHub-hosted) because it needs
+  # AWS credentials and SSH keys stored in GitHub Secrets. The self-hosted
+  # runner handles the heavy CI jobs; deploy is lightweight and infrequent.
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
