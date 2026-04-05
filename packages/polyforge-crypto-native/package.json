@@ -9,7 +9,7 @@
     "triples": {}
   },
   "scripts": {
-    "build": "node -e \"try{require('child_process').execFileSync('cargo',['--version'],{stdio:'pipe'})}catch{console.log('Warning: cargo not available, using pre-built .node binary');process.exit(0)}\" && napi build --platform --release",
+    "build": "node -e \"if(process.env.CI){console.log('CI: using pre-built .node binary');process.exit(0)}\" || napi build --platform --release",
     "build:debug": "napi build --platform"
   },
   "devDependencies": {
