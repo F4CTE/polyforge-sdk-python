@@ -76,6 +76,13 @@ describe("AdminAuthService", () => {
       set: vi.fn().mockResolvedValue("OK"),
       del: vi.fn().mockResolvedValue(1),
       get: vi.fn().mockResolvedValue(null),
+      getClient: vi.fn().mockReturnValue({
+        get: vi.fn().mockResolvedValue(null),
+        set: vi.fn().mockResolvedValue("OK"),
+        del: vi.fn().mockResolvedValue(1),
+        incr: vi.fn().mockResolvedValue(1),
+        expire: vi.fn().mockResolvedValue(1),
+      }),
     };
     jwtService = {
       sign: vi.fn().mockReturnValue("signed-admin-jwt"),
