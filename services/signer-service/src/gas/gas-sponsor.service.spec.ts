@@ -250,7 +250,7 @@ describe("GasSponsorService", () => {
     it("returns placeholder address in dev mode", () => {
       const address = service.getSponsorAddress();
 
-      expect(address).toBe("0x00000000000000000000000000000000GasSponsor");
+      expect(address).toBe("0x0000000000000000000000000000000000000000");
     });
 
     it("returns null when sponsor is inactive", () => {

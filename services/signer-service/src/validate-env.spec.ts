@@ -35,7 +35,7 @@ describe("validateEnv (N-L1)", () => {
     });
 
     expect(() => validateEnv(env)).toThrow(
-      "MASTER_ENCRYPTION_KEY must not be all-zeros in production",
+      "MASTER_ENCRYPTION_KEY must not be all-zeros in non-development environments",
     );
   });
 
@@ -48,12 +48,15 @@ describe("validateEnv (N-L1)", () => {
     expect(() => validateEnv(env)).not.toThrow();
   });
 
-  it("does NOT throw when NODE_ENV is undefined and key is all-zeros", () => {
+  it("throws when NODE_ENV is undefined and key is all-zeros", () => {
+    // Undefined NODE_ENV is treated as non-development, so all-zeros is rejected
     const env = validEnv({
       MASTER_ENCRYPTION_KEY: "0".repeat(64),
     });
 
-    expect(() => validateEnv(env)).not.toThrow();
+    expect(() => validateEnv(env)).toThrow(
+      "MASTER_ENCRYPTION_KEY must not be all-zeros in non-development environments",
+    );
   });
 
   it("allows a valid non-zero key in production", () => {
