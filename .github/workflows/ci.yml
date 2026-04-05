@@ -38,10 +38,14 @@ jobs:
           cache: pnpm
 
       # Rust toolchain installed under the interactive user profile.
-      # The runner service runs as SYSTEM, so we hardcode the path.
+      # The runner service runs as SYSTEM, so we set RUSTUP_HOME/CARGO_HOME
+      # to point at the user install, and add cargo to PATH.
       - name: Add Rust to PATH
         shell: pwsh
-        run: echo "C:\Users\User\.cargo\bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+        run: |
+          echo "C:\Users\User\.cargo\bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+          echo "RUSTUP_HOME=C:\Users\User\.rustup" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
+          echo "CARGO_HOME=C:\Users\User\.cargo" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
