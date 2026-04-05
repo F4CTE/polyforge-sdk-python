@@ -1850,7 +1850,7 @@ export function Component() {
               ) : (
                 <>
                   <div className="overflow-x-auto rounded-pf border border-pf-border">
-                    <table className="w-full text-xs">
+                    <table className="w-full text-xs" aria-label="Strategy trade history">
                       <thead>
                         <tr className="border-b border-pf-border bg-pf-surface">
                           <th className="px-3 py-3 text-left font-medium text-pf-text-muted">Date</th>

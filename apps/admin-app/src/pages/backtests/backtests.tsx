@@ -354,7 +354,7 @@ export function Component() {
       {/* Table */}
       <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label="Backtest results">
             <caption className="sr-only">Backtest runs</caption>
             <thead>
               <tr className="border-b border-pf-border">

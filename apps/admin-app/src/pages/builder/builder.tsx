@@ -83,7 +83,7 @@ export function Component() {
           <p className="text-sm text-pf-text-tertiary">No weekly data</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm" aria-label="Strategy builder blocks">
               <caption className="sr-only">Weekly builder history</caption>
               <thead>
                 <tr className="border-b border-pf-border">

@@ -2216,7 +2216,7 @@ export function Component() {
                             <div className="py-8 text-center text-xs text-pf-text-muted">No deliveries yet</div>
                           ) : (
                             <div className="overflow-x-auto">
-                              <table className="w-full text-xs">
+                              <table className="w-full text-xs" aria-label="Webhook deliveries">
                                 <thead>
                                   <tr className="text-pf-text-muted border-b border-pf-border-subtle">
                                     <th className="text-left px-4 py-2 font-medium">Time</th>

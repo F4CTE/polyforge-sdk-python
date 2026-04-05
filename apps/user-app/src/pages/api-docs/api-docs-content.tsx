@@ -280,7 +280,7 @@ export function renderContent({
       </Sub>
       <Sub title="Inbound event types">
         <div className="border border-pf-border rounded-pf-lg overflow-hidden">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label="Inbound event types">
             <thead>
               <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border">
                 <th scope="col" className="px-4 py-3 font-medium">Event</th>
@@ -374,7 +374,7 @@ export function renderContent({
         subtitle="120 requests per minute per API key. Exceeding the limit returns 429 with a Retry-After header."
       />
       <div className="border border-pf-border rounded-pf-lg overflow-hidden">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm" aria-label="Rate limit headers">
           <thead>
             <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border">
               <th scope="col" className="px-4 py-3 font-medium">Header</th>
@@ -415,7 +415,7 @@ export function renderContent({
       </Sub>
       <Sub title="HTTP status codes">
         <div className="border border-pf-border rounded-pf-lg overflow-hidden">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label="HTTP status codes">
             <thead>
               <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider border-b border-pf-border">
                 <th scope="col" className="px-4 py-3 font-medium w-16">Code</th>

@@ -192,7 +192,7 @@ export function Component() {
                 <h3 className="text-sm font-semibold text-pf-text">Cache Patterns</h3>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm" aria-label="Cache entries">
                   <caption className="sr-only">Cache patterns</caption>
                   <thead>
                     <tr className="border-b border-pf-border">

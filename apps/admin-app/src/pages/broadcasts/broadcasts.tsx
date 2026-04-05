@@ -426,7 +426,7 @@ export function Component() {
           <EmptyState />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm" aria-label="Broadcast messages">
               <caption className="sr-only">Sent broadcasts</caption>
               <thead>
                 <tr className="border-b border-pf-border">

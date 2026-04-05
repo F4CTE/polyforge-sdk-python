@@ -603,7 +603,7 @@ export function Component() {
                   </div>
                 )}
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
+                  <table className="w-full text-xs" aria-label="Backtest results">
                     <thead>
                       <tr className="border-b border-pf-border">
                         <th className="text-left py-2 pr-4 font-medium text-pf-text-muted">Metric</th>

@@ -1330,7 +1330,7 @@ export function Component() {
               return (
                 <div className="mb-3">
                   <div className="overflow-x-auto rounded-pf border border-pf-border-subtle">
-                    <table className="w-full text-xs">
+                    <table className="w-full text-xs" aria-label="Capital gains and losses">
                       <thead>
                         <tr className="border-b border-pf-border-subtle bg-pf-overlay">
                           <th className="px-3 py-2 text-left text-pf-text-secondary font-medium">Close Date</th>
@@ -2373,7 +2373,7 @@ export function Component() {
               <section className="mt-6">
                 <h2 className="text-base font-semibold text-pf-text mb-3">Resolved Positions</h2>
                 <div className="rounded-pf border border-pf-border overflow-hidden">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm" aria-label="Resolved positions">
                     <thead>
                       <tr className="border-b border-pf-border bg-pf-surface-elevated">
                         <th className="text-left px-4 py-3 text-xs font-medium text-pf-text-muted">Market</th>
