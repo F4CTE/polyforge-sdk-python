@@ -28,9 +28,11 @@ jobs:
     name: Check
     runs-on: [self-hosted, polyforge]
     env:
-      # Each runner gets its own pnpm store based on workspace dir to prevent
-      # concurrent corruption when 4 runners share the SYSTEM profile.
-      PNPM_STORE_DIR: .pnpm-store
+      # Shared content-addressable pnpm store across all 4 runners.
+      # pnpm's CAS design is safe for concurrent reads; only writes are
+      # atomic (hardlink from store to node_modules). Avoids re-downloading
+      # 890+ packages on every run.
+      PNPM_STORE_DIR: C:\pnpm-store
     steps:
       - uses: actions/checkout@v4
 
@@ -44,7 +46,7 @@ jobs:
       # Build scripts skip gracefully when cargo/wasm-pack aren't available.
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --store-dir "$PWD/.pnpm-store" --store-dir "$PWD/.pnpm-store"
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma clients
         run: |
@@ -84,7 +86,7 @@ jobs:
     runs-on: [self-hosted, polyforge]
     needs: [check]
     env:
-      PNPM_STORE_DIR: .pnpm-store
+      PNPM_STORE_DIR: C:\pnpm-store
     steps:
       - uses: actions/checkout@v4
 
@@ -95,7 +97,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --store-dir "$PWD/.pnpm-store"
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma clients
         run: |
@@ -137,7 +139,7 @@ jobs:
     runs-on: [self-hosted, polyforge]
     needs: [build]
     env:
-      PNPM_STORE_DIR: .pnpm-store
+      PNPM_STORE_DIR: C:\pnpm-store
       DIRECT_DATABASE_URL: 'postgresql://poly:devpass@localhost:5432/polyforge'
       ADMIN_DIRECT_DATABASE_URL: 'postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin'
       NODE_ENV: development
@@ -151,7 +153,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --store-dir "$PWD/.pnpm-store"
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma clients
         run: |
