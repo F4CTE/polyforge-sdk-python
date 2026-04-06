@@ -142,6 +142,9 @@ jobs:
       BOT_JWT_SECRET: 'ci-bot-jwt-secret-not-for-production'
       MASTER_ENCRYPTION_KEY: 'aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233'
       TOTP_ENCRYPTION_KEY: 'ff6600112233aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55'
+      # Docker Desktop uses a non-default named pipe. The SYSTEM service
+      # account needs this to find the Docker daemon.
+      DOCKER_HOST: 'npipe:////./pipe/dockerDesktopLinuxEngine'
     steps:
       - uses: actions/checkout@v4
 
