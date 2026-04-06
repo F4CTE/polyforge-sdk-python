@@ -27,6 +27,9 @@ jobs:
   check:
     name: Check
     runs-on: [self-hosted, polyforge]
+    defaults:
+      run:
+        shell: pwsh
     env:
       # Each runner gets its own pnpm store based on workspace dir to prevent
       # concurrent corruption when 4 runners share the SYSTEM profile.
@@ -83,6 +86,9 @@ jobs:
     name: Build
     runs-on: [self-hosted, polyforge]
     needs: [check]
+    defaults:
+      run:
+        shell: pwsh
     env:
       PNPM_STORE_DIR: .pnpm-store
     steps:
@@ -136,6 +142,9 @@ jobs:
     name: E2E
     runs-on: [self-hosted, polyforge]
     needs: [build]
+    defaults:
+      run:
+        shell: pwsh
     env:
       PNPM_STORE_DIR: .pnpm-store
       DIRECT_DATABASE_URL: 'postgresql://poly:devpass@localhost:5432/polyforge'
@@ -166,28 +175,36 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and start Docker Compose
-        run: DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f docker-compose.infra.yml up -d --build
+        run: |
+          $env:DOCKER_BUILDKIT = "1"
+          $env:COMPOSE_DOCKER_CLI_BUILD = "1"
+          docker compose -f docker-compose.infra.yml up -d --build
         timeout-minutes: 45
 
       - name: Wait for services to be healthy
         run: |
-          echo "Waiting for PostgreSQL..."
-          until docker exec polyforge-dev-postgres-1 pg_isready -U poly -d polyforge; do sleep 2; done
-          echo "Waiting for Redis..."
-          until docker exec polyforge-dev-redis-1 redis-cli ping | grep -q PONG; do sleep 2; done
-          echo "Waiting for auth-service..."
-          timeout 60 bash -c 'until curl -sf http://localhost:3001/health; do sleep 2; done'
-          echo "Waiting for api-service..."
-          timeout 60 bash -c 'until curl -sf http://localhost:3002/health; do sleep 2; done'
-          echo "Waiting for gateway..."
-          timeout 60 bash -c 'until curl -sf http://localhost/login; do sleep 2; done'
-          echo "All services healthy"
+          function Wait-For($name, $test, $timeout = 60) {
+            Write-Host "Waiting for $name..."
+            $sw = [System.Diagnostics.Stopwatch]::StartNew()
+            while ($sw.Elapsed.TotalSeconds -lt $timeout) {
+              try { $r = Invoke-Expression $test 2>$null; if ($LASTEXITCODE -eq 0) { return } } catch {}
+              Start-Sleep 2
+            }
+            throw "$name did not become healthy within ${timeout}s"
+          }
+          Wait-For "PostgreSQL" "docker exec polyforge-dev-postgres-1 pg_isready -U poly -d polyforge"
+          Wait-For "Redis" "docker exec polyforge-dev-redis-1 redis-cli ping"
+          Wait-For "auth-service" "curl -sf http://localhost:3001/health"
+          Wait-For "api-service" "curl -sf http://localhost:3002/health"
+          Wait-For "gateway" "curl -sf http://localhost/login"
+          Write-Host "All services healthy"
 
       # ── Seed test data ───────────────────────────────────────────────────
       - name: Run migrations and seed
         run: |
           npx ts-node prisma/seed.ts
-          ADMIN_DIRECT_DATABASE_URL="postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin" npx ts-node prisma/seed.admin.ts
+          $env:ADMIN_DIRECT_DATABASE_URL = "postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin"
+          npx ts-node prisma/seed.admin.ts
 
       - name: Clear invite-only flag
         run: docker exec polyforge-dev-redis-1 redis-cli DEL config:invite_only
@@ -198,9 +215,10 @@ jobs:
 
       # ── Run E2E tests ────────────────────────────────────────────────────
       - name: Run E2E tests
-        run: BASE_URL=http://localhost pnpm --filter @polyforge/e2e test
+        run: pnpm --filter @polyforge/e2e test
         env:
           CI: true
+          BASE_URL: http://localhost
 
       # ── Artifacts on failure ─────────────────────────────────────────────
       - name: Upload Playwright report
@@ -214,15 +232,15 @@ jobs:
       - name: Upload service logs on failure
         if: failure()
         run: |
-          mkdir -p /tmp/docker-logs
-          docker compose -f docker-compose.infra.yml logs --no-color > /tmp/docker-logs/all-services.log 2>&1
+          New-Item -ItemType Directory -Path docker-logs -Force | Out-Null
+          docker compose -f docker-compose.infra.yml logs --no-color 2>&1 | Out-File docker-logs/all-services.log
 
       - name: Upload Docker logs artifact
         uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: docker-logs
-          path: /tmp/docker-logs/
+          path: docker-logs/
           retention-days: 7
 
       # ── Cleanup ──────────────────────────────────────────────────────────
