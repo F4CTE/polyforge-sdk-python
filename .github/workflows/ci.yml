@@ -27,9 +27,6 @@ jobs:
   check:
     name: Check
     runs-on: [self-hosted, polyforge]
-    defaults:
-      run:
-        shell: pwsh
     env:
       # Each runner gets its own pnpm store based on workspace dir to prevent
       # concurrent corruption when 4 runners share the SYSTEM profile.
@@ -86,9 +83,6 @@ jobs:
     name: Build
     runs-on: [self-hosted, polyforge]
     needs: [check]
-    defaults:
-      run:
-        shell: pwsh
     env:
       PNPM_STORE_DIR: .pnpm-store
     steps:
@@ -142,9 +136,6 @@ jobs:
     name: E2E
     runs-on: [self-hosted, polyforge]
     needs: [build]
-    defaults:
-      run:
-        shell: pwsh
     env:
       PNPM_STORE_DIR: .pnpm-store
       DIRECT_DATABASE_URL: 'postgresql://poly:devpass@localhost:5432/polyforge'
@@ -175,36 +166,39 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and start Docker Compose
-        run: |
-          $env:DOCKER_BUILDKIT = "1"
-          $env:COMPOSE_DOCKER_CLI_BUILD = "1"
-          docker compose -f docker-compose.infra.yml up -d --build
+        run: docker compose -f docker-compose.infra.yml up -d --build
+        env:
+          DOCKER_BUILDKIT: '1'
+          COMPOSE_DOCKER_CLI_BUILD: '1'
         timeout-minutes: 45
 
       - name: Wait for services to be healthy
+        shell: node {0}
         run: |
-          function Wait-For($name, $test, $timeout = 60) {
-            Write-Host "Waiting for $name..."
-            $sw = [System.Diagnostics.Stopwatch]::StartNew()
-            while ($sw.Elapsed.TotalSeconds -lt $timeout) {
-              try { $r = Invoke-Expression $test 2>$null; if ($LASTEXITCODE -eq 0) { return } } catch {}
-              Start-Sleep 2
+          const { execSync } = require('child_process');
+          function waitFor(name, cmd, timeout = 60000) {
+            const start = Date.now();
+            process.stdout.write(`Waiting for ${name}...`);
+            while (Date.now() - start < timeout) {
+              try { execSync(cmd, { stdio: 'pipe' }); console.log(' ready'); return; } catch {}
+              execSync(process.platform === 'win32' ? 'ping -n 3 127.0.0.1 >nul' : 'sleep 2', { stdio: 'pipe' });
             }
-            throw "$name did not become healthy within ${timeout}s"
+            throw new Error(`${name} did not become healthy within ${timeout/1000}s`);
           }
-          Wait-For "PostgreSQL" "docker exec polyforge-dev-postgres-1 pg_isready -U poly -d polyforge"
-          Wait-For "Redis" "docker exec polyforge-dev-redis-1 redis-cli ping"
-          Wait-For "auth-service" "curl -sf http://localhost:3001/health"
-          Wait-For "api-service" "curl -sf http://localhost:3002/health"
-          Wait-For "gateway" "curl -sf http://localhost/login"
-          Write-Host "All services healthy"
+          waitFor('PostgreSQL', 'docker exec polyforge-dev-postgres-1 pg_isready -U poly -d polyforge');
+          waitFor('Redis', 'docker exec polyforge-dev-redis-1 redis-cli ping');
+          waitFor('auth-service', 'curl -sf http://localhost:3001/health');
+          waitFor('api-service', 'curl -sf http://localhost:3002/health');
+          waitFor('gateway', 'curl -sf http://localhost/login');
+          console.log('All services healthy');
 
       # ── Seed test data ───────────────────────────────────────────────────
       - name: Run migrations and seed
         run: |
           npx ts-node prisma/seed.ts
-          $env:ADMIN_DIRECT_DATABASE_URL = "postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin"
           npx ts-node prisma/seed.admin.ts
+        env:
+          ADMIN_DIRECT_DATABASE_URL: 'postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin'
 
       - name: Clear invite-only flag
         run: docker exec polyforge-dev-redis-1 redis-cli DEL config:invite_only
@@ -231,9 +225,12 @@ jobs:
 
       - name: Upload service logs on failure
         if: failure()
+        shell: node {0}
         run: |
-          New-Item -ItemType Directory -Path docker-logs -Force | Out-Null
-          docker compose -f docker-compose.infra.yml logs --no-color 2>&1 | Out-File docker-logs/all-services.log
+          const { execSync, mkdirSync } = { ...require('child_process'), ...require('fs') };
+          require('fs').mkdirSync('docker-logs', { recursive: true });
+          const logs = execSync('docker compose -f docker-compose.infra.yml logs --no-color', { encoding: 'utf8', maxBuffer: 50*1024*1024 });
+          require('fs').writeFileSync('docker-logs/all-services.log', logs);
 
       - name: Upload Docker logs artifact
         uses: actions/upload-artifact@v4
