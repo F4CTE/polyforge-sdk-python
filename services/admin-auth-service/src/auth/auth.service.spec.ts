@@ -359,7 +359,12 @@ describe("AdminAuthService", () => {
       // Mock the private decrypt method to return a valid secret
       vi.spyOn(service as any, "decrypt").mockReturnValue("JBSWY3DPEHPK3PXP");
 
-      await service.disableTotp(admin.id, "test-session-id", "Passw0rd!", "123456");
+      await service.disableTotp(
+        admin.id,
+        "test-session-id",
+        "Passw0rd!",
+        "123456",
+      );
 
       expect(adminDb.admin.update).toHaveBeenCalledWith({
         where: { id: admin.id },
@@ -375,7 +380,12 @@ describe("AdminAuthService", () => {
 
       redis.get.mockResolvedValue("1"); // session is live
       await expect(
-        service.disableTotp("nonexistent", "test-session-id", "password", "000000"),
+        service.disableTotp(
+          "nonexistent",
+          "test-session-id",
+          "password",
+          "000000",
+        ),
       ).rejects.toMatchObject({
         response: { code: "ADMIN_NOT_FOUND" },
         status: HttpStatus.NOT_FOUND,

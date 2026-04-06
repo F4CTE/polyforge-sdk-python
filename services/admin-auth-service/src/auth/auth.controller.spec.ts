@@ -27,7 +27,9 @@ describe("AdminAuthController", () => {
         .mockResolvedValue({ secret: "s", uri: "u", qrCode: "q" }),
       confirmTotp: vi.fn().mockResolvedValue({ enabled: true }),
       disableTotp: vi.fn().mockResolvedValue(undefined),
-      verifyToken: vi.fn().mockReturnValue({ sub: "admin-1", sessionId: "session-1" }),
+      verifyToken: vi
+        .fn()
+        .mockReturnValue({ sub: "admin-1", sessionId: "session-1" }),
     } as unknown as AuthService;
     controller = new AuthController(authService);
   });

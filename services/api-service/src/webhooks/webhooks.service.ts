@@ -23,11 +23,7 @@ const MAX_WEBHOOKS_PER_USER = 10;
  */
 function isPrivateHost(hostname: string): boolean {
   const h = hostname.toLowerCase();
-  if (
-    h === "localhost" ||
-    h === "0.0.0.0" ||
-    h === "metadata.google.internal"
-  )
+  if (h === "localhost" || h === "0.0.0.0" || h === "metadata.google.internal")
     return true;
   if (h === "[::1]" || h === "::1" || h.startsWith("fe80:")) return true;
   if (h.endsWith(".internal") || h.endsWith(".local")) return true;
