@@ -27,6 +27,10 @@ jobs:
   check:
     name: Check
     runs-on: [self-hosted, polyforge]
+    env:
+      # Each runner gets its own pnpm store based on workspace dir to prevent
+      # concurrent corruption when 4 runners share the SYSTEM profile.
+      PNPM_STORE_DIR: .pnpm-store
     steps:
       - uses: actions/checkout@v4
 
@@ -80,6 +84,8 @@ jobs:
     name: Build
     runs-on: [self-hosted, polyforge]
     needs: [check]
+    env:
+      PNPM_STORE_DIR: .pnpm-store
     steps:
       - uses: actions/checkout@v4
 
@@ -89,10 +95,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-
-      - name: Add Rust to PATH
-        shell: pwsh
-        run: echo "C:\Users\User\.cargo\bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -137,6 +139,7 @@ jobs:
     runs-on: [self-hosted, polyforge]
     needs: [build]
     env:
+      PNPM_STORE_DIR: .pnpm-store
       DIRECT_DATABASE_URL: 'postgresql://poly:devpass@localhost:5432/polyforge'
       ADMIN_DIRECT_DATABASE_URL: 'postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin'
       NODE_ENV: development
