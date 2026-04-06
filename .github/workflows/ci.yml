@@ -27,24 +27,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # standalone: true downloads pnpm as a single binary — no npm install,
-      # no SYSTEM profile contamination, no .bin shim issues on Windows.
-      # run_install: false prevents the action from auto-running pnpm install.
-      - uses: pnpm/action-setup@v4
-        with:
-          standalone: true
-          run_install: false
-        env:
-          # Per-workspace PNPM_HOME prevents the action from touching the
-          # shared SYSTEM profile (which causes EBUSY when 4 runners collide).
-          PNPM_HOME: ${{ github.workspace }}/.pnpm-home
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      # Install pnpm via corepack (ships with Node 24) to avoid
+      # pnpm/action-setup self-installer conflicts with stale global pnpm.
+      - name: Enable corepack and activate pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.0.0 --activate
+          pnpm --version
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --store-dir C:\pnpm-store
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma clients
         run: |
@@ -84,16 +80,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          standalone: true
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Enable corepack and activate pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.0.0 --activate
+          pnpm --version
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --store-dir C:\pnpm-store
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma clients
         run: |
@@ -139,16 +137,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          standalone: true
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Enable corepack and activate pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.0.0 --activate
+          pnpm --version
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --store-dir C:\pnpm-store
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma clients
         run: |

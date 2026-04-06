@@ -260,7 +260,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                       ? 'text-pf-text shadow-pf-xs'
                       : 'text-pf-text-muted hover:text-pf-text-secondary bg-transparent hover:bg-pf-overlay'
                   }`}
-                  style={isActive ? { backgroundColor: meta.color + 'CC' } : undefined}
+                  style={isActive ? { backgroundColor: `color-mix(in srgb, ${meta.color} 80%, transparent)` } : undefined}
                 >
                   {icon}
                   {meta.label}
@@ -268,7 +268,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                     <span
                       className="ml-1 px-1 py-px rounded-pf-full text-pf-micro font-semibold leading-none"
                       style={{
-                        backgroundColor: isActive ? 'color-mix(in srgb, var(--color-pf-text) 25%, transparent)' : meta.color + '30',
+                        backgroundColor: isActive ? 'color-mix(in srgb, var(--color-pf-text) 25%, transparent)' : `color-mix(in srgb, ${meta.color} 19%, transparent)`,
                         color: isActive ? 'white' : meta.color,
                       }}
                     >

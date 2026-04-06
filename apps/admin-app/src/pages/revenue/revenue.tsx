@@ -888,9 +888,9 @@ export function Component() {
                             <span
                               className="inline-flex items-center gap-2 px-2 py-1 rounded-pf-full text-xs font-medium"
                               style={{
-                                backgroundColor: `${dotColor}18`,
+                                backgroundColor: `color-mix(in srgb, ${dotColor} 9%, transparent)`,
                                 color: dotColor,
-                                border: `1px solid ${dotColor}33`,
+                                border: `1px solid color-mix(in srgb, ${dotColor} 20%, transparent)`,
                               }}
                             >
                               <span
