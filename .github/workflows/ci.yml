@@ -21,31 +21,21 @@ env:
 
 jobs:
   # ── 1. Check (lint + typecheck + test in one job) ────────────────────────
-  # On a single self-hosted runner, 3 parallel jobs = 3× setup overhead.
-  # Merging them into one job saves ~4 min of repeated pnpm install + prisma
-  # generate + package builds. Lint/typecheck/test still fail independently.
   check:
     name: Check
     runs-on: [self-hosted, polyforge]
-    env:
-      # Shared content-addressable pnpm store across all 4 runners.
-      # pnpm's CAS design is safe for concurrent reads; only writes are
-      # atomic (hardlink from store to node_modules). Avoids re-downloading
-      # 890+ packages on every run.
-      PNPM_STORE_DIR: C:\pnpm-store
     steps:
       - uses: actions/checkout@v4
 
+      # standalone: true downloads pnpm as a single binary — no npm install,
+      # no SYSTEM profile contamination, no .bin shim issues on Windows.
       - uses: pnpm/action-setup@v4
         with:
-          dest: C:\pnpm
+          standalone: true
 
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-
-      # Rust/WASM packages have pre-built artifacts checked in.
-      # Build scripts skip gracefully when cargo/wasm-pack aren't available.
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --store-dir C:\pnpm-store
@@ -58,8 +48,6 @@ jobs:
       - name: Build packages
         run: pnpm turbo build --filter=./packages/*
 
-      # Run all three checks — each step fails independently so you see
-      # exactly which check broke, but we only pay the setup cost once.
       - name: Lint
         run: pnpm lint
 
@@ -87,14 +75,12 @@ jobs:
     name: Build
     runs-on: [self-hosted, polyforge]
     needs: [check]
-    env:
-      PNPM_STORE_DIR: C:\pnpm-store
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
         with:
-          dest: C:\pnpm
+          standalone: true
 
       - uses: actions/setup-node@v4
         with:
@@ -136,14 +122,11 @@ jobs:
         run: pnpm audit --audit-level=high || echo "::warning::Dependency audit found issues"
 
   # ── 3. E2E ──────────────────────────────────────────────────────────────
-  # Full-stack end-to-end tests using Playwright against Docker Compose.
-  # Runs after build to catch integration issues across services.
   e2e:
     name: E2E
     runs-on: [self-hosted, polyforge]
     needs: [build]
     env:
-      PNPM_STORE_DIR: C:\pnpm-store
       DIRECT_DATABASE_URL: 'postgresql://poly:devpass@localhost:5432/polyforge'
       ADMIN_DIRECT_DATABASE_URL: 'postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin'
       NODE_ENV: development
@@ -152,7 +135,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          dest: C:\pnpm
+          standalone: true
 
       - uses: actions/setup-node@v4
         with:
@@ -235,9 +218,8 @@ jobs:
         if: failure()
         shell: node {0}
         run: |
-          const { execSync, mkdirSync } = { ...require('child_process'), ...require('fs') };
           require('fs').mkdirSync('docker-logs', { recursive: true });
-          const logs = execSync('docker compose -f docker-compose.infra.yml logs --no-color', { encoding: 'utf8', maxBuffer: 50*1024*1024 });
+          const logs = require('child_process').execSync('docker compose -f docker-compose.infra.yml logs --no-color', { encoding: 'utf8', maxBuffer: 50*1024*1024 });
           require('fs').writeFileSync('docker-logs/all-services.log', logs);
 
       - name: Upload Docker logs artifact
@@ -254,13 +236,6 @@ jobs:
         run: docker compose -f docker-compose.infra.yml down -v
 
   # ── 4. Deploy to AWS ────────────────────────────────────────────────────
-  # Triggers on manual dispatch only (workflow_dispatch).
-  # Builds all Docker images (including Rust NAPI/WASM stages), pushes to ECR,
-  # runs migrations, and deploys to EC2 via SSH.
-  #
-  # NOTE: Deploy stays on ubuntu-latest (GitHub-hosted) because it needs
-  # AWS credentials and SSH keys stored in GitHub Secrets. The self-hosted
-  # runner handles the heavy CI jobs; deploy is lightweight and infrequent.
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
@@ -283,10 +258,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # NOTE: signer-service and strategy-engine Dockerfiles include Rust build
-      # stages (rust:1-slim). Docker handles Rust compilation internally.
-      # signer-service uses node:24-slim (Debian) runtime for glibc/NAPI compat.
-      # Build time: ~5min each for Rust services, ~2min for others.
       - name: Build and push all service images
         env:
           ECR_BASE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
@@ -326,10 +297,8 @@ jobs:
             cd /opt/polyforge
             git pull origin main
 
-            # Refresh secrets from AWS Secrets Manager
             bash scripts/fetch-secrets.sh
 
-            # Pull and restart services
             export ECR_REGISTRY=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
             export IMAGE_TAG=${{ github.sha }}
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
@@ -338,11 +307,9 @@ jobs:
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --remove-orphans
 
-            # Wait for services and verify
             sleep 20
             curl -f https://polyforge.app/api/v1/health || exit 1
 
-            # Verify Rust modules are active
             docker logs polyforge-prod-signer-service-1 2>&1 | grep -q "Rust NAPI-RS encryption active" || \
               echo "WARNING: Rust NAPI not confirmed in signer-service logs"
 
