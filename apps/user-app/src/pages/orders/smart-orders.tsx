@@ -5,7 +5,7 @@ import {
   Layers, Loader2, RefreshCw, X, ChevronDown, ChevronRight,
   Clock, CheckCircle, XCircle, AlertTriangle, Plus,
 } from 'lucide-react';
-import { Button } from '@polyforge/ui';
+import { Button, StatusBadge } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -54,20 +54,17 @@ const TYPE_DESC: Record<SmartOrderType, string> = {
   OCO: 'One-cancels-other — two legs, first fill cancels the other',
 };
 
-function StatusBadge({ status }: { status: SmartOrderStatus }) {
-  const map: Record<SmartOrderStatus, { cls: string; icon: React.ReactNode; label: string }> = {
-    PENDING: { cls: 'text-pf-text-muted bg-pf-surface border-pf-border', icon: <Clock className="size-3" />, label: 'Pending' },
-    ACTIVE: { cls: 'text-pf-cyan-400 bg-pf-cyan-500/10 border-pf-cyan-500/20', icon: <Loader2 className="size-3 animate-spin" />, label: 'Active' },
-    COMPLETED: { cls: 'text-pf-success bg-pf-success/10 border-pf-success/20', icon: <CheckCircle className="size-3" />, label: 'Completed' },
-    CANCELLED: { cls: 'text-pf-text-muted bg-pf-surface border-pf-border', icon: <XCircle className="size-3" />, label: 'Cancelled' },
-    FAILED: { cls: 'text-pf-danger bg-pf-danger/10 border-pf-danger/20', icon: <AlertTriangle className="size-3" />, label: 'Failed' },
-  };
-  const { cls, icon, label } = map[status];
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-xs font-medium border ${cls}`}>
-      {icon}{label}
-    </span>
-  );
+const SMART_ORDER_STATUS: Record<SmartOrderStatus, { variant: 'secondary' | 'default' | 'success' | 'danger'; icon: React.ReactNode; label: string }> = {
+  PENDING: { variant: 'secondary', icon: <Clock className="size-3" />, label: 'Pending' },
+  ACTIVE: { variant: 'default', icon: <Loader2 className="size-3 animate-spin" />, label: 'Active' },
+  COMPLETED: { variant: 'success', icon: <CheckCircle className="size-3" />, label: 'Completed' },
+  CANCELLED: { variant: 'secondary', icon: <XCircle className="size-3" />, label: 'Cancelled' },
+  FAILED: { variant: 'danger', icon: <AlertTriangle className="size-3" />, label: 'Failed' },
+};
+
+function SmartOrderStatusBadge({ status }: { status: SmartOrderStatus }) {
+  const { variant, icon, label } = SMART_ORDER_STATUS[status];
+  return <StatusBadge variant={variant} icon={icon} label={label} />;
 }
 
 function formatDate(iso: string) {
@@ -211,7 +208,7 @@ export function Component() {
                   </p>
                 </div>
 
-                <StatusBadge status={so.status} />
+                <SmartOrderStatusBadge status={so.status} />
 
                 <span className="text-xs text-pf-text-muted shrink-0">{formatDate(so.createdAt)}</span>
 

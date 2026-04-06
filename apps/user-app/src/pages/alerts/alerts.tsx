@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button, Input, Select } from '@polyforge/ui';
+import { Button, Input, Select, StatusBadge } from '@polyforge/ui';
 
 interface AlertToken {
   id: string;
@@ -31,18 +31,12 @@ interface PriceAlert {
 }
 
 function OutcomeBadge({ outcome }: { outcome: string }) {
-  const upper = outcome.toUpperCase();
-  if (upper === 'YES') {
-    return (
-      <span className="text-pf-caption px-2 py-1 rounded border border-pf-success/30 bg-pf-success/10 text-pf-success font-semibold">
-        YES
-      </span>
-    );
-  }
+  const isYes = outcome.toUpperCase() === 'YES';
   return (
-    <span className="text-pf-caption px-2 py-1 rounded border border-pf-danger/30 bg-pf-danger/10 text-pf-danger font-semibold">
-      NO
-    </span>
+    <StatusBadge
+      variant={isYes ? 'success' : 'danger'}
+      label={isYes ? 'YES' : 'NO'}
+    />
   );
 }
 

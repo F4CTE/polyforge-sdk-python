@@ -49,7 +49,8 @@ describe("StrategiesService", () => {
   beforeEach(() => {
     prisma = makePrisma();
     jwtService = makeJwtService();
-    service = new StrategiesService(prisma as any, jwtService as any);
+    const config = { getOrThrow: vi.fn((key: string) => `test-${key}`) } as any;
+    service = new StrategiesService(prisma as any, jwtService as any, config);
   });
 
   afterEach(() => {

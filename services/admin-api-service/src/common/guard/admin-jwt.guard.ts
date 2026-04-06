@@ -5,16 +5,16 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
 import { RedisService } from "@polyforge/shared-redis";
 import { AdminJwtPayload } from "@polyforge/shared-types";
-
-const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET!;
 
 @Injectable()
 export class AdminJwtGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly redis: RedisService,
+    private readonly config: ConfigService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -35,7 +35,7 @@ export class AdminJwtGuard implements CanActivate {
 
     try {
       payload = this.jwtService.verify<AdminJwtPayload>(token, {
-        secret: ADMIN_JWT_SECRET,
+        secret: this.config.getOrThrow<string>("ADMIN_JWT_SECRET"),
       });
     } catch {
       throw new UnauthorizedException("Invalid or expired token");

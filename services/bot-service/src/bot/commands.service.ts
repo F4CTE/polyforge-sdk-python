@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
@@ -7,15 +8,6 @@ import { randomUUID } from "crypto";
 const ENGINE_URL =
   process.env.STRATEGY_ENGINE_URL ?? "http://strategy-engine:3006";
 const API_URL = process.env.API_SERVICE_URL ?? "http://api-service:3002";
-const INTERNAL_SECRET = process.env.INTERNAL_JWT_SECRET;
-if (!INTERNAL_SECRET) {
-  throw new Error("INTERNAL_JWT_SECRET env var is required");
-}
-
-const BOT_JWT_SECRET = process.env.BOT_JWT_SECRET;
-if (!BOT_JWT_SECRET) {
-  throw new Error("BOT_JWT_SECRET env var is required");
-}
 
 const HELP_TEXT = `
 📖 Polyforge Bot Commands
@@ -65,6 +57,7 @@ export class CommandsService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly jwt: JwtService,
+    private readonly config: ConfigService,
   ) {}
 
   // ─── Router ───────────────────────────────────────────────────────────────
@@ -658,7 +651,7 @@ export class CommandsService {
     return this.jwt.sign(
       { sub: "bot-service", jti: randomUUID() },
       {
-        secret: INTERNAL_SECRET,
+        secret: this.config.getOrThrow<string>("INTERNAL_JWT_SECRET"),
         audience: "strategy-engine",
         expiresIn: "30s",
       },

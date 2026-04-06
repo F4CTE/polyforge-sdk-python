@@ -42,7 +42,8 @@ describe("LinkingService", () => {
     prisma = makePrismaMock();
     redis = makeRedisMock();
     jwt = makeJwtMock();
-    svc = new LinkingService(prisma, redis, jwt);
+    const config = { getOrThrow: vi.fn((key: string) => `test-${key}`) } as any;
+    svc = new LinkingService(prisma, redis, jwt, config);
   });
 
   afterEach(() => {

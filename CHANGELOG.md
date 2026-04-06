@@ -5,13 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased] — 2026-04-04
+## [Unreleased] — 2026-04-06
+
+### Fixed (CI)
+- **Fix EBUSY pnpm setup on Windows self-hosted runners** — set `dest: ${{ github.workspace }}/.pnpm-setup` on all three CI jobs (check, build, e2e) so the `pnpm/action-setup@v4` self-installer unpacks to a workspace-local directory instead of the shared SYSTEM profile (`C:\WINDOWS\system32\config\systemprofile\setup-pnpm`), preventing EBUSY collisions when multiple runners execute concurrently
 
 ### Added
 - **Progress component (closes #164)** — `packages/ui/src/components/ui/progress.tsx`: determinate and indeterminate progress bar using `bg-pf-overlay` track, `bg-pf-cyan-500` fill, `transition-all duration-300`, and `role="progressbar"` accessibility attributes
 - **DropdownMenu component (closes #164)** — `packages/ui/src/components/ui/dropdown-menu.tsx`: fully custom context-based dropdown with `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, and `DropdownMenuSeparator`; supports keyboard navigation (Arrow Up/Down, Enter/Space, Escape) and click-outside close
 - **Tooltip component (closes #164)** — `packages/ui/src/components/ui/tooltip.tsx`: hover/focus tooltip with `top|bottom|left|right` placement, opacity/scale animation, and `role="tooltip"` with `aria-describedby` linking
 - **Chip component (closes #164)** — `packages/ui/src/components/ui/chip.tsx`: closable tag with `default|success|danger|warning` variant colors using design tokens; optional remove button with `aria-label="Remove"` using Lucide `X` icon
+
+### Fixed (Security)
+- **Replace module-level process.env JWT secret captures with ConfigService injection (closes #303)** — `admin-auth-service/auth.module.ts`: switched `JwtModule.register()` to `JwtModule.registerAsync()` with `ConfigService`; `admin-api-service/admin-jwt.guard.ts`: injected `ConfigService` and removed frozen `ADMIN_JWT_SECRET` constant; `admin-api-service/strategies.service.ts`: replaced `INTERNAL_JWT_SECRET` module-level capture with `config.getOrThrow()`; `bot-service/commands.service.ts` and `linking.service.ts`: replaced `INTERNAL_JWT_SECRET` and `BOT_JWT_SECRET` module-level captures with `ConfigService` injection — enables key rotation to take effect without service restart
 
 ### Fixed (Design / Code Quality)
 - **Remove dead tailwind.config.ts references from shared UI package (closes #257)** — `packages/ui/components.json` config field cleared (no JS config needed with Tailwind v4 CSS-first approach); dead `./tailwind.config` export removed from `packages/ui/package.json`

@@ -1,13 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
 import { createHash, randomUUID } from "crypto";
 
-const BOT_JWT_SECRET = process.env.BOT_JWT_SECRET;
-if (!BOT_JWT_SECRET) {
-  throw new Error("BOT_JWT_SECRET env var is required");
-}
 const BOT_JWT_EXPIRES = "30d";
 
 export type BotChannelType = "TELEGRAM" | "DISCORD" | "WHATSAPP";
@@ -20,6 +17,7 @@ export class LinkingService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly jwt: JwtService,
+    private readonly config: ConfigService,
   ) {}
 
   /**
@@ -69,7 +67,7 @@ export class LinkingService {
       scopes: ["read:strategies", "read:pnl", "write:strategy:stop"],
     };
     const token = this.jwt.sign(tokenPayload, {
-      secret: BOT_JWT_SECRET,
+      secret: this.config.getOrThrow<string>("BOT_JWT_SECRET"),
       expiresIn: BOT_JWT_EXPIRES,
     });
     const tokenHash = createHash("sha256").update(token).digest("hex");

@@ -10,7 +10,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button } from '@polyforge/ui';
+import { Button, StatusBadge } from '@polyforge/ui';
 
 interface ReferralEntry {
   id: string;
@@ -59,18 +59,15 @@ function StatCard({
   );
 }
 
-function StatusBadge({ status }: { status: ReferralEntry['status'] }) {
-  const map: Record<ReferralEntry['status'], { label: string; className: string }> = {
-    PENDING: { label: 'Pending', className: 'bg-pf-surface text-pf-text-secondary border border-pf-border' },
-    SIGNED_UP: { label: 'Signed Up', className: 'bg-pf-info/10 text-pf-info border border-pf-info/20' },
-    ACTIVE: { label: 'Active', className: 'bg-pf-success/10 text-pf-success border border-pf-success/20' },
-  };
-  const { label, className } = map[status];
-  return (
-    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${className}`}>
-      {label}
-    </span>
-  );
+const REFERRAL_STATUS: Record<ReferralEntry['status'], { variant: 'secondary' | 'info' | 'success'; label: string }> = {
+  PENDING: { variant: 'secondary', label: 'Pending' },
+  SIGNED_UP: { variant: 'info', label: 'Signed Up' },
+  ACTIVE: { variant: 'success', label: 'Active' },
+};
+
+function ReferralStatusBadge({ status }: { status: ReferralEntry['status'] }) {
+  const { variant, label } = REFERRAL_STATUS[status];
+  return <StatusBadge variant={variant} label={label} />;
 }
 
 function TableSkeleton() {
@@ -325,7 +322,7 @@ export function Component() {
                       <div className="text-xs text-pf-text-secondary">@{entry.username}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <StatusBadge status={entry.status} />
+                      <ReferralStatusBadge status={entry.status} />
                     </td>
                     <td className="px-4 py-3 text-pf-text-secondary">
                       {formatDate(entry.joinedAt)}

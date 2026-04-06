@@ -78,4 +78,7 @@ export type { TooltipProps } from './components/ui/tooltip';
 export { Chip, chipVariants } from './components/ui/chip';
 export type { ChipProps } from './components/ui/chip';
 
+export { StatusBadge } from './components/ui/status-badge';
+export type { StatusBadgeProps } from './components/ui/status-badge';
+
 export { PolyforgeLogomark } from './components/polyforge-logomark';
