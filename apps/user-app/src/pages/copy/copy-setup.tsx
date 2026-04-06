@@ -276,7 +276,7 @@ export function Component() {
                     variant="ghost"
                     key={opt.value}
                     onClick={() => setMode(opt.value)}
-                    className={`flex flex-col items-start gap-2 p-4 rounded-pf-lg border text-left transition-all duration-100 ${
+                    className={`flex flex-col items-start gap-2 p-4 rounded-pf-lg border text-left transition-all duration-pf-fast ${
                       selected
                         ? 'bg-pf-cyan-500/10 border-pf-cyan-500/30 shadow-pf-sm'
                         : 'border-pf-border hover:border-pf-border-strong'

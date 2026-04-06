@@ -251,7 +251,7 @@ export function OnboardingDashboardChecklist() {
         aria-label={`${completedCount} of ${STEPS.length} steps completed`}
       >
         <div
-          className="h-full bg-pf-cyan-500 rounded-pf-full transition-all duration-300"
+          className="h-full bg-pf-cyan-500 rounded-pf-full transition-all duration-pf-slow"
           style={{ width: `${(completedCount / STEPS.length) * 100}%` }}
         />
       </div>

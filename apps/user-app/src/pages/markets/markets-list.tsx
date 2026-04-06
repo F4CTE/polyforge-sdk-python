@@ -261,7 +261,7 @@ const MarketCard = memo(function MarketCard({
   return (
     <Link
       to={`/markets/${market.id}`}
-      className={`group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 ${featured ? 'ring-1 ring-pf-cyan-500/20' : ''}`}
+      className={`group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 ${featured ? 'ring-1 ring-pf-cyan-500/20' : ''}`}
     >
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
@@ -391,7 +391,7 @@ function TrendingCard({ market }: { market: Market }) {
   return (
     <Link
       to={`/markets/${market.slug || market.id}`}
-      className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 transition-all duration-200 hover:border-pf-cyan-500/30 hover:shadow-pf-sm hover:-translate-y-1"
+      className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 transition-all duration-pf-normal hover:border-pf-cyan-500/30 hover:shadow-pf-sm hover:-translate-y-1"
     >
       {/* Question */}
       <p className="text-sm font-medium text-pf-text leading-snug line-clamp-2 group-hover:text-pf-cyan-400 transition-colors">

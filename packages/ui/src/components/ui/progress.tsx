@@ -23,7 +23,7 @@ function Progress({ value = 0, indeterminate = false, className, ...props }: Pro
         <div className="h-full w-1/3 rounded-full bg-pf-cyan-500 animate-pulse" />
       ) : (
         <div
-          className="h-full rounded-full bg-pf-cyan-500 transition-all duration-300"
+          className="h-full rounded-full bg-pf-cyan-500 transition-all duration-pf-slow"
           style={{ width: `${clamped}%` }}
         />
       )}

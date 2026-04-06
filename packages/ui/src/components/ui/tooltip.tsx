@@ -37,7 +37,7 @@ function Tooltip({ children, content, side = "top", className }: TooltipProps) {
         className={cn(
           "pointer-events-none absolute z-50 whitespace-nowrap",
           "bg-pf-elevated border border-pf-border text-pf-text text-xs rounded-pf-sm px-2 py-1 shadow-pf-lg",
-          "transition-all duration-100",
+          "transition-all duration-pf-fast",
           sideStyles[side],
           visible ? "opacity-100 scale-100" : "opacity-0 scale-95",
           className

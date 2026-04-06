@@ -963,7 +963,7 @@ export function Features() {
           {features.map((feature) => (
             <article
               key={feature.title}
-              className={`bg-pf-surface bg-gradient-to-br ${feature.gradientClass} to-pf-surface border border-pf-border-subtle rounded-pf-lg transition-all duration-200 hover:border-pf-cyan-500/30 hover:shadow-pf-md`}
+              className={`bg-pf-surface bg-gradient-to-br ${feature.gradientClass} to-pf-surface border border-pf-border-subtle rounded-pf-lg transition-all duration-pf-normal hover:border-pf-cyan-500/30 hover:shadow-pf-md`}
             >
               {/* Visual preview */}
               <div

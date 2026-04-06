@@ -1712,7 +1712,7 @@ export function Component() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className={`text-pf-text-muted transition-transform duration-200 ${lpExpanded ? 'rotate-180' : ''}`}
+                  className={`text-pf-text-muted transition-transform duration-pf-normal ${lpExpanded ? 'rotate-180' : ''}`}
                   aria-hidden="true"
                 >
                   <polyline points="6 9 12 15 18 9" />
@@ -1825,12 +1825,12 @@ export function Component() {
                       </div>
                       <div className="h-4 rounded-pf-full overflow-hidden flex">
                         <div
-                          className="bg-pf-success transition-all duration-300 ease-out"
+                          className="bg-pf-success transition-all duration-pf-slow ease-out"
                           style={{ width: `${sentiment.yesPercent}%` }}
                           title={`YES ${sentiment.yesPercent}%`}
                         />
                         <div
-                          className="bg-pf-danger flex-1 transition-all duration-300 ease-out"
+                          className="bg-pf-danger flex-1 transition-all duration-pf-slow ease-out"
                           title={`NO ${sentiment.noPercent}%`}
                         />
                       </div>

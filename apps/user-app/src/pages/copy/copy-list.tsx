@@ -772,7 +772,7 @@ export function Component() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/copy/${config.id}`); }
                 }}
-                className="group bg-pf-elevated border border-pf-border rounded-pf-lg p-5 cursor-pointer transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                className="group bg-pf-elevated border border-pf-border rounded-pf-lg p-5 cursor-pointer transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
               >
                 {/* Wallet + Status */}
                 <div className="flex items-start justify-between gap-3 mb-3">

@@ -2394,7 +2394,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
                 <Star className="size-3 text-pf-warning fill-pf-warning shrink-0" />
                 <div className="flex-1 h-2 bg-pf-surface rounded-pf-full overflow-hidden">
                   <div
-                    className="h-full bg-pf-warning rounded-pf-full transition-all duration-300"
+                    className="h-full bg-pf-warning rounded-pf-full transition-all duration-pf-slow"
                     style={{ width: `${(count / maxStarCount) * 100}%` }}
                   />
                 </div>

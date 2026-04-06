@@ -317,7 +317,7 @@ export function Component() {
               {categories.map((cat, j) => (
                 <div
                   key={`col-${cat}`}
-                  className={`h-[72px] w-[72px] flex items-end justify-center pb-2 transition-colors duration-100 ${
+                  className={`h-[72px] w-[72px] flex items-end justify-center pb-2 transition-colors duration-pf-fast ${
                     highlightCol === j ? 'text-pf-cyan-400' : 'text-pf-text-secondary'
                   }`}
                   aria-hidden="true"
@@ -337,7 +337,7 @@ export function Component() {
                   {/* Row header */}
                   <div
                     key={`row-label-${rowCat}`}
-                    className={`h-[72px] w-20 flex items-center justify-end pr-2 transition-colors duration-100 ${
+                    className={`h-[72px] w-20 flex items-center justify-end pr-2 transition-colors duration-pf-fast ${
                       highlightRow === i ? 'text-pf-cyan-400' : 'text-pf-text-secondary'
                     }`}
                     aria-hidden="true"
@@ -372,7 +372,7 @@ export function Component() {
                     return (
                       <div
                         key={`cell-${i}-${j}`}
-                        className={`h-[72px] w-[72px] rounded flex items-center justify-center cursor-default transition-all duration-100 ${cellBg} ${
+                        className={`h-[72px] w-[72px] rounded flex items-center justify-center cursor-default transition-all duration-pf-fast ${cellBg} ${
                           isHighlighted ? 'ring-1 ring-pf-cyan-400/50 scale-[1.04]' : ''
                         }`}
                         role="gridcell"

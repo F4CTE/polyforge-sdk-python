@@ -321,7 +321,7 @@ export function Component() {
               <Link
                 key={f.id}
                 to={`/marketplace/${f.id}`}
-                className="group block bg-pf-elevated border border-pf-warning/40 rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-warning/60 hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-warning"
+                className="group block bg-pf-elevated border border-pf-warning/40 rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-warning/60 hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-warning"
               >
                 {/* FEATURED badge + seller */}
                 <div className="flex items-center gap-2 mb-3">
@@ -497,7 +497,7 @@ export function Component() {
               <Link
                 key={s.id}
                 to={`/strategies/${s.id}`}
-                className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+                className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
               >
                 {/* Author row */}
                 <div className="flex items-center gap-2 mb-3">

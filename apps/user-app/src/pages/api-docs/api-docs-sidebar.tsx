@@ -109,7 +109,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
                   variant="ghost"
                   key={item.id}
                   onClick={() => onNavigate(item.id)}
-                  className={`w-full text-left px-3 py-2 rounded-pf-sm text-sm transition-colors duration-100 cursor-pointer ${
+                  className={`w-full text-left px-3 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast cursor-pointer ${
                     activeId === item.id
                       ? 'bg-pf-cyan-500/10 text-pf-cyan-400 font-medium'
                       : 'text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated'
@@ -135,7 +135,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
                   variant="ghost"
                   key={`${ep.method}-${ep.path}`}
                   onClick={() => onNavigate(sectionId)}
-                  className="w-full text-left px-3 py-2 rounded-pf-sm text-xs transition-colors duration-100 cursor-pointer text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated"
+                  className="w-full text-left px-3 py-2 rounded-pf-sm text-xs transition-colors duration-pf-fast cursor-pointer text-pf-text-secondary hover:text-pf-text hover:bg-pf-elevated"
                 >
                   <span className="font-mono text-pf-cyan-400 mr-1">{ep.method}</span>
                   {ep.summary}

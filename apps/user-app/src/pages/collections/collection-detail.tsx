@@ -145,7 +145,7 @@ export function Component() {
               {listings.map(listing => (
                 <div
                   key={listing.id}
-                  className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 transition-all duration-200 flex flex-col"
+                  className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 transition-all duration-pf-normal flex flex-col"
                 >
                   {/* Seller */}
                   <div className="flex items-center gap-2 mb-2">

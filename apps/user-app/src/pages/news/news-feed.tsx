@@ -384,7 +384,7 @@ export function Component() {
                 return (
                   <div
                     key={article.id}
-                    className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm"
+                    className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm"
                   >
                     {/* Top row: badges + time */}
                     <div className="flex items-center gap-2 mb-2">
@@ -544,7 +544,7 @@ export function Component() {
                 {topSignals.map(signal => (
                   <div
                     key={signal.id}
-                    className={`rounded-pf-sm border p-3 transition-all duration-200 ${
+                    className={`rounded-pf-sm border p-3 transition-all duration-pf-normal ${
                       signal.confidence > 80
                         ? 'border-pf-cyan-500/30 shadow-[0_0_12px_color-mix(in_srgb,var(--color-pf-cyan-500)_8%,transparent)]'
                         : 'border-pf-border-subtle'
@@ -569,7 +569,7 @@ export function Component() {
                     <div className="flex items-center gap-2 mb-2">
                       <div className={`h-2 rounded-pf-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
                         <div
-                          className={`h-full rounded-pf-full transition-all duration-300 ${confidenceColor(signal.confidence)}`}
+                          className={`h-full rounded-pf-full transition-all duration-pf-slow ${confidenceColor(signal.confidence)}`}
                           style={{ width: `${signal.confidence}%` }}
                         />
                       </div>

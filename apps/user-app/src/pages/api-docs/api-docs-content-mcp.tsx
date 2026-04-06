@@ -82,7 +82,7 @@ export function McpSection() {
             '"Show me whale trades over $50,000 from the last hour"',
             '"What\'s my portfolio P&L this week?"',
           ].map(p => (
-            <p key={p} className="text-xs text-pf-text-secondary bg-pf-elevated border border-pf-border rounded-pf px-4 py-3 font-mono hover:border-pf-border-strong transition-all duration-200">{p}</p>
+            <p key={p} className="text-xs text-pf-text-secondary bg-pf-elevated border border-pf-border rounded-pf px-4 py-3 font-mono hover:border-pf-border-strong transition-all duration-pf-normal">{p}</p>
           ))}
         </div>
       </Sub>

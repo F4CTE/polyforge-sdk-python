@@ -219,7 +219,7 @@ function DbCard({ db }: { db: DbHealth }) {
         </div>
         <div className="h-2 bg-pf-elevated rounded-pf-full overflow-hidden">
           <div
-            className={`h-full rounded-pf-full transition-all duration-300 ${connBarColor}`}
+            className={`h-full rounded-pf-full transition-all duration-pf-slow ${connBarColor}`}
             style={{ width: `${connPct}%` }}
           />
         </div>

@@ -149,7 +149,7 @@ function ToggleSwitch({ checked, onChange, danger, disabled, label }: ToggleSwit
       disabled={disabled}
       onClick={() => !disabled && onChange(!checked)}
       className={[
-        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-pf-full transition-colors duration-200',
+        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-pf-full transition-colors duration-pf-normal',
         trackClass,
         disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
@@ -157,7 +157,7 @@ function ToggleSwitch({ checked, onChange, danger, disabled, label }: ToggleSwit
     >
       <span
         className={[
-          'inline-block h-4 w-4 rounded-pf-full bg-pf-text shadow transition-transform duration-200',
+          'inline-block h-4 w-4 rounded-pf-full bg-pf-text shadow transition-transform duration-pf-normal',
           checked ? 'translate-x-6' : 'translate-x-1',
         ].join(' ')}
       />

@@ -233,7 +233,7 @@ function AlertBell({ alerts, loading, onClick, active }: AlertBellProps) {
       disabled={loading}
       aria-label="Manage price alerts"
       aria-pressed={active}
-      className={`relative inline-flex items-center justify-center w-7 h-7 rounded-pf-sm transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${iconColor} ${
+      className={`relative inline-flex items-center justify-center w-7 h-7 rounded-pf-sm transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${iconColor} ${
         active ? 'bg-pf-cyan-400/10' : 'hover:bg-pf-surface'
       } ${loading ? 'opacity-50 cursor-wait' : ''}`}
     >
@@ -494,7 +494,7 @@ export function Component() {
                 key={cat}
                 variant="ghost"
                 onClick={() => setFilterCategory(cat)}
-                className={`px-3 py-1 text-xs font-medium rounded-pf-sm border transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                className={`px-3 py-1 text-xs font-medium rounded-pf-sm border transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                   filterCategory === cat
                     ? 'bg-pf-cyan-500 text-pf-text-contrast border-pf-cyan-500'
                     : 'bg-transparent text-pf-text-secondary border-pf-border hover:border-pf-border-strong hover:text-pf-text'
@@ -519,7 +519,7 @@ export function Component() {
           </p>
           <Button
             onClick={() => navigate('/markets')}
-            className="mt-2 px-4 py-2 bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold rounded-pf hover:brightness-110 transition-all duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+            className="mt-2 px-4 py-2 bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold rounded-pf hover:brightness-110 transition-all duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
           >
             Browse Markets
           </Button>
@@ -621,7 +621,7 @@ export function Component() {
                     {/* -------------------------------------------------------- */}
                     <tr
                       key={market.id}
-                      className={`group transition-colors duration-100 ${
+                      className={`group transition-colors duration-pf-fast ${
                         isQuickOrderOpen || isAlertsOpen
                           ? 'bg-pf-elevated'
                           : 'hover:bg-pf-elevated/60'
@@ -634,7 +634,7 @@ export function Component() {
                           size="icon-sm"
                           onClick={() => handleRemoveStar(market.id)}
                           aria-label={`Remove ${market.title} from watchlist`}
-                          className="text-pf-cyan-400 hover:text-pf-warning transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                          className="text-pf-cyan-400 hover:text-pf-warning transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                         >
                           <Star className="w-4 h-4 fill-current" />
                         </Button>
@@ -646,7 +646,7 @@ export function Component() {
                           <Button
                             variant="ghost"
                             onClick={() => navigate(`/markets/${market.slug}`)}
-                            className="text-left text-pf-text font-medium hover:text-pf-cyan-400 transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm leading-snug max-w-xs"
+                            className="text-left text-pf-text font-medium hover:text-pf-cyan-400 transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm leading-snug max-w-xs"
                           >
                             {market.title}
                           </Button>
@@ -706,7 +706,7 @@ export function Component() {
                           onClick={() => openQuickOrder(market.id)}
                           aria-pressed={isQuickOrderOpen}
                           aria-label={`Quick order for ${market.title}`}
-                          className={`inline-flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-semibold transition-all duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                          className={`inline-flex items-center gap-1 px-3 py-2 rounded-pf text-xs font-semibold transition-all duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                             isQuickOrderOpen
                               ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border border-pf-cyan-500/40'
                               : 'bg-pf-elevated border border-pf-border text-pf-text-secondary hover:border-pf-cyan-500/60 hover:text-pf-cyan-400'
@@ -739,7 +739,7 @@ export function Component() {
                                 size="icon"
                                 onClick={() => setExpandedQuickOrder(null)}
                                 aria-label="Close quick order panel"
-                                className="text-pf-text-muted hover:text-pf-text transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                className="text-pf-text-muted hover:text-pf-text transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                               >
                                 <X className="w-4 h-4" />
                               </Button>
@@ -760,7 +760,7 @@ export function Component() {
                                       variant="ghost"
                                       onClick={() => updateQuickOrder(market.id, { outcome: o })}
                                       aria-pressed={qo.outcome === o}
-                                      className={`px-4 py-2 text-sm font-semibold transition-colors duration-100 focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                      className={`px-4 py-2 text-sm font-semibold transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                                         qo.outcome === o
                                           ? o === 'YES'
                                             ? 'bg-pf-success text-pf-text'
@@ -785,7 +785,7 @@ export function Component() {
                                       updateQuickOrder(market.id, { amount: Math.max(1, qo.amount - 10) })
                                     }
                                     aria-label="Decrease amount"
-                                    className="p-1 text-pf-text-muted hover:text-pf-text transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                    className="p-1 text-pf-text-muted hover:text-pf-text transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                                   >
                                     <Minus className="w-4 h-4" />
                                   </Button>
@@ -809,7 +809,7 @@ export function Component() {
                                       updateQuickOrder(market.id, { amount: qo.amount + 10 })
                                     }
                                     aria-label="Increase amount"
-                                    className="p-1 text-pf-text-muted hover:text-pf-text transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                    className="p-1 text-pf-text-muted hover:text-pf-text transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                                   >
                                     <Plus className="w-4 h-4" />
                                   </Button>
@@ -823,7 +823,7 @@ export function Component() {
                                     key={preset}
                                     variant="ghost"
                                     onClick={() => updateQuickOrder(market.id, { amount: preset })}
-                                    className={`px-2 py-2 text-xs font-medium rounded-pf-sm border transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                    className={`px-2 py-2 text-xs font-medium rounded-pf-sm border transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                                       qo.amount === preset
                                         ? 'bg-pf-cyan-500/20 border-pf-cyan-500/40 text-pf-cyan-400'
                                         : 'bg-transparent border-pf-border text-pf-text-muted hover:text-pf-text hover:border-pf-border-strong'
@@ -857,7 +857,7 @@ export function Component() {
                               <Button
                                 onClick={() => submitQuickOrder(market)}
                                 disabled={qo.submitting}
-                                className="px-5 py-2 bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
+                                className="px-5 py-2 bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
                               >
                                 {qo.submitting ? 'Placing…' : `Buy ${qo.outcome}`}
                               </Button>
@@ -866,7 +866,7 @@ export function Component() {
                               <Button
                                 variant="ghost"
                                 onClick={() => navigate(`/markets/${market.slug}`)}
-                                className="inline-flex items-center gap-1 text-xs text-pf-text-muted hover:text-pf-cyan-400 transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                className="inline-flex items-center gap-1 text-xs text-pf-text-muted hover:text-pf-cyan-400 transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                               >
                                 <ExternalLink className="w-3 h-3" />
                                 Full detail
@@ -898,7 +898,7 @@ export function Component() {
                                 size="icon"
                                 onClick={() => setExpandedAlerts(null)}
                                 aria-label="Close price alerts panel"
-                                className="text-pf-text-muted hover:text-pf-text transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                className="text-pf-text-muted hover:text-pf-text transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                               >
                                 <X className="w-4 h-4" />
                               </Button>
@@ -924,7 +924,7 @@ export function Component() {
                                         variant="ghost"
                                         onClick={() => setAlertOutcome(o)}
                                         aria-pressed={alertOutcome === o}
-                                        className={`px-4 py-2 text-sm font-semibold transition-colors duration-100 focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                        className={`px-4 py-2 text-sm font-semibold transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                                           alertOutcome === o
                                             ? o === 'YES'
                                               ? 'bg-pf-success text-pf-text'
@@ -952,7 +952,7 @@ export function Component() {
                                         variant="ghost"
                                         onClick={() => setAlertCondition(c)}
                                         aria-pressed={alertCondition === c}
-                                        className={`px-3 py-2 text-sm font-medium transition-colors duration-100 capitalize focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
+                                        className={`px-3 py-2 text-sm font-medium transition-colors duration-pf-fast capitalize focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 ${
                                           alertCondition === c
                                             ? 'bg-pf-cyan-500/20 text-pf-cyan-400 border-r border-pf-cyan-500/30'
                                             : 'bg-pf-elevated text-pf-text-secondary hover:text-pf-text'
@@ -980,7 +980,7 @@ export function Component() {
                                     step={0.01}
                                     value={alertThreshold}
                                     onChange={(e) => setAlertThreshold(Number(e.target.value))}
-                                    className="w-24 px-3 py-2 bg-pf-elevated border border-pf-border rounded-pf text-sm text-pf-text tabular-nums focus:outline-none focus:border-pf-cyan-500/60 focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors duration-100"
+                                    className="w-24 px-3 py-2 bg-pf-elevated border border-pf-border rounded-pf text-sm text-pf-text tabular-nums focus:outline-none focus:border-pf-cyan-500/60 focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors duration-pf-fast"
                                   />
                                 </div>
 
@@ -1004,7 +1004,7 @@ export function Component() {
                                 <Button
                                   onClick={() => handleAddAlert(market.id)}
                                   disabled={addingAlert}
-                                  className="inline-flex items-center gap-2 px-4 py-2 bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
+                                  className="inline-flex items-center gap-2 px-4 py-2 bg-pf-cyan-500 text-pf-text-contrast text-sm font-semibold rounded-pf hover:brightness-110 disabled:opacity-50 disabled:cursor-wait transition-all duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 whitespace-nowrap"
                                 >
                                   <Plus className="w-4 h-4" aria-hidden="true" />
                                   {addingAlert ? 'Adding…' : 'Add Alert'}
@@ -1098,7 +1098,7 @@ export function Component() {
                                         onClick={() => handleDeleteAlert(market.id, alert.id)}
                                         disabled={deletingAlertId === alert.id}
                                         aria-label={`Delete alert: ${alert.outcome} ${alert.condition} ${alert.threshold}`}
-                                        className="flex-shrink-0 p-1 rounded-pf-sm text-pf-text-muted hover:text-pf-danger transition-colors duration-100 disabled:opacity-40 disabled:cursor-wait focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
+                                        className="flex-shrink-0 p-1 rounded-pf-sm text-pf-text-muted hover:text-pf-danger transition-colors duration-pf-fast disabled:opacity-40 disabled:cursor-wait focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
                                       >
                                         <Trash2 className="w-4 h-4" />
                                       </Button>
@@ -1113,7 +1113,7 @@ export function Component() {
                               <Button
                                 variant="ghost"
                                 onClick={() => navigate(`/markets/${market.slug}`)}
-                                className="inline-flex items-center gap-1 text-xs text-pf-text-muted hover:text-pf-cyan-400 transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
+                                className="inline-flex items-center gap-1 text-xs text-pf-text-muted hover:text-pf-cyan-400 transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-sm"
                               >
                                 <BarChart2 className="w-3 h-3" aria-hidden="true" />
                                 View full market &amp; alerts

@@ -179,7 +179,7 @@ function ProgressDots({ current }: { current: number }) {
             aria-selected={isCurrent}
             aria-label={`Step ${step.id} of ${TOTAL_STEPS}`}
             className={[
-              'rounded-pf-full transition-all duration-300',
+              'rounded-pf-full transition-all duration-pf-slow',
               isComplete || isCurrent
                 ? 'w-6 h-2 bg-pf-cyan-500'
                 : 'w-2 h-2 bg-pf-border',
@@ -316,7 +316,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
       className={[
         'fixed inset-0 z-50 flex items-center justify-center p-4',
         'backdrop-blur-sm bg-pf-backdrop',
-        'transition-opacity duration-200',
+        'transition-opacity duration-pf-normal',
         overlayOpacity,
       ].join(' ')}
       role="dialog"
@@ -330,7 +330,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
         className={[
           'relative w-full max-w-lg',
           'bg-pf-elevated border border-pf-border rounded-2xl p-8',
-          'transition-all duration-300',
+          'transition-all duration-pf-slow',
           cardTransform,
         ].join(' ')}
         onClick={(e) => e.stopPropagation()}

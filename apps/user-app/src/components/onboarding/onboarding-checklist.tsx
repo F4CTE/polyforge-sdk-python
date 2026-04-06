@@ -155,7 +155,7 @@ export function OnboardingChecklist() {
       <div className="px-4 pt-2">
         <div className="w-full h-2 bg-pf-overlay rounded-pf-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed`}>
           <div
-            className="h-full bg-pf-cyan-500 rounded-pf-full transition-all duration-300"
+            className="h-full bg-pf-cyan-500 rounded-pf-full transition-all duration-pf-slow"
             style={{ width: `${(completedCount / CHECKLIST_ITEMS.length) * 100}%` }}
           />
         </div>

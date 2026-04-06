@@ -168,7 +168,7 @@ function ScoreRow({ label, value, max }: { label: string; value: string; max: nu
       </div>
       <div className="h-2 bg-pf-overlay rounded-pf-full overflow-hidden">
         <div
-          className="h-full bg-pf-cyan-400 rounded-pf-full transition-all duration-300"
+          className="h-full bg-pf-cyan-400 rounded-pf-full transition-all duration-pf-slow"
           style={{ width: `${pct}%` }}
         />
       </div>

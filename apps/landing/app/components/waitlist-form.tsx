@@ -100,7 +100,7 @@ export function WaitlistForm({ className = "" }: WaitlistFormProps) {
           type="submit"
           disabled={status === "loading"}
           aria-busy={status === "loading"}
-          className="inline-flex items-center justify-center font-semibold text-pf-body px-6 py-3 min-h-[44px] rounded-pf-md bg-pf-cyan-500 text-pf-text-contrast cursor-pointer transition-all duration-200 hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_color-mix(in_srgb,var(--color-pf-cyan-500)_30%,transparent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:bg-pf-cyan-500 whitespace-nowrap"
+          className="inline-flex items-center justify-center font-semibold text-pf-body px-6 py-3 min-h-[44px] rounded-pf-md bg-pf-cyan-500 text-pf-text-contrast cursor-pointer transition-all duration-pf-normal hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_color-mix(in_srgb,var(--color-pf-cyan-500)_30%,transparent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:bg-pf-cyan-500 whitespace-nowrap"
         >
           <span>Request access</span>
           {status === "loading" && (

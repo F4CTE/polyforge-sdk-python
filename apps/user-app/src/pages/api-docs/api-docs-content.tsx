@@ -175,7 +175,7 @@ export function renderContent({
             { scope: 'WRITE', cls: SCOPE_CLS.WRITE, desc: 'Create/update strategies, alerts, webhooks, and run backtests.' },
             { scope: 'TRADE', cls: SCOPE_CLS.TRADE, desc: 'Place and cancel orders, start/stop strategies, manage copy trading.' },
           ] as { scope: string; cls: string; desc: string }[]).map(s => (
-            <div key={s.scope} className="flex items-start gap-3 p-3 bg-pf-elevated border border-pf-border rounded-pf-lg hover:border-pf-border-strong transition-all duration-200">
+            <div key={s.scope} className="flex items-start gap-3 p-3 bg-pf-elevated border border-pf-border rounded-pf-lg hover:border-pf-border-strong transition-all duration-pf-normal">
               <Badge text={s.scope} cls={s.cls} />
               <p className="text-xs text-pf-text-secondary leading-relaxed pt-1">{s.desc}</p>
             </div>
@@ -205,14 +205,14 @@ export function renderContent({
           { label: 'Python',     install: 'pip install polyforge',       cls: 'text-pf-success', code: `from polyforge import PolyforgeClient\nclient = PolyforgeClient(api_key='pf_...')` },
           { label: 'Rust',       install: 'cargo add polyforge tokio',   cls: 'text-pf-warning', code: `use polyforge::PolyforgeClient;\nlet client = PolyforgeClient::new("pf_...");` },
         ]).map(s => (
-          <div key={s.label} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 hover:border-pf-border-strong transition-all duration-200">
+          <div key={s.label} className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 hover:border-pf-border-strong transition-all duration-pf-normal">
             <p className={`text-sm font-semibold ${s.cls}`}>{s.label}</p>
             <Code code={s.install} />
             <Code code={s.code} />
           </div>
         ))}
       </div>
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 hover:border-pf-border-strong transition-all duration-200">
+      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 hover:border-pf-border-strong transition-all duration-pf-normal">
         <div className="flex items-center gap-2">
           <p className="text-sm font-semibold text-pf-purple-300">MCP Server</p>
           <Badge text="Claude · Cursor · Windsurf · Zed" cls="bg-pf-purple-500/10 text-pf-purple-400" />

@@ -1555,7 +1555,7 @@ export function Component() {
                 </div>
                 <div className="w-full h-2 bg-pf-overlay rounded-pf-full overflow-hidden">
                   <div
-                    className={`h-full rounded-pf-full transition-all duration-300 ${
+                    className={`h-full rounded-pf-full transition-all duration-pf-slow ${
                       gasUsage.todayUsage / gasUsage.dailyLimit > 0.8 ? 'bg-pf-danger' : 'bg-pf-cyan-500'
                     }`}
                     style={{ width: `${Math.min(100, (gasUsage.todayUsage / gasUsage.dailyLimit) * 100)}%` }}

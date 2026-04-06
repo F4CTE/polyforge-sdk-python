@@ -45,7 +45,7 @@ function PublicHeader() {
         </Link>
         <Link
           to="/register"
-          className="text-sm font-semibold px-4 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors duration-100"
+          className="text-sm font-semibold px-4 py-2 rounded-pf bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors duration-pf-fast"
         >
           Sign up free
         </Link>
@@ -186,7 +186,7 @@ export function Component() {
     return (
       <div className="flex h-screen bg-pf-base text-pf-text overflow-hidden animate-fade-in">
         {/* App sidebar */}
-        <div className={`hidden md:block overflow-hidden transition-[width,min-width] duration-200 ${sidebarCollapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
+        <div className={`hidden md:block overflow-hidden transition-[width,min-width] duration-pf-normal ${sidebarCollapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
           <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
         </div>
         {/* Mobile app sidebar overlay */}

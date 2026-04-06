@@ -79,7 +79,7 @@ export function AppLayout() {
         Skip to main content
       </a>
       {/* Desktop sidebar */}
-      <div className={`hidden md:block overflow-hidden transition-[width,min-width] duration-200 ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
+      <div className={`hidden md:block overflow-hidden transition-[width,min-width] duration-pf-normal ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
       </div>
 

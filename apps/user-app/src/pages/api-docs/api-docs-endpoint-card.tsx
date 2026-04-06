@@ -176,13 +176,13 @@ export function EndpointCard({ ep, lang, setLang, forceOpen }: EndpointCardProps
 
   return (
     <div
-      className={`border border-pf-border border-l-[3px] ${METHOD_BORDER[ep.method]} rounded-pf-lg overflow-hidden transition-all duration-200 ${isOpen ? '' : 'hover:border-pf-border-strong'}`}
+      className={`border border-pf-border border-l-[3px] ${METHOD_BORDER[ep.method]} rounded-pf-lg overflow-hidden transition-all duration-pf-normal ${isOpen ? '' : 'hover:border-pf-border-strong'}`}
     >
       <Button
         type="button"
         variant="ghost"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-3 px-4 py-3 bg-pf-elevated hover:bg-pf-elevated/80 text-left transition-colors duration-200 cursor-pointer"
+        className="w-full flex items-center gap-3 px-4 py-3 bg-pf-elevated hover:bg-pf-elevated/80 text-left transition-colors duration-pf-normal cursor-pointer"
         aria-expanded={isOpen}
       >
         <Badge text={ep.method} cls={METHOD_CLS[ep.method]} />

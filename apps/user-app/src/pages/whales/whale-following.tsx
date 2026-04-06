@@ -122,7 +122,7 @@ export function Component() {
           {wallets.map(wallet => (
             <div
               key={wallet.walletAddress}
-              className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm"
+              className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm"
             >
               <div className="flex items-center justify-between mb-3">
                 <Link

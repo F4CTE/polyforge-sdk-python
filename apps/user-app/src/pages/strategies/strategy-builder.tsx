@@ -1569,7 +1569,7 @@ export function Component() {
             )}
 
             {/* Side panel — always mounted, collapsed via width to prevent React Flow reflow issues */}
-            <div className={`transition-all duration-200 overflow-hidden ${panelOpen ? 'w-80' : 'w-0'}`}>
+            <div className={`transition-all duration-pf-normal overflow-hidden ${panelOpen ? 'w-80' : 'w-0'}`}>
               <BlockPalette open={panelOpen} onClose={() => setPanelOpen(false)} />
               {/* Market Picker */}
               <div className="border-t border-pf-border mt-2 pt-2">

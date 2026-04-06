@@ -382,6 +382,18 @@ Grille interne       : 12 colonnes, gap 16px
 
 > ⚠️ **DEPRECATED (v3.0+):** Angular animation syntax not applicable. Use Tailwind CSS utilities with duration tokens `--duration-pf-fast` (100ms), `--duration-pf-normal` (200ms), `--duration-pf-slow` (300ms) from `globals.css`. See [`docs/legacy/design-charter-v2-angular.md`](legacy/design-charter-v2-angular.md#9-animations--transitions) for archived spec.
 
+### Duration tokens (Tailwind v4)
+
+| Token | Utility class | Value | Use case |
+|-------|--------------|-------|----------|
+| `--duration-pf-fast` | `duration-pf-fast` | 100ms | Hover states, micro-interactions |
+| `--duration-pf-normal` | `duration-pf-normal` | 200ms | Sidebar transitions, opacity fades |
+| `--duration-pf-slow` | `duration-pf-slow` | 300ms | Progress bars, layout shifts |
+
+**Infinite animation exceptions:** `pf-pulse` (2s) and `shimmer` (2s) are accepted longer durations for decorative infinite animations.
+
+**Rule:** Never use raw `duration-100`, `duration-200`, `duration-300` — always use `duration-pf-fast`, `duration-pf-normal`, `duration-pf-slow`.
+
 ---
 
 ## 10. Logo & identité

@@ -276,7 +276,7 @@ export function Component() {
           {trades.map(trade => (
             <div
               key={trade.id}
-              className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-200 hover:border-pf-border-strong hover:shadow-pf-sm"
+              className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm"
             >
               {/* Top row: wallet + time */}
               <div className="flex items-center justify-between mb-3">

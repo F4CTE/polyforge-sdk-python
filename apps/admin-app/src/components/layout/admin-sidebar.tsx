@@ -161,7 +161,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                   title={collapsed ? item.label : undefined}
                   onClick={onNavigate}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-pf-sm text-sm transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
+                    `flex items-center gap-3 px-3 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500 ${
                       isActive
                         ? 'bg-pf-cyan-500/10 text-pf-cyan-500 font-medium'
                         : 'text-pf-text-secondary hover:bg-pf-elevated hover:text-pf-text'

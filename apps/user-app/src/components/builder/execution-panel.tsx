@@ -618,7 +618,7 @@ function BacktestTab({
         </div>
         <div className="h-2 bg-pf-surface rounded-pf-full overflow-hidden" role="progressbar" aria-valuenow={bt.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Backtest progress">
           <div
-            className="h-full bg-gradient-to-r from-pf-cyan-500 to-pf-cyan-400 rounded-pf-full transition-all duration-300 ease-out"
+            className="h-full bg-gradient-to-r from-pf-cyan-500 to-pf-cyan-400 rounded-pf-full transition-all duration-pf-slow ease-out"
             style={{ width: `${bt.progress}%` }}
           />
         </div>

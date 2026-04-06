@@ -5,7 +5,7 @@ export function ProductPreview() {
       aria-label="Product dashboard preview"
     >
       <div className="max-w-[1100px] mx-auto px-6">
-        <div className="dark bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden transition-transform duration-300 shadow-pf-lg [transform:perspective(1200px)_rotateX(2deg)]">
+        <div className="dark bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden transition-transform duration-pf-slow shadow-pf-lg [transform:perspective(1200px)_rotateX(2deg)]">
           {/* Browser chrome */}
           <div
             className="flex items-center gap-2 px-4 py-3 border-b border-pf-border-subtle bg-pf-elevated"

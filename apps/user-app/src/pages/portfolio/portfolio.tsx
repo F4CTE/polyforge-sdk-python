@@ -1626,7 +1626,7 @@ export function Component() {
                       {/* Progress bar */}
                       <div className="h-2 rounded-pf-full bg-pf-surface overflow-hidden mb-3">
                         <div
-                          className={`h-2 rounded-pf-full transition-all duration-300 ${barColor}`}
+                          className={`h-2 rounded-pf-full transition-all duration-pf-slow ${barColor}`}
                           style={{ width: `${progress}%` }}
                         />
                       </div>

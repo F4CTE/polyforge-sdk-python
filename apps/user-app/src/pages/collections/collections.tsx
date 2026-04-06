@@ -92,7 +92,7 @@ export function Component() {
           {collections.map(col => (
             <div
               key={col.id}
-              className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 hover:border-pf-border-strong transition-all duration-200 hover:shadow-pf-sm flex flex-col"
+              className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 hover:border-pf-border-strong transition-all duration-pf-normal hover:shadow-pf-sm flex flex-col"
             >
               {/* Emoji + Title */}
               <div className="flex items-center gap-3 mb-2">

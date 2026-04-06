@@ -719,7 +719,7 @@ export function Component() {
                 role={compareMode ? 'checkbox' : 'link'}
                 aria-checked={compareMode ? isSelected : undefined}
                 className={[
-                  'group bg-pf-elevated border rounded-pf-lg p-5 cursor-pointer transition-all duration-200 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
+                  'group bg-pf-elevated border rounded-pf-lg p-5 cursor-pointer transition-all duration-pf-normal overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40',
                   compareMode && isSelected
                     ? 'border-pf-cyan-500/50 shadow-[0_0_0_2px_color-mix(in_srgb,var(--color-pf-cyan-500)_20%,transparent)]'
                     : 'border-pf-border hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1',
