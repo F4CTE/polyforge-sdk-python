@@ -29,9 +29,15 @@ jobs:
 
       # standalone: true downloads pnpm as a single binary — no npm install,
       # no SYSTEM profile contamination, no .bin shim issues on Windows.
+      # run_install: false prevents the action from auto-running pnpm install.
       - uses: pnpm/action-setup@v4
         with:
           standalone: true
+          run_install: false
+        env:
+          # Per-workspace PNPM_HOME prevents the action from touching the
+          # shared SYSTEM profile (which causes EBUSY when 4 runners collide).
+          PNPM_HOME: ${{ github.workspace }}/.pnpm-home
 
       - uses: actions/setup-node@v4
         with:
