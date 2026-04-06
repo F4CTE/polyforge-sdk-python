@@ -15,6 +15,7 @@ param(
     [string]$Token,
 
     [string]$RunnerDir = "C:\actions-runner",
+    [string]$RunnerName = "polyforge-local",
     [string]$Labels = "self-hosted,windows,x64,polyforge"
 )
 
@@ -113,7 +114,7 @@ Push-Location $RunnerDir
 & .\config.cmd `
     --url "https://github.com/$repo" `
     --token $regToken `
-    --name "polyforge-local" `
+    --name $RunnerName `
     --labels $Labels `
     --work "_work" `
     --replace `
@@ -125,7 +126,7 @@ Write-Host "  Runner configured as 'polyforge-local'" -ForegroundColor Green
 # ── 6. Install as Windows service ──────────────────────────────────────────
 Write-Host "`n[6/6] Installing as Windows service..." -ForegroundColor Yellow
 
-$svcName = "actions.runner.F4CTE-PolyForge.polyforge-local"
+$svcName = "actions.runner.F4CTE-PolyForge.$RunnerName"
 $svcExe  = Join-Path $RunnerDir "bin\RunnerService.exe"
 
 $existingSvc = Get-Service $svcName -ErrorAction SilentlyContinue
@@ -137,17 +138,17 @@ if ($existingSvc) {
 } else {
     New-Service -Name $svcName `
         -BinaryPathName $svcExe `
-        -DisplayName "GitHub Actions Runner (polyforge-local)" `
-        -Description "Self-hosted GitHub Actions runner for F4CTE/PolyForge" `
+        -DisplayName "GitHub Actions Runner ($RunnerName)" `
+        -Description "Self-hosted GitHub Actions runner for F4CTE/PolyForge ($RunnerName)" `
         -StartupType Automatic
     Start-Service $svcName
 }
 
 Write-Host "`n=== Runner installed and running ===" -ForegroundColor Cyan
-Write-Host "  Name:    polyforge-local" -ForegroundColor White
+Write-Host "  Name:    $RunnerName" -ForegroundColor White
 Write-Host "  Labels:  $Labels" -ForegroundColor White
 Write-Host "  Dir:     $RunnerDir" -ForegroundColor White
-Write-Host "  Service: actions.runner.F4CTE-PolyForge.polyforge-local" -ForegroundColor White
+Write-Host "  Service: $svcName" -ForegroundColor White
 Write-Host ""
 Write-Host "Management commands:" -ForegroundColor Yellow
 Write-Host "  Start:   cd $RunnerDir && .\svc.cmd start" -ForegroundColor Gray

@@ -106,15 +106,23 @@ jobs:
         run: pnpm build
 
       - name: Verify dist artifacts
+        shell: node {0}
         run: |
-          echo "Checking build artifacts..."
-          test -d packages/shared-types/dist
-          test -d packages/shared-db/dist
-          test -d packages/shared-redis/dist
-          test -d packages/shared-auth/dist
-          test -d packages/logger/dist
-          test -d packages/shared-schemas/dist
-          echo "All build artifacts present"
+          const fs = require('fs');
+          const dirs = [
+            'packages/shared-types/dist',
+            'packages/shared-db/dist',
+            'packages/shared-redis/dist',
+            'packages/shared-auth/dist',
+            'packages/logger/dist',
+            'packages/shared-schemas/dist',
+          ];
+          const missing = dirs.filter(d => !fs.existsSync(d));
+          if (missing.length) {
+            console.error('Missing build artifacts:', missing.join(', '));
+            process.exit(1);
+          }
+          console.log('All build artifacts present');
 
       - name: Security audit
         if: success() || failure()
