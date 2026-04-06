@@ -13,26 +13,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Add Python to PATH
-        shell: pwsh
-        run: |
-          $pyPath = (Get-Command python3 -ErrorAction SilentlyContinue).Source | Split-Path
-          if (-not $pyPath) { $pyPath = "C:\Users\User\AppData\Local\Microsoft\WindowsApps" }
-          echo $pyPath | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
-
       - name: Install dependencies
-        run: python3 -m pip install -e ".[dev]" || python3 -m pip install -e .
+        run: python3 -m pip install --user -e ".[dev]" || python3 -m pip install --user -e .
 
       - name: Type check
-        run: python3 -m pip install pyright && python3 -m pyright src/
-        continue-on-error: true
+        run: python3 -m pyright src/ || true
 
       - name: Test
         shell: node {0}
         run: |
           const fs = require('fs');
           if (fs.existsSync('tests') && fs.readdirSync('tests').some(f => f.endsWith('.py'))) {
-            require('child_process').execSync('python3 -m pip install pytest && python3 -m pytest tests/ -v', { stdio: 'inherit' });
+            require('child_process').execSync('python3 -m pytest tests/ -v', { stdio: 'inherit' });
           } else {
             console.log('No test files found — skipping');
           }
