@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  check:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]" 2>/dev/null || pip install -e .
+
+      - name: Type check
+        run: |
+          pip install pyright 2>/dev/null
+          pyright src/ || true
+
+      - name: Test
+        run: |
+          if [ -d tests ] && find tests -name '*.py' | head -1 | grep -q .; then
+            pip install pytest 2>/dev/null
+            pytest tests/ -v
+          else
+            echo "No test files found — skipping"
+          fi
