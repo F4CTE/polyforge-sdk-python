@@ -13,23 +13,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Install dependencies
-        run: pip install -e ".[dev]" 2>$null; if ($LASTEXITCODE -ne 0) { pip install -e . }
-        shell: pwsh
+        run: pip install -e ".[dev]" || pip install -e .
 
       - name: Type check
         run: |
-          pip install pyright 2>$null
-          pyright src/
-        shell: pwsh
-        continue-on-error: true
+          pip install pyright
+          pyright src/ || true
 
       - name: Test
-        shell: pwsh
+        shell: node {0}
         run: |
-          if (Test-Path tests) {
-            pip install pytest 2>$null
-            pytest tests/ -v
+          const fs = require('fs');
+          if (fs.existsSync('tests') && fs.readdirSync('tests').some(f => f.endsWith('.py'))) {
+            require('child_process').execSync('pip install pytest && pytest tests/ -v', { stdio: 'inherit' });
           } else {
-            Write-Host "No tests directory — skipping"
+            console.log('No test files found — skipping');
           }
