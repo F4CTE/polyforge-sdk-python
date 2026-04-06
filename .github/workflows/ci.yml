@@ -9,30 +9,27 @@ on:
 jobs:
   check:
     name: Lint & Test
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.10', '3.12', '3.13']
+    runs-on: [self-hosted, polyforge-sdk]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
 
       - name: Install dependencies
-        run: pip install -e ".[dev]" 2>/dev/null || pip install -e .
+        run: pip install -e ".[dev]" 2>$null; if ($LASTEXITCODE -ne 0) { pip install -e . }
+        shell: pwsh
 
       - name: Type check
         run: |
-          pip install pyright 2>/dev/null
-          pyright src/ || true
+          pip install pyright 2>$null
+          pyright src/
+        shell: pwsh
+        continue-on-error: true
 
       - name: Test
+        shell: pwsh
         run: |
-          if [ -d tests ] && find tests -name '*.py' | head -1 | grep -q .; then
-            pip install pytest 2>/dev/null
+          if (Test-Path tests) {
+            pip install pytest 2>$null
             pytest tests/ -v
-          else
-            echo "No test files found — skipping"
-          fi
+          } else {
+            Write-Host "No tests directory — skipping"
+          }
