@@ -48,7 +48,7 @@ jobs:
       # Build scripts skip gracefully when cargo/wasm-pack aren't available.
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --store-dir C:\pnpm-store
 
       - name: Generate Prisma clients
         run: |
@@ -101,7 +101,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --store-dir C:\pnpm-store
 
       - name: Generate Prisma clients
         run: |
@@ -159,7 +159,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --store-dir C:\pnpm-store
 
       - name: Generate Prisma clients
         run: |
