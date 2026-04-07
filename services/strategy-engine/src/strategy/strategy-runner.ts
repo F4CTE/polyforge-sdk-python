@@ -1,6 +1,5 @@
 import { Logger } from "@nestjs/common";
 import { v4 as uuidv4 } from "uuid";
-import { evaluate as mathEvaluate } from "mathjs";
 import { StrategyStatus } from ".prisma/client";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
@@ -16,37 +15,10 @@ import {
 } from "../blocks/registry";
 import { resolveParams } from "../blocks/resolve-params";
 import { StateService } from "../state/state.service";
+import { safeEvaluate } from "../common/safe-evaluate";
 
 const MIN_TICK_MS = 200;
 const STALE_PRICE_MS = 5_000;
-
-/** Safe wrapper around expr-eval to prevent DoS via long/malicious expressions */
-function safeEvaluate(
-  expression: string,
-  scope: Record<string, number>,
-  maxLength = 200,
-): number {
-  if (expression.length > maxLength) {
-    throw new Error(`Expression too long: ${expression.length} > ${maxLength}`);
-  }
-  // Reject potentially dangerous patterns and CPU-exhausting exponentiation
-  if (
-    /while|for|function|eval|require|import|__proto__|constructor|prototype/.test(
-      expression,
-    )
-  ) {
-    throw new Error("Expression contains forbidden keywords");
-  }
-  // Block nested exponentiation (e.g., 9^9^9) which causes CPU exhaustion
-  if ((expression.match(/\^/g) || []).length > 2) {
-    throw new Error("Expression contains too many exponentiation operators");
-  }
-  try {
-    return Number(mathEvaluate(expression, scope));
-  } catch {
-    return 0; // Safe fallback
-  }
-}
 
 export type StrategyRunnerStatus = "RUNNING" | "PAUSED" | "STOPPED";
 

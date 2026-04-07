@@ -8,7 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased] — 2026-04-07
 
 ### Fixed (Security)
-- **Enable restrictive Content-Security-Policy on all API services (closes #388)** — replaced `contentSecurityPolicy: false` with `default-src 'none'; frame-ancestors 'none'` in helmet config across all 12 NestJS services (api-service, auth-service, admin-api-service, admin-auth-service, signer-service, strategy-engine, order-service, paper-order-service, backtest-service, bot-service, notification-service, market-data-service); these services only serve JSON, so a strict CSP provides defense-in-depth against accidental HTML rendering
+- **Replace mathjs keyword blocklist with restricted mathjs instance (closes #391)** — created a limited mathjs instance via `create(all)` that removes dangerous functions (`evaluate`, `parse`, `compile`, `import`, `createUnit`, `simplify`, `derivative`, `rationalize`, `help`) as primary defense; existing keyword blocklist, character limit, and exponentiation depth cap retained as secondary safeguards; extracted shared `safeEvaluate` into `common/safe-evaluate.ts` to eliminate duplication between `logic.blocks.ts` and `strategy-runner.ts`
 
 ## [Unreleased] — 2026-04-06
 
