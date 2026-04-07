@@ -94,6 +94,9 @@
   --duration-pf-normal: 200ms;
   --duration-pf-slow: 300ms;
 
+  /* Typography tokens */
+  --tracking-pf-code: 0.3em;
+
   /* Shadows — minimal for shadcn dark */
   --shadow-pf-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-pf-sm: 0 1px 3px rgba(0, 0, 0, 0.3);

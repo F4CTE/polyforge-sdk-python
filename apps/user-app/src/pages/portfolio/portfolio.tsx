@@ -1104,7 +1104,7 @@ export function Component() {
 
         return (
           <div
-            className={`flex flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-3 rounded-pf-lg border transition-colors ${
+            className={`flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 rounded-pf-lg border transition-colors ${
               pnlFlashing
                 ? 'bg-pf-elevated/80 border-pf-border-hover'
                 : 'bg-pf-elevated border-pf-border'

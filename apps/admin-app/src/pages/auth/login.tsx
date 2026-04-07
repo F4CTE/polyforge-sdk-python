@@ -121,7 +121,7 @@ export function Component() {
                 onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
                 required
                 autoFocus
-                className="w-full px-3 py-2 text-sm text-center tracking-[0.3em] font-mono rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500 focus-visible:border-pf-cyan-500 transition-colors"
+                className="w-full px-3 py-2 text-sm text-center tracking-[var(--tracking-pf-code)] font-mono rounded-pf-sm border border-pf-border bg-pf-base text-pf-text placeholder:text-pf-text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500 focus-visible:border-pf-cyan-500 transition-colors"
                 placeholder="000000"
               />
             </div>

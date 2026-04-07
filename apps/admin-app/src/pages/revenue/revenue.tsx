@@ -527,7 +527,7 @@ export function Component() {
                 </div>
 
                 {/* Legend */}
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mt-2">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2">
                   {breakdown?.sources.map(s => (
                     <div key={s.source} className="flex items-center gap-2 text-xs">
                       <span
