@@ -4,7 +4,7 @@ FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a
 WORKDIR /app
 
 # Install pnpm + typescript (globally, so tsc is always available in PATH)
-RUN corepack enable && corepack prepare pnpm@latest --activate && \
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate && \
     npm install -g typescript@5
 
 # Copy workspace manifests (all packages so pnpm can resolve the full dep tree)
@@ -35,7 +35,7 @@ FROM node:24-alpine@sha256:01743339035a5c3c11a373cd7c83aeab6ed1457b55da6a69e014a
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY services/mock-polymarket/package.json ./services/mock-polymarket/
