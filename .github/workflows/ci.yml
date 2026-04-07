@@ -27,7 +27,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - name: Enable corepack (pnpm via packageManager field)
+        run: |
+          mkdir -p "$HOME/.corepack/bin"
+          corepack enable --install-directory "$HOME/.corepack/bin"
+          echo "$HOME/.corepack/bin" >> "$GITHUB_PATH"
 
       - uses: actions/setup-node@v4
         with:
@@ -75,7 +79,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - name: Enable corepack (pnpm via packageManager field)
+        run: |
+          mkdir -p "$HOME/.corepack/bin"
+          corepack enable --install-directory "$HOME/.corepack/bin"
+          echo "$HOME/.corepack/bin" >> "$GITHUB_PATH"
 
       - uses: actions/setup-node@v4
         with:
@@ -128,7 +136,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - name: Enable corepack (pnpm via packageManager field)
+        run: |
+          mkdir -p "$HOME/.corepack/bin"
+          corepack enable --install-directory "$HOME/.corepack/bin"
+          echo "$HOME/.corepack/bin" >> "$GITHUB_PATH"
 
       - uses: actions/setup-node@v4
         with:

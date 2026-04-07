@@ -5,9 +5,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased] — 2026-04-06
+## [Unreleased] — 2026-04-07
 
 ### Fixed (CI)
+- **Replace pnpm/action-setup@v4 with corepack enable** — `pnpm/action-setup@v4` targets Node.js 20 and fails on the self-hosted runner when `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` forces Node 24 execution; replaced with `corepack enable` in all three CI jobs (check, build, e2e), which uses the `packageManager: pnpm@9.0.0` field in package.json — this unblocks CI for all open PRs
 - **Fix EBUSY pnpm setup on Windows self-hosted runners** — set `dest: ${{ github.workspace }}/.pnpm-setup` on all three CI jobs (check, build, e2e) so the `pnpm/action-setup@v4` self-installer unpacks to a workspace-local directory instead of the shared SYSTEM profile (`C:\WINDOWS\system32\config\systemprofile\setup-pnpm`), preventing EBUSY collisions when multiple runners execute concurrently
 
 ### Added
