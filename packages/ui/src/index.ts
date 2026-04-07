@@ -81,4 +81,19 @@ export type { ChipProps } from './components/ui/chip';
 export { StatusBadge } from './components/ui/status-badge';
 export type { StatusBadgeProps } from './components/ui/status-badge';
 
+export { Checkbox } from './components/ui/checkbox';
+export type { CheckboxProps } from './components/ui/checkbox';
+
+export { Switch } from './components/ui/switch';
+export type { SwitchProps } from './components/ui/switch';
+
+export { Label } from './components/ui/label';
+export type { LabelProps } from './components/ui/label';
+
+export { Separator } from './components/ui/separator';
+export type { SeparatorProps } from './components/ui/separator';
+
+export { Toaster } from './components/ui/toaster';
+export type { ToasterProps } from './components/ui/toaster';
+
 export { PolyforgeLogomark } from './components/polyforge-logomark';
