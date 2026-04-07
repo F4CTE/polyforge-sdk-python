@@ -489,9 +489,9 @@ export function Component() {
           <div>
             <p className="text-xs text-pf-text-muted font-medium uppercase tracking-wide mb-3">Distribution</p>
             {loadingBreakdown ? (
-              <Skeleton className="h-[260px]" />
+              <Skeleton className="h-pf-chart-lg" />
             ) : donutData.length === 0 ? (
-              <div className="h-[260px] flex items-center justify-center text-sm text-pf-text-muted">No data</div>
+              <div className="h-pf-chart-lg flex items-center justify-center text-sm text-pf-text-muted">No data</div>
             ) : (
               <div>
                 <ResponsiveContainer width="100%" height={200}>
@@ -523,7 +523,7 @@ export function Component() {
                 </ResponsiveContainer>
 
                 {/* Center label overlay using absolute positioning trick */}
-                <div className="relative -mt-[120px] mb-[60px] flex flex-col items-center justify-center pointer-events-none select-none">
+                <div className="relative -mt-30 mb-15 flex flex-col items-center justify-center pointer-events-none select-none">
                   <span className="text-xs text-pf-text-muted">Total</span>
                   <span className="text-base font-bold font-mono text-pf-text">
                     {fmtDollar(breakdown?.totalRevenue ?? 0)}
@@ -653,9 +653,9 @@ export function Component() {
         </div>
         <div className="px-4 py-4">
           {loadingMonthly ? (
-            <Skeleton className="h-[240px]" />
+            <Skeleton className="h-pf-chart-md" />
           ) : monthlyData.length === 0 ? (
-            <div className="h-[240px] flex items-center justify-center text-sm text-pf-text-muted">
+            <div className="h-pf-chart-md flex items-center justify-center text-sm text-pf-text-muted">
               No revenue data yet
             </div>
           ) : (
@@ -705,9 +705,9 @@ export function Component() {
         </div>
         <div className="px-4 py-4">
           {loadingBreakdown ? (
-            <Skeleton className="h-[220px]" />
+            <Skeleton className="h-pf-chart-sm" />
           ) : compareData.length === 0 ? (
-            <div className="h-[220px] flex items-center justify-center text-sm text-pf-text-muted">
+            <div className="h-pf-chart-sm flex items-center justify-center text-sm text-pf-text-muted">
               No comparison data
             </div>
           ) : (

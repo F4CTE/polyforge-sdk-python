@@ -251,7 +251,7 @@ interface FieldRowProps {
 
 function FieldRow({ label, description, children }: FieldRowProps) {
   return (
-    <div className="flex items-center justify-between gap-4 min-h-[2.5rem]">
+    <div className="flex items-center justify-between gap-4 min-h-10">
       <div className="min-w-0">
         <p className="text-sm font-medium text-pf-text leading-tight">{label}</p>
         {description && (

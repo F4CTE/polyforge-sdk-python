@@ -134,6 +134,21 @@
   --spacing-pf-8: 48px;
   --spacing-pf-9: 56px;
   --spacing-pf-10: 64px;
+
+  /* Chart height tokens */
+  --height-pf-chart-sm: 220px;
+  --height-pf-chart-md: 240px;
+  --height-pf-chart-lg: 260px;
+
+  /* Column width tokens — truncation breakpoints */
+  --width-pf-col-xs: 120px;
+  --width-pf-col-sm: 160px;
+  --width-pf-col-md: 200px;
+  --width-pf-col-lg: 260px;
+
+  /* Input minimum width tokens */
+  --width-pf-input-min-sm: 180px;
+  --width-pf-input-min-md: 200px;
 }
 
 /* Base styles */

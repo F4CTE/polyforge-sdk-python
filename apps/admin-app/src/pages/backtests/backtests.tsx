@@ -452,7 +452,7 @@ export function Component() {
                       </td>
 
                       {/* Strategy */}
-                      <td className="px-4 py-3 text-pf-text-secondary text-xs max-w-[160px] truncate" title={bt.strategyName}>
+                      <td className="px-4 py-3 text-pf-text-secondary text-xs max-w-pf-col-sm truncate" title={bt.strategyName}>
                         {bt.strategyName || '—'}
                       </td>
 
@@ -498,7 +498,7 @@ export function Component() {
                           </span>
                         ) : isFailed && bt.errorMessage ? (
                           <span
-                            className="text-pf-danger truncate max-w-[120px] inline-block"
+                            className="text-pf-danger truncate max-w-pf-col-xs inline-block"
                             title={bt.errorMessage}
                           >
                             {bt.errorMessage.length > 30

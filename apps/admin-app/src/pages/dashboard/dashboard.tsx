@@ -417,7 +417,7 @@ export function Component() {
                   <tbody className="divide-y divide-pf-border">
                     {rateLimits.topOffenders.slice(0, 10).map((entry) => (
                       <tr key={entry.key}>
-                        <td className="py-2 font-mono text-pf-text-secondary truncate max-w-[200px]">{entry.key}</td>
+                        <td className="py-2 font-mono text-pf-text-secondary truncate max-w-pf-col-md">{entry.key}</td>
                         <td className={`py-2 text-right font-mono ${entry.hits > 50 ? 'text-pf-danger' : 'text-pf-text'}`}>{entry.hits}</td>
                         <td className="py-2 text-right font-mono text-pf-text-secondary">{entry.ttl}</td>
                       </tr>

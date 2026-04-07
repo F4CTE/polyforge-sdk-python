@@ -442,7 +442,7 @@ export function Component() {
               <tbody>
                 {broadcasts.map((b) => (
                   <tr key={b.id} className="border-b border-pf-border last:border-0 hover:bg-pf-base/40 transition-colors">
-                    <td className="px-3 py-3 text-pf-text font-medium max-w-[200px]">
+                    <td className="px-3 py-3 text-pf-text font-medium max-w-pf-col-md">
                       <span className="truncate block" title={b.title}>{b.title}</span>
                     </td>
                     <td className="px-3 py-3">

@@ -79,7 +79,7 @@ function ChartSkeleton() {
   return (
     <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 animate-pulse">
       <div className="h-4 bg-pf-base rounded w-32 mb-4" />
-      <div className="h-[220px] bg-pf-base rounded" />
+      <div className="h-pf-chart-sm bg-pf-base rounded" />
     </div>
   );
 }
@@ -111,6 +111,13 @@ interface CustomTooltipProps {
   label?: string;
 }
 
+// Map series names back to design token classes (Recharts resolves CSS vars to hex)
+const SERIES_BG_CLASS: Record<string, string> = {
+  'New Users': 'bg-pf-cyan-500',
+  'Returning Users': 'bg-pf-purple-500',
+  'DAU': 'bg-pf-warning',
+};
+
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
@@ -118,7 +125,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       <p className="font-semibold text-pf-text mb-2">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2 mb-1">
-          <span className="w-2 h-2 rounded-pf-full shrink-0" style={{ backgroundColor: entry.color }} />
+          <span className={`w-2 h-2 rounded-pf-full shrink-0 ${SERIES_BG_CLASS[entry.name] ?? 'bg-pf-text-muted'}`} />
           <span className="text-pf-text-secondary">{entry.name}:</span>
           <span className="text-pf-text font-medium">{fmt(entry.value)}</span>
         </div>

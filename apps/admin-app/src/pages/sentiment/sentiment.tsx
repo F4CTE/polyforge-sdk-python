@@ -164,6 +164,13 @@ function SortableTh({ col, sortKey, sortDir, onSort, align = 'left', children }:
   );
 }
 
+// Map series names back to design token classes (Recharts resolves CSS vars to hex)
+const SERIES_COLOR_CLASS: Record<string, string> = {
+  'Bullish %': 'text-pf-success',
+  'Neutral %': 'text-pf-text-muted',
+  'Bearish %': 'text-pf-danger',
+};
+
 // Recharts custom tooltip
 function CategoryTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
   if (!active || !payload?.length) return null;
@@ -171,7 +178,7 @@ function CategoryTooltip({ active, payload, label }: { active?: boolean; payload
     <div className="bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-xs shadow-pf-lg">
       <p className="font-semibold text-pf-text mb-1">{label}</p>
       {payload.map((entry) => (
-        <p key={entry.name} style={{ color: entry.color }}>
+        <p key={entry.name} className={SERIES_COLOR_CLASS[entry.name] ?? 'text-pf-text'}>
           {entry.name}: {entry.value}
         </p>
       ))}
@@ -360,11 +367,11 @@ export function Component() {
         </div>
 
         {loadingCategory ? (
-          <div className="h-[220px] flex items-center justify-center">
+          <div className="h-pf-chart-sm flex items-center justify-center">
             <div className="h-4 w-32 bg-pf-surface rounded animate-pulse" />
           </div>
         ) : chartData.length === 0 ? (
-          <div className="h-[220px] flex items-center justify-center text-pf-text-tertiary text-sm">
+          <div className="h-pf-chart-sm flex items-center justify-center text-pf-text-tertiary text-sm">
             No category data available
           </div>
         ) : (
@@ -534,12 +541,12 @@ export function Component() {
                   return (
                     <tr key={row.marketId} className="border-b border-pf-border last:border-0 hover:bg-pf-base transition-colors">
                       {/* Market title */}
-                      <td className="px-4 py-3 text-pf-text font-medium max-w-[260px]">
+                      <td className="px-4 py-3 text-pf-text font-medium max-w-pf-col-lg">
                         <span className="block truncate">{row.marketTitle}</span>
                       </td>
 
                       {/* Score column: value + progress bar */}
-                      <td className="px-4 py-3 text-right min-w-[120px]">
+                      <td className="px-4 py-3 text-right min-w-pf-col-xs">
                         <span className={`font-mono font-medium text-xs ${scoreColor(row.score)}`}>
                           {row.score > 0 ? '+' : ''}{row.score.toFixed(3)}
                         </span>

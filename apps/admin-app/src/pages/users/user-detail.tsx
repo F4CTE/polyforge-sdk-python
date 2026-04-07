@@ -431,7 +431,7 @@ function ActivityTimeline({ userId }: ActivityTimelineProps) {
                             <span className="text-pf-text-muted capitalize">
                               {k.replace(/([A-Z])/g, ' $1').trim()}:
                             </span>
-                            <span className="font-medium text-pf-text truncate max-w-[160px]">{String(v)}</span>
+                            <span className="font-medium text-pf-text truncate max-w-pf-col-sm">{String(v)}</span>
                           </span>
                         ))}
                       </div>
@@ -966,7 +966,7 @@ export function Component() {
                         <td className="px-4 py-3 text-pf-text-tertiary whitespace-nowrap">
                           {order.createdAt ? formatDate(order.createdAt) : '—'}
                         </td>
-                        <td className="px-4 py-3 text-pf-text max-w-[200px] truncate">
+                        <td className="px-4 py-3 text-pf-text max-w-pf-col-md truncate">
                           {String(order.market ?? '—')}
                         </td>
                         <td className="px-4 py-3">
