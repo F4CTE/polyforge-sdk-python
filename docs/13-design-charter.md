@@ -394,6 +394,8 @@ Grille interne       : 12 colonnes, gap 16px
 
 **Infinite animation exceptions:** `pf-pulse` (2s) and `shimmer` (2s) are accepted longer durations for decorative infinite animations.
 
+**SVG animations:** SVG `<animate>` elements used for decorative loops (stroke-dashoffset, opacity pulses) must also use `dur="2s"` to match the `pf-pulse` standard. Do not use arbitrary durations like 1.5s, 2.3s, or 2.5s.
+
 **Rule:** Never use raw `duration-100`, `duration-200`, `duration-300` — always use `duration-pf-fast`, `duration-pf-normal`, `duration-pf-slow`.
 
 ---

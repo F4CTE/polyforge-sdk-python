@@ -153,7 +153,7 @@ export function Hero() {
                 attributeName="stroke-dashoffset"
                 from="20"
                 to="0"
-                dur="2.5s"
+                dur="2s"
                 repeatCount="indefinite"
               />
             </path>
@@ -168,7 +168,7 @@ export function Hero() {
                 attributeName="stroke-dashoffset"
                 from="20"
                 to="0"
-                dur="2.5s"
+                dur="2s"
                 repeatCount="indefinite"
               />
             </path>
@@ -343,7 +343,7 @@ export function Hero() {
               <animate
                 attributeName="opacity"
                 values="1;0.3;1"
-                dur="1.5s"
+                dur="2s"
                 repeatCount="indefinite"
               />
             </circle>

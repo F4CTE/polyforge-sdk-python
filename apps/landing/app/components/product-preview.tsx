@@ -433,7 +433,7 @@ export function ProductPreview() {
                 <animate
                   attributeName="opacity"
                   values="1;0.4;1"
-                  dur="2.3s"
+                  dur="2s"
                   repeatCount="indefinite"
                 />
               </circle>
