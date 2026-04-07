@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  ParseUUIDPipe,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
@@ -58,7 +59,7 @@ export class MarketplaceController {
   }
 
   @Get(":id")
-  getListing(@Param("id") id: string) {
+  getListing(@Param("id", ParseUUIDPipe) id: string) {
     return this.marketplace.getListing(id);
   }
 
@@ -74,7 +75,7 @@ export class MarketplaceController {
   @Patch(":id")
   updateListing(
     @CurrentUser() user: any,
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @Body() dto: UpdateListingDto,
   ) {
     return this.marketplace.updateListing(user.sub, id, dto);
@@ -85,7 +86,7 @@ export class MarketplaceController {
   @Post(":id/purchase")
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
-  purchase(@CurrentUser() user: any, @Param("id") id: string) {
+  purchase(@CurrentUser() user: any, @Param("id", ParseUUIDPipe) id: string) {
     return this.marketplace.purchase(user.sub, id);
   }
 
@@ -93,7 +94,7 @@ export class MarketplaceController {
   @HttpCode(HttpStatus.OK)
   rate(
     @CurrentUser() user: any,
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @Body() dto: RateListingDto,
   ) {
     return this.marketplace.rateListing(user.sub, id, dto);

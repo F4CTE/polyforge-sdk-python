@@ -1,4 +1,10 @@
-import { Controller, Get, Param, UseGuards } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Param,
+  UseGuards,
+  ParseUUIDPipe,
+} from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
 import { ScoresService } from "./scores.service";
@@ -26,12 +32,12 @@ export class ScoresController {
   }
 
   @Get(":userId")
-  getUserScore(@Param("userId") userId: string) {
+  getUserScore(@Param("userId", ParseUUIDPipe) userId: string) {
     return this.scores.getUserScore(userId);
   }
 
   @Get(":userId/badges")
-  getUserBadges(@Param("userId") userId: string) {
+  getUserBadges(@Param("userId", ParseUUIDPipe) userId: string) {
     return this.scores.getUserBadges(userId);
   }
 }

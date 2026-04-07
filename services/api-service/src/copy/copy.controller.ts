@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  ParseUUIDPipe,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
@@ -35,14 +36,14 @@ export class CopyController {
   }
 
   @Get(":id")
-  getDetail(@CurrentUser() user: any, @Param("id") id: string) {
+  getDetail(@CurrentUser() user: any, @Param("id", ParseUUIDPipe) id: string) {
     return this.copy.getDetail(id, user.sub);
   }
 
   @Patch(":id")
   update(
     @CurrentUser() user: any,
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @Body() dto: UpdateCopyDto,
   ) {
     return this.copy.update(id, user.sub, dto);
@@ -50,26 +51,26 @@ export class CopyController {
 
   @Post(":id/pause")
   @HttpCode(HttpStatus.OK)
-  pause(@CurrentUser() user: any, @Param("id") id: string) {
+  pause(@CurrentUser() user: any, @Param("id", ParseUUIDPipe) id: string) {
     return this.copy.pause(id, user.sub);
   }
 
   @Post(":id/resume")
   @HttpCode(HttpStatus.OK)
-  resume(@CurrentUser() user: any, @Param("id") id: string) {
+  resume(@CurrentUser() user: any, @Param("id", ParseUUIDPipe) id: string) {
     return this.copy.resume(id, user.sub);
   }
 
   @Delete(":id")
   @HttpCode(HttpStatus.OK)
-  stop(@CurrentUser() user: any, @Param("id") id: string) {
+  stop(@CurrentUser() user: any, @Param("id", ParseUUIDPipe) id: string) {
     return this.copy.stop(id, user.sub);
   }
 
   @Get(":id/trades")
   getTrades(
     @CurrentUser() user: any,
-    @Param("id") id: string,
+    @Param("id", ParseUUIDPipe) id: string,
     @Query("page") page?: string,
     @Query("limit") limit?: string,
   ) {

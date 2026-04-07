@@ -9,6 +9,7 @@ export class ProvideLiquidityDto {
 
   @IsNumber()
   @Min(1)
+  @Max(50000)
   amountUsdc!: number;
 
   @IsOptional()

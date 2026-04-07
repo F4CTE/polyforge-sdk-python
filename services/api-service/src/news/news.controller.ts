@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "@polyforge/shared-auth";
 import { NewsService } from "./news.service";
@@ -22,12 +29,12 @@ export class NewsController {
   }
 
   @Get("sentiment/:marketId")
-  getMarketSentiment(@Param("marketId") marketId: string) {
+  getMarketSentiment(@Param("marketId", ParseUUIDPipe) marketId: string) {
     return this.news.getMarketSentiment(marketId);
   }
 
   @Get(":id")
-  getArticleById(@Param("id") id: string) {
+  getArticleById(@Param("id", ParseUUIDPipe) id: string) {
     return this.news.getArticleById(id);
   }
 }

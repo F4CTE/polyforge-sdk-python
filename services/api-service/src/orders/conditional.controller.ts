@@ -12,6 +12,7 @@ import {
   NotFoundException,
   ForbiddenException,
   UnprocessableEntityException,
+  ParseUUIDPipe,
 } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard, CurrentUser } from "@polyforge/shared-auth";
@@ -99,7 +100,10 @@ export class ConditionalController {
   }
 
   @Get(":id")
-  async detail(@CurrentUser() user: any, @Param("id") id: string) {
+  async detail(
+    @CurrentUser() user: any,
+    @Param("id", ParseUUIDPipe) id: string,
+  ) {
     const order = await this.prisma.conditionalOrder.findUnique({
       where: { id },
     });
@@ -123,7 +127,10 @@ export class ConditionalController {
 
   @Delete(":id")
   @HttpCode(HttpStatus.OK)
-  async cancel(@CurrentUser() user: any, @Param("id") id: string) {
+  async cancel(
+    @CurrentUser() user: any,
+    @Param("id", ParseUUIDPipe) id: string,
+  ) {
     const order = await this.prisma.conditionalOrder.findUnique({
       where: { id },
     });

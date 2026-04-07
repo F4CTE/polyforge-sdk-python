@@ -266,7 +266,10 @@ export class StrategiesController {
   }
 
   @Get(":id/versions")
-  listVersions(@Param("id") id: string, @CurrentUser() user: any) {
+  listVersions(
+    @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: any,
+  ) {
     return this.strategies.listVersions(id, user.sub);
   }
 
@@ -275,8 +278,8 @@ export class StrategiesController {
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("WRITE")
   rollback(
-    @Param("id") id: string,
-    @Param("versionId") versionId: string,
+    @Param("id", ParseUUIDPipe) id: string,
+    @Param("versionId", ParseUUIDPipe) versionId: string,
     @CurrentUser() user: any,
   ) {
     return this.strategies.rollbackToVersion(id, versionId, user.sub);
