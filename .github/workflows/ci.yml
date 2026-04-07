@@ -128,10 +128,8 @@ jobs:
   # ── 3. E2E ──────────────────────────────────────────────────────────────
   e2e:
     name: E2E
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, polyforge]
     needs: [build]
-    # E2E runs on GitHub-hosted ubuntu-latest because Docker Desktop on
-    # Windows self-hosted runners can't be accessed by the SYSTEM account.
     env:
       DIRECT_DATABASE_URL: 'postgresql://poly:devpass@localhost:5432/polyforge'
       ADMIN_DIRECT_DATABASE_URL: 'postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin'
@@ -144,18 +142,23 @@ jobs:
       BOT_JWT_SECRET: 'ci-bot-jwt-secret-not-for-production'
       MASTER_ENCRYPTION_KEY: 'aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233'
       TOTP_ENCRYPTION_KEY: 'ff6600112233aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55'
+      # Docker Desktop named pipe — accessible after adding SYSTEM to docker-users.
+      DOCKER_HOST: 'npipe:////./pipe/dockerDesktopLinuxEngine'
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
+        with:
+          standalone: true
+        env:
+          PNPM_HOME: ${{ github.workspace }}/.pnpm-home
 
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --store-dir C:\pnpm-store
 
       - name: Generate Prisma clients
         run: |
@@ -166,32 +169,29 @@ jobs:
         run: pnpm turbo build --filter=./packages/*
 
       # ── Start the full Docker stack ──────────────────────────────────────
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
-          sudo docker image prune -af
-          df -h /
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build and start Docker Compose
-        run: DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f docker-compose.infra.yml up -d --build
+        run: docker compose -f docker-compose.infra.yml up -d --build
         timeout-minutes: 45
 
       - name: Wait for services to be healthy
+        shell: node {0}
         run: |
-          echo "Waiting for PostgreSQL..."
-          until docker exec polyforge-dev-postgres-1 pg_isready -U poly -d polyforge; do sleep 2; done
-          echo "Waiting for Redis..."
-          until docker exec polyforge-dev-redis-1 redis-cli ping | grep -q PONG; do sleep 2; done
-          echo "Waiting for auth-service..."
-          timeout 60 bash -c 'until curl -sf http://localhost:3001/health; do sleep 2; done'
-          echo "Waiting for api-service..."
-          timeout 60 bash -c 'until curl -sf http://localhost:3002/health; do sleep 2; done'
-          echo "Waiting for gateway..."
-          timeout 60 bash -c 'until curl -sf http://localhost/login; do sleep 2; done'
-          echo "All services healthy"
+          const { execSync } = require('child_process');
+          function waitFor(name, cmd, timeout = 60000) {
+            const start = Date.now();
+            process.stdout.write(`Waiting for ${name}...`);
+            while (Date.now() - start < timeout) {
+              try { execSync(cmd, { stdio: 'pipe' }); console.log(' ready'); return; } catch {}
+              execSync(process.platform === 'win32' ? 'ping -n 3 127.0.0.1 >nul' : 'sleep 2', { stdio: 'pipe' });
+            }
+            throw new Error(`${name} did not become healthy within ${timeout/1000}s`);
+          }
+          waitFor('PostgreSQL', 'docker exec polyforge-dev-postgres-1 pg_isready -U poly -d polyforge');
+          waitFor('Redis', 'docker exec polyforge-dev-redis-1 redis-cli ping');
+          waitFor('auth-service', 'curl -sf http://localhost:3001/health');
+          waitFor('api-service', 'curl -sf http://localhost:3002/health');
+          waitFor('gateway', 'curl -sf http://localhost/login');
+          console.log('All services healthy');
 
       # ── Seed test data ───────────────────────────────────────────────────
       - name: Run migrations and seed
@@ -226,9 +226,13 @@ jobs:
 
       - name: Upload service logs on failure
         if: failure()
+        shell: node {0}
         run: |
-          mkdir -p docker-logs
-          docker compose -f docker-compose.infra.yml logs --no-color > docker-logs/all-services.log 2>&1
+          require('fs').mkdirSync('docker-logs', { recursive: true });
+          try {
+            const logs = require('child_process').execSync('docker compose -f docker-compose.infra.yml logs --no-color', { encoding: 'utf8', maxBuffer: 50*1024*1024 });
+            require('fs').writeFileSync('docker-logs/all-services.log', logs);
+          } catch(e) { require('fs').writeFileSync('docker-logs/all-services.log', 'Failed to collect logs: ' + e.message); }
 
       - name: Upload Docker logs artifact
         uses: actions/upload-artifact@v4
