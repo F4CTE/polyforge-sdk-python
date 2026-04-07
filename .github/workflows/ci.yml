@@ -130,10 +130,8 @@ jobs:
     name: E2E
     runs-on: ubuntu-latest
     needs: [build]
-    # E2E runs on GitHub-hosted runners because Docker Desktop on Windows
-    # self-hosted runners can't be accessed by the SYSTEM service account.
-    # Only runs on main pushes and manual dispatch to conserve minutes.
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    # E2E runs on GitHub-hosted ubuntu-latest because Docker Desktop on
+    # Windows self-hosted runners can't be accessed by the SYSTEM account.
     env:
       DIRECT_DATABASE_URL: 'postgresql://poly:devpass@localhost:5432/polyforge'
       ADMIN_DIRECT_DATABASE_URL: 'postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin'
