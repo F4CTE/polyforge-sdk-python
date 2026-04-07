@@ -171,11 +171,13 @@ DONNÉES FINANCIÈRES (P&L)
 4 niveaux de profondeur + un glow pour les accents :
 
 ```
---shadow-pf-xs    0 1px 2px rgba(0,0,0,0.3)                  Éléments plats
---shadow-pf-sm    0 1px 3px rgba(0,0,0,0.3)                  Sidebar, cartes légèrement élevées
---shadow-pf-md    0 4px 6px rgba(0,0,0,0.3)                  Cartes en hover, panneaux flottants
---shadow-pf-lg    0 10px 15px rgba(0,0,0,0.3)                Dialogs, modals
--- (hover glow)   0 0 20px color-mix(in srgb, --color-pf-cyan-500 30%, transparent)
+--shadow-pf-xs              0 1px 2px rgba(0,0,0,0.3)                  Éléments plats
+--shadow-pf-sm              0 1px 3px rgba(0,0,0,0.3)                  Sidebar, cartes légèrement élevées
+--shadow-pf-md              0 4px 6px rgba(0,0,0,0.3)                  Cartes en hover, panneaux flottants
+--shadow-pf-lg              0 10px 15px rgba(0,0,0,0.3)                Dialogs, modals
+--shadow-pf-ring-cyan       0 0 0 2px color-mix(…cyan 20%)             Selection ring (compare mode)
+--shadow-pf-glow-cyan       0 0 12px color-mix(…cyan 8%)               Subtle highlight glow
+--shadow-pf-glow-cyan-strong 0 0 20px color-mix(…cyan 30%)             Button hover glow
 ```
 
 Light mode : opacités réduites (0.05 à 0.12) — voir `globals.css` `.light` block.

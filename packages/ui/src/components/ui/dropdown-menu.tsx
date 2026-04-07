@@ -127,7 +127,7 @@ function DropdownMenuContent({ children, className, align = "start" }: DropdownM
       ref={contentRef}
       role="menu"
       className={cn(
-        "absolute z-50 mt-1 min-w-[8rem] p-1",
+        "absolute z-50 mt-1 min-w-pf-dropdown-min p-1",
         "bg-pf-elevated border border-pf-border rounded-pf shadow-pf-lg",
         align === "end" ? "right-0" : "left-0",
         className
