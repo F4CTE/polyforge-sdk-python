@@ -19,8 +19,8 @@
     "passport-jwt": "^4.0.1"
   },
   "devDependencies": {
-    "@nestjs/common": "^11.1.16",
-    "@nestjs/core": "^11.1.16",
+    "@nestjs/common": "^11.1.18",
+    "@nestjs/core": "^11.1.18",
     "@types/node": "^25.5.0",
     "@types/passport-jwt": "^4.0.1",
     "typescript": "^5.9.2"

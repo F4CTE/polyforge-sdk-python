@@ -14,9 +14,9 @@
   },
   "dependencies": {
     "@fastify/helmet": "^13.0.2",
-    "@nestjs/common": "^11.1.16",
+    "@nestjs/common": "^11.1.18",
     "@nestjs/config": "^4.0.2",
-    "@nestjs/core": "^11.1.16",
+    "@nestjs/core": "^11.1.18",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-fastify": "^11.1.16",
     "@nestjs/schedule": "^6.1.1",
