@@ -372,41 +372,37 @@ export class SigningService implements OnModuleInit {
     userId: string,
     tokenId: string,
   ): Promise<{ txHash: string; gasSponsored: boolean }> {
-    const creds = await this.credentials.getDecryptedCredentials(userId);
+    let txHash: string;
 
-    try {
-      let txHash: string;
-
-      if (this.isStubMode) {
-        this.logger.warn(
-          "DEV MODE: Using stub redemption — positions will NOT be redeemed on Polymarket",
-        );
-        // Stub: return a fake transaction hash
-        txHash = "dev-redemption-" + crypto.randomBytes(16).toString("hex");
-      } else {
-        const client = await this.buildClient(userId);
-
+    if (this.isStubMode) {
+      this.logger.warn(
+        "DEV MODE: Using stub redemption — positions will NOT be redeemed on Polymarket",
+      );
+      txHash = "dev-redemption-" + crypto.randomBytes(16).toString("hex");
+    } else {
+      const { client, creds } = await this.buildClient(userId);
+      try {
         const result = await client.redeemPositions([tokenId]);
         txHash = result?.transactionHash ?? "0x0";
+      } finally {
+        zeroCredentials(creds);
       }
-
-      // Use configurable gas estimate for redemptions (slightly higher than orders)
-      const gasEstimateRedemption =
-        parseFloat(this.config.get<string>("GAS_ESTIMATE_MATIC") ?? "0.002") *
-        1.5;
-      const gasSponsored = await this.gasSponsor.sponsorGas(
-        userId,
-        gasEstimateRedemption,
-      );
-
-      this.logger.log(
-        `Position redeemed for user=${userId} tokenId=${tokenId} gasSponsored=${gasSponsored}`,
-      );
-
-      return { txHash, gasSponsored };
-    } finally {
-      zeroCredentials(creds);
     }
+
+    // Use configurable gas estimate for redemptions (slightly higher than orders)
+    const gasEstimateRedemption =
+      parseFloat(this.config.get<string>("GAS_ESTIMATE_MATIC") ?? "0.002") *
+      1.5;
+    const gasSponsored = await this.gasSponsor.sponsorGas(
+      userId,
+      gasEstimateRedemption,
+    );
+
+    this.logger.log(
+      `Position redeemed for user=${userId} tokenId=${tokenId} gasSponsored=${gasSponsored}`,
+    );
+
+    return { txHash, gasSponsored };
   }
 
   // ─── CTF Split / Merge ──────────────────────────────────────────────────
@@ -420,9 +416,13 @@ export class SigningService implements OnModuleInit {
       this.logger.warn("DEV MODE: Stub split");
       return { txHash: `dev-split-${Date.now()}` };
     }
-    const client = await this.buildClient(userId);
-    const result = await client.splitPosition(tokenId, parseFloat(amount));
-    return { txHash: result.transactionHash ?? result };
+    const { client, creds } = await this.buildClient(userId);
+    try {
+      const result = await client.splitPosition(tokenId, parseFloat(amount));
+      return { txHash: result.transactionHash ?? result };
+    } finally {
+      zeroCredentials(creds);
+    }
   }
 
   async mergePosition(
@@ -434,20 +434,30 @@ export class SigningService implements OnModuleInit {
       this.logger.warn("DEV MODE: Stub merge");
       return { txHash: `dev-merge-${Date.now()}` };
     }
-    const client = await this.buildClient(userId);
-    const result = await client.mergePositions(tokenId, parseFloat(amount));
-    return { txHash: result.transactionHash ?? result };
+    const { client, creds } = await this.buildClient(userId);
+    try {
+      const result = await client.mergePositions(tokenId, parseFloat(amount));
+      return { txHash: result.transactionHash ?? result };
+    } finally {
+      zeroCredentials(creds);
+    }
   }
 
   // ─── Build ClobClient helper ────────────────────────────────────────────
 
-  private async buildClient(userId: string): Promise<any> {
+  private async buildClient(
+    userId: string,
+  ): Promise<{ client: any; creds: DecryptedCredentials }> {
     const creds = await this.credentials.getDecryptedCredentials(userId);
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { ClobClient } = require("@polymarket/clob-client");
 
-    // Convert Buffers to strings at the external API boundary
+    // Convert Buffers to strings at the external API boundary.
+    // NOTE: JS strings are immutable — the string copies passed to ClobClient
+    // will persist in V8 heap until GC. This is an inherent JS limitation.
+    // Credentials are returned so callers zero them in a finally block,
+    // ensuring Buffers are wiped even if the API call throws.
     const client = new ClobClient(
       this.clobApiUrl,
       this.chainId,
@@ -462,10 +472,7 @@ export class SigningService implements OnModuleInit {
       creds.safeAddress ?? undefined,
     );
 
-    // Zero credential Buffers now that values are passed to the client
-    zeroCredentials(creds);
-
-    return client;
+    return { client, creds };
   }
 
   // ─── Builder HMAC headers ─────────────────────────────────────────────────
