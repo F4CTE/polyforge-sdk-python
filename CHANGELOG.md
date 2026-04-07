@@ -14,6 +14,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed (CI)
 - **Fix EBUSY pnpm setup on Windows self-hosted runners** — set `dest: ${{ github.workspace }}/.pnpm-setup` on all three CI jobs (check, build, e2e) so the `pnpm/action-setup@v4` self-installer unpacks to a workspace-local directory instead of the shared SYSTEM profile (`C:\WINDOWS\system32\config\systemprofile\setup-pnpm`), preventing EBUSY collisions when multiple runners execute concurrently
+- **Restrict `trustProxy` to single hop in all NestJS services (closes #392)** — `api-service`, `auth-service`, `admin-auth-service`, `admin-api-service`: changed `FastifyAdapter({ trustProxy: true })` to `trustProxy: 1` so only the immediate nginx proxy is trusted for `X-Forwarded-For`, preventing clients from spoofing IPs to bypass rate limits
 
 ### Added
 - **Progress component (closes #164)** — `packages/ui/src/components/ui/progress.tsx`: determinate and indeterminate progress bar using `bg-pf-overlay` track, `bg-pf-cyan-500` fill, `transition-all duration-300`, and `role="progressbar"` accessibility attributes
@@ -50,6 +51,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Fix off-grid bracket dimensions in landing components (closes #126)** — `sm:pt-[100px]` → `sm:pt-24` (96px) in `hero.tsx`; `w-[7px] h-[7px]` → `w-2 h-2` on badge pulse dot; `w-[11px] h-[11px]` → `w-3 h-3` on browser chrome dots in `product-preview.tsx`; `w-[22px]` → `w-6` on hamburger bars in `nav.tsx`; all values now on 4px grid per charter §4
 - **Document loading screen hardcoded colors as intentional token exceptions (closes #151)** — added inline comment to `apps/user-app/index.html` and `apps/admin-app/index.html` explaining that CSS variables are unavailable before the React bundle loads; hex values map to design tokens (`#020817 = --color-pf-base`, `#06b6d4 = --color-pf-cyan-500`, `#64748b = --color-pf-text-muted`)
 - **Add deprecation notices to design charter §5–12 (closes #128)** — added `> ⚠️ DEPRECATED (v3.0+)` banners to Angular/PrimeNG sections (5: PrimeNG components, 6: PrimeIcons→Lucide, 7: Chart.js→Recharts, 8: p-toast/p-badge, 9: Angular animations, 11: angular.json, 12: tokens.css variable naming); each banner points to §32 and current equivalents
+
+### Fixed (Design / Accessibility)
+- **Replace focus: with focus-visible: on user-app form inputs (closes #372)** — bulk-replaced 112 occurrences of `focus:outline-none`, `focus:ring-*`, and `focus:border-*` with `focus-visible:` equivalents across 31 files in `apps/user-app/src/`; restores keyboard-only focus ring visibility per WCAG 2.1 AA §2.4.7; shared UI components in `packages/ui/` already used `focus-visible:` and were not touched
 
 ### Security
 - **Upgrade Prisma from 7.5.0 to 7.7.0 to fix transitive dependency CVEs (closes #380, closes #381, closes #382, closes #383)** — resolves 9 hono CVEs (XSS, IP spoofing, prototype pollution), lodash prototype pollution + code injection, @hono/node-server auth bypass (GHSA-wc8c-qw6v-h7f6), and effect AsyncLocalStorage context contamination (GHSA-38f7-945m-qr2g); all via transitive deps through `@prisma/dev` and `@prisma/config`

@@ -236,7 +236,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 value={d.config[dropdownOptions.key] ?? dropdownOptions.options[0]?.value ?? ''}
                 onChange={(e) => onFieldChange(dropdownOptions.key, e.target.value)}
                 aria-label={d.type === 'MATH' ? 'Operation' : d.type === 'COMPARISON' ? 'Operator' : 'Function'}
-                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-success/50 transition-colors"
+                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-success/50 transition-colors"
               >
                 {dropdownOptions.options.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -260,7 +260,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 value={d.config.windowSize ?? ''}
                 onChange={(e) => onFieldChange('windowSize', e.target.value)}
                 aria-label="Window size"
-                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-success/50 transition-colors"
+                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-success/50 transition-colors"
               />
             </div>
           )}
@@ -279,7 +279,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                   value={d.config.min ?? ''}
                   onChange={(e) => onFieldChange('min', e.target.value)}
                   aria-label="Minimum value"
-                  className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-success/50 transition-colors"
+                  className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-success/50 transition-colors"
                 />
               </div>
               <div>
@@ -293,7 +293,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                   value={d.config.max ?? ''}
                   onChange={(e) => onFieldChange('max', e.target.value)}
                   aria-label="Maximum value"
-                  className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-success/50 transition-colors"
+                  className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-success/50 transition-colors"
                 />
               </div>
             </>
@@ -312,7 +312,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 value={d.config.decimals ?? ''}
                 onChange={(e) => onFieldChange('decimals', e.target.value)}
                 aria-label="Decimal places"
-                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-success/50 transition-colors"
+                className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-success/50 transition-colors"
               />
             </div>
           )}

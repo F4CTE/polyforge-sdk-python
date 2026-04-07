@@ -583,7 +583,7 @@ function CategorySelect({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="w-full appearance-none bg-pf-surface border border-pf-border rounded-pf-sm px-3 py-2 pr-8 text-sm text-pf-text focus:outline-none focus:ring-2 focus:ring-pf-cyan-400/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full appearance-none bg-pf-surface border border-pf-border rounded-pf-sm px-3 py-2 pr-8 text-sm text-pf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-400/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <option value="">Select category…</option>
         {options.map((opt) => (

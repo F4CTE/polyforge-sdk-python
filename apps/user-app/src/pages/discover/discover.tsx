@@ -420,7 +420,7 @@ export function Component() {
             aria-label="Search strategies"
             value={searchQuery}
             onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
-            className="w-full pl-10 pr-4 py-3 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted"
+            className="w-full pl-10 pr-4 py-3 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus-visible:border-pf-cyan-500/50 focus-visible:outline-none transition-colors placeholder:text-pf-text-muted"
           />
         </div>
         {/* Tag filter */}
@@ -432,7 +432,7 @@ export function Component() {
             aria-label="Filter by tag"
             value={tagFilter}
             onChange={e => setTagFilter(e.target.value)}
-            className="pl-8 pr-3 py-3 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted w-36"
+            className="pl-8 pr-3 py-3 rounded-pf-sm text-sm bg-pf-elevated text-pf-text border border-pf-border hover:border-pf-border-strong focus-visible:border-pf-cyan-500/50 focus-visible:outline-none transition-colors placeholder:text-pf-text-muted w-36"
           />
         </div>
       </div>

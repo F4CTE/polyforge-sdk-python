@@ -146,7 +146,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onBlur={(e) => setName(e.target.value)}
               placeholder="My Strategy"
               aria-required="true"
-              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
             />
           </div>
 
@@ -162,7 +162,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onBlur={(e) => setDescription(e.target.value)}
               placeholder="What does this strategy do?"
               aria-label="Strategy description"
-              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors resize-none"
+              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors resize-none"
             />
           </div>
 
@@ -175,7 +175,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               value={execMode}
               onChange={(e) => setExecMode(e.target.value)}
               aria-label="Execution mode"
-              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
             >
               <option value="TICK">Tick - evaluate on timer</option>
               <option value="EVENT">Event - evaluate on price change</option>
@@ -197,7 +197,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 placeholder="1000"
                 min={200}
                 aria-label="Tick interval in milliseconds"
-                className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
               />
             </div>
           )}
@@ -211,7 +211,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               value={visibility}
               onChange={(e) => setVisibility(e.target.value)}
               aria-label="Strategy visibility"
-              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
             >
               <option value="PRIVATE">Private</option>
               <option value="UNLISTED">Unlisted</option>
@@ -231,7 +231,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onBlur={(e) => setTags(e.target.value)}
               placeholder="momentum, politics"
               aria-label="Strategy tags, comma-separated"
-              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
             />
           </div>
         </div>
@@ -316,7 +316,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                   value={paletteSearch}
                   onChange={e => setPaletteSearch(e.target.value)}
                   aria-label="Search blocks"
-                  className="w-full pl-7 pr-2 py-2 text-xs bg-pf-surface border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                  className="w-full pl-7 pr-2 py-2 text-xs bg-pf-surface border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
                 />
               </div>
               {(() => {

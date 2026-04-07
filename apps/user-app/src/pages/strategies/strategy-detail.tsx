@@ -1115,7 +1115,7 @@ export function Component() {
                     value={listTitle}
                     onChange={(e) => setListTitle(e.target.value)}
                     placeholder="Strategy name for the marketplace"
-                    className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                    className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
                   />
                 </div>
                 <div>
@@ -1125,7 +1125,7 @@ export function Component() {
                     onChange={(e) => setListDesc(e.target.value)}
                     rows={2}
                     placeholder="Describe your strategy's edge..."
-                    className="w-full px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 resize-none"
+                    className="w-full px-3 py-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 resize-none"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -1138,7 +1138,7 @@ export function Component() {
                       value={listPrice}
                       onChange={(e) => setListPrice(e.target.value)}
                       placeholder="0"
-                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
                     />
                     <p className="text-pf-caption text-pf-text-muted mt-1">0 = Free</p>
                   </div>
@@ -1149,7 +1149,7 @@ export function Component() {
                       value={listTags}
                       onChange={(e) => setListTags(e.target.value)}
                       placeholder="momentum, political"
-                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
                     />
                   </div>
                 </div>
@@ -1368,7 +1368,7 @@ export function Component() {
                           if (t === 'strategy_offline') setAlertThreshold('');
                         }}
                         disabled={!!editingAlert}
-                        className="w-full h-9 px-3 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-warning/50 disabled:opacity-60"
+                        className="w-full h-9 px-3 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-warning/50 disabled:opacity-60"
                       >
                         {ALERT_TYPES_ORDERED.map((t) => (
                           <option key={t} value={t}>{ALERT_TYPE_LABELS[t]}</option>
@@ -1387,7 +1387,7 @@ export function Component() {
                           placeholder="e.g. 50"
                           min="0"
                           step="any"
-                          className="w-full h-9 px-3 rounded-pf bg-pf-elevated border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-warning/50"
+                          className="w-full h-9 px-3 rounded-pf bg-pf-elevated border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-warning/50"
                         />
                       </div>
                     )}
@@ -2268,7 +2268,7 @@ function StarRow({
             onMouseEnter={() => onHover?.(n)}
             onMouseLeave={() => onHover?.(0)}
             onClick={() => onClick?.(n)}
-            className={interactive ? 'cursor-pointer focus:outline-none' : 'cursor-default pointer-events-none'}
+            className={interactive ? 'cursor-pointer focus-visible:outline-none' : 'cursor-default pointer-events-none'}
           >
             <Star
               className={`size-4 transition-colors ${

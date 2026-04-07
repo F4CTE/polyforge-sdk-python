@@ -200,7 +200,7 @@ function EditDialog({
               min={0}
               value={sizeValue}
               onChange={(e) => setSizeValue(Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus:border-pf-cyan-500/50 focus:outline-none font-mono"
+              className="w-full px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
             />
           </div>
         )}
@@ -213,7 +213,7 @@ function EditDialog({
             min={0}
             value={maxExposure}
             onChange={(e) => setMaxExposure(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus:border-pf-cyan-500/50 focus:outline-none font-mono"
+            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
           />
         </div>
 
@@ -225,7 +225,7 @@ function EditDialog({
             min={0}
             value={maxDailyLoss}
             onChange={(e) => setMaxDailyLoss(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus:border-pf-cyan-500/50 focus:outline-none font-mono"
+            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
           />
         </div>
 
@@ -239,7 +239,7 @@ function EditDialog({
             step={0.1}
             value={priceOffset}
             onChange={(e) => setPriceOffset(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus:border-pf-cyan-500/50 focus:outline-none font-mono"
+            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
           />
         </div>
 

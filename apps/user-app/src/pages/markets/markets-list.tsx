@@ -580,7 +580,7 @@ function AdvancedSearchModal({
             value={filters.query}
             onChange={(e) => updateFilters((prev) => ({ ...prev, query: e.target.value }))}
             onKeyDown={(e) => { if (e.key === 'Enter') runSearch(0); }}
-            className="w-full h-11 px-4 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors"
+            className="w-full h-11 px-4 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 focus-visible:ring-1 focus-visible:ring-pf-cyan-500/20 transition-colors"
           />
 
           {/* Categories */}
@@ -630,7 +630,7 @@ function AdvancedSearchModal({
                     type="date"
                     value={filters.endDateFrom ?? ''}
                     onChange={(e) => updateFilters((prev) => ({ ...prev, endDateFrom: e.target.value || undefined }))}
-                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
                   />
                 </div>
                 <div className="flex-1">
@@ -640,7 +640,7 @@ function AdvancedSearchModal({
                     type="date"
                     value={filters.endDateTo ?? ''}
                     onChange={(e) => updateFilters((prev) => ({ ...prev, endDateTo: e.target.value || undefined }))}
-                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
                   />
                 </div>
               </div>
@@ -660,7 +660,7 @@ function AdvancedSearchModal({
                     placeholder="0.01"
                     value={filters.minYesPrice ?? ''}
                     onChange={(e) => updateFilters((prev) => ({ ...prev, minYesPrice: e.target.value ? parseFloat(e.target.value) : undefined }))}
-                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
                   />
                 </div>
                 <span className="text-pf-text-muted text-xs mt-4">—</span>
@@ -674,7 +674,7 @@ function AdvancedSearchModal({
                     placeholder="0.99"
                     value={filters.maxYesPrice ?? ''}
                     onChange={(e) => updateFilters((prev) => ({ ...prev, maxYesPrice: e.target.value ? parseFloat(e.target.value) : undefined }))}
-                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                    className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
                   />
                 </div>
               </div>
@@ -697,7 +697,7 @@ function AdvancedSearchModal({
                   placeholder="Min"
                   value={filters.minVolume ?? ''}
                   onChange={(e) => updateFilters((prev) => ({ ...prev, minVolume: e.target.value ? parseFloat(e.target.value) : undefined }))}
-                  className="flex-1 h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                  className="flex-1 h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
                 />
                 <span className="text-pf-text-muted text-xs">—</span>
                 <Input
@@ -706,7 +706,7 @@ function AdvancedSearchModal({
                   placeholder="Max"
                   value={filters.maxVolume ?? ''}
                   onChange={(e) => updateFilters((prev) => ({ ...prev, maxVolume: e.target.value ? parseFloat(e.target.value) : undefined }))}
-                  className="flex-1 h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                  className="flex-1 h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
                 />
               </div>
             </div>
@@ -719,7 +719,7 @@ function AdvancedSearchModal({
                 placeholder="e.g. 10000"
                 value={filters.minLiquidity ?? ''}
                 onChange={(e) => updateFilters((prev) => ({ ...prev, minLiquidity: e.target.value ? parseFloat(e.target.value) : undefined }))}
-                className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                className="w-full h-8 px-2 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
               />
             </div>
           </div>
@@ -1090,7 +1090,7 @@ export function Component() {
             aria-label="Search markets"
             defaultValue=""
             onChange={(e) => onSearchInput(e.target.value)}
-            className="w-full h-11 pl-11 pr-4 rounded-pf-full bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors"
+            className="w-full h-11 pl-11 pr-4 rounded-pf-full bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 focus-visible:ring-1 focus-visible:ring-pf-cyan-500/20 transition-colors"
           />
         </div>
         {/* Advanced search button */}
@@ -1204,7 +1204,7 @@ export function Component() {
               id="sort-select"
               value={sort}
               onChange={(e) => { setSort(e.target.value as SortOption); setPage(1); }}
-              className="h-8 px-3 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+              className="h-8 px-3 rounded-pf bg-pf-elevated border border-pf-border text-xs text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
             >
               {SORT_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>

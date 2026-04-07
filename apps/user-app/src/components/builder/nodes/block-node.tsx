@@ -151,7 +151,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   /** Render a select field for strategy picker or mode picker */
   function renderSelectField(field: { key: string; label: string; placeholder: string; options?: string[] }) {
     const isEmpty = emptyFieldKeys.has(field.key);
-    const selectClass = `w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50 transition-colors ${
+    const selectClass = `w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors ${
       isEmpty ? 'border-pf-danger/40 bg-pf-danger/5' : 'border-pf-border-subtle'
     }`;
 
@@ -316,10 +316,10 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                         value={d.config[field.key] ?? ''}
                         onChange={(e) => onFieldChange(field.key, e.target.value)}
                         aria-label={field.label}
-                        className={`w-full h-7 px-2 rounded text-xs text-pf-text focus:outline-none transition-colors ${
+                        className={`w-full h-7 px-2 rounded text-xs text-pf-text focus-visible:outline-none transition-colors ${
                           isEmpty
-                            ? 'bg-pf-danger/8 border border-pf-danger/40 focus:border-pf-danger/60'
-                            : 'bg-[var(--block-color)]/10 border border-[var(--block-color)]/20 focus:border-[var(--block-color)]/50'
+                            ? 'bg-pf-danger/8 border border-pf-danger/40 focus-visible:border-pf-danger/60'
+                            : 'bg-[var(--block-color)]/10 border border-[var(--block-color)]/20 focus-visible:border-[var(--block-color)]/50'
                         }`}
                       >
                         <option value="">Select market slot...</option>
@@ -347,10 +347,10 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                           value={d.config[field.key] ?? ''}
                           onChange={(e) => onFieldChange(field.key, e.target.value)}
                           aria-label={field.label}
-                          className={`w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm placeholder:text-pf-text-muted/50 focus:outline-none transition-colors ${
+                          className={`w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm placeholder:text-pf-text-muted/50 focus-visible:outline-none transition-colors ${
                             isEmpty
-                              ? 'border-pf-danger/40 bg-pf-danger/5 focus:border-pf-danger/60'
-                              : 'border-pf-border-subtle focus:border-pf-cyan-500/50'
+                              ? 'border-pf-danger/40 bg-pf-danger/5 focus-visible:border-pf-danger/60'
+                              : 'border-pf-border-subtle focus-visible:border-pf-cyan-500/50'
                           } ${
                             (d.config[field.key] ?? '').startsWith('$')
                               ? 'text-pf-purple-500 font-mono'

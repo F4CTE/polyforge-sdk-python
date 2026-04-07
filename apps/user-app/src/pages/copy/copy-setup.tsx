@@ -231,7 +231,7 @@ export function Component() {
               aria-label="Target wallet address"
               value={targetWallet}
               onChange={(e) => setTargetWallet(e.target.value)}
-              className="w-full px-4 py-3 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border hover:border-pf-border-strong focus:border-pf-cyan-500/50 focus:outline-none transition-colors placeholder:text-pf-text-muted font-mono"
+              className="w-full px-4 py-3 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border hover:border-pf-border-strong focus-visible:border-pf-cyan-500/50 focus-visible:outline-none transition-colors placeholder:text-pf-text-muted font-mono"
             />
             {followedWhales.length > 0 && (
               <div>
@@ -372,7 +372,7 @@ export function Component() {
                         min={0}
                         value={sizeValue}
                         onChange={(e) => setSizeValue(Number(e.target.value))}
-                        className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus:border-pf-cyan-500/50 focus:outline-none font-mono"
+                        className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
                       />
                       <span className="text-sm text-pf-text-secondary">
                         {mode === 'PERCENTAGE' ? '%' : 'USD'}
@@ -393,7 +393,7 @@ export function Component() {
                     value={maxPerTrade}
                     onChange={(e) => setMaxPerTrade(parseInt(e.target.value) || 0)}
                     placeholder="500"
-                    className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                    className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
                   />
                   <p className="text-pf-caption text-pf-text-muted mt-1">Never copy more than this per single trade</p>
                 </div>
@@ -427,7 +427,7 @@ export function Component() {
                     min={0}
                     value={maxExposure}
                     onChange={(e) => setMaxExposure(Number(e.target.value))}
-                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus:border-pf-cyan-500/50 focus:outline-none font-mono"
+                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
                   />
                   <span className="text-sm text-pf-text-secondary">USD</span>
                 </div>
@@ -453,7 +453,7 @@ export function Component() {
                     min={0}
                     value={maxDailyLoss}
                     onChange={(e) => setMaxDailyLoss(Number(e.target.value))}
-                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus:border-pf-cyan-500/50 focus:outline-none font-mono"
+                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
                   />
                   <span className="text-sm text-pf-text-secondary">USD</span>
                 </div>
@@ -481,7 +481,7 @@ export function Component() {
                     step={0.1}
                     value={priceOffset}
                     onChange={(e) => setPriceOffset(Number(e.target.value))}
-                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus:border-pf-cyan-500/50 focus:outline-none font-mono"
+                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-pf-surface text-pf-text border border-pf-border focus-visible:border-pf-cyan-500/50 focus-visible:outline-none font-mono"
                   />
                   <span className="text-sm text-pf-text-secondary">%</span>
                 </div>

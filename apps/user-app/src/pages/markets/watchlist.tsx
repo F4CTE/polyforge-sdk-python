@@ -800,7 +800,7 @@ export function Component() {
                                       })
                                     }
                                     aria-label="Order amount in USDC"
-                                    className="w-16 text-center bg-transparent text-pf-text text-sm font-semibold tabular-nums py-2 focus:outline-none"
+                                    className="w-16 text-center bg-transparent text-pf-text text-sm font-semibold tabular-nums py-2 focus-visible:outline-none"
                                   />
                                   <Button
                                     variant="ghost"
@@ -980,7 +980,7 @@ export function Component() {
                                     step={0.01}
                                     value={alertThreshold}
                                     onChange={(e) => setAlertThreshold(Number(e.target.value))}
-                                    className="w-24 px-3 py-2 bg-pf-elevated border border-pf-border rounded-pf text-sm text-pf-text tabular-nums focus:outline-none focus:border-pf-cyan-500/60 focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors duration-pf-fast"
+                                    className="w-24 px-3 py-2 bg-pf-elevated border border-pf-border rounded-pf text-sm text-pf-text tabular-nums focus-visible:outline-none focus-visible:border-pf-cyan-500/60 focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors duration-pf-fast"
                                   />
                                 </div>
 

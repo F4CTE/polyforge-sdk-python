@@ -132,7 +132,7 @@ export function Component() {
                   placeholder="you@example.com"
                   aria-invalid={!!emailError}
                   aria-describedby={emailError ? 'login-email-error' : undefined}
-                  className="w-full pl-10 pr-4 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:border-pf-cyan-500 transition-colors"
                 />
               </div>
               {emailError && <p id="login-email-error" role="alert" className="mt-1 text-xs text-pf-danger">{emailError}</p>}
@@ -153,7 +153,7 @@ export function Component() {
                   placeholder="Your password"
                   aria-invalid={!!passwordError}
                   aria-describedby={passwordError ? 'login-password-error' : undefined}
-                  className="w-full pl-10 pr-10 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 transition-colors"
+                  className="w-full pl-10 pr-10 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:border-pf-cyan-500 transition-colors"
                 />
                 <Button
                   type="button"
@@ -187,7 +187,7 @@ export function Component() {
                     onChange={(e) => setTotp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="000000"
                     aria-label="6-digit authentication code"
-                    className="w-full pl-10 pr-4 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:ring-2 focus:ring-pf-cyan-500/40 focus:border-pf-cyan-500 tracking-[0.3em] font-mono transition-colors"
+                    className="w-full pl-10 pr-4 py-3 bg-pf-base border border-pf-border rounded-pf text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:border-pf-cyan-500 tracking-[0.3em] font-mono transition-colors"
                   />
                 </div>
               </div>

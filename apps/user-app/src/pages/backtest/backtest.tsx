@@ -260,7 +260,7 @@ export function Component() {
                 id="backtest-strategy"
                 value={selectedStratId}
                 onChange={e => setSelectedStratId(e.target.value)}
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
               >
                 <option value="">Select strategy</option>
                 {strategies.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -274,7 +274,7 @@ export function Component() {
                 lang="en"
                 value={dateStart}
                 onChange={e => setDateStart(e.target.value)}
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
               />
             </div>
             <div>
@@ -285,7 +285,7 @@ export function Component() {
                 lang="en"
                 value={dateEnd}
                 onChange={e => setDateEnd(e.target.value)}
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
               />
             </div>
             <div className="flex items-end">
@@ -317,7 +317,7 @@ export function Component() {
                         searchMarkets(slot.slot, e.target.value);
                       }}
                       placeholder="Search markets..."
-                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
                     />
                     {marketBindings[slot.slot] && (
                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-pf-caption text-pf-cyan-400 font-mono">bound</span>

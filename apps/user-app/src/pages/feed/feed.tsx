@@ -323,7 +323,7 @@ function CommentSection({
           onKeyDown={handleKeyDown}
           placeholder="Add a comment..."
           aria-label={`Add a comment to post ${itemId}`}
-          className="flex-1 min-w-0 bg-pf-surface border border-pf-border rounded-pf px-3 py-2 text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/60 focus:ring-1 focus:ring-pf-cyan-500/30 transition-colors"
+          className="flex-1 min-w-0 bg-pf-surface border border-pf-border rounded-pf px-3 py-2 text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/60 focus-visible:ring-1 focus-visible:ring-pf-cyan-500/30 transition-colors"
         />
         <Button
           type="button"

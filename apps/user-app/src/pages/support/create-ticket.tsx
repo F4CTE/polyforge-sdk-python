@@ -94,7 +94,7 @@ export function Component() {
             placeholder="Brief description of your issue"
             aria-required="true"
             aria-describedby={subjectError ? 'ticket-subject-error' : undefined}
-            className={`w-full h-10 px-3 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors ${subjectError ? 'border-pf-danger/50' : 'border-pf-border'}`}
+            className={`w-full h-10 px-3 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 focus-visible:ring-1 focus-visible:ring-pf-cyan-500/20 transition-colors ${subjectError ? 'border-pf-danger/50' : 'border-pf-border'}`}
           />
           {subjectError && <p id="ticket-subject-error" className="mt-1 text-xs text-pf-danger">{subjectError}</p>}
         </div>
@@ -106,7 +106,7 @@ export function Component() {
               id="ticket-category"
               value={category}
               onChange={e => setCategory(e.target.value)}
-              className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+              className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
             >
               {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </Select>
@@ -117,7 +117,7 @@ export function Component() {
               id="ticket-priority"
               value={priority}
               onChange={e => setPriority(e.target.value)}
-              className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+              className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
             >
               {PRIORITIES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
             </Select>
@@ -135,7 +135,7 @@ export function Component() {
             rows={6}
             aria-required="true"
             aria-describedby={bodyError ? 'ticket-body-error' : undefined}
-            className={`w-full px-3 py-3 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors resize-y ${bodyError ? 'border-pf-danger/50' : 'border-pf-border'}`}
+            className={`w-full px-3 py-3 rounded-pf bg-pf-surface border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 focus-visible:ring-1 focus-visible:ring-pf-cyan-500/20 transition-colors resize-y ${bodyError ? 'border-pf-danger/50' : 'border-pf-border'}`}
           />
           {bodyError && <p id="ticket-body-error" className="mt-1 text-xs text-pf-danger">{bodyError}</p>}
         </div>

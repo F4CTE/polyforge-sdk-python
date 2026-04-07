@@ -249,7 +249,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
               value={note}
               onChange={e => setNote(e.target.value)}
               placeholder="Record your reasoning, what you observed, or what you'd do differently..."
-              className="w-full px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 resize-none"
+              className="w-full px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 resize-none"
             />
           </div>
 
@@ -295,7 +295,7 @@ function InlineJournalPanel({ order, entry, onClose, onSaved, onDeleted }: Inlin
                   onChange={e => setTagInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
                   placeholder="+ add tag"
-                  className="h-6 px-2 rounded-pf-full bg-pf-elevated border border-pf-border text-pf-label text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 w-24"
+                  className="h-6 px-2 rounded-pf-full bg-pf-elevated border border-pf-border text-pf-label text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 w-24"
                 />
                 <Button type="button" variant="ghost" onClick={addTag} className="text-pf-label text-pf-cyan-400 hover:text-pf-cyan-300 transition-colors">Add</Button>
               </div>
@@ -422,14 +422,14 @@ function JournalTab({ entries, loading, onEdit, onDelete }: JournalTabProps) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search notes or markets..."
-            className="w-full h-9 pl-8 pr-3 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+            className="w-full h-9 pl-8 pr-3 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
           />
         </div>
         {allTags.length > 0 && (
           <Select
             value={tagFilter}
             onChange={e => setTagFilter(e.target.value)}
-            className="h-9 px-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+            className="h-9 px-2 rounded-pf bg-pf-elevated border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
           >
             <option value="">All tags</option>
             {allTags.map(t => <option key={t} value={t}>{t}</option>)}
@@ -622,7 +622,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
                 const mkt = positions.find(p => p.marketId === e.target.value);
                 updateField('marketId', e.target.value);
                 if (mkt) updateField('tokenId', mkt.tokenId);
-              }} required className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50">
+              }} required className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50">
                 <option value="">Select from your positions...</option>
                 {positions.map(p => (
                   <option key={p.id} value={p.marketId}>
@@ -642,7 +642,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
             <div>
               <label htmlFor="cond-type" className="block text-xs font-medium text-pf-text-secondary mb-1">Type</label>
               <Select id="cond-type" value={form.type} onChange={e => updateField('type', e.target.value)}
-                className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50">
+                className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50">
                 <option value="TAKE_PROFIT">Take Profit</option>
                 <option value="STOP_LOSS">Stop Loss</option>
                 <option value="TRAILING_STOP">Trailing Stop</option>
@@ -653,7 +653,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
             <div>
               <label htmlFor="cond-side" className="block text-xs font-medium text-pf-text-secondary mb-1">Side</label>
               <Select id="cond-side" value={form.side} onChange={e => updateField('side', e.target.value)}
-                className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50">
+                className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50">
                 <option value="BUY">BUY</option>
                 <option value="SELL">SELL</option>
               </Select>
@@ -661,7 +661,7 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
             <div>
               <label htmlFor="cond-outcome" className="block text-xs font-medium text-pf-text-secondary mb-1">Outcome</label>
               <Select id="cond-outcome" value={form.outcome} onChange={e => updateField('outcome', e.target.value)}
-                className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50">
+                className="w-full h-9 px-2 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50">
                 <option value="YES">YES</option>
                 <option value="NO">NO</option>
               </Select>
@@ -671,29 +671,29 @@ function CreateConditionalDialog({ onClose, onCreated }: { onClose: () => void; 
             <div>
               <label htmlFor="cond-size" className="block text-xs font-medium text-pf-text-secondary mb-1">Size</label>
               <Input id="cond-size" type="number" step="any" value={form.size} onChange={e => updateField('size', e.target.value)} required
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50" />
+                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50" />
             </div>
             <div>
               <label htmlFor="cond-trigger-price" className="block text-xs font-medium text-pf-text-secondary mb-1">Trigger Price</label>
               <Input id="cond-trigger-price" type="number" step="any" value={form.triggerPrice} onChange={e => updateField('triggerPrice', e.target.value)} required
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50" />
+                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50" />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label htmlFor="cond-limit-price" className="block text-xs font-medium text-pf-text-secondary mb-1">Limit Price</label>
               <Input id="cond-limit-price" type="number" step="any" value={form.limitPrice} onChange={e => updateField('limitPrice', e.target.value)} placeholder="Optional"
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50" />
+                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50" />
             </div>
             <div>
               <label htmlFor="cond-trailing-pct" className="block text-xs font-medium text-pf-text-secondary mb-1">Trailing %</label>
               <Input id="cond-trailing-pct" type="number" step="any" value={form.trailingPct} onChange={e => updateField('trailingPct', e.target.value)} placeholder="Optional"
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50" />
+                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50" />
             </div>
             <div>
               <label htmlFor="cond-expires-at" className="block text-xs font-medium text-pf-text-secondary mb-1">Expires At</label>
               <input id="cond-expires-at" type="datetime-local" lang="en" value={form.expiresAt} onChange={e => updateField('expiresAt', e.target.value)}
-                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50" />
+                className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50" />
             </div>
           </div>
           <div className="flex gap-2 justify-end pt-3 border-t border-pf-border-subtle">

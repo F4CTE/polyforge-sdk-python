@@ -857,7 +857,7 @@ export function Component() {
             placeholder="Search by username..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:max-w-sm px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 focus:ring-1 focus:ring-pf-cyan-500/20 transition-colors"
+            className="w-full sm:max-w-sm px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 focus-visible:ring-1 focus-visible:ring-pf-cyan-500/20 transition-colors"
           />
 
           {/* Category chips */}
@@ -889,7 +889,7 @@ export function Component() {
                 id="win-rate-filter"
                 value={winRate}
                 onChange={(e) => setWinRate(e.target.value as WinRateFilter)}
-                className="px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus:outline-none focus:border-pf-cyan-500/50 transition-colors cursor-pointer"
+                className="px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors cursor-pointer"
               >
                 {WIN_RATE_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -907,7 +907,7 @@ export function Component() {
                 id="min-trades-filter"
                 value={minTrades}
                 onChange={(e) => setMinTrades(e.target.value as MinTradesFilter)}
-                className="px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus:outline-none focus:border-pf-cyan-500/50 transition-colors cursor-pointer"
+                className="px-3 py-2 rounded-pf bg-pf-elevated border border-pf-border text-pf-text text-sm focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors cursor-pointer"
               >
                 {MIN_TRADES_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>

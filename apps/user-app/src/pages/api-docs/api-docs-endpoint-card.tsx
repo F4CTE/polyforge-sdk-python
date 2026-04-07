@@ -94,7 +94,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
           value={apiKey}
           onChange={e => setApiKey(e.target.value)}
           placeholder="pf_live_your_key..."
-          className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500 focus:ring-1 focus:ring-pf-cyan-500/50 font-mono"
+          className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500 focus-visible:ring-1 focus-visible:ring-pf-cyan-500/50 font-mono"
         />
       </div>
 
@@ -107,7 +107,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
             value={pathParams[name] ?? ''}
             onChange={e => setPathParams(prev => ({ ...prev, [name]: e.target.value }))}
             placeholder={name}
-            className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-xs text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500 focus:ring-1 focus:ring-pf-cyan-500/50 font-mono"
+            className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-xs text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500 focus-visible:ring-1 focus-visible:ring-pf-cyan-500/50 font-mono"
           />
         </div>
       ))}
@@ -120,7 +120,7 @@ function TryItPanel({ ep }: { ep: EndpointDef }) {
             value={body}
             onChange={e => setBody(e.target.value)}
             rows={5}
-            className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-xs text-pf-text font-mono focus:outline-none focus:border-pf-cyan-500 focus:ring-1 focus:ring-pf-cyan-500/50 resize-y"
+            className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-xs text-pf-text font-mono focus-visible:outline-none focus-visible:border-pf-cyan-500 focus-visible:ring-1 focus-visible:ring-pf-cyan-500/50 resize-y"
           />
         </div>
       )}

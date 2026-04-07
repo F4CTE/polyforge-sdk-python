@@ -561,7 +561,7 @@ function BacktestTab({
               value={dateStart}
               onChange={e => setDateStart(e.target.value)}
               aria-label="Start date"
-              className="w-full h-8 px-3 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+              className="w-full h-8 px-3 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
             />
           </div>
           <div className="flex-1 min-w-[140px]">
@@ -573,7 +573,7 @@ function BacktestTab({
               value={dateEnd}
               onChange={e => setDateEnd(e.target.value)}
               aria-label="End date"
-              className="w-full h-8 px-3 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+              className="w-full h-8 px-3 rounded-pf-sm bg-pf-surface border border-pf-border text-xs text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
             />
           </div>
           <button
@@ -958,7 +958,7 @@ function MarketBindingsSection({
                 searchMarkets(slot.slot, e.target.value);
               }}
               placeholder="Search markets..."
-              className="w-full h-7 px-2 rounded-pf-sm bg-pf-surface border border-pf-border text-pf-label text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 transition-colors"
+              className="w-full h-7 px-2 rounded-pf-sm bg-pf-surface border border-pf-border text-pf-label text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors"
             />
             {marketBindings[slot.slot] && (
               <span className="absolute right-2 top-[22px] text-pf-micro text-pf-cyan-400 font-mono">bound</span>

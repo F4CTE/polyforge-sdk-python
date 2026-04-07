@@ -206,7 +206,7 @@ function MaxLossEditor({
             if (e.key === 'Escape') { e.stopPropagation(); setEditing(false); }
           }}
           disabled={saving}
-          className="w-20 px-2 py-1 rounded bg-pf-surface border border-pf-cyan-500/40 text-pf-text text-pf-label font-mono focus:outline-none"
+          className="w-20 px-2 py-1 rounded bg-pf-surface border border-pf-cyan-500/40 text-pf-text text-pf-label font-mono focus-visible:outline-none"
         />
         <Button
           type="button"

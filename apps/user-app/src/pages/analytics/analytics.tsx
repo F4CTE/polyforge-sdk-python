@@ -733,7 +733,7 @@ export function Component() {
               if (e.key === 'Enter' && !loadingAiQuery) submitAiQuery();
             }}
             placeholder="Ask about your portfolio..."
-            className="flex-1 bg-pf-surface border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:ring-2 focus:ring-pf-cyan-400/40 transition"
+            className="flex-1 bg-pf-surface border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-400/40 transition"
             disabled={loadingAiQuery}
             aria-label="Ask AI a question about your portfolio"
           />

@@ -236,7 +236,7 @@ export function Component() {
                     }
                   }}
                   placeholder="Search markets..."
-                  className="w-full bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:ring-1 focus:ring-pf-cyan-500/50"
+                  className="w-full bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500/50"
                 />
                 {showDropdown && (
                   <div className="absolute z-20 w-full top-full mt-1 rounded-pf border border-pf-border bg-pf-elevated shadow-pf-lg overflow-hidden">
@@ -302,7 +302,7 @@ export function Component() {
                 <Select
                   value={direction}
                   onChange={e => setDirection(e.target.value as 'above' | 'below')}
-                  className="w-full bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text focus:outline-none focus:ring-1 focus:ring-pf-cyan-500/50"
+                  className="w-full bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500/50"
                 >
                   <option value="above">Price rises above</option>
                   <option value="below">Price falls below</option>
@@ -319,7 +319,7 @@ export function Component() {
                   step="0.01"
                   value={price}
                   onChange={e => setPrice(e.target.value)}
-                  className="w-full bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text font-mono focus:outline-none focus:ring-1 focus:ring-pf-cyan-500/50"
+                  className="w-full bg-pf-elevated border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500/50"
                 />
               </div>
             </div>

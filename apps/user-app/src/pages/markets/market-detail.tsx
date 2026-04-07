@@ -1533,7 +1533,7 @@ export function Component() {
                   onChange={(e) => setTradePrice(e.target.value)}
                   disabled={isMarketOrder}
                   placeholder="0.65"
-                  className="w-full h-11 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50 disabled:opacity-40"
+                  className="w-full h-11 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50 disabled:opacity-40"
                 />
               </div>
 
@@ -1543,7 +1543,7 @@ export function Component() {
                   type="checkbox"
                   checked={isMarketOrder}
                   onChange={(e) => setIsMarketOrder(e.target.checked)}
-                  className="rounded border-pf-border bg-pf-surface text-pf-cyan-500 focus:ring-pf-cyan-500/30"
+                  className="rounded border-pf-border bg-pf-surface text-pf-cyan-500 focus-visible:ring-pf-cyan-500/30"
                 />
                 <span className="text-xs text-pf-text-secondary">Market Order</span>
               </label>
@@ -1594,7 +1594,7 @@ export function Component() {
                     value={tradeAmount}
                     onChange={(e) => setTradeAmount(e.target.value)}
                     placeholder="10"
-                    className="w-full h-11 px-3 pr-14 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                    className="w-full h-11 px-3 pr-14 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-pf-text-muted">USDC</span>
                 </div>
@@ -1730,7 +1730,7 @@ export function Component() {
                       id="lp-token"
                       value={lpTokenId}
                       onChange={(e) => setLpTokenId(e.target.value)}
-                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
                     >
                       {(market?.tokens ?? []).map((t) => (
                         <option key={t.id} value={t.id}>
@@ -1754,7 +1754,7 @@ export function Component() {
                       value={lpSpread}
                       onChange={(e) => setLpSpread(e.target.value)}
                       placeholder="0.02"
-                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
                     />
                   </div>
 
@@ -1771,7 +1771,7 @@ export function Component() {
                       value={lpSize}
                       onChange={(e) => setLpSize(e.target.value)}
                       placeholder="10"
-                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                      className="w-full h-9 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm font-mono text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
                     />
                   </div>
 
@@ -2299,7 +2299,7 @@ export function Component() {
                       value={condTriggerPrice}
                       onChange={(e) => setCondTriggerPrice(e.target.value)}
                       placeholder="e.g. 0.75"
-                      className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                      className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
                     />
                   </div>
                   <div>
@@ -2312,7 +2312,7 @@ export function Component() {
                       value={condSize}
                       onChange={(e) => setCondSize(e.target.value)}
                       placeholder="e.g. 100"
-                      className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500/50"
+                      className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
                     />
                   </div>
                   <div className="flex gap-2 justify-end pt-3 border-t border-pf-border-subtle">
@@ -2368,7 +2368,7 @@ export function Component() {
                       id="run-strategy-select"
                       value={selectedStrategyId}
                       onChange={(e) => setSelectedStrategyId(e.target.value)}
-                      className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus:outline-none focus:border-pf-cyan-500/50"
+                      className="w-full h-10 px-3 rounded-pf bg-pf-surface border border-pf-border text-sm text-pf-text focus-visible:outline-none focus-visible:border-pf-cyan-500/50"
                     >
                       <option value="">Choose a strategy...</option>
                       {strategyOptions.map((s) => (

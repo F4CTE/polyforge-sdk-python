@@ -141,7 +141,7 @@ function LogicNodeInner({ id, data }: NodeProps<LogicNode>) {
                   value={d.config[field.key] ?? ''}
                   onChange={(e) => onFieldChange(field.key, e.target.value)}
                   aria-label={field.label}
-                  className={`w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-cyan-500/50 transition-colors ${
+                  className={`w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-cyan-500/50 transition-colors ${
                     (d.config[field.key] ?? '').startsWith('$')
                       ? 'text-pf-purple-400 font-mono'
                       : 'text-pf-text'

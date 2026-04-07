@@ -74,7 +74,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search docs..."
-          className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus:outline-none focus:border-pf-cyan-500 focus:ring-1 focus:ring-pf-cyan-500/50 pr-8"
+          className="w-full bg-pf-base border border-pf-border rounded-pf-sm px-3 py-2 text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:border-pf-cyan-500 focus-visible:ring-1 focus-visible:ring-pf-cyan-500/50 pr-8"
         />
         {searchQuery && (
           <Button

@@ -163,10 +163,10 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               value={data.variableName ?? ''}
               onChange={onNameChange}
               aria-describedby={!nameValid ? `${id}-name-error` : undefined}
-              className={`w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none transition-colors ${
+              className={`w-full px-2 py-1 text-xs bg-pf-surface border rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none transition-colors ${
                 nameValid
-                  ? 'border-pf-border-subtle focus:border-pf-purple-500/50'
-                  : 'border-pf-danger/60 focus:border-pf-danger'
+                  ? 'border-pf-border-subtle focus-visible:border-pf-purple-500/50'
+                  : 'border-pf-danger/60 focus-visible:border-pf-danger'
               }`}
             />
             {!nameValid && (
@@ -188,7 +188,7 @@ function VariableNodeInner({ id, data }: NodeProps<VariableNodeType>) {
               value={data.expression ?? ''}
               onChange={onExpressionChange}
               aria-label="Variable expression"
-              className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus:outline-none focus:border-pf-purple-500/50 transition-colors font-mono"
+              className="w-full px-2 py-1 text-xs bg-pf-surface border border-pf-border-subtle rounded-pf-sm text-pf-text placeholder:text-pf-text-muted/50 focus-visible:outline-none focus-visible:border-pf-purple-500/50 transition-colors font-mono"
             />
           </div>
 
