@@ -115,6 +115,28 @@ cd C:\actions-runner
 .\scripts\setup-runner.ps1 -Token ghp_NEW_TOKEN
 ```
 
+## CI Secrets (E2E Job)
+
+The E2E job requires encryption keys and JWT secrets. These are stored as GitHub
+Actions Encrypted Secrets — never hardcode them in the workflow file (CWE-321).
+
+| Secret name | Purpose |
+|-------------|---------|
+| `CI_MASTER_ENCRYPTION_KEY` | 256-bit AES KEK for E2E wallet encryption |
+| `CI_TOTP_ENCRYPTION_KEY` | 256-bit AES key for E2E TOTP encryption |
+| `CI_INTERNAL_JWT_SECRET` | JWT signing for internal service-to-service auth |
+| `CI_USER_JWT_SECRET` | JWT signing for user auth |
+| `CI_ADMIN_JWT_SECRET` | JWT signing for admin auth |
+| `CI_BOT_JWT_SECRET` | JWT signing for bot auth |
+
+Generate CI-only values (not shared with production):
+```bash
+openssl rand -hex 32  # for encryption keys
+openssl rand -base64 32  # for JWT secrets
+```
+
+Add via: Settings → Secrets and variables → Actions → New repository secret.
+
 ## Security Notes
 
 - The runner executes code from PRs. For public repos, restrict to `push` events only.

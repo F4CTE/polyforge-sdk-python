@@ -126,13 +126,13 @@ jobs:
       DIRECT_DATABASE_URL: 'postgresql://poly:devpass@localhost:5432/polyforge'
       ADMIN_DIRECT_DATABASE_URL: 'postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin'
       NODE_ENV: development
-      # Dev-safe dummy secrets for docker-compose required vars.
-      INTERNAL_JWT_SECRET: 'ci-internal-jwt-secret-not-for-production'
-      USER_JWT_SECRET: 'ci-user-jwt-secret-not-for-production'
-      ADMIN_JWT_SECRET: 'ci-admin-jwt-secret-not-for-production'
-      BOT_JWT_SECRET: 'ci-bot-jwt-secret-not-for-production'
-      MASTER_ENCRYPTION_KEY: 'aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233'
-      TOTP_ENCRYPTION_KEY: 'ff6600112233aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55'
+      # Secrets stored in GitHub Actions Encrypted Secrets — never hardcode keys (CWE-321)
+      INTERNAL_JWT_SECRET: ${{ secrets.CI_INTERNAL_JWT_SECRET }}
+      USER_JWT_SECRET: ${{ secrets.CI_USER_JWT_SECRET }}
+      ADMIN_JWT_SECRET: ${{ secrets.CI_ADMIN_JWT_SECRET }}
+      BOT_JWT_SECRET: ${{ secrets.CI_BOT_JWT_SECRET }}
+      MASTER_ENCRYPTION_KEY: ${{ secrets.CI_MASTER_ENCRYPTION_KEY }}
+      TOTP_ENCRYPTION_KEY: ${{ secrets.CI_TOTP_ENCRYPTION_KEY }}
     steps:
       - uses: actions/checkout@v4
 

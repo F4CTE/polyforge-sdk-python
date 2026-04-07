@@ -7,6 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-04-07
 
+### Fixed (Security)
+- **Move hardcoded E2E encryption keys to GitHub Actions Encrypted Secrets (closes #378)** — `MASTER_ENCRYPTION_KEY`, `TOTP_ENCRYPTION_KEY`, and all JWT secrets in the E2E job now reference `${{ secrets.CI_* }}` instead of plaintext values committed to git history (CWE-321); repository maintainer must add `CI_MASTER_ENCRYPTION_KEY`, `CI_TOTP_ENCRYPTION_KEY`, `CI_INTERNAL_JWT_SECRET`, `CI_USER_JWT_SECRET`, `CI_ADMIN_JWT_SECRET`, `CI_BOT_JWT_SECRET` via Settings → Secrets and variables → Actions
+
 ### Fixed (CI)
 - **Replace pnpm/action-setup@v4 with corepack enable** — `pnpm/action-setup@v4` targets Node.js 20 and fails on the self-hosted runner when `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` forces Node 24 execution; replaced with `corepack enable` in all three CI jobs (check, build, e2e), which uses the `packageManager: pnpm@9.0.0` field in package.json — this unblocks CI for all open PRs
 - **Fix EBUSY pnpm setup on Windows self-hosted runners** — set `dest: ${{ github.workspace }}/.pnpm-setup` on all three CI jobs (check, build, e2e) so the `pnpm/action-setup@v4` self-installer unpacks to a workspace-local directory instead of the shared SYSTEM profile (`C:\WINDOWS\system32\config\systemprofile\setup-pnpm`), preventing EBUSY collisions when multiple runners execute concurrently
