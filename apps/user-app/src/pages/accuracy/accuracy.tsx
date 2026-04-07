@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { Target, Info } from 'lucide-react';
 import { Button } from '@polyforge/ui';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
+import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 import {
   ScatterChart,
   Scatter,
@@ -232,7 +233,7 @@ export function Component() {
                   type="number"
                   domain={[0, 1]}
                   ticks={[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]}
-                  tick={{ fontSize: 10, fill: textMuted }}
+                  tick={chartAxisTick}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(v: number) => v.toFixed(1)}
@@ -243,7 +244,7 @@ export function Component() {
                   type="number"
                   domain={[0, 1]}
                   ticks={[0, 0.25, 0.5, 0.75, 1]}
-                  tick={{ fontSize: 10, fill: textMuted }}
+                  tick={chartAxisTick}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(v: number) => v.toFixed(2)}
@@ -252,13 +253,8 @@ export function Component() {
                 />
                 <Tooltip
                   cursor={{ strokeDasharray: '3 3', stroke: borderColor }}
-                  contentStyle={{
-                    background: bgElevated,
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: 6,
-                    fontSize: 12,
-                  }}
-                  labelStyle={{ color: textSecondary }}
+                  contentStyle={chartTooltipContentStyle}
+                  labelStyle={chartTooltipLabelStyle}
                   itemStyle={{ color: cyan500 }}
                   formatter={(value: number, name: string) => [value.toFixed(3), name === 'frequency' ? 'Actual' : 'Predicted']}
                 />

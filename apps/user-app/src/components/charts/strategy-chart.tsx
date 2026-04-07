@@ -4,6 +4,7 @@ import {
 } from 'recharts';
 import { TrendingUp, Loader2, AlertTriangle } from 'lucide-react';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
+import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -215,7 +216,7 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
                 scale="time"
                 domain={[fullDomainMin, fullDomainMax]}
                 tickFormatter={formatTickLabel}
-                tick={{ fontSize: 9, fill: textMuted }}
+                tick={chartAxisTick}
                 tickLine={false}
                 axisLine={false}
                 interval="preserveStartEnd"
@@ -223,23 +224,16 @@ export function StrategyChart({ tokenId, label, trades, dateFrom, dateTo, live =
               />
               <YAxis
                 domain={[0, 1]}
-                tick={{ fontSize: 9, fill: textMuted }}
+                tick={chartAxisTick}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v: number) => v.toFixed(2)}
                 width={32}
               />
               <Tooltip
-                contentStyle={{
-                  background: bgElevated,
-                  border: `1px solid ${border}`,
-                  borderRadius: 4,
-                  fontSize: 11,
-                  fontFamily: "'JetBrains Mono', monospace",
-                  padding: '4px 8px',
-                }}
+                contentStyle={chartTooltipContentStyle}
                 labelFormatter={(ts: number) => formatTooltipDate(ts)}
-                labelStyle={{ color: theme.current.textSec, marginBottom: 2 }}
+                labelStyle={chartTooltipLabelStyle}
                 itemStyle={{ color: cyan }}
                 formatter={(v: number) => [v.toFixed(3), 'Price']}
               />

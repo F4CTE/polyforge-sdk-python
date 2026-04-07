@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Button } from '@polyforge/ui';
+import { chartTooltipContentStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 import {
   Plus,
   Play,
@@ -257,24 +258,18 @@ function ComparisonPanel({ perfData, loading, onBack }: ComparisonPanelProps) {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-pf-border)" />
               <XAxis
                 dataKey="date"
-                tick={{ fill: 'var(--color-pf-text-muted)', fontSize: 11 }}
+                tick={chartAxisTick}
                 axisLine={{ stroke: 'var(--color-pf-border)' }}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fill: 'var(--color-pf-text-muted)', fontSize: 11 }}
+                tick={chartAxisTick}
                 axisLine={{ stroke: 'var(--color-pf-border)' }}
                 tickLine={false}
                 tickFormatter={(v: number) => `$${v}`}
               />
               <Tooltip
-                contentStyle={{
-                  background: 'var(--color-pf-elevated)',
-                  border: '1px solid var(--color-pf-border)',
-                  borderRadius: '8px',
-                  fontSize: 12,
-                  color: 'var(--color-pf-text)',
-                }}
+                contentStyle={chartTooltipContentStyle}
                 formatter={(value: number, name: string) => {
                   const strategy = perfData.find((s) => s.strategyId === name);
                   return [`$${value.toFixed(2)}`, strategy?.name ?? name];

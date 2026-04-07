@@ -5,6 +5,7 @@ import {
   Play, ChevronLeft, ChevronRight, History, X, AlertTriangle, XCircle, Loader2,
 } from 'lucide-react';
 import { Button, Input, Select } from '@polyforge/ui';
+import { chartTooltipContentStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -421,9 +422,9 @@ export function Component() {
                             <stop offset="100%" stopColor="var(--color-pf-cyan-400)" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <XAxis dataKey="time" tick={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                        <YAxis tick={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace" }} tickLine={false} axisLine={false} width={45} tickFormatter={(v: number) => `$${v.toFixed(0)}`} />
-                        <Tooltip formatter={(v: number) => [`$${v.toFixed(2)}`, 'P&L']} contentStyle={{ background: 'var(--color-pf-chart-tooltip-bg)', border: '1px solid var(--color-pf-chart-tooltip-border)', borderRadius: 6, fontSize: 11 }} />
+                        <XAxis dataKey="time" tick={chartAxisTick} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                        <YAxis tick={chartAxisTick} tickLine={false} axisLine={false} width={45} tickFormatter={(v: number) => `$${v.toFixed(0)}`} />
+                        <Tooltip formatter={(v: number) => [`$${v.toFixed(2)}`, 'P&L']} contentStyle={chartTooltipContentStyle} />
                         <Area type="monotone" dataKey="value" stroke="var(--color-pf-cyan-400)" strokeWidth={1.5} fill="url(#btGrad)" dot={false} />
                       </AreaChart>
                     </ResponsiveContainer>

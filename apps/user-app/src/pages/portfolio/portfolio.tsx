@@ -18,6 +18,7 @@ import { useThemeStore } from '@/stores/theme-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button, Input, Select } from '@polyforge/ui';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
+import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -1879,19 +1880,16 @@ export function Component() {
                       </linearGradient>
                     </defs>
                     <XAxis
-                      dataKey="time" tick={{ fill: textMuted, fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
+                      dataKey="time" tick={chartAxisTick}
                       axisLine={false} tickLine={false}
                     />
                     <YAxis
-                      tick={{ fill: textMuted, fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }}
+                      tick={chartAxisTick}
                       axisLine={false} tickLine={false} tickFormatter={v => `$${v}`}
                     />
                     <Tooltip
-                      contentStyle={{
-                        background: bgElevated, border: `1px solid ${borderColor}`, borderRadius: 6,
-                        fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
-                      }}
-                      labelStyle={{ color: textPrimary }}
+                      contentStyle={chartTooltipContentStyle}
+                      labelStyle={chartTooltipLabelStyle}
                       formatter={(value: number) => [`${value >= 0 ? '+' : ''}$${value.toFixed(2)}`, 'P&L']}
                     />
                     <Area

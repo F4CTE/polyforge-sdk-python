@@ -4,6 +4,7 @@ import {
 } from 'recharts';
 import { Button, Input } from '@polyforge/ui';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
+import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 import {
   LineChart as LineChartIcon,
   Bot,
@@ -463,25 +464,20 @@ export function Component() {
                 </defs>
                 <XAxis
                   dataKey="time"
-                  tick={{ fill: textMuted, fontSize: 10 }}
+                  tick={chartAxisTick}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: textMuted, fontSize: 10 }}
+                  tick={chartAxisTick}
                   axisLine={false}
                   tickLine={false}
                   width={56}
                   tickFormatter={(v: number) => `$${v.toFixed(0)}`}
                 />
                 <Tooltip
-                  contentStyle={{
-                    background: bgElevated,
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: 6,
-                    fontSize: 12,
-                  }}
-                  labelStyle={{ color: textSecondary }}
+                  contentStyle={chartTooltipContentStyle}
+                  labelStyle={chartTooltipLabelStyle}
                   itemStyle={{ color: chartColor }}
                   formatter={(value: number) => [
                     `${value >= 0 ? '+' : ''}$${value.toFixed(2)}`,

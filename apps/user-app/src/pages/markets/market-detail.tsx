@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router';
 import { toast } from 'sonner';
 import { Button, Input, Select } from '@polyforge/ui';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
+import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 import { wsManager, WebSocketManager } from '@/lib/websocket';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -1002,7 +1003,7 @@ export function Component() {
                     <CartesianGrid strokeDasharray="3 3" stroke={borderColor} strokeOpacity={0.4} vertical={false} />
                     <XAxis
                       dataKey="label"
-                      tick={{ fontSize: 10, fill: textMuted }}
+                      tick={chartAxisTick}
                       tickLine={false}
                       axisLine={false}
                       interval="preserveStartEnd"
@@ -1011,7 +1012,7 @@ export function Component() {
                     <YAxis
                       yAxisId="price"
                       domain={[0, 1]}
-                      tick={{ fontSize: 10, fill: textMuted }}
+                      tick={chartAxisTick}
                       tickLine={false}
                       axisLine={false}
                       tickFormatter={(v: number) => v.toFixed(2)}
@@ -1021,7 +1022,7 @@ export function Component() {
                     <YAxis
                       yAxisId="volume"
                       orientation="right"
-                      tick={{ fontSize: 10, fill: textMuted }}
+                      tick={chartAxisTick}
                       tickLine={false}
                       axisLine={false}
                       tickFormatter={(v: number) => v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${v.toFixed(0)}`}
@@ -1123,28 +1124,22 @@ export function Component() {
                       </defs>
                       <XAxis
                         dataKey="time"
-                        tick={{ fontSize: 10, fill: textMuted }}
+                        tick={chartAxisTick}
                         tickLine={false}
                         axisLine={false}
                         interval="preserveStartEnd"
                       />
                       <YAxis
                         domain={[0, 1]}
-                        tick={{ fontSize: 10, fill: textMuted }}
+                        tick={chartAxisTick}
                         tickLine={false}
                         axisLine={false}
                         tickFormatter={(v: number) => v.toFixed(2)}
                         width={40}
                       />
                       <Tooltip
-                        contentStyle={{
-                          background: bgElevated,
-                          border: `1px solid ${borderColor}`,
-                          borderRadius: 6,
-                          fontSize: 12,
-                          fontFamily: "'JetBrains Mono', monospace",
-                        }}
-                        labelStyle={{ color: textSecondary }}
+                        contentStyle={chartTooltipContentStyle}
+                        labelStyle={chartTooltipLabelStyle}
                         itemStyle={{ color: cyan500 }}
                         formatter={(value: number) => [value.toFixed(3), 'YES']}
                       />
@@ -1337,14 +1332,14 @@ export function Component() {
                               dataKey="price"
                               type="number"
                               domain={[0, 1]}
-                              tick={{ fontSize: 10, fill: textMuted }}
+                              tick={chartAxisTick}
                               tickLine={false}
                               axisLine={false}
                               tickFormatter={(v: number) => v.toFixed(2)}
                               interval="preserveStartEnd"
                             />
                             <YAxis
-                              tick={{ fontSize: 10, fill: textMuted }}
+                              tick={chartAxisTick}
                               tickLine={false}
                               axisLine={false}
                               tickFormatter={formatDepthSize}

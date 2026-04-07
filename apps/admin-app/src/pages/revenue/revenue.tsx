@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@polyforge/ui';
+import { chartTooltipContentStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 import {
   DollarSign, TrendingUp, TrendingDown, BarChart2,
   PieChart as PieChartIcon, Users, ShoppingBag, GitFork, Star, RefreshCw,
@@ -512,12 +513,7 @@ export function Component() {
                     </Pie>
                     <Tooltip
                       formatter={(value: number) => [fmtDollar(value), '']}
-                      contentStyle={{
-                        backgroundColor: 'var(--color-pf-surface)',
-                        border: '1px solid var(--color-pf-border)',
-                        borderRadius: '6px',
-                        fontSize: 12,
-                      }}
+                      contentStyle={chartTooltipContentStyle}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -665,11 +661,11 @@ export function Component() {
                 margin={{ top: 4, right: 48, left: 8, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-pf-chart-grid)" />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--color-pf-text-secondary)' }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="label" tick={chartAxisTick} axisLine={false} tickLine={false} />
                 <YAxis
                   yAxisId="left"
                   tickFormatter={fmtDollar}
-                  tick={{ fontSize: 11, fill: 'var(--color-pf-text-secondary)' }}
+                  tick={chartAxisTick}
                   axisLine={false}
                   tickLine={false}
                   width={56}
@@ -677,7 +673,7 @@ export function Component() {
                 <YAxis
                   yAxisId="right"
                   orientation="right"
-                  tick={{ fontSize: 11, fill: 'var(--color-pf-text-secondary)' }}
+                  tick={chartAxisTick}
                   axisLine={false}
                   tickLine={false}
                   width={40}
@@ -714,8 +710,8 @@ export function Component() {
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={compareData} margin={{ top: 4, right: 16, left: 8, bottom: 0 }} barCategoryGap="30%">
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-pf-chart-grid)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--color-pf-text-secondary)' }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={fmtDollar} tick={{ fontSize: 10, fill: 'var(--color-pf-text-secondary)' }} axisLine={false} tickLine={false} width={52} />
+                <XAxis dataKey="name" tick={chartAxisTick} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={fmtDollar} tick={chartAxisTick} axisLine={false} tickLine={false} width={52} />
                 <Tooltip content={<CompareTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
                 <Bar dataKey="Current" name="Current" radius={[2, 2, 0, 0]} opacity={0.85}>
