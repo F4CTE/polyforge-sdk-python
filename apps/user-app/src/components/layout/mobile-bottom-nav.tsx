@@ -28,8 +28,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Mobile navigation"
-      className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-pf-surface border-t border-pf-border flex items-stretch h-16"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-pf-surface border-t border-pf-border flex items-stretch h-16 pb-safe-area"
     >
       {navItems.map((item) => (
         <NavLink

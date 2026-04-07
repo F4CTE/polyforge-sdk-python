@@ -2,6 +2,10 @@
 
 /* Landing-specific overrides */
 
+.product-preview-tilt {
+  transform: perspective(1200px) rotateX(2deg);
+}
+
 @keyframes float-particle {
   0% {
     transform: translateY(0) translateX(0);

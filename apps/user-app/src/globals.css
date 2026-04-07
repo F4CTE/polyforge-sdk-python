@@ -105,6 +105,11 @@
   outline-offset: -2px !important;
 }
 
+/* ─── Safe-area utility ──────────────────────────────────────────────── */
+.pb-safe-area {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* ─── Auth background ────────────────────────────────────────────────── */
 .auth-bg-gradient {
   background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-pf-cyan-500) 10%, transparent) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, color-mix(in srgb, var(--color-pf-cyan-500) 5%, transparent) 0%, transparent 40%);

@@ -5,7 +5,7 @@ export function ProductPreview() {
       aria-label="Product dashboard preview"
     >
       <div className="max-w-[1100px] mx-auto px-6">
-        <div className="dark bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden transition-transform duration-pf-slow shadow-pf-lg [transform:perspective(1200px)_rotateX(2deg)]">
+        <div className="dark bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden transition-transform duration-pf-slow shadow-pf-lg product-preview-tilt">
           {/* Browser chrome */}
           <div
             className="flex items-center gap-2 px-4 py-3 border-b border-pf-border-subtle bg-pf-elevated"
@@ -14,7 +14,7 @@ export function ProductPreview() {
             <span className="w-3 h-3 rounded-pf-full bg-pf-danger" />
             <span className="w-3 h-3 rounded-pf-full bg-pf-warning" />
             <span className="w-3 h-3 rounded-pf-full bg-pf-success" />
-            <span className="flex-1 text-center text-pf-label font-mono text-pf-text-muted bg-white/4 rounded px-3 py-1 ml-2">
+            <span className="flex-1 text-center text-pf-label font-mono text-pf-text-muted bg-pf-text/4 rounded-pf-sm px-3 py-1 ml-2">
               app.polyforge.app/dashboard
             </span>
           </div>

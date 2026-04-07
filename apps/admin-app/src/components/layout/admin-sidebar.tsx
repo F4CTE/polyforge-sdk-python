@@ -171,7 +171,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                   <span className="shrink-0 relative">
                     {item.icon}
                     {collapsed && item.label === 'Tickets' && openTickets > 0 && (
-                      <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[14px] h-4 px-1 rounded-pf-full bg-pf-cyan-500 text-pf-micro font-bold text-pf-text-contrast" aria-label={`${openTickets} open tickets`}>
+                      <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-4 h-4 px-1 rounded-pf-full bg-pf-cyan-500 text-pf-micro font-bold text-pf-text-contrast" aria-label={`${openTickets} open tickets`}>
                         {openTickets}
                       </span>
                     )}

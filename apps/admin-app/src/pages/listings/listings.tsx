@@ -340,7 +340,7 @@ export function Component() {
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-pf-text">Marketplace Listings</h2>
           {pendingCount > 0 && (
-            <span className="flex items-center justify-center min-w-[22px] h-5 px-2 rounded-pf-full bg-pf-warning text-pf-caption font-bold text-pf-text-contrast" aria-label={`${pendingCount} pending listings`}>
+            <span className="flex items-center justify-center min-w-6 h-5 px-2 rounded-pf-full bg-pf-warning text-pf-caption font-bold text-pf-text-contrast" aria-label={`${pendingCount} pending listings`}>
               {pendingCount}
             </span>
           )}

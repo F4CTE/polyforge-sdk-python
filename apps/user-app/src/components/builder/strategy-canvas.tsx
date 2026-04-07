@@ -148,7 +148,7 @@ export function StrategyCanvas() {
         />
         <MiniMap
           position="bottom-right"
-          style={{ width: 180, height: 120 }}
+          className="!w-[180px] !h-[120px]"
           maskColor={isDark
             ? 'color-mix(in srgb, var(--color-pf-base) 60%, transparent)'
             : 'color-mix(in srgb, var(--color-pf-base) 60%, transparent)'}
