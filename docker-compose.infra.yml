@@ -157,10 +157,10 @@ services:
   # ─── MAILHOG ───────────────────────────────────────────────────────────────
 
   mailhog:
-    image: mailhog/mailhog:latest
+    image: axllent/mailpit:v1.23
     ports:
-      - "8025:8025"
-      - "1025:1025"
+      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:1025:1025"
     networks: [internal]
 
   # ─── MOCK POLYMARKET ─────────────────────────────────────────────────────
