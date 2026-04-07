@@ -17,6 +17,11 @@
  * Reset: pnpm reset (drops DB and re-runs migrations + seed)
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+const crypto_1 = require("crypto");
+if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development') {
+    console.error('ERROR: Seed scripts must only run in development environment');
+    process.exit(1);
+}
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaPg } = require('@prisma/adapter-pg');
 const client_1 = require(".prisma/client");
@@ -30,6 +35,9 @@ const BCRYPT_COST = 12;
 // ─────────────────────────────────────────────────────────────────────────────
 async function hashPassword(plain) {
     return bcrypt.hash(plain, BCRYPT_COST);
+}
+function generateSeedPassword() {
+    return (0, crypto_1.randomBytes)(16).toString('base64url');
 }
 function daysAgo(n) {
     const d = new Date();
@@ -222,6 +230,8 @@ const scalperActions = [
 // ─────────────────────────────────────────────────────────────────────────────
 async function main() {
     console.log('🌱 Seeding user database...\n');
+    const seedPassword = generateSeedPassword();
+    console.log(`🔑 Generated seed password for all users: ${seedPassword}\n`);
     // ───────────────────────────────────────────────
     // USERS
     // ───────────────────────────────────────────────
@@ -231,7 +241,7 @@ async function main() {
         update: {},
         create: {
             email: 'alice@dev.local',
-            passwordHash: await hashPassword('password123'),
+            passwordHash: await hashPassword(seedPassword),
             username: 'alice',
             displayName: 'Alice Martin',
             bio: 'Momentum trader. Focused on political markets.',
@@ -252,7 +262,7 @@ async function main() {
         update: {},
         create: {
             email: 'bob@dev.local',
-            passwordHash: await hashPassword('password123'),
+            passwordHash: await hashPassword(seedPassword),
             username: 'bob',
             displayName: 'Bob Chen',
             bio: 'Quant background. I backtest everything.',
@@ -270,7 +280,7 @@ async function main() {
         update: {},
         create: {
             email: 'charlie@dev.local',
-            passwordHash: await hashPassword('password123'),
+            passwordHash: await hashPassword(seedPassword),
             username: 'charlie',
             displayName: 'Charlie Dev',
             bio: 'Just getting started with prediction markets.',
@@ -287,7 +297,7 @@ async function main() {
         update: {},
         create: {
             email: 'carol@dev.local',
-            passwordHash: await hashPassword('Test1234!'),
+            passwordHash: await hashPassword(seedPassword),
             username: 'carol',
             displayName: 'Carol Paper',
             bio: 'Paper trading while I learn the ropes.',
@@ -304,7 +314,7 @@ async function main() {
         update: {},
         create: {
             email: 'dave@dev.local',
-            passwordHash: await hashPassword('Test1234!'),
+            passwordHash: await hashPassword(seedPassword),
             username: 'dave',
             displayName: 'Dave Suspended',
             emailVerified: true,
@@ -1642,13 +1652,14 @@ async function main() {
     // DONE
     // ───────────────────────────────────────────────
     console.log('\n✅ User database seed complete!\n');
-    console.log('  Dev credentials:');
+    console.log('  Dev credentials (password shown at seed start):');
     console.log('  ┌──────────────────────────────────────────────────────┐');
-    console.log('  │  alice@dev.local   / password123  (connected)        │');
-    console.log('  │  bob@dev.local     / password123  (verified)         │');
-    console.log('  │  charlie@dev.local / password123  (verified)         │');
-    console.log('  │  carol@dev.local   / Test1234!    (verified, paper)  │');
-    console.log('  │  dave@dev.local    / Test1234!    (suspended)        │');
+    console.log(`  │  All users share the generated password above     │`);
+    console.log(`  │  alice@dev.local   (connected)                    │`);
+    console.log(`  │  bob@dev.local     (verified)                     │`);
+    console.log(`  │  charlie@dev.local (verified)                     │`);
+    console.log(`  │  carol@dev.local   (paper)                        │`);
+    console.log(`  │  dave@dev.local    (suspended)                    │`);
     console.log('  └──────────────────────────────────────────────────────┘\n');
 }
 main()

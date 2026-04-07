@@ -145,6 +145,8 @@ The `DO $$` PL/pgSQL block is used to avoid repeating the market/token ID lookup
 
 **Populates:** Reference data for the main database — default configuration records, demo user accounts, and any data required for integration tests to have a known baseline.
 
+**Security:** Passwords are dynamically generated using `crypto.randomBytes(16)` on each run and logged to the console. A `NODE_ENV !== 'development'` guard prevents accidental execution in non-development environments.
+
 **How to run:**
 
 ```bash
@@ -161,6 +163,8 @@ pnpm prisma db seed
 **Run via:** Configured in the admin prisma config (`prisma.admin.config.ts`)
 
 **Populates:** Admin database (separate schema) — admin user accounts, permission sets, and default admin configuration.
+
+**Security:** The admin password is dynamically generated using `crypto.randomBytes(16)` on each run and logged to the console. A `NODE_ENV !== 'development'` guard prevents accidental execution in non-development environments.
 
 **How to run:**
 

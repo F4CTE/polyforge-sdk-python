@@ -44,20 +44,30 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+const crypto_1 = require("crypto");
+if (process.env.NODE_ENV && process.env.NODE_ENV !== 'development') {
+    console.error('ERROR: Seed scripts must only run in development environment');
+    process.exit(1);
+}
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaPg } = require('@prisma/adapter-pg');
 const admin_client_1 = require(".prisma/admin-client");
 const bcrypt = __importStar(require("bcrypt"));
+function generateSeedPassword() {
+    return (0, crypto_1.randomBytes)(16).toString('base64url');
+}
 const adminAdapter = new PrismaPg({ connectionString: process.env.ADMIN_DIRECT_DATABASE_URL ?? process.env.ADMIN_DATABASE_URL });
 const prisma = new admin_client_1.PrismaClient({ adapter: adminAdapter });
 async function main() {
     console.log('🌱 Seeding admin database...\n');
+    const adminPassword = generateSeedPassword();
+    console.log(`🔑 Generated admin password: ${adminPassword}\n`);
     const superAdmin = await prisma.admin.upsert({
         where: { email: 'superadmin@dev.local' },
         update: {},
         create: {
             email: 'superadmin@dev.local',
-            passwordHash: await bcrypt.hash('superadmin123', 12),
+            passwordHash: await bcrypt.hash(adminPassword, 12),
             displayName: 'Super Admin',
             role: 'SUPER_ADMIN',
             active: true,
@@ -66,7 +76,7 @@ async function main() {
     console.log(`  ✓ superadmin (id: ${superAdmin.id}) — SUPER_ADMIN`);
     console.log('\n✅ Done!\n');
     console.log('  Email:    superadmin@dev.local');
-    console.log('  Password: superadmin123\n');
+    console.log(`  Password: ${adminPassword}\n`);
     console.log('  ⚠️  Dev-only password. Change in production.\n');
 }
 main()
