@@ -1,4 +1,5 @@
 import { Controller, Get, Post, UseGuards } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { KeyRotationService } from "./key-rotation.service";
 import { AdminJwtGuard } from "../common/guard/admin-jwt.guard";
 import { RolesGuard } from "../common/guard/roles.guard";
@@ -25,6 +26,7 @@ export class KeyRotationController {
 
   @Post("start")
   @Roles(AdminRole.SUPER_ADMIN)
+  @Throttle({ default: { limit: 5, ttl: 3_600_000 } })
   async startRotation(
     @CurrentAdmin() admin: AdminJwtPayload,
     @AdminIp() ip: string,
