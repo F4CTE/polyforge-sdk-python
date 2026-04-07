@@ -22,6 +22,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Chip component (closes #164)** — `packages/ui/src/components/ui/chip.tsx`: closable tag with `default|success|danger|warning` variant colors using design tokens; optional remove button with `aria-label="Remove"` using Lucide `X` icon
 
 ### Fixed (Security)
+- **Change LOG_LEVEL default to info in .env.example (closes #390)**
 - **Replace module-level process.env JWT secret captures with ConfigService injection (closes #303)** — `admin-auth-service/auth.module.ts`: switched `JwtModule.register()` to `JwtModule.registerAsync()` with `ConfigService`; `admin-api-service/admin-jwt.guard.ts`: injected `ConfigService` and removed frozen `ADMIN_JWT_SECRET` constant; `admin-api-service/strategies.service.ts`: replaced `INTERNAL_JWT_SECRET` module-level capture with `config.getOrThrow()`; `bot-service/commands.service.ts` and `linking.service.ts`: replaced `INTERNAL_JWT_SECRET` and `BOT_JWT_SECRET` module-level captures with `ConfigService` injection — enables key rotation to take effect without service restart
 
 ### Fixed (Design / Code Quality)
