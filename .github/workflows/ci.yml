@@ -27,17 +27,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-
-      # Install pnpm via corepack (ships with Node 24) to avoid
-      # pnpm/action-setup self-installer conflicts with stale global pnpm.
-      - name: Enable corepack and activate pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@9.0.0 --activate
-          pnpm --version
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -80,15 +75,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-
-      - name: Enable corepack and activate pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@9.0.0 --activate
-          pnpm --version
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -102,23 +94,15 @@ jobs:
         run: pnpm build
 
       - name: Verify dist artifacts
-        shell: node {0}
         run: |
-          const fs = require('fs');
-          const dirs = [
-            'packages/shared-types/dist',
-            'packages/shared-db/dist',
-            'packages/shared-redis/dist',
-            'packages/shared-auth/dist',
-            'packages/logger/dist',
-            'packages/shared-schemas/dist',
-          ];
-          const missing = dirs.filter(d => !fs.existsSync(d));
-          if (missing.length) {
-            console.error('Missing build artifacts:', missing.join(', '));
-            process.exit(1);
-          }
-          console.log('All build artifacts present');
+          echo "Checking build artifacts..."
+          test -d packages/shared-types/dist
+          test -d packages/shared-db/dist
+          test -d packages/shared-redis/dist
+          test -d packages/shared-auth/dist
+          test -d packages/logger/dist
+          test -d packages/shared-schemas/dist
+          echo "All build artifacts present"
 
       - name: Security audit
         if: success() || failure()
@@ -134,31 +118,25 @@ jobs:
       DIRECT_DATABASE_URL: 'postgresql://poly:devpass@localhost:5432/polyforge'
       ADMIN_DIRECT_DATABASE_URL: 'postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin'
       NODE_ENV: development
-      # Dev-safe dummy secrets for docker-compose ${:?} required vars.
-      # These are NOT real secrets — they only start local dev containers.
+      # Dev-safe dummy secrets for docker-compose required vars.
       INTERNAL_JWT_SECRET: 'ci-internal-jwt-secret-not-for-production'
       USER_JWT_SECRET: 'ci-user-jwt-secret-not-for-production'
       ADMIN_JWT_SECRET: 'ci-admin-jwt-secret-not-for-production'
       BOT_JWT_SECRET: 'ci-bot-jwt-secret-not-for-production'
       MASTER_ENCRYPTION_KEY: 'aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233'
       TOTP_ENCRYPTION_KEY: 'ff6600112233aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55'
-      # Docker Desktop named pipe — accessible after adding SYSTEM to docker-users.
-      DOCKER_HOST: 'npipe:////./pipe/dockerDesktopLinuxEngine'
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          standalone: true
-        env:
-          PNPM_HOME: ${{ github.workspace }}/.pnpm-home
 
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --store-dir C:\pnpm-store
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma clients
         run: |
@@ -169,37 +147,32 @@ jobs:
         run: pnpm turbo build --filter=./packages/*
 
       # ── Start the full Docker stack ──────────────────────────────────────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and start Docker Compose
-        run: docker compose -f docker-compose.infra.yml up -d --build
+        run: DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f docker-compose.infra.yml up -d --build
         timeout-minutes: 45
 
       - name: Wait for services to be healthy
-        shell: node {0}
         run: |
-          const { execSync } = require('child_process');
-          function waitFor(name, cmd, timeout = 60000) {
-            const start = Date.now();
-            process.stdout.write(`Waiting for ${name}...`);
-            while (Date.now() - start < timeout) {
-              try { execSync(cmd, { stdio: 'pipe' }); console.log(' ready'); return; } catch {}
-              execSync(process.platform === 'win32' ? 'ping -n 3 127.0.0.1 >nul' : 'sleep 2', { stdio: 'pipe' });
-            }
-            throw new Error(`${name} did not become healthy within ${timeout/1000}s`);
-          }
-          waitFor('PostgreSQL', 'docker exec polyforge-dev-postgres-1 pg_isready -U poly -d polyforge');
-          waitFor('Redis', 'docker exec polyforge-dev-redis-1 redis-cli ping');
-          waitFor('auth-service', 'curl -sf http://localhost:3001/health');
-          waitFor('api-service', 'curl -sf http://localhost:3002/health');
-          waitFor('gateway', 'curl -sf http://localhost/login');
-          console.log('All services healthy');
+          echo "Waiting for PostgreSQL..."
+          until docker exec polyforge-dev-postgres-1 pg_isready -U poly -d polyforge; do sleep 2; done
+          echo "Waiting for Redis..."
+          until docker exec polyforge-dev-redis-1 redis-cli ping | grep -q PONG; do sleep 2; done
+          echo "Waiting for auth-service..."
+          timeout 60 bash -c 'until curl -sf http://localhost:3001/health; do sleep 2; done'
+          echo "Waiting for api-service..."
+          timeout 60 bash -c 'until curl -sf http://localhost:3002/health; do sleep 2; done'
+          echo "Waiting for gateway..."
+          timeout 60 bash -c 'until curl -sf http://localhost/login; do sleep 2; done'
+          echo "All services healthy"
 
       # ── Seed test data ───────────────────────────────────────────────────
       - name: Run migrations and seed
         run: |
           npx ts-node prisma/seed.ts
-          npx ts-node prisma/seed.admin.ts
-        env:
-          ADMIN_DIRECT_DATABASE_URL: 'postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin'
+          ADMIN_DIRECT_DATABASE_URL="postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin" npx ts-node prisma/seed.admin.ts
 
       - name: Clear invite-only flag
         run: docker exec polyforge-dev-redis-1 redis-cli DEL config:invite_only
@@ -210,10 +183,9 @@ jobs:
 
       # ── Run E2E tests ────────────────────────────────────────────────────
       - name: Run E2E tests
-        run: pnpm --filter @polyforge/e2e test
+        run: BASE_URL=http://localhost pnpm --filter @polyforge/e2e test
         env:
           CI: true
-          BASE_URL: http://localhost
 
       # ── Artifacts on failure ─────────────────────────────────────────────
       - name: Upload Playwright report
@@ -226,13 +198,9 @@ jobs:
 
       - name: Upload service logs on failure
         if: failure()
-        shell: node {0}
         run: |
-          require('fs').mkdirSync('docker-logs', { recursive: true });
-          try {
-            const logs = require('child_process').execSync('docker compose -f docker-compose.infra.yml logs --no-color', { encoding: 'utf8', maxBuffer: 50*1024*1024 });
-            require('fs').writeFileSync('docker-logs/all-services.log', logs);
-          } catch(e) { require('fs').writeFileSync('docker-logs/all-services.log', 'Failed to collect logs: ' + e.message); }
+          mkdir -p docker-logs
+          docker compose -f docker-compose.infra.yml logs --no-color > docker-logs/all-services.log 2>&1
 
       - name: Upload Docker logs artifact
         uses: actions/upload-artifact@v4
@@ -250,7 +218,7 @@ jobs:
   # ── 4. Deploy to AWS ────────────────────────────────────────────────────
   deploy:
     name: Deploy to Production
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, polyforge]
     needs: [e2e]
     if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     environment: production
