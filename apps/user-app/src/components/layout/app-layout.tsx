@@ -98,7 +98,7 @@ export function AppLayout() {
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center ml-2 rounded-pf-sm text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors md:hidden"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center ml-2 rounded-pf-sm text-pf-text-muted hover:bg-pf-elevated hover:text-pf-text active:bg-pf-surface transition-colors md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40"
             aria-label="Open navigation menu"
           >
             <Menu size={20} />

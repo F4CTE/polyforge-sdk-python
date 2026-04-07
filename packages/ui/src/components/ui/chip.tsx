@@ -35,7 +35,7 @@ function Chip({ children, onRemove, variant, className, ...props }: ChipProps) {
           type="button"
           aria-label="Remove"
           onClick={onRemove}
-          className="hover:opacity-70 cursor-pointer focus:outline-none"
+          className="hover:opacity-70 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded-pf-full"
         >
           <X size={12} />
         </button>
