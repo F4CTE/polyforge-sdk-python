@@ -160,7 +160,7 @@ function DropdownMenuItem({ children, onSelect, disabled, className, ...props }:
       tabIndex={disabled ? -1 : 0}
       aria-disabled={disabled || undefined}
       className={cn(
-        "px-2 py-1.5 text-sm rounded-[4px] cursor-pointer select-none outline-none",
+        "px-2 py-1.5 text-sm rounded-pf-xs cursor-pointer select-none outline-none",
         "hover:bg-pf-overlay focus:bg-pf-overlay",
         disabled && "opacity-50 cursor-not-allowed pointer-events-none",
         className

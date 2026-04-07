@@ -556,7 +556,7 @@ export function Component() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full text-xs" aria-label="Revenue by source">
                   <thead>
                     <tr className="text-pf-text-muted border-b border-pf-border">
                       <th className="text-left pb-2 font-medium">Source</th>
@@ -837,7 +837,7 @@ export function Component() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label="Top users by volume">
             <thead>
               <tr className="text-xs text-pf-text-muted border-b border-pf-border">
                 <th className="text-left px-4 py-3 font-medium w-10">#</th>

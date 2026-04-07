@@ -103,6 +103,7 @@
   --shadow-pf-2xl: 0 25px 50px rgba(0, 0, 0, 0.4);
 
   /* Radius */
+  --radius-pf-xs: 4px;
   --radius-pf-sm: 6px;
   --radius-pf: 8px;
   --radius-pf-md: 10px;
