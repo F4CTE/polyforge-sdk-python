@@ -51,7 +51,7 @@ export function Hero() {
 
         <h1
           id="hero-heading"
-          className="text-[clamp(40px,7vw,72px)] font-extrabold leading-[1.15] tracking-[-0.035em] text-pf-text mb-6"
+          className="text-[clamp(40px,7vw,72px)] font-extrabold leading-[1.15] tracking-tight text-pf-text mb-6"
         >
           Trade Smarter. Copy the Best.
           <br />

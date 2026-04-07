@@ -4,7 +4,7 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { cn } from "../../lib/utils";
 
-interface DialogProps {
+export interface DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;

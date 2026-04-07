@@ -41,6 +41,7 @@ export {
   TabsTrigger,
   TabsContent,
 } from './components/ui/tabs';
+export type { TabsProps } from './components/ui/tabs';
 
 export {
   Dialog,
@@ -51,9 +52,11 @@ export {
   DialogBody,
   DialogFooter,
 } from './components/ui/dialog';
+export type { DialogProps } from './components/ui/dialog';
 
 export { Skeleton } from './components/ui/skeleton';
 export { Spinner } from './components/ui/spinner';
+export type { SpinnerProps } from './components/ui/spinner';
 
 export { Progress } from './components/ui/progress';
 export type { ProgressProps } from './components/ui/progress';
@@ -97,3 +100,6 @@ export { Toaster } from './components/ui/toaster';
 export type { ToasterProps } from './components/ui/toaster';
 
 export { PolyforgeLogomark } from './components/polyforge-logomark';
+
+// Chart color utilities
+export { chartColors, resolveChartTheme, chartPalette } from './lib/chart-colors';
