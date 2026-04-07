@@ -19,8 +19,15 @@ async function bootstrap() {
     { bufferLogs: true },
   );
 
-  // Security headers via helmet (CSP disabled — gateway manages it)
-  await app.register(helmet as any, { contentSecurityPolicy: false });
+  // Security headers via helmet (restrictive CSP — API-only, no HTML served)
+  await app.register(helmet as any, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

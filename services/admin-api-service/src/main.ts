@@ -63,9 +63,14 @@ async function bootstrap() {
   // ETag support for conditional requests (304 Not Modified)
   await app.register(etag as any);
 
-  // Security headers via helmet (CSP disabled — gateway manages it)
+  // Security headers via helmet (restrictive CSP — API-only, no HTML served)
   await app.register(helmet as any, {
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+      },
+    },
   });
 
   app.useLogger(app.get(Logger));

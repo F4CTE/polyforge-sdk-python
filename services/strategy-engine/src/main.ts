@@ -32,8 +32,15 @@ async function bootstrap() {
     { bufferLogs: true },
   );
 
-  // Security headers via helmet (CSP disabled — gateway manages it)
-  await app.register(helmet as any, { contentSecurityPolicy: false });
+  // Security headers via helmet (restrictive CSP — API-only, no HTML served)
+  await app.register(helmet as any, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+  });
 
   // R4-04: Global exception filter to strip stack traces in production
   app.useGlobalFilters(new GlobalExceptionFilter());

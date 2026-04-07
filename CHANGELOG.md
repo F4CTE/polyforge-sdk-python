@@ -8,10 +8,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased] — 2026-04-07
 
 ### Fixed (Security)
-- **Move hardcoded E2E encryption keys to GitHub Actions Encrypted Secrets (closes #378)** — `MASTER_ENCRYPTION_KEY`, `TOTP_ENCRYPTION_KEY`, and all JWT secrets in the E2E job now reference `${{ secrets.CI_* }}` instead of plaintext values committed to git history (CWE-321); repository maintainer must add `CI_MASTER_ENCRYPTION_KEY`, `CI_TOTP_ENCRYPTION_KEY`, `CI_INTERNAL_JWT_SECRET`, `CI_USER_JWT_SECRET`, `CI_ADMIN_JWT_SECRET`, `CI_BOT_JWT_SECRET` via Settings → Secrets and variables → Actions
+- **Enable restrictive Content-Security-Policy on all API services (closes #388)** — replaced `contentSecurityPolicy: false` with `default-src 'none'; frame-ancestors 'none'` in helmet config across all 12 NestJS services (api-service, auth-service, admin-api-service, admin-auth-service, signer-service, strategy-engine, order-service, paper-order-service, backtest-service, bot-service, notification-service, market-data-service); these services only serve JSON, so a strict CSP provides defense-in-depth against accidental HTML rendering
+
+## [Unreleased] — 2026-04-06
 
 ### Fixed (CI)
-- **Replace pnpm/action-setup@v4 with corepack enable** — `pnpm/action-setup@v4` targets Node.js 20 and fails on the self-hosted runner when `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` forces Node 24 execution; replaced with `corepack enable` in all three CI jobs (check, build, e2e), which uses the `packageManager: pnpm@9.0.0` field in package.json — this unblocks CI for all open PRs
 - **Fix EBUSY pnpm setup on Windows self-hosted runners** — set `dest: ${{ github.workspace }}/.pnpm-setup` on all three CI jobs (check, build, e2e) so the `pnpm/action-setup@v4` self-installer unpacks to a workspace-local directory instead of the shared SYSTEM profile (`C:\WINDOWS\system32\config\systemprofile\setup-pnpm`), preventing EBUSY collisions when multiple runners execute concurrently
 
 ### Added
@@ -21,7 +22,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Chip component (closes #164)** — `packages/ui/src/components/ui/chip.tsx`: closable tag with `default|success|danger|warning` variant colors using design tokens; optional remove button with `aria-label="Remove"` using Lucide `X` icon
 
 ### Fixed (Security)
-- **Make key-rotation endpoint flush admin sessions instead of writing orphaned Redis secrets (closes #302)** — `admin-api-service/key-rotation.service.ts`: `startRotation()` now scans and deletes all `admin:session:*` keys from Redis, forcing every admin to re-authenticate; removed the never-read `jwt:secret:current` / `jwt:secret:previous` writes; updated `getStatus()` to report `sessionsInvalidated` count; return value now includes actionable `note` instructing operators to update `ADMIN_JWT_SECRET` env var and restart services; updated `docs/ops/01-deployment-guide.md` with full secret rotation SOP
 - **Replace module-level process.env JWT secret captures with ConfigService injection (closes #303)** — `admin-auth-service/auth.module.ts`: switched `JwtModule.register()` to `JwtModule.registerAsync()` with `ConfigService`; `admin-api-service/admin-jwt.guard.ts`: injected `ConfigService` and removed frozen `ADMIN_JWT_SECRET` constant; `admin-api-service/strategies.service.ts`: replaced `INTERNAL_JWT_SECRET` module-level capture with `config.getOrThrow()`; `bot-service/commands.service.ts` and `linking.service.ts`: replaced `INTERNAL_JWT_SECRET` and `BOT_JWT_SECRET` module-level captures with `ConfigService` injection — enables key rotation to take effect without service restart
 
 ### Fixed (Design / Code Quality)
@@ -51,8 +51,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Add deprecation notices to design charter §5–12 (closes #128)** — added `> ⚠️ DEPRECATED (v3.0+)` banners to Angular/PrimeNG sections (5: PrimeNG components, 6: PrimeIcons→Lucide, 7: Chart.js→Recharts, 8: p-toast/p-badge, 9: Angular animations, 11: angular.json, 12: tokens.css variable naming); each banner points to §32 and current equivalents
 
 ### Security
-- **Replace single Upgrade map with dual safe_upgrade/safe_connection maps in all nginx configs (closes #385)** — all 4 gateway configs (`nginx.ssl.conf`, `nginx.dev-ssl.conf`, `nginx.dev.conf`, `nginx.prod.conf`): split `$connection_upgrade` map into `$safe_upgrade` (forwards only `websocket` value) and `$safe_connection` (sets `upgrade` only for websocket); all `proxy_set_header Upgrade/Connection` directives updated — 5th and final fix for H2C smuggling (CWE-444, regression of #145/#194/#264/#298)
-- **Upgrade Prisma from 7.5.0 to 7.7.0 to fix transitive dependency CVEs (closes #380, closes #381, closes #382, closes #383)** — resolves 9 hono CVEs (XSS, IP spoofing, prototype pollution), lodash prototype pollution + code injection, @hono/node-server auth bypass (GHSA-wc8c-qw6v-h7f6), and effect AsyncLocalStorage context contamination (GHSA-38f7-945m-qr2g); all via transitive deps through `@prisma/dev` and `@prisma/config`
 - **Upgrade migration Dockerfiles from Node.js 20 to Node.js 24 (closes #297)** — `Dockerfile.migrate` and `Dockerfile.migrate.admin`: replaced EOL `node:20-alpine` with `node:24-alpine` pinned digest matching service Dockerfiles; prevents unpatched CVEs after Node.js 20 EOL (2026-04-30)
 - **Tighten nginx WebSocket upgrade map to exact string match (closes #298)** — all 4 gateway configs: replaced `~*websocket` regex with exact `"websocket"` string match and `default close` with `default ""` in the `$connection_upgrade` map; prevents H2C cleartext smuggling (CWE-444, 4th regression fix)
 - **Add per-endpoint rate limit to POST /lp/provide (closes #278)** — `lp.controller.ts`: added `@Throttle({ default: { limit: 10, ttl: 60000 } })` to `provideLiquidity()` handler; each LP call creates 2 order records, so 10 req/min caps order generation at 20/min per account, matching the order-endpoint throttle pattern

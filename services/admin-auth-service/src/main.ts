@@ -61,9 +61,14 @@ async function bootstrap() {
   // Cookie plugin — must be registered before any route handlers
   await app.register(fastifyCookie as any);
 
-  // Security headers via helmet (CSP disabled — gateway manages it)
+  // Security headers via helmet (restrictive CSP — API-only, no HTML served)
   await app.register(helmet as any, {
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+      },
+    },
   });
 
   app.useLogger(app.get(Logger));
