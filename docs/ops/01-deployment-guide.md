@@ -614,7 +614,21 @@ Logs also stream to CloudWatch under the `/polyforge/prod` log group.
 
 ### Secret rotation
 
-See the JWT Secret Rotation SOP in [02-deployment-aws.md](./02-deployment-aws.md) for zero-downtime secret rotation procedures.
+The `POST /api/v1/key-rotation/start` endpoint (SUPER_ADMIN only) provides an
+**emergency session flush**: it deletes every `admin:session:*` key in Redis,
+forcing all admins to re-authenticate immediately. Use this as a first response
+to a suspected credential compromise.
+
+**To complete a full JWT secret rotation:**
+
+1. Trigger `POST /api/v1/key-rotation/start` to invalidate all active sessions.
+2. Generate a new secret: `openssl rand -hex 32`
+3. Update `ADMIN_JWT_SECRET` in the secret store (AWS Secrets Manager / `.env.prod`).
+4. Restart all services that use the secret (`admin-auth-service`, `admin-api-service`).
+5. Verify by calling `GET /api/v1/key-rotation/status` — the `currentSecretHash`
+   field should reflect the first 16 chars of the SHA-256 of the new secret.
+
+See the JWT Secret Rotation SOP in [02-deployment-aws.md](./02-deployment-aws.md) for additional zero-downtime procedures.
 
 ---
 
