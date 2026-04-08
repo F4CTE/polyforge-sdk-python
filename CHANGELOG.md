@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Security
+- **CI**: switch from self-hosted runner to `ubuntu-latest` for `pull_request` events and add `permissions: contents: read` to restrict GITHUB_TOKEN scope (closes #68)
+
 ## [1.5.2] — 2026-04-03
 
 ### Fixed
