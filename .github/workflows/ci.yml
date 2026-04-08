@@ -23,7 +23,7 @@ jobs:
   # ── 1. Check (lint + typecheck + test in one job) ────────────────────────
   check:
     name: Check
-    runs-on: [self-hosted, polyforge]
+    runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v4
 
@@ -74,7 +74,7 @@ jobs:
   # ── 2. Build ─────────────────────────────────────────────────────────────
   build:
     name: Build
-    runs-on: [self-hosted, polyforge]
+    runs-on: [self-hosted, linux]
     needs: [check]
     steps:
       - uses: actions/checkout@v4
@@ -120,7 +120,7 @@ jobs:
   # ── 3. E2E ──────────────────────────────────────────────────────────────
   e2e:
     name: E2E
-    runs-on: [self-hosted, polyforge]
+    runs-on: [self-hosted, linux]
     needs: [build]
     env:
       DIRECT_DATABASE_URL: 'postgresql://poly:devpass@localhost:5432/polyforge'
@@ -230,7 +230,7 @@ jobs:
   # ── 4. Deploy to AWS ────────────────────────────────────────────────────
   deploy:
     name: Deploy to Production
-    runs-on: [self-hosted, polyforge]
+    runs-on: [self-hosted, linux]
     needs: [e2e]
     if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     environment: production
