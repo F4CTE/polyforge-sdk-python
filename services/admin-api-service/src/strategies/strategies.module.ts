@@ -1,10 +1,11 @@
 import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { StrategiesService } from "./strategies.service";
 import { StrategiesController } from "./strategies.controller";
 
 @Module({
-  imports: [JwtModule.register({})],
+  imports: [ConfigModule, JwtModule.register({})],
   providers: [StrategiesService],
   controllers: [StrategiesController],
 })
