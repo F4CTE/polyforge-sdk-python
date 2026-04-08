@@ -1,0 +1,107 @@
+name: Runner Setup — Docker Cache
+
+# Run once manually to configure the pull-through Docker registry
+# on each self-hosted runner with Docker Hub credentials.
+#
+# This:
+#   1. Recreates the polyforge-docker-cache registry container with
+#      Docker Hub auth (REGISTRY_PROXY_USERNAME/PASSWORD) so it can
+#      pull images without hitting the unauthenticated 100/6h rate limit.
+#   2. Warms the cache with the base images used by docker-compose.infra.yml.
+#   3. Creates /opt/polyforge-buildcache for BuildKit layer caching.
+#
+# Trigger: Actions → Runner Setup → Run workflow → Run (on main)
+# Frequency: Only needs to be re-run after runner OS reinstall.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  configure-docker-cache:
+    name: Configure pull-through registry
+    runs-on: [self-hosted, linux]
+    # Run on ALL available runner instances so each gets configured
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [1, 2, 3]
+    steps:
+      - name: Recreate registry with Docker Hub credentials
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          echo "==> Configuring pull-through registry with Docker Hub auth..."
+          docker rm -f polyforge-docker-cache 2>/dev/null || true
+          sudo mkdir -p /opt/docker-registry-cache /opt/polyforge-buildcache
+          sudo chown "$USER:$USER" /opt/polyforge-buildcache
+
+          docker run -d \
+            --name polyforge-docker-cache \
+            --restart always \
+            -p 127.0.0.1:5001:5000 \
+            -v /opt/docker-registry-cache:/var/lib/registry \
+            -e REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io \
+            -e REGISTRY_PROXY_USERNAME="${DOCKERHUB_USERNAME}" \
+            -e REGISTRY_PROXY_PASSWORD="${DOCKERHUB_TOKEN}" \
+            -e REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry \
+            registry:2
+
+          sleep 3
+          docker ps --filter name=polyforge-docker-cache --format "Registry: {{.Status}}"
+
+      - name: Verify daemon.json has registry mirror
+        run: |
+          if ! cat /etc/docker/daemon.json 2>/dev/null | grep -q "localhost:5001"; then
+            echo "==> Adding registry mirror to daemon.json..."
+            sudo python3 - <<'PYEOF'
+          import json, os
+
+          path = '/etc/docker/daemon.json'
+          cfg = {}
+          if os.path.exists(path):
+              with open(path) as f:
+                  cfg = json.load(f)
+
+          mirrors = cfg.get('registry-mirrors', [])
+          if 'http://localhost:5001' not in mirrors:
+              mirrors.insert(0, 'http://localhost:5001')
+              cfg['registry-mirrors'] = mirrors
+              with open(path, 'w') as f:
+                  json.dump(cfg, f, indent=2)
+                  f.write('\n')
+              print('Added registry mirror')
+          else:
+              print('Mirror already configured')
+          PYEOF
+            sudo systemctl restart docker
+            sleep 5
+            docker start polyforge-docker-cache 2>/dev/null || true
+            sleep 2
+          fi
+
+          docker info 2>/dev/null | grep -A3 "Registry Mirrors"
+
+      - name: Warm cache — pull base images via authenticated mirror
+        run: |
+          echo "==> Warming pull-through cache..."
+          IMAGES=(
+            "node:24-alpine"
+            "nginx:1.27-alpine"
+            "redis:7-alpine"
+            "postgres:16-alpine"
+            "timescale/timescaledb:2.17.2-pg16"
+            "edoburu/pgbouncer:latest"
+            "axllent/mailpit:v1.23"
+          )
+          for img in "${IMAGES[@]}"; do
+            echo -n "  $img → "
+            docker pull "$img" 2>&1 | tail -1
+          done
+
+          echo ""
+          echo "Registry cache size:"
+          sudo du -sh /opt/docker-registry-cache/ 2>/dev/null
+
+          echo ""
+          echo "==> Done. Future CI builds pull from localhost:5001 (no Docker Hub quota used)."
