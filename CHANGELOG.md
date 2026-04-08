@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.3] — 2026-04-08
+
+### Security
+- Switch CI from self-hosted to GitHub-hosted runners (`ubuntu-latest`) and add `permissions: contents: read` to prevent arbitrary code execution from fork PRs (closes #68)
+- Replace `shell: node {0}` in CI test step with bash to eliminate arbitrary code execution vector (closes #67)
+
 ## [1.5.2] — 2026-04-03
 
 ### Fixed
