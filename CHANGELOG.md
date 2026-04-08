@@ -8,11 +8,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased] — 2026-04-08
 
 ### Fixed (E2E / CI)
-- **Resolve all remaining auth E2E test failures** — four root causes:
-  1. **Redis password missing from invite-only clear** — `ci.yml` and `global-setup.ts` ran `redis-cli DEL config:invite_only` without `-a devredispass`; redis-cli returned NOAUTH (exit 0, silently ignored), leaving the invite-only flag active so all registrations landed on `/pending-approval` instead of `/verify-email`
-  2. **Error locator CSS class mismatch** — `login.page.ts` and `register.page.ts` used `.bg-red-500/10` but the `@polyforge/ui` design-token migration renamed the class to `.bg-pf-danger/10`; caused `errorText()` to hit the 15 s global timeout on every invalid-credentials test
-  3. **False "session expired" banner causing layout shift** — `auth-store.ts` `init()` wrote `sessionStorage.session_expired = 'true'` on any 401 from `/auth/v1/me`, including fresh unauthenticated page loads; the resulting banner appeared during `loginPage.goto()` and shifted the page layout so Playwright's click on "Create one" missed the link; flag now set exclusively by the `main.tsx` global fetch interceptor (real expired sessions only)
-  4. **Non-deterministic seed password** — `seed.ts` generated a random password via `randomBytes(16)` each run; hardcoded test credentials (`password123`) always mismatched; `CI=true` now uses fixed password `TestPass123!`; `auth-flow.spec.ts` logout test updated to match
+- **Resolve all E2E auth/login/seed test failures** — seven root causes across two rounds of investigation:
+  1. **Redis password missing from invite-only clear** — `ci.yml` and `global-setup.ts` ran `redis-cli DEL config:invite_only` without `-a devredispass`; NOAUTH exit 0 silently ignored; invite-only stayed active
+  2. **DEL vs SET for invite-only override** — deleting the Redis key fell through to `INVITE_ONLY=true` env var; changed to `SET config:invite_only false` to explicitly override the env default
+  3. **Error locator CSS class mismatch** — `login.page.ts` and `register.page.ts` used `.bg-red-500/10`; design-token migration renamed to `.bg-pf-danger/10`; `errorText()` timed out 15 s on every invalid-credentials test
+  4. **False "session expired" banner causing layout shift on init** — `auth-store.ts init()` set `session_expired` on any fresh 401 from `/auth/v1/me`; banner appeared during `goto()` and shifted page layout mid-click; removed from `init()` (flag now only set by `main.tsx` global fetch interceptor)
+  5. **autoFocus email input layout shift during link clicks** — email input has `autoFocus`; clicking "Create one" or "Forgot password?" blurred email first, showing "Email is required" validation, growing the card, shifting links down, causing mouseup to miss; `login.page.ts goto()` now calls `email.blur()` after load to pre-settle the layout
+  6. **Non-deterministic seed password across all spec files** — `seed.ts` used `randomBytes(16)` each run; hardcoded `password123` in 7 spec files (`auth-flow`, `smoke`, `credentials`, `copy-trading`, `news`, `strategy-lifecycle`, `whale-tracking`) always mismatched; `CI=true` now uses fixed `TestPass123!`
+  7. **Missing E2E test user** — `orders-comprehensive.spec.ts` calls `apiLogin('alice@e2e.dev.local', 'TestPass123!')` in `beforeEach` but user was never seeded; added dedicated E2E user block to `prisma/seed.ts` with fixed password
 
 ## [Unreleased] — 2026-04-07
 
