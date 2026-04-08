@@ -38,14 +38,14 @@ export default async function globalSetup() {
   try {
     const { execSync } = await import('child_process');
     // Clear invite-only flag
-    execSync('docker exec polyforge-dev-redis-1 redis-cli DEL config:invite_only', {
+    execSync('docker exec polyforge-dev-redis-1 redis-cli -a devredispass DEL config:invite_only', {
       stdio: 'ignore',
       timeout: 5000,
     });
     // Flush all throttle counters so E2E tests don't hit rate limits
     // Throttler keys follow the pattern: throttler:*
     execSync(
-      'docker exec polyforge-dev-redis-1 redis-cli --scan --pattern "throttler:*" | xargs -r docker exec -i polyforge-dev-redis-1 redis-cli DEL',
+      'docker exec polyforge-dev-redis-1 redis-cli -a devredispass --scan --pattern "throttler:*" | xargs -r docker exec -i polyforge-dev-redis-1 redis-cli -a devredispass DEL',
       { stdio: 'ignore', timeout: 5000 },
     );
   } catch {

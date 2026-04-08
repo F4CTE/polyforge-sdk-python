@@ -26,7 +26,7 @@ export class RegisterPage {
         this.tosCheckbox     = page.locator('#tos');
         this.submit          = page.locator('button', { hasText: 'Create account' });
         // Error alert: styled div with AlertCircle icon
-        this.error           = page.locator('.bg-red-500\\/10');
+        this.error           = page.locator('.bg-pf-danger\\/10');
     }
 
     async goto(): Promise<void> {

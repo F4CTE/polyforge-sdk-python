@@ -254,8 +254,8 @@ const scalperActions = [
 async function main() {
   console.log('🌱 Seeding user database...\n');
 
-  const seedPassword = generateSeedPassword();
-  console.log(`🔑 Generated seed password for all users: ${seedPassword}\n`);
+  const seedPassword = process.env.CI === 'true' ? 'TestPass123!' : generateSeedPassword();
+  console.log(`🔑 Seed password for all users: ${seedPassword}\n`);
 
   // ───────────────────────────────────────────────
   // USERS

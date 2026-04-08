@@ -21,7 +21,7 @@ export class LoginPage {
         this.password = page.locator('#password');
         this.submit   = page.locator('button', { hasText: 'Sign in' });
         // Error alert: a div with AlertCircle icon and error text
-        this.error    = page.locator('.bg-red-500\\/10');
+        this.error    = page.locator('.bg-pf-danger\\/10');
         // TOTP input: plain <input id="totp"> shown conditionally
         this.totpInput = page.locator('#totp');
     }

@@ -140,7 +140,7 @@ test.describe('Auth flow', () => {
     test('logout redirects to login', async ({ page }) => {
         const loginPage = new LoginPage(page);
         await loginPage.goto();
-        await loginPage.loginAndRedirect('alice@dev.local', 'password123');
+        await loginPage.loginAndRedirect('alice@dev.local', 'TestPass123!');
 
         // Open user menu dropdown and click Sign out
         await page.locator('[data-testid="user-menu-btn"]').click();
