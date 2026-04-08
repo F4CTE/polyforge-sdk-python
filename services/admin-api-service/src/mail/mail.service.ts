@@ -96,11 +96,13 @@ export class AdminMailService {
   private readonly from: string;
 
   constructor() {
-    const fromEmail = process.env.AWS_SES_FROM_EMAIL;
+    const driver = process.env.EMAIL_DRIVER ?? "mailhog";
+    const fromEmail =
+      process.env.AWS_SES_FROM_EMAIL ??
+      (driver === "mailhog" ? "noreply@polyforge.local" : undefined);
     if (!fromEmail)
       throw new Error("AWS_SES_FROM_EMAIL environment variable is required");
     this.from = `Polyforge <${fromEmail}>`;
-    const driver = process.env.EMAIL_DRIVER ?? "mailhog";
 
     if (driver === "mailhog") {
       this.transporter = nodemailer.createTransport({
