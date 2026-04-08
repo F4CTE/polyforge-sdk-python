@@ -1,14 +1,15 @@
 name: Runner Setup — Docker Cache
 
-# Run once manually to configure the pull-through Docker registry
-# on each self-hosted runner with Docker Hub credentials.
+# Run once manually to configure Docker caching on the self-hosted runner.
 #
 # This:
-#   1. Recreates the polyforge-docker-cache registry container with
-#      Docker Hub auth (REGISTRY_PROXY_USERNAME/PASSWORD) so it can
-#      pull images without hitting the unauthenticated 100/6h rate limit.
-#   2. Warms the cache with the base images used by docker-compose.infra.yml.
-#   3. Creates /opt/polyforge-buildcache for BuildKit layer caching.
+#   1. Recreates polyforge-docker-cache (port 5001) — a Docker Hub pull-through
+#      proxy with auth credentials so CI pulls don't hit the 100/6h rate limit.
+#   2. Recreates polyforge-buildcache-registry (port 5002) — a plain OCI registry
+#      used exclusively by BuildKit (buildx bake --cache-to/from type=registry).
+#      Kept separate from the pull-through proxy because a proxy registry rejects
+#      pushes, while the build-cache registry must accept them.
+#   3. Warms the pull-through cache with the base images used by docker-compose.infra.yml.
 #
 # Trigger: Actions → Runner Setup → Run workflow → Run (on main)
 # Frequency: Only needs to be re-run after runner OS reinstall.
@@ -30,8 +31,8 @@ jobs:
         run: |
           echo "==> Configuring pull-through registry with Docker Hub auth..."
           docker rm -f polyforge-docker-cache 2>/dev/null || true
-          sudo mkdir -p /opt/docker-registry-cache /opt/polyforge-buildcache
-          sudo chown "$USER:$USER" /opt/polyforge-buildcache
+          sudo mkdir -p /opt/docker-registry-cache
+          sudo chown "$USER:$USER" /opt/docker-registry-cache
 
           docker run -d \
             --name polyforge-docker-cache \
@@ -78,6 +79,24 @@ jobs:
           fi
 
           docker info 2>/dev/null | grep -A3 "Registry Mirrors"
+
+      - name: Start build-cache registry (port 5002)
+        run: |
+          echo "==> Starting BuildKit layer-cache registry on port 5002..."
+          docker rm -f polyforge-buildcache-registry 2>/dev/null || true
+          sudo mkdir -p /opt/polyforge-buildcache-registry
+          sudo chown "$USER:$USER" /opt/polyforge-buildcache-registry
+
+          docker run -d \
+            --name polyforge-buildcache-registry \
+            --restart always \
+            -p 127.0.0.1:5002:5000 \
+            -v /opt/polyforge-buildcache-registry:/var/lib/registry \
+            -e REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry \
+            registry:2
+
+          sleep 2
+          docker ps --filter name=polyforge-buildcache-registry --format "BuildCache registry: {{.Status}}"
 
       - name: Warm cache — pull base images via authenticated mirror
         run: |

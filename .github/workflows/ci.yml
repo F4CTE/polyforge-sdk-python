@@ -169,25 +169,28 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Build all services using buildx bake so we can use a persistent
-      # local layer cache on the runner (/opt/polyforge-buildcache).
-      # On cache hits (unchanged layers) this skips re-running RUN steps
-      # entirely, cutting build time from ~15 min → ~2 min on warm runs.
-      # The runner-level pull-through registry (see docs/ops/09-dev-setup.md)
-      # handles caching of pulled base images (nginx, postgres, redis…).
-      - name: Build images (with layer cache)
+      # Build all services using buildx bake with a registry-type layer cache.
+      # Cache lives in the dedicated OCI registry on localhost:5002 (started by
+      # runner-setup.yml — see docs/ops/09-dev-setup.md).
+      #
+      # Why registry-type (not local-type)?
+      #   local-type stores layers as files under /opt/polyforge-buildcache and uses
+      #   filesystem renames for atomic commits (ingest/<hash>/data → blobs/sha256/<hash>).
+      #   buildkitd is a long-running daemon that persists across CI runs; when the
+      #   concurrency group cancels a run mid-build, buildkitd still has in-flight gRPC
+      #   writes reaching the filesystem AFTER the cancelled job's workspace is gone.
+      #   Any subsequent run that wipes the ingest dir races with those writes →
+      #   "rename …startedat.tmp …startedat: no such file or directory".
+      #
+      #   registry-type uses OCI HTTP push/pull instead of local renames.  The registry
+      #   server (localhost:5002) serialises concurrent access internally, so there is no
+      #   shared mutable directory for buildkitd to race against between cancelled runs.
+      - name: Build images (with registry layer cache)
         run: |
-          # Clear any partial ingest files left by SIGKILL'd previous runs.
-          # BuildKit atomically renames ingest/<hash>/data → blobs/sha256/<hash>;
-          # an interrupted build leaves orphaned ingest files that make the next
-          # run fail with "rename … no such file or directory". Wiping ingest/
-          # only clears in-flight writes — completed blobs/ entries are kept.
-          rm -rf /opt/polyforge-buildcache/ingest
-          mkdir -p /opt/polyforge-buildcache
           DOCKER_BUILDKIT=1 docker buildx bake \
             -f docker-compose.infra.yml \
-            --set "*.cache-from=type=local,src=/opt/polyforge-buildcache" \
-            --set "*.cache-to=type=local,dest=/opt/polyforge-buildcache,mode=max" \
+            --set "*.cache-from=type=registry,ref=localhost:5002/cache/polyforge-build" \
+            --set "*.cache-to=type=registry,ref=localhost:5002/cache/polyforge-build,mode=max" \
             --load
         timeout-minutes: 45
 
