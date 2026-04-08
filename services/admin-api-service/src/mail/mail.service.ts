@@ -1,8 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import * as nodemailer from "nodemailer";
 
-const FRONTEND = process.env.FRONTEND_URL;
-if (!FRONTEND) throw new Error("FRONTEND_URL environment variable is required");
+const FRONTEND = process.env.FRONTEND_URL ?? "http://localhost";
 
 function emailLayout(opts: {
   preheader?: string;

@@ -1,5 +1,4 @@
-const FRONTEND = process.env.FRONTEND_URL;
-if (!FRONTEND) throw new Error('FRONTEND_URL environment variable is required');
+const FRONTEND = process.env.FRONTEND_URL ?? 'http://localhost';
 
 /** Wraps content in the Polyforge branded email shell. */
 export function emailLayout(opts: {
