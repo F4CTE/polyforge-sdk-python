@@ -28,7 +28,7 @@ export class LoginPage {
 
     async goto(): Promise<void> {
         await this.page.goto('/login');
-        await expect(this.page.locator('h2', { hasText: 'Welcome back' })).toBeVisible({ timeout: 15_000 });
+        await expect(this.page.locator('h1', { hasText: 'Welcome back' })).toBeVisible({ timeout: 15_000 });
         // Dismiss cookie banner if present
         const cookieBtn = this.page.locator('button', { hasText: 'Got it' });
         if (await cookieBtn.isVisible({ timeout: 1000 }).catch(() => false)) {

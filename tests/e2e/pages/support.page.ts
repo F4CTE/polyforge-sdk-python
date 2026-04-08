@@ -23,7 +23,7 @@ export class SupportPage {
 
     constructor(page: Page) {
         this.page = page;
-        this.newTicketButton = page.locator('button', { hasText: 'New Ticket' });
+        this.newTicketButton = page.locator('a[href="/support/new"], button', { hasText: 'New Ticket' });
         this.ticketRows = page.locator('[data-testid="ticket-row"]');
         this.faqAccordion = page.locator('[data-testid="faq-accordion"]');
         this.faqItems = page.locator('[data-testid="faq-item"]');

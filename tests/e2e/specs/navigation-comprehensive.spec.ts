@@ -47,7 +47,7 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
         await registerPage.register({ email, username, password: 'Password123!' });
         const verifyUrl = await getVerificationUrl(email);
         await page.goto(verifyUrl);
-        await expect(page.locator('h2', { hasText: /verified/i })).toBeVisible({ timeout: 15_000 });
+        await expect(page.locator('h1', { hasText: /verified/i })).toBeVisible({ timeout: 15_000 });
 
         await loginPage.goto();
         await loginPage.loginAndRedirect(email, 'Password123!');

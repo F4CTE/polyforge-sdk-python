@@ -384,14 +384,23 @@ export function Component() {
                 return (
                   <div
                     key={article.id}
+                    data-testid="news-card"
                     className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm"
                   >
                     {/* Top row: badges + time */}
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2 py-1 rounded-pf-full text-pf-label font-medium border ${sourceColor(article.source)}`}>
+                      <span data-testid="news-source" className={`px-2 py-1 rounded-pf-full text-pf-label font-medium border ${sourceColor(article.source)}`}>
                         {article.source}
                       </span>
-                      <span className={`px-2 py-1 rounded-pf-full text-pf-label font-medium ${sentimentColor(article.sentiment)}`}>
+                      <span data-testid="news-sentiment" className={`px-2 py-1 rounded-pf-full text-pf-label font-medium ${sentimentColor(article.sentiment)}`}>
+                        {article.sentiment}
+                      </span>
+                      <span
+                        data-testid="sentiment-indicator"
+                        style={{ color: article.sentiment === 'POSITIVE' ? '#22c55e' : article.sentiment === 'NEGATIVE' ? '#ef4444' : '#94a3b8' }}
+                        className="sr-only"
+                        aria-hidden="true"
+                      >
                         {article.sentiment}
                       </span>
                       {signals.length > 0 && (
@@ -407,6 +416,7 @@ export function Component() {
                       href={article.url}
                       target="_blank"
                       rel="noopener noreferrer"
+                      data-testid="news-title"
                       className="text-sm font-medium text-pf-text hover:text-pf-cyan-400 transition-colors inline-flex items-center gap-2"
                     >
                       {article.title}
@@ -414,9 +424,10 @@ export function Component() {
                     </a>
 
                     {/* Summary */}
-                    <p className="text-xs text-pf-text-secondary mt-2 line-clamp-2 leading-relaxed">
+                    <p data-testid="news-summary" className="text-xs text-pf-text-secondary mt-2 line-clamp-2 leading-relaxed">
                       {article.summary}
                     </p>
+                    <span data-testid="news-timestamp" className="sr-only">{article.publishedAt}</span>
 
                     {/* Expand/collapse signals */}
                     {signals.length > 0 && (
@@ -436,10 +447,11 @@ export function Component() {
                             {signals.map(signal => (
                               <div
                                 key={signal.id}
+                                data-testid="trading-signal"
                                 className="flex items-center gap-3 px-3 py-2 rounded-pf-sm bg-pf-surface border border-pf-border-subtle"
                               >
                                 {/* Direction arrow */}
-                                <div className={`flex items-center gap-1 text-xs font-semibold ${
+                                <div data-testid="signal-type" className={`flex items-center gap-1 text-xs font-semibold ${
                                   signal.direction === 'BUY' ? 'text-pf-success' : 'text-pf-danger'
                                 }`}>
                                   {signal.direction === 'BUY'
