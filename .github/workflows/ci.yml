@@ -169,9 +169,24 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and start Docker Compose
-        run: DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f docker-compose.infra.yml up -d --build
+      # Build all services using buildx bake so we can use a persistent
+      # local layer cache on the runner (/opt/polyforge-buildcache).
+      # On cache hits (unchanged layers) this skips re-running RUN steps
+      # entirely, cutting build time from ~15 min → ~2 min on warm runs.
+      # The runner-level pull-through registry (see docs/ops/09-dev-setup.md)
+      # handles caching of pulled base images (nginx, postgres, redis…).
+      - name: Build images (with layer cache)
+        run: |
+          mkdir -p /opt/polyforge-buildcache
+          DOCKER_BUILDKIT=1 docker buildx bake \
+            -f docker-compose.infra.yml \
+            --set "*.cache-from=type=local,src=/opt/polyforge-buildcache" \
+            --set "*.cache-to=type=local,dest=/opt/polyforge-buildcache,mode=max" \
+            --load
         timeout-minutes: 45
+
+      - name: Start Docker Compose
+        run: docker compose -f docker-compose.infra.yml up -d
 
       - name: Wait for services to be healthy
         run: |
