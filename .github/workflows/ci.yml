@@ -177,6 +177,12 @@ jobs:
       # handles caching of pulled base images (nginx, postgres, redis…).
       - name: Build images (with layer cache)
         run: |
+          # Clear any partial ingest files left by SIGKILL'd previous runs.
+          # BuildKit atomically renames ingest/<hash>/data → blobs/sha256/<hash>;
+          # an interrupted build leaves orphaned ingest files that make the next
+          # run fail with "rename … no such file or directory". Wiping ingest/
+          # only clears in-flight writes — completed blobs/ entries are kept.
+          rm -rf /opt/polyforge-buildcache/ingest
           mkdir -p /opt/polyforge-buildcache
           DOCKER_BUILDKIT=1 docker buildx bake \
             -f docker-compose.infra.yml \
