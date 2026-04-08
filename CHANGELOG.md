@@ -11,6 +11,9 @@
 - **#42** `WebhookEvent` class: event value strings converted from `SCREAMING_SNAKE_CASE` to `dot.notation` (e.g. `ORDER_FILLED = "order.filled"`) to match platform webhook registration contract
 - **#39** `create_strategy_from_description()`: request body field renamed `description` → `query` to match platform endpoint (affects both sync and async clients)
 - **#40** `start_strategy()`: mode value is now uppercased before sending (`mode.upper()`) so that default `"paper"` and user-supplied `"live"` are sent as `"PAPER"` / `"LIVE"` as required by the platform enum (affects both sync and async clients)
+- **BREAKING** `_delete()`: handle 204 No Content responses — `delete_strategy()` no longer raises `JSONDecodeError` (closes #71)
+- **BREAKING** `place_smart_order()`: rename `interval_minutes` parameter to `interval_seconds` and send `intervalSeconds` in request body to match platform contract — TWAP/DCA orders were executing 60x too fast (closes #64)
+- **BREAKING** `_parse()`: add `_camel_to_snake()` mapping so camelCase API fields (`baseToken`, `volume24h`, `createdAt`, etc.) correctly populate snake_case dataclass fields — all multi-word response fields were silently defaulting (closes #62)
 
 ## [1.5.2] — 2026-04-03
 
