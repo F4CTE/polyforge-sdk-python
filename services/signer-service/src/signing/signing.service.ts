@@ -35,7 +35,7 @@ const FEE_RATE_CACHE_TTL = 300; // 5 minutes
  *   - "production": uses @polymarket/clob-client for real EIP712 signing
  *   - Defaults to "stub" when NODE_ENV=development, "production" otherwise
  *
- * SECURITY: SIGNING_MODE=stub is rejected when NODE_ENV=production.
+ * SECURITY: SIGNING_MODE=stub is only allowed when NODE_ENV=development.
  * Decrypted credentials are held in memory only for the duration
  * of a single signing call. They are never logged or cached.
  */
@@ -59,9 +59,9 @@ export class SigningService implements OnModuleInit {
       this.config.get<string>("SIGNING_MODE") ??
       (nodeEnv === "development" ? "stub" : "production");
 
-    if (nodeEnv === "production" && signingMode === "stub") {
+    if (signingMode === "stub" && nodeEnv !== "development") {
       throw new Error(
-        "FATAL: Cannot use stub signer in production (NODE_ENV=production + SIGNING_MODE=stub). " +
+        `FATAL: Stub signing mode is only allowed in development (current NODE_ENV=${nodeEnv}). ` +
           "Remove SIGNING_MODE=stub or set SIGNING_MODE=production.",
       );
     }

@@ -7,6 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-04-08
 
+### Fixed (Security)
+- **Restrict stub signer mode to NODE_ENV=development only (closes #455)** — tightened the signing mode guard in `signer-service/signing.service.ts` from rejecting stub mode only in production to rejecting it in any non-development environment (staging, test, etc.); prevents misconfigured staging deployments from silently producing fake signatures; added tests for staging/test/production rejection
+
 ### Fixed (E2E / CI)
 - **Resolve all E2E auth/login/seed test failures** — seven root causes across two rounds of investigation:
   1. **Redis password missing from invite-only clear** — `ci.yml` and `global-setup.ts` ran `redis-cli DEL config:invite_only` without `-a devredispass`; NOAUTH exit 0 silently ignored; invite-only stayed active

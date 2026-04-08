@@ -80,7 +80,7 @@ describe("SigningService", () => {
 
   // ── Dev stub signing ──────────────────────────────────────────────────────
 
-  describe("signOrder() — dev stub (NODE_ENV != production)", () => {
+  describe("signOrder() — dev stub (NODE_ENV=development)", () => {
     it("resolves without throwing", async () => {
       await expect(svc.signOrder(BASE_REQ)).resolves.toBeDefined();
     });
@@ -220,6 +220,62 @@ describe("SigningService", () => {
         h1.POLY_BUILDER_TIMESTAMP !== h2.POLY_BUILDER_TIMESTAMP ||
         h1.POLY_BUILDER_SIGNATURE !== h2.POLY_BUILDER_SIGNATURE;
       expect(differ).toBe(true);
+    });
+  });
+
+  // ── Stub mode environment restriction ─────────────────────────────────────
+
+  describe("constructor — stub mode only allowed in development", () => {
+    it("throws when SIGNING_MODE=stub and NODE_ENV=staging", () => {
+      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
+      expect(
+        () =>
+          new SigningService(
+            credentials,
+            makeConfig({ NODE_ENV: "staging", SIGNING_MODE: "stub" }),
+            gasSponsor,
+            redis as any,
+          ),
+      ).toThrow("Stub signing mode is only allowed in development");
+    });
+
+    it("throws when SIGNING_MODE=stub and NODE_ENV=test", () => {
+      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
+      expect(
+        () =>
+          new SigningService(
+            credentials,
+            makeConfig({ NODE_ENV: "test", SIGNING_MODE: "stub" }),
+            gasSponsor,
+            redis as any,
+          ),
+      ).toThrow("Stub signing mode is only allowed in development");
+    });
+
+    it("throws when SIGNING_MODE=stub and NODE_ENV=production", () => {
+      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
+      expect(
+        () =>
+          new SigningService(
+            credentials,
+            makeConfig({ NODE_ENV: "production", SIGNING_MODE: "stub" }),
+            gasSponsor,
+            redis as any,
+          ),
+      ).toThrow("Stub signing mode is only allowed in development");
+    });
+
+    it("allows stub mode when NODE_ENV=development", () => {
+      const gasSponsor = { sponsorGas: vi.fn(), isActive: vi.fn() } as any;
+      expect(
+        () =>
+          new SigningService(
+            credentials,
+            makeConfig({ NODE_ENV: "development", SIGNING_MODE: "stub" }),
+            gasSponsor,
+            redis as any,
+          ),
+      ).not.toThrow();
     });
   });
 
