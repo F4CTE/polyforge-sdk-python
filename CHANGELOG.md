@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-04-08
+
+### Fixed (E2E / CI)
+- **Resolve all remaining auth E2E test failures** — four root causes:
+  1. **Redis password missing from invite-only clear** — `ci.yml` and `global-setup.ts` ran `redis-cli DEL config:invite_only` without `-a devredispass`; redis-cli returned NOAUTH (exit 0, silently ignored), leaving the invite-only flag active so all registrations landed on `/pending-approval` instead of `/verify-email`
+  2. **Error locator CSS class mismatch** — `login.page.ts` and `register.page.ts` used `.bg-red-500/10` but the `@polyforge/ui` design-token migration renamed the class to `.bg-pf-danger/10`; caused `errorText()` to hit the 15 s global timeout on every invalid-credentials test
+  3. **False "session expired" banner causing layout shift** — `auth-store.ts` `init()` wrote `sessionStorage.session_expired = 'true'` on any 401 from `/auth/v1/me`, including fresh unauthenticated page loads; the resulting banner appeared during `loginPage.goto()` and shifted the page layout so Playwright's click on "Create one" missed the link; flag now set exclusively by the `main.tsx` global fetch interceptor (real expired sessions only)
+  4. **Non-deterministic seed password** — `seed.ts` generated a random password via `randomBytes(16)` each run; hardcoded test credentials (`password123`) always mismatched; `CI=true` now uses fixed password `TestPass123!`; `auth-flow.spec.ts` logout test updated to match
+
 ## [Unreleased] — 2026-04-07
 
 ### Fixed (Security)
