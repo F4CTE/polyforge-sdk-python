@@ -171,7 +171,7 @@ jobs:
           echo "Waiting for PostgreSQL..."
           until docker exec polyforge-dev-postgres-1 pg_isready -U poly -d polyforge; do sleep 2; done
           echo "Waiting for Redis..."
-          until docker exec polyforge-dev-redis-1 redis-cli ping | grep -q PONG; do sleep 2; done
+          until docker exec polyforge-dev-redis-1 redis-cli -a devredispass ping 2>/dev/null | grep -q PONG; do sleep 2; done
           echo "Waiting for auth-service..."
           timeout 60 bash -c 'until curl -sf http://localhost:3001/health; do sleep 2; done'
           echo "Waiting for api-service..."
