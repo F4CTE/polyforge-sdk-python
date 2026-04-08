@@ -169,22 +169,49 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Ensure the dedicated BuildKit layer-cache registry is running on port 5002.
+      # We start it here (not just in runner-setup.yml) so CI is self-healing:
+      # the container might be absent on a freshly provisioned runner, or might
+      # have been removed by docker system prune.  `--restart always` means it
+      # survives future reboots and will already be up for the next CI run.
+      #
+      # Why a separate registry on 5002 (not the pull-through proxy on 5001)?
+      #   A Docker Hub proxy registry (REGISTRY_PROXY_REMOTEURL set) rejects pushes
+      #   with 405 Method Not Allowed.  The build-cache registry must accept pushes.
+      - name: Ensure build-cache registry is running (port 5002)
+        run: |
+          if ! curl -sf http://localhost:5002/v2/ > /dev/null 2>&1; then
+            echo "Build-cache registry not responding — starting it..."
+            docker rm -f polyforge-buildcache-registry 2>/dev/null || true
+            sudo mkdir -p /opt/polyforge-buildcache-registry
+            sudo chown "$USER:$USER" /opt/polyforge-buildcache-registry
+            docker run -d \
+              --name polyforge-buildcache-registry \
+              --restart always \
+              -p 127.0.0.1:5002:5000 \
+              -v /opt/polyforge-buildcache-registry:/var/lib/registry \
+              -e REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry \
+              registry:2
+            # Wait for the registry to be ready (usually < 2s)
+            timeout 30 bash -c 'until curl -sf http://localhost:5002/v2/; do sleep 1; done'
+            echo "Build-cache registry started."
+          else
+            echo "Build-cache registry already running."
+          fi
+
       # Build all services using buildx bake with a registry-type layer cache.
-      # Cache lives in the dedicated OCI registry on localhost:5002 (started by
-      # runner-setup.yml — see docs/ops/09-dev-setup.md).
       #
       # Why registry-type (not local-type)?
-      #   local-type stores layers as files under /opt/polyforge-buildcache and uses
-      #   filesystem renames for atomic commits (ingest/<hash>/data → blobs/sha256/<hash>).
-      #   buildkitd is a long-running daemon that persists across CI runs; when the
-      #   concurrency group cancels a run mid-build, buildkitd still has in-flight gRPC
-      #   writes reaching the filesystem AFTER the cancelled job's workspace is gone.
-      #   Any subsequent run that wipes the ingest dir races with those writes →
+      #   local-type stores layers as files and uses filesystem renames for atomic
+      #   commits (ingest/<hash>/data → blobs/sha256/<hash>).  buildkitd is a
+      #   long-running daemon that persists across CI runs; when the concurrency
+      #   group cancels a job mid-build, buildkitd still has in-flight gRPC writes
+      #   that reach the filesystem AFTER the next job's rm -rf ingest/ has run →
       #   "rename …startedat.tmp …startedat: no such file or directory".
       #
-      #   registry-type uses OCI HTTP push/pull instead of local renames.  The registry
-      #   server (localhost:5002) serialises concurrent access internally, so there is no
-      #   shared mutable directory for buildkitd to race against between cancelled runs.
+      #   registry-type uses OCI HTTP push/pull instead of local renames.  The
+      #   registry server (localhost:5002) serialises concurrent access internally,
+      #   so there is no shared mutable directory for buildkitd to race against.
       - name: Build images (with registry layer cache)
         run: |
           DOCKER_BUILDKIT=1 docker buildx bake \
