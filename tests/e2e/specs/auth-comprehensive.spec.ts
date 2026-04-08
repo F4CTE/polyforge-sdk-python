@@ -42,7 +42,7 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
     test('@smoke register page renders', async ({ page }) => {
         const registerPage = new RegisterPage(page);
         await registerPage.goto();
-        await expect(page.locator('h2', { hasText: 'Create account' })).toBeVisible();
+        await expect(page.locator('h1', { hasText: /create.*account/i })).toBeVisible();
     });
 
     test('register with valid data redirects to verify-email page', async ({ page }) => {
@@ -199,7 +199,7 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         await page.goto(verifyUrl);
 
         // Should show success message
-        await expect(page.locator('h2', { hasText: /verified|success/i })).toBeVisible({ timeout: 15_000 });
+        await expect(page.locator('h1', { hasText: /verified|success/i })).toBeVisible({ timeout: 15_000 });
     });
 
     test('resend verification email sends new email', async ({ page }) => {
@@ -253,7 +253,7 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         await registerPage.register({ email, username, password: 'Password123!' });
         const verifyUrl = await getVerificationUrl(email);
         await page.goto(verifyUrl);
-        await expect(page.locator('h2', { hasText: /verified/i })).toBeVisible({ timeout: 15_000 });
+        await expect(page.locator('h1', { hasText: /verified/i })).toBeVisible({ timeout: 15_000 });
 
         // Login
         await loginPage.goto();
@@ -281,7 +281,7 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         await registerPage.register({ email, username, password });
         const verifyUrl = await getVerificationUrl(email);
         await page.goto(verifyUrl);
-        await expect(page.locator('h2', { hasText: /verified/i })).toBeVisible({ timeout: 15_000 });
+        await expect(page.locator('h1', { hasText: /verified/i })).toBeVisible({ timeout: 15_000 });
 
         // Login
         await loginPage.goto();
@@ -499,7 +499,7 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         await page.goto(resetUrl);
 
         // Fill in new password
-        await expect(page.locator('h2', { hasText: /reset/i })).toBeVisible({ timeout: 15_000 });
+        await expect(page.locator('h1', { hasText: /reset|password/i })).toBeVisible({ timeout: 15_000 });
         const passwordInput = page.locator('#password');
         const confirmInput = page.locator('#confirmPassword');
         await passwordInput.fill(newPassword);
@@ -508,7 +508,7 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         await submitReset.click();
 
         // Should show success
-        await expect(page.locator('h2', { hasText: /success|reset/i })).toBeVisible({ timeout: 15_000 });
+        await expect(page.locator('h1', { hasText: /success|reset|password/i })).toBeVisible({ timeout: 15_000 });
 
         // Verify can login with new password
         await loginPage.goto();

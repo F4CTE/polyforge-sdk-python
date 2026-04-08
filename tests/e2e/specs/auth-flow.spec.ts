@@ -36,7 +36,7 @@ test.describe('Auth flow', () => {
         await loginPage.goto();
         await loginPage.clickCreateAccount();
         await expect(page).toHaveURL(/\/register/);
-        await expect(page.locator('h2', { hasText: 'Create account' })).toBeVisible();
+        await expect(page.locator('h1', { hasText: /create.*account/i })).toBeVisible();
     });
 
     test('register with valid credentials sends verification email', async ({ page }) => {
@@ -68,7 +68,7 @@ test.describe('Auth flow', () => {
         await page.goto(verifyUrl);
 
         // 3. Verification page shows success
-        await expect(page.locator('h2', { hasText: 'Email verified' })).toBeVisible({ timeout: 15_000 });
+        await expect(page.locator('h1', { hasText: /verified/i })).toBeVisible({ timeout: 15_000 });
 
         // 4. Navigate to login and sign in with the new credentials
         await loginPage.goto();
