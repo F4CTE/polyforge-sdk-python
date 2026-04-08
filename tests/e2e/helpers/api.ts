@@ -65,7 +65,15 @@ export async function apiRegister(
         throw new Error(`Register failed: ${res.status} ${JSON.stringify(err)}`);
     }
 
-    return res.json() as Promise<LoginResponse>;
+    // Cookie-based auth: token is in Set-Cookie header, user object in body
+    const cookie = res.headers.get('set-cookie') ?? '';
+    const tokenMatch = cookie.match(/pf_token=([^;]+)/);
+    const user = await res.json() as LoginResponse['user'];
+    return {
+        token: tokenMatch?.[1] ?? '',
+        user,
+        cookie,
+    };
 }
 
 // ─── Strategy helpers ─────────────────────────────────────────────────────────

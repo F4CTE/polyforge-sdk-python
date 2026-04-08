@@ -63,10 +63,13 @@ function hoursAgo(n: number): Date {
 
 const IDS = {
   // Strategies
-  stratMomentum:   'a1b2c3d4-0001-4000-8000-000000000001',
-  stratCrossDown:  'a1b2c3d4-0001-4000-8000-000000000002',
-  stratScalper:    'a1b2c3d4-0001-4000-8000-000000000003',
-  stratForked:     'a1b2c3d4-0001-4000-8000-000000000004',
+  stratMomentum:     'a1b2c3d4-0001-4000-8000-000000000001',
+  stratCrossDown:    'a1b2c3d4-0001-4000-8000-000000000002',
+  stratScalper:      'a1b2c3d4-0001-4000-8000-000000000003',
+  stratForked:       'a1b2c3d4-0001-4000-8000-000000000004',
+  // E2E-only strategies for alice@e2e.dev.local (used by backtest-comprehensive spec)
+  stratE2EMomentum:  'a1b2c3d4-0001-4000-8000-000000000091',
+  stratE2EScalper:   'a1b2c3d4-0001-4000-8000-000000000092',
   // Orders
   order1:  'b2c3d4e5-0002-4000-8000-000000000001',
   order2:  'b2c3d4e5-0002-4000-8000-000000000002',
@@ -263,7 +266,7 @@ async function main() {
 
   // Dedicated E2E test user for order/filter specs.
   // Password is always TestPass123! regardless of CI flag.
-  await prisma.user.upsert({
+  const aliceE2E = await prisma.user.upsert({
     where: { email: 'alice@e2e.dev.local' },
     update: { passwordHash: await hashPassword('TestPass123!') },
     create: {
@@ -279,6 +282,52 @@ async function main() {
     },
   });
   console.log('✓ E2E test user alice@e2e.dev.local seeded');
+
+  // Seed strategies for the E2E user so backtest-comprehensive tests can
+  // open the strategy dropdown and find at least one option.
+  await prisma.strategy.upsert({
+    where: { id: IDS.stratE2EMomentum },
+    update: {},
+    create: {
+      id: IDS.stratE2EMomentum,
+      userId: aliceE2E.id,
+      name: 'E2E Momentum',
+      description: 'Seed strategy for backtest E2E tests.',
+      visibility: 'PRIVATE',
+      execMode: 'EVENT',
+      triggers: momentumTrigger,
+      conditions: momentumConditions,
+      actions: momentumActions,
+      safety: momentumSafety,
+      status: 'PAUSED',
+      tags: ['e2e'],
+      version: 1,
+      createdAt: daysAgo(5),
+      updatedAt: daysAgo(1),
+    },
+  });
+  await prisma.strategy.upsert({
+    where: { id: IDS.stratE2EScalper },
+    update: {},
+    create: {
+      id: IDS.stratE2EScalper,
+      userId: aliceE2E.id,
+      name: 'E2E Scalper',
+      description: 'Second seed strategy for backtest E2E tests.',
+      visibility: 'PRIVATE',
+      execMode: 'EVENT',
+      triggers: crossDownTrigger,
+      conditions: [],
+      actions: crossDownActions,
+      safety: momentumSafety,
+      status: 'PAUSED',
+      tags: ['e2e'],
+      version: 1,
+      createdAt: daysAgo(3),
+      updatedAt: daysAgo(1),
+    },
+  });
+  console.log('✓ E2E strategies seeded for alice@e2e.dev.local');
 
   // ───────────────────────────────────────────────
   // USERS
