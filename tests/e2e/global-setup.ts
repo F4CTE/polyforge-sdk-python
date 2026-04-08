@@ -37,8 +37,8 @@ export default async function globalSetup() {
   // For simplicity, we'll use the exec approach via Docker if available
   try {
     const { execSync } = await import('child_process');
-    // Clear invite-only flag
-    execSync('docker exec polyforge-dev-redis-1 redis-cli -a devredispass DEL config:invite_only', {
+    // Disable invite-only mode (SET to 'false' so the env-var fallback is overridden)
+    execSync('docker exec polyforge-dev-redis-1 redis-cli -a devredispass SET config:invite_only false', {
       stdio: 'ignore',
       timeout: 5000,
     });

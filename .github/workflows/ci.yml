@@ -187,7 +187,7 @@ jobs:
           ADMIN_DIRECT_DATABASE_URL="postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin" npx ts-node prisma/seed.admin.ts
 
       - name: Clear invite-only flag
-        run: docker exec polyforge-dev-redis-1 redis-cli -a devredispass DEL config:invite_only
+        run: docker exec polyforge-dev-redis-1 redis-cli -a devredispass SET config:invite_only false
 
       # ── Install Playwright browsers ──────────────────────────────────────
       - name: Install Playwright browsers

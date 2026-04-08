@@ -34,6 +34,10 @@ export class LoginPage {
         if (await cookieBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
             await cookieBtn.click();
         }
+        // The email input has autoFocus. Blurring it now pre-triggers the
+        // "Email is required" validation layout shift so that any subsequent
+        // link clicks are not disrupted by the card growing taller mid-click.
+        await this.email.blur();
     }
 
     async login(email: string, password: string): Promise<void> {
