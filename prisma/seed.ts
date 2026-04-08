@@ -258,6 +258,29 @@ async function main() {
   console.log(`🔑 Seed password for all users: ${seedPassword}\n`);
 
   // ───────────────────────────────────────────────
+  // E2E TEST USERS (fixed credentials, always seeded)
+  // ───────────────────────────────────────────────
+
+  // Dedicated E2E test user for order/filter specs.
+  // Password is always TestPass123! regardless of CI flag.
+  await prisma.user.upsert({
+    where: { email: 'alice@e2e.dev.local' },
+    update: { passwordHash: await hashPassword('TestPass123!') },
+    create: {
+      email: 'alice@e2e.dev.local',
+      passwordHash: await hashPassword('TestPass123!'),
+      username: 'alice_e2e',
+      displayName: 'Alice E2E',
+      emailVerified: true,
+      emailVerifiedAt: daysAgo(1),
+      tosAcceptedAt: daysAgo(1),
+      createdAt: daysAgo(1),
+      lastSeen: hoursAgo(1),
+    },
+  });
+  console.log('✓ E2E test user alice@e2e.dev.local seeded');
+
+  // ───────────────────────────────────────────────
   // USERS
   // ───────────────────────────────────────────────
 
