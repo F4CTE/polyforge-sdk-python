@@ -39,11 +39,11 @@ RUN DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     npx prisma generate --schema ./prisma/schema.prisma --config ./prisma/prisma.config.ts && \
     DIRECT_DATABASE_URL=placeholder ADMIN_DIRECT_DATABASE_URL=placeholder \
     npx prisma generate --schema ./prisma/schema.admin.prisma --config ./prisma/prisma.admin.config.ts && \
+    (cd packages/shared-types  && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/shared-db     && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/shared-redis  && /usr/local/bin/tsc -p tsconfig.json) && \
-    (cd packages/shared-auth   && /usr/local/bin/tsc -p tsconfig.json) && \
-    (cd packages/shared-types  && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd packages/logger        && /usr/local/bin/tsc -p tsconfig.json) && \
+    (cd packages/shared-auth   && /usr/local/bin/tsc -p tsconfig.json) && \
     (cd services/admin-auth-service && /usr/local/bin/tsc -p tsconfig.build.json)
 
 # ── Runtime ──────────────────────────────────────────────────────────────────
