@@ -17,8 +17,8 @@ export class LeaderboardPage {
         this.page = page;
 
         this.periodTabs = {
-            '7d': page.locator('[role="tab"]', { hasText: '7d' }),
-            '30d': page.locator('[role="tab"]', { hasText: '30d' }),
+            '7d': page.locator('[role="tab"]', { hasText: '7 Days' }),
+            '30d': page.locator('[role="tab"]', { hasText: '30 Days' }),
             allTime: page.locator('[role="tab"]', { hasText: 'All Time' }),
         };
 

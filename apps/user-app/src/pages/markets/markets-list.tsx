@@ -261,6 +261,7 @@ const MarketCard = memo(function MarketCard({
   return (
     <Link
       to={`/markets/${market.id}`}
+      data-testid="market-card"
       className={`group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 ${featured ? 'ring-1 ring-pf-cyan-500/20' : ''}`}
     >
       {/* Header */}

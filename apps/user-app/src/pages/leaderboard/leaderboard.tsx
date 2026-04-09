@@ -178,6 +178,8 @@ export function Component() {
             type="button"
             variant="ghost"
             key={p.value}
+            role="tab"
+            aria-selected={period === p.value}
             onClick={() => changePeriod(p.value)}
             className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
               period === p.value
@@ -259,7 +261,7 @@ export function Component() {
                 </tr>
               ) : (
                 entries.map(entry => (
-                  <tr key={entry.userId} className="hover:bg-pf-surface/50 transition-colors">
+                  <tr key={entry.userId} data-testid="trader-row" data-username={entry.username} className="hover:bg-pf-surface/50 transition-colors">
                     <td className="px-4 py-3 text-right">
                       <div className={`${rankColor(entry.rank)}`}>
                         {rankMedal(entry.rank) !== null ? (
@@ -271,7 +273,7 @@ export function Component() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                      <Link to={`/profile/${entry.username}`} className="flex items-center gap-3 hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors">
+                      <Link to={`/profile/${entry.username}`} data-testid={`trader-${entry.username}`} className="flex items-center gap-3 hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors">
                         {entry.avatarUrl ? (
                           <img src={entry.avatarUrl} alt={`${entry.displayName ?? entry.username} avatar`} className="size-8 rounded-pf-full object-cover" width={32} height={32} loading="lazy" />
                         ) : (

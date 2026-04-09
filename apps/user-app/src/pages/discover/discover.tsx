@@ -444,6 +444,8 @@ export function Component() {
             type="button"
             variant="ghost"
             key={opt.value}
+            role="tab"
+            aria-selected={sort === opt.value}
             onClick={() => changeSort(opt.value)}
             className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
               sort === opt.value
@@ -496,6 +498,7 @@ export function Component() {
             return (
               <Link
                 key={s.id}
+                data-testid="strategy-card"
                 to={`/strategies/${s.id}`}
                 className="group block bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
               >
