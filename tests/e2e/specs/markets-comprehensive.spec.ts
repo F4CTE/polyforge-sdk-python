@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { MarketsPage } from '../pages/markets.page';
-import { apiLogin, apiRegister, uniqueEmail, uniqueUsername } from '../helpers/api';
+import { apiLogin, apiRegister, apiRegisterAndVerify, uniqueEmail, uniqueUsername } from '../helpers/api';
 
 /**
  * Markets — Full Workflow Coverage (@e2e @comprehensive)
@@ -22,7 +22,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
         // Register a unique test user for markets tests
         const email = uniqueEmail('markets');
         const username = uniqueUsername('mktsuser');
-        const res = await apiRegister(email, username, 'TestPass123!');
+        const res = await apiRegisterAndVerify(email, username, 'TestPass123!');
         token = res.token;
     });
 

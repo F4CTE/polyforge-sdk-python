@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { StrategyBuilderPage } from '../pages/strategy-builder.page';
 import { StrategiesListPage } from '../pages/strategies-list.page';
-import { apiLogin, apiRegister, uniqueEmail, uniqueUsername, apiDeleteStrategy, apiGetStrategies } from '../helpers/api';
+import { apiLogin, apiRegister, apiRegisterAndVerify, uniqueEmail, uniqueUsername, apiDeleteStrategy, apiGetStrategies } from '../helpers/api';
 
 /**
  * Strategy Builder — Full Workflow Coverage (@e2e @comprehensive)
@@ -24,7 +24,7 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         // Register a unique test user
         const email = uniqueEmail('strategybuilder');
         const username = uniqueUsername('stratbuilder');
-        const res = await apiRegister(email, username, 'TestPass123!');
+        const res = await apiRegisterAndVerify(email, username, 'TestPass123!');
         token = res.token;
         userId = res.user.id;
     });

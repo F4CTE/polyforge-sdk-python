@@ -94,6 +94,49 @@ export async function apiRegister(
     };
 }
 
+/**
+ * Registers a new user AND immediately verifies their email by:
+ *   1. Calling apiRegister() to create the account
+ *   2. Fetching the verification token from Mailpit
+ *   3. POSTing to /auth/v1/verify-email to mark the account verified
+ *
+ * Use this instead of plain apiRegister() in specs that navigate to routes
+ * protected by VerifiedGuard (most authenticated routes in the user app).
+ */
+export async function apiRegisterAndVerify(
+    email:    string,
+    username: string,
+    password: string,
+): Promise<LoginResponse> {
+    // 1. Register
+    const result = await apiRegister(email, username, password);
+
+    // 2. Extract verification token from Mailpit email
+    const { waitForEmail } = await import('./mailhog');
+    const msg  = await waitForEmail(email, 15_000);
+    const body = msg.HTML || msg.Text || '';
+
+    // Token is a 64-char hex string in the verify-email URL query param
+    const tokenMatch = body.match(/[?&]token=([a-f0-9]{64})/i);
+    if (!tokenMatch) {
+        throw new Error(`Could not extract verification token from email to ${email}`);
+    }
+    const verifyToken = tokenMatch[1];
+
+    // 3. Verify email via API
+    const verifyRes = await fetch(`${AUTH_URL}/auth/v1/verify-email`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ token: verifyToken }),
+    });
+    if (!verifyRes.ok) {
+        const err = await verifyRes.json().catch(() => ({})) as Record<string, unknown>;
+        throw new Error(`Email verification failed: ${verifyRes.status} ${JSON.stringify(err)}`);
+    }
+
+    return result;
+}
+
 // ─── Strategy helpers ─────────────────────────────────────────────────────────
 
 export async function apiGetStrategies(token: string): Promise<StrategyResponse[]> {

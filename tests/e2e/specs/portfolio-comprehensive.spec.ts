@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { PortfolioPage } from '../pages/portfolio.page';
-import { apiLogin, apiRegister, uniqueEmail, uniqueUsername } from '../helpers/api';
+import { apiLogin, apiRegister, apiRegisterAndVerify, uniqueEmail, uniqueUsername } from '../helpers/api';
 
 /**
  * Portfolio — Full Workflow Coverage (@e2e @comprehensive)
@@ -21,7 +21,7 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
         // Register a unique test user for portfolio tests
         const email = uniqueEmail('portfolio');
         const username = uniqueUsername('portfoliouser');
-        const res = await apiRegister(email, username, 'TestPass123!');
+        const res = await apiRegisterAndVerify(email, username, 'TestPass123!');
         token = res.token;
     });
 
