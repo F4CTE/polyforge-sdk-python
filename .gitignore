@@ -160,3 +160,7 @@ tests/e2e/**/*.js
 tests/e2e/**/*.js.map
 tests/e2e/**/*.d.ts
 tests/e2e/**/*.d.ts.map
+
+# Session logs — stored outside repo on polyforge-lab
+docs/session-logs/
+docs/reports/
