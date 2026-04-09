@@ -91,7 +91,7 @@ export function Component() {
       </div>
 
       {/* Tickets table */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+      <div data-testid="ticket-list" className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Support tickets">
             <thead>
@@ -116,7 +116,7 @@ export function Component() {
               ) : tickets.length === 0 ? (
                 <tr>
                   <td colSpan={6}>
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div data-testid="empty-state" className="flex flex-col items-center justify-center py-16 text-center">
                       <LifeBuoy className="size-10 text-pf-text-muted mb-3" />
                       <p className="text-sm font-medium text-pf-text">No support tickets</p>
                       <p className="text-xs text-pf-text-muted mt-1">Create a ticket if you need help.</p>
@@ -129,19 +129,19 @@ export function Component() {
                   const ps = PRIORITY_STYLES[ticket.priority] ?? PRIORITY_STYLES.LOW;
                   const lastMsg = ticket.messages[ticket.messages.length - 1];
                   return (
-                    <tr key={ticket.id} className="hover:bg-pf-surface/50 transition-colors">
+                    <tr key={ticket.id} data-testid="ticket-row" className="hover:bg-pf-surface/50 transition-colors">
                       <td className="px-4 py-3">
-                        <Link to={`/support/${ticket.id}`} className="text-pf-text hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors font-medium">
+                        <Link to={`/support/${ticket.id}`} data-testid="ticket-subject" className="text-pf-text hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors font-medium">
                           {ticket.subject}
                         </Link>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
+                        <span data-testid="status-badge" className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
                           {ticket.status.replace(/_/g, ' ')}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ps.bg} ${ps.text}`}>
+                        <span data-testid="priority-badge" className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ps.bg} ${ps.text}`}>
                           {ticket.priority}
                         </span>
                       </td>
@@ -160,11 +160,11 @@ export function Component() {
       </div>
 
       {/* FAQ */}
-      <div>
+      <div data-testid="faq-section">
         <h2 className="text-lg font-semibold text-pf-text mb-4">Frequently Asked Questions</h2>
-        <div className="space-y-2">
+        <div data-testid="faq-accordion" className="space-y-2">
           {FAQ_ITEMS.map((item, idx) => (
-            <div key={idx} className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+            <div key={idx} data-testid="faq-item" className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
               <Button
                 type="button"
                 variant="ghost"
@@ -182,7 +182,7 @@ export function Component() {
                 )}
               </Button>
               {openFaq === idx && (
-                <div id={`faq-panel-${idx}`} role="region" aria-labelledby={`faq-btn-${idx}`} className="px-4 pb-3 text-sm text-pf-text-secondary leading-relaxed border-l-2 border-pf-cyan-500/40 ml-4 mr-4">
+                <div data-testid="faq-content" id={`faq-panel-${idx}`} role="region" aria-labelledby={`faq-btn-${idx}`} className="px-4 pb-3 text-sm text-pf-text-secondary leading-relaxed border-l-2 border-pf-cyan-500/40 ml-4 mr-4">
                   {item.a}
                 </div>
               )}

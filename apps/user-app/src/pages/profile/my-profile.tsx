@@ -109,16 +109,16 @@ export function Component() {
         {/* Identity */}
         <div className="flex items-center gap-4 mb-4">
           {user.avatarUrl ? (
-            <img src={user.avatarUrl} alt={`${user.displayName ?? user.username} avatar`} className="size-20 rounded-pf-full object-cover" />
+            <img data-testid="profile-avatar" src={user.avatarUrl} alt={`${user.displayName ?? user.username} avatar`} className="size-20 rounded-pf-full object-cover" />
           ) : (
-            <div className="size-20 rounded-pf-full bg-pf-surface flex items-center justify-center text-2xl font-bold text-pf-cyan-400">
+            <div data-testid="profile-avatar" className="size-20 rounded-pf-full bg-pf-surface flex items-center justify-center text-2xl font-bold text-pf-cyan-400">
               {initials}
             </div>
           )}
           <div>
-            <div className="text-lg font-semibold text-pf-text">{user.displayName ?? user.username}</div>
+            <div data-testid="profile-display-name" className="text-lg font-semibold text-pf-text">{user.displayName ?? user.username}</div>
             {user.displayName && (
-              <div className="text-sm text-pf-text-muted">@{user.username}</div>
+              <div data-testid="profile-username" className="text-sm text-pf-text-muted">@{user.username}</div>
             )}
             <div className="text-xs font-mono text-pf-text-muted mt-1">Member since {memberSince}</div>
           </div>
@@ -126,12 +126,12 @@ export function Component() {
 
         {/* Bio */}
         {user.bio && (
-          <p className="text-sm text-pf-text-secondary mb-4 leading-relaxed">{user.bio}</p>
+          <p data-testid="profile-bio" className="text-sm text-pf-text-secondary mb-4 leading-relaxed">{user.bio}</p>
         )}
 
         {/* Status chips */}
         <div className="flex flex-wrap gap-2">
-          <span className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
+          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
             user.emailVerified
               ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
               : 'bg-pf-overlay text-pf-text-muted border-pf-border'
@@ -139,7 +139,7 @@ export function Component() {
             <Mail className="size-3" />
             {user.emailVerified ? 'Email Verified' : 'Email Unverified'}
           </span>
-          <span className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
+          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
             user.polymarketConnected
               ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
               : 'bg-pf-overlay text-pf-text-muted border-pf-border'
@@ -147,7 +147,7 @@ export function Component() {
             <Link2 className="size-3" />
             {user.polymarketConnected ? 'Polymarket Connected' : 'Not Connected'}
           </span>
-          <span className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
+          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
             user.totpEnabled
               ? 'bg-pf-success/10 text-pf-success border-pf-success/20'
               : 'bg-pf-overlay text-pf-text-muted border-pf-border'
@@ -159,7 +159,7 @@ export function Component() {
       </div>
 
       {/* Edge Rating card */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+      <div data-testid="edge-rating" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="size-4 text-pf-cyan-400" />
           <h2 className="text-sm font-semibold text-pf-text">Edge Rating</h2>
@@ -222,12 +222,14 @@ export function Component() {
             {badges.map(badge => (
               <div
                 key={badge.id}
+                data-testid="badge"
+                data-earned={badge.earnedAt}
                 className="flex items-center gap-3 px-3 py-2 rounded-pf bg-pf-surface border border-pf-border-subtle"
               >
-                <span className="text-lg">{BADGE_ICONS[badge.type] ?? <Target className="size-4" />}</span>
+                <span data-testid="badge-icon" className="text-lg">{BADGE_ICONS[badge.type] ?? <Target className="size-4" />}</span>
                 <div className="min-w-0">
-                  <div className="text-xs font-medium text-pf-text truncate">{badge.name}</div>
-                  <div className="text-pf-caption text-pf-text-muted">
+                  <div data-testid="badge-name" className="text-xs font-medium text-pf-text truncate">{badge.name}</div>
+                  <div data-testid="earned-date" className="text-pf-caption text-pf-text-muted">
                     {new Date(badge.earnedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </div>
                 </div>
