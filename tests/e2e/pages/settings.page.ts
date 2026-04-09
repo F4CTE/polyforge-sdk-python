@@ -40,9 +40,10 @@ export class SettingsPage {
     readonly changePasswordButton: Locator;
 
     // 2FA tab
+    readonly startSetup2FAButton: Locator; // "Enable Two-Factor Authentication" — transitions to setup view
     readonly qrCode: Locator;
     readonly totpCodeInput: Locator;
-    readonly enable2faButton: Locator;
+    readonly enable2faButton: Locator;     // "Enable 2FA" — confirms TOTP code in setup view
     readonly disable2faButton: Locator;
     readonly backupCodes: Locator;
 
@@ -77,52 +78,75 @@ export class SettingsPage {
         this.gasTab = page.locator('[role="tab"]', { hasText: 'Gas' });
 
         // Profile
-        this.displayNameInput = page.locator('input[placeholder*="Display Name"]');
-        this.bioInput = page.locator('textarea[placeholder*="Bio"]');
-        this.avatarUrlInput = page.locator('input[placeholder*="Avatar"]');
+        // Use stable id attributes (the actual placeholders are "Your display name",
+        // "Tell others about yourself...", and "https://..." — not matching the
+        // old case-sensitive placeholder*="..." selectors).
+        this.displayNameInput = page.locator('input#settings-display-name');
+        this.bioInput = page.locator('textarea#settings-bio');
+        this.avatarUrlInput = page.locator('input#settings-avatar-url');
         this.saveProfileButton = page.locator('button', { hasText: 'Save Profile' });
 
-        // Notifications
+        // Notifications — the UI uses <Button role="switch"> toggles (not checkboxes).
+        // Each event has 3 toggles (inApp, email, push); .first() selects the inApp one.
+        // aria-label pattern: "${eventLabel} ${field} notification"
         this.notificationCheckboxes = {
-            orderFilled: page.locator('input[type="checkbox"][id*="orderFilled"]'),
-            strategyError: page.locator('input[type="checkbox"][id*="strategyError"]'),
-            backtestComplete: page.locator('input[type="checkbox"][id*="backtestComplete"]'),
-            priceAlert: page.locator('input[type="checkbox"][id*="priceAlert"]'),
-            dailyLossLimit: page.locator('input[type="checkbox"][id*="dailyLossLimit"]'),
-            marketResolved: page.locator('input[type="checkbox"][id*="marketResolved"]'),
-            newFollower: page.locator('input[type="checkbox"][id*="newFollower"]'),
+            orderFilled:     page.locator('[role="switch"][aria-label*="Order Filled"]').first(),
+            strategyError:   page.locator('[role="switch"][aria-label*="Strategy Error"]').first(),
+            backtestComplete: page.locator('[role="switch"][aria-label*="Backtest Complete"]').first(),
+            priceAlert:      page.locator('[role="switch"][aria-label*="Price Alert"]').first(),
+            dailyLossLimit:  page.locator('[role="switch"][aria-label*="Daily Loss Limit"]').first(),
+            marketResolved:  page.locator('[role="switch"][aria-label*="Market Resolved"]').first(),
+            newFollower:     page.locator('[role="switch"][aria-label*="New Follower"]').first(),
         };
-        this.saveNotificationsButton = page.locator('button', { hasText: 'Save Notifications' });
+        // Button text is "Save Preferences" (not "Save Notifications")
+        this.saveNotificationsButton = page.locator('button', { hasText: 'Save Preferences' });
 
-        // Password
-        this.currentPasswordInput = page.locator('input[placeholder*="Current Password"]');
-        this.newPasswordInput = page.locator('input[placeholder*="New Password"]').first();
-        this.confirmPasswordInput = page.locator('input[placeholder*="Confirm Password"]');
+        // Password — inputs have no placeholder; use stable IDs.
+        this.currentPasswordInput = page.locator('input#settings-current-password');
+        this.newPasswordInput = page.locator('input#settings-new-password');
+        this.confirmPasswordInput = page.locator('input#settings-confirm-password');
         this.changePasswordButton = page.locator('button', { hasText: 'Change Password' });
 
         // 2FA
-        this.qrCode = page.locator('[data-testid="2fa-qrcode"]');
-        this.totpCodeInput = page.locator('input[placeholder*="6-digit"]');
+        // "Enable Two-Factor Authentication" starts the setup flow (disabled view).
+        this.startSetup2FAButton = page.locator('button', { hasText: 'Enable Two-Factor Authentication' });
+        // QR code <img> is rendered in the setup view — no data-testid, use alt.
+        this.qrCode = page.locator('img[alt="TOTP QR Code"]');
+        // The verify TOTP input: id="2fa-verify-token", placeholder="000000"
+        this.totpCodeInput = page.locator('input#2fa-verify-token');
+        // "Enable 2FA" confirms the 6-digit TOTP code (setup view only).
         this.enable2faButton = page.locator('button', { hasText: 'Enable 2FA' });
         this.disable2faButton = page.locator('button', { hasText: 'Disable 2FA' });
         this.backupCodes = page.locator('[data-testid="backup-codes"]');
 
         // API Keys
-        this.keyNameInput = page.locator('input[placeholder*="Key Name"]');
+        // id="settings-key-name", placeholder="My Integration"
+        this.keyNameInput = page.locator('input#settings-key-name');
+        // Scopes: READ, TRADE, STRATEGY, WEBHOOK — no WRITE scope.
+        // Checkboxes are implicit-label inputs (input inside <label>); use getByRole
+        // with accessible-name matching (Playwright derives the name from the wrapping label).
         this.scopeCheckboxes = {
-            READ: page.locator('input[type="checkbox"][value="READ"]'),
-            WRITE: page.locator('input[type="checkbox"][value="WRITE"]'),
-            TRADE: page.locator('input[type="checkbox"][value="TRADE"]'),
+            READ:     page.getByRole('checkbox', { name: /\bRead\b/ }),
+            TRADE:    page.getByRole('checkbox', { name: /\bTrade\b/ }),
+            STRATEGY: page.getByRole('checkbox', { name: /\bStrategy\b/ }),
+            WEBHOOK:  page.getByRole('checkbox', { name: /\bWebhook\b/ }),
         };
-        this.expirationInput = page.locator('input[placeholder*="Expiration"]');
-        this.createKeyButton = page.locator('button', { hasText: 'Create API Key' });
-        this.keysTable = page.locator('[data-testid="api-keys-table"]');
-        this.createdKeyDisplay = page.locator('[data-testid="created-key"]');
+        // id="settings-key-expiration", type="date" (no placeholder)
+        this.expirationInput = page.locator('input#settings-key-expiration');
+        // Button text is "Generate API Key" (not "Create API Key")
+        this.createKeyButton = page.locator('button', { hasText: 'Generate API Key' });
+        // Table has no data-testid; identified by aria-label
+        this.keysTable = page.locator('table[aria-label="API keys"]');
+        // One-time secret display: <code class="...text-pf-warning..."> in the warning banner
+        this.createdKeyDisplay = page.locator('code.text-pf-warning');
 
-        // Gas
-        this.usageBar = page.locator('[data-testid="gas-usage-bar"]');
-        this.dailyLimit = page.locator('[data-testid="gas-daily-limit"]');
-        this.remaining = page.locator('[data-testid="gas-remaining"]');
+        // Gas — panel container is always present when the tab is active.
+        // Individual stat cards (Today's Usage / Daily Limit / Remaining) only render
+        // when the GET /api/v1/settings/gas call succeeds (gasUsage != null).
+        // When the call fails the panel shows "Unable to load gas usage data." instead.
+        this.usageBar  = page.locator('[data-testid="gas-panel"]');
+        this.dailyLimit = page.locator('[data-testid="gas-panel"] span', { hasText: "Daily Limit" }).first();
+        this.remaining  = page.locator('[data-testid="gas-panel"] span', { hasText: "Remaining"   }).first();
 
         // Delete account
         this.deleteAccountButton = page.locator('button', { hasText: 'Delete Account' });
@@ -132,6 +156,10 @@ export class SettingsPage {
     }
 
     async goto(): Promise<void> {
+        // Prevent the onboarding modal from intercepting clicks.
+        await this.page.addInitScript(() => {
+            localStorage.setItem('pf-onboarding-complete', 'true'); localStorage.setItem('polyforge:onboarding:dismissed', 'true');
+        });
         await this.page.goto('/settings');
         await expect(this.page.locator('h1', { hasText: 'Settings' })).toBeVisible({ timeout: 15_000 });
     }
@@ -143,7 +171,11 @@ export class SettingsPage {
 
     async goToNotificationsTab(): Promise<void> {
         await this.notificationsTab.click();
-        await this.page.waitForTimeout(300);
+        // Wait for the notification preferences to load.
+        // The panel shows a skeleton loader while notifLoading=true; the actual
+        // [role="switch"] toggle buttons only appear after the API fetch completes.
+        // 15s covers Docker cold-start overhead.
+        await this.page.locator('[role="switch"]').first().waitFor({ state: 'visible', timeout: 15_000 });
     }
 
     async goToPasswordTab(): Promise<void> {
@@ -197,8 +229,13 @@ export class SettingsPage {
         await this.page.waitForTimeout(300);
     }
 
+    /** Enter 2FA setup flow from the disabled view, then submit the TOTP code. */
     async setup2FA(totpCode: string): Promise<void> {
-        await expect(this.qrCode).toBeVisible();
+        // If still in disabled view, click through to setup view first.
+        if (await this.startSetup2FAButton.isVisible()) {
+            await this.startSetup2FAButton.click();
+        }
+        await expect(this.qrCode).toBeVisible({ timeout: 10_000 });
         await this.totpCodeInput.fill(totpCode);
         await this.enable2faButton.click();
         await this.page.waitForTimeout(300);
@@ -212,12 +249,12 @@ export class SettingsPage {
     }
 
     async getBackupCodes(): Promise<string> {
-        return (await this.backupCodes.textContent()) ?? '';
+        return (await this.backupCodes.textContent({ timeout: 2_000 }).catch(() => '')) ?? '';
     }
 
     async createApiKey(params: {
         name: string;
-        scopes: Array<'READ' | 'WRITE' | 'TRADE'>;
+        scopes: Array<'READ' | 'TRADE' | 'STRATEGY' | 'WEBHOOK'>;
         expirationDays?: string;
     }): Promise<void> {
         await this.keyNameInput.fill(params.name);
@@ -238,15 +275,17 @@ export class SettingsPage {
         return (await this.createdKeyDisplay.textContent()) ?? '';
     }
 
-    getRevokeButton(keyId: string): Locator {
-        return this.page.locator(`[data-testid="revoke-key-${keyId}"]`);
+    /** Returns the revoke button for a key identified by its NAME (used in aria-label). */
+    getRevokeButton(keyName: string): Locator {
+        return this.page.locator(`button[aria-label="Revoke API key ${keyName}"]`);
     }
 
-    async revokeApiKey(id: string): Promise<void> {
-        await this.getRevokeButton(id).click();
-        await expect(this.page.locator('[role="dialog"]')).toBeVisible();
-        await this.page.locator('[role="dialog"] button', { hasText: 'Confirm' }).click();
-        await this.page.waitForTimeout(300);
+    /** Revoke an API key by name. Accepts the native window.confirm() dialog. */
+    async revokeApiKey(keyName: string): Promise<void> {
+        // revokeApiKey() in the component uses window.confirm() — handle with Playwright dialog event
+        this.page.once('dialog', async dialog => { await dialog.accept(); });
+        await this.getRevokeButton(keyName).click();
+        await this.page.waitForTimeout(500);
     }
 
     async deleteAccount(password: string): Promise<void> {
@@ -259,8 +298,8 @@ export class SettingsPage {
 
     async getGasUsage(): Promise<{ daily: string; remaining: string }> {
         return {
-            daily: (await this.dailyLimit.textContent()) ?? '',
-            remaining: (await this.remaining.textContent()) ?? '',
+            daily:     (await this.dailyLimit.textContent({ timeout: 3_000 }).catch(() => '')) ?? '',
+            remaining: (await this.remaining .textContent({ timeout: 3_000 }).catch(() => '')) ?? '',
         };
     }
 }
