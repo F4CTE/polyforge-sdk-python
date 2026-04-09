@@ -276,6 +276,7 @@ export function Component() {
           {trades.map(trade => (
             <div
               key={trade.id}
+              data-testid="whale-feed-item"
               className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm"
             >
               {/* Top row: wallet + time */}
@@ -283,9 +284,10 @@ export function Component() {
                 <div className="flex items-center gap-2">
                   <Link
                     to={`/whales/${trade.walletAddress}`}
+                    data-testid={`whale-${trade.walletAddress}`}
                     className="font-mono text-sm text-pf-text hover:text-pf-cyan-400 transition-colors"
                   >
-                    {truncateAddress(trade.walletAddress)}
+                    <span data-testid="whale-address">{truncateAddress(trade.walletAddress)}</span>
                   </Link>
                   <Button
                     type="button"
@@ -298,12 +300,12 @@ export function Component() {
                     <Copy className="size-4" />
                   </Button>
                 </div>
-                <span className="text-pf-label text-pf-text-muted">{timeAgo(trade.timestamp)}</span>
+                <span data-testid="transaction-timestamp" className="text-pf-label text-pf-text-muted">{timeAgo(trade.timestamp)}</span>
               </div>
 
               {/* Market name + category */}
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-sm text-pf-text font-medium truncate">{trade.marketName}</span>
+                <span data-testid="transaction-market" className="text-sm text-pf-text font-medium truncate">{trade.marketName}</span>
                 <span className="px-2 py-1 rounded-pf-full text-pf-caption bg-pf-overlay text-pf-text-muted shrink-0">
                   {trade.marketCategory}
                 </span>
@@ -311,7 +313,7 @@ export function Component() {
 
               {/* Side + Outcome badges */}
               <div className="flex items-center gap-2 mb-3">
-                <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
+                <span data-testid="transaction-side" className={`px-2 py-1 rounded text-pf-label font-semibold ${
                   trade.side === 'BUY'
                     ? 'bg-pf-success/15 text-pf-success'
                     : 'bg-pf-danger/15 text-pf-danger'
@@ -329,7 +331,7 @@ export function Component() {
 
               {/* Size / Price / Notional */}
               <div className="flex items-center gap-4 text-xs text-pf-text-secondary mb-3">
-                <span>Size: <span className="font-mono text-pf-text">{fmtUsd(trade.size)}</span></span>
+                <span data-testid="transaction-amount">Size: <span className="font-mono text-pf-text">{fmtUsd(trade.size)}</span></span>
                 <span>Price: <span className="font-mono text-pf-text">{fmtPrice(trade.price)}</span></span>
                 <span>Notional: <span className="font-mono text-pf-text font-semibold">{fmtUsd(trade.notional)}</span></span>
               </div>
@@ -342,6 +344,7 @@ export function Component() {
                 <Button
                   type="button"
                   variant="ghost"
+                  data-testid={followingSet.has(trade.walletAddress) ? `unfollow-${trade.walletAddress}` : `follow-${trade.walletAddress}`}
                   onClick={() => toggleFollow(trade.walletAddress)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border cursor-pointer transition-colors ${
                     followingSet.has(trade.walletAddress)

@@ -387,7 +387,7 @@ export function Component() {
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-pf-surface rounded-pf p-3">
                   <span className="text-xs text-pf-text-muted block">Total P&L</span>
-                  <span className={`text-lg font-mono font-semibold ${pnlColor(selectedRun.totalPnl)}`}>
+                  <span data-testid="result-pnl" className={`text-lg font-mono font-semibold ${pnlColor(selectedRun.totalPnl)}`}>
                     {pnlSign(selectedRun.totalPnl)}
                   </span>
                 </div>
@@ -504,6 +504,8 @@ export function Component() {
                   return (
                     <tr
                       key={run.id}
+                      data-testid="backtest-history-row"
+                      data-backtest-id={run.id}
                       tabIndex={0}
                       onClick={() => selectRun(run)}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectRun(run); }}
