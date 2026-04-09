@@ -23,4 +23,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Use CommonJS export so Next.js reads the config object directly.
+// ESM `export default` in a .ts file gets transpiled to { __esModule: true, default: {...} }
+// which Next.js treats as an unrecognised-key object and silently ignores options like `output`.
+module.exports = nextConfig;
