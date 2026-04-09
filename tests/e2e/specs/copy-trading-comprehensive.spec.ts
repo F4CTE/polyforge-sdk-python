@@ -55,7 +55,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
 
         // If copies exist, verify cards display properly
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
             await expect(firstCard).toBeVisible();
 
             // Verify card contains expected information
@@ -93,7 +93,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
             const cardText = await firstCard.textContent() || '';
 
             // Should contain wallet address or whale name
@@ -108,7 +108,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
             const cardText = await firstCard.textContent() || '';
 
             // Should indicate the copy mode
@@ -123,7 +123,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
             const statusBadge = firstCard.locator('[data-testid="status-badge"]');
 
             await expect(statusBadge).toBeVisible();
@@ -137,7 +137,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
             const cardText = await firstCard.textContent() || '';
 
             // Should show P&L info
@@ -152,7 +152,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
             const statusBadge = firstCard.locator('[data-testid="status-badge"]');
 
             const statusText = await statusBadge.textContent() || '';
@@ -605,7 +605,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         expect(copyCount).toBeGreaterThan(0);
 
         // First copy should have ACTIVE status
-        const firstCard = page.locator('[data-testid="copy-card"]').first();
+        const firstCard = page.locator('[data-testid="copy-config-card"]').first();
         const statusBadge = firstCard.locator('[data-testid="status-badge"]');
         const statusText = await statusBadge.textContent() || '';
 
@@ -619,7 +619,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
             const statusBadge = firstCard.locator('[data-testid="status-badge"]');
             const statusBefore = await statusBadge.textContent();
 
@@ -646,7 +646,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
             const statusBadge = firstCard.locator('[data-testid="status-badge"]');
             const statusText = await statusBadge.textContent() || '';
 
@@ -673,7 +673,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
 
             // Find and click stop button
             const stopButton = firstCard.locator('button[data-action="stop"], button:has-text("Stop")');
@@ -706,7 +706,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
             const statusBadge = firstCard.locator('[data-testid="status-badge"]');
             const statusText = await statusBadge.textContent() || '';
 
@@ -729,7 +729,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
 
             // Click on card
             await firstCard.click();
@@ -746,7 +746,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
             await firstCard.click();
 
             // Verify detail page content
@@ -765,7 +765,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
             await firstCard.click();
 
             // Should show history/trades section
@@ -783,7 +783,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-card"]').first();
+            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
             await firstCard.click();
 
             // Should have action buttons (pause/resume/stop)

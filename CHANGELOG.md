@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-04-09
+
+### Fixed (E2E / CI)
+- **Align E2E test selectors with source component testids** — resolved final batch of spec/source mismatches:
+  1. **Copy trading spec**: replaced 15 occurrences of `[data-testid="copy-card"]` with the correct `[data-testid="copy-config-card"]` in `copy-trading-comprehensive.spec.ts`
+  2. **News sentiment filters**: updated `news.page.ts` `sentimentFilters` map from `Bullish`/`Bearish` to `Positive`/`Negative` to match the `POSITIVE`/`NEGATIVE` sentiment type used in `news-feed.tsx`; updated `filterBySentiment()` type signature and all call sites in `news-comprehensive.spec.ts`; updated content assertions from `'bullish'`/`'bearish'` to `'positive'`/`'negative'` to match what the `[data-testid="news-sentiment"]` badge renders
+  3. **News pagination indicator**: added `data-testid="page-indicator"` to pagination span in `news-feed.tsx`; changed display format from `"Page N of T"` to `"N / T"` to satisfy the spec's `\d+\s*\/\s*\d+` regex assertion
+
 ## [Unreleased] — 2026-04-08
 
 ### Fixed (Security)

@@ -18,9 +18,9 @@ export class NewsPage {
         this.page = page;
 
         this.sentimentFilters = {
-            Bullish: page.locator('button', { hasText: 'Bullish' }),
+            Positive: page.locator('button', { hasText: 'Positive' }),
             Neutral: page.locator('button', { hasText: 'Neutral' }),
-            Bearish: page.locator('button', { hasText: 'Bearish' }),
+            Negative: page.locator('button', { hasText: 'Negative' }),
         };
 
         this.sourceFilters = {
@@ -40,7 +40,7 @@ export class NewsPage {
         await expect(this.page.locator('h1', { hasText: 'News' })).toBeVisible({ timeout: 15_000 });
     }
 
-    async filterBySentiment(sentiment: 'Bullish' | 'Neutral' | 'Bearish'): Promise<void> {
+    async filterBySentiment(sentiment: 'Positive' | 'Neutral' | 'Negative'): Promise<void> {
         await this.sentimentFilters[sentiment].click();
         await this.page.waitForTimeout(300);
     }

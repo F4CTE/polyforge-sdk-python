@@ -45,41 +45,41 @@ test.describe('News — Full Workflow Coverage', () => {
     });
 
     test.describe('Sentiment Filters', () => {
-        test('Filter by Bullish → shows only bullish articles', async ({ page }) => {
+        test('Filter by Positive → shows only positive articles', async ({ page }) => {
             const newsPage = new NewsPage(page);
             await newsPage.goto();
 
             const initialCount = await newsPage.getNewsCount();
 
-            await newsPage.filterBySentiment('Bullish');
+            await newsPage.filterBySentiment('Positive');
 
-            const bullishCount = await newsPage.getNewsCount();
+            const positiveCount = await newsPage.getNewsCount();
 
-            // Should have some bullish articles
-            expect(bullishCount).toBeGreaterThan(0);
+            // Should have some positive articles
+            expect(positiveCount).toBeGreaterThan(0);
 
-            // Verify all visible cards have bullish sentiment
+            // Verify all visible cards have positive sentiment
             const sentiments = await page.locator('[data-testid="news-card"] [data-testid="news-sentiment"]').allTextContents();
             sentiments.forEach(sentiment => {
-                expect(sentiment.toLowerCase()).toContain('bullish');
+                expect(sentiment.toLowerCase()).toContain('positive');
             });
         });
 
-        test('Filter by Bearish → shows only bearish articles', async ({ page }) => {
+        test('Filter by Negative → shows only negative articles', async ({ page }) => {
             const newsPage = new NewsPage(page);
             await newsPage.goto();
 
-            await newsPage.filterBySentiment('Bearish');
+            await newsPage.filterBySentiment('Negative');
 
-            const bearishCount = await newsPage.getNewsCount();
+            const negativeCount = await newsPage.getNewsCount();
 
-            // Should have some bearish articles
-            expect(bearishCount).toBeGreaterThan(0);
+            // Should have some negative articles
+            expect(negativeCount).toBeGreaterThan(0);
 
-            // Verify all visible cards have bearish sentiment
+            // Verify all visible cards have negative sentiment
             const sentiments = await page.locator('[data-testid="news-card"] [data-testid="news-sentiment"]').allTextContents();
             sentiments.forEach(sentiment => {
-                expect(sentiment.toLowerCase()).toContain('bearish');
+                expect(sentiment.toLowerCase()).toContain('negative');
             });
         });
 
@@ -108,11 +108,11 @@ test.describe('News — Full Workflow Coverage', () => {
             const initialCount = await newsPage.getNewsCount();
 
             // Apply a filter
-            await newsPage.filterBySentiment('Bullish');
+            await newsPage.filterBySentiment('Positive');
             const filteredCount = await newsPage.getNewsCount();
 
             // Click filter again to clear it
-            await newsPage.filterBySentiment('Bullish');
+            await newsPage.filterBySentiment('Positive');
             await page.waitForTimeout(300);
 
             const clearedCount = await newsPage.getNewsCount();
