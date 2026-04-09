@@ -129,12 +129,12 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
         await expect(page).toHaveURL(/\/backtest/);
     });
 
-    test('click Copy Trading nav item navigates to /copy-trading', async ({ page }) => {
+    test('click Copy Trading nav item navigates to /copy', async ({ page }) => {
         const sidebar = page.locator('[role="navigation"], nav, [data-testid="sidebar"]').first();
         const copyLink = sidebar.locator('a, button', { hasText: /copy trading/i });
         await expect(copyLink).toBeVisible();
         await copyLink.click();
-        await expect(page).toHaveURL(/\/copy-trading/);
+        await expect(page).toHaveURL(/\/copy/);
     });
 
     test('click Discover nav item navigates to /discover', async ({ page }) => {
