@@ -26,6 +26,24 @@ export interface StrategyResponse {
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 
+/**
+ * Extract Set-Cookie headers from a fetch response.
+ *
+ * Node.js 18+ (undici) treats `set-cookie` as a special multi-value header.
+ * `headers.get('set-cookie')` returns null per the Fetch spec when there are
+ * multiple Set-Cookie lines. `headers.getSetCookie()` (added in Node 18.14+)
+ * correctly returns all values as an array.  We join them so the pf_token
+ * regex works against a single string regardless of which other cookies are set.
+ */
+function getSetCookieString(headers: Headers): string {
+    // Prefer the standards-compliant array API (Node 18.14+)
+    if (typeof (headers as unknown as Record<string, unknown>)['getSetCookie'] === 'function') {
+        return ((headers as unknown as { getSetCookie(): string[] }).getSetCookie()).join(', ');
+    }
+    // Fallback: older runtimes where get('set-cookie') returns a combined string
+    return headers.get('set-cookie') ?? '';
+}
+
 export async function apiLogin(email: string, password: string): Promise<LoginResponse> {
     const res = await fetch(`${AUTH_URL}/auth/v1/login`, {
         method:  'POST',
@@ -39,7 +57,7 @@ export async function apiLogin(email: string, password: string): Promise<LoginRe
     }
 
     // Cookie-based auth: token is in Set-Cookie header, user object in body
-    const cookie = res.headers.get('set-cookie') ?? '';
+    const cookie = getSetCookieString(res.headers);
     const tokenMatch = cookie.match(/pf_token=([^;]+)/);
     const user = await res.json() as LoginResponse['user'];
     return {
@@ -66,7 +84,7 @@ export async function apiRegister(
     }
 
     // Cookie-based auth: token is in Set-Cookie header, user object in body
-    const cookie = res.headers.get('set-cookie') ?? '';
+    const cookie = getSetCookieString(res.headers);
     const tokenMatch = cookie.match(/pf_token=([^;]+)/);
     const user = await res.json() as LoginResponse['user'];
     return {

@@ -23,7 +23,7 @@ test.describe('Smoke', () => {
         // Navigate to a protected route — should redirect to /login
         await page.goto('/strategies');
         await page.waitForURL(/\/login/, { timeout: 15_000 });
-        await expect(page.locator('h2', { hasText: 'Welcome back' })).toBeVisible();
+        await expect(page.locator('h1', { hasText: 'Welcome back' })).toBeVisible();
     });
 
     test('@smoke login page renders correctly', async ({ page }) => {
