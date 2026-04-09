@@ -35,8 +35,8 @@ export class PortfolioPage {
         this.pnlChart = page.locator('[data-testid="pnl-chart"]');
         this.resetPaperButton = page.locator('button', { hasText: 'Reset Paper Account' });
         this.resetConfirmDialog = page.locator('[role="dialog"]');
-        this.resetConfirmButton = page.locator('button', { hasText: 'Confirm' }).last();
-        this.resetCancelButton = page.locator('button', { hasText: 'Cancel' }).last();
+        this.resetConfirmButton = page.locator('[role="dialog"] button', { hasText: 'Reset' });
+        this.resetCancelButton = page.locator('[role="dialog"] button', { hasText: 'Cancel' });
     }
 
     async goto(): Promise<void> {

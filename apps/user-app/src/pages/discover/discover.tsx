@@ -483,7 +483,7 @@ export function Component() {
           {Array.from({ length: 9 }, (_, i) => <CardSkeleton key={i} />)}
         </div>
       ) : strategies.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center" role="status">
+        <div data-testid="empty-state" className="flex flex-col items-center justify-center py-20 text-center" role="status">
           <Compass className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
           <p className="text-pf-text font-medium">No strategies found</p>
           <p className="text-sm text-pf-text-muted mt-1">Be the first to publish a public strategy.</p>
@@ -512,6 +512,7 @@ export function Component() {
                     </div>
                   )}
                   <a
+                    data-testid="strategy-author"
                     href={`/profile/${s.author.username}`}
                     onClick={e => { e.stopPropagation(); }}
                     className="text-xs text-pf-text-secondary hover:text-pf-cyan-400 transition-colors"
@@ -528,17 +529,17 @@ export function Component() {
                       {s.author.score}
                     </span>
                   )}
-                  <span className="ml-auto text-pf-caption px-2 py-1 rounded bg-pf-overlay text-pf-text-muted">
+                  <span data-testid="strategy-status" className="ml-auto text-pf-caption px-2 py-1 rounded bg-pf-overlay text-pf-text-muted">
                     {execLabel(s.execMode)}
                   </span>
                 </div>
 
                 {/* Name + description */}
-                <div className="text-sm font-medium text-pf-text group-hover:text-pf-cyan-400 transition-colors mb-1">
+                <div data-testid="strategy-name" className="text-sm font-medium text-pf-text group-hover:text-pf-cyan-400 transition-colors mb-1">
                   {s.name}
                 </div>
                 {s.description && (
-                  <div className="text-xs text-pf-text-muted line-clamp-2 mb-3">{s.description}</div>
+                  <div data-testid="strategy-description" className="text-xs text-pf-text-muted line-clamp-2 mb-3">{s.description}</div>
                 )}
 
                 {/* Tags */}
@@ -569,6 +570,7 @@ export function Component() {
                   <Button
                     type="button"
                     variant="ghost"
+                    data-testid="strategy-pnl"
                     aria-label={isLiked ? 'Unlike strategy' : 'Like strategy'}
                     aria-pressed={isLiked}
                     disabled={isLiking}
@@ -586,7 +588,7 @@ export function Component() {
                     />
                     {likeCount}
                   </Button>
-                  <span className="flex items-center gap-1"><GitFork className="size-4" aria-hidden="true" /> {s.forkCount}</span>
+                  <span data-testid="strategy-forks" className="flex items-center gap-1"><GitFork className="size-4" aria-hidden="true" /> {s.forkCount}</span>
                   <span className="ml-auto text-pf-label text-pf-text-muted">&bull;</span>
                   <span className="font-mono text-pf-label">{formatDate(s.createdAt)}</span>
                 </div>
@@ -610,7 +612,7 @@ export function Component() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
+          <span data-testid="page-indicator" className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
           <Button
             type="button"
             variant="ghost"

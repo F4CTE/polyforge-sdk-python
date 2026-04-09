@@ -1209,19 +1209,19 @@ export function Component() {
               <>
                 <div className={`bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 ${pnlBorderColor(portfolio.totalUnrealizedPnl)}`}>
                   <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Unrealized P&L</span>
-                  <span className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalUnrealizedPnl)}`}>
+                  <span data-testid="stat-pnl" className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalUnrealizedPnl)}`}>
                     {formatPnl(portfolio.totalUnrealizedPnl)}
                   </span>
                 </div>
                 <div className={`bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 ${pnlBorderColor(portfolio.totalRealizedPnl)}`}>
                   <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Realized P&L</span>
-                  <span className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalRealizedPnl)}`}>
+                  <span data-testid="stat-return" className={`block mt-1 text-xl font-mono font-semibold ${pnlColor(portfolio.totalRealizedPnl)}`}>
                     {formatPnl(portfolio.totalRealizedPnl)}
                   </span>
                 </div>
                 <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 border-l-pf-cyan-500">
                   <span className="text-xs text-pf-text-secondary uppercase tracking-wider">Win Rate</span>
-                  <span className="block mt-1 text-xl font-mono font-semibold text-pf-cyan-400">
+                  <span data-testid="stat-win-rate" className="block mt-1 text-xl font-mono font-semibold text-pf-cyan-400">
                     {parseFloat(pnl?.winRate ?? '0') === 0 && (portfolio?.positions ?? []).length > 0
                       ? '—'
                       : winRatePct(pnl?.winRate ?? '0')}
@@ -1860,6 +1860,7 @@ export function Component() {
                     key={p.value}
                     variant={period === p.value ? 'default' : 'ghost'}
                     size="sm"
+                    aria-selected={period === p.value}
                     onClick={() => setPeriod(p.value)}
                   >
                     {p.label}

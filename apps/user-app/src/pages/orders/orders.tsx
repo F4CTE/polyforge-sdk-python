@@ -1006,6 +1006,7 @@ export function Component() {
                 type="button"
                 variant="ghost"
                 key={f.value}
+                aria-pressed={filter === f.value}
                 onClick={() => changeFilter(f.value)}
                 className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
                   filter === f.value
@@ -1065,6 +1066,8 @@ export function Component() {
                       const rows = [
                         <tr
                           key={order.id}
+                          data-testid="order-row"
+                          data-order-id={order.id}
                           tabIndex={0}
                           onClick={() => setSelectedOrder(order)}
                           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedOrder(order); }}
@@ -1101,7 +1104,7 @@ export function Component() {
                             <span className="font-mono text-pf-label text-pf-text-muted">{order.orderType}</span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
+                            <span data-testid="status-cell" className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ss.bg} ${ss.text}`}>
                               {order.status}
                             </span>
                           </td>
@@ -1175,7 +1178,7 @@ export function Component() {
               >
                 <ChevronLeft className="size-4" />
               </Button>
-              <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
+              <span data-testid="page-info" className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -1235,7 +1238,7 @@ export function Component() {
                       const ts = CONDITIONAL_TYPE_STYLES[co.type] ?? CONDITIONAL_TYPE_STYLES.LIMIT;
                       const cs = CONDITIONAL_STATUS_STYLES[co.status] ?? CONDITIONAL_STATUS_STYLES.PENDING;
                       return (
-                        <tr key={co.id} className="hover:bg-pf-surface/50 transition-colors">
+                        <tr key={co.id} data-testid="order-row" data-order-id={co.id} className="hover:bg-pf-surface/50 transition-colors">
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${ts.bg} ${ts.text}`}>
                               {ts.label}
@@ -1279,6 +1282,7 @@ export function Component() {
                                 type="button"
                                 variant="ghost"
                                 size="icon-sm"
+                                data-testid={`cancel-order-${co.id}`}
                                 onClick={() => cancelConditional(co.id)}
                                 aria-label="Cancel conditional order"
                               >
