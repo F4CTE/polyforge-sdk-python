@@ -8,10 +8,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased] — 2026-04-09
 
 ### Fixed (E2E / CI)
-- **Align E2E test selectors with source component testids** — resolved final batch of spec/source mismatches:
+- **Batch-fix all E2E selector/testid mismatches** — comprehensive static analysis of all spec files vs source components; fixed 61 missing/mismatched `data-testid` attributes across 8 files in a single pass rather than reacting to CI failures one by one:
   1. **Copy trading spec**: replaced 15 occurrences of `[data-testid="copy-card"]` with the correct `[data-testid="copy-config-card"]` in `copy-trading-comprehensive.spec.ts`
-  2. **News sentiment filters**: updated `news.page.ts` `sentimentFilters` map from `Bullish`/`Bearish` to `Positive`/`Negative` to match the `POSITIVE`/`NEGATIVE` sentiment type used in `news-feed.tsx`; updated `filterBySentiment()` type signature and all call sites in `news-comprehensive.spec.ts`; updated content assertions from `'bullish'`/`'bearish'` to `'positive'`/`'negative'` to match what the `[data-testid="news-sentiment"]` badge renders
-  3. **News pagination indicator**: added `data-testid="page-indicator"` to pagination span in `news-feed.tsx`; changed display format from `"Page N of T"` to `"N / T"` to satisfy the spec's `\d+\s*\/\s*\d+` regex assertion
+  2. **News sentiment filters**: updated `news.page.ts` `sentimentFilters` map from `Bullish`/`Bearish` to `Positive`/`Negative`; updated `filterBySentiment()` type signature and all call sites in `news-comprehensive.spec.ts`
+  3. **News/Whale feed pagination**: added `data-testid="page-indicator"` and changed format from `"Page N of T"` to `"N / T"` in both `news-feed.tsx` and `whale-feed.tsx`
+  4. **Leaderboard**: added `data-testid="leaderboard-table"` to table container; added `column-rank/trader/score/pnl/win-rate/trend/trades` to `<th>` elements; added `data-testid="trader-rank"` with `<span className="sr-only">` for rank number (so `.textContent()` works on medal rows); added `data-testid="trader-name/score/pnl"` to row cells; added medal `data-testid/data-medal` attributes; changed pagination to `{page} / {totalPages}` with `page-indicator` testid
+  5. **News detail**: added `data-testid="article-content/title/signal-section/trading-signal/signal-type/signal-strength/signal-reasoning"` to the article wrapper, title, signals panel, and each signal row
+  6. **Whale profile**: added `data-testid="whale-stats/whale-total-volume/whale-win-rate/trading-history"` to stats grid, volume/win-rate values, and trades table; added new "Favorite Market" stat card with `data-testid="whale-favorite-markets"` derived from `recentTrades[0].marketName`
+  7. **Whale following**: added `data-testid="whale-feed-item/whale-stats/empty-state"` to card, stats row, and empty state; added dynamic `data-testid={`unfollow-${wallet.walletAddress}`}` to unfollow button
+  8. **Public profile**: added `data-testid="trader-stats"` to score breakdown section; added `data-testid="win-rate"` to win rate value; added rendered `totalTrades` row with `data-testid="total-trades"`; added `data-testid="total-volume"` row with `"—"` placeholder
 
 ## [Unreleased] — 2026-04-08
 

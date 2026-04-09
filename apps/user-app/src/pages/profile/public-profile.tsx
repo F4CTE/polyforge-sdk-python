@@ -448,7 +448,7 @@ export function Component() {
 
       {/* Score breakdown */}
       {scoreData?.score && (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+        <div data-testid="trader-stats" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="size-4 text-pf-cyan-400" />
             <h2 className="text-sm font-semibold text-pf-text">Edge Rating</h2>
@@ -462,7 +462,7 @@ export function Component() {
             <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
               <div className="flex justify-between">
                 <span className="text-pf-text-muted">Win Rate</span>
-                <span className="font-mono text-pf-text">{scoreData.score.winRate}%</span>
+                <span data-testid="win-rate" className="font-mono text-pf-text">{scoreData.score.winRate}%</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-pf-text-muted">Sharpe</span>
@@ -475,6 +475,14 @@ export function Component() {
               <div className="flex justify-between">
                 <span className="text-pf-text-muted">Consistency</span>
                 <span className="font-mono text-pf-text">{scoreData.score.consistency}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-pf-text-muted">Total Trades</span>
+                <span data-testid="total-trades" className="font-mono text-pf-text">{scoreData.score.totalTrades}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-pf-text-muted">Total Volume</span>
+                <span data-testid="total-volume" className="font-mono text-pf-text">—</span>
               </div>
             </div>
           </div>

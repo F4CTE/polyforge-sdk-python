@@ -118,7 +118,7 @@ export function Component() {
   }, [id]);
 
   return (
-    <div className="animate-fade-in p-6 max-w-4xl mx-auto space-y-6">
+    <div data-testid="article-content" className="animate-fade-in p-6 max-w-4xl mx-auto space-y-6">
       {/* Back link */}
       <Link
         to="/news"
@@ -158,7 +158,7 @@ export function Component() {
             </div>
 
             {/* Title */}
-            <h1 className="text-xl font-semibold text-pf-text leading-snug">{article.title}</h1>
+            <h1 data-testid="article-title" className="text-xl font-semibold text-pf-text leading-snug">{article.title}</h1>
 
             {/* Published date */}
             <p className="text-xs text-pf-text-muted">{formatDate(article.publishedAt)}</p>
@@ -178,7 +178,7 @@ export function Component() {
           </div>
 
           {/* Signals table */}
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+          <div data-testid="signal-section" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
             <h2 className="text-sm font-medium text-pf-text mb-4">
               Signals ({article.signals.length})
             </h2>
@@ -202,9 +202,9 @@ export function Component() {
                   </thead>
                   <tbody>
                     {article.signals.map(signal => (
-                      <tr key={signal.id} className="border-b border-pf-border-subtle last:border-b-0 hover:bg-pf-surface/50 transition-colors">
+                      <tr key={signal.id} data-testid="trading-signal" className="border-b border-pf-border-subtle last:border-b-0 hover:bg-pf-surface/50 transition-colors">
                         <td className="py-3 px-3 text-pf-text font-medium">{signal.marketName}</td>
-                        <td className="py-3 px-3">
+                        <td data-testid="signal-type" className="py-3 px-3">
                           <span className={`inline-flex items-center gap-1 font-semibold ${
                             signal.direction === 'BUY' ? 'text-pf-success' : 'text-pf-danger'
                           }`}>
@@ -222,7 +222,7 @@ export function Component() {
                             {signal.outcome}
                           </span>
                         </td>
-                        <td className="py-3 px-3">
+                        <td data-testid="signal-strength" className="py-3 px-3">
                           <div className="flex items-center gap-2 min-w-[100px]">
                             <div className={`h-2 rounded-pf-full flex-1 ${confidenceBarBg(signal.confidence)}`}>
                               <div
@@ -233,7 +233,7 @@ export function Component() {
                             <span className="font-mono text-pf-text-muted w-7 text-right">{signal.confidence}%</span>
                           </div>
                         </td>
-                        <td className="py-3 px-3 text-pf-text-secondary max-w-[200px] truncate">{signal.reasoning}</td>
+                        <td data-testid="signal-reasoning" className="py-3 px-3 text-pf-text-secondary max-w-[200px] truncate">{signal.reasoning}</td>
                         <td className="py-3 px-3 text-right">
                           <Link
                             to={`/markets/${signal.marketId}`}

@@ -251,10 +251,10 @@ export function Component() {
       </div>
 
       {/* Stats cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div data-testid="whale-stats" className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
           <div className="text-xs text-pf-text-secondary mb-1">Total Volume</div>
-          <div className="text-lg font-mono font-semibold text-pf-text">{stats.totalVolume}</div>
+          <div data-testid="whale-total-volume" className="text-lg font-mono font-semibold text-pf-text">{stats.totalVolume}</div>
         </div>
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
           <div className="text-xs text-pf-text-secondary mb-1">Total P&L</div>
@@ -268,7 +268,13 @@ export function Component() {
         </div>
         <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
           <div className="text-xs text-pf-text-secondary mb-1">Win Rate</div>
-          <div className="text-lg font-mono font-semibold text-pf-text">{stats.winRate}%</div>
+          <div data-testid="whale-win-rate" className="text-lg font-mono font-semibold text-pf-text">{stats.winRate}%</div>
+        </div>
+        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4">
+          <div className="text-xs text-pf-text-secondary mb-1">Favorite Market</div>
+          <div data-testid="whale-favorite-markets" className="text-sm font-mono font-semibold text-pf-text truncate">
+            {recentTrades.length > 0 ? recentTrades[0].marketName : '—'}
+          </div>
         </div>
       </div>
 
@@ -281,7 +287,7 @@ export function Component() {
       )}
 
       {/* Recent trades table */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+      <div data-testid="trading-history" className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-pf-border">
           <h2 className="text-sm font-medium text-pf-text">Recent Trades</h2>
         </div>

@@ -384,7 +384,7 @@ export function Component() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
+          <span data-testid="page-indicator" className="text-sm font-mono text-pf-text-secondary" aria-live="polite">{page} / {totalPages}</span>
           <Button
             type="button"
             variant="ghost"

@@ -106,7 +106,7 @@ export function Component() {
           {Array.from({ length: 4 }, (_, i) => <CardSkeleton key={i} />)}
         </div>
       ) : wallets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div data-testid="empty-state" className="flex flex-col items-center justify-center py-20 text-center">
           <Fish className="size-10 text-pf-text-muted mb-4" aria-hidden="true" />
           <p className="text-pf-text font-medium">You're not following any whales yet</p>
           <p className="text-sm text-pf-text-muted mt-1">Follow whales from the feed to track their trades.</p>
@@ -122,6 +122,7 @@ export function Component() {
           {wallets.map(wallet => (
             <div
               key={wallet.walletAddress}
+              data-testid="whale-feed-item"
               className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-pf-border-strong hover:shadow-pf-sm"
             >
               <div className="flex items-center justify-between mb-3">
@@ -135,6 +136,7 @@ export function Component() {
                   type="button"
                   variant="danger"
                   onClick={() => unfollow(wallet.walletAddress)}
+                  data-testid={`unfollow-${wallet.walletAddress}`}
                   className="flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border border-pf-danger/30 text-pf-danger hover:bg-pf-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-danger/40 transition-colors"
                   aria-label={`Unfollow wallet ${truncateAddress(wallet.walletAddress)}`}
                 >
@@ -142,7 +144,7 @@ export function Component() {
                 </Button>
               </div>
 
-              <div className="flex items-center gap-4 text-xs text-pf-text-secondary">
+              <div data-testid="whale-stats" className="flex items-center gap-4 text-xs text-pf-text-secondary">
                 <span>Volume: <span className="font-mono text-pf-text">{wallet.profile?.totalVolume ?? wallet.totalVolume ?? '—'}</span></span>
                 <span>P&L: <span className={`font-mono ${pnlColor(wallet.profile?.totalPnl ?? wallet.totalPnl ?? '0')}`}>{pnlSign(wallet.profile?.totalPnl ?? wallet.totalPnl ?? '0')}</span></span>
                 <span>Trades: <span className="font-mono text-pf-text">{wallet.profile?.tradeCount ?? wallet.tradeCount ?? 0}</span></span>

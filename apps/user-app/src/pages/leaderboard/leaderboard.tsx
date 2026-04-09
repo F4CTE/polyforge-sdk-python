@@ -70,9 +70,9 @@ function pnlSign(pnl: string): string {
 }
 
 function rankMedal(rank: number): React.ReactNode {
-  if (rank === 1) return <Trophy className="size-4 text-pf-gold-400" aria-label="Gold medal" />;
-  if (rank === 2) return <Trophy className="size-4 text-pf-text-secondary" aria-label="Silver medal" />;
-  if (rank === 3) return <Trophy className="size-4 text-pf-gold-600" aria-label="Bronze medal" />;
+  if (rank === 1) return <Trophy data-testid="medal-badge" data-medal="gold" className="size-4 text-pf-gold-400" aria-label="Gold medal" />;
+  if (rank === 2) return <Trophy data-testid="medal-badge" data-medal="silver" className="size-4 text-pf-text-secondary" aria-label="Silver medal" />;
+  if (rank === 3) return <Trophy data-testid="medal-badge" data-medal="bronze" className="size-4 text-pf-gold-600" aria-label="Bronze medal" />;
   return null;
 }
 
@@ -226,18 +226,18 @@ export function Component() {
       </div>
 
       {/* Table */}
-      <div className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
+      <div data-testid="leaderboard-table" className="bg-pf-elevated border border-pf-border rounded-pf-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Leaderboard rankings">
             <thead>
               <tr className="bg-pf-surface text-left text-xs text-pf-text-secondary uppercase tracking-wider">
-                <th scope="col" className="px-4 py-3 font-medium text-right w-16">Rank</th>
-                <th scope="col" className="px-4 py-3 font-medium">Trader</th>
-                <th scope="col" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Score</th>
-                <th scope="col" className="px-4 py-3 font-medium text-right">P&L</th>
-                <th scope="col" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Win Rate</th>
-                <th scope="col" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Trend</th>
-                <th scope="col" className="px-4 py-3 font-medium text-right">Trades</th>
+                <th scope="col" data-testid="column-rank" className="px-4 py-3 font-medium text-right w-16">Rank</th>
+                <th scope="col" data-testid="column-trader" className="px-4 py-3 font-medium">Trader</th>
+                <th scope="col" data-testid="column-score" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Score</th>
+                <th scope="col" data-testid="column-pnl" className="px-4 py-3 font-medium text-right">P&L</th>
+                <th scope="col" data-testid="column-win-rate" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Win Rate</th>
+                <th scope="col" data-testid="column-trend" className="px-4 py-3 font-medium text-right hidden sm:table-cell">Trend</th>
+                <th scope="col" data-testid="column-trades" className="px-4 py-3 font-medium text-right">Trades</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-pf-border-subtle">
@@ -263,15 +263,15 @@ export function Component() {
                 entries.map(entry => (
                   <tr key={entry.userId} data-testid="trader-row" data-username={entry.username} className="hover:bg-pf-surface/50 transition-colors">
                     <td className="px-4 py-3 text-right">
-                      <div className={`${rankColor(entry.rank)}`}>
+                      <div data-testid="trader-rank" className={`${rankColor(entry.rank)}`}>
                         {rankMedal(entry.rank) !== null ? (
-                          <span className="text-lg">{rankMedal(entry.rank)}</span>
+                          <span className="text-lg"><span className="sr-only">{entry.rank}</span>{rankMedal(entry.rank)}</span>
                         ) : (
                           <span className="font-mono text-xs">{entry.rank}</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td data-testid="trader-name" className="px-4 py-3">
                       <div className="flex items-center gap-2">
                       <Link to={`/profile/${entry.username}`} data-testid={`trader-${entry.username}`} className="flex items-center gap-3 hover:text-pf-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 transition-colors">
                         {entry.avatarUrl ? (
@@ -297,7 +297,7 @@ export function Component() {
                       </Link>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right hidden sm:table-cell">
+                    <td data-testid="trader-score" className="px-4 py-3 text-right hidden sm:table-cell">
                       {entry.score != null ? (
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono font-bold ${
                           entry.score >= 80 ? 'text-pf-success bg-pf-success/10' :
@@ -312,7 +312,7 @@ export function Component() {
                         <span className="text-xs text-pf-text-muted">&mdash;</span>
                       )}
                     </td>
-                    <td className={`px-4 py-3 text-right font-mono ${pnlColor(entry.pnl)}`}>
+                    <td data-testid="trader-pnl" className={`px-4 py-3 text-right font-mono ${pnlColor(entry.pnl)}`}>
                       {pnlSign(entry.pnl)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-pf-text-secondary hidden sm:table-cell">
@@ -352,7 +352,7 @@ export function Component() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="text-sm font-mono text-pf-text-secondary" aria-live="polite">Page {page} of {totalPages}</span>
+          <span data-testid="page-indicator" className="text-sm font-mono text-pf-text-secondary" aria-live="polite">{page} / {totalPages}</span>
           <Button
             type="button"
             variant="ghost"
