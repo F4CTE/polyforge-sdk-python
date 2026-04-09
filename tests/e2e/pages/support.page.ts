@@ -54,7 +54,7 @@ export class SupportPage {
 
     async clickNewTicket(): Promise<void> {
         await this.newTicketButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async createTicket(params: {
@@ -92,7 +92,7 @@ export class SupportPage {
 
         // Submit
         await this.submitButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async getTicketCount(): Promise<number> {
@@ -101,11 +101,11 @@ export class SupportPage {
 
     async openFaq(index: number): Promise<void> {
         await this.faqItems.nth(index).click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async goToTicket(id: string): Promise<void> {
         await this.page.locator(`[data-testid="ticket-${id}"]`).click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 }

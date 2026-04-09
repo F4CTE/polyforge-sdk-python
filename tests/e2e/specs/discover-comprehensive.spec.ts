@@ -212,11 +212,11 @@ test.describe('Discover — Full Workflow Coverage', () => {
 
             // Search for something
             await discoverPage.search('momentum');
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             // Clear search
             await discoverPage.searchInput.clear();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             const clearedCount = await discoverPage.getStrategyCount();
             // Should return to initial count
@@ -326,7 +326,7 @@ test.describe('Discover — Full Workflow Coverage', () => {
             const cardLink = firstCard.locator('a').first();
 
             await cardLink.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             // Verify we're on a strategy detail page
             expect(page.url()).toMatch(/\/strategies\//);
@@ -341,7 +341,7 @@ test.describe('Discover — Full Workflow Coverage', () => {
             const cardLink = firstCard.locator('a').first();
 
             await cardLink.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             // Verify blocks visualization is present
             const blocksVisualization = page.locator('[data-testid="blocks-visualization"]');
@@ -356,14 +356,14 @@ test.describe('Discover — Full Workflow Coverage', () => {
             const cardLink = firstCard.locator('a').first();
 
             await cardLink.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             // Look for fork button
             const forkButton = page.locator('button', { hasText: /fork|fork strategy/i }).first();
 
             if (await forkButton.isVisible()) {
                 await forkButton.click();
-                await page.waitForLoadState('networkidle');
+                await page.waitForTimeout(300);
 
                 // Verify success message or navigation
                 const successMessage = page.locator('[data-testid="fork-success"]');

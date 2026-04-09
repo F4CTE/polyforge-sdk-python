@@ -58,8 +58,8 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         const builder = new StrategyBuilderPage(page);
         await builder.gotoNew();
 
-        // Verify empty canvas state
-        await expect(page.locator('h1', { hasText: 'New Strategy' })).toBeVisible();
+        // Verify builder canvas is ready (gotoNew already clicked through the template wizard)
+        await expect(page.locator('.react-flow')).toBeVisible();
         const blocks = builder.blockCards();
         const initialCount = await blocks.count();
         expect(initialCount).toBe(0);

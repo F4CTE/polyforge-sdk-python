@@ -42,7 +42,7 @@ export class NewsPage {
 
     async filterBySentiment(sentiment: 'Bullish' | 'Neutral' | 'Bearish'): Promise<void> {
         await this.sentimentFilters[sentiment].click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async filterBySource(source: string): Promise<void> {
@@ -51,7 +51,7 @@ export class NewsPage {
         } else {
             await this.page.locator('button', { hasText: source }).click();
         }
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async getNewsCount(): Promise<number> {
@@ -68,6 +68,6 @@ export class NewsPage {
         } else {
             await this.paginationPrev.click();
         }
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 }

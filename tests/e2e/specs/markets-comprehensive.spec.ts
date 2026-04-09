@@ -191,7 +191,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
 
         // Clear search by emptying input
         await markets.searchInput.fill('');
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         // Verify results are restored
         const finalCount = await markets.getMarketCount();
@@ -233,7 +233,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const countAfterTyping = networkRequestCount;
 
         // Wait for debounce to settle
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         // Verify debounce worked by checking requests were limited
         // (exact count depends on implementation, but should not be excessive)

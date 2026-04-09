@@ -418,7 +418,7 @@ test.describe('Backtesting — Full Workflow Coverage', () => {
 
         if (isClickable) {
             await firstEntry.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             // Should navigate to or show detailed view
             await expect(page.locator('[data-testid="result-pnl"]')).toBeVisible({ timeout: 10_000 });

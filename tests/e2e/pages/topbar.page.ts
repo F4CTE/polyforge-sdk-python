@@ -35,7 +35,7 @@ export class TopbarPage {
 
     async toggleTheme(): Promise<void> {
         await this.themeToggle.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async openNotifications(): Promise<void> {
@@ -45,7 +45,7 @@ export class TopbarPage {
 
     async markAllRead(): Promise<void> {
         await this.markAllReadButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async getUnreadCount(): Promise<string> {
@@ -61,19 +61,19 @@ export class TopbarPage {
     async goToProfile(): Promise<void> {
         await this.openUserMenu();
         await this.profileLink.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async goToSettings(): Promise<void> {
         await this.openUserMenu();
         await this.settingsLink.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async signOut(): Promise<void> {
         await this.openUserMenu();
         await this.signOutButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async isDarkMode(): Promise<boolean> {

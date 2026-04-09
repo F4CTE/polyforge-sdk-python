@@ -16,7 +16,7 @@ export class CopyListPage {
 
     constructor(page: Page) {
         this.page = page;
-        this.newCopyButton = page.locator('button', { hasText: 'New Copy Trade' });
+        this.newCopyButton = page.locator('button', { hasText: 'New Copy Config' });
         this.copyCards = page.locator('[data-testid="copy-card"]');
 
         this.statusFilter = {
@@ -36,7 +36,7 @@ export class CopyListPage {
 
     async goToNewCopy(): Promise<void> {
         await this.newCopyButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     getCopyByName(name: string): Locator {
@@ -57,6 +57,6 @@ export class CopyListPage {
         } else {
             await this.paginationPrev.click();
         }
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 }

@@ -27,12 +27,12 @@ export class WhaleFeedPage {
 
     async goto(): Promise<void> {
         await this.page.goto('/whale-feed');
-        await expect(this.page.locator('h1', { hasText: 'Whale Feed' })).toBeVisible({ timeout: 15_000 });
+        await expect(this.page.locator('h1', { hasText: 'Whale Tracker' })).toBeVisible({ timeout: 15_000 });
     }
 
     async setMinSize(size: string): Promise<void> {
         await this.minSizeInput.fill(size);
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     getFollowButton(address: string): Locator {
@@ -45,12 +45,12 @@ export class WhaleFeedPage {
 
     async followWhale(address: string): Promise<void> {
         await this.getFollowButton(address).click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async unfollowWhale(address: string): Promise<void> {
         await this.getUnfollowButton(address).click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async getItemCount(): Promise<number> {
@@ -59,12 +59,12 @@ export class WhaleFeedPage {
 
     async goToProfile(address: string): Promise<void> {
         await this.page.locator(`[data-testid="whale-${address}"]`).click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async goToFollowing(): Promise<void> {
         await this.followingLink.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async goToPage(direction: 'next' | 'prev'): Promise<void> {
@@ -73,6 +73,6 @@ export class WhaleFeedPage {
         } else {
             await this.paginationPrev.click();
         }
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 }

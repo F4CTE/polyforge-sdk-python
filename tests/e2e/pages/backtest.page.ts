@@ -57,7 +57,7 @@ export class BacktestPage {
 
     async runBacktest(): Promise<void> {
         await this.runButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
         await expect(this.historyTable).toBeVisible({ timeout: 30_000 });
     }
 
@@ -85,6 +85,6 @@ export class BacktestPage {
         } else {
             await this.paginationPrev.click();
         }
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 }

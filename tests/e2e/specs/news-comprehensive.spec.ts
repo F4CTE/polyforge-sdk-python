@@ -113,7 +113,7 @@ test.describe('News — Full Workflow Coverage', () => {
 
             // Click filter again to clear it
             await newsPage.filterBySentiment('Bullish');
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             const clearedCount = await newsPage.getNewsCount();
 
@@ -176,7 +176,7 @@ test.describe('News — Full Workflow Coverage', () => {
 
             // Click filter again to clear
             await newsPage.filterBySource('Twitter');
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             const clearedCount = await newsPage.getNewsCount();
 
@@ -250,7 +250,7 @@ test.describe('News — Full Workflow Coverage', () => {
             const cardLink = firstCard.locator('a').first();
 
             await cardLink.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             // Verify we're on a news detail page
             expect(page.url()).toMatch(/\/news\/[\w-]+/);
@@ -264,7 +264,7 @@ test.describe('News — Full Workflow Coverage', () => {
             const cardLink = firstCard.locator('a').first();
 
             await cardLink.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             // Verify detail page elements
             const articleContent = page.locator('[data-testid="article-content"]');
@@ -286,7 +286,7 @@ test.describe('News — Full Workflow Coverage', () => {
                 const firstSignalCard = cardsWithSignals.first();
                 const link = firstSignalCard.locator('a').first();
                 await link.click();
-                await page.waitForLoadState('networkidle');
+                await page.waitForTimeout(300);
 
                 const signalSection = page.locator('[data-testid="signal-section"]');
                 if (await signalSection.isVisible()) {
@@ -305,7 +305,7 @@ test.describe('News — Full Workflow Coverage', () => {
             const firstCard = page.locator('[data-testid="news-card"]').first();
             const cardLink = firstCard.locator('a').first();
             await cardLink.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             // Verify we're on detail page
             expect(page.url()).not.toBe(feedUrl);
@@ -314,7 +314,7 @@ test.describe('News — Full Workflow Coverage', () => {
             const backButton = page.locator('button[aria-label="Go back"]');
             if (await backButton.isVisible()) {
                 await backButton.click();
-                await page.waitForLoadState('networkidle');
+                await page.waitForTimeout(300);
 
                 // Should return to feed
                 expect(page.url()).toBe(feedUrl);

@@ -575,7 +575,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
             const initialOrderId = await page.locator('[data-testid="order-row"]').first().getAttribute('data-order-id');
 
             await ordersPage.paginationNext.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             const newOrderId = await page.locator('[data-testid="order-row"]').first().getAttribute('data-order-id');
 
@@ -594,7 +594,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
         if (isNextEnabled) {
             // Go to next page
             await ordersPage.paginationNext.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             // Check if prev button is enabled
             const isPrevEnabled = await ordersPage.paginationPrev.isEnabled();
@@ -604,7 +604,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
 
                 // Go back
                 await ordersPage.paginationPrev.click();
-                await page.waitForLoadState('networkidle');
+                await page.waitForTimeout(300);
 
                 const firstPageOrderId = await page.locator('[data-testid="order-row"]').first().getAttribute('data-order-id');
 
@@ -623,7 +623,7 @@ test.describe('Orders — Full Workflow Coverage', () => {
         const isNextEnabled = await ordersPage.paginationNext.isEnabled();
         if (isNextEnabled) {
             await ordersPage.paginationNext.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             const newPageText = await page.locator('[data-testid="page-info"]').textContent() || 'Page 2';
 

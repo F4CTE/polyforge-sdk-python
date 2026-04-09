@@ -27,13 +27,18 @@ export class StrategyBuilderPage {
 
     async gotoNew(): Promise<void> {
         await this.page.goto('/strategies/new');
-        // The h1 shows "New Strategy" (from the name state) or a dynamic name
-        await expect(this.page.locator('h1', { hasText: 'New Strategy' })).toBeVisible({ timeout: 15_000 });
+        // A template wizard appears first — click "Start from Scratch" to enter the builder
+        const blankBtn = this.page.locator('button', { hasText: 'Start from Scratch' });
+        await expect(blankBtn).toBeVisible({ timeout: 15_000 });
+        await blankBtn.click();
+        // Wait for the BlockPalette name input to confirm the builder canvas is ready
+        await expect(this.nameInput).toBeVisible({ timeout: 10_000 });
     }
 
     async gotoEdit(strategyId: string): Promise<void> {
         await this.page.goto(`/strategies/${strategyId}/edit`);
-        await expect(this.page.locator('h1', { hasText: 'Edit Strategy' })).toBeVisible({ timeout: 15_000 });
+        // Edit mode skips the wizard and goes directly to the builder canvas
+        await expect(this.page.locator('.react-flow')).toBeVisible({ timeout: 15_000 });
     }
 
     async fillName(name: string): Promise<void> {
@@ -46,11 +51,11 @@ export class StrategyBuilderPage {
 
     /** Click a section tab in the floating panel by label (e.g. 'Safety', 'Triggers', 'Conditions', 'Actions') */
     async selectSection(label: string): Promise<void> {
-        // Ensure the panel is visible (controlled by Settings2 toggle button in top bar)
-        const panel = this.page.locator('.absolute.top-3.right-3');
-        if (!(await panel.isVisible())) {
-            await this.page.locator('button[title="Open panel"]').click();
-            await expect(panel).toBeVisible({ timeout: 5_000 });
+        // Panel toggle has title "Show blocks" when collapsed, "Hide blocks" when open
+        const showBtn = this.page.locator('button[title="Show blocks"]');
+        if (await showBtn.isVisible()) {
+            await showBtn.click();
+            await expect(this.nameInput).toBeVisible({ timeout: 5_000 });
         }
         // Section tabs are buttons inside the "Blocks" section of the palette
         await this.page.locator('button', { hasText: label }).click();

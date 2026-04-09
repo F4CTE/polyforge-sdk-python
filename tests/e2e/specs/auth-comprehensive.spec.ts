@@ -64,19 +64,15 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         const registerPage = new RegisterPage(page);
         await registerPage.goto();
 
-        // Try to submit without email
+        // Fill all fields except email, then submit
         await registerPage.username.fill(uniqueUsername());
         await registerPage.password.fill('Password123!');
         await registerPage.confirmPassword.fill('Password123!');
         await registerPage.tosCheckbox.check();
+        await registerPage.submit.click();
 
-        // Attempt submit (may be blocked by HTML5 validation or caught by form)
-        const emailInput = page.locator('#email');
-        await expect(emailInput).toBeDefined();
-
-        // If validation is HTML5, the browser will show a message
-        const isInvalid = await emailInput.evaluate((el: HTMLInputElement) => !el.checkValidity());
-        expect(isInvalid).toBe(true);
+        // React form validation marks email as touched and shows the error message
+        await expect(page.locator('[role="alert"]', { hasText: 'Email is required' })).toBeVisible();
     });
 
     test('register with invalid email format shows error', async ({ page }) => {

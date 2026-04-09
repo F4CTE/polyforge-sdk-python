@@ -273,7 +273,7 @@ test.describe.serial('Profile — Full Workflow Coverage', () => {
 
         const editButton = profilePage.editProfileButton;
         await editButton.click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         expect(page.url()).toContain('/settings');
     });
@@ -284,7 +284,7 @@ test.describe.serial('Profile — Full Workflow Coverage', () => {
         const settingsLink = profilePage.settingsLink;
         if (await settingsLink.isVisible()) {
             await settingsLink.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             expect(page.url()).toContain('/settings');
         }
@@ -296,7 +296,7 @@ test.describe.serial('Profile — Full Workflow Coverage', () => {
         const tradingLink = profilePage.tradingAccountLink;
         if (await tradingLink.isVisible()) {
             await tradingLink.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             expect(page.url()).toContain('/trading-account');
         }
@@ -308,7 +308,7 @@ test.describe.serial('Profile — Full Workflow Coverage', () => {
         const strategiesLink = profilePage.myStrategiesLink;
         if (await strategiesLink.isVisible()) {
             await strategiesLink.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             expect(page.url()).toContain('/strategies');
         }
@@ -394,7 +394,7 @@ test.describe.serial('Profile — Full Workflow Coverage', () => {
 
         // Go back
         await page.goBack();
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         // Should navigate away from profile
         expect(page.url()).not.toContain(`/profile/${TEST_USERNAME}`);
@@ -441,7 +441,7 @@ test.describe.serial('Profile — Full Workflow Coverage', () => {
 
         // Navigate to settings and update profile
         await profilePage.goToEditProfile();
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         // Update display name
         const newName = `UpdatedName${Date.now()}`;
@@ -451,11 +451,11 @@ test.describe.serial('Profile — Full Workflow Coverage', () => {
 
         const saveButton = page.locator('button:has-text("Save")').first();
         await saveButton.click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         // Navigate back to profile
         await page.goto('/profile/me');
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         const updatedDisplayName = await profilePage.getDisplayName();
         expect(updatedDisplayName).toBe(newName);
@@ -497,7 +497,7 @@ test.describe.serial('Profile — Full Workflow Coverage', () => {
 
         // Navigate back to profile
         await page.goBack();
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         expect(page.url()).toBe(initialUrl);
     });
@@ -508,7 +508,7 @@ test.describe.serial('Profile — Full Workflow Coverage', () => {
         const myStrategiesLink = profilePage.myStrategiesLink;
         if (await myStrategiesLink.isVisible()) {
             await myStrategiesLink.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             expect(page.url()).toContain('/strategies');
         }
@@ -525,7 +525,7 @@ test.describe.serial('Profile — Full Workflow Coverage', () => {
         // Test tablet viewport
         await page.setViewportSize({ width: 768, height: 1024 });
         await page.reload();
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         const tabletDisplayName = await profilePage.getDisplayName();
         expect(tabletDisplayName).toBe(displayName);
@@ -541,7 +541,7 @@ test.describe.serial('Profile — Full Workflow Coverage', () => {
         });
 
         await profilePage.gotoProfile('me');
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         // Should not have critical errors
         // (May have minor console errors, but shouldn't break the page)

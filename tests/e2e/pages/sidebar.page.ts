@@ -38,14 +38,14 @@ export class SidebarPage {
 
     async navigateTo(page: keyof typeof this.navItems): Promise<void> {
         await this.navItems[page].click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async collapse(): Promise<void> {
         const isCollapsed = await this.isCollapsed();
         if (!isCollapsed) {
             await this.collapseToggle.click();
-            await this.page.waitForLoadState('networkidle');
+            await this.page.waitForTimeout(300);
         }
     }
 
@@ -53,7 +53,7 @@ export class SidebarPage {
         const isCollapsed = await this.isCollapsed();
         if (isCollapsed) {
             await this.collapseToggle.click();
-            await this.page.waitForLoadState('networkidle');
+            await this.page.waitForTimeout(300);
         }
     }
 
@@ -69,6 +69,6 @@ export class SidebarPage {
 
     async goToSettings(): Promise<void> {
         await this.settingsLink.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 }

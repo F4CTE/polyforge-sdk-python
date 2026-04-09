@@ -50,12 +50,12 @@ export class OnboardingPage {
     async completeItem(index: number): Promise<void> {
         const checkbox = this.checklistItems.nth(index).locator('input[type="checkbox"]');
         await checkbox.check();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async dismissChecklist(): Promise<void> {
         await this.dismissButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async startTour(): Promise<void> {
@@ -65,17 +65,17 @@ export class OnboardingPage {
 
     async nextStep(): Promise<void> {
         await this.tourNextButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async prevStep(): Promise<void> {
         await this.tourPrevButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async closeTour(): Promise<void> {
         await this.tourCloseButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async getCurrentStep(): Promise<string> {

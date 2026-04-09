@@ -47,12 +47,12 @@ export class MarketsPage {
 
     async search(term: string): Promise<void> {
         await this.searchInput.fill(term);
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async selectCategory(category: 'All' | 'Sports' | 'Crypto' | 'Politics' | 'Economics' | 'Finance' | 'Technology'): Promise<void> {
         await this.categoryChips[category].click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async selectSort(sort: 'volume' | 'newest' | 'closingSoon' | 'liquidity'): Promise<void> {
@@ -64,12 +64,12 @@ export class MarketsPage {
             liquidity: 'Liquidity',
         };
         await this.page.locator('text=' + sortMap[sort]).click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async toggleView(): Promise<void> {
         await this.viewToggle.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async goToPage(direction: 'next' | 'prev'): Promise<void> {
@@ -78,7 +78,7 @@ export class MarketsPage {
         } else {
             await this.paginationPrev.click();
         }
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     getMarketCardByName(name: string): Locator {

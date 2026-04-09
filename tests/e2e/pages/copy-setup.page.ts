@@ -62,7 +62,7 @@ export class CopySetupPage {
 
     async goto(): Promise<void> {
         await this.page.goto('/copy/setup');
-        await expect(this.page.locator('h1', { hasText: 'Setup Copy Trade' })).toBeVisible({ timeout: 15_000 });
+        await expect(this.page.locator('h1', { hasText: 'New Copy Config' })).toBeVisible({ timeout: 15_000 });
     }
 
     async setTarget(address: string, whale?: string): Promise<void> {
@@ -99,12 +99,12 @@ export class CopySetupPage {
 
     async nextStep(): Promise<void> {
         await this.nextButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async previousStep(): Promise<void> {
         await this.backButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async review(): Promise<string> {
@@ -113,7 +113,7 @@ export class CopySetupPage {
 
     async confirm(): Promise<void> {
         await this.confirmButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async getCurrentStep(): Promise<number> {

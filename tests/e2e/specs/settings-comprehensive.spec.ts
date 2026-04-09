@@ -85,7 +85,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
         for (const tab of tabs) {
             const tabElement = page.locator('[role="tab"]', { hasText: tab.name });
             await tabElement.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             // Verify active state
             const ariaSelected = await tabElement.getAttribute('aria-selected');
@@ -108,7 +108,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
 
         // Refresh page
         await page.reload();
-        await page.waitForLoadState('networkidle');
+        await expect(page.locator('h1', { hasText: 'Settings' })).toBeVisible({ timeout: 15_000 });
 
         // Check if same tab is still active (or defaults to Profile)
         const activeTabAfterRefresh = page.locator('[role="tab"][aria-selected="true"]');
@@ -219,7 +219,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
         await settingsPage.saveProfileButton.click();
 
         // Should complete without error (cleared or reverted)
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
     });
 
     test('special characters in display name are handled properly', async ({ page }) => {
@@ -229,7 +229,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
         await settingsPage.displayNameInput.fill(specialName);
         await settingsPage.saveProfileButton.click();
 
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
         // Should save without error
         await page.reload();
         await settingsPage.goToProfileTab();
@@ -243,7 +243,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
         await settingsPage.bioInput.fill(longBio);
         await settingsPage.saveProfileButton.click();
 
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
         await page.reload();
         await settingsPage.goToProfileTab();
         const savedBio = await settingsPage.bioInput.inputValue();
@@ -592,7 +592,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
         await settingsPage.enable2faButton.click();
 
         // After enable (success or would-be in test environment)
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         // Check if backup codes are displayed or if we see confirmation
         // This may require mock TOTP for actual testing
@@ -678,7 +678,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
             scopes: ['READ', 'WRITE', 'TRADE'],
         });
 
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         // Verify in table
         const keyRow = page.locator(`text=${keyName}`);
@@ -697,7 +697,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
             expirationDays: expirationDate,
         });
 
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         // Check that expiration is shown in table
         const expiryCell = page.locator(`[data-testid="key-expiry-${keyName}"]`);
@@ -742,7 +742,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
             scopes: ['READ'],
         });
 
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         // Verify table has required columns
         const headerText = await page.locator('[role="columnheader"]').allTextContents();
@@ -764,7 +764,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
             scopes: ['READ'],
         });
 
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         // Get the API key ID from the row (or use name-based lookup)
         // For this test, we'll attempt revocation if revoke button exists
@@ -779,7 +779,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
             const confirmButton = page.locator('[role="dialog"] button', { hasText: /confirm|delete|revoke/i });
             await confirmButton.click();
 
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(300);
 
             // Verify key is removed from table
             await expect(page.locator(`text=${keyName}`)).not.toBeVisible({ timeout: 5000 });
@@ -795,7 +795,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
             scopes: ['READ'],
         });
 
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         // Get created key display
         const keyDisplay = settingsPage.createdKeyDisplay;
@@ -814,7 +814,7 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
             scopes: ['READ'],
         });
 
-        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(300);
 
         // Find copy button
         const copyButton = page.locator('[data-testid="copy-key"], button:has-text("Copy")').first();

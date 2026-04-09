@@ -970,6 +970,8 @@ export function Component() {
           <Button
             type="button"
             key={t.value}
+            role="tab"
+            aria-selected={activeTab === t.value}
             variant={activeTab === t.value ? 'default' : 'secondary'}
             size="sm"
             onClick={() => handleTab(t.value)}
@@ -1084,7 +1086,7 @@ export function Component() {
 
       {/* ─── Notifications Tab ─── */}
       {activeTab === 'notifications' && (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-6">
+        <div data-testid="notifications-panel" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-6">
           <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Notification Preferences</h2>
 
           {/* Email Digest Frequency */}
@@ -1193,7 +1195,7 @@ export function Component() {
 
       {/* ─── Password Tab ─── */}
       {activeTab === 'password' && (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
+        <div data-testid="password-panel" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
           <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Change Password</h2>
           <div>
             <label htmlFor="settings-current-password" className="text-xs text-pf-text-secondary mb-2 block">Current Password</label>
@@ -1231,7 +1233,7 @@ export function Component() {
 
       {/* ─── 2FA Tab ─── */}
       {activeTab === '2fa' && (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
+        <div data-testid="twofa-panel" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
           <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Two-Factor Authentication (TOTP)</h2>
 
           {/* View A: 2FA Disabled */}
@@ -1513,7 +1515,7 @@ export function Component() {
 
       {/* ─── Gas Usage Tab ─── */}
       {activeTab === 'gas' && (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
+        <div data-testid="gas-panel" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-5">
           <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Gas Sponsorship</h2>
           <p className="text-sm text-pf-text-secondary">
             Polyforge absorbs Polygon gas fees so you can trade without worrying about network costs.
@@ -1817,7 +1819,7 @@ export function Component() {
 
       {/* ─── API Keys Tab ─── */}
       {activeTab === 'apikeys' && (
-        <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-6">
+        <div data-testid="apikeys-panel" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6 space-y-6">
           {/* Generate section */}
           <div className="space-y-4">
             <h2 className="text-sm font-semibold text-pf-text uppercase tracking-wider">Generate API Key</h2>

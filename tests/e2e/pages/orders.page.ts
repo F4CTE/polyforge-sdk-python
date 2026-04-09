@@ -72,17 +72,17 @@ export class OrdersPage {
 
     async switchToOrders(): Promise<void> {
         await this.ordersTab.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async switchToConditional(): Promise<void> {
         await this.conditionalTab.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async filterByStatus(status: 'All' | 'Confirmed' | 'Live' | 'Pending' | 'Cancelled' | 'Failed'): Promise<void> {
         await this.statusFilter[status].click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async createConditionalOrder(params: {
@@ -151,14 +151,14 @@ export class OrdersPage {
 
         // Submit
         await this.submitButton.click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async cancelOrder(id: string): Promise<void> {
         await this.page.locator(`[data-testid="cancel-order-${id}"]`).click();
         await expect(this.page.locator('[role="dialog"]')).toBeVisible();
         await this.page.locator('[role="dialog"] button', { hasText: 'Confirm' }).click();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(300);
     }
 
     async getOrderCount(): Promise<number> {
