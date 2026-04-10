@@ -30,6 +30,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-04-09
 
+### Fixed (E2E / CI — ACCOUNT_PENDING)
+- **Seed users now created with `approved: true`** — all 6 user upserts in `prisma/seed.ts` now explicitly set `approved: true` and `approvedAt` in both `create` and `update` clauses, eliminating the dependency on the deferred `updateMany` at the end of the seed script. This fixes intermittent 403 ACCOUNT_PENDING errors that blocked ~264 E2E tests from logging in.
+- **E2E global-setup approves all seed users** — `tests/e2e/global-setup.ts` now runs `UPDATE "user" SET approved = true` via direct SQL as a safety net before test execution, ensuring no user is stuck in pending state regardless of seed ordering.
+
 ### Fixed (E2E / CI)
 - **Batch-fix all E2E selector/testid mismatches** — comprehensive static analysis of all spec files vs source components; fixed 61 missing/mismatched `data-testid` attributes across 8 files in a single pass rather than reacting to CI failures one by one:
   1. **Copy trading spec**: replaced 15 occurrences of `[data-testid="copy-card"]` with the correct `[data-testid="copy-config-card"]` in `copy-trading-comprehensive.spec.ts`

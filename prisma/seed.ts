@@ -268,7 +268,7 @@ async function main() {
   // Password is always TestPass123! regardless of CI flag.
   const aliceE2E = await prisma.user.upsert({
     where: { email: 'alice@e2e.dev.local' },
-    update: { passwordHash: await hashPassword('TestPass123!') },
+    update: { passwordHash: await hashPassword('TestPass123!'), approved: true, approvedAt: new Date() },
     create: {
       email: 'alice@e2e.dev.local',
       passwordHash: await hashPassword('TestPass123!'),
@@ -277,6 +277,8 @@ async function main() {
       emailVerified: true,
       emailVerifiedAt: daysAgo(1),
       tosAcceptedAt: daysAgo(1),
+      approved: true,
+      approvedAt: daysAgo(1),
       createdAt: daysAgo(1),
       lastSeen: hoursAgo(1),
     },
@@ -337,7 +339,7 @@ async function main() {
 
   const alice = await prisma.user.upsert({
     where: { email: 'alice@dev.local' },
-    update: {},
+    update: { approved: true, approvedAt: new Date() },
     create: {
       email: 'alice@dev.local',
       passwordHash: await hashPassword(seedPassword),
@@ -349,6 +351,8 @@ async function main() {
       emailVerified: true,
       emailVerifiedAt: daysAgo(30),
       tosAcceptedAt: daysAgo(30),
+      approved: true,
+      approvedAt: daysAgo(30),
       polymarketConnected: true,
       polymarketSigType: 1,
       polymarketAddress: '0xAliceDevAddress000000000000000000000001',
@@ -359,7 +363,7 @@ async function main() {
 
   const bob = await prisma.user.upsert({
     where: { email: 'bob@dev.local' },
-    update: {},
+    update: { approved: true, approvedAt: new Date() },
     create: {
       email: 'bob@dev.local',
       passwordHash: await hashPassword(seedPassword),
@@ -371,6 +375,8 @@ async function main() {
       emailVerified: true,
       emailVerifiedAt: daysAgo(20),
       tosAcceptedAt: daysAgo(20),
+      approved: true,
+      approvedAt: daysAgo(20),
       createdAt: daysAgo(45),
       lastSeen: hoursAgo(3),
     },
@@ -378,7 +384,7 @@ async function main() {
 
   const charlie = await prisma.user.upsert({
     where: { email: 'charlie@dev.local' },
-    update: {},
+    update: { approved: true, approvedAt: new Date() },
     create: {
       email: 'charlie@dev.local',
       passwordHash: await hashPassword(seedPassword),
@@ -388,6 +394,8 @@ async function main() {
       emailVerified: true,
       emailVerifiedAt: daysAgo(5),
       tosAcceptedAt: daysAgo(5),
+      approved: true,
+      approvedAt: daysAgo(5),
       createdAt: daysAgo(5),
       lastSeen: hoursAgo(12),
     },
@@ -396,7 +404,7 @@ async function main() {
   // carol — VERIFIED, paper trading only (no polymarket connection)
   const carol = await prisma.user.upsert({
     where: { email: 'carol@dev.local' },
-    update: {},
+    update: { approved: true, approvedAt: new Date() },
     create: {
       email: 'carol@dev.local',
       passwordHash: await hashPassword(seedPassword),
@@ -406,6 +414,8 @@ async function main() {
       emailVerified: true,
       emailVerifiedAt: daysAgo(7),
       tosAcceptedAt: daysAgo(7),
+      approved: true,
+      approvedAt: daysAgo(7),
       createdAt: daysAgo(7),
       lastSeen: hoursAgo(6),
     },
@@ -414,7 +424,7 @@ async function main() {
   // dave — VERIFIED but SUSPENDED
   const dave = await prisma.user.upsert({
     where: { email: 'dave@dev.local' },
-    update: {},
+    update: { approved: true, approvedAt: new Date() },
     create: {
       email: 'dave@dev.local',
       passwordHash: await hashPassword(seedPassword),
@@ -423,6 +433,8 @@ async function main() {
       emailVerified: true,
       emailVerifiedAt: daysAgo(14),
       tosAcceptedAt: daysAgo(14),
+      approved: true,
+      approvedAt: daysAgo(14),
       suspended: true,
       suspendedReason: 'Violation of terms of service (dev seed)',
       createdAt: daysAgo(14),
