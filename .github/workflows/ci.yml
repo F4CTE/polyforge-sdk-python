@@ -284,11 +284,11 @@ jobs:
           echo "Waiting for Redis..."
           until docker exec polyforge-dev-redis-1 redis-cli -a devredispass ping 2>/dev/null | grep -q PONG; do sleep 2; done
           echo "Waiting for auth-service..."
-          timeout 60 bash -c 'until curl -sf http://localhost:3001/health; do sleep 2; done'
+          timeout 180 bash -c 'until curl -sf http://localhost:3001/health; do sleep 3; done'
           echo "Waiting for api-service..."
-          timeout 60 bash -c 'until curl -sf http://localhost:3002/health; do sleep 2; done'
+          timeout 180 bash -c 'until curl -sf http://localhost:3002/health; do sleep 3; done'
           echo "Waiting for gateway..."
-          timeout 60 bash -c 'until curl -sf http://localhost/login; do sleep 2; done'
+          timeout 180 bash -c 'until curl -sf http://localhost/login; do sleep 3; done'
           echo "All services healthy"
 
       # ── Seed test data ───────────────────────────────────────────────────
