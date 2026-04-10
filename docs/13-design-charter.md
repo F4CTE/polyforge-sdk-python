@@ -396,6 +396,30 @@ Grille interne       : 12 colonnes, gap 16px
 
 **SVG animations:** SVG `<animate>` elements used for decorative loops (stroke-dashoffset, opacity pulses) must also use `dur="2s"` to match the `pf-pulse` standard. Do not use arbitrary durations like 1.5s, 2.3s, or 2.5s.
 
+**Ambient background exceptions (>5s):** Decorative background animations (auth-background floats, landing hero particles) use long durations that are imperceptible as interactions. These are exempt from the 100–300ms token range and defined as CSS custom properties:
+
+| Token | Value | Location |
+|-------|-------|----------|
+| `--duration-pf-ambient-slow` | 15s | Auth-background floats |
+| `--duration-pf-ambient-medium` | 18s | Auth-background floats |
+| `--duration-pf-ambient-fast` | 21s | Auth-background floats |
+| `--duration-pf-ambient-drift` | 25s | Auth-background floats |
+| `--particle-dur` (7s–12s) | per-instance | Landing hero particles |
+
+All ambient animations are purely decorative (`aria-hidden="true"`, `pointer-events-none`) and honor `prefers-reduced-motion`.
+
+**Strategy builder duration exceptions:** The builder canvas uses section-specific pulse rhythms to convey different operational states. These are documented as CSS custom properties:
+
+| Token | Value | Section |
+|-------|-------|---------|
+| `--duration-pf-builder-triggers` | 1.4s | Trigger blocks — fast scanning rhythm |
+| `--duration-pf-builder-actions` | 1.8s | Action blocks |
+| `--duration-pf-builder-conditions` | 2.4s | Condition blocks |
+| `--duration-pf-builder-logic` | 2s | Logic/calc blocks |
+| `--duration-pf-builder-calc` | 2s | Calc blocks |
+| `--duration-pf-builder-safety` | 3.6s | Safety blocks — slow heartbeat rhythm |
+| `--duration-pf-builder-fired` | 0.9s | Block-fired flash |
+
 **Rule:** Never use raw `duration-100`, `duration-200`, `duration-300` — always use `duration-pf-fast`, `duration-pf-normal`, `duration-pf-slow`.
 
 ---

@@ -17,7 +17,7 @@ export function CtaBanner() {
 
           <h2
             id="cta-heading"
-            className="relative text-[clamp(24px,4vw,36px)] font-bold text-pf-text mb-4"
+            className="relative text-2xl sm:text-3xl lg:text-4xl font-bold text-pf-text mb-4"
           >
             Ready to gain your edge?
           </h2>

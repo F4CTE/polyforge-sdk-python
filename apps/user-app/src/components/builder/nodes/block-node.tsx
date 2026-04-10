@@ -132,18 +132,18 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   // Pulse animation speed varies by section to convey different "rhythms":
   // triggers scan rapidly, safety beats slowly like a heartbeat
   const PULSE_DURATION: Record<string, string> = {
-    triggers:   '1.4s',
-    actions:    '1.8s',
-    conditions: '2.4s',
-    logic:      '2.0s',
-    calc:       '2.0s',
-    safety:     '3.6s',
+    triggers:   'var(--duration-pf-builder-triggers)',
+    actions:    'var(--duration-pf-builder-actions)',
+    conditions: 'var(--duration-pf-builder-conditions)',
+    logic:      'var(--duration-pf-builder-logic)',
+    calc:       'var(--duration-pf-builder-calc)',
+    safety:     'var(--duration-pf-builder-safety)',
   };
   const pulseKeyframe = d.section === 'safety' ? 'safetyPulse' : 'blockPulse';
-  const pulseDuration = PULSE_DURATION[d.section] ?? '2.0s';
+  const pulseDuration = PULSE_DURATION[d.section] ?? 'var(--duration-pf-builder-logic)';
 
   const cardAnimation = hasFired
-    ? 'blockFired 0.9s ease-out forwards'
+    ? 'blockFired var(--duration-pf-builder-fired) ease-out forwards'
     : isExecuting && !isInactive
     ? `${pulseKeyframe} ${pulseDuration} ease-in-out infinite`
     : undefined;

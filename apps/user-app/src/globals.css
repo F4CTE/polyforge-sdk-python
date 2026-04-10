@@ -122,6 +122,13 @@
   75% { transform: translateY(-20px) rotate(0.5deg); }
 }
 
+.auth-float {
+  animation: float var(--duration-pf-ambient-medium) ease-in-out infinite;
+}
+.auth-float--reverse {
+  animation-direction: reverse;
+}
+
 /* ─── Builder node utilities ────────────────────────────────────────── */
 
 /* Base card shared by all builder nodes — set --node-color on the element */
@@ -181,6 +188,24 @@
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--color-pf-danger) 18%, transparent),
     0 0 14px color-mix(in srgb, var(--color-pf-danger) 12%, transparent);
+}
+
+/* ─── Ambient & builder duration tokens (§9 documented exceptions) ──── */
+:root {
+  /* Auth-background ambient float durations (decorative, >5s) */
+  --duration-pf-ambient-slow: 15s;
+  --duration-pf-ambient-medium: 18s;
+  --duration-pf-ambient-fast: 21s;
+  --duration-pf-ambient-drift: 25s;
+
+  /* Strategy builder section-specific pulse durations */
+  --duration-pf-builder-triggers: 1.4s;
+  --duration-pf-builder-actions: 1.8s;
+  --duration-pf-builder-conditions: 2.4s;
+  --duration-pf-builder-logic: 2s;
+  --duration-pf-builder-calc: 2s;
+  --duration-pf-builder-safety: 3.6s;
+  --duration-pf-builder-fired: 0.9s;
 }
 
 /* ─── Strategy canvas animations ─────────────────────────────────────── */
