@@ -37,3 +37,10 @@ export const chartAxisTick = {
   fontFamily: "'JetBrains Mono', monospace",
   fill: 'var(--color-pf-text-muted)',
 } as const;
+
+/** Legend wrapper style — consistent font, color, and spacing across all chart legends. */
+export const chartLegendStyle: CSSProperties = {
+  fontSize: 'var(--font-size-pf-label)',
+  color: 'var(--color-pf-text-secondary)',
+  paddingTop: 'var(--spacing-pf-2)',
+};

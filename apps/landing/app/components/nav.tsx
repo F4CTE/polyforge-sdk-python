@@ -147,7 +147,7 @@ export function Nav() {
       className="sticky top-0 z-50 bg-pf-base/85 backdrop-blur-xl border-b border-pf-border-subtle"
       aria-label="Main navigation"
     >
-      <div className="flex items-center gap-4 md:gap-8 h-16 max-w-[1100px] mx-auto px-6">
+      <div className="flex items-center gap-4 md:gap-8 h-16 max-w-pf-container-landing mx-auto px-6">
         <a
           href="/"
           className="flex items-center gap-2 text-pf-subhead font-bold text-pf-text shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-sm"

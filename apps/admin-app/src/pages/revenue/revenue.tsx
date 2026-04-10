@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@polyforge/ui';
-import { chartTooltipContentStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
+import { chartTooltipContentStyle, chartAxisTick, chartLegendStyle } from '@polyforge/ui/lib/chart-styles';
 import {
   DollarSign, TrendingUp, TrendingDown, BarChart2,
   PieChart as PieChartIcon, Users, ShoppingBag, GitFork, Star, RefreshCw,
@@ -679,7 +679,7 @@ export function Component() {
                   width={40}
                 />
                 <Tooltip content={<MonthlyTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+                <Legend wrapperStyle={chartLegendStyle} />
                 <Bar yAxisId="left" dataKey="revenue" name="Revenue" fill="var(--color-pf-cyan-500)" opacity={0.7} radius={[2, 2, 0, 0]} />
                 <Bar yAxisId="left" dataKey="fees" name="Fees" fill="var(--color-pf-purple-500)" opacity={0.7} radius={[2, 2, 0, 0]} />
                 <Line yAxisId="right" type="monotone" dataKey="purchases" name="Purchases" stroke="var(--color-pf-gold-500)" strokeWidth={2} dot={false} />
@@ -713,7 +713,7 @@ export function Component() {
                 <XAxis dataKey="name" tick={chartAxisTick} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={fmtDollar} tick={chartAxisTick} axisLine={false} tickLine={false} width={52} />
                 <Tooltip content={<CompareTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+                <Legend wrapperStyle={chartLegendStyle} />
                 <Bar dataKey="Current" name="Current" radius={[2, 2, 0, 0]} opacity={0.85}>
                   {compareData.map((entry, index) => (
                     <Cell key={`cur-${index}`} fill={entry.color} />

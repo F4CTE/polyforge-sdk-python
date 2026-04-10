@@ -25,8 +25,8 @@ export function Testimonials() {
       className="py-24 bg-pf-surface border-t border-b border-pf-border-subtle"
       aria-labelledby="testimonials-heading"
     >
-      <div className="max-w-[1100px] mx-auto px-6">
-        <div className="text-center max-w-[600px] mx-auto mb-14">
+      <div className="max-w-pf-container-landing mx-auto px-6">
+        <div className="text-center max-w-pf-content-sm mx-auto mb-14">
           <h2
             id="testimonials-heading"
             className="text-2xl sm:text-3xl font-bold text-pf-text mb-4"

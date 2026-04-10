@@ -4,7 +4,7 @@ export function ProductPreview() {
       className="pt-8 -mt-2 overflow-hidden"
       aria-label="Product dashboard preview"
     >
-      <div className="max-w-[1100px] mx-auto px-6">
+      <div className="max-w-pf-container-landing mx-auto px-6">
         <div className="dark bg-pf-surface border border-pf-border-subtle rounded-pf-lg overflow-hidden transition-transform duration-pf-slow shadow-pf-lg product-preview-tilt">
           {/* Browser chrome */}
           <div

@@ -11,7 +11,7 @@ export function ProofStrip() {
       className="py-7 border-t border-b border-pf-border-subtle bg-pf-surface"
       aria-label="Platform statistics"
     >
-      <div className="max-w-[1100px] mx-auto px-6">
+      <div className="max-w-pf-container-landing mx-auto px-6">
         <dl className="flex items-center justify-center flex-wrap m-0">
           {stats.map((stat, i) => (
             <div key={stat.label} className="contents">

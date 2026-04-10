@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router';
 import { toast } from 'sonner';
 import { Button, Input, Select } from '@polyforge/ui';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
-import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
+import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick, chartLegendStyle } from '@polyforge/ui/lib/chart-styles';
 import { wsManager, WebSocketManager } from '@/lib/websocket';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -1050,7 +1050,7 @@ export function Component() {
                     />
                     <Legend
                       iconSize={8}
-                      wrapperStyle={{ fontSize: 10, color: textSecondary, paddingTop: 4 }}
+                      wrapperStyle={chartLegendStyle}
                       formatter={(value: string) => value === 'yesPrice' ? 'YES' : value === 'noPrice' ? 'NO' : 'Volume'}
                     />
                     {/* Volume bars */}

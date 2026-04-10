@@ -157,6 +157,18 @@
   /* Input minimum width tokens */
   --width-pf-input-min-sm: 180px;
   --width-pf-input-min-md: 200px;
+
+  /* Landing page container widths */
+  --width-pf-container-landing: 1100px;
+  --width-pf-content-sm: 600px;
+
+  /* Opacity scale — gradient overlays and disabled states */
+  --opacity-pf-subtle: 0.04;
+  --opacity-pf-muted: 0.06;
+  --opacity-pf-disabled: 0.6;
+
+  /* Line-height tokens */
+  --leading-pf-tight: 1.15;
 }
 
 /* Base styles */

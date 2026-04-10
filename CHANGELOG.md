@@ -17,7 +17,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **#440 key-rotation spec alignment** — rewrote stale tests to match refactored KeyRotationService interface
 
 ### Fixed (Design / Tokens)
-- **#447 Charter-defined glow shadow tokens** — added `shadow-pf-ring-cyan`, `shadow-pf-glow-cyan`, `shadow-pf-glow-cyan-strong` to globals.css
+- **#447 Charter-defined glow shadow tokens** — added glow shadow tokens to globals.css
+- **#446/#448/#449/#450 Opacity, line-height, container, chart legend tokens** — added opacity/line-height/container-width tokens; tokenized gradient overlays and Recharts Legend styles
 
 ### Fixed (Security)
 - **#498 Hardcoded devpass in DIRECT_DATABASE_URL** — parameterized with env var substitution

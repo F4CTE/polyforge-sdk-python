@@ -13,7 +13,7 @@ const features = [
     title: "Strategy Builder",
     description:
       "Build no-code automated trading strategies with our visual block editor. Set conditions, triggers, and position limits.",
-    gradientClass: "from-pf-cyan-500/[0.04]",
+    gradientClass: "from-pf-cyan-500/[var(--opacity-pf-subtle)]",
     icon: <LayoutGrid size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -168,7 +168,7 @@ const features = [
     title: "Paper Trading & Backtesting",
     description:
       "Test against historical data, simulate with real-time prices. Prove your edge before risking capital with detailed P&L curves, Sharpe ratio, and drawdown analytics.",
-    gradientClass: "from-pf-cyan-400/[0.04]",
+    gradientClass: "from-pf-cyan-400/[var(--opacity-pf-subtle)]",
     icon: <Activity size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -266,7 +266,7 @@ const features = [
     title: "Copy Trading",
     description:
       "Follow top performers and mirror their trades automatically. Browse the leaderboard and copy with one click.",
-    gradientClass: "from-pf-success/[0.03]",
+    gradientClass: "from-pf-success/[var(--opacity-pf-subtle)]",
     icon: <Users size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -417,7 +417,7 @@ const features = [
     title: "Backtesting",
     description:
       "Test your strategies against historical market data before going live. See P&L curves and win rates.",
-    gradientClass: "from-pf-purple-500/[0.04]",
+    gradientClass: "from-pf-purple-500/[var(--opacity-pf-subtle)]",
     icon: <Lightbulb size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -558,7 +558,7 @@ const features = [
     title: "Smart Alerts",
     description:
       "Get notified on price movements, whale trades, and strategy signals via webhooks, email, or in-app alerts.",
-    gradientClass: "from-pf-cyan-500/[0.03]",
+    gradientClass: "from-pf-cyan-500/[var(--opacity-pf-subtle)]",
     icon: <TrendingUp size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -702,7 +702,7 @@ const features = [
     title: "Strategy Marketplace",
     description:
       "Buy, sell, and fork proven strategies from top traders. Rate and review what you use.",
-    gradientClass: "from-pf-gold-400/[0.03]",
+    gradientClass: "from-pf-gold-400/[var(--opacity-pf-subtle)]",
     icon: <ZoomIn size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -875,7 +875,7 @@ const features = [
     title: "AI Portfolio Review",
     description:
       "Get AI-powered insights on your portfolio, risk exposure, and trading opportunities.",
-    gradientClass: "from-pf-purple-400/[0.04]",
+    gradientClass: "from-pf-purple-400/[var(--opacity-pf-subtle)]",
     icon: <Code2 size={24} aria-hidden="true" />,
     visual: (
       <svg viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -946,8 +946,8 @@ const features = [
 export function Features() {
   return (
     <section className="py-24" id="features" aria-labelledby="features-heading">
-      <div className="max-w-[1100px] mx-auto px-6">
-        <div className="text-center max-w-[600px] mx-auto mb-14">
+      <div className="max-w-pf-container-landing mx-auto px-6">
+        <div className="text-center max-w-pf-content-sm mx-auto mb-14">
           <h2
             id="features-heading"
             className="text-2xl sm:text-3xl font-bold text-pf-text mb-4"

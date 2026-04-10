@@ -1,7 +1,7 @@
 export function CtaBanner() {
   return (
     <section className="py-24" aria-labelledby="cta-heading">
-      <div className="max-w-[1100px] mx-auto px-6">
+      <div className="max-w-pf-container-landing mx-auto px-6">
         <div className="relative overflow-hidden bg-pf-surface border border-pf-cyan-500/20 rounded-pf-lg px-6 sm:px-12 py-12 sm:py-16 text-center">
           {/* Glow */}
           <div

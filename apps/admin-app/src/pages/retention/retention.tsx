@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
+import { chartLegendStyle } from '@polyforge/ui/lib/chart-styles';
 import { adminApi } from '@/lib/api';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -438,7 +439,7 @@ export function Component() {
               <Legend
                 iconType="circle"
                 iconSize={8}
-                wrapperStyle={{ fontSize: '11px', color: 'var(--color-pf-text-secondary)' }}
+                wrapperStyle={chartLegendStyle}
               />
               <Bar
                 dataKey="newUsers"

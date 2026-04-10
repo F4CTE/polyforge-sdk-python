@@ -92,7 +92,7 @@ const footerLinks = [
 export function Footer() {
   return (
     <footer className="bg-pf-surface border-t border-pf-border-subtle pt-15 pb-8">
-      <div className="max-w-[1100px] mx-auto px-6">
+      <div className="max-w-pf-container-landing mx-auto px-6">
         <div className="flex flex-col md:flex-row gap-8 md:gap-16 mb-10">
           {/* Brand */}
           <div className="shrink-0 min-w-[220px]">
@@ -116,7 +116,7 @@ export function Footer() {
                   rel="noopener noreferrer"
                   aria-label={link.label}
                   title={link.label}
-                  className="w-10 h-10 rounded-pf-sm border border-pf-border-subtle flex items-center justify-center text-pf-text-muted hover:text-pf-cyan-400 hover:border-pf-cyan-500/30 hover:bg-pf-cyan-500/[0.06] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 transition-colors cursor-pointer"
+                  className="w-10 h-10 rounded-pf-sm border border-pf-border-subtle flex items-center justify-center text-pf-text-muted hover:text-pf-cyan-400 hover:border-pf-cyan-500/30 hover:bg-pf-cyan-500/[var(--opacity-pf-muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 transition-colors cursor-pointer"
                 >
                   {link.icon}
                 </a>

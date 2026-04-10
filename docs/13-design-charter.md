@@ -422,6 +422,37 @@ All ambient animations are purely decorative (`aria-hidden="true"`, `pointer-eve
 
 **Rule:** Never use raw `duration-100`, `duration-200`, `duration-300` — always use `duration-pf-fast`, `duration-pf-normal`, `duration-pf-slow`.
 
+### Opacity tokens
+
+| Token | Utility class | Value | Use case |
+|-------|--------------|-------|----------|
+| `--opacity-pf-subtle` | `opacity-pf-subtle` | 0.04 | Gradient overlay backgrounds on cards |
+| `--opacity-pf-muted` | `opacity-pf-muted` | 0.06 | Hover highlight backgrounds |
+| `--opacity-pf-disabled` | `opacity-pf-disabled` | 0.6 | Disabled button/input states |
+
+**Rule:** Never use arbitrary opacity bracket values like `/[0.03]` or `/[0.04]`. Use `var(--opacity-pf-subtle)` for gradient color stops and `var(--opacity-pf-muted)` for hover states. For disabled states use `disabled:opacity-[var(--opacity-pf-disabled)]`.
+
+### Line-height tokens
+
+| Token | Utility class | Value | Use case |
+|-------|--------------|-------|----------|
+| `--leading-pf-tight` | `leading-pf-tight` | 1.15 | Hero and large display headings |
+
+**Rule:** Never use arbitrary `leading-[1.15]`. Use `leading-pf-tight`.
+
+### Container width tokens
+
+| Token | Utility class | Value | Use case |
+|-------|--------------|-------|----------|
+| `--width-pf-container-landing` | `max-w-pf-container-landing` | 1100px | Landing page section containers |
+| `--width-pf-content-sm` | `max-w-pf-content-sm` | 600px | Narrow content blocks (intro text, centered descriptions) |
+
+**Rule:** Never hardcode `max-w-[1100px]` or `max-w-[600px]` in landing page components. Use `max-w-pf-container-landing` and `max-w-pf-content-sm`.
+
+### Chart Legend style
+
+Use the shared `chartLegendStyle` from `@polyforge/ui/lib/chart-styles` for all Recharts `<Legend>` `wrapperStyle` props. Do not hardcode `fontSize`, `color`, or `paddingTop` inline.
+
 ---
 
 ## 10. Logo & identité
