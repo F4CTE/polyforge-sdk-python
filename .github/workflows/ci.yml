@@ -7,6 +7,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Limit the default GITHUB_TOKEN to read-only. This reduces the blast radius
+# if a malicious PR manages to execute code on the self-hosted runner.
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true

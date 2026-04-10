@@ -11,9 +11,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Add E2E concurrency group to prevent port conflicts** — E2E jobs across different branches all share Docker Compose ports (3001, 3002, 5432) on the self-hosted runner; without serialization, concurrent E2E jobs fight over ports causing flaky failures or long waits; added `concurrency: { group: e2e-docker-compose, cancel-in-progress: false }` to the E2E job so they queue instead of conflicting
 
 ### Fixed (Security)
-- **#498 Hardcoded devpass in DIRECT_DATABASE_URL** — replaced all hardcoded `devpass` and `devpass_admin` credentials in `docker-compose.infra.yml` connection strings with `${POSTGRES_PASSWORD:-devpass}` and `${POSTGRES_ADMIN_PASSWORD:-devpass_admin}` env var substitution to match the parameterized pattern used by `POSTGRES_PASSWORD`; prevents silent credential mismatch in non-local deployments
-- **#499 rejectPlaceholderSecrets missing in 5 services** — added `@polyforge/shared-auth` dependency and `rejectPlaceholderSecrets()` guard to `strategy-engine`, `market-data-service`, `notification-service`, `backtest-service`, and `paper-order-service`; updated all 5 Dockerfiles to include `packages/shared-auth` in build context; services now reject placeholder `INTERNAL_JWT_SECRET` values in production
-- **#500 Excessive rate limits on financial services** — lowered global `ThrottlerModule` limits from 1000 req/min to defence-in-depth values: `order-service` 100, `strategy-engine` 200, `backtest-service` 200, `paper-order-service` 200, `notification-service` 500, `market-data-service` 300 (aligned with `signer-service` which already uses 120)
+- **#498 Hardcoded devpass in DIRECT_DATABASE_URL** — replaced all hardcoded `devpass` and `devpass_admin` credentials in `docker-compose.infra.yml` connection strings with `${POSTGRES_PASSWORD:-devpass}` and `${POSTGRES_ADMIN_PASSWORD:-devpass_admin}` env var substitution
+- **#499 rejectPlaceholderSecrets missing in 5 services** — added `rejectPlaceholderSecrets()` guard to `strategy-engine`, `market-data-service`, `notification-service`, `backtest-service`, and `paper-order-service`
+- **#500 Excessive rate limits on financial services** — lowered `ThrottlerModule` limits: `order-service` 100, `strategy-engine` 200, `backtest-service` 200, `paper-order-service` 200, `notification-service` 500, `market-data-service` 300
+- **#488 order-service missing `rejectPlaceholderSecrets` guard** — added `rejectPlaceholderSecrets()` to `order-service` `validateEnv()`
+- **#489 admin-api-service missing `rejectPlaceholderSecrets` guard** — same fix applied to `admin-api-service`; guards `ADMIN_JWT_SECRET` and `INTERNAL_JWT_SECRET`
+- **#487 Self-hosted CI runner pwn-request mitigation** — added top-level `permissions: contents: read` to CI workflow
 
 ## [Unreleased] — 2026-04-09
 

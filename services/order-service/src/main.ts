@@ -5,6 +5,7 @@ import {
 } from "@nestjs/platform-fastify";
 import { Logger, RequestMethod, ValidationPipe } from "@nestjs/common";
 import helmet from "@fastify/helmet";
+import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
 import { AppModule } from "./app.module";
 
 const PORT = parseInt(process.env.PORT ?? "3007", 10);
@@ -20,6 +21,8 @@ function validateEnv() {
     );
     process.exit(1);
   }
+
+  rejectPlaceholderSecrets("order-service", ["INTERNAL_JWT_SECRET"]);
 
   if (process.env.NODE_ENV === "production") {
     const clobUrl = process.env.CLOB_API_URL;
