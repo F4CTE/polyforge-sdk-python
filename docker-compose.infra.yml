@@ -78,7 +78,7 @@ services:
       context: .
       dockerfile: Dockerfile.migrate
     environment:
-      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
@@ -123,7 +123,7 @@ services:
       context: .
       dockerfile: Dockerfile.migrate.admin
     environment:
-      ADMIN_DIRECT_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
+      ADMIN_DIRECT_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:-devpass_admin}@postgres-admin:5432/polyforge_admin
     networks: [admin-only]
     depends_on:
       postgres-admin: { condition: service_healthy }
@@ -192,8 +192,8 @@ services:
       dockerfile: services/signer-service/Dockerfile
     environment:
       # SECURITY: Signer uses direct DB connection (not pgbouncer) for credential operations
-      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
       ENCRYPTION_KEY: "${MASTER_ENCRYPTION_KEY:?MASTER_ENCRYPTION_KEY is required}"
@@ -220,8 +220,8 @@ services:
       context: .
       dockerfile: services/strategy-engine/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
       PORT: "3006"
@@ -240,8 +240,8 @@ services:
       context: .
       dockerfile: services/order-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
       SIGNER_SERVICE_URL: http://signer-service:3012
@@ -264,8 +264,8 @@ services:
       context: .
       dockerfile: services/api-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       JWT_SECRET: "${USER_JWT_SECRET:?USER_JWT_SECRET is required}"
       USER_JWT_SECRET: "${USER_JWT_SECRET:?USER_JWT_SECRET is required}"
@@ -295,8 +295,8 @@ services:
       context: .
       dockerfile: services/paper-order-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       PORT: "3008"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
@@ -316,8 +316,8 @@ services:
       context: .
       dockerfile: services/backtest-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       PORT: "3009"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
@@ -337,8 +337,8 @@ services:
       context: .
       dockerfile: services/notification-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       EMAIL_DRIVER: mailhog
       MAILHOG_HOST: mailhog
@@ -369,8 +369,8 @@ services:
       context: .
       dockerfile: services/bot-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       STRATEGY_ENGINE_URL: http://strategy-engine:3006
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
@@ -402,9 +402,9 @@ services:
       context: .
       dockerfile: services/admin-api-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      ADMIN_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      ADMIN_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:-devpass_admin}@postgres-admin:5432/polyforge_admin
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       ADMIN_JWT_SECRET: "${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required}"
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
@@ -437,8 +437,8 @@ services:
       context: .
       dockerfile: services/auth-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       USER_JWT_SECRET: "${USER_JWT_SECRET:?USER_JWT_SECRET is required}"
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
@@ -468,10 +468,10 @@ services:
       context: .
       dockerfile: services/admin-auth-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      ADMIN_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
-      ADMIN_DIRECT_DATABASE_URL: postgresql://poly_admin:devpass_admin@postgres-admin:5432/polyforge_admin
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      ADMIN_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:-devpass_admin}@postgres-admin:5432/polyforge_admin
+      ADMIN_DIRECT_DATABASE_URL: postgresql://poly_admin:${POSTGRES_ADMIN_PASSWORD:-devpass_admin}@postgres-admin:5432/polyforge_admin
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       ADMIN_JWT_SECRET: "${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required}"
       TOTP_ENCRYPTION_KEY: "${TOTP_ENCRYPTION_KEY:?TOTP_ENCRYPTION_KEY is required}"
@@ -540,8 +540,8 @@ services:
       context: .
       dockerfile: services/market-data-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
-      DIRECT_DATABASE_URL: postgresql://poly:devpass@postgres:5432/polyforge
+      DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
+      DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       CLOB_WS_URL: wss://ws-subscriptions-clob.polymarket.com/ws/market
       GAMMA_API_URL: https://gamma-api.polymarket.com

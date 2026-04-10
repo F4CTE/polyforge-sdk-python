@@ -16,7 +16,7 @@ import { HealthController } from "./health/health.controller";
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 1000 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 300 }]),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     LoggerModule,

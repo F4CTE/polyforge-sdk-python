@@ -5,6 +5,7 @@ import {
 } from "@nestjs/platform-fastify";
 import { Logger, RequestMethod, ValidationPipe } from "@nestjs/common";
 import helmet from "@fastify/helmet";
+import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
 import { AppModule } from "./app.module";
 
 const PORT = parseInt(process.env.PORT ?? "3005", 10);
@@ -29,6 +30,8 @@ function validateEnv() {
       );
     }
   }
+
+  rejectPlaceholderSecrets("market-data-service", ["INTERNAL_JWT_SECRET"]);
 }
 
 async function bootstrap() {

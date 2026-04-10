@@ -967,6 +967,9 @@ importers:
       '@polyforge/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@polyforge/shared-auth':
+        specifier: workspace:^
+        version: link:../../packages/shared-auth
       '@polyforge/shared-db':
         specifier: workspace:*
         version: link:../../packages/shared-db
@@ -1128,6 +1131,9 @@ importers:
       '@polyforge/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@polyforge/shared-auth':
+        specifier: workspace:^
+        version: link:../../packages/shared-auth
       '@polyforge/shared-db':
         specifier: workspace:*
         version: link:../../packages/shared-db
@@ -1247,6 +1253,9 @@ importers:
       '@polyforge/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@polyforge/shared-auth':
+        specifier: workspace:^
+        version: link:../../packages/shared-auth
       '@polyforge/shared-db':
         specifier: workspace:*
         version: link:../../packages/shared-db
@@ -1420,6 +1429,9 @@ importers:
       '@polyforge/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@polyforge/shared-auth':
+        specifier: workspace:^
+        version: link:../../packages/shared-auth
       '@polyforge/shared-db':
         specifier: workspace:*
         version: link:../../packages/shared-db
@@ -1593,6 +1605,9 @@ importers:
       '@polyforge/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@polyforge/shared-auth':
+        specifier: workspace:^
+        version: link:../../packages/shared-auth
       '@polyforge/shared-db':
         specifier: workspace:*
         version: link:../../packages/shared-db

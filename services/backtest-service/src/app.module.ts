@@ -12,7 +12,7 @@ import { StreamModule } from "./stream/stream.module";
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 1000 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 200 }]),
     LoggerModule,
     SharedDbModule,
     RedisModule,

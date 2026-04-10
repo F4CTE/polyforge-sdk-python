@@ -21,6 +21,7 @@
     "@nestjs/platform-fastify": "^11.1.16",
     "@nestjs/throttler": "^6.5.0",
     "@polyforge/logger": "workspace:*",
+    "@polyforge/shared-auth": "workspace:^",
     "@polyforge/shared-db": "workspace:*",
     "@polyforge/shared-redis": "workspace:*",
     "@polyforge/shared-types": "workspace:*",

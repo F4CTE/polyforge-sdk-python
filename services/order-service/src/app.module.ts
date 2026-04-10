@@ -17,7 +17,7 @@ import { HeartbeatService } from "./heartbeat/heartbeat.service";
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     JwtModule.register({}),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 1000 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     LoggerModule,
     RedisModule,
     SharedDbModule,

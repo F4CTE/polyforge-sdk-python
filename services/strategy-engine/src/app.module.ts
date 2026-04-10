@@ -13,7 +13,7 @@ import { StrategyRegistryService } from "./strategy/strategy-registry.service";
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     JwtModule.register({}),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 1000 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 200 }]),
     LoggerModule,
     StrategyModule,
     InternalModule,

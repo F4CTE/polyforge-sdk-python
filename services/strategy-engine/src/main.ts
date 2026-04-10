@@ -5,6 +5,7 @@ import {
 } from "@nestjs/platform-fastify";
 import { Logger, RequestMethod, ValidationPipe } from "@nestjs/common";
 import helmet from "@fastify/helmet";
+import { rejectPlaceholderSecrets } from "@polyforge/shared-auth";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./common/filters/http-exception.filter";
 
@@ -21,6 +22,8 @@ function validateEnv() {
     );
     process.exit(1);
   }
+
+  rejectPlaceholderSecrets("strategy-engine", ["INTERNAL_JWT_SECRET"]);
 }
 
 async function bootstrap() {
