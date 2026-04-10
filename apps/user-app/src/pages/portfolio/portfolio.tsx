@@ -16,7 +16,7 @@ import { wsManager } from '@/lib/websocket';
 import { toast } from 'sonner';
 import { useThemeStore } from '@/stores/theme-store';
 import { useAuthStore } from '@/stores/auth-store';
-import { Button, Input, Select } from '@polyforge/ui';
+import { Button, Input, Select, CardSkeleton } from '@polyforge/ui';
 import { resolveChartTheme } from '@polyforge/ui/lib/chart-colors';
 import { chartTooltipContentStyle, chartTooltipLabelStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 
@@ -268,8 +268,8 @@ function CategoryBadge({ category }: { category?: string | null }) {
 
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
-function CardSkeleton() {
-  return <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 animate-pulse h-20" />;
+function PortfolioCardSkeleton() {
+  return <CardSkeleton className="h-20" />;
 }
 
 function TableSkeleton() {
@@ -1204,7 +1204,7 @@ export function Component() {
           {/* Summary cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {loadingPortfolio ? (
-              [1, 2, 3, 4].map(i => <CardSkeleton key={i} />)
+              [1, 2, 3, 4].map(i => <PortfolioCardSkeleton key={i} />)
             ) : portfolio ? (
               <>
                 <div className={`bg-pf-elevated border border-pf-border rounded-pf-lg p-4 border-l-4 ${pnlBorderColor(portfolio.totalUnrealizedPnl)}`}>
@@ -3162,7 +3162,7 @@ export function Component() {
           {loadingPaper ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {[1, 2, 3].map(i => <CardSkeleton key={i} />)}
+                {[1, 2, 3].map(i => <PortfolioCardSkeleton key={i} />)}
               </div>
               <TableSkeleton />
             </div>

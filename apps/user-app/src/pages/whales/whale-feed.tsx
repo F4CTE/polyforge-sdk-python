@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import {
   ChevronLeft, ChevronRight, Fish, Copy, Search, UserPlus, UserCheck,
 } from 'lucide-react';
-import { Button, Input, Select } from '@polyforge/ui';
+import { Button, Input, Select, CardSkeleton, SkeletonLine, SkeletonBadge } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -83,20 +83,20 @@ function copyToClipboard(text: string) {
 
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
-function CardSkeleton() {
+function WhaleFeedSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
+    <CardSkeleton>
       <div className="flex items-center gap-2">
-        <div className="h-4 bg-pf-overlay rounded w-[120px]" />
-        <div className="h-5 w-16 bg-pf-overlay rounded-pf-full ml-auto" />
+        <SkeletonLine h="h-4" w="w-[120px]" />
+        <SkeletonBadge w="w-16" className="ml-auto" />
       </div>
-      <div className="h-3 bg-pf-overlay rounded w-[80%]" />
+      <SkeletonLine w="w-[80%]" />
       <div className="flex gap-2">
-        <div className="h-5 w-12 bg-pf-overlay rounded-pf-full" />
-        <div className="h-5 w-12 bg-pf-overlay rounded-pf-full" />
+        <SkeletonBadge w="w-12" />
+        <SkeletonBadge w="w-12" />
       </div>
-      <div className="h-3 bg-pf-overlay rounded w-[50%]" />
-    </div>
+      <SkeletonLine w="w-[50%]" />
+    </CardSkeleton>
   );
 }
 
@@ -261,7 +261,7 @@ export function Component() {
       {/* Feed */}
       {loading && trades.length === 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Array.from({ length: 6 }, (_, i) => <CardSkeleton key={i} />)}
+          {Array.from({ length: 6 }, (_, i) => <WhaleFeedSkeleton key={i} />)}
         </div>
       ) : trades.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">

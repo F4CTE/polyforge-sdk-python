@@ -55,6 +55,19 @@ export {
 export type { DialogProps } from './components/ui/dialog';
 
 export { Skeleton } from './components/ui/skeleton';
+
+export {
+  CardSkeleton,
+  SkeletonLine,
+  SkeletonCircle,
+  SkeletonBadge,
+} from './components/ui/card-skeleton';
+export type {
+  CardSkeletonProps,
+  SkeletonLineProps,
+  SkeletonCircleProps,
+  SkeletonBadgeProps,
+} from './components/ui/card-skeleton';
 export { Spinner } from './components/ui/spinner';
 export type { SpinnerProps } from './components/ui/spinner';
 

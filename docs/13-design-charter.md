@@ -908,7 +908,7 @@ The v3.0 frontend uses **shadcn/ui** as its component library. shadcn/ui is not 
 - **Radix primitives** — Dialog, Popover, Select, Tabs, Tooltip, and other interactive patterns use `@radix-ui/react-*` for accessibility and keyboard handling.
 - **Composable API** — components expose compound patterns (e.g., `<Card>`, `<CardHeader>`, `<CardContent>`) rather than monolithic prop-heavy APIs.
 
-**Shared component inventory (21 components):** Button, Badge, Input, Textarea, Select, Card, Table, Tabs, Dialog, Skeleton, Spinner, Progress, DropdownMenu, Tooltip, Chip, StatusBadge, Checkbox, Switch, Label, Separator, Toaster.
+**Shared component inventory (25 components):** Button, Badge, Input, Textarea, Select, Card, Table, Tabs, Dialog, Skeleton, CardSkeleton, SkeletonLine, SkeletonCircle, SkeletonBadge, Spinner, Progress, DropdownMenu, Tooltip, Chip, StatusBadge, Checkbox, Switch, Label, Separator, Toaster.
 
 ### Styling — Tailwind CSS v4
 

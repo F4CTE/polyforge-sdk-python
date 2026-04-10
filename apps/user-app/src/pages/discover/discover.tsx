@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import {
   ChevronLeft, ChevronRight, Compass, Heart, GitFork, TrendingUp, Tag, Star, Award, Library,
 } from 'lucide-react';
-import { Button, Input } from '@polyforge/ui';
+import { Button, Input, CardSkeleton, SkeletonLine, SkeletonBadge } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -89,17 +89,17 @@ function formatDate(d: string): string {
 
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
-function CardSkeleton() {
+function DiscoverSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
-      <div className="h-4 bg-pf-overlay rounded w-[60%]" />
-      <div className="h-3 bg-pf-overlay rounded w-[90%]" />
-      <div className="h-3 bg-pf-overlay rounded w-[75%]" />
+    <CardSkeleton>
+      <SkeletonLine h="h-4" w="w-[60%]" />
+      <SkeletonLine w="w-[90%]" />
+      <SkeletonLine w="w-[75%]" />
       <div className="flex gap-2">
-        <div className="h-5 w-12 bg-pf-overlay rounded-pf-full" />
-        <div className="h-5 w-12 bg-pf-overlay rounded-pf-full" />
+        <SkeletonBadge w="w-12" />
+        <SkeletonBadge w="w-12" />
       </div>
-    </div>
+    </CardSkeleton>
   );
 }
 
@@ -480,7 +480,7 @@ export function Component() {
       {/* Grid */}
       {loading && strategies.length === 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 9 }, (_, i) => <CardSkeleton key={i} />)}
+          {Array.from({ length: 9 }, (_, i) => <DiscoverSkeleton key={i} />)}
         </div>
       ) : strategies.length === 0 ? (
         <div data-testid="empty-state" className="flex flex-col items-center justify-center py-20 text-center" role="status">

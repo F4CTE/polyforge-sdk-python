@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { Button, Input, Select } from '@polyforge/ui';
+import { Button, Input, Select, CardSkeleton, SkeletonLine, SkeletonCircle } from '@polyforge/ui';
 import {
   Search,
   Grid3X3,
@@ -202,22 +202,22 @@ function priceCents(market: Market, outcome: 'YES' | 'NO'): string {
 
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
-function CardSkeleton() {
+function MarketCardSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
+    <CardSkeleton>
       <div className="flex items-start gap-3">
-        <div className="w-12 h-12 rounded-pf-md bg-pf-overlay shrink-0" />
+        <SkeletonCircle size="w-12 h-12" rounded="rounded-pf-md" />
         <div className="flex-1 space-y-2">
-          <div className="h-4 bg-pf-overlay rounded w-[85%]" />
-          <div className="h-3 bg-pf-overlay rounded w-[50%]" />
+          <SkeletonLine h="h-4" w="w-[85%]" />
+          <SkeletonLine w="w-[50%]" />
         </div>
       </div>
-      <div className="h-2 bg-pf-overlay rounded-pf-full" />
+      <SkeletonLine h="h-2" className="rounded-pf-full" />
       <div className="grid grid-cols-2 gap-2">
-        <div className="h-9 bg-pf-overlay rounded-pf" />
-        <div className="h-9 bg-pf-overlay rounded-pf" />
+        <SkeletonLine h="h-9" className="rounded-pf" />
+        <SkeletonLine h="h-9" className="rounded-pf" />
       </div>
-    </div>
+    </CardSkeleton>
   );
 }
 
@@ -371,15 +371,15 @@ const MarketCard = memo(function MarketCard({
 
 function TrendingCardSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
-      <div className="h-4 bg-pf-overlay rounded w-[90%]" />
-      <div className="h-3 bg-pf-overlay rounded w-[55%]" />
-      <div className="h-8 bg-pf-overlay rounded w-[40%]" />
+    <CardSkeleton>
+      <SkeletonLine h="h-4" w="w-[90%]" />
+      <SkeletonLine w="w-[55%]" />
+      <SkeletonLine h="h-8" w="w-[40%]" />
       <div className="flex items-center justify-between">
-        <div className="h-5 bg-pf-overlay rounded w-[30%]" />
-        <div className="h-5 bg-pf-overlay rounded w-[25%]" />
+        <SkeletonLine h="h-5" w="w-[30%]" />
+        <SkeletonLine h="h-5" w="w-[25%]" />
       </div>
-    </div>
+    </CardSkeleton>
   );
 }
 
@@ -1219,10 +1219,10 @@ export function Component() {
       {loading && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => <CardSkeleton key={i} />)}
+            {[1, 2, 3].map((i) => <MarketCardSkeleton key={i} />)}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }, (_, i) => <CardSkeleton key={i} />)}
+            {Array.from({ length: 6 }, (_, i) => <MarketCardSkeleton key={i} />)}
           </div>
         </>
       )}

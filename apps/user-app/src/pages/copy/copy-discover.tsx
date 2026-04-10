@@ -11,7 +11,7 @@ import {
   Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button, Input, Select } from '@polyforge/ui';
+import { Button, Input, Select, CardSkeleton, SkeletonLine, SkeletonCircle, SkeletonBadge } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -174,28 +174,28 @@ function categoryEmoji(cat: string): string {
 
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
-function CardSkeleton() {
+function CopyDiscoverSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
+    <CardSkeleton>
       <div className="flex items-center gap-3">
-        <div className="size-10 rounded-pf-full bg-pf-overlay shrink-0" />
+        <SkeletonCircle />
         <div className="flex-1 space-y-2">
-          <div className="h-4 bg-pf-overlay rounded w-[55%]" />
-          <div className="h-3 bg-pf-overlay rounded w-[35%]" />
+          <SkeletonLine h="h-4" w="w-[55%]" />
+          <SkeletonLine w="w-[35%]" />
         </div>
-        <div className="h-5 w-10 bg-pf-overlay rounded-pf-full" />
+        <SkeletonBadge w="w-10" />
       </div>
-      <div className="h-3 bg-pf-overlay rounded w-[40%]" />
+      <SkeletonLine w="w-[40%]" />
       <div className="flex gap-3">
-        <div className="h-4 bg-pf-overlay rounded w-[30%]" />
-        <div className="h-4 bg-pf-overlay rounded w-[25%]" />
-        <div className="h-4 bg-pf-overlay rounded w-[20%]" />
+        <SkeletonLine h="h-4" w="w-[30%]" />
+        <SkeletonLine h="h-4" w="w-[25%]" />
+        <SkeletonLine h="h-4" w="w-[20%]" />
       </div>
       <div className="flex gap-2 pt-1">
-        <div className="h-8 bg-pf-overlay rounded-pf w-full" />
-        <div className="h-8 bg-pf-overlay rounded-pf w-24 shrink-0" />
+        <SkeletonLine h="h-8" className="rounded-pf" />
+        <SkeletonLine h="h-8" w="w-24" className="rounded-pf shrink-0" />
       </div>
-    </div>
+    </CardSkeleton>
   );
 }
 
@@ -933,7 +933,7 @@ export function Component() {
       {!showComparison && loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <CardSkeleton key={i} />
+            <CopyDiscoverSkeleton key={i} />
           ))}
         </div>
       )}

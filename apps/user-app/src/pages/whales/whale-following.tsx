@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { ArrowLeft, Fish, UserMinus } from 'lucide-react';
-import { Button } from '@polyforge/ui';
+import { Button, CardSkeleton, SkeletonLine } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -39,16 +39,16 @@ function pnlSign(pnl: string): string {
 
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
-function CardSkeleton() {
+function WhaleFollowingSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-4 space-y-3 animate-shimmer">
-      <div className="h-4 bg-pf-overlay rounded w-[50%]" />
+    <CardSkeleton>
+      <SkeletonLine h="h-4" w="w-[50%]" />
       <div className="flex gap-4">
-        <div className="h-3 bg-pf-overlay rounded w-[25%]" />
-        <div className="h-3 bg-pf-overlay rounded w-[25%]" />
-        <div className="h-3 bg-pf-overlay rounded w-[25%]" />
+        <SkeletonLine w="w-[25%]" />
+        <SkeletonLine w="w-[25%]" />
+        <SkeletonLine w="w-[25%]" />
       </div>
-    </div>
+    </CardSkeleton>
   );
 }
 
@@ -103,7 +103,7 @@ export function Component() {
       {/* List */}
       {loading ? (
         <div className="space-y-4">
-          {Array.from({ length: 4 }, (_, i) => <CardSkeleton key={i} />)}
+          {Array.from({ length: 4 }, (_, i) => <WhaleFollowingSkeleton key={i} />)}
         </div>
       ) : wallets.length === 0 ? (
         <div data-testid="empty-state" className="flex flex-col items-center justify-center py-20 text-center">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Button } from '@polyforge/ui';
+import { Button, CardSkeleton, SkeletonLine } from '@polyforge/ui';
 import { chartTooltipContentStyle, chartAxisTick } from '@polyforge/ui/lib/chart-styles';
 import {
   Plus,
@@ -148,13 +148,13 @@ function formatDate(dateStr: string): string {
 
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
-function CardSkeleton() {
+function StrategyCardSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 space-y-3 animate-shimmer">
-      <div className="h-5 bg-pf-overlay rounded w-[60%]" />
-      <div className="h-3 bg-pf-overlay rounded w-[40%]" />
-      <div className="h-3 bg-pf-overlay rounded w-[80%]" />
-    </div>
+    <CardSkeleton padding="p-5">
+      <SkeletonLine h="h-5" w="w-[60%]" />
+      <SkeletonLine w="w-[40%]" />
+      <SkeletonLine w="w-[80%]" />
+    </CardSkeleton>
   );
 }
 
@@ -655,7 +655,7 @@ export function Component() {
       {/* Loading skeletons */}
       {!showComparison && loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4].map((i) => <CardSkeleton key={i} />)}
+          {[1, 2, 3, 4].map((i) => <StrategyCardSkeleton key={i} />)}
         </div>
       )}
 

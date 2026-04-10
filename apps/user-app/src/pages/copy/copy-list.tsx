@@ -18,7 +18,7 @@ import {
   BarChart2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button, Input } from '@polyforge/ui';
+import { Button, Input, CardSkeleton, SkeletonLine, SkeletonBadge } from '@polyforge/ui';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -505,21 +505,21 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
 
 /* ─── Skeleton ───────────────────────────────────────────────────────── */
 
-function CardSkeleton() {
+function CopyListSkeleton() {
   return (
-    <div className="bg-pf-elevated border border-pf-border rounded-pf-lg p-5 space-y-3 animate-shimmer">
+    <CardSkeleton padding="p-5">
       <div className="flex items-center gap-2">
-        <div className="h-4 bg-pf-overlay rounded w-[140px]" />
-        <div className="h-5 w-20 bg-pf-overlay rounded-pf-full ml-auto" />
+        <SkeletonLine h="h-4" w="w-[140px]" />
+        <SkeletonBadge w="w-20" className="ml-auto" />
       </div>
-      <div className="h-3 bg-pf-overlay rounded w-[60%]" />
+      <SkeletonLine w="w-[60%]" />
       <div className="flex gap-2">
-        <div className="h-5 w-24 bg-pf-overlay rounded-pf-full" />
-        <div className="h-5 w-16 bg-pf-overlay rounded-pf-full" />
+        <SkeletonBadge w="w-24" />
+        <SkeletonBadge w="w-16" />
       </div>
-      <div className="h-3 bg-pf-overlay rounded w-[80%]" />
-      <div className="h-3 bg-pf-overlay rounded w-[50%]" />
-    </div>
+      <SkeletonLine w="w-[80%]" />
+      <SkeletonLine w="w-[50%]" />
+    </CardSkeleton>
   );
 }
 
@@ -727,7 +727,7 @@ export function Component() {
       {/* Loading */}
       {loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => <CardSkeleton key={i} />)}
+          {[1, 2, 3, 4, 5, 6].map((i) => <CopyListSkeleton key={i} />)}
         </div>
       )}
 
