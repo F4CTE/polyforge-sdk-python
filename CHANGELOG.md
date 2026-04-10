@@ -5,6 +5,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+<<<<<<< HEAD
 ## [Unreleased] — 2026-04-10
 
 ### Fixed (CI)
@@ -24,6 +25,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **#490 SES SMTP STARTTLS downgrade risk** — added `requireTLS: true` to SES transport
 - **#456 All-zeros MASTER_ENCRYPTION_KEY** — emit stderr warning in dev, throw in non-dev
 - **#454 COOKIE_SECURE=false footgun** — commented out in `.env.example`; defaults to secure
+- **#486 nodemailer SMTP injection (GHSA-vvjj-xcjg-gr5g)** — bumped to `^8.0.5`
+- **#451 hono + @hono/node-server CVEs** — updated overrides to `>=4.13.0` / `>=1.19.13`
 
 ## [Unreleased] — 2026-04-09
 
