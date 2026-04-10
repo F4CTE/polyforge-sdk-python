@@ -2,8 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { SharedDbModule } from '@polyforge/shared-db';
-import { RedisModule } from '@polyforge/shared-redis';
+import { RedisModule, RedisService } from '@polyforge/shared-redis';
 import { SharedAuthModule } from '@polyforge/shared-auth';
 import { LoggerModule } from '@polyforge/logger';
 import { AuthModule } from './auth/auth.module';
@@ -18,13 +19,18 @@ import { HealthController } from './common/health.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60000,
-          limit: process.env.NODE_ENV === 'production' ? 60 : 10000, // 60 req/min prod, effectively unlimited in dev
-        },
-      ],
+    ThrottlerModule.forRootAsync({
+      imports: [RedisModule],
+      inject: [RedisService],
+      useFactory: (redis: RedisService) => ({
+        throttlers: [
+          {
+            ttl: 60000,
+            limit: process.env.NODE_ENV === 'production' ? 60 : 10000,
+          },
+        ],
+        storage: new ThrottlerStorageRedisService(redis.getClient()),
+      }),
     }),
     LoggerModule,
     SharedDbModule,

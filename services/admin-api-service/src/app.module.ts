@@ -2,9 +2,10 @@ import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
+import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
 import { APP_GUARD } from "@nestjs/core";
 import { SharedDbModule } from "@polyforge/shared-db";
-import { RedisModule } from "@polyforge/shared-redis";
+import { RedisModule, RedisService } from "@polyforge/shared-redis";
 import { LoggerModule } from "@polyforge/logger";
 import { HealthController } from "./common/health.controller";
 import { AdminGuardModule } from "./common/guard/admin-guard.module";
@@ -31,7 +32,14 @@ import { KeyRotationModule } from "./key-rotation/key-rotation.module";
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
+    ThrottlerModule.forRootAsync({
+      imports: [RedisModule],
+      inject: [RedisService],
+      useFactory: (redis: RedisService) => ({
+        throttlers: [{ ttl: 60000, limit: 60 }],
+        storage: new ThrottlerStorageRedisService(redis.getClient()),
+      }),
+    }),
     LoggerModule,
     SharedDbModule,
     RedisModule,

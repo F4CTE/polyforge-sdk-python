@@ -2,10 +2,11 @@ import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerModule } from "@nestjs/throttler";
+import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
 import { ApiKeyThrottlerGuard } from "./common/api-key-throttler.guard";
 import { JwtModule } from "@nestjs/jwt";
 import { SharedDbModule } from "@polyforge/shared-db";
-import { RedisModule } from "@polyforge/shared-redis";
+import { RedisModule, RedisService } from "@polyforge/shared-redis";
 import { SharedAuthModule } from "@polyforge/shared-auth";
 import { LoggerModule } from "@polyforge/logger";
 import { HealthController, StatusController } from "./health/health.controller";
@@ -39,13 +40,18 @@ import { LpModule } from "./lp/lp.module";
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60000,
-          limit: process.env.NODE_ENV === "production" ? 120 : 1200, // 120 req/min prod, 1200 dev/test
-        },
-      ],
+    ThrottlerModule.forRootAsync({
+      imports: [RedisModule],
+      inject: [RedisService],
+      useFactory: (redis: RedisService) => ({
+        throttlers: [
+          {
+            ttl: 60000,
+            limit: process.env.NODE_ENV === "production" ? 120 : 1200,
+          },
+        ],
+        storage: new ThrottlerStorageRedisService(redis.getClient()),
+      }),
     }),
     JwtModule.register({}),
     LoggerModule,

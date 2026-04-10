@@ -20,6 +20,7 @@
     "@fastify/cors": "^11.2.0",
     "@fastify/etag": "^6.0.2",
     "@fastify/helmet": "^13.0.2",
+    "@nest-lab/throttler-storage-redis": "^1.2.0",
     "@nestjs/common": "^11.1.18",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.1.18",
