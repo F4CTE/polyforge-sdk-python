@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-04-10
+
+### Fixed (CI)
+- **Add E2E concurrency group to prevent port conflicts** — E2E jobs across different branches all share Docker Compose ports (3001, 3002, 5432) on the self-hosted runner; without serialization, concurrent E2E jobs fight over ports causing flaky failures or long waits; added `concurrency: { group: e2e-docker-compose, cancel-in-progress: false }` to the E2E job so they queue instead of conflicting
+
 ## [Unreleased] — 2026-04-09
 
 ### Fixed (E2E / CI)

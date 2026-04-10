@@ -122,6 +122,13 @@ jobs:
     name: E2E
     runs-on: [self-hosted, linux]
     needs: [build]
+    # Only one E2E job at a time across all branches — they share Docker
+    # Compose ports (3001, 3002, 5432, etc.) on the self-hosted runner.
+    # Without this, concurrent E2E jobs fight over the same ports and either
+    # fail or produce flaky results.  Queued jobs wait instead of cancelling.
+    concurrency:
+      group: e2e-docker-compose
+      cancel-in-progress: false
     env:
       DIRECT_DATABASE_URL: 'postgresql://poly:devpass@localhost:5432/polyforge'
       ADMIN_DIRECT_DATABASE_URL: 'postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin'
@@ -230,8 +237,18 @@ jobs:
             --load
         timeout-minutes: 45
 
+      # Remove stale containers from prior cancelled/failed runs.
+      # The `if: always()` cleanup at the end of this job does not execute
+      # when the job is cancelled by a concurrency group or workflow-level
+      # cancel-in-progress, leaving containers behind that block the next run.
+      - name: Clean up stale containers
+        run: |
+          docker ps -a --filter "name=polyforge-dev" -q | xargs -r docker rm -f 2>/dev/null || true
+          docker network rm polyforge-dev_internal polyforge-dev_admin-only 2>/dev/null || true
+          docker volume rm polyforge-dev_postgres-data polyforge-dev_postgres-admin-data polyforge-dev_redis-data 2>/dev/null || true
+
       - name: Start Docker Compose
-        run: docker compose -f docker-compose.infra.yml up -d
+        run: docker compose -f docker-compose.infra.yml up -d --force-recreate
 
       - name: Wait for services to be healthy
         run: |
