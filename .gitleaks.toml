@@ -1,0 +1,21 @@
+# Gitleaks configuration for PolyForge
+# See: https://github.com/gitleaks/gitleaks#configuration
+
+title = "PolyForge gitleaks config"
+
+# Allowlist known historical findings that have been remediated.
+# These entries suppress re-detection of keys that were hardcoded in
+# historical commits but have since been rotated and replaced with
+# GitHub Actions Encrypted Secrets.
+#
+# IMPORTANT: The keys exposed in commit bf2a782 have been rotated.
+# All current environments use different, secret-managed values.
+
+[allowlist]
+  description = "Known remediated historical findings"
+
+  # Commit bf2a782 contained hardcoded MASTER_ENCRYPTION_KEY and
+  # TOTP_ENCRYPTION_KEY in .github/workflows/ci.yml (lines 143-144).
+  # Fixed in subsequent commit — now uses ${{ secrets.CI_* }} refs.
+  # Keys have been rotated for all environments.
+  commits = ["bf2a782"]

@@ -5,6 +5,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+<<<<<<< HEAD
 ## [Unreleased] — 2026-04-10
 
 ### Fixed (CI)
@@ -45,6 +46,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   5. **autoFocus email input layout shift during link clicks** — email input has `autoFocus`; clicking "Create one" or "Forgot password?" blurred email first, showing "Email is required" validation, growing the card, shifting links down, causing mouseup to miss; `login.page.ts goto()` now calls `email.blur()` after load to pre-settle the layout
   6. **Non-deterministic seed password across all spec files** — `seed.ts` used `randomBytes(16)` each run; hardcoded `password123` in 7 spec files (`auth-flow`, `smoke`, `credentials`, `copy-trading`, `news`, `strategy-lifecycle`, `whale-tracking`) always mismatched; `CI=true` now uses fixed `TestPass123!`
   7. **Missing E2E test user** — `orders-comprehensive.spec.ts` calls `apiLogin('alice@e2e.dev.local', 'TestPass123!')` in `beforeEach` but user was never seeded; added dedicated E2E user block to `prisma/seed.ts` with fixed password
+
+## [Unreleased] — 2026-04-08
+
+### Fixed (Security)
+- **Add gitleaks allowlist for historical CI key exposure (closes #453)** — added `.gitleaks.toml` to suppress re-flagging of hardcoded encryption keys found in historical commit `bf2a782`; current CI workflow already uses `${{ secrets.CI_* }}` references; documented key rotation requirement in `docs/ops/05-incident-response.md`
 
 ## [Unreleased] — 2026-04-07
 

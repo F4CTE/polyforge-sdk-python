@@ -161,6 +161,23 @@ docker exec polyforge_api-service sh -c \
 
 ---
 
+## Known Remediated Security Findings
+
+### CI Workflow Key Exposure (commit bf2a782) — Remediated 2026-04-08
+
+**Finding:** Hardcoded `MASTER_ENCRYPTION_KEY` and `TOTP_ENCRYPTION_KEY` hex values were committed to `.github/workflows/ci.yml` at commit `bf2a782`. These were subsequently replaced with `${{ secrets.CI_* }}` references.
+
+**Status:** Code remediated. Historical exposure remains in git history.
+
+**Actions taken:**
+1. CI workflow updated to use GitHub Actions Encrypted Secrets (lines 130-135)
+2. `.gitleaks.toml` allowlist added for commit `bf2a782` to prevent re-flagging
+3. Keys must be rotated for all environments (CI, staging, production)
+
+**Action required:** Confirm that the exposed values were never reused outside CI. If they were, rotate all encryption keys immediately and re-encrypt affected data. Consider `git filter-repo` to purge the historical commit if full remediation is needed.
+
+---
+
 ## Escalation Matrix
 
 | Severity | Who to notify | Communication channel |
