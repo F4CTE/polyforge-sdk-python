@@ -101,8 +101,11 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         await registerPage.tosCheckbox.check();
         await registerPage.submit.click();
 
-        // Server should reject or form should show error
-        const errText = await registerPage.errorText();
+        // Client-side validation prevents submission and shows inline field error
+        // (the server error banner never appears because the form short-circuits)
+        const fieldError = page.locator('#register-password-error');
+        await expect(fieldError).toBeVisible();
+        const errText = (await fieldError.textContent()) ?? '';
         expect(errText.toLowerCase()).toMatch(/password|length|short|8|characters|minimum/);
     });
 

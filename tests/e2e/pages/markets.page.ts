@@ -11,7 +11,8 @@ export class MarketsPage {
     readonly searchInput: Locator;
     readonly categoryChips: Record<string, Locator>;
     readonly sortDropdown: Locator;
-    readonly viewToggle: Locator;
+    readonly cardViewButton: Locator;
+    readonly tableViewButton: Locator;
     readonly marketCards: Locator;
     readonly paginationPrev: Locator;
     readonly paginationNext: Locator;
@@ -19,25 +20,40 @@ export class MarketsPage {
 
     constructor(page: Page) {
         this.page = page;
-        this.searchInput = page.locator('input[placeholder*="Search"]').first();
 
-        // Category chips
+        // The search input uses placeholder="Search markets..." and aria-label="Search markets"
+        this.searchInput = page.locator('input[aria-label="Search markets"]');
+
+        // Category chips — rendered as <Button> elements inside a scrollable row.
+        // The "all" category renders display text "All". Each chip has the category
+        // text alongside an icon. Use getByRole to scope to the category chip row.
+        const chipRow = page.locator('.flex.gap-2.overflow-x-auto');
         this.categoryChips = {
-            All: page.locator('button', { hasText: 'All' }),
-            Sports: page.locator('button', { hasText: 'Sports' }),
-            Crypto: page.locator('button', { hasText: 'Crypto' }),
-            Politics: page.locator('button', { hasText: 'Politics' }),
-            Economics: page.locator('button', { hasText: 'Economics' }),
-            Finance: page.locator('button', { hasText: 'Finance' }),
-            Technology: page.locator('button', { hasText: 'Technology' }),
+            All: chipRow.getByRole('button', { name: /^All$/i }),
+            Sports: chipRow.getByRole('button', { name: /Sports/i }),
+            Crypto: chipRow.getByRole('button', { name: /Crypto/i }),
+            Politics: chipRow.getByRole('button', { name: /Politics/i }),
+            Economics: chipRow.getByRole('button', { name: /Economics/i }),
+            Finance: chipRow.getByRole('button', { name: /Finance/i }),
+            Technology: chipRow.getByRole('button', { name: /Technology/i }),
         };
 
-        this.sortDropdown = page.locator('select, [role="combobox"]').first();
-        this.viewToggle = page.locator('button[data-testid="view-toggle"]');
+        // Sort dropdown is a native <select> element with id="sort-select"
+        this.sortDropdown = page.locator('select#sort-select');
+
+        // View toggle: two separate buttons with aria-labels
+        this.cardViewButton = page.getByRole('button', { name: 'Card view' });
+        this.tableViewButton = page.getByRole('button', { name: 'Table view' });
+
+        // Market cards use data-testid="market-card" on <Link> elements
         this.marketCards = page.locator('[data-testid="market-card"]');
-        this.paginationPrev = page.locator('button[aria-label="Previous page"]');
-        this.paginationNext = page.locator('button[aria-label="Next page"]');
-        this.pageInfo = page.locator('[data-testid="page-info"]');
+
+        // Pagination buttons
+        this.paginationPrev = page.getByRole('button', { name: 'Previous page' });
+        this.paginationNext = page.getByRole('button', { name: 'Next page' });
+
+        // Page info: <span aria-live="polite">Page X of Y</span>
+        this.pageInfo = page.locator('span[aria-live="polite"]');
     }
 
     async goto(): Promise<void> {
@@ -46,8 +62,12 @@ export class MarketsPage {
     }
 
     async search(term: string): Promise<void> {
+        // The input uses defaultValue + onChange (uncontrolled), so we clear then
+        // type to trigger the onChange handler which debounces.
+        await this.searchInput.clear();
         await this.searchInput.fill(term);
-        await this.page.waitForTimeout(300);
+        // Wait for debounce (component debounces search input)
+        await this.page.waitForTimeout(400);
     }
 
     async selectCategory(category: 'All' | 'Sports' | 'Crypto' | 'Politics' | 'Economics' | 'Finance' | 'Technology'): Promise<void> {
@@ -56,20 +76,39 @@ export class MarketsPage {
     }
 
     async selectSort(sort: 'volume' | 'newest' | 'closingSoon' | 'liquidity'): Promise<void> {
-        await this.sortDropdown.click();
+        // The sort dropdown is a native <select> element. Use selectOption().
+        // Map the test keys to the actual <option> values used by the component.
         const sortMap: Record<string, string> = {
-            volume: 'Volume',
-            newest: 'Newest',
-            closingSoon: 'Closing Soon',
-            liquidity: 'Liquidity',
+            volume: 'volume',
+            newest: 'newest',
+            closingSoon: 'closing_soon',
+            liquidity: 'liquidity',
         };
-        await this.page.locator('text=' + sortMap[sort]).click();
+        await this.sortDropdown.selectOption(sortMap[sort]);
         await this.page.waitForTimeout(300);
     }
 
-    async toggleView(): Promise<void> {
-        await this.viewToggle.click();
+    async switchToCardView(): Promise<void> {
+        await this.cardViewButton.click();
         await this.page.waitForTimeout(300);
+    }
+
+    async switchToTableView(): Promise<void> {
+        await this.tableViewButton.click();
+        await this.page.waitForTimeout(300);
+    }
+
+    /** @deprecated Use switchToCardView() or switchToTableView() instead */
+    async toggleView(): Promise<void> {
+        // Determine current view and toggle to the other
+        const tableActive = await this.tableViewButton.evaluate(
+            (el) => el.classList.contains('bg-pf-elevated'),
+        ).catch(() => false);
+        if (tableActive) {
+            await this.switchToCardView();
+        } else {
+            await this.switchToTableView();
+        }
     }
 
     async goToPage(direction: 'next' | 'prev'): Promise<void> {
@@ -91,5 +130,16 @@ export class MarketsPage {
 
     async getPageInfo(): Promise<string> {
         return (await this.pageInfo.textContent()) ?? '';
+    }
+
+    /** Check if currently in table view by looking for <table> element */
+    async isTableView(): Promise<boolean> {
+        return await this.page.locator('table[aria-label="Markets"]').isVisible().catch(() => false);
+    }
+
+    /** Check if currently in card view by checking market cards are visible */
+    async isCardView(): Promise<boolean> {
+        const count = await this.marketCards.count();
+        return count > 0;
     }
 }

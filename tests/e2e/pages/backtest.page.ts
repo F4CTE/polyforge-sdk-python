@@ -5,6 +5,12 @@ import { type Page, type Locator, expect } from '@playwright/test';
  *
  * Handles strategy selection, date range input, running backtests,
  * viewing history with pagination, and extracting result statistics.
+ *
+ * The backtest component uses:
+ * - Native <select> for strategy dropdown (not shadcn combobox)
+ * - Native <input type="date"> for date inputs
+ * - <table aria-label="Backtest history"> for the history table
+ * - data-testid="result-pnl" on the P&L stat card (other stats lack data-testid)
  */
 export class BacktestPage {
     readonly page: Page;
@@ -25,19 +31,24 @@ export class BacktestPage {
 
     constructor(page: Page) {
         this.page = page;
+        // Native <select> element — use selectOption() not click+role=option
         this.strategySelect = page.locator('#backtest-strategy');
+        // Native <input type="date"> — use setNativeDate() helper instead of fill()
         this.startDateInput = page.locator('#backtest-start');
         this.endDateInput = page.locator('#backtest-end');
         this.runButton = page.locator('button', { hasText: 'Run Backtest' });
-        this.historyTable = page.locator('[data-testid="backtest-history-table"]');
+        // The table uses aria-label, not data-testid
+        this.historyTable = page.locator('table[aria-label="Backtest history"]');
         this.historyRows = page.locator('[data-testid="backtest-history-row"]');
         this.paginationPrev = page.locator('button[aria-label="Previous page"]');
         this.paginationNext = page.locator('button[aria-label="Next page"]');
 
+        // Only result-pnl has a data-testid in the component.
+        // Win rate, orders, and gaps are identified by their label text.
         this.resultDetailsPnl = page.locator('[data-testid="result-pnl"]');
-        this.resultDetailsWinRate = page.locator('[data-testid="result-win-rate"]');
-        this.resultDetailsOrders = page.locator('[data-testid="result-orders"]');
-        this.resultDetailsGaps = page.locator('[data-testid="result-gaps"]');
+        this.resultDetailsWinRate = page.locator('.bg-pf-surface:has(> span:text-is("Win Rate")) >> span.font-mono');
+        this.resultDetailsOrders = page.locator('.bg-pf-surface:has(> span:text-is("Orders Placed")) >> span.font-mono');
+        this.resultDetailsGaps = page.locator('.bg-pf-warning\\/10');
     }
 
     async goto(): Promise<void> {
@@ -45,20 +56,80 @@ export class BacktestPage {
         await expect(this.page.locator('h1', { hasText: 'Backtest' })).toBeVisible({ timeout: 15_000 });
     }
 
+    /**
+     * Select a strategy by its visible name from the native <select> dropdown.
+     */
     async selectStrategy(name: string): Promise<void> {
-        await this.strategySelect.click();
-        await this.page.locator('text=' + name).click();
+        await this.strategySelect.selectOption({ label: name });
+    }
+
+    /**
+     * Select the first available strategy from the native <select>.
+     * Returns the strategy name or null if no strategies are available.
+     */
+    async selectFirstStrategy(): Promise<string | null> {
+        // Wait for strategies to load (options beyond the placeholder)
+        await this.page.waitForFunction(
+            (sel: string) => {
+                const el = document.querySelector(sel) as HTMLSelectElement | null;
+                return el && el.options.length > 1;
+            },
+            '#backtest-strategy',
+            { timeout: 10_000 },
+        );
+
+        const options = this.strategySelect.locator('option');
+        const count = await options.count();
+        if (count <= 1) return null; // only the placeholder "Select strategy"
+
+        const firstReal = options.nth(1);
+        const name = await firstReal.textContent();
+        const value = await firstReal.getAttribute('value');
+        if (value) {
+            await this.strategySelect.selectOption(value);
+        }
+        return name?.trim() ?? null;
+    }
+
+    /**
+     * Set a date on a native <input type="date"> using the native setter
+     * so React's onChange fires correctly.
+     */
+    async setNativeDate(selector: string, value: string): Promise<void> {
+        await this.page.evaluate(
+            ({ sel, val }: { sel: string; val: string }) => {
+                const el = document.querySelector(sel) as HTMLInputElement | null;
+                if (!el) throw new Error(`Element not found: ${sel}`);
+                const nativeSetter = Object.getOwnPropertyDescriptor(
+                    HTMLInputElement.prototype, 'value',
+                )?.set;
+                if (nativeSetter) {
+                    nativeSetter.call(el, val);
+                } else {
+                    el.value = val;
+                }
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            },
+            { sel: selector, val: value },
+        );
     }
 
     async setDateRange(start: string, end: string): Promise<void> {
-        await this.startDateInput.fill(start);
-        await this.endDateInput.fill(end);
+        await this.setNativeDate('#backtest-start', start);
+        await this.setNativeDate('#backtest-end', end);
     }
 
     async runBacktest(): Promise<void> {
+        await expect(this.runButton).toBeEnabled({ timeout: 5_000 });
         await this.runButton.click();
-        await this.page.waitForTimeout(300);
-        await expect(this.historyTable).toBeVisible({ timeout: 30_000 });
+        // Wait for either the history table to refresh or a toast error
+        await Promise.race([
+            expect(this.historyTable).toBeVisible({ timeout: 30_000 }),
+            this.page.locator('[data-sonner-toast]').waitFor({ timeout: 30_000 }).catch(() => {}),
+        ]);
+        // Give the history table time to populate after the toast
+        await this.page.waitForTimeout(500);
     }
 
     async getHistoryCount(): Promise<number> {
@@ -71,11 +142,22 @@ export class BacktestPage {
         orders: string;
         gaps: string;
     }> {
+        // Click the first completed row to expand details if not already visible
+        const pnlVisible = await this.resultDetailsPnl.isVisible().catch(() => false);
+        if (!pnlVisible) {
+            // Try clicking a completed row to show detail panel
+            const completedRow = this.page.locator('[data-testid="backtest-history-row"]').first();
+            if (await completedRow.isVisible().catch(() => false)) {
+                await completedRow.click();
+                await this.page.waitForTimeout(500);
+            }
+        }
+
         return {
-            pnl: (await this.resultDetailsPnl.textContent()) ?? '',
-            winRate: (await this.resultDetailsWinRate.textContent()) ?? '',
-            orders: (await this.resultDetailsOrders.textContent()) ?? '',
-            gaps: (await this.resultDetailsGaps.textContent()) ?? '',
+            pnl: (await this.resultDetailsPnl.textContent().catch(() => '')) ?? '',
+            winRate: (await this.resultDetailsWinRate.textContent().catch(() => '')) ?? '',
+            orders: (await this.resultDetailsOrders.textContent().catch(() => '')) ?? '',
+            gaps: (await this.resultDetailsGaps.textContent().catch(() => '')) ?? '',
         };
     }
 
@@ -85,6 +167,6 @@ export class BacktestPage {
         } else {
             await this.paginationPrev.click();
         }
-        await this.page.waitForTimeout(300);
+        await this.page.waitForTimeout(500);
     }
 }

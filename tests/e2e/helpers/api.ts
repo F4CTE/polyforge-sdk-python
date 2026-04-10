@@ -7,6 +7,8 @@
  *   - Checking resource state after UI actions
  */
 
+import { waitForEmail } from './mailhog';
+
 const AUTH_URL = process.env.AUTH_URL ?? 'http://localhost:3001';
 const API_URL  = process.env.API_URL  ?? 'http://localhost:3002';
 
@@ -112,7 +114,6 @@ export async function apiRegisterAndVerify(
     const result = await apiRegister(email, username, password);
 
     // 2. Extract verification token from Mailpit email
-    const { waitForEmail } = await import('./mailhog');
     const msg  = await waitForEmail(email, 15_000);
     const body = msg.HTML || msg.Text || '';
 

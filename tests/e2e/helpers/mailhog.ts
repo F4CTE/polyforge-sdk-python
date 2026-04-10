@@ -167,8 +167,8 @@ function rebaseUrl(raw: string): string {
  * the verification URL it contains (rebased to BASE_URL).
  * Checks the HTML body first, then plain text.
  */
-export async function getVerificationUrl(email: string): Promise<string> {
-    const msg  = await waitForEmail(email);
+export async function getVerificationUrl(email: string, timeoutMs?: number): Promise<string> {
+    const msg  = await waitForEmail(email, timeoutMs);
     const body = msg.HTML || msg.Text || '';
     return rebaseUrl(extractLink(body, '/verify-email'));
 }
@@ -177,8 +177,8 @@ export async function getVerificationUrl(email: string): Promise<string> {
  * Convenience: wait for the password-reset email and return the reset URL
  * (rebased to BASE_URL).
  */
-export async function getPasswordResetUrl(email: string): Promise<string> {
-    const msg  = await waitForEmail(email);
+export async function getPasswordResetUrl(email: string, timeoutMs?: number): Promise<string> {
+    const msg  = await waitForEmail(email, timeoutMs);
     const body = msg.HTML || msg.Text || '';
     return rebaseUrl(extractLink(body, '/reset-password'));
 }

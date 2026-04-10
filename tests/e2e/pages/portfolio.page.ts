@@ -51,12 +51,15 @@ export class PortfolioPage {
 
     async switchToLive(): Promise<void> {
         await this.liveTab.click();
-        await this.page.waitForTimeout(300);
+        // Wait for the tab to become selected rather than using a fixed timeout.
+        await expect(this.liveTab).toHaveAttribute('aria-selected', 'true', { timeout: 10_000 });
     }
 
     async switchToPaper(): Promise<void> {
         await this.paperTab.click();
-        await this.page.waitForTimeout(300);
+        // Wait for the tab to become selected (aria-selected="true") rather
+        // than using a fixed timeout — prevents flakiness on slow CI runners.
+        await expect(this.paperTab).toHaveAttribute('aria-selected', 'true', { timeout: 10_000 });
     }
 
     getClosePositionButton(marketId: string): Locator {

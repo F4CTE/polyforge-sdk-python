@@ -63,8 +63,8 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const firstCard = cards.first();
         await expect(firstCard).toBeVisible();
 
-        // Check for market name
-        const marketName = firstCard.locator('h3, .text-lg, .font-semibold').first();
+        // Check for market name — the card uses h3.text-sm.font-medium
+        const marketName = firstCard.locator('h3').first();
         if (await marketName.isVisible()) {
             const name = await marketName.textContent();
             expect(name).toBeTruthy();
@@ -78,8 +78,8 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const cards = markets.marketCards;
         const firstCard = cards.first();
 
-        // Find and verify market name text
-        const nameElement = firstCard.locator('h3, .text-lg, .font-semibold').first();
+        // Find and verify market name text — card uses h3 element
+        const nameElement = firstCard.locator('h3').first();
         if (await nameElement.isVisible()) {
             const name = await nameElement.textContent();
             expect(name).toMatch(/\w+/);
@@ -93,8 +93,8 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const cards = markets.marketCards;
         const firstCard = cards.first();
 
-        // Find volume text (often labeled "Volume" or shows number)
-        const volumeElement = firstCard.locator(':text("Volume"), :text("$"), .text-sm').first();
+        // Volume is shown as e.g. "$1.2M Vol" in a .text-xs span inside the card header
+        const volumeElement = firstCard.locator('text=/\\$[\\d.]+[KMB]? Vol/i').first();
         if (await volumeElement.isVisible()) {
             const volume = await volumeElement.textContent();
             expect(volume).toBeTruthy();
@@ -108,8 +108,9 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const cards = markets.marketCards;
         const firstCard = cards.first();
 
-        // Find end date element
-        const dateElement = firstCard.locator(':text("Closes"), :text("Ends"), [data-testid*="date"]').first();
+        // End date is shown as "3 days", "1mo", "Today", "Closed" etc. in the header
+        // next to volume. It's a span inside the .text-xs container.
+        const dateElement = firstCard.locator('text=/\\d+ days?|\\d+mo|Today|Closed/i').first();
         if (await dateElement.isVisible()) {
             const date = await dateElement.textContent();
             expect(date).toBeTruthy();
@@ -123,8 +124,8 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const cards = markets.marketCards;
         const firstCard = cards.first();
 
-        // Find price element
-        const priceElement = firstCard.locator(':text("$"), .price, [data-testid*="price"]').first();
+        // Price is shown as "Yes XX¢" / "No XX¢" or as "XX% chance" in the card body
+        const priceElement = firstCard.locator('text=/Yes|No|\\d+% chance|\\d+¢/i').first();
         if (await priceElement.isVisible()) {
             const price = await priceElement.textContent();
             expect(price).toBeTruthy();
@@ -141,7 +142,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const firstCard = markets.marketCards.first();
         let marketName = '';
 
-        const nameElement = firstCard.locator('h3, .text-lg, .font-semibold').first();
+        const nameElement = firstCard.locator('h3').first();
         if (await nameElement.isVisible()) {
             marketName = (await nameElement.textContent() ?? '').trim();
         }
@@ -164,15 +165,20 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const markets = new MarketsPage(page);
         await markets.goto();
 
-        // Search with partial term
-        const searchTerm = 'bitcoin';
+        // Get first market name to extract a partial search term from real data
+        const firstCard = markets.marketCards.first();
+        const nameEl = firstCard.locator('h3').first();
+        const fullName = (await nameEl.textContent() ?? '').trim();
+
+        // Use first word of the market name as partial search term (at least 3 chars)
+        const searchTerm = fullName.split(/\s+/)[0]?.slice(0, 6) || 'market';
         await markets.search(searchTerm);
 
         // Verify filtered results exist
         const cardCount = await markets.getMarketCount();
         expect(cardCount).toBeGreaterThanOrEqual(0);
 
-        // If results exist, verify they match the search
+        // If results exist, verify they match the search (case-insensitive)
         if (cardCount > 0) {
             const firstResult = markets.marketCards.first();
             const resultText = await firstResult.textContent() ?? '';
@@ -189,9 +195,10 @@ test.describe('Markets — Full Workflow Coverage', () => {
         // Search for something
         await markets.search('xyz-nonexistent-market');
 
-        // Clear search by emptying input
+        // Clear search by emptying input and wait for debounce
+        await markets.searchInput.clear();
         await markets.searchInput.fill('');
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(400);
 
         // Verify results are restored
         const finalCount = await markets.getMarketCount();
@@ -205,8 +212,8 @@ test.describe('Markets — Full Workflow Coverage', () => {
         // Search for nonexistent market
         await markets.search('zzz-impossible-market-xyz-123');
 
-        // Verify empty state message
-        const emptyState = page.locator('text="No markets found", :text("No results"), :text("empty")').first();
+        // Verify empty state message — component renders "No markets found"
+        const emptyState = page.locator('text="No markets found"').first();
         if (await emptyState.isVisible()) {
             await expect(emptyState).toBeVisible();
         }
@@ -358,13 +365,17 @@ test.describe('Markets — Full Workflow Coverage', () => {
         // Select Crypto (should deselect Sports)
         await markets.selectCategory('Crypto');
 
-        // Verify only Crypto is active (check class attributes)
+        // Verify only Crypto is active — active chip uses 'bg-pf-cyan-500/15' and 'text-pf-cyan-400'
         const cryptoButton = markets.categoryChips['Crypto'];
         const cryptoClass = await cryptoButton.getAttribute('class') ?? '';
+        const isCryptoSelected = cryptoClass.includes('pf-cyan');
+        expect(isCryptoSelected).toBeTruthy();
 
-        // Verify Crypto is selected
-        const isSelected = cryptoClass.includes('active') || cryptoClass.includes('selected');
-        expect(isSelected).toBeTruthy();
+        // Verify Sports is NOT active
+        const sportsButton = markets.categoryChips['Sports'];
+        const sportsClass = await sportsButton.getAttribute('class') ?? '';
+        const isSportsSelected = sportsClass.includes('pf-cyan');
+        expect(isSportsSelected).toBeFalsy();
     });
 
     // ─── Sorting Tests ────────────────────────────────────────────────────────
@@ -444,25 +455,23 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const markets = new MarketsPage(page);
         await markets.goto();
 
-        // Toggle to table view
-        await markets.toggleView();
+        // Switch to table view
+        await markets.switchToTableView();
 
-        // Verify table elements exist
-        const tableElement = page.locator('table, [role="table"], [role="grid"]').first();
-        if (await tableElement.isVisible()) {
-            await expect(tableElement).toBeVisible();
-        }
+        // Verify table element exists — component renders <table aria-label="Markets">
+        const tableElement = page.locator('table[aria-label="Markets"]');
+        await expect(tableElement).toBeVisible({ timeout: 5_000 });
     });
 
     test('@comprehensive should switch back to card view from table', async ({ page }) => {
         const markets = new MarketsPage(page);
         await markets.goto();
 
-        // Toggle to table
-        await markets.toggleView();
+        // Switch to table
+        await markets.switchToTableView();
 
-        // Toggle back to cards
-        await markets.toggleView();
+        // Switch back to cards
+        await markets.switchToCardView();
 
         // Verify cards are visible again
         const cards = markets.marketCards;
@@ -475,14 +484,19 @@ test.describe('Markets — Full Workflow Coverage', () => {
         await markets.goto();
 
         // Switch to table view
-        await markets.toggleView();
+        await markets.switchToTableView();
 
         // Perform search
         await markets.search('bitcoin');
 
         // Verify still in table view
-        const tableElement = page.locator('table, [role="table"], [role="grid"]').first();
-        if (await tableElement.isVisible()) {
+        const tableElement = page.locator('table[aria-label="Markets"]');
+        // Table may or may not have results, but the view mode should persist
+        const isTable = await markets.isTableView();
+        // If there are results, table should be visible; if empty, we just verify
+        // no cards are shown (empty state is rendered instead of table)
+        const cardCount = await markets.getMarketCount();
+        if (cardCount > 0) {
             await expect(tableElement).toBeVisible();
         }
     });
@@ -492,14 +506,15 @@ test.describe('Markets — Full Workflow Coverage', () => {
         await markets.goto();
 
         // Switch to table view
-        await markets.toggleView();
+        await markets.switchToTableView();
 
         // Apply category filter
         await markets.selectCategory('Sports');
 
         // Verify still in table view
-        const tableElement = page.locator('table, [role="table"], [role="grid"]').first();
-        if (await tableElement.isVisible()) {
+        const tableElement = page.locator('table[aria-label="Markets"]');
+        const cardCount = await markets.getMarketCount();
+        if (cardCount > 0) {
             await expect(tableElement).toBeVisible();
         }
     });
@@ -521,23 +536,17 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const markets = new MarketsPage(page);
         await markets.goto();
 
-        const initialCount = await markets.getMarketCount();
-
-        // Click next if available
+        // Pagination only renders when totalPages > 1
         const nextButton = markets.paginationNext;
-        const isNextVisible = await nextButton.isVisible();
+        if (!(await nextButton.isVisible().catch(() => false))) return;
 
-        if (isNextVisible) {
-            // Try to click next
-            const isEnabled = await nextButton.isEnabled();
-            if (isEnabled) {
-                await markets.goToPage('next');
+        const isEnabled = await nextButton.isEnabled();
+        if (isEnabled) {
+            await markets.goToPage('next');
 
-                // Verify page changed (URL should change or content should change)
-                const newCount = await markets.getMarketCount();
-                // New page might have different count
-                expect(newCount).toBeGreaterThanOrEqual(0);
-            }
+            // Verify page changed — content should update
+            const newCount = await markets.getMarketCount();
+            expect(newCount).toBeGreaterThanOrEqual(0);
         }
     });
 
@@ -545,8 +554,11 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const markets = new MarketsPage(page);
         await markets.goto();
 
-        // Navigate to page 2 first
+        // Pagination only renders when totalPages > 1
         const nextButton = markets.paginationNext;
+        if (!(await nextButton.isVisible().catch(() => false))) return;
+
+        // Navigate to page 2 first
         if (await nextButton.isEnabled()) {
             await markets.goToPage('next');
 
@@ -566,12 +578,11 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const markets = new MarketsPage(page);
         await markets.goto();
 
-        // Get page info text
+        // Page info is only shown when totalPages > 1 (pagination visible).
+        // The format is "Page X of Y" in a span[aria-live="polite"].
         const pageInfo = await markets.getPageInfo();
-
-        // Verify format like "Page 1 of X"
         if (pageInfo) {
-            expect(pageInfo).toMatch(/Page \d+ of \d+|Showing/);
+            expect(pageInfo).toMatch(/Page \d+ of \d+/);
         }
     });
 
@@ -579,12 +590,11 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const markets = new MarketsPage(page);
         await markets.goto();
 
-        // On first page, Previous should be disabled
+        // On first page, Previous should be disabled.
+        // Pagination only renders when totalPages > 1.
         const prevButton = markets.paginationPrev;
-
         if (await prevButton.isVisible()) {
-            const isDisabled = (await prevButton.getAttribute('disabled')) === '';
-            expect(isDisabled).toBe(true);
+            await expect(prevButton).toBeDisabled();
         }
     });
 
@@ -593,19 +603,19 @@ test.describe('Markets — Full Workflow Coverage', () => {
         await markets.goto();
 
         // Navigate to last page (keep clicking next)
-        let canContinue = true;
-        while (canContinue) {
-            const nextButton = markets.paginationNext;
-            const isEnabled = await nextButton.isEnabled();
+        // Pagination only renders when totalPages > 1.
+        const nextButton = markets.paginationNext;
+        if (!(await nextButton.isVisible())) return;
 
+        let maxIterations = 20;
+        while (maxIterations > 0) {
+            const isEnabled = await nextButton.isEnabled();
             if (isEnabled) {
                 await markets.goToPage('next');
+                maxIterations--;
             } else {
-                canContinue = false;
-
-                // Verify Next is disabled
-                const isDisabled = (await nextButton.getAttribute('disabled')) === '';
-                expect(isDisabled).toBe(true);
+                // Verify Next is disabled on last page
+                await expect(nextButton).toBeDisabled();
                 break;
             }
         }
@@ -621,11 +631,11 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const firstCard = markets.marketCards.first();
 
         if (await firstCard.isVisible()) {
-            // Click the card
+            // Click the card (it's a <Link to="/markets/{id}">)
             await firstCard.click();
 
-            // Verify navigation to detail page
-            await expect(page).toHaveURL(/\/markets\/\w+/);
+            // Verify navigation to detail page — IDs can contain letters, digits, hyphens
+            await expect(page).toHaveURL(/\/markets\/[\w-]+/, { timeout: 15_000 });
 
             // Verify detail page loaded
             const detailHeading = page.locator('h1, h2').first();
@@ -643,18 +653,13 @@ test.describe('Markets — Full Workflow Coverage', () => {
             await firstCard.click();
 
             // Verify detail content
-            await expect(page).toHaveURL(/\/markets\/\w+/, { timeout: 15_000 });
+            await expect(page).toHaveURL(/\/markets\/[\w-]+/, { timeout: 15_000 });
 
             // Verify market name shown
             const marketName = page.locator('h1, h2').first();
+            await expect(marketName).toBeVisible({ timeout: 15_000 });
             const name = await marketName.textContent();
             expect(name).toBeTruthy();
-
-            // Verify additional details (description, end date, etc)
-            const details = page.locator('[data-testid*="detail"], .description, .market-info').first();
-            if (await details.isVisible()) {
-                await expect(details).toBeVisible();
-            }
         }
     });
 
@@ -666,22 +671,23 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const firstCard = markets.marketCards.first();
         if (await firstCard.isVisible()) {
             await firstCard.click();
+            await expect(page).toHaveURL(/\/markets\/[\w-]+/, { timeout: 15_000 });
 
             // Find back button or link
-            const backButton = page.locator('button[aria-label*="Back"], a[aria-label*="Back"], :text("Back")').first();
+            const backButton = page.locator('button:has-text("Back"), a:has-text("Back"), [aria-label*="back" i]').first();
 
-            if (await backButton.isVisible()) {
+            if (await backButton.isVisible({ timeout: 3_000 }).catch(() => false)) {
                 await backButton.click();
 
                 // Verify returned to markets list
-                await expect(page).toHaveURL(/\/markets$/);
+                await expect(page).toHaveURL(/\/markets\/?$/, { timeout: 10_000 });
                 await expect(page.locator('h1', { hasText: 'Markets' })).toBeVisible();
             } else {
                 // If no explicit back button, try browser back
                 await page.goBack();
 
                 // Verify back at markets list
-                await expect(page).toHaveURL(/\/markets$/);
+                await expect(page).toHaveURL(/\/markets\/?$/, { timeout: 10_000 });
             }
         }
     });

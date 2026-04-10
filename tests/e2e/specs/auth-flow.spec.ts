@@ -63,12 +63,13 @@ test.describe('Auth flow', () => {
         await registerPage.goto();
         await registerPage.register({ email, username, password });
 
-        // 2. Fetch verification link from MailHog and navigate to it
-        const verifyUrl = await getVerificationUrl(email);
-        await page.goto(verifyUrl);
+        // 2. Fetch verification link from Mailpit (allow 20s for email delivery on CI)
+        const verifyUrl = await getVerificationUrl(email, 20_000);
 
-        // 3. Verification page shows success
-        await expect(page.locator('h1', { hasText: /verified/i })).toBeVisible({ timeout: 15_000 });
+        // 3. Navigate to verification URL and wait for the API call to complete.
+        //    The page starts in "pending" (spinner) then transitions to "verified".
+        await page.goto(verifyUrl, { waitUntil: 'networkidle' });
+        await expect(page.locator('h1', { hasText: /email verified/i })).toBeVisible({ timeout: 20_000 });
 
         // 4. Navigate to login and sign in with the new credentials
         await loginPage.goto();

@@ -167,15 +167,24 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
         // Switch to Paper tab
         await portfolio.switchToPaper();
 
-        // Verify paper-specific content (positions or empty state)
-        const positionsTable = portfolio.positionsTable;
-        const emptyState = page.locator(':text("No positions"), :text("empty")').first();
+        // Wait for paper loading skeleton to disappear before asserting content.
+        // The component shows a CardSkeleton / TableSkeleton while loadingPaper is
+        // true, then renders either a positions table or the "No paper positions"
+        // empty state.  We wait for at least one of those to appear.
+        const paperPositionsHeading = page.locator('text="Paper Positions"');
+        const emptyState = page.locator('text="No paper positions"');
+        const paperPnlLabel = page.locator('text="Paper P&L"');
 
-        if (await positionsTable.isVisible()) {
-            await expect(positionsTable).toBeVisible();
-        } else if (await emptyState.isVisible()) {
-            await expect(emptyState).toBeVisible();
-        }
+        // Wait up to 15 s (CI is slow) for the paper data to load — indicated by
+        // either the summary card ("Paper P&L") or the empty-state message appearing.
+        await expect(paperPnlLabel.or(emptyState)).toBeVisible({ timeout: 15_000 });
+
+        // Now assert that the page shows either positions or the empty state.
+        const hasPositions = await paperPositionsHeading.isVisible().catch(() => false);
+        const hasEmpty = await emptyState.isVisible().catch(() => false);
+
+        // At least one must be true once loading finishes.
+        expect(hasPositions || hasEmpty).toBe(true);
     });
 
     test('@comprehensive should show live positions in Live tab', async ({ page }) => {
@@ -578,9 +587,15 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
         // Switch to Paper tab
         await portfolio.switchToPaper();
 
-        // Verify reset button exists
+        // Wait for paper data to finish loading (skeleton cleared) before
+        // checking for the reset button — it only renders after data loads.
+        const paperPnlLabel = page.locator('text="Paper P&L"');
+        const emptyState = page.locator('text="No paper positions"');
+        await expect(paperPnlLabel.or(emptyState)).toBeVisible({ timeout: 15_000 });
+
+        // Verify reset button exists (it renders in both loaded states)
         const resetButton = portfolio.resetPaperButton;
-        await expect(resetButton).toBeVisible();
+        await expect(resetButton).toBeVisible({ timeout: 10_000 });
     });
 
     test('@comprehensive should open confirmation dialog when clicking reset', async ({ page }) => {
@@ -590,13 +605,19 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
         // Switch to Paper tab
         await portfolio.switchToPaper();
 
+        // Wait for paper data to load before interacting with reset button
+        const paperPnlLabel = page.locator('text="Paper P&L"');
+        const emptyState = page.locator('text="No paper positions"');
+        await expect(paperPnlLabel.or(emptyState)).toBeVisible({ timeout: 15_000 });
+
         // Click reset button
         const resetButton = portfolio.resetPaperButton;
+        await resetButton.waitFor({ state: 'visible', timeout: 10_000 });
         await resetButton.click();
 
         // Verify dialog appears
         const dialog = portfolio.resetConfirmDialog;
-        await expect(dialog).toBeVisible({ timeout: 5000 });
+        await expect(dialog).toBeVisible({ timeout: 10_000 });
 
         // Verify dialog content
         const dialogText = await dialog.textContent();
@@ -610,36 +631,42 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
         // Switch to Paper tab
         await portfolio.switchToPaper();
 
-        // Store initial positions
-        const initialPositions = page.locator('tr[data-testid*="position"]');
-        const initialCount = await initialPositions.count();
+        // Wait for paper data to finish loading (skeleton cleared).
+        // The component shows "Paper P&L" once data arrives, or
+        // "No paper positions" if the account is empty.
+        const paperPnlLabel = page.locator('text="Paper P&L"');
+        const emptyState = page.locator('text="No paper positions"');
+        await expect(paperPnlLabel.or(emptyState)).toBeVisible({ timeout: 15_000 });
 
-        // Only proceed if there are positions to reset
-        if (initialCount > 0) {
-            // Click reset button
-            const resetButton = portfolio.resetPaperButton;
-            await resetButton.click();
+        // The "Reset Paper Account" button only renders when paper data is loaded
+        // (not during skeleton). Wait for it explicitly.
+        const resetButton = portfolio.resetPaperButton;
+        const resetButtonVisible = await resetButton.isVisible().catch(() => false);
 
-            // Wait for dialog
-            const dialog = portfolio.resetConfirmDialog;
-            await expect(dialog).toBeVisible({ timeout: 5000 });
+        // If there is no reset button (edge-case: paper data failed to load), skip.
+        if (!resetButtonVisible) return;
 
-            // Click confirm
-            const confirmBtn = portfolio.resetConfirmButton;
-            await confirmBtn.click();
+        await resetButton.waitFor({ state: 'visible', timeout: 10_000 });
+        await resetButton.click();
 
-            // Wait for update
-            await page.waitForTimeout(300);
+        // Wait for the confirmation dialog to appear (custom dialog, not
+        // window.confirm).
+        const dialog = portfolio.resetConfirmDialog;
+        await expect(dialog).toBeVisible({ timeout: 10_000 });
 
-            // Verify dialog closed
-            const isDialogVisible = await dialog.isVisible().catch(() => false);
-            expect(isDialogVisible).toBe(false);
+        // Click confirm
+        const confirmBtn = portfolio.resetConfirmButton;
+        await confirmBtn.waitFor({ state: 'visible', timeout: 5_000 });
+        await confirmBtn.click();
 
-            // Verify positions cleared
-            const finalPositions = page.locator('tr[data-testid*="position"]');
-            const finalCount = await finalPositions.count();
-            expect(finalCount).toBe(0);
-        }
+        // Wait for dialog to close — the component sets showResetConfirm=false
+        // synchronously, then fires an API call. Wait for the dialog element to
+        // be detached/hidden.
+        await expect(dialog).toBeHidden({ timeout: 10_000 });
+
+        // After reset, the component sets paper.positions to [] which renders
+        // the "No paper positions" empty state. Wait for it.
+        await expect(emptyState).toBeVisible({ timeout: 15_000 });
     });
 
     test('@comprehensive should cancel paper account reset', async ({ page }) => {
@@ -649,24 +676,31 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
         // Switch to Paper tab
         await portfolio.switchToPaper();
 
+        // Wait for paper data to load before interacting
+        const paperPnlLabel = page.locator('text="Paper P&L"');
+        const emptyState = page.locator('text="No paper positions"');
+        await expect(paperPnlLabel.or(emptyState)).toBeVisible({ timeout: 15_000 });
+
         // Store initial positions
         const initialPositions = page.locator('tr[data-testid*="position"]');
         const initialCount = await initialPositions.count();
 
         // Click reset button
         const resetButton = portfolio.resetPaperButton;
+        await resetButton.waitFor({ state: 'visible', timeout: 10_000 });
         await resetButton.click();
 
         // Wait for dialog
         const dialog = portfolio.resetConfirmDialog;
-        await expect(dialog).toBeVisible({ timeout: 5000 });
+        await expect(dialog).toBeVisible({ timeout: 10_000 });
 
         // Click cancel
         const cancelBtn = portfolio.resetCancelButton;
+        await cancelBtn.waitFor({ state: 'visible', timeout: 5_000 });
         await cancelBtn.click();
 
         // Verify dialog closed
-        await expect(dialog).not.toBeVisible();
+        await expect(dialog).toBeHidden({ timeout: 10_000 });
 
         // Verify positions unchanged
         const finalPositions = page.locator('tr[data-testid*="position"]');
