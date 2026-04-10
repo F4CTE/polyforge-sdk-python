@@ -30,7 +30,6 @@ services:
 
   postgres:
     image: timescale/timescaledb:2.17.2-pg16
-    mem_limit: 2g
     command: >
       postgres
       -c shared_buffers=512MB
@@ -59,7 +58,6 @@ services:
 
   pgbouncer:
     image: edoburu/pgbouncer:latest
-    mem_limit: 128m
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-poly}:${POSTGRES_PASSWORD:-devpass}@postgres:5432/${POSTGRES_DB:-polyforge}
       POOL_MODE: transaction
@@ -90,7 +88,6 @@ services:
 
   postgres-admin:
     image: postgres:16-alpine
-    mem_limit: 512m
     environment:
       POSTGRES_USER: ${POSTGRES_ADMIN_USER:-poly_admin}
       POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-devpass_admin}
@@ -109,7 +106,6 @@ services:
 
   pgbouncer-admin:
     image: edoburu/pgbouncer:latest
-    mem_limit: 128m
     environment:
       DATABASE_URL: postgres://${POSTGRES_ADMIN_USER:-poly_admin}:${POSTGRES_ADMIN_PASSWORD:-devpass_admin}@postgres-admin:5432/${POSTGRES_ADMIN_DB:-polyforge_admin}
       POOL_MODE: transaction
@@ -137,7 +133,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    mem_limit: 384m
     command: >-
       redis-server
       --requirepass ${REDIS_PASSWORD:-devredispass}
@@ -163,7 +158,6 @@ services:
 
   mailhog:
     image: axllent/mailpit:v1.23
-    mem_limit: 128m
     ports:
       - "127.0.0.1:8025:8025"
       - "127.0.0.1:1025:1025"
@@ -175,7 +169,6 @@ services:
     build:
       context: .
       dockerfile: services/mock-polymarket/Dockerfile
-    mem_limit: 256m
     environment:
       SCENARIO: ${SCENARIO:-normal}
       GAMMA_PORT: "3096"
@@ -197,7 +190,6 @@ services:
     build:
       context: .
       dockerfile: services/signer-service/Dockerfile
-    mem_limit: 512m
     environment:
       # SECURITY: Signer uses direct DB connection (not pgbouncer) for credential operations
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
@@ -227,13 +219,11 @@ services:
     build:
       context: .
       dockerfile: services/strategy-engine/Dockerfile
-    mem_limit: 512m
     environment:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
-      NODE_OPTIONS: "--max-old-space-size=384"
       PORT: "3006"
     ports:
       - "3006:3006"
@@ -249,7 +239,6 @@ services:
     build:
       context: .
       dockerfile: services/order-service/Dockerfile
-    mem_limit: 512m
     environment:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
@@ -257,7 +246,6 @@ services:
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
       SIGNER_SERVICE_URL: http://signer-service:3012
       CLOB_API_URL: http://mock-polymarket:3099
-      NODE_OPTIONS: "--max-old-space-size=384"
       PORT: "3007"
     ports:
       - "3007:3007"
@@ -275,7 +263,6 @@ services:
     build:
       context: .
       dockerfile: services/api-service/Dockerfile
-    mem_limit: 768m
     environment:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
@@ -291,7 +278,7 @@ services:
       GEO_CLOSE_ONLY_COUNTRIES: ${GEO_CLOSE_ONLY_COUNTRIES:-PL,SG,TH,TW}
       PORT: "3002"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
-      NODE_OPTIONS: "--max-old-space-size=512"
+      NODE_OPTIONS: "--max-old-space-size=1024"
     ports:
       - "3002:3002"
     networks: [internal]
@@ -307,12 +294,10 @@ services:
     build:
       context: .
       dockerfile: services/paper-order-service/Dockerfile
-    mem_limit: 512m
     environment:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
-      NODE_OPTIONS: "--max-old-space-size=384"
       PORT: "3008"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -330,12 +315,10 @@ services:
     build:
       context: .
       dockerfile: services/backtest-service/Dockerfile
-    mem_limit: 512m
     environment:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
-      NODE_OPTIONS: "--max-old-space-size=384"
       PORT: "3009"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -353,7 +336,6 @@ services:
     build:
       context: .
       dockerfile: services/notification-service/Dockerfile
-    mem_limit: 512m
     environment:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
@@ -368,7 +350,6 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-dev-disabled}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-dev-disabled}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
-      NODE_OPTIONS: "--max-old-space-size=384"
       PORT: "3010"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -387,7 +368,6 @@ services:
     build:
       context: .
       dockerfile: services/bot-service/Dockerfile
-    mem_limit: 512m
     environment:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
@@ -404,7 +384,6 @@ services:
       WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN:-polyforge-verify}
       WHATSAPP_APP_SECRET: ${WHATSAPP_APP_SECRET:-}
       API_SERVICE_URL: http://api-service:3002
-      NODE_OPTIONS: "--max-old-space-size=384"
       PORT: "3011"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -422,7 +401,6 @@ services:
     build:
       context: .
       dockerfile: services/admin-api-service/Dockerfile
-    mem_limit: 512m
     environment:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
@@ -436,7 +414,6 @@ services:
       MAILHOG_HOST: mailhog
       MAILHOG_PORT: "1025"
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
-      NODE_OPTIONS: "--max-old-space-size=384"
       PORT: "3004"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -459,7 +436,6 @@ services:
     build:
       context: .
       dockerfile: services/auth-service/Dockerfile
-    mem_limit: 512m
     environment:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
@@ -473,7 +449,6 @@ services:
       MAILHOG_PORT: "1025"
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       INVITE_ONLY: ${INVITE_ONLY:-true}
-      NODE_OPTIONS: "--max-old-space-size=384"
       AUTH_SERVICE_PORT: "3001"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -492,7 +467,6 @@ services:
     build:
       context: .
       dockerfile: services/admin-auth-service/Dockerfile
-    mem_limit: 512m
     environment:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
@@ -501,7 +475,6 @@ services:
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       ADMIN_JWT_SECRET: "${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required}"
       TOTP_ENCRYPTION_KEY: "${TOTP_ENCRYPTION_KEY:?TOTP_ENCRYPTION_KEY is required}"
-      NODE_OPTIONS: "--max-old-space-size=384"
       ADMIN_AUTH_SERVICE_PORT: "3003"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -521,7 +494,6 @@ services:
     build:
       context: .
       dockerfile: apps/user-app/Dockerfile
-    mem_limit: 128m
     networks: [internal]
     restart: unless-stopped
 
@@ -529,7 +501,6 @@ services:
     build:
       context: .
       dockerfile: apps/admin-app/Dockerfile
-    mem_limit: 128m
     networks: [internal, admin-only]
     restart: unless-stopped
 
@@ -537,7 +508,6 @@ services:
     build:
       context: .
       dockerfile: apps/landing/Dockerfile
-    mem_limit: 256m
     networks: [internal]
     restart: unless-stopped
 
@@ -547,7 +517,6 @@ services:
 
   gateway:
     image: nginx:1.27-alpine
-    mem_limit: 128m
     volumes:
       - ./services/gateway/nginx.dev.conf:/etc/nginx/nginx.conf:ro
     ports:
@@ -570,14 +539,12 @@ services:
     build:
       context: .
       dockerfile: services/market-data-service/Dockerfile
-    mem_limit: 512m
     environment:
       DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       DIRECT_DATABASE_URL: postgresql://poly:${POSTGRES_PASSWORD:-devpass}@postgres:5432/polyforge
       REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379
       CLOB_WS_URL: wss://ws-subscriptions-clob.polymarket.com/ws/market
       GAMMA_API_URL: https://gamma-api.polymarket.com
-      NODE_OPTIONS: "--max-old-space-size=384"
       PORT: "3005"
     ports:
       - "3005:3005"
