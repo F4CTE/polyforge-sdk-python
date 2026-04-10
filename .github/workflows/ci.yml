@@ -292,7 +292,10 @@ jobs:
       # ── Cleanup ──────────────────────────────────────────────────────────
       - name: Stop Docker Compose
         if: always()
-        run: docker compose -f docker-compose.infra.yml down -v
+        run: |
+          docker compose -f docker-compose.infra.yml down -v --rmi local
+          docker image prune -f --filter "until=2h"
+          docker builder prune -f --keep-storage 10GB
 
   # ── 4. Deploy to AWS ────────────────────────────────────────────────────
   deploy:
