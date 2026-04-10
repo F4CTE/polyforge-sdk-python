@@ -19,6 +19,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **#487 CI pwn-request mitigation** — added `permissions: contents: read` to workflow
 - **#502 BigInt JSON precision loss** — changed `Number()` to `toString()` for BigInt serialization
 - **#503 Swagger in production** — force-disabled when `NODE_ENV=production`
+- **#492 Signer-service nonce fallback to zero** — replaced `return 0` with `throw ServiceUnavailableException` when relayer unreachable
+- **#491 safeAddress DTO validation** — added `@Matches(/^0x[0-9a-fA-F]{40}$/)` to reject malformed Ethereum addresses
+- **#490 SES SMTP STARTTLS downgrade risk** — added `requireTLS: true` to SES transport
+- **#456 All-zeros MASTER_ENCRYPTION_KEY** — emit stderr warning in dev, throw in non-dev
+- **#454 COOKIE_SECURE=false footgun** — commented out in `.env.example`; defaults to secure
 
 ## [Unreleased] — 2026-04-09
 

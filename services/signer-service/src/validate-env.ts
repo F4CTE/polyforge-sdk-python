@@ -30,13 +30,18 @@ export function validateEnv(
     );
   }
 
-  // All-zeros guard applies outside development so staging deployments
-  // over HTTPS do not silently accept a weak key.
-  if (env.NODE_ENV !== "development") {
-    const masterKey = env.MASTER_ENCRYPTION_KEY;
-    if (!masterKey || masterKey === "0".repeat(64)) {
+  // All-zeros guard: throws in non-dev, warns loudly in dev.
+  const masterKey = env.MASTER_ENCRYPTION_KEY;
+  if (!masterKey || masterKey === "0".repeat(64)) {
+    if (env.NODE_ENV !== "development") {
       throw new Error(
         "MASTER_ENCRYPTION_KEY must not be all-zeros in non-development environments",
+      );
+    } else {
+      process.stderr.write(
+        "[signer-service] ⚠️  WARNING: MASTER_ENCRYPTION_KEY is all zeros — " +
+          "encryption is effectively disabled. DO NOT use with real credentials " +
+          "or promote this configuration to staging/production.\n",
       );
     }
   }

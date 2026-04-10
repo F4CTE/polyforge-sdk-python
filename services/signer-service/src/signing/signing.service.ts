@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  ServiceUnavailableException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { RedisService } from "@polyforge/shared-redis";
 import * as crypto from "crypto";
@@ -331,7 +336,9 @@ export class SigningService implements OnModuleInit {
       );
     }
 
-    return 0; // fallback
+    throw new ServiceUnavailableException(
+      "Cannot fetch nonce from Polymarket relayer — refusing to sign with potentially stale nonce",
+    );
   }
 
   /**

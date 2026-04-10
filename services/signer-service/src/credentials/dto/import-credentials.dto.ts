@@ -6,6 +6,7 @@ import {
   IsInt,
   Min,
   Max,
+  Matches,
   MaxLength,
 } from "class-validator";
 
@@ -40,9 +41,11 @@ export class ImportCredentialsDto {
   apiPassphrase!: string;
 
   /** Safe address (only for sig_type 2) */
-  @IsString()
   @IsOptional()
-  @MaxLength(42)
+  @IsString()
+  @Matches(/^0x[0-9a-fA-F]{40}$/, {
+    message: "safeAddress must be a valid Ethereum address (0x + 40 hex chars)",
+  })
   safeAddress?: string;
 
   /** 0 = EOA, 1 = gnosis safe, 2 = magic link */
