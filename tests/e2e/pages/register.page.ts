@@ -54,8 +54,9 @@ export class RegisterPage {
         // Blur confirm password field
         await this.email.click();
         await this.page.waitForTimeout(300);
-        // Standard HTML checkbox — click directly
-        await this.tosCheckbox.check();
+        // Use click() instead of check() — controlled React checkboxes
+        // can reset DOM state before Playwright verifies the post-click state
+        await this.tosCheckbox.click();
         await this.submit.click();
     }
 

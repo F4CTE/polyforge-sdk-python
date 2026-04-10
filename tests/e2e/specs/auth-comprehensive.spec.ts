@@ -68,7 +68,7 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         await registerPage.username.fill(uniqueUsername());
         await registerPage.password.fill('Password123!');
         await registerPage.confirmPassword.fill('Password123!');
-        await registerPage.tosCheckbox.check();
+        await registerPage.tosCheckbox.click();
         await registerPage.submit.click();
 
         // React form validation marks email as touched and shows the error message
@@ -83,7 +83,7 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         await registerPage.username.fill(uniqueUsername());
         await registerPage.password.fill('Password123!');
         await registerPage.confirmPassword.fill('Password123!');
-        await registerPage.tosCheckbox.check();
+        await registerPage.tosCheckbox.click();
 
         const emailInput = page.locator('#email');
         const isInvalid = await emailInput.evaluate((el: HTMLInputElement) => !el.checkValidity());
@@ -98,7 +98,7 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         await registerPage.username.fill(uniqueUsername());
         await registerPage.password.fill('Short1!');  // 7 characters
         await registerPage.confirmPassword.fill('Short1!');
-        await registerPage.tosCheckbox.check();
+        await registerPage.tosCheckbox.click();
         await registerPage.submit.click();
 
         // Client-side validation prevents submission and shows inline field error
@@ -120,7 +120,7 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         // Blur to trigger validation
         await registerPage.email.click();
         await page.waitForTimeout(300);
-        await registerPage.tosCheckbox.check();
+        await registerPage.tosCheckbox.click();
         await registerPage.submit.click();
 
         // Client-side validation renders inline field error at #register-confirm-password-error
