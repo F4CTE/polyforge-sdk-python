@@ -259,13 +259,9 @@ jobs:
       #   registry-type uses OCI HTTP push/pull instead of local renames.  The
       #   registry server (localhost:5002) serialises concurrent access internally,
       #   so there is no shared mutable directory for buildkitd to race against.
-      - name: Build images (with registry layer cache)
+      - name: Build images
         run: |
-          DOCKER_BUILDKIT=1 docker buildx bake \
-            -f docker-compose.infra.yml \
-            --set "*.cache-from=type=registry,ref=localhost:5002/cache/polyforge-build,ignore-error=true" \
-            --set "*.cache-to=type=registry,ref=localhost:5002/cache/polyforge-build,mode=max" \
-            --load
+          docker compose -f docker-compose.infra.yml build
         timeout-minutes: 45
 
       # Remove stale containers from prior cancelled/failed runs.
