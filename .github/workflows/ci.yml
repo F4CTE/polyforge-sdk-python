@@ -263,7 +263,7 @@ jobs:
         run: |
           DOCKER_BUILDKIT=1 docker buildx bake \
             -f docker-compose.infra.yml \
-            --set "*.cache-from=type=registry,ref=localhost:5002/cache/polyforge-build" \
+            --set "*.cache-from=type=registry,ref=localhost:5002/cache/polyforge-build,ignore-error=true" \
             --set "*.cache-to=type=registry,ref=localhost:5002/cache/polyforge-build,mode=max" \
             --load
         timeout-minutes: 45
