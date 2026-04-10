@@ -1,6 +1,8 @@
 import { Controller, Get } from "@nestjs/common";
+import { SkipThrottle } from "@nestjs/throttler";
 import { StrategyRegistryService } from "../strategy/strategy-registry.service";
 
+@SkipThrottle()
 @Controller("health")
 export class HealthController {
   constructor(private readonly registry: StrategyRegistryService) {}

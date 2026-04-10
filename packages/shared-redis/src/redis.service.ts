@@ -26,7 +26,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
         return Math.min(times * 200, 5000);
       },
       reconnectOnError: (err: Error) => {
-        const targetErrors = ["READONLY", "ECONNRESET", "ETIMEDOUT"];
+        const targetErrors = [
+          "READONLY",
+          "ECONNRESET",
+          "ECONNREFUSED",
+          "ETIMEDOUT",
+        ];
         return targetErrors.some((e) => err.message.includes(e));
       },
     });

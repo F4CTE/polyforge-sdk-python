@@ -1,6 +1,8 @@
 import { Controller, Get } from "@nestjs/common";
+import { SkipThrottle } from "@nestjs/throttler";
 import { PolymarketWsService } from "../market-sync/polymarket-ws.service";
 
+@SkipThrottle()
 @Controller("health")
 export class HealthController {
   constructor(private readonly ws: PolymarketWsService) {}

@@ -1,4 +1,5 @@
 import { Controller, Get } from "@nestjs/common";
+import { SkipThrottle } from "@nestjs/throttler";
 import { ApiExcludeController, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { PrismaService } from "@polyforge/shared-db";
 import { RedisService } from "@polyforge/shared-redis";
@@ -60,6 +61,7 @@ async function pingService(
   }
 }
 
+@SkipThrottle()
 @ApiExcludeController()
 @Controller("health")
 export class HealthController {
@@ -69,6 +71,7 @@ export class HealthController {
   }
 }
 
+@SkipThrottle()
 @ApiTags("Status")
 @Controller("status")
 export class StatusController {

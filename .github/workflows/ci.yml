@@ -204,64 +204,12 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
         continue-on-error: true   # authenticated pulls preferred but not required
 
-      # Set up Docker Buildx with network=host so buildkitd (which runs inside a
-      # Docker container) can reach services bound to the host's loopback interface.
-      # Without this, --cache-from/cache-to type=registry calls from buildkitd
-      # resolve "localhost" to the buildkitd container's own loopback (not the host),
-      # and the registry on localhost:5002 is unreachable → "connection refused".
-      # registry-mirrors in daemon.json is unaffected — those pulls go through the
-      # Docker daemon on the host, not through buildkitd's direct HTTP stack.
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      # Ensure the dedicated BuildKit layer-cache registry is running on port 5002.
-      # We start it here (not just in runner-setup.yml) so CI is self-healing:
-      # the container might be absent on a freshly provisioned runner, or might
-      # have been removed by docker system prune.  `--restart always` means it
-      # survives future reboots and will already be up for the next CI run.
-      #
-      # Why a separate registry on 5002 (not the pull-through proxy on 5001)?
-      #   A Docker Hub proxy registry (REGISTRY_PROXY_REMOTEURL set) rejects pushes
-      #   with 405 Method Not Allowed.  The build-cache registry must accept pushes.
-      - name: Ensure build-cache registry is running (port 5002)
-        run: |
-          if ! curl -sf http://localhost:5002/v2/ > /dev/null 2>&1; then
-            echo "Build-cache registry not responding — starting it..."
-            docker rm -f polyforge-buildcache-registry 2>/dev/null || true
-            sudo mkdir -p /opt/polyforge-buildcache-registry
-            sudo chown "$USER:$USER" /opt/polyforge-buildcache-registry
-            docker run -d \
-              --name polyforge-buildcache-registry \
-              --restart always \
-              -p 127.0.0.1:5002:5000 \
-              -v /opt/polyforge-buildcache-registry:/var/lib/registry \
-              -e REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry \
-              registry:2
-            # Wait for the registry to be ready (usually < 2s)
-            timeout 30 bash -c 'until curl -sf http://localhost:5002/v2/; do sleep 1; done'
-            echo "Build-cache registry started."
-          else
-            echo "Build-cache registry already running."
-          fi
-
-      # Build all services using buildx bake with a registry-type layer cache.
-      #
-      # Why registry-type (not local-type)?
-      #   local-type stores layers as files and uses filesystem renames for atomic
-      #   commits (ingest/<hash>/data → blobs/sha256/<hash>).  buildkitd is a
-      #   long-running daemon that persists across CI runs; when the concurrency
-      #   group cancels a job mid-build, buildkitd still has in-flight gRPC writes
-      #   that reach the filesystem AFTER the next job's rm -rf ingest/ has run →
-      #   "rename …startedat.tmp …startedat: no such file or directory".
-      #
-      #   registry-type uses OCI HTTP push/pull instead of local renames.  The
-      #   registry server (localhost:5002) serialises concurrent access internally,
-      #   so there is no shared mutable directory for buildkitd to race against.
+      # Plain docker compose build — uses Docker daemon's built-in BuildKit.
+      # Previously used buildx bake with a registry cache (localhost:5002),
+      # but the --load export had a race condition causing
+      # "could not fetch content descriptor from remote: not found".
       - name: Build images
-        run: |
-          docker compose -f docker-compose.infra.yml build
+        run: docker compose -f docker-compose.infra.yml build
         timeout-minutes: 45
 
       # Remove stale containers from prior cancelled/failed runs.
@@ -344,17 +292,6 @@ jobs:
           docker image prune -f --filter "until=2h"
           docker builder prune -f --keep-storage 10GB
 
-      - name: Garbage-collect build-cache registry
-        if: always()
-        run: |
-          # The registry on port 5002 grows unbounded (observed 189GB).
-          # Run GC inside the registry container to reclaim unreferenced blobs.
-          if docker ps -q --filter "name=polyforge-buildcache-registry" | grep -q .; then
-            docker exec polyforge-buildcache-registry \
-              bin/registry garbage-collect /etc/docker/registry/config.yml --delete-untagged 2>&1 || true
-            echo "Build-cache registry size after GC:"
-            du -sh /opt/polyforge-buildcache-registry 2>/dev/null || true
-          fi
 
   # ── 4. Deploy to AWS ────────────────────────────────────────────────────
   deploy:
