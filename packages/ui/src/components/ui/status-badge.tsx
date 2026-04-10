@@ -9,7 +9,7 @@ export interface StatusBadgeProps extends Omit<BadgeProps, "children"> {
 
 function StatusBadge({ label, icon, className, ...props }: StatusBadgeProps) {
   return (
-    <Badge className={cn("normal-case tracking-normal", className)} {...props}>
+    <Badge className={cn("uppercase tracking-wider", className)} {...props}>
       {icon}
       {label}
     </Badge>

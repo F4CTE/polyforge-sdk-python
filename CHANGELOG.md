@@ -19,6 +19,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed (Design / Tokens)
 - **#447 Charter-defined glow shadow tokens** — added glow shadow tokens to globals.css
 - **#446/#448/#449/#450 Opacity, line-height, container, chart legend tokens** — added opacity/line-height/container-width tokens; tokenized gradient overlays and Recharts Legend styles
+- **#479/#480/#481/#483/#484/#485 Design batch** — fixed focus rings, arbitrary dimensions, `.5` spacing, footer `pt-15`, dropdown focus-visible ring, StatusBadge case
 
 ### Fixed (Security)
 - **#498 Hardcoded devpass in DIRECT_DATABASE_URL** — parameterized with env var substitution

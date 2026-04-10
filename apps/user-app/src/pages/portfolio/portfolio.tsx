@@ -2988,7 +2988,7 @@ export function Component() {
                   <Lightbulb className="size-4 text-pf-warning" />
                   <span className="text-sm font-semibold text-pf-text">Rebalancing Suggestions</span>
                   {visibleSuggestions.length > 0 && (
-                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-pf-full bg-pf-warning/15 text-pf-warning text-pf-caption font-semibold">
+                    <span className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-pf-full bg-pf-warning/15 text-pf-warning text-pf-caption font-semibold">
                       {visibleSuggestions.length}
                     </span>
                   )}

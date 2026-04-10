@@ -106,7 +106,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             onKeyDown={handleKeyDown}
             aria-label="Search markets and strategies"
             placeholder="Search markets, strategies..."
-            className="flex-1 bg-transparent text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pf-cyan-500/30 rounded"
+            className="flex-1 bg-transparent text-sm text-pf-text placeholder:text-pf-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 rounded"
           />
           <kbd className="hidden sm:inline-flex items-center px-2 py-1 rounded text-pf-label text-pf-text-muted border border-pf-border font-mono">
             Esc

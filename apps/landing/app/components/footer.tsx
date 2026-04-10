@@ -91,7 +91,7 @@ const footerLinks = [
 
 export function Footer() {
   return (
-    <footer className="bg-pf-surface border-t border-pf-border-subtle pt-15 pb-8">
+    <footer className="bg-pf-surface border-t border-pf-border-subtle pt-14 pb-8">
       <div className="max-w-pf-container-landing mx-auto px-6">
         <div className="flex flex-col md:flex-row gap-8 md:gap-16 mb-10">
           {/* Brand */}
