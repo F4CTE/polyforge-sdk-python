@@ -170,24 +170,28 @@ async function bootstrap() {
 
   // ENABLE_SWAGGER: explicit opt-in only (defaults to false).
   // Must be set to "true" to expose API docs — prevents accidental exposure.
-  const enableSwagger = process.env.ENABLE_SWAGGER === "true";
+  // Blocked unconditionally in production to prevent API reconnaissance.
+  const enableSwagger =
+    process.env.ENABLE_SWAGGER === "true" &&
+    process.env.NODE_ENV !== "production";
 
-  if (enableSwagger && process.env.NODE_ENV === "production") {
+  if (
+    process.env.ENABLE_SWAGGER === "true" &&
+    process.env.NODE_ENV === "production"
+  ) {
     process.stderr.write(
-      "[api-service] WARNING: Swagger is enabled in production — ensure this is intentional\n",
+      "[api-service] ENABLE_SWAGGER ignored in production — Swagger UI is disabled for security. Use build-time swagger.json for SDK generation.\n",
     );
   }
 
   // Write swagger.json alongside the compiled output — consumed by
   // Postman, SDK generators, and the admin builder stats page.
+  // Written regardless of enableSwagger so CI/CD can use it for codegen.
   const outPath = path.join(__dirname, "..", "swagger.json");
-  if (enableSwagger) {
-    fs.writeFileSync(outPath, JSON.stringify(document, null, 2), "utf8");
-  }
+  fs.writeFileSync(outPath, JSON.stringify(document, null, 2), "utf8");
 
   // ─── Public OpenAPI / Swagger UI ────────────────────────────────────────────
-  // These routes are public (no auth) so AI agents and SDK generators can
-  // discover the API schema programmatically.
+  // These routes are only available in non-production environments.
 
   const fastify = app.getHttpAdapter().getInstance();
 

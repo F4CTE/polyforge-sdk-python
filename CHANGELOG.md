@@ -5,19 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-<<<<<<< HEAD
 ## [Unreleased] — 2026-04-10
 
 ### Fixed (CI)
-- **Add E2E concurrency group to prevent port conflicts** — E2E jobs across different branches all share Docker Compose ports (3001, 3002, 5432) on the self-hosted runner; without serialization, concurrent E2E jobs fight over ports causing flaky failures or long waits; added `concurrency: { group: e2e-docker-compose, cancel-in-progress: false }` to the E2E job so they queue instead of conflicting
+- **Add E2E concurrency group to prevent port conflicts** — serialized E2E jobs to prevent Docker port conflicts on shared self-hosted runner
 
 ### Fixed (Security)
-- **#498 Hardcoded devpass in DIRECT_DATABASE_URL** — replaced all hardcoded `devpass` and `devpass_admin` credentials in `docker-compose.infra.yml` connection strings with `${POSTGRES_PASSWORD:-devpass}` and `${POSTGRES_ADMIN_PASSWORD:-devpass_admin}` env var substitution
-- **#499 rejectPlaceholderSecrets missing in 5 services** — added `rejectPlaceholderSecrets()` guard to `strategy-engine`, `market-data-service`, `notification-service`, `backtest-service`, and `paper-order-service`
-- **#500 Excessive rate limits on financial services** — lowered `ThrottlerModule` limits: `order-service` 100, `strategy-engine` 200, `backtest-service` 200, `paper-order-service` 200, `notification-service` 500, `market-data-service` 300
-- **#488 order-service missing `rejectPlaceholderSecrets` guard** — added `rejectPlaceholderSecrets()` to `order-service` `validateEnv()`
-- **#489 admin-api-service missing `rejectPlaceholderSecrets` guard** — same fix applied to `admin-api-service`; guards `ADMIN_JWT_SECRET` and `INTERNAL_JWT_SECRET`
-- **#487 Self-hosted CI runner pwn-request mitigation** — added top-level `permissions: contents: read` to CI workflow
+- **#498 Hardcoded devpass in DIRECT_DATABASE_URL** — parameterized with env var substitution
+- **#499 rejectPlaceholderSecrets missing in 5 services** — added guards to strategy-engine, market-data, notification, backtest, paper-order
+- **#500 Excessive rate limits** — lowered ThrottlerModule limits across financial services
+- **#488 order-service missing rejectPlaceholderSecrets** — added guard
+- **#489 admin-api-service missing rejectPlaceholderSecrets** — added guard
+- **#487 CI pwn-request mitigation** — added `permissions: contents: read` to workflow
+- **#502 BigInt JSON precision loss** — changed `Number()` to `toString()` for BigInt serialization
+- **#503 Swagger in production** — force-disabled when `NODE_ENV=production`
 
 ## [Unreleased] — 2026-04-09
 
