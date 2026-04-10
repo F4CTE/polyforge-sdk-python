@@ -17,7 +17,7 @@ export class CopyListPage {
     constructor(page: Page) {
         this.page = page;
         this.newCopyButton = page.locator('button', { hasText: 'New Copy Config' });
-        this.copyCards = page.locator('[data-testid="copy-card"]');
+        this.copyCards = page.locator('[data-testid="copy-config-card"]');
 
         this.statusFilter = {
             Active: page.locator('button', { hasText: 'Active' }),
@@ -40,7 +40,7 @@ export class CopyListPage {
     }
 
     getCopyByName(name: string): Locator {
-        return this.page.locator('[data-testid="copy-card"]', { hasText: name });
+        return this.page.locator('[data-testid="copy-config-card"]', { hasText: name });
     }
 
     async getCopyCount(): Promise<number> {

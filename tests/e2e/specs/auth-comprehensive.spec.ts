@@ -117,10 +117,19 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         await registerPage.username.fill(uniqueUsername());
         await registerPage.password.fill('Password123!');
         await registerPage.confirmPassword.fill('Password456!');
+        // Blur to trigger validation
+        await registerPage.email.click();
+        await page.waitForTimeout(300);
         await registerPage.tosCheckbox.check();
         await registerPage.submit.click();
 
-        const errText = await registerPage.errorText();
+        // Client-side validation renders inline field error at #register-confirm-password-error
+        // (not the server error banner). Same pattern as short password test.
+        const fieldError = page.locator('#register-confirm-password-error');
+        const serverError = registerPage.error;
+        const errorLocator = fieldError.or(serverError);
+        await expect(errorLocator).toBeVisible({ timeout: 5_000 });
+        const errText = (await errorLocator.first().textContent()) ?? '';
         expect(errText.toLowerCase()).toMatch(/match|confirm|password/);
     });
 

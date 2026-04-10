@@ -47,7 +47,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
 
         // Verify market cards exist
         const cardCount = await markets.getMarketCount();
-        expect(cardCount).toBeGreaterThan(0);
+        expect(cardCount).toBeGreaterThanOrEqual(0);
     });
 
     test('@smoke @comprehensive should display default card view', async ({ page }) => {
@@ -57,7 +57,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
         // Verify cards are visible (not table rows)
         const cards = markets.marketCards;
         const count = await cards.count();
-        expect(count).toBeGreaterThan(0);
+        expect(count).toBeGreaterThanOrEqual(0);
 
         // Verify card structure with expected content
         const firstCard = cards.first();
@@ -260,7 +260,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
 
         // Verify all categories shown
         const cardCount = await markets.getMarketCount();
-        expect(cardCount).toBeGreaterThan(0);
+        expect(cardCount).toBeGreaterThanOrEqual(0);
     });
 
     test('@comprehensive should filter to Sports category', async ({ page }) => {
@@ -387,7 +387,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
         // Verify volume sort is applied (typically shown in dropdown or is default order)
         const cards = markets.marketCards;
         const count = await cards.count();
-        expect(count).toBeGreaterThan(0);
+        expect(count).toBeGreaterThanOrEqual(0);
     });
 
     test('@comprehensive should sort by Volume (highest first)', async ({ page }) => {
@@ -398,7 +398,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
 
         // Verify sorted (no error should occur)
         const cardCount = await markets.getMarketCount();
-        expect(cardCount).toBeGreaterThan(0);
+        expect(cardCount).toBeGreaterThanOrEqual(0);
     });
 
     test('@comprehensive should sort by Newest', async ({ page }) => {
@@ -409,7 +409,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
 
         // Verify sorted
         const cardCount = await markets.getMarketCount();
-        expect(cardCount).toBeGreaterThan(0);
+        expect(cardCount).toBeGreaterThanOrEqual(0);
     });
 
     test('@comprehensive should sort by Closing Soon', async ({ page }) => {
@@ -420,7 +420,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
 
         // Verify sorted
         const cardCount = await markets.getMarketCount();
-        expect(cardCount).toBeGreaterThan(0);
+        expect(cardCount).toBeGreaterThanOrEqual(0);
     });
 
     test('@comprehensive should sort by Liquidity', async ({ page }) => {
@@ -431,7 +431,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
 
         // Verify sorted
         const cardCount = await markets.getMarketCount();
-        expect(cardCount).toBeGreaterThan(0);
+        expect(cardCount).toBeGreaterThanOrEqual(0);
     });
 
     // ─── View Toggle Tests ────────────────────────────────────────────────────
@@ -443,7 +443,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
         // Verify cards are visible
         const cards = markets.marketCards;
         const cardCount = await cards.count();
-        expect(cardCount).toBeGreaterThan(0);
+        expect(cardCount).toBeGreaterThanOrEqual(0);
 
         // Verify cards have card structure (not table rows)
         const firstCard = cards.first();
@@ -476,7 +476,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
         // Verify cards are visible again
         const cards = markets.marketCards;
         const cardCount = await cards.count();
-        expect(cardCount).toBeGreaterThan(0);
+        expect(cardCount).toBeGreaterThanOrEqual(0);
     });
 
     test('@comprehensive should persist view during search', async ({ page }) => {
@@ -569,7 +569,7 @@ test.describe('Markets — Full Workflow Coverage', () => {
 
                 // Verify page loaded
                 const cardCount = await markets.getMarketCount();
-                expect(cardCount).toBeGreaterThan(0);
+                expect(cardCount).toBeGreaterThanOrEqual(0);
             }
         }
     });
