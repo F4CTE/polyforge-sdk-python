@@ -63,6 +63,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-04-07
 
+### Fixed
+- **Align key-rotation.service.spec.ts with refactored KeyRotationService interface (closes #440)** — rewrote stale tests that referenced removed `activeSecretsCount`, `secretHash`, and `gracePeriodSeconds` properties; added proper `getClient()` mock with SCAN/DEL for `flushSessionKeys()`; all 7 tests now match the session-invalidation model and `pnpm typecheck` passes on `@polyforge/admin-api-service`
+
 ### Fixed (Security)
 - **Replace mathjs keyword blocklist with restricted mathjs instance (closes #391)** — created a limited mathjs instance via `create(all)` that removes dangerous functions (`evaluate`, `parse`, `compile`, `import`, `createUnit`, `simplify`, `derivative`, `rationalize`, `help`) as primary defense; existing keyword blocklist, character limit, and exponentiation depth cap retained as secondary safeguards; extracted shared `safeEvaluate` into `common/safe-evaluate.ts` to eliminate duplication between `logic.blocks.ts` and `strategy-runner.ts`
 
