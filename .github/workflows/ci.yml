@@ -12,8 +12,13 @@ on:
 permissions:
   contents: read
 
+# All 3 self-hosted runners share one physical host (polyforge-lab, 30 GB RAM).
+# Per-ref concurrency (ci-${{ github.ref }}) allowed 3+ branches to run in
+# parallel, exhausting memory and crashing Docker services mid-E2E (#517).
+# A single global group ensures only one pipeline occupies the runners at a time.
+# cancel-in-progress: true so the newest push always wins.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-polyforge
   cancel-in-progress: true
 
 env:
@@ -170,6 +175,27 @@ jobs:
       - name: Build shared packages
         run: pnpm turbo build --filter=./packages/*
 
+      # ── Pre-flight: ensure enough resources for the Docker stack ────────
+      - name: Resource pre-flight check
+        run: |
+          echo "=== Memory ==="
+          free -m
+          AVAIL_MB=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo)
+          echo "Available: ${AVAIL_MB}MB"
+          if [ "$AVAIL_MB" -lt 8000 ]; then
+            echo "::warning::Low memory (${AVAIL_MB}MB available). Cleaning up to free resources."
+            # Kill leftover dev containers that shouldn't be running during CI
+            docker ps -q --filter "name=polyforge-dev" | xargs -r docker stop 2>/dev/null || true
+            docker ps -aq --filter "name=polyforge-dev" | xargs -r docker rm -f 2>/dev/null || true
+            docker image prune -f 2>/dev/null || true
+            echo "Rechecking..."
+            free -m
+          fi
+          echo "=== Disk ==="
+          df -h / | tail -1
+          echo "=== Docker ==="
+          docker system df
+
       # ── Start the full Docker stack ──────────────────────────────────────
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -315,9 +341,24 @@ jobs:
       - name: Stop Docker Compose
         if: always()
         run: |
-          docker compose -f docker-compose.infra.yml down -v --rmi local
+          docker compose -f docker-compose.infra.yml down -v --rmi local --timeout 30
+          # Remove any orphaned containers from cancelled runs
+          docker ps -aq --filter "name=polyforge-dev" | xargs -r docker rm -f 2>/dev/null || true
+          docker network prune -f 2>/dev/null || true
           docker image prune -f --filter "until=2h"
           docker builder prune -f --keep-storage 10GB
+
+      - name: Garbage-collect build-cache registry
+        if: always()
+        run: |
+          # The registry on port 5002 grows unbounded (observed 189GB).
+          # Run GC inside the registry container to reclaim unreferenced blobs.
+          if docker ps -q --filter "name=polyforge-buildcache-registry" | grep -q .; then
+            docker exec polyforge-buildcache-registry \
+              bin/registry garbage-collect /etc/docker/registry/config.yml --delete-untagged 2>&1 || true
+            echo "Build-cache registry size after GC:"
+            du -sh /opt/polyforge-buildcache-registry 2>/dev/null || true
+          fi
 
   # ── 4. Deploy to AWS ────────────────────────────────────────────────────
   deploy:
