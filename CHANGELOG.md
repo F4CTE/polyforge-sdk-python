@@ -14,10 +14,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Add `aria-pressed` to order status filter buttons** — improves a11y and aligns with E2E test expectations
 
 ### Fixed
-- **Align key-rotation.service.spec.ts with refactored KeyRotationService interface (closes #440)** — rewrote stale tests that referenced removed `activeSecretsCount`, `secretHash`, and `gracePeriodSeconds` properties; added proper `getClient()` mock with SCAN/DEL for `flushSessionKeys()`; all 7 tests now match the session-invalidation model and `pnpm typecheck` passes on `@polyforge/admin-api-service`
+- **#440 key-rotation spec alignment** — rewrote stale tests to match refactored KeyRotationService interface
 
-### Fixed
-- **Align key-rotation.service.spec.ts with refactored KeyRotationService interface (closes #440)** — rewrote stale tests that referenced removed `activeSecretsCount`, `secretHash`, and `gracePeriodSeconds` properties; added proper `getClient()` mock with SCAN/DEL for `flushSessionKeys()`; all 7 tests now match the session-invalidation model and `pnpm typecheck` passes on `@polyforge/admin-api-service`
+### Fixed (Design / Tokens)
+- **#447 Charter-defined glow shadow tokens** — added `shadow-pf-ring-cyan`, `shadow-pf-glow-cyan`, `shadow-pf-glow-cyan-strong` to globals.css
 
 ### Fixed (Security)
 - **#498 Hardcoded devpass in DIRECT_DATABASE_URL** — parameterized with env var substitution

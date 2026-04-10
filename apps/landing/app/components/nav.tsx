@@ -200,7 +200,7 @@ export function Nav() {
           </a>
           <a
             href="/register"
-            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast transition-all duration-pf-normal hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_color-mix(in_srgb,var(--color-pf-cyan-500)_30%,transparent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+            className="inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast transition-all duration-pf-normal hover:bg-pf-cyan-400 hover:shadow-pf-glow-cyan-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
           >
             Start building free
           </a>
@@ -271,7 +271,7 @@ export function Nav() {
         <a
           href="/register"
           onClick={closeMobile}
-          className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast transition-all duration-pf-normal hover:bg-pf-cyan-400 hover:shadow-[0_0_20px_color-mix(in_srgb,var(--color-pf-cyan-500)_30%,transparent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
+          className="mt-2 block text-center text-sm font-semibold px-4 py-2 rounded-pf-sm bg-pf-cyan-500 text-pf-text-contrast transition-all duration-pf-normal hover:bg-pf-cyan-400 hover:shadow-pf-glow-cyan-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400"
         >
           Start building free
         </a>

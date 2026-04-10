@@ -105,6 +105,11 @@
   --shadow-pf-xl: 0 20px 25px rgba(0, 0, 0, 0.35);
   --shadow-pf-2xl: 0 25px 50px rgba(0, 0, 0, 0.4);
 
+  /* Glow / ring shadows (per design charter §2 — Elevation) */
+  --shadow-pf-ring-cyan: 0 0 0 2px color-mix(in srgb, var(--color-pf-cyan-500) 20%, transparent);
+  --shadow-pf-glow-cyan: 0 0 12px color-mix(in srgb, var(--color-pf-cyan-500) 8%, transparent);
+  --shadow-pf-glow-cyan-strong: 0 0 20px color-mix(in srgb, var(--color-pf-cyan-500) 30%, transparent);
+
   /* Radius */
   --radius-pf-xs: 4px;
   --radius-pf-sm: 6px;
@@ -446,4 +451,9 @@ body {
   --shadow-pf-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
   --shadow-pf-xl: 0 16px 40px rgba(0, 0, 0, 0.15);
   --shadow-pf-2xl: 0 24px 60px rgba(0, 0, 0, 0.2);
+
+  /* Glow / ring shadows — reduced intensity for light mode */
+  --shadow-pf-ring-cyan: 0 0 0 2px color-mix(in srgb, var(--color-pf-cyan-500) 15%, transparent);
+  --shadow-pf-glow-cyan: 0 0 12px color-mix(in srgb, var(--color-pf-cyan-500) 5%, transparent);
+  --shadow-pf-glow-cyan-strong: 0 0 20px color-mix(in srgb, var(--color-pf-cyan-500) 20%, transparent);
 }
