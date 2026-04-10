@@ -397,8 +397,7 @@ export function Component() {
                       </span>
                       <span
                         data-testid="sentiment-indicator"
-                        style={{ color: article.sentiment === 'POSITIVE' ? '#22c55e' : article.sentiment === 'NEGATIVE' ? '#ef4444' : '#94a3b8' }}
-                        className="sr-only"
+                        className={`sr-only ${article.sentiment === 'POSITIVE' ? 'text-pf-success' : article.sentiment === 'NEGATIVE' ? 'text-pf-danger' : 'text-pf-text-muted'}`}
                         aria-hidden="true"
                       >
                         {article.sentiment}

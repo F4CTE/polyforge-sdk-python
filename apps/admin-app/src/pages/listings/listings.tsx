@@ -375,7 +375,7 @@ export function Component() {
           >
             {tab.label}
             {tab.value === 'PENDING' && pendingCount > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-pf-full bg-pf-warning text-pf-micro font-bold text-pf-text-contrast">
+              <span className="ml-2 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-pf-full bg-pf-warning text-pf-micro font-bold text-pf-text-contrast">
                 {pendingCount}
               </span>
             )}

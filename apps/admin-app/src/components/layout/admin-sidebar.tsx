@@ -180,7 +180,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                     <>
                       <span className="truncate">{item.label}</span>
                       {item.label === 'Tickets' && openTickets > 0 && (
-                        <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-2 rounded-pf-full bg-pf-cyan-500 text-pf-caption font-bold text-pf-text-contrast" aria-label={`${openTickets} open tickets`}>
+                        <span className="ml-auto flex items-center justify-center min-w-5 h-5 px-2 rounded-pf-full bg-pf-cyan-500 text-pf-caption font-bold text-pf-text-contrast" aria-label={`${openTickets} open tickets`}>
                           {openTickets}
                         </span>
                       )}

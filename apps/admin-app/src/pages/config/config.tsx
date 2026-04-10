@@ -500,7 +500,7 @@ export function Component() {
             className={[
               'inline-flex items-center gap-2 rounded-pf px-4 py-2 text-sm font-semibold transition-all',
               dirty && !saving
-                ? 'bg-pf-cyan-500 text-pf-text-contrast hover:brightness-110 cursor-pointer'
+                ? 'bg-pf-cyan-500 text-pf-text-contrast hover:bg-pf-cyan-400 transition-colors duration-pf-fast cursor-pointer'
                 : 'bg-pf-elevated border border-pf-border text-pf-text-muted cursor-not-allowed opacity-50',
             ].join(' ')}
           >
