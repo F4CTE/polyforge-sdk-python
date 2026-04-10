@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased] — 2026-04-10
 
 ### Fixed (CI)
+- **#517 Docker memory limits** — added `mem_limit` to all 23 Docker Compose services (total ceiling ~9.5GB vs ~22GB+ unbounded) and `NODE_OPTIONS --max-old-space-size` to all NestJS services to prevent OOM during CI E2E runs
 - **Add E2E concurrency group to prevent port conflicts** — serialized E2E jobs to prevent Docker port conflicts on shared self-hosted runner
 
 ### Fixed (Accessibility)
