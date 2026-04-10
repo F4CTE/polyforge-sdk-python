@@ -5,11 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-<<<<<<< HEAD
 ## [Unreleased] — 2026-04-10
 
 ### Fixed (CI)
 - **Add E2E concurrency group to prevent port conflicts** — serialized E2E jobs to prevent Docker port conflicts on shared self-hosted runner
+
+### Fixed (Accessibility)
+- **Add `aria-pressed` to order status filter buttons** — improves a11y and aligns with E2E test expectations
 
 ### Fixed (Security)
 - **#498 Hardcoded devpass in DIRECT_DATABASE_URL** — parameterized with env var substitution
