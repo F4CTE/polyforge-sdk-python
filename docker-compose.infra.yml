@@ -291,6 +291,7 @@ services:
   # ─── PAPER ORDER SERVICE ─────────────────────────────────────────────────
 
   paper-order-service:
+    profiles: [full]
     build:
       context: .
       dockerfile: services/paper-order-service/Dockerfile
@@ -333,6 +334,7 @@ services:
   # ─── NOTIFICATION SERVICE ────────────────────────────────────────────────
 
   notification-service:
+    profiles: [full]
     build:
       context: .
       dockerfile: services/notification-service/Dockerfile
@@ -365,6 +367,7 @@ services:
   # ─── BOT SERVICE ─────────────────────────────────────────────────────────
 
   bot-service:
+    profiles: [full]
     build:
       context: .
       dockerfile: services/bot-service/Dockerfile
@@ -536,6 +539,7 @@ services:
   # ─── MARKET DATA SERVICE ─────────────────────────────────────────────────
 
   market-data-service:
+    profiles: [full]
     build:
       context: .
       dockerfile: services/market-data-service/Dockerfile
