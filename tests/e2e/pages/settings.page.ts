@@ -166,7 +166,6 @@ export class SettingsPage {
 
     async goToProfileTab(): Promise<void> {
         await this.profileTab.click();
-        await this.page.waitForTimeout(300);
     }
 
     async goToNotificationsTab(): Promise<void> {
@@ -180,22 +179,18 @@ export class SettingsPage {
 
     async goToPasswordTab(): Promise<void> {
         await this.passwordTab.click();
-        await this.page.waitForTimeout(300);
     }
 
     async goTo2FATab(): Promise<void> {
         await this.twoFactorTab.click();
-        await this.page.waitForTimeout(300);
     }
 
     async goToAPIKeysTab(): Promise<void> {
         await this.apiKeysTab.click();
-        await this.page.waitForTimeout(300);
     }
 
     async goToGasTab(): Promise<void> {
         await this.gasTab.click();
-        await this.page.waitForTimeout(300);
     }
 
     async updateProfile(data: { displayName?: string; bio?: string; avatarUrl?: string }): Promise<void> {
@@ -209,7 +204,6 @@ export class SettingsPage {
             await this.avatarUrlInput.fill(data.avatarUrl);
         }
         await this.saveProfileButton.click();
-        await this.page.waitForTimeout(300);
     }
 
     async toggleNotification(name: keyof typeof this.notificationCheckboxes): Promise<void> {
@@ -218,7 +212,6 @@ export class SettingsPage {
 
     async saveNotifications(): Promise<void> {
         await this.saveNotificationsButton.click();
-        await this.page.waitForTimeout(300);
     }
 
     async changePassword(currentPassword: string, newPassword: string): Promise<void> {
@@ -226,7 +219,6 @@ export class SettingsPage {
         await this.newPasswordInput.fill(newPassword);
         await this.confirmPasswordInput.fill(newPassword);
         await this.changePasswordButton.click();
-        await this.page.waitForTimeout(300);
     }
 
     /** Enter 2FA setup flow from the disabled view, then submit the TOTP code. */
@@ -238,14 +230,12 @@ export class SettingsPage {
         await expect(this.qrCode).toBeVisible({ timeout: 10_000 });
         await this.totpCodeInput.fill(totpCode);
         await this.enable2faButton.click();
-        await this.page.waitForTimeout(300);
     }
 
     async disable2FA(): Promise<void> {
         await this.disable2faButton.click();
         await expect(this.page.locator('[role="dialog"]')).toBeVisible();
         await this.page.locator('[role="dialog"] button', { hasText: 'Confirm' }).click();
-        await this.page.waitForTimeout(300);
     }
 
     async getBackupCodes(): Promise<string> {
@@ -268,7 +258,6 @@ export class SettingsPage {
         }
 
         await this.createKeyButton.click();
-        await this.page.waitForTimeout(300);
     }
 
     async getCreatedApiKey(): Promise<string> {
@@ -285,7 +274,7 @@ export class SettingsPage {
         // revokeApiKey() in the component uses window.confirm() — handle with Playwright dialog event
         this.page.once('dialog', async dialog => { await dialog.accept(); });
         await this.getRevokeButton(keyName).click();
-        await this.page.waitForTimeout(500);
+        await expect(this.getRevokeButton(keyName)).toBeHidden({ timeout: 5_000 }).catch(() => {});
     }
 
     async deleteAccount(password: string): Promise<void> {
@@ -293,7 +282,6 @@ export class SettingsPage {
         await expect(this.deleteConfirmDialog).toBeVisible();
         await this.deletePasswordInput.fill(password);
         await this.deleteConfirmButton.click();
-        await this.page.waitForTimeout(300);
     }
 
     async getGasUsage(): Promise<{ daily: string; remaining: string }> {

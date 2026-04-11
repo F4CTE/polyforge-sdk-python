@@ -34,7 +34,6 @@ export class LeaderboardPage {
 
     async selectPeriod(period: '7d' | '30d' | 'allTime'): Promise<void> {
         await this.periodTabs[period].click();
-        await this.page.waitForTimeout(300);
     }
 
     async getTraderByRank(rank: number): Promise<string> {
@@ -51,7 +50,6 @@ export class LeaderboardPage {
 
     async goToProfile(username: string): Promise<void> {
         await this.page.locator(`[data-testid="trader-${username}"]`).click();
-        await this.page.waitForTimeout(300);
     }
 
     async goToPage(direction: 'next' | 'prev'): Promise<void> {
@@ -60,6 +58,5 @@ export class LeaderboardPage {
         } else {
             await this.paginationPrev.click();
         }
-        await this.page.waitForTimeout(300);
     }
 }

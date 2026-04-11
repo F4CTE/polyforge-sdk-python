@@ -206,7 +206,6 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
         const collapseBtn = page.locator('button[data-testid="sidebar-toggle"], [aria-label*="collapse"], [aria-label*="toggle"]').first();
         if (await collapseBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
             await collapseBtn.click();
-            await page.waitForTimeout(300);
 
             const collapsedWidth = await sidebar.boundingBox().then(box => box?.width ?? 0);
             expect(collapsedWidth).toBeLessThan(initialWidth);
@@ -225,11 +224,9 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
         const collapseBtn = page.locator('button[data-testid="sidebar-toggle"], [aria-label*="collapse"], [aria-label*="toggle"]').first();
         if (await collapseBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
             await collapseBtn.click();
-            await page.waitForTimeout(300);
 
             // Then expand
             await collapseBtn.click();
-            await page.waitForTimeout(300);
 
             // Text labels should be visible again
             const marketLabel = sidebar.locator('span, div', { hasText: /Markets/ });
@@ -270,7 +267,6 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
             const isDark = initialClass?.includes('dark');
 
             await themeToggle.click();
-            await page.waitForTimeout(300);
 
             // Check theme changed
             const newClass = await htmlEl.getAttribute('class');
@@ -289,7 +285,6 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
             const initialClass = await htmlEl.getAttribute('class');
             if (!initialClass?.includes('dark')) {
                 await themeToggle.click();
-                await page.waitForTimeout(300);
             }
 
             // Store dark mode state
@@ -329,7 +324,6 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
 
         if (await notifBell.isVisible({ timeout: 2000 }).catch(() => false)) {
             await notifBell.click();
-            await page.waitForTimeout(300);
 
             // Check for notification dropdown/popover
             const dropdown = page.locator('[role="menu"], [data-testid="notification-dropdown"], .popover').first();
@@ -346,13 +340,11 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
 
         if (await notifBell.isVisible({ timeout: 2000 }).catch(() => false)) {
             await notifBell.click();
-            await page.waitForTimeout(300);
 
             // Find and click "Mark all as read"
             const markAllBtn = page.locator('button', { hasText: /mark all|read/i });
             if (await markAllBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
                 await markAllBtn.click();
-                await page.waitForTimeout(300);
 
                 // Badge should disappear or show 0
                 const badge = notifBell.locator('[data-testid="badge"], .badge').first();
@@ -371,7 +363,6 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
 
         if (await userMenu.isVisible({ timeout: 2000 }).catch(() => false)) {
             await userMenu.click();
-            await page.waitForTimeout(300);
 
             // Check for dropdown menu
             const dropdown = page.locator('[role="menu"], [data-testid="user-dropdown"]').first();
@@ -386,7 +377,6 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
 
         if (await userMenu.isVisible({ timeout: 2000 }).catch(() => false)) {
             await userMenu.click();
-            await page.waitForTimeout(300);
 
             const profileLink = page.locator('a, button', { hasText: /profile/i });
             if (await profileLink.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -402,7 +392,6 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
 
         if (await userMenu.isVisible({ timeout: 2000 }).catch(() => false)) {
             await userMenu.click();
-            await page.waitForTimeout(300);
 
             const settingsLink = page.locator('a, button', { hasText: /settings/i });
             if (await settingsLink.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -418,7 +407,6 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
 
         if (await userMenu.isVisible({ timeout: 2000 }).catch(() => false)) {
             await userMenu.click();
-            await page.waitForTimeout(300);
 
             const signOutLink = page.locator('a, button', { hasText: /sign out|logout|exit/i });
             if (await signOutLink.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -449,7 +437,6 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
         const hamburger = page.locator('button[data-testid="menu-toggle"], [aria-label*="menu"], [aria-label*="toggle"]').first();
         if (await hamburger.isVisible({ timeout: 2000 }).catch(() => false)) {
             await hamburger.click();
-            await page.waitForTimeout(300);
 
             // Sidebar should be visible now
             const sidebar = page.locator('[role="navigation"], nav, [data-testid="sidebar"]').first();
@@ -464,7 +451,6 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
         const hamburger = page.locator('button[data-testid="menu-toggle"], [aria-label*="menu"], [aria-label*="toggle"]').first();
         if (await hamburger.isVisible({ timeout: 2000 }).catch(() => false)) {
             await hamburger.click();
-            await page.waitForTimeout(300);
 
             const sidebar = page.locator('[role="navigation"], nav, [data-testid="sidebar"]').first();
             await expect(sidebar).toBeVisible();
@@ -473,7 +459,6 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
             const main = page.locator('main, [role="main"]').first();
             if (await main.isVisible({ timeout: 1000 }).catch(() => false)) {
                 await main.click({ position: { x: 10, y: 10 } });
-                await page.waitForTimeout(300);
 
                 const isHidden = !(await sidebar.isVisible({ timeout: 2000 }).catch(() => false));
                 expect(isHidden).toBe(true);
@@ -488,7 +473,6 @@ test.describe.serial('Navigation — Full Workflow Coverage', () => {
         const hamburger = page.locator('button[data-testid="menu-toggle"], [aria-label*="menu"], [aria-label*="toggle"]').first();
         if (await hamburger.isVisible({ timeout: 2000 }).catch(() => false)) {
             await hamburger.click();
-            await page.waitForTimeout(300);
 
             // Click a nav link
             const sidebar = page.locator('[role="navigation"], nav, [data-testid="sidebar"]').first();

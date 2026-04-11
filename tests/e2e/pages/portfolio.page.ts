@@ -46,7 +46,6 @@ export class PortfolioPage {
 
     async selectPeriod(period: '7d' | '30d' | '90d' | 'All'): Promise<void> {
         await this.periodButtons[period].click();
-        await this.page.waitForTimeout(300);
     }
 
     async switchToLive(): Promise<void> {
@@ -74,21 +73,18 @@ export class PortfolioPage {
         await this.getClosePositionButton(market).click();
         await expect(this.resetConfirmDialog).toBeVisible();
         await this.resetConfirmButton.click();
-        await this.page.waitForTimeout(300);
     }
 
     async redeemPosition(market: string): Promise<void> {
         await this.getRedeemButton(market).click();
         await expect(this.resetConfirmDialog).toBeVisible();
         await this.resetConfirmButton.click();
-        await this.page.waitForTimeout(300);
     }
 
     async resetPaperAccount(): Promise<void> {
         await this.resetPaperButton.click();
         await expect(this.resetConfirmDialog).toBeVisible();
         await this.resetConfirmButton.click();
-        await this.page.waitForTimeout(300);
     }
 
     async getSummaryStats(): Promise<{ pnl: string; return: string; win_rate: string }> {

@@ -87,12 +87,10 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
             await whaleFeedPage.goto();
 
             await whaleFeedPage.setMinSize('1000');
-            await page.waitForTimeout(300);
 
             const count1000 = await whaleFeedPage.getItemCount();
 
             await whaleFeedPage.setMinSize('10000');
-            await page.waitForTimeout(300);
 
             const count10000 = await whaleFeedPage.getItemCount();
 
@@ -108,13 +106,11 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
 
             // Set high minimum first
             await whaleFeedPage.setMinSize('10000');
-            await page.waitForTimeout(300);
 
             const filteredCount = await whaleFeedPage.getItemCount();
 
             // Reset to 0
             await whaleFeedPage.setMinSize('0');
-            await page.waitForTimeout(300);
 
             const resetCount = await whaleFeedPage.getItemCount();
 
@@ -128,7 +124,6 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
 
             // Set minimum size
             await whaleFeedPage.setMinSize('5000');
-            await page.waitForTimeout(300);
 
             const minSizeValue = await whaleFeedPage.minSizeInput.inputValue();
 
@@ -188,7 +183,6 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
 
                 // Click follow
                 await followButton.click();
-                await page.waitForTimeout(300);
 
                 // Button should change
                 const afterClickButton = firstItem.locator('button', { hasText: /following|unfollow/i });
@@ -214,12 +208,10 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
 
                 // Follow first
                 await followButton.click();
-                await page.waitForTimeout(300);
 
                 // Now unfollow
                 const unfollowButton = whaleFeedPage.getUnfollowButton(trimmedAddress);
                 await unfollowButton.click();
-                await page.waitForTimeout(300);
 
                 // Button should revert to Follow
                 const revertedButton = firstItem.locator('button', { hasText: /follow/i });
@@ -243,11 +235,9 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
 
                 // Follow the whale
                 await followButton.click();
-                await page.waitForTimeout(300);
 
                 // Refresh page
                 await page.reload();
-                await page.waitForTimeout(300);
 
                 // Verify follow state persisted
                 const unfollowButton = whaleFeedPage.getUnfollowButton(trimmedAddress);
@@ -278,7 +268,6 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
                 const trimmedAddress = address.trim();
                 const followButton = whaleFeedPage.getFollowButton(trimmedAddress);
                 await followButton.click();
-                await page.waitForTimeout(300);
 
                 // Navigate to following page
                 await whaleFeedPage.goToFollowing();
@@ -305,7 +294,6 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
                 // Only click if still visible (not already following)
                 if (await followButton.isVisible()) {
                     await followButton.click();
-                    await page.waitForTimeout(300);
                 }
 
                 // Navigate to following page
@@ -337,7 +325,6 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
                 const trimmedAddress = address.trim();
                 const followButton = whaleFeedPage.getFollowButton(trimmedAddress);
                 await followButton.click();
-                await page.waitForTimeout(300);
 
                 // Go to following page
                 await whaleFeedPage.goToFollowing();
@@ -347,7 +334,6 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
                 // Unfollow from the list
                 const unfollowButton = page.locator(`[data-testid="unfollow-${trimmedAddress}"]`);
                 await unfollowButton.click();
-                await page.waitForTimeout(300);
 
                 const afterUnfollowCount = await whaleFeedPage.getItemCount();
 
@@ -384,7 +370,6 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
             const address = await addressElement.textContent();
             if (address) {
                 await addressElement.click();
-                await page.waitForTimeout(300);
 
                 expect(page.url()).toMatch(/\/whales\/[a-zA-Z0-9]+/);
             }
@@ -400,7 +385,6 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
             const address = await addressElement.textContent();
             if (address) {
                 await addressElement.click();
-                await page.waitForTimeout(300);
 
                 // Verify trading history is shown
                 const history = page.locator('[data-testid="trading-history"]');
@@ -418,7 +402,6 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
             const address = await addressElement.textContent();
             if (address) {
                 await addressElement.click();
-                await page.waitForTimeout(300);
 
                 // Check for stats
                 const winRate = page.locator('[data-testid="whale-win-rate"]');
@@ -441,7 +424,6 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
             const address = await addressElement.textContent();
             if (address) {
                 await addressElement.click();
-                await page.waitForTimeout(300);
 
                 const followButton = page.locator('button', { hasText: /follow|unfollow/i });
                 await expect(followButton).toBeVisible();
@@ -461,7 +443,6 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
             const address = await addressElement.textContent();
             if (address) {
                 await addressElement.click();
-                await page.waitForTimeout(300);
 
                 const copyTradeButton = page.locator('button', { hasText: /copy trade|copy this trader/i });
 

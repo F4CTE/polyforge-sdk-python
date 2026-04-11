@@ -36,7 +36,6 @@ export class CopyListPage {
 
     async goToNewCopy(): Promise<void> {
         await this.newCopyButton.click();
-        await this.page.waitForTimeout(300);
     }
 
     getCopyByName(name: string): Locator {
@@ -57,6 +56,5 @@ export class CopyListPage {
         } else {
             await this.paginationPrev.click();
         }
-        await this.page.waitForTimeout(300);
     }
 }

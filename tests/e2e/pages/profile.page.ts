@@ -40,7 +40,6 @@ export class ProfilePage {
 
     async goToEditProfile(): Promise<void> {
         await this.editProfileButton.click();
-        await this.page.waitForTimeout(300);
     }
 
     async getDisplayName(): Promise<string> {
@@ -65,16 +64,13 @@ export class ProfilePage {
 
     async goToSettings(): Promise<void> {
         await this.settingsLink.click();
-        await this.page.waitForTimeout(300);
     }
 
     async goToTradingAccount(): Promise<void> {
         await this.tradingAccountLink.click();
-        await this.page.waitForTimeout(300);
     }
 
     async goToMyStrategies(): Promise<void> {
         await this.myStrategiesLink.click();
-        await this.page.waitForTimeout(300);
     }
 }

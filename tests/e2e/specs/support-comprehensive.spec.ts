@@ -143,7 +143,6 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         if (count > 0) {
             const firstItem = faqItems.first();
             await firstItem.click();
-            await page.waitForTimeout(300);
 
             // Check if expanded (usually aria-expanded or visible content)
             const expanded = await firstItem.getAttribute('aria-expanded');
@@ -162,11 +161,9 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
 
             // Click to expand
             await firstItem.click();
-            await page.waitForTimeout(300);
 
             // Click to collapse
             await firstItem.click();
-            await page.waitForTimeout(300);
 
             const expanded = await firstItem.getAttribute('aria-expanded');
             expect(expanded === 'false' || expanded === undefined).toBe(true);
@@ -183,7 +180,6 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             // Expand first two items
             await faqItems.nth(0).click();
             await faqItems.nth(1).click();
-            await page.waitForTimeout(300);
 
             const firstExpanded = await faqItems.nth(0).getAttribute('aria-expanded');
             const secondExpanded = await faqItems.nth(1).getAttribute('aria-expanded');
@@ -200,7 +196,6 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
 
         if (count > 0) {
             await faqItems.first().click();
-            await page.waitForTimeout(300);
 
             const content = page.locator('[data-testid="faq-content"], .faq-answer');
             const text = await content.textContent();
@@ -277,7 +272,6 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             description: `Test billing inquiry created at ${timestamp}`,
         });
 
-        await page.waitForTimeout(300);
         expect(page.url()).not.toContain('/support/new');
     });
 
@@ -292,7 +286,6 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             description: `Test technical inquiry created at ${timestamp}`,
         });
 
-        await page.waitForTimeout(300);
         expect(page.url()).not.toContain('/support/new');
     });
 
@@ -307,7 +300,6 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             description: `Test account inquiry created at ${timestamp}`,
         });
 
-        await page.waitForTimeout(300);
         expect(page.url()).not.toContain('/support/new');
     });
 
@@ -322,7 +314,6 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             description: `Test bug report created at ${timestamp}`,
         });
 
-        await page.waitForTimeout(300);
         expect(page.url()).not.toContain('/support/new');
     });
 
@@ -337,7 +328,6 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             description: `Test feature request created at ${timestamp}`,
         });
 
-        await page.waitForTimeout(300);
         expect(page.url()).not.toContain('/support/new');
     });
 
@@ -358,11 +348,9 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             description: 'Test low priority ticket',
         });
 
-        await page.waitForTimeout(300);
 
         // Navigate to ticket list to verify priority
         await supportPage.gotoTickets();
-        await page.waitForTimeout(300);
 
         const ticketRow = page.locator(`text=${subject}`);
         const priorityBadge = ticketRow.locator('[data-testid="priority-badge"]').or(ticketRow.locator('text=/LOW/i'));
@@ -384,7 +372,6 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             description: 'Test medium priority ticket',
         });
 
-        await page.waitForTimeout(300);
         await supportPage.gotoTickets();
 
         const ticketRow = page.locator(`text=${subject}`);
@@ -405,7 +392,6 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             description: 'Test high priority ticket',
         });
 
-        await page.waitForTimeout(300);
         await supportPage.gotoTickets();
 
         const ticketRow = page.locator(`text=${subject}`);
@@ -426,7 +412,6 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             description: 'Test urgent priority ticket',
         });
 
-        await page.waitForTimeout(300);
         await supportPage.gotoTickets();
 
         const ticketRow = page.locator(`text=${subject}`);
@@ -512,7 +497,6 @@ Line 4`;
             description: `Test with long subject at ${timestamp}`,
         });
 
-        await page.waitForTimeout(300);
         // Should complete successfully or show validation error
     });
 
@@ -528,7 +512,6 @@ Line 4`;
             description: 'Test with special characters',
         });
 
-        await page.waitForTimeout(300);
         expect(page.url()).not.toContain('/support/new');
     });
 
@@ -549,14 +532,12 @@ Line 4`;
             description: 'Test ticket for detail view',
         });
 
-        await page.waitForTimeout(300);
 
         // Now navigate to tickets list and click the ticket
         await supportPage.gotoTickets();
         const ticketRow = page.locator(`text=${subject}`);
         await ticketRow.click();
 
-        await page.waitForTimeout(300);
         expect(page.url()).toContain('/support');
         // URL might be /support/:id
     });
@@ -569,7 +550,6 @@ Line 4`;
         if (count > 0) {
             // Click first ticket
             await allTickets.first().click();
-            await page.waitForTimeout(300);
 
             // Verify details are displayed
             const subject = page.locator('[data-testid="ticket-subject"]');
@@ -589,7 +569,6 @@ Line 4`;
 
         if (count > 0) {
             await allTickets.first().click();
-            await page.waitForTimeout(300);
 
             // Look for message thread
             const messageThread = page.locator('[data-testid="message-thread"], [class*="messages"], [class*="thread"]');
@@ -606,7 +585,6 @@ Line 4`;
 
         if (count > 0) {
             await allTickets.first().click();
-            await page.waitForTimeout(300);
 
             // Check if ticket is OPEN status
             const status = page.locator('[data-testid="ticket-status"]');
@@ -627,7 +605,6 @@ Line 4`;
 
         if (count > 0) {
             await allTickets.first().click();
-            await page.waitForTimeout(300);
 
             const replyTextarea = page.locator('[data-testid="reply-textarea"], textarea[placeholder*="Reply"]');
 
@@ -638,7 +615,6 @@ Line 4`;
                 const submitButton = page.locator('button:has-text("Submit"), button:has-text("Reply"), button:has-text("Send")').first();
                 await submitButton.click();
 
-                await page.waitForTimeout(300);
 
                 // Verify reply appears in thread
                 const messageInThread = page.locator(`text=${replyText}`);
@@ -654,7 +630,6 @@ Line 4`;
 
         if (count > 0) {
             await closedTickets.first().click();
-            await page.waitForTimeout(300);
 
             const replyTextarea = page.locator('[data-testid="reply-textarea"], textarea[placeholder*="Reply"]');
             const isVisible = await replyTextarea.isVisible();
@@ -680,7 +655,6 @@ Line 4`;
             description: 'Test ticket lifecycle',
         });
 
-        await page.waitForTimeout(300);
 
         // Navigate to tickets list
         await supportPage.gotoTickets();
@@ -751,7 +725,6 @@ Line 4`;
             description: 'Integration test ticket',
         });
 
-        await page.waitForTimeout(300);
 
         // Navigate to tickets list
         await supportPage.gotoTickets();
@@ -773,7 +746,6 @@ Line 4`;
             description: 'Category test ticket',
         });
 
-        await page.waitForTimeout(300);
         await supportPage.gotoTickets();
 
         const ticketRow = page.locator(`text=${subject}`);
@@ -801,7 +773,6 @@ Line 4`;
             description: 'Navigation test',
         });
 
-        await page.waitForTimeout(300);
 
         // Should have more tickets now (if navigation works correctly)
         await supportPage.gotoTickets();

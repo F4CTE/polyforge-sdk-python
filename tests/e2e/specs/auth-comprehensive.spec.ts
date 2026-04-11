@@ -119,7 +119,6 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         await registerPage.confirmPassword.fill('Password456!');
         // Blur to trigger validation
         await registerPage.email.click();
-        await page.waitForTimeout(300);
         await registerPage.tosCheckbox.click();
         await registerPage.submit.click();
 
@@ -314,7 +313,6 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         // Try login with wrong password
         await loginPage.goto();
         await loginPage.login(email, 'WrongPassword123!');
-        await page.waitForTimeout(1000);
 
         const errText = await loginPage.errorText();
         expect(errText.toLowerCase()).toMatch(/wrong|invalid|incorrect|failed/);
@@ -324,7 +322,6 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         const loginPage = new LoginPage(page);
         await loginPage.goto();
         await loginPage.login('nonexistent@example.com', 'Password123!');
-        await page.waitForTimeout(1000);
 
         const errText = await loginPage.errorText();
         expect(errText.toLowerCase()).toMatch(/not found|wrong|invalid|incorrect|failed/);
@@ -356,7 +353,7 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         // Try to login
         await loginPage.goto();
         await loginPage.login(email, 'Password123!');
-        await page.waitForTimeout(1000);
+        await page.waitForLoadState('networkidle');
 
         // Should redirect to verify-email or show error suggesting email verification
         const url = page.url();
@@ -436,7 +433,6 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
 
         // Navigate to any protected page
         await page.goto('/markets');
-        await page.waitForTimeout(1000);
 
         // Should redirect to login
         await expect(page).toHaveURL(/\/login/);
@@ -691,11 +687,9 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
 
         // Navigate to markets
         await page.goto('/markets');
-        await page.waitForTimeout(1000);
 
         // Should redirect to verify-email
-        const url = page.url();
-        expect(url).toContain('/verify-email');
+        await expect(page).toHaveURL(/\/verify-email/);
     });
 
     test('unverified user can access /settings', async ({ page }) => {

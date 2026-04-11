@@ -240,7 +240,6 @@ test.describe('Markets — Full Workflow Coverage', () => {
         const countAfterTyping = networkRequestCount;
 
         // Wait for debounce to settle
-        await page.waitForTimeout(300);
 
         // Verify debounce worked by checking requests were limited
         // (exact count depends on implementation, but should not be excessive)

@@ -122,7 +122,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
         const marketLink = sidebar.locator('a, button', { hasText: /markets/i });
         await marketLink.click();
         await expect(page).toHaveURL(/\/markets/);
-        await page.waitForTimeout(500);
 
         // Check that Markets item is now marked complete
         const checklist = page.locator('[data-testid="onboarding-checklist"], [data-testid="checklist"]').first();
@@ -171,7 +170,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
         const marketLink = sidebar.locator('a, button', { hasText: /markets/i });
         await marketLink.click();
         await expect(page).toHaveURL(/\/markets/);
-        await page.waitForTimeout(500);
 
         // Get new progress
         const newProgress = await progressBar.evaluate((el) => {
@@ -206,7 +204,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
         const dismissBtn = checklist.locator('button[aria-label*="close"], button[aria-label*="dismiss"], [data-testid="close"]').first();
         if (await dismissBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
             await dismissBtn.click();
-            await page.waitForTimeout(300);
 
             // Checklist should be hidden
             const isHidden = !(await checklist.isVisible({ timeout: 2000 }).catch(() => false));
@@ -235,12 +232,11 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
         const dismissBtn = checklist.locator('button[aria-label*="close"], button[aria-label*="dismiss"], [data-testid="close"]').first();
         if (await dismissBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
             await dismissBtn.click();
-            await page.waitForTimeout(300);
         }
 
         // Refresh page
         await page.reload();
-        await page.waitForTimeout(1000);
+        await page.waitForLoadState('networkidle');
 
         // Checklist should still be dismissed
         const isHidden = !(await checklist.isVisible({ timeout: 2000 }).catch(() => false));
@@ -269,7 +265,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
 
         if (await tourLink.isVisible({ timeout: 2000 }).catch(() => false)) {
             await tourLink.click();
-            await page.waitForTimeout(500);
 
             // Tour should start (should see tour overlay/tooltip)
             const tourOverlay = page.locator('[data-testid="tour"], .tour, [role="tooltip"]').first();
@@ -303,7 +298,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
 
         if (await tourLink.isVisible({ timeout: 2000 }).catch(() => false)) {
             await tourLink.click();
-            await page.waitForTimeout(500);
 
             const tourOverlay = page.locator('[data-testid="tour"], .tour, [role="tooltip"]').first();
             await expect(tourOverlay).toBeVisible({ timeout: 5000 });
@@ -336,7 +330,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
 
         if (await tourLink.isVisible({ timeout: 2000 }).catch(() => false)) {
             await tourLink.click();
-            await page.waitForTimeout(500);
 
             const tourOverlay = page.locator('[data-testid="tour"], .tour, [role="tooltip"]').first();
             await expect(tourOverlay).toBeVisible({ timeout: 5000 });
@@ -353,7 +346,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
                 // Click next
                 if (await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
                     await nextBtn.click();
-                    await page.waitForTimeout(300);
                 }
             }
 
@@ -385,7 +377,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
 
         if (await tourLink.isVisible({ timeout: 2000 }).catch(() => false)) {
             await tourLink.click();
-            await page.waitForTimeout(500);
 
             const tourOverlay = page.locator('[data-testid="tour"], .tour, [role="tooltip"]').first();
             await expect(tourOverlay).toBeVisible({ timeout: 5000 });
@@ -395,7 +386,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
             for (let i = 0; i < 2; i++) {
                 if (await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
                     await nextBtn.click();
-                    await page.waitForTimeout(300);
                 }
             }
 
@@ -407,7 +397,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
             const prevBtn = tourOverlay.locator('button', { hasText: /previous|back/i });
             if (await prevBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
                 await prevBtn.click();
-                await page.waitForTimeout(300);
 
                 // Should be back on step 2
                 const step2Counter = tourOverlay.locator('text=/step\\s*2\\s*of\\s*8/i');
@@ -438,7 +427,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
 
         if (await tourLink.isVisible({ timeout: 2000 }).catch(() => false)) {
             await tourLink.click();
-            await page.waitForTimeout(500);
 
             const tourOverlay = page.locator('[data-testid="tour"], .tour, [role="tooltip"]').first();
             await expect(tourOverlay).toBeVisible({ timeout: 5000 });
@@ -448,7 +436,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
             for (let i = 0; i < 3; i++) {
                 if (await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
                     await nextBtn.click();
-                    await page.waitForTimeout(300);
                 }
             }
 
@@ -456,7 +443,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
             const closeBtn = tourOverlay.locator('button[aria-label*="close"], button', { hasText: /close|exit|skip/i }).first();
             if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
                 await closeBtn.click();
-                await page.waitForTimeout(300);
 
                 // Tour should be gone
                 const isHidden = !(await tourOverlay.isVisible({ timeout: 2000 }).catch(() => false));
@@ -487,7 +473,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
 
         if (await tourLink.isVisible({ timeout: 2000 }).catch(() => false)) {
             await tourLink.click();
-            await page.waitForTimeout(500);
 
             const tourOverlay = page.locator('[data-testid="tour"], .tour, [role="tooltip"]').first();
             await expect(tourOverlay).toBeVisible({ timeout: 5000 });
@@ -510,7 +495,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
             const nextBtn = tourOverlay.locator('button', { hasText: /next/i });
             if (await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
                 await nextBtn.click();
-                await page.waitForTimeout(300);
 
                 const highlightedStep2 = page.locator('[data-tour="2"], [data-tour-active="2"]');
                 const isStep2Highlighted = await highlightedStep2.evaluate((el) => {
@@ -549,7 +533,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
 
         if (await tourLink.isVisible({ timeout: 2000 }).catch(() => false)) {
             await tourLink.click();
-            await page.waitForTimeout(500);
 
             const tourOverlay = page.locator('[data-testid="tour"], .tour, [role="tooltip"]').first();
             await expect(tourOverlay).toBeVisible({ timeout: 5000 });
@@ -559,7 +542,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
             for (let i = 0; i < 7; i++) {
                 if (await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
                     await nextBtn.click();
-                    await page.waitForTimeout(300);
                 }
             }
 
@@ -567,12 +549,11 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
             const closeBtn = tourOverlay.locator('button[aria-label*="close"], button', { hasText: /finish|complete|close/i }).first();
             if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
                 await closeBtn.click();
-                await page.waitForTimeout(300);
             }
 
             // Refresh page
             await page.reload();
-            await page.waitForTimeout(1000);
+            await page.waitForLoadState('networkidle');
 
             // Tour should not reappear
             const tourAgain = page.locator('[data-testid="tour"], .tour, [role="tooltip"]').first();
@@ -603,7 +584,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
 
         if (await tourLink.isVisible({ timeout: 2000 }).catch(() => false)) {
             await tourLink.click();
-            await page.waitForTimeout(500);
 
             const tourOverlay = page.locator('[data-testid="tour"], .tour, [role="tooltip"]').first();
             await expect(tourOverlay).toBeVisible({ timeout: 5000 });
@@ -617,7 +597,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
             for (let i = 0; i < 4; i++) {
                 if (await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
                     await nextBtn.click();
-                    await page.waitForTimeout(300);
                 }
             }
 
@@ -628,7 +607,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
             for (let i = 0; i < 3; i++) {
                 if (await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
                     await nextBtn.click();
-                    await page.waitForTimeout(300);
                 }
             }
 
@@ -657,13 +635,11 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
         const helpBtn = page.locator('button[data-testid="help"], [aria-label*="help"], [aria-label*="support"]').first();
         if (await helpBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
             await helpBtn.click();
-            await page.waitForTimeout(300);
 
             // Look for "Start Tour" option
             const startTourBtn = page.locator('button, a', { hasText: /start\s*tour|guided\s*tour|tour/i });
             if (await startTourBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
                 await startTourBtn.click();
-                await page.waitForTimeout(500);
 
                 const tourOverlay = page.locator('[data-testid="tour"], .tour, [role="tooltip"]').first();
                 await expect(tourOverlay).toBeVisible({ timeout: 5000 });

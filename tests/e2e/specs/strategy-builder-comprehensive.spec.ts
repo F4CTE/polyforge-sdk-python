@@ -841,7 +841,7 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         await listPage.startPaper(strategyName);
 
         // Wait for it to be running
-        await page.waitForTimeout(500);
+        await page.locator('button[title="Pause"]').waitFor({ timeout: 5_000 }).catch(() => {});
 
         // Pause the strategy
         await listPage.pauseStrategy(strategyName);
@@ -866,7 +866,7 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         await listPage.goto();
         await listPage.startPaper(strategyName);
 
-        await page.waitForTimeout(500);
+        await page.locator('button[title="Pause"]').waitFor({ timeout: 5_000 }).catch(() => {});
         await listPage.pauseStrategy(strategyName);
 
         // Resume the strategy
@@ -892,7 +892,7 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         await listPage.goto();
         await listPage.startPaper(strategyName);
 
-        await page.waitForTimeout(500);
+        await page.locator('button[title="Pause"]').waitFor({ timeout: 5_000 }).catch(() => {});
 
         // Stop the strategy
         await listPage.stopStrategy(strategyName);

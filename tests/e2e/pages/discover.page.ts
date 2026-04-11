@@ -37,12 +37,10 @@ export class DiscoverPage {
 
     async selectSort(sort: 'Popular' | 'Newest' | 'Top P&L' | 'Most Forked'): Promise<void> {
         await this.sortTabs[sort].click();
-        await this.page.waitForTimeout(300);
     }
 
     async search(term: string): Promise<void> {
         await this.searchInput.fill(term);
-        await this.page.waitForTimeout(300);
     }
 
     getStrategyByName(name: string): Locator {
@@ -59,6 +57,5 @@ export class DiscoverPage {
         } else {
             await this.paginationPrev.click();
         }
-        await this.page.waitForTimeout(300);
     }
 }
