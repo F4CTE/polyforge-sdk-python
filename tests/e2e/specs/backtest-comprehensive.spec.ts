@@ -284,7 +284,7 @@ test.describe('Backtesting — Full Workflow Coverage', () => {
         const firstRow = page.locator('[data-testid="backtest-history-row"]').first();
         if (await firstRow.isVisible().catch(() => false)) {
             await firstRow.click();
-            await page.waitForTimeout(500);
+            await page.locator('[data-testid="result-pnl"]').waitFor({ state: 'visible', timeout: 3_000 }).catch(() => {});
         }
 
         // Check if result-pnl is visible (only shows for COMPLETED runs)
@@ -313,7 +313,7 @@ test.describe('Backtesting — Full Workflow Coverage', () => {
         const firstRow = page.locator('[data-testid="backtest-history-row"]').first();
         if (await firstRow.isVisible().catch(() => false)) {
             await firstRow.click();
-            await page.waitForTimeout(500);
+            await page.locator('[data-testid="result-pnl"]').waitFor({ state: 'visible', timeout: 3_000 }).catch(() => {});
         }
 
         const pnlVisible = await backtestPage.resultDetailsPnl.isVisible().catch(() => false);
@@ -340,7 +340,7 @@ test.describe('Backtesting — Full Workflow Coverage', () => {
         const firstRow = page.locator('[data-testid="backtest-history-row"]').first();
         if (await firstRow.isVisible().catch(() => false)) {
             await firstRow.click();
-            await page.waitForTimeout(500);
+            await page.locator('[data-testid="result-pnl"]').waitFor({ state: 'visible', timeout: 3_000 }).catch(() => {});
         }
 
         const pnlVisible = await backtestPage.resultDetailsPnl.isVisible().catch(() => false);
@@ -367,7 +367,7 @@ test.describe('Backtesting — Full Workflow Coverage', () => {
         const firstRow = page.locator('[data-testid="backtest-history-row"]').first();
         if (await firstRow.isVisible().catch(() => false)) {
             await firstRow.click();
-            await page.waitForTimeout(500);
+            await page.locator('[data-testid="result-pnl"]').waitFor({ state: 'visible', timeout: 3_000 }).catch(() => {});
         }
 
         // Gaps indicator only appears when hasDataGaps is true
@@ -392,7 +392,7 @@ test.describe('Backtesting — Full Workflow Coverage', () => {
         const firstRow = page.locator('[data-testid="backtest-history-row"]').first();
         if (await firstRow.isVisible().catch(() => false)) {
             await firstRow.click();
-            await page.waitForTimeout(500);
+            await page.locator('[data-testid="result-pnl"]').waitFor({ state: 'visible', timeout: 3_000 }).catch(() => {});
         }
 
         // Check if positive/negative styling is applied
@@ -470,7 +470,7 @@ test.describe('Backtesting — Full Workflow Coverage', () => {
         const firstEntry = page.locator('[data-testid="backtest-history-row"]').first();
         if (await firstEntry.isVisible().catch(() => false)) {
             await firstEntry.click();
-            await page.waitForTimeout(500);
+            await page.locator('[data-testid="result-pnl"]').waitFor({ state: 'visible', timeout: 3_000 }).catch(() => {});
 
             // Should show the detail panel — check for either result-pnl (completed)
             // or progress bar (running/queued) or error message (failed)

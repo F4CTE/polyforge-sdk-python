@@ -94,7 +94,6 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
         for (const tab of tabs) {
             const tabElement = page.locator('[role="tab"]', { hasText: tab.name });
             await tabElement.click();
-            await page.waitForTimeout(300);
 
             // Verify active state
             const ariaSelected = await tabElement.getAttribute('aria-selected');
@@ -228,7 +227,6 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
         await settingsPage.saveProfileButton.click();
 
         // Should complete without error (cleared or reverted)
-        await page.waitForTimeout(300);
     });
 
     test('special characters in display name are handled properly', async ({ page }) => {
@@ -238,7 +236,6 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
         await settingsPage.displayNameInput.fill(specialName);
         await settingsPage.saveProfileButton.click();
 
-        await page.waitForTimeout(300);
         // Should save without error
         await page.reload();
         await settingsPage.goToProfileTab();
@@ -252,7 +249,6 @@ test.describe.serial('Settings — Full Workflow Coverage', () => {
         await settingsPage.bioInput.fill(longBio);
         await settingsPage.saveProfileButton.click();
 
-        await page.waitForTimeout(300);
         await page.reload();
         await settingsPage.goToProfileTab();
         const savedBio = await settingsPage.bioInput.inputValue();

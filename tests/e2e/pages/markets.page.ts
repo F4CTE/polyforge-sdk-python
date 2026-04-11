@@ -72,7 +72,6 @@ export class MarketsPage {
 
     async selectCategory(category: 'All' | 'Sports' | 'Crypto' | 'Politics' | 'Economics' | 'Finance' | 'Technology'): Promise<void> {
         await this.categoryChips[category].click();
-        await this.page.waitForTimeout(300);
     }
 
     async selectSort(sort: 'volume' | 'newest' | 'closingSoon' | 'liquidity'): Promise<void> {
@@ -85,17 +84,14 @@ export class MarketsPage {
             liquidity: 'liquidity',
         };
         await this.sortDropdown.selectOption(sortMap[sort]);
-        await this.page.waitForTimeout(300);
     }
 
     async switchToCardView(): Promise<void> {
         await this.cardViewButton.click();
-        await this.page.waitForTimeout(300);
     }
 
     async switchToTableView(): Promise<void> {
         await this.tableViewButton.click();
-        await this.page.waitForTimeout(300);
     }
 
     /** @deprecated Use switchToCardView() or switchToTableView() instead */
@@ -117,7 +113,6 @@ export class MarketsPage {
         } else {
             await this.paginationPrev.click();
         }
-        await this.page.waitForTimeout(300);
     }
 
     getMarketCardByName(name: string): Locator {

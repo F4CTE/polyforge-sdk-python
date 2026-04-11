@@ -630,7 +630,6 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
 
                 if (isPauseVisible) {
                     await pauseButton.click();
-                    await page.waitForTimeout(300);
 
                     const statusAfter = await statusBadge.textContent();
                     expect(statusAfter).toContain('PAUSED');
@@ -657,7 +656,6 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
 
                 if (isResumeVisible) {
                     await resumeButton.click();
-                    await page.waitForTimeout(300);
 
                     const statusAfter = await statusBadge.textContent();
                     expect(statusAfter).toContain('ACTIVE');
@@ -690,7 +688,6 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
                     await confirmButton.click();
                 }
 
-                await page.waitForTimeout(300);
 
                 const statusBadge = firstCard.locator('[data-testid="status-badge"]');
                 const statusAfter = await statusBadge.textContent();

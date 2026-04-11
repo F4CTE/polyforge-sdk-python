@@ -472,7 +472,6 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
             await confirmBtn.click();
 
             // Verify dialog closed
-            await page.waitForTimeout(300);
             const isDialogVisible = await dialog.isVisible().catch(() => false);
             expect(isDialogVisible).toBe(false);
         }
@@ -530,7 +529,6 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
                 await confirmBtn.click();
 
                 // Wait for update
-                await page.waitForTimeout(300);
 
                 // Verify position count decreased
                 const finalPositions = page.locator('tr[data-testid*="position"]');
@@ -567,7 +565,6 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
                 await confirmBtn.click();
 
                 // Wait for update
-                await page.waitForTimeout(300);
 
                 // Verify position count decreased
                 const finalPositions = page.locator('tr[data-testid*="position"]');
@@ -732,7 +729,6 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
                 await confirmBtn.click();
 
                 // Wait for update
-                await page.waitForTimeout(300);
 
                 // Verify positions table is empty
                 const positions = page.locator('tr[data-testid*="position"]');

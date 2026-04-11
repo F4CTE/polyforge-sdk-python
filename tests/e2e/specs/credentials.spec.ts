@@ -65,7 +65,7 @@ test.describe('Trading Account credentials', () => {
         const tradingPage = new TradingAccountPage(page);
         await tradingPage.goto();
         // Wait for component to stabilize after auth state loads
-        await page.waitForTimeout(1000);
+        await page.waitForLoadState('networkidle');
 
         // Skip test if already connected (shows Disconnect instead of Connect form)
         if (await tradingPage.disconnectButton.isVisible().catch(() => false)) {

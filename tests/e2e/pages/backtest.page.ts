@@ -128,8 +128,8 @@ export class BacktestPage {
             expect(this.historyTable).toBeVisible({ timeout: 30_000 }),
             this.page.locator('[data-sonner-toast]').waitFor({ timeout: 30_000 }).catch(() => {}),
         ]);
-        // Give the history table time to populate after the toast
-        await this.page.waitForTimeout(500);
+        // Wait for history table to populate with at least one row
+        await this.historyRows.first().waitFor({ state: 'attached', timeout: 10_000 }).catch(() => {});
     }
 
     async getHistoryCount(): Promise<number> {
@@ -149,7 +149,7 @@ export class BacktestPage {
             const completedRow = this.page.locator('[data-testid="backtest-history-row"]').first();
             if (await completedRow.isVisible().catch(() => false)) {
                 await completedRow.click();
-                await this.page.waitForTimeout(500);
+                await expect(this.resultDetailsPnl).toBeVisible({ timeout: 5_000 }).catch(() => {});
             }
         }
 
@@ -167,6 +167,7 @@ export class BacktestPage {
         } else {
             await this.paginationPrev.click();
         }
-        await this.page.waitForTimeout(500);
+        // Wait for table content to update after page change
+        await this.historyRows.first().waitFor({ state: 'attached', timeout: 5_000 }).catch(() => {});
     }
 }

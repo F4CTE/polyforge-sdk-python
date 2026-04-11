@@ -49,11 +49,9 @@ export class RegisterPage {
         await this.password.fill(params.password);
         // Blur the password field to trigger validation and dismiss any popups
         await this.email.click();
-        await this.page.waitForTimeout(300);
         await this.confirmPassword.fill(params.password);
         // Blur confirm password field
         await this.email.click();
-        await this.page.waitForTimeout(300);
         // Use click() instead of check() — controlled React checkboxes
         // can reset DOM state before Playwright verifies the post-click state
         await this.tosCheckbox.click();

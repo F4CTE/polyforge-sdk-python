@@ -58,7 +58,7 @@ export function safeEvaluate(
   }
 
   try {
-    return Number(limitedMath.evaluate!(expression, scope));
+    return Number(limitedMath.evaluate(expression, scope));
   } catch {
     return 0; // Safe fallback
   }

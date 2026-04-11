@@ -267,7 +267,6 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
 
                 // Click to sort
                 await scoreButton.click();
-                await page.waitForTimeout(300);
 
                 // Verify sort was applied
                 const firstScore = await page.locator('[data-testid="trader-row"]').nth(0).locator('[data-testid="trader-score"]').textContent();
@@ -288,13 +287,11 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
 
                 // Click once
                 await pnlButton.click();
-                await page.waitForTimeout(300);
 
                 const firstPnlAfter = await page.locator('[data-testid="trader-row"]').nth(0).locator('[data-testid="trader-pnl"]').textContent();
 
                 // Click again to reverse
                 await pnlButton.click();
-                await page.waitForTimeout(300);
 
                 const firstPnlReversed = await page.locator('[data-testid="trader-row"]').nth(0).locator('[data-testid="trader-pnl"]').textContent();
 
@@ -394,7 +391,6 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
 
             // Click to navigate
             await traderLink.click();
-            await page.waitForTimeout(300);
 
             // Verify we're on profile page
             expect(page.url()).toMatch(/\/profile\/[\w-]+/);
@@ -411,7 +407,6 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             const traderLink = firstRow.locator('[data-testid="trader-name"] a');
 
             await traderLink.click();
-            await page.waitForTimeout(300);
 
             // Verify profile content
             const profileStats = page.locator('[data-testid="trader-stats"]');
@@ -440,7 +435,6 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
             const traderLink = firstRow.locator('[data-testid="trader-name"] a');
 
             await traderLink.click();
-            await page.waitForTimeout(300);
 
             // Verify we're on profile page
             expect(page.url()).not.toBe(leaderboardUrl);
@@ -450,11 +444,9 @@ test.describe('Leaderboard — Full Workflow Coverage', () => {
 
             if (await backButton.isVisible()) {
                 await backButton.click();
-                await page.waitForTimeout(300);
             } else {
                 // Use browser back
                 await page.goBack();
-                await page.waitForTimeout(300);
             }
 
             // Should return to leaderboard

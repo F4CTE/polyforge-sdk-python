@@ -101,10 +101,8 @@ test.describe('Auth flow', () => {
         await registerPage.username.fill(uniqueUsername());
         await registerPage.password.fill('Password123!');
         await registerPage.email.click();
-        await page.waitForTimeout(300);
         await registerPage.confirmPassword.fill('Password123!');
         await registerPage.email.click();
-        await page.waitForTimeout(300);
         // Do NOT check TOS
         await registerPage.submit.click();
 
