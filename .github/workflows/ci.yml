@@ -131,11 +131,12 @@ jobs:
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: coverage
           path: |
             services/*/coverage/
-          retention-days: 7
+          retention-days: 3
 
   # ── 2. Build ─────────────────────────────────────────────────────────────
   build:
