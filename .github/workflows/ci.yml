@@ -261,9 +261,8 @@ jobs:
         continue-on-error: true   # authenticated pulls preferred but not required
 
       # Plain docker compose build — uses Docker daemon's built-in BuildKit.
-      # Previously used buildx bake with a registry cache (localhost:5002),
-      # but the --load export had a race condition causing
-      # "could not fetch content descriptor from remote: not found".
+      # No --profile flag: services with profiles: [full] (market-data,
+      # bot, paper-order, notification) are skipped — saves ~5 min build time.
       - name: Build images
         run: docker compose -f docker-compose.infra.yml build
         timeout-minutes: 45
@@ -305,12 +304,20 @@ jobs:
         run: docker exec polyforge-dev-redis-1 redis-cli -a devredispass SET config:invite_only false
 
       # ── Install Playwright browsers ──────────────────────────────────────
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('tests/e2e/package.json') }}
+          restore-keys: playwright-
+
       - name: Install Playwright browsers
-        run: pnpm --filter @polyforge/e2e exec playwright install --with-deps chromium firefox
+        # Only chromium — Firefox is disabled on CI in playwright.config.ts
+        run: pnpm --filter @polyforge/e2e exec playwright install --with-deps chromium
 
       # ── Run E2E tests ────────────────────────────────────────────────────
       - name: Run E2E tests
-        timeout-minutes: 120
+        timeout-minutes: 30
         run: BASE_URL=http://localhost pnpm --filter @polyforge/e2e test
         env:
           CI: true
@@ -342,11 +349,15 @@ jobs:
       - name: Stop Docker Compose
         if: always()
         run: |
-          docker compose -f docker-compose.infra.yml down -v --rmi local --timeout 30
+          # Stop containers and remove volumes (clean DB state) but KEEP images
+          # cached for the next run.  --rmi local was removed because it forced
+          # a full 20-30 min image rebuild on every CI run.
+          docker compose -f docker-compose.infra.yml down -v --timeout 30
           # Remove any orphaned containers from cancelled runs
           docker ps -aq --filter "name=polyforge-dev" | xargs -r docker rm -f 2>/dev/null || true
           docker network prune -f 2>/dev/null || true
-          docker image prune -f --filter "until=2h"
+          # Prune only dangling images older than 24h — keep recent build cache
+          docker image prune -f --filter "until=24h"
           docker builder prune -f --keep-storage 10GB
 
 

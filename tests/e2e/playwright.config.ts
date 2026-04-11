@@ -31,8 +31,8 @@ export default defineConfig({
         storageState:  undefined,
         // Allow extra time for SPA loading through nginx proxy in Docker.
         // First cold-start navigation can take up to 25s on a dev machine.
-        navigationTimeout: 30_000,
-        actionTimeout:     15_000,
+        navigationTimeout: process.env.CI ? 15_000 : 30_000,
+        actionTimeout:     process.env.CI ? 8_000  : 15_000,
         // Larger viewport to avoid cookie banner overlapping form buttons
         viewport:      { width: 1280, height: 900 },
     },
@@ -40,7 +40,20 @@ export default defineConfig({
     projects: [
         {
             name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
+            use: {
+                ...devices['Desktop Chrome'],
+                // CI Docker containers have limited /dev/shm (64 MB default).
+                // These flags prevent Chromium OOM crashes and reduce GPU overhead.
+                ...(process.env.CI ? {
+                    launchOptions: {
+                        args: [
+                            '--disable-dev-shm-usage',
+                            '--disable-gpu',
+                            '--no-sandbox',
+                        ],
+                    },
+                } : {}),
+            },
         },
         // Firefox is slow on GitHub Actions runners causing flaky timeouts.
         // Run locally for cross-browser coverage; skip on CI for reliability.
