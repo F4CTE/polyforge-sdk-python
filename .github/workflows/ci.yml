@@ -267,11 +267,20 @@ jobs:
       - name: Clean up stale containers
         run: |
           docker ps -a --filter "name=polyforge-dev" -q | xargs -r docker rm -f 2>/dev/null || true
-          docker network rm polyforge-dev_internal polyforge-dev_admin-only 2>/dev/null || true
+          docker network rm polyforge-dev_internal polyforge-dev_admin-only polyforge-dev_signer-only 2>/dev/null || true
           docker volume rm polyforge-dev_postgres-data polyforge-dev_postgres-admin-data polyforge-dev_redis-data 2>/dev/null || true
 
       - name: Start Docker Compose
-        run: docker compose -f docker-compose.infra.yml up -d --force-recreate
+        run: |
+          docker compose -f docker-compose.infra.yml up -d --force-recreate
+          # Redis can occasionally exit(0) on first start due to stale network
+          # state from cancelled runs. Detect and retry once.
+          sleep 3
+          if ! docker ps --filter "name=polyforge-dev-redis-1" --filter "status=running" -q | grep -q .; then
+            echo "::warning::Redis exited after start — retrying..."
+            docker compose -f docker-compose.infra.yml up -d redis
+            sleep 3
+          fi
 
       - name: Wait for services to be healthy
         run: |

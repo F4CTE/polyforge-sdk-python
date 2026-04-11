@@ -38,7 +38,7 @@ export function Component() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, newPassword: password }),
       });
       if (res.ok) {
         setDone(true);
