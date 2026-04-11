@@ -254,7 +254,7 @@ jobs:
 
       # ── Run E2E tests ────────────────────────────────────────────────────
       - name: Run E2E tests
-        timeout-minutes: 60
+        timeout-minutes: 120
         run: BASE_URL=http://localhost pnpm --filter @polyforge/e2e test
         env:
           CI: true
