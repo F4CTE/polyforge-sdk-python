@@ -30,9 +30,9 @@ env:
   ADMIN_DIRECT_DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci_admin'
 
 jobs:
-  # ── 1. Check (lint + typecheck + test in one job) ────────────────────────
-  check:
-    name: Check
+  # ── 1a. Lint (parallel) ─────────────────────────────────────────────────
+  lint:
+    name: Lint
     runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v4
@@ -62,12 +62,68 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+  # ── 1b. Typecheck (parallel) ────────────────────────────────────────────
+  typecheck:
+    name: Typecheck
+    runs-on: [self-hosted, linux]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable corepack (pnpm via packageManager field)
+        run: |
+          mkdir -p "$HOME/.corepack/bin"
+          corepack enable --install-directory "$HOME/.corepack/bin"
+          echo "$HOME/.corepack/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma clients
+        run: |
+          pnpm prisma generate --schema prisma/schema.prisma --config prisma/prisma.config.ts
+          pnpm prisma generate --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts
+
+      - name: Build packages
+        run: pnpm turbo build --filter=./packages/*
+
       - name: Typecheck
-        if: success() || failure()
         run: pnpm typecheck
 
+  # ── 1c. Test (parallel) ─────────────────────────────────────────────────
+  test:
+    name: Test
+    runs-on: [self-hosted, linux]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable corepack (pnpm via packageManager field)
+        run: |
+          mkdir -p "$HOME/.corepack/bin"
+          corepack enable --install-directory "$HOME/.corepack/bin"
+          echo "$HOME/.corepack/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma clients
+        run: |
+          pnpm prisma generate --schema prisma/schema.prisma --config prisma/prisma.config.ts
+          pnpm prisma generate --schema prisma/schema.admin.prisma --config prisma/prisma.admin.config.ts
+
+      - name: Build packages
+        run: pnpm turbo build --filter=./packages/*
+
       - name: Test
-        if: success() || failure()
         run: pnpm turbo test:cov
         env:
           CI: true
@@ -85,7 +141,7 @@ jobs:
   build:
     name: Build
     runs-on: [self-hosted, linux]
-    needs: [check]
+    needs: [lint, typecheck, test]
     steps:
       - uses: actions/checkout@v4
 
