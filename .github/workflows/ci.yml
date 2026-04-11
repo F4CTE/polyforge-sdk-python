@@ -309,6 +309,20 @@ jobs:
             exit 1
           fi
           echo "All services healthy — gateway proxy verified"
+          echo ""
+          echo "=== Login smoke test ==="
+          LOGIN_STATUS=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3001/auth/v1/login \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"alice@e2e.dev.local","password":"TestPass123!"}')
+          echo "  → HTTP $LOGIN_STATUS (expected 200 = login works, 500 = auth broken)"
+          if [ "$LOGIN_STATUS" = "500" ]; then
+            echo "::error::Login returns 500 — auth-service is broken (likely Redis connection issue)"
+            echo "=== auth-service logs ==="
+            docker logs polyforge-dev-auth-service-1 --tail 30 2>&1
+            echo "=== Redis connectivity from auth ==="
+            docker exec polyforge-dev-auth-service-1 wget -q -O- --timeout=5 http://redis:6379 2>&1 || true
+            exit 1
+          fi
 
       # ── Seed test data ───────────────────────────────────────────────────
       - name: Run migrations and seed
