@@ -19,7 +19,7 @@ export default defineConfig({
     fullyParallel: false,           // sequential within a file, but each file gets a fresh context
     forbidOnly: !!process.env.CI,
     retries:   process.env.CI ? 2 : 0,
-    workers:   1,                   // serial execution — one browser, one DB state
+    workers:   process.env.CI ? 2 : 1,  // 2 on CI (30GB RAM handles it), 1 local
     reporter:  [['html', { open: 'never' }], ['list']],
 
     use: {
