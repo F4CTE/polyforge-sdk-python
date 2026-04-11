@@ -285,7 +285,30 @@ jobs:
           timeout 180 bash -c 'until curl -sf http://localhost:3002/health; do sleep 3; done'
           echo "Waiting for gateway..."
           timeout 180 bash -c 'until curl -sf http://localhost/login; do sleep 3; done'
-          echo "All services healthy"
+          echo ""
+          echo "=== Verifying API proxy through gateway ==="
+          echo "Testing auth-service proxy (GET /auth/v1/me)..."
+          AUTH_PROXY_STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost/auth/v1/me)
+          echo "  → HTTP $AUTH_PROXY_STATUS (expected 401 = proxy works, 502 = proxy broken)"
+          echo "Testing api-service proxy (GET /api/v1/markets)..."
+          API_PROXY_STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost/api/v1/markets)
+          echo "  → HTTP $API_PROXY_STATUS (expected 200 or 401 = proxy works, 502 = proxy broken)"
+          echo ""
+          if [ "$AUTH_PROXY_STATUS" = "502" ] || [ "$API_PROXY_STATUS" = "502" ]; then
+            echo "::error::Gateway proxy is returning 502 — nginx cannot reach backend services"
+            echo "=== nginx error log ==="
+            docker exec polyforge-dev-gateway-1 cat /var/log/nginx/error.log 2>&1 || true
+            echo "=== nginx access log (last 20) ==="
+            docker exec polyforge-dev-gateway-1 tail -20 /var/log/nginx/access.log 2>&1 || true
+            echo "=== DNS resolution test from gateway ==="
+            docker exec polyforge-dev-gateway-1 nslookup auth-service 127.0.0.11 2>&1 || true
+            docker exec polyforge-dev-gateway-1 nslookup api-service 127.0.0.11 2>&1 || true
+            echo "=== Direct connectivity test from gateway ==="
+            docker exec polyforge-dev-gateway-1 wget -q -O- --timeout=5 http://auth-service:3001/health 2>&1 || true
+            docker exec polyforge-dev-gateway-1 wget -q -O- --timeout=5 http://api-service:3002/health 2>&1 || true
+            exit 1
+          fi
+          echo "All services healthy — gateway proxy verified"
 
       # ── Seed test data ───────────────────────────────────────────────────
       - name: Run migrations and seed
@@ -293,8 +316,10 @@ jobs:
           npx ts-node prisma/seed.ts
           ADMIN_DIRECT_DATABASE_URL="postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin" npx ts-node prisma/seed.admin.ts
 
-      - name: Clear invite-only flag
-        run: docker exec polyforge-dev-redis-1 redis-cli -a devredispass SET config:invite_only false
+      - name: Clear invite-only flag and flush throttle counters
+        run: |
+          docker exec polyforge-dev-redis-1 redis-cli -a devredispass SET config:invite_only false
+          docker exec polyforge-dev-redis-1 redis-cli -a devredispass --scan --pattern "throttler:*" | xargs -r docker exec -i polyforge-dev-redis-1 redis-cli -a devredispass DEL || true
 
       # ── Install Playwright browsers ──────────────────────────────────────
       - name: Cache Playwright browsers
@@ -329,6 +354,13 @@ jobs:
         run: |
           mkdir -p docker-logs
           docker compose -f docker-compose.infra.yml logs --no-color > docker-logs/all-services.log 2>&1
+          echo "=== Gateway nginx error log ===" >> docker-logs/all-services.log
+          docker exec polyforge-dev-gateway-1 cat /var/log/nginx/error.log >> docker-logs/all-services.log 2>&1 || true
+          echo "=== Gateway nginx access log (last 100) ===" >> docker-logs/all-services.log
+          docker exec polyforge-dev-gateway-1 tail -100 /var/log/nginx/access.log >> docker-logs/all-services.log 2>&1 || true
+          echo "=== API proxy test at failure time ===" >> docker-logs/all-services.log
+          curl -v http://localhost/auth/v1/me >> docker-logs/all-services.log 2>&1 || true
+          curl -v http://localhost/api/v1/markets >> docker-logs/all-services.log 2>&1 || true
 
       - name: Upload Docker logs artifact
         uses: actions/upload-artifact@v4
