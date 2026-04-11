@@ -1,0 +1,12 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost",
+      "localStorage": [
+        { "name": "pf-onboarding-complete", "value": "true" },
+        { "name": "pf-onboarding-dismissed", "value": "true" }
+      ]
+    }
+  ]
+}

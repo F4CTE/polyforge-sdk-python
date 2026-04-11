@@ -6,6 +6,13 @@ import { type Page, type Locator, expect } from '@playwright/test';
  * Handles order management including regular orders and conditional orders
  * (TAKE_PROFIT, STOP_LOSS, TRAILING_STOP, LIMIT, PEGGED), filtering by status,
  * and pagination.
+ *
+ * Key implementation details:
+ * - View tabs: "Orders" and "Conditional" (role="tab")
+ * - New conditional button: "New Conditional" (not "New Conditional Order")
+ * - Dialog fields use native <Select> with id="cond-*" attributes
+ * - Market select populates from portfolio positions
+ * - Submit button says "Create" (not "Submit")
  */
 export class OrdersPage {
     readonly page: Page;
@@ -17,7 +24,7 @@ export class OrdersPage {
     readonly paginationPrev: Locator;
     readonly paginationNext: Locator;
 
-    // Conditional order dialog fields
+    // Conditional order dialog fields (native <select> and <input> by id)
     readonly marketSelect: Locator;
     readonly tokenIdField: Locator;
     readonly typeSelect: Locator;
@@ -28,7 +35,7 @@ export class OrdersPage {
     readonly limitPriceInput: Locator;
     readonly trailingPctInput: Locator;
     readonly expiresAtInput: Locator;
-    readonly submitButton: Locator;
+    readonly createButton: Locator;
     readonly cancelButton: Locator;
 
     constructor(page: Page) {
@@ -45,23 +52,23 @@ export class OrdersPage {
             Failed: page.locator('button', { hasText: 'Failed' }),
         };
 
-        this.newConditionalButton = page.locator('button', { hasText: 'New Conditional Order' });
+        this.newConditionalButton = page.locator('button', { hasText: 'New Conditional' });
         this.orderRows = page.locator('[data-testid="order-row"]');
         this.paginationPrev = page.locator('button[aria-label="Previous page"]');
         this.paginationNext = page.locator('button[aria-label="Next page"]');
 
-        // Conditional order dialog
-        this.marketSelect = page.locator('[data-testid="market-select"]');
-        this.tokenIdField = page.locator('input[placeholder*="Token ID"]');
-        this.typeSelect = page.locator('[data-testid="type-select"]');
-        this.sideSelect = page.locator('[data-testid="side-select"]');
-        this.outcomeSelect = page.locator('[data-testid="outcome-select"]');
-        this.sizeInput = page.locator('input[placeholder*="Size"]');
-        this.triggerPriceInput = page.locator('input[placeholder*="Trigger Price"]');
-        this.limitPriceInput = page.locator('input[placeholder*="Limit Price"]');
-        this.trailingPctInput = page.locator('input[placeholder*="Trailing"]');
-        this.expiresAtInput = page.locator('input[placeholder*="Expires"]');
-        this.submitButton = page.locator('[role="dialog"] button', { hasText: 'Submit' });
+        // Conditional order dialog — all fields are native elements with id="cond-*"
+        this.marketSelect = page.locator('#cond-market-select');
+        this.tokenIdField = page.locator('#cond-token-id');
+        this.typeSelect = page.locator('#cond-type');
+        this.sideSelect = page.locator('#cond-side');
+        this.outcomeSelect = page.locator('#cond-outcome');
+        this.sizeInput = page.locator('#cond-size');
+        this.triggerPriceInput = page.locator('#cond-trigger-price');
+        this.limitPriceInput = page.locator('#cond-limit-price');
+        this.trailingPctInput = page.locator('#cond-trailing-pct');
+        this.expiresAtInput = page.locator('#cond-expires-at');
+        this.createButton = page.locator('[role="dialog"] button', { hasText: 'Create' });
         this.cancelButton = page.locator('[role="dialog"] button', { hasText: 'Cancel' });
     }
 
@@ -82,8 +89,13 @@ export class OrdersPage {
         await this.statusFilter[status].click();
     }
 
+    /**
+     * Open the create conditional order dialog and fill in the form.
+     * Market is selected from portfolio positions via native <select>.
+     * Type, side, and outcome are also native <select> elements.
+     */
     async createConditionalOrder(params: {
-        market: string;
+        market?: string; // Optional: value or partial label to match in the position select
         tokenId?: string;
         type: 'TAKE_PROFIT' | 'STOP_LOSS' | 'TRAILING_STOP' | 'LIMIT' | 'PEGGED';
         side: 'BUY' | 'SELL';
@@ -97,57 +109,55 @@ export class OrdersPage {
         await this.newConditionalButton.click();
         await expect(this.page.locator('[role="dialog"]')).toBeVisible();
 
-        // Fill market select
-        await this.marketSelect.click();
-        await this.page.locator('text=' + params.market).click();
-
-        // Fill token ID if provided
-        if (params.tokenId) {
-            await this.tokenIdField.fill(params.tokenId);
+        // Select market from positions dropdown (if positions exist)
+        if (params.market) {
+            const options = this.marketSelect.locator('option');
+            const count = await options.count();
+            // Try to find an option containing the market name
+            for (let i = 1; i < count; i++) { // skip placeholder
+                const text = await options.nth(i).textContent() ?? '';
+                if (text.toLowerCase().includes(params.market.toLowerCase())) {
+                    const value = await options.nth(i).getAttribute('value') ?? '';
+                    await this.marketSelect.selectOption(value);
+                    break;
+                }
+            }
         }
 
-        // Fill type select
-        await this.typeSelect.click();
-        const typeMap: Record<string, string> = {
-            TAKE_PROFIT: 'Take Profit',
-            STOP_LOSS: 'Stop Loss',
-            TRAILING_STOP: 'Trailing Stop',
-            LIMIT: 'Limit',
-            PEGGED: 'Pegged',
-        };
-        await this.page.locator('text=' + typeMap[params.type]).click();
+        // Select type (native <select>)
+        await this.typeSelect.selectOption(params.type);
 
-        // Fill side select
-        await this.sideSelect.click();
-        await this.page.locator('text=' + params.side).click();
+        // Select side (native <select>)
+        await this.sideSelect.selectOption(params.side);
 
-        // Fill outcome select
-        await this.outcomeSelect.click();
-        await this.page.locator('text=' + params.outcome).click();
+        // Select outcome (native <select>)
+        await this.outcomeSelect.selectOption(params.outcome);
 
         // Fill size
         await this.sizeInput.fill(params.size);
 
-        // Fill conditional price fields based on type
-        if (params.triggerPrice && ['TAKE_PROFIT', 'STOP_LOSS'].includes(params.type)) {
+        // Fill trigger price
+        if (params.triggerPrice) {
             await this.triggerPriceInput.fill(params.triggerPrice);
         }
 
-        if (params.limitPrice && params.type === 'LIMIT') {
+        // Fill limit price
+        if (params.limitPrice) {
             await this.limitPriceInput.fill(params.limitPrice);
         }
 
-        if (params.trailingPct && params.type === 'TRAILING_STOP') {
+        // Fill trailing pct
+        if (params.trailingPct) {
             await this.trailingPctInput.fill(params.trailingPct);
         }
 
-        // Fill expiration if provided
+        // Fill expiration
         if (params.expiresAt) {
             await this.expiresAtInput.fill(params.expiresAt);
         }
 
         // Submit
-        await this.submitButton.click();
+        await this.createButton.click();
     }
 
     async cancelOrder(id: string): Promise<void> {

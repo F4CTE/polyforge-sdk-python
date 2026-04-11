@@ -27,8 +27,11 @@ export default defineConfig({
         trace:         'on-first-retry',
         screenshot:    'only-on-failure',
         video:         'retain-on-failure',
-        // Seed user credentials (alice is pre-verified + pre-connected)
-        storageState:  undefined,
+        // Pre-populate localStorage so the onboarding welcome modal
+        // (pf-onboarding-complete) is dismissed for all tests.  Without this,
+        // the modal appears 500ms after the AppLayout mounts and blocks
+        // element interactions, causing 41s timeouts on CI.
+        storageState:  './storage-state.json',
         // Allow extra time for SPA loading through nginx proxy in Docker.
         // First cold-start navigation can take up to 25s on a dev machine.
         navigationTimeout: process.env.CI ? 15_000 : 30_000,

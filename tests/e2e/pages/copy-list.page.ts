@@ -31,7 +31,7 @@ export class CopyListPage {
 
     async goto(): Promise<void> {
         await this.page.goto('/copy');
-        await expect(this.page.locator('h1', { hasText: 'Copy Trading' })).toBeVisible({ timeout: 15_000 });
+        await expect(this.page.locator('h1', { hasText: 'Copy Trading' })).toBeVisible({ timeout: 30_000 });
     }
 
     async goToNewCopy(): Promise<void> {

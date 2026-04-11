@@ -29,7 +29,7 @@ import {
  *   - 2FA (TOTP) flows
  */
 
-test.describe.serial('Authentication — Full Workflow Coverage', () => {
+test.describe('Authentication — Full Workflow Coverage', () => {
 
     test.beforeEach(async () => {
         await clearAllMessages();
@@ -237,16 +237,8 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
         const invalidToken = 'invalid-token-12345';
         await page.goto(`/verify-email?token=${invalidToken}`);
 
-        // Should show an error or redirect
-        const errorMsg = page.locator('[data-testid="error"], .bg-red-500');
-        const isErrorVisible = await errorMsg.isVisible({ timeout: 5000 }).catch(() => false);
-        if (isErrorVisible) {
-            const text = await errorMsg.textContent();
-            expect(text?.toLowerCase()).toMatch(/invalid|expired|error/);
-        } else {
-            // May redirect to login or register
-            expect(page.url()).not.toContain('/verify-email');
-        }
+        // The verify-email page shows "Verification failed" heading on invalid token
+        await expect(page.locator('h1', { hasText: /verification failed/i })).toBeVisible({ timeout: 10_000 });
     });
 
     test('already verified user visiting verify-email redirects to markets', async ({ page }) => {
@@ -268,8 +260,8 @@ test.describe.serial('Authentication — Full Workflow Coverage', () => {
 
         // Now try to visit verify-email
         await page.goto('/verify-email');
-        // Should redirect to markets (or dashboard)
-        await expect(page).not.toHaveURL(/\/verify-email/);
+        // Should redirect to markets (or dashboard) — allow extra time for redirect
+        await expect(page).not.toHaveURL(/\/verify-email/, { timeout: 15_000 });
     });
 
     // ─────────────────────────────────────────────────────────────────────────

@@ -119,7 +119,8 @@ test.describe('Backtesting — Full Workflow Coverage', () => {
 
         const startDate = formatDate(new Date(2024, 0, 1)); // Jan 1, 2024
 
-        await backtestPage.setNativeDate('#backtest-start', startDate);
+        // Use fill() for controlled React date inputs
+        await backtestPage.startDateInput.fill(startDate);
 
         // Verify value is set
         const value = await backtestPage.startDateInput.inputValue();
@@ -132,7 +133,8 @@ test.describe('Backtesting — Full Workflow Coverage', () => {
 
         const endDate = formatDate(new Date(2024, 11, 31)); // Dec 31, 2024
 
-        await backtestPage.setNativeDate('#backtest-end', endDate);
+        // Use fill() for controlled React date inputs
+        await backtestPage.endDateInput.fill(endDate);
 
         const value = await backtestPage.endDateInput.inputValue();
         expect(value).toContain('2024');

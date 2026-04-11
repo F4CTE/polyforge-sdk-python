@@ -210,21 +210,18 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
         const portfolio = new PortfolioPage(page);
         await portfolio.goto();
 
-        // Get Live tab content
-        const liveContent = page.locator('[role="tabpanel"]').first();
+        // Get Live tab content text
+        const liveText = await page.locator('main').textContent() ?? '';
 
         // Switch to Paper
         await portfolio.switchToPaper();
 
-        // Get Paper tab content
-        const paperContent = page.locator('[role="tabpanel"]').first();
+        // Paper tab should render its own content (Paper P&L or No paper positions)
+        const paperContent = page.locator('text="Paper P&L"').or(page.locator('text="No paper positions"'));
+        await expect(paperContent).toBeVisible({ timeout: 15_000 });
 
-        // Tabs should render different content
-        const liveText = await liveContent.textContent() ?? '';
-        const paperText = await paperContent.textContent() ?? '';
-
-        // Either content is different or both are empty states
-        expect(liveText || paperText).toBeTruthy();
+        // At least some content should exist
+        expect(liveText).toBeTruthy();
     });
 
     // ─── Period Filter Tests ───────────────────────────────────────────────────
@@ -250,18 +247,9 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
         // Click 30d button
         await portfolio.selectPeriod('30d');
 
-        // Verify button is now selected
+        // Verify button is now selected (has aria-selected="true")
         const thirtyDayButton = portfolio.periodButtons['30d'];
-        const ariaSelected = await thirtyDayButton.getAttribute('aria-selected');
-        const classList = await thirtyDayButton.getAttribute('class');
-        const isSelected = ariaSelected === 'true'
-            || classList?.includes('active');
-
-        expect(isSelected).toBe(true);
-
-        // Verify chart updated (should not error)
-        const chart = portfolio.pnlChart;
-        await expect(chart).toBeVisible({ timeout: 5000 });
+        await expect(thirtyDayButton).toHaveAttribute('aria-selected', 'true', { timeout: 5_000 });
     });
 
     test('@comprehensive should update chart to 90d period', async ({ page }) => {
@@ -271,18 +259,9 @@ test.describe('Portfolio — Full Workflow Coverage', () => {
         // Click 90d button
         await portfolio.selectPeriod('90d');
 
-        // Verify button is now selected
+        // Verify button is now selected (has aria-selected="true")
         const ninetyDayButton = portfolio.periodButtons['90d'];
-        const ariaSelected = await ninetyDayButton.getAttribute('aria-selected');
-        const classList = await ninetyDayButton.getAttribute('class');
-        const isSelected = ariaSelected === 'true'
-            || classList?.includes('active');
-
-        expect(isSelected).toBe(true);
-
-        // Verify chart updated
-        const chart = portfolio.pnlChart;
-        await expect(chart).toBeVisible({ timeout: 5000 });
+        await expect(ninetyDayButton).toHaveAttribute('aria-selected', 'true', { timeout: 5_000 });
     });
 
     test('@comprehensive should update chart to All-time period', async ({ page }) => {

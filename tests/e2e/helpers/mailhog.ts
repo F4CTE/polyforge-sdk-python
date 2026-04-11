@@ -131,13 +131,20 @@ function decodeQuotedPrintable(raw: string): string {
 /**
  * Extracts the first URL matching `pathPrefix` from an email body.
  * Checks HTML body first, then plain-text body.
+ *
+ * Important: Mailpit returns already-decoded HTML via its REST API, so
+ * quoted-printable decoding is only needed for the plain-text fallback.
+ * Applying `decodeQuotedPrintable` to the HTML href corrupts URLs whose
+ * query-string values happen to contain valid hex pairs after `=`
+ * (e.g. `?token=f854…` → `=f8` decoded to `ø`).
  */
 export function extractLink(body: string, pathPrefix: string): string {
-    const decoded = decodeQuotedPrintable(body);
-
-    const hrefMatch = decoded.match(new RegExp(`href="([^"]*${escapeRegex(pathPrefix)}[^"]*)"`, 'i'));
+    // 1. Try href in already-decoded HTML (no QP decoding needed)
+    const hrefMatch = body.match(new RegExp(`href="([^"]*${escapeRegex(pathPrefix)}[^"]*)"`, 'i'));
     if (hrefMatch) return hrefMatch[1];
 
+    // 2. Fallback: plain-text body may still be QP-encoded
+    const decoded = decodeQuotedPrintable(body);
     const textMatch = decoded.match(new RegExp(`https?://\\S*${escapeRegex(pathPrefix)}\\S*`, 'i'));
     if (textMatch) return textMatch[0];
 

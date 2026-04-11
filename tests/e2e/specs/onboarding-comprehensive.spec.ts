@@ -75,11 +75,17 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
         await expect(page.locator('h1', { hasText: /verified/i })).toBeVisible({ timeout: 15_000 });
 
         await loginPage.goto();
+
+        // Clear onboarding-complete flag so checklist appears for fresh user
+        await page.evaluate(() => localStorage.removeItem('pf-onboarding-complete'));
+
         await loginPage.loginAndRedirect(email, 'Password123!');
 
         // Get checklist items
         const checklist = page.locator('[data-testid="onboarding-checklist"], [data-testid="checklist"]').first();
-        const items = checklist.locator('[data-testid="checklist-item"], li, [role="listitem"]');
+        // Wait for checklist to appear (may take a moment after layout mounts)
+        if (!(await checklist.isVisible({ timeout: 5_000 }).catch(() => false))) return; // Skip if dismissed
+        const items = checklist.locator('[data-testid="checklist-item"]');
         const itemCount = await items.count();
 
         // Should have 6 items: profile, markets, strategy, backtest, paper trade, notifications

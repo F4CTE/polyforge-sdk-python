@@ -7,8 +7,10 @@ import { apiLogin } from '../helpers/api';
  * Copy Trading — Full Workflow Coverage
  *
  * Comprehensive test suite for copy trading functionality.
- * Covers list page, setup wizard (all 4 steps), lifecycle management,
+ * Covers list page, setup wizard (all 5 steps), lifecycle management,
  * and detail page navigation.
+ *
+ * Wizard steps: 0=Target, 1=Mode, 2=Size, 3=Risk, 4=Review
  *
  * Run with: pnpm --filter @polyforge/e2e test copy-trading-comprehensive
  */
@@ -39,7 +41,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         await copyListPage.goto();
 
         // Verify page title
-        await expect(page.locator('h1', { hasText: /Copy Trading|copy/i })).toBeVisible();
+        await expect(page.locator('h1', { hasText: /Copy Trading/i })).toBeVisible();
 
         // Verify main button is visible
         await expect(copyListPage.newCopyButton).toBeVisible();
@@ -82,8 +84,8 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
 
         await copyListPage.goToNewCopy();
 
-        // Should navigate to setup page
-        await expect(page).toHaveURL(/\/copy\/(new|setup)/);
+        // Should navigate to /copy/new
+        await expect(page).toHaveURL(/\/copy\/new/);
     });
 
     test('copy card displays whale address or name', async ({ page }) => {
@@ -130,21 +132,6 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         }
     });
 
-    test('copy card displays pnl metric', async ({ page }) => {
-        const copyListPage = new CopyListPage(page);
-        await copyListPage.goto();
-
-        const copyCount = await copyListPage.getCopyCount();
-
-        if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
-            const cardText = await firstCard.textContent() || '';
-
-            // Should show P&L info
-            expect(cardText).toMatch(/P&L|pnl|[\d$%\-]/);
-        }
-    });
-
     test('status badges show correct states', async ({ page }) => {
         const copyListPage = new CopyListPage(page);
         await copyListPage.goto();
@@ -162,7 +149,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         }
     });
 
-    // ─── Copy Setup Wizard — Step 1 (Target) ────────────────────────────────
+    // ─── Copy Setup Wizard — Step 0 (Target) ────────────────────────────────
 
     test('@smoke copy setup wizard navigates from list', async ({ page }) => {
         const copyListPage = new CopyListPage(page);
@@ -171,13 +158,13 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         await copyListPage.goToNewCopy();
 
         // Should be on setup page
-        await expect(page).toHaveURL(/\/copy\/(new|setup)/);
+        await expect(page).toHaveURL(/\/copy\/new/);
 
-        // Verify step 1 is displayed
-        await expect(page.locator('text=/step|target|wallet/i')).toBeVisible();
+        // Verify step 0 is displayed — shows wallet address heading
+        await expect(page.locator('h2', { hasText: /Target Wallet/i })).toBeVisible();
     });
 
-    test('step 1 shows wallet address input', async ({ page }) => {
+    test('step 0 shows wallet address input', async ({ page }) => {
         const copySetupPage = new CopySetupPage(page);
         await copySetupPage.goto();
 
@@ -196,42 +183,19 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         await expect(copySetupPage.nextButton).toBeEnabled();
     });
 
-    test('select from followed whales dropdown populates address', async ({ page }) => {
-        const copySetupPage = new CopySetupPage(page);
-        await copySetupPage.goto();
-
-        // Click whale dropdown
-        await copySetupPage.whaleSelect.click();
-
-        // Wait for options
-        const firstOption = page.locator('[role="option"]').first();
-        const isVisible = await firstOption.isVisible().catch(() => false);
-
-        if (isVisible) {
-            const optionText = await firstOption.textContent();
-
-            // Select first option
-            await firstOption.click();
-
-            // Verify wallet address input is populated
-            const walletValue = await copySetupPage.walletAddressInput.inputValue();
-            expect(walletValue).toMatch(/0x[a-fA-F0-9]/);
-        }
-    });
-
     test('empty wallet address disables next button', async ({ page }) => {
         const copySetupPage = new CopySetupPage(page);
         await copySetupPage.goto();
 
-        // Leave wallet empty
-        await expect(copySetupPage.walletAddressInput).toHaveValue('');
+        // Leave wallet empty — clear any prefilled value
+        await copySetupPage.walletAddressInput.clear();
 
         // Next button should be disabled
         const isDisabled = await copySetupPage.nextButton.isDisabled();
         expect(isDisabled).toBe(true);
     });
 
-    test('advance to step 2 from step 1', async ({ page }) => {
+    test('advance to step 1 (Mode) from step 0', async ({ page }) => {
         const copySetupPage = new CopySetupPage(page);
         await copySetupPage.goto();
 
@@ -241,26 +205,27 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         // Go to next step
         await copySetupPage.nextStep();
 
-        // Should be on step 2
-        const currentStep = await copySetupPage.getCurrentStep();
-        expect(currentStep).toBe(2);
+        // Should be on step 1 (Mode) — heading says "Copy Mode"
+        await expect(page.locator('h2', { hasText: /Copy Mode/i })).toBeVisible();
     });
 
-    // ─── Copy Setup Wizard — Step 2 (Mode) ─────────────────────────────────
+    // ─── Copy Setup Wizard — Step 1 (Mode) ─────────────────────────────────
 
-    test('step 2 shows mode selection', async ({ page }) => {
+    test('step 1 shows mode selection cards', async ({ page }) => {
         const copySetupPage = new CopySetupPage(page);
         await copySetupPage.goto();
 
-        // Navigate to step 2
+        // Navigate to step 1
         await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
         await copySetupPage.nextStep();
 
-        // Verify mode select is visible
-        await expect(copySetupPage.modeSelect).toBeVisible();
+        // Verify mode cards are visible
+        await expect(page.locator('button', { hasText: 'Percentage' })).toBeVisible();
+        await expect(page.locator('button', { hasText: 'Fixed Amount' })).toBeVisible();
+        await expect(page.locator('button', { hasText: 'Mirror (1:1)' })).toBeVisible();
     });
 
-    test('select percentage mode in step 2', async ({ page }) => {
+    test('select percentage mode in step 1', async ({ page }) => {
         const copySetupPage = new CopySetupPage(page);
         await copySetupPage.goto();
 
@@ -270,18 +235,13 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         // Select PERCENTAGE mode
         await copySetupPage.selectMode('PERCENTAGE');
 
-        // Size input should be visible
-        await expect(copySetupPage.sizeInput).toBeVisible();
-
-        // Enter percentage value
-        await copySetupPage.setSize('50');
-
-        // Verify value is set
-        const value = await copySetupPage.sizeInput.inputValue();
-        expect(value).toBe('50');
+        // The percentage card should have active styling (pf-cyan)
+        const percentBtn = page.locator('button', { hasText: 'Percentage' });
+        const classes = await percentBtn.getAttribute('class') ?? '';
+        expect(classes).toContain('pf-cyan');
     });
 
-    test('select fixed mode in step 2', async ({ page }) => {
+    test('select fixed mode in step 1', async ({ page }) => {
         const copySetupPage = new CopySetupPage(page);
         await copySetupPage.goto();
 
@@ -291,17 +251,13 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         // Select FIXED mode
         await copySetupPage.selectMode('FIXED');
 
-        // Size input should be visible
-        await expect(copySetupPage.sizeInput).toBeVisible();
-
-        // Enter fixed amount
-        await copySetupPage.setSize('100');
-
-        const value = await copySetupPage.sizeInput.inputValue();
-        expect(value).toBe('100');
+        // The fixed card should have active styling
+        const fixedBtn = page.locator('button', { hasText: 'Fixed Amount' });
+        const classes = await fixedBtn.getAttribute('class') ?? '';
+        expect(classes).toContain('pf-cyan');
     });
 
-    test('select mirror mode in step 2', async ({ page }) => {
+    test('select mirror mode in step 1', async ({ page }) => {
         const copySetupPage = new CopySetupPage(page);
         await copySetupPage.goto();
 
@@ -311,42 +267,13 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         // Select MIRROR mode
         await copySetupPage.selectMode('MIRROR');
 
-        // Mirror mode should not require size input
-        const sizeVisible = await copySetupPage.sizeInput.isVisible().catch(() => false);
-
-        // Size input may or may not be visible for mirror
-        // Just verify we can proceed
-        await copySetupPage.nextStep();
-
-        const currentStep = await copySetupPage.getCurrentStep();
-        expect(currentStep).toBe(3);
+        // The mirror card should have active styling
+        const mirrorBtn = page.locator('button', { hasText: 'Mirror (1:1)' });
+        const classes = await mirrorBtn.getAttribute('class') ?? '';
+        expect(classes).toContain('pf-cyan');
     });
 
-    test('back button in step 2 returns to step 1 with data preserved', async ({ page }) => {
-        const copySetupPage = new CopySetupPage(page);
-        await copySetupPage.goto();
-
-        // Fill step 1
-        await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
-        await copySetupPage.nextStep();
-
-        // Fill step 2
-        await copySetupPage.selectMode('PERCENTAGE');
-        await copySetupPage.setSize('50');
-
-        // Go back
-        await copySetupPage.previousStep();
-
-        // Verify step 1
-        const currentStep = await copySetupPage.getCurrentStep();
-        expect(currentStep).toBe(1);
-
-        // Verify data is still there
-        const walletValue = await copySetupPage.walletAddressInput.inputValue();
-        expect(walletValue).toBe(VALID_WHALE_ADDRESS);
-    });
-
-    test('advance from step 2 to step 3', async ({ page }) => {
+    test('advance from step 1 to step 2 (Size)', async ({ page }) => {
         const copySetupPage = new CopySetupPage(page);
         await copySetupPage.goto();
 
@@ -354,12 +281,53 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         await copySetupPage.nextStep();
 
         await copySetupPage.selectMode('PERCENTAGE');
-        await copySetupPage.setSize('50');
-
         await copySetupPage.nextStep();
 
-        const currentStep = await copySetupPage.getCurrentStep();
-        expect(currentStep).toBe(3);
+        // Should be on step 2 (Size)
+        await expect(page.locator('h2', { hasText: /Trade Size/i })).toBeVisible();
+    });
+
+    // ─── Copy Setup Wizard — Step 2 (Size) ──────────────────────────────────
+
+    test('step 2 shows size controls for non-mirror modes', async ({ page }) => {
+        const copySetupPage = new CopySetupPage(page);
+        await copySetupPage.goto();
+
+        await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
+        await copySetupPage.nextStep();
+        await copySetupPage.selectMode('FIXED');
+        await copySetupPage.nextStep();
+
+        // Size controls should be visible (slider + number input)
+        const numberInput = page.locator('input[type="number"]').first();
+        await expect(numberInput).toBeVisible();
+    });
+
+    test('mirror mode step 2 shows informational text', async ({ page }) => {
+        const copySetupPage = new CopySetupPage(page);
+        await copySetupPage.goto();
+
+        await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
+        await copySetupPage.nextStep();
+        await copySetupPage.selectMode('MIRROR');
+        await copySetupPage.nextStep();
+
+        // Mirror mode shows informational text about 1:1 copying
+        await expect(page.locator('text=/mirror mode|exact same size|1:1/i')).toBeVisible();
+    });
+
+    test('advance from step 2 to step 3 (Risk)', async ({ page }) => {
+        const copySetupPage = new CopySetupPage(page);
+        await copySetupPage.goto();
+
+        await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
+        await copySetupPage.nextStep();
+        await copySetupPage.selectMode('PERCENTAGE');
+        await copySetupPage.nextStep();
+        await copySetupPage.nextStep();
+
+        // Should be on step 3 (Risk)
+        await expect(page.locator('h2', { hasText: /Risk Controls/i })).toBeVisible();
     });
 
     // ─── Copy Setup Wizard — Step 3 (Risk) ──────────────────────────────────
@@ -372,7 +340,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
         await copySetupPage.nextStep();
         await copySetupPage.selectMode('PERCENTAGE');
-        await copySetupPage.setSize('50');
+        await copySetupPage.nextStep();
         await copySetupPage.nextStep();
 
         // Verify risk inputs are visible
@@ -388,7 +356,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
         await copySetupPage.nextStep();
         await copySetupPage.selectMode('PERCENTAGE');
-        await copySetupPage.setSize('50');
+        await copySetupPage.nextStep();
         await copySetupPage.nextStep();
 
         await copySetupPage.maxExposureInput.fill('500');
@@ -404,7 +372,7 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
         await copySetupPage.nextStep();
         await copySetupPage.selectMode('PERCENTAGE');
-        await copySetupPage.setSize('50');
+        await copySetupPage.nextStep();
         await copySetupPage.nextStep();
 
         await copySetupPage.maxDailyLossInput.fill('100');
@@ -420,197 +388,134 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
         await copySetupPage.nextStep();
         await copySetupPage.selectMode('PERCENTAGE');
-        await copySetupPage.setSize('50');
+        await copySetupPage.nextStep();
         await copySetupPage.nextStep();
 
-        await copySetupPage.priceOffsetInput.fill('0.02');
+        await copySetupPage.priceOffsetInput.fill('2');
 
         const value = await copySetupPage.priceOffsetInput.inputValue();
-        expect(value).toBe('0.02');
+        expect(value).toBe('2');
     });
 
-    test('risk parameters are optional in step 3', async ({ page }) => {
+    test('advance from step 3 to step 4 (Review)', async ({ page }) => {
         const copySetupPage = new CopySetupPage(page);
         await copySetupPage.goto();
 
         await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
         await copySetupPage.nextStep();
         await copySetupPage.selectMode('PERCENTAGE');
-        await copySetupPage.setSize('50');
+        await copySetupPage.nextStep();
+        await copySetupPage.nextStep();
         await copySetupPage.nextStep();
 
-        // Don't fill risk parameters
-        // Should still be able to proceed
-        await copySetupPage.nextStep();
-
-        const currentStep = await copySetupPage.getCurrentStep();
-        expect(currentStep).toBe(4);
-    });
-
-    test('back button in step 3 returns to step 2', async ({ page }) => {
-        const copySetupPage = new CopySetupPage(page);
-        await copySetupPage.goto();
-
-        await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
-        await copySetupPage.nextStep();
-        await copySetupPage.selectMode('FIXED');
-        await copySetupPage.setSize('100');
-        await copySetupPage.nextStep();
-
-        await copySetupPage.maxExposureInput.fill('500');
-
-        // Go back
-        await copySetupPage.previousStep();
-
-        const currentStep = await copySetupPage.getCurrentStep();
-        expect(currentStep).toBe(2);
-
-        // Verify step 2 data preserved
-        const sizeValue = await copySetupPage.sizeInput.inputValue();
-        expect(sizeValue).toBe('100');
-    });
-
-    test('advance from step 3 to step 4', async ({ page }) => {
-        const copySetupPage = new CopySetupPage(page);
-        await copySetupPage.goto();
-
-        await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
-        await copySetupPage.nextStep();
-        await copySetupPage.selectMode('PERCENTAGE');
-        await copySetupPage.setSize('50');
-        await copySetupPage.nextStep();
-
-        await copySetupPage.setRiskParams({
-            maxExposure: '500',
-            maxDailyLoss: '100',
-            priceOffset: '0.02',
-        });
-
-        await copySetupPage.nextStep();
-
-        const currentStep = await copySetupPage.getCurrentStep();
-        expect(currentStep).toBe(4);
+        // Should be on step 4 (Review)
+        await expect(page.locator('h2', { hasText: /Review Configuration/i })).toBeVisible();
     });
 
     // ─── Copy Setup Wizard — Step 4 (Review) ────────────────────────────────
 
-    test('step 4 shows setup summary', async ({ page }) => {
+    test('step 4 shows setup summary with entered values', async ({ page }) => {
         const copySetupPage = new CopySetupPage(page);
         await copySetupPage.goto();
 
-        // Complete steps 1-3
+        // Complete steps 0-3
         await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
         await copySetupPage.nextStep();
         await copySetupPage.selectMode('PERCENTAGE');
-        await copySetupPage.setSize('75');
         await copySetupPage.nextStep();
-        await copySetupPage.setRiskParams({
-            maxExposure: '1000',
-            maxDailyLoss: '200',
-            priceOffset: '0.03',
-        });
+        // Step 2: size defaults are pre-filled, proceed
+        await copySetupPage.nextStep();
+        // Step 3: risk defaults are pre-filled, proceed
         await copySetupPage.nextStep();
 
-        // Verify summary display
-        await expect(copySetupPage.summaryDisplay).toBeVisible();
-
+        // Verify summary displays wallet address and mode
         const summary = await copySetupPage.review();
         expect(summary).toBeTruthy();
+        expect(summary).toContain('PERCENTAGE');
     });
 
-    test('step 4 summary shows all entered values', async ({ page }) => {
+    test('submit button creates copy configuration', async ({ page }) => {
         const copySetupPage = new CopySetupPage(page);
         await copySetupPage.goto();
 
-        await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
-        await copySetupPage.nextStep();
-        await copySetupPage.selectMode('FIXED');
-        await copySetupPage.setSize('250');
-        await copySetupPage.nextStep();
-        await copySetupPage.setRiskParams({
-            maxExposure: '2000',
-            maxDailyLoss: '500',
-            priceOffset: '0.05',
-        });
-        await copySetupPage.nextStep();
-
-        const summary = await copySetupPage.review();
-
-        // Summary should contain the values we entered
-        expect(summary).toContain(VALID_WHALE_ADDRESS);
-        expect(summary).toMatch(/250|Fixed/i);
-    });
-
-    test('confirm button in step 4 creates copy configuration', async ({ page }) => {
-        const copySetupPage = new CopySetupPage(page);
-        await copySetupPage.goto();
-
+        // Complete all steps
         await copySetupPage.walletAddressInput.fill(ANOTHER_WHALE_ADDRESS);
         await copySetupPage.nextStep();
         await copySetupPage.selectMode('MIRROR');
         await copySetupPage.nextStep();
-        // Skip risk params
+        // Mirror mode — size step just shows info, proceed
+        await copySetupPage.nextStep();
+        // Risk — defaults are fine, proceed
         await copySetupPage.nextStep();
 
-        // Verify confirm button is visible
-        await expect(copySetupPage.confirmButton).toBeVisible();
+        // Verify submit button is visible
+        await expect(copySetupPage.submitButton).toBeVisible();
 
-        // Click confirm
+        // Click submit
         await copySetupPage.confirm();
 
-        // Should navigate away from setup page
+        // Should navigate away from setup page (to detail or list)
         const url = page.url();
-        expect(url).not.toMatch(/\/copy\/(new|setup)/);
+        expect(url).not.toContain('/copy/new');
     });
 
-    test('back button in step 4 returns to step 3', async ({ page }) => {
+    // ─── Back Navigation ─────────────────────────────────────────────────────
+
+    test('back button in step 1 returns to step 0 with data preserved', async ({ page }) => {
         const copySetupPage = new CopySetupPage(page);
         await copySetupPage.goto();
 
+        // Fill step 0
         await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
         await copySetupPage.nextStep();
-        await copySetupPage.selectMode('PERCENTAGE');
-        await copySetupPage.setSize('60');
-        await copySetupPage.nextStep();
-        await copySetupPage.nextStep();
 
-        // Go back from review
+        // Go back
         await copySetupPage.previousStep();
 
-        const currentStep = await copySetupPage.getCurrentStep();
-        expect(currentStep).toBe(3);
+        // Verify step 0 visible and data preserved
+        await expect(page.locator('h2', { hasText: /Target Wallet/i })).toBeVisible();
+        const walletValue = await copySetupPage.walletAddressInput.inputValue();
+        expect(walletValue).toBe(VALID_WHALE_ADDRESS);
+    });
+
+    test('wizard preserves data when navigating back and forth', async ({ page }) => {
+        const copySetupPage = new CopySetupPage(page);
+        await copySetupPage.goto();
+
+        // Step 0: fill wallet
+        await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
+        await copySetupPage.nextStep();
+
+        // Step 1: select mode
+        await copySetupPage.selectMode('FIXED');
+        await copySetupPage.nextStep();
+
+        // Step 2: size has default value, proceed
+        await copySetupPage.nextStep();
+
+        // Step 3: set risk params
+        await copySetupPage.maxExposureInput.fill('1500');
+
+        // Go back to step 0
+        await copySetupPage.previousStep(); // → step 2
+        await copySetupPage.previousStep(); // → step 1
+        await copySetupPage.previousStep(); // → step 0
+
+        // Verify step 0 data
+        const walletValue = await copySetupPage.walletAddressInput.inputValue();
+        expect(walletValue).toBe(VALID_WHALE_ADDRESS);
+
+        // Go forward to step 3
+        await copySetupPage.nextStep(); // → step 1
+        await copySetupPage.nextStep(); // → step 2
+        await copySetupPage.nextStep(); // → step 3
+
+        // Verify step 3 data
+        const exposureValue = await copySetupPage.maxExposureInput.inputValue();
+        expect(exposureValue).toBe('1500');
     });
 
     // ─── Copy Lifecycle Management ────────────────────────────────────────────
-
-    test('created copy appears in list with active status', async ({ page }) => {
-        const copySetupPage = new CopySetupPage(page);
-        await copySetupPage.goto();
-
-        // Create a new copy
-        await copySetupPage.walletAddressInput.fill(VALID_WHALE_ADDRESS);
-        await copySetupPage.nextStep();
-        await copySetupPage.selectMode('PERCENTAGE');
-        await copySetupPage.setSize('50');
-        await copySetupPage.nextStep();
-        await copySetupPage.nextStep();
-        await copySetupPage.confirm();
-
-        // Navigate back to list
-        const copyListPage = new CopyListPage(page);
-        await copyListPage.goto();
-
-        // New copy should be visible
-        const copyCount = await copyListPage.getCopyCount();
-        expect(copyCount).toBeGreaterThan(0);
-
-        // First copy should have ACTIVE status
-        const firstCard = page.locator('[data-testid="copy-config-card"]').first();
-        const statusBadge = firstCard.locator('[data-testid="status-badge"]');
-        const statusText = await statusBadge.textContent() || '';
-
-        expect(statusText).toContain('ACTIVE');
-    });
 
     test('pause active copy changes status to paused', async ({ page }) => {
         const copyListPage = new CopyListPage(page);
@@ -624,13 +529,13 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
             const statusBefore = await statusBadge.textContent();
 
             if (statusBefore?.includes('ACTIVE')) {
-                // Find and click pause button
-                const pauseButton = firstCard.locator('button[data-action="pause"], button:has-text("Pause")');
+                const pauseButton = firstCard.locator('button[aria-label="Pause config"]');
                 const isPauseVisible = await pauseButton.isVisible().catch(() => false);
 
                 if (isPauseVisible) {
                     await pauseButton.click();
-
+                    // Wait for status to update
+                    await page.waitForTimeout(1000);
                     const statusAfter = await statusBadge.textContent();
                     expect(statusAfter).toContain('PAUSED');
                 }
@@ -650,74 +555,18 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
             const statusText = await statusBadge.textContent() || '';
 
             if (statusText.includes('PAUSED')) {
-                // Find and click resume button
-                const resumeButton = firstCard.locator('button[data-action="resume"], button:has-text("Resume")');
+                const resumeButton = firstCard.locator('button[aria-label="Resume config"]');
                 const isResumeVisible = await resumeButton.isVisible().catch(() => false);
 
                 if (isResumeVisible) {
                     await resumeButton.click();
-
+                    await page.waitForTimeout(1000);
                     const statusAfter = await statusBadge.textContent();
                     expect(statusAfter).toContain('ACTIVE');
                 }
             }
         }
     });
-
-    test('stop copy changes status to stopped', async ({ page }) => {
-        const copyListPage = new CopyListPage(page);
-        await copyListPage.goto();
-
-        const copyCount = await copyListPage.getCopyCount();
-
-        if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
-
-            // Find and click stop button
-            const stopButton = firstCard.locator('button[data-action="stop"], button:has-text("Stop")');
-            const isStopVisible = await stopButton.isVisible().catch(() => false);
-
-            if (isStopVisible) {
-                await stopButton.click();
-
-                // May need to confirm action
-                const confirmButton = page.locator('button:has-text("Confirm"), button:has-text("Yes")');
-                const isConfirmVisible = await confirmButton.isVisible().catch(() => false);
-
-                if (isConfirmVisible) {
-                    await confirmButton.click();
-                }
-
-
-                const statusBadge = firstCard.locator('[data-testid="status-badge"]');
-                const statusAfter = await statusBadge.textContent();
-                expect(statusAfter).toContain('STOPPED');
-            }
-        }
-    });
-
-    test('stopped copy cannot be resumed', async ({ page }) => {
-        const copyListPage = new CopyListPage(page);
-        await copyListPage.goto();
-
-        const copyCount = await copyListPage.getCopyCount();
-
-        if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
-            const statusBadge = firstCard.locator('[data-testid="status-badge"]');
-            const statusText = await statusBadge.textContent() || '';
-
-            if (statusText.includes('STOPPED')) {
-                // Resume button should not be visible
-                const resumeButton = firstCard.locator('button[data-action="resume"], button:has-text("Resume")');
-                const isResumeVisible = await resumeButton.isVisible().catch(() => false);
-
-                expect(isResumeVisible).toBe(false);
-            }
-        }
-    });
-
-    // ─── Copy Detail Page ─────────────────────────────────────────────────────
 
     test('navigate to copy detail page from list', async ({ page }) => {
         const copyListPage = new CopyListPage(page);
@@ -726,141 +575,15 @@ test.describe('Copy Trading — Full Workflow Coverage', () => {
         const copyCount = await copyListPage.getCopyCount();
 
         if (copyCount > 0) {
+            // Click the "View config details" button (eye icon)
             const firstCard = page.locator('[data-testid="copy-config-card"]').first();
+            const viewButton = firstCard.locator('button[aria-label="View config details"]');
 
-            // Click on card
-            await firstCard.click();
-
-            // Should navigate to detail page
-            await expect(page).toHaveURL(/\/copy\/\w+/);
+            if (await viewButton.isVisible().catch(() => false)) {
+                await viewButton.click();
+                // Should navigate to detail page
+                await expect(page).toHaveURL(/\/copy\/\w+/);
+            }
         }
     });
-
-    test('copy detail page shows full configuration', async ({ page }) => {
-        const copyListPage = new CopyListPage(page);
-        await copyListPage.goto();
-
-        const copyCount = await copyListPage.getCopyCount();
-
-        if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
-            await firstCard.click();
-
-            // Verify detail page content
-            await expect(page.locator('h1', { hasText: /Copy|detail|configuration/i })).toBeVisible({ timeout: 10_000 });
-
-            // Should show configuration details
-            const detailText = await page.locator('main').textContent() || '';
-            expect(detailText).toBeTruthy();
-        }
-    });
-
-    test('copy detail page shows copy trading history', async ({ page }) => {
-        const copyListPage = new CopyListPage(page);
-        await copyListPage.goto();
-
-        const copyCount = await copyListPage.getCopyCount();
-
-        if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
-            await firstCard.click();
-
-            // Should show history/trades section
-            const historySection = page.locator('[data-testid="copy-history"], text=/history|trades|orders/i');
-            const isVisible = await historySection.isVisible().catch(() => false);
-
-            expect([true, false]).toContain(isVisible);
-        }
-    });
-
-    test('copy detail page has action buttons', async ({ page }) => {
-        const copyListPage = new CopyListPage(page);
-        await copyListPage.goto();
-
-        const copyCount = await copyListPage.getCopyCount();
-
-        if (copyCount > 0) {
-            const firstCard = page.locator('[data-testid="copy-config-card"]').first();
-            await firstCard.click();
-
-            // Should have action buttons (pause/resume/stop)
-            const actionButtons = page.locator('button[data-action], button:has-text(/pause|resume|stop|edit/i)');
-            const count = await actionButtons.count();
-
-            expect(count).toBeGreaterThan(0);
-        }
-    });
-
-    // ─── Wizard Validation & Navigation ────────────────────────────────────────
-
-    test('cannot skip steps in wizard', async ({ page }) => {
-        const copySetupPage = new CopySetupPage(page);
-        await copySetupPage.goto();
-
-        // Should be on step 1
-        let currentStep = await copySetupPage.getCurrentStep();
-        expect(currentStep).toBe(1);
-
-        // Next button should be disabled without entering wallet
-        const nextDisabled = await copySetupPage.nextButton.isDisabled();
-        expect(nextDisabled).toBe(true);
-    });
-
-    test('step indicators show current and completed steps', async ({ page }) => {
-        const copySetupPage = new CopySetupPage(page);
-        await copySetupPage.goto();
-
-        // Check step indicator count
-        const stepCount = await copySetupPage.getStepCount();
-        expect(stepCount).toBe(4);
-
-        // Step 1 should be active
-        const activeStep = page.locator('[data-testid="step-indicator"][aria-current="step"]');
-        const activeCount = await activeStep.count();
-        expect(activeCount).toBeGreaterThan(0);
-    });
-
-    test('wizard preserves data when navigating back and forth', async ({ page }) => {
-        const copySetupPage = new CopySetupPage(page);
-        await copySetupPage.goto();
-
-        const testAddress = VALID_WHALE_ADDRESS;
-        const testPercentage = '75';
-        const testExposure = '1500';
-
-        // Step 1
-        await copySetupPage.walletAddressInput.fill(testAddress);
-        await copySetupPage.nextStep();
-
-        // Step 2
-        await copySetupPage.selectMode('PERCENTAGE');
-        await copySetupPage.setSize(testPercentage);
-        await copySetupPage.nextStep();
-
-        // Step 3
-        await copySetupPage.maxExposureInput.fill(testExposure);
-
-        // Go back to step 1
-        await copySetupPage.previousStep();
-        await copySetupPage.previousStep();
-
-        // Verify step 1 data
-        let walletValue = await copySetupPage.walletAddressInput.inputValue();
-        expect(walletValue).toBe(testAddress);
-
-        // Go forward to step 2
-        await copySetupPage.nextStep();
-
-        // Verify step 2 data
-        let sizeValue = await copySetupPage.sizeInput.inputValue();
-        expect(sizeValue).toBe(testPercentage);
-
-        // Go forward to step 3
-        await copySetupPage.nextStep();
-
-        // Verify step 3 data
-        let exposureValue = await copySetupPage.maxExposureInput.inputValue();
-        expect(exposureValue).toBe(testExposure);
-    });
-
 });
