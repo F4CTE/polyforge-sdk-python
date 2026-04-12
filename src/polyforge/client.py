@@ -168,15 +168,76 @@ _BLOCKED_HOSTNAMES: set[str] = {
 }
 
 
-def _validate_webhook_url(url: str) -> None:
+def _is_ip_blocked(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> str | None:
+    """Return a human-readable reason if *addr* must be blocked, else ``None``."""
+    # Check IPv4-mapped IPv6 first — the IPv6 wrapper has is_reserved=True for ALL
+    # mapped addresses, which would incorrectly block public IPs like ::ffff:8.8.8.8.
+    if isinstance(addr, ipaddress.IPv6Address) and addr.ipv4_mapped:
+        mapped = addr.ipv4_mapped
+        if mapped.is_private or mapped.is_loopback or mapped.is_link_local or mapped.is_reserved:
+            return (
+                "Webhook URL cannot point to private/loopback addresses "
+                f"via IPv4-mapped IPv6 (resolved to {addr})"
+            )
+        return None
+
+    if addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_reserved:
+        return (
+            "Webhook URL cannot point to private, loopback, link-local, "
+            f"or reserved addresses (resolved to {addr})"
+        )
+    return None
+
+
+def _resolve_and_validate_ips(hostname: str) -> list[str]:
+    """Resolve *hostname* and validate every resulting IP.
+
+    Returns the list of validated public IP strings so callers can pin the
+    resolution result and avoid a second DNS lookup (DNS-rebinding mitigation).
+    """
+    try:
+        addrinfos = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        raise ValueError(f"Could not resolve webhook hostname: {hostname}")
+
+    validated: list[str] = []
+    for _family, _, _, _, sockaddr in addrinfos:
+        ip_str = sockaddr[0]
+        try:
+            addr = ipaddress.ip_address(ip_str)
+        except ValueError:
+            raise ValueError(f"Invalid IP resolved for webhook hostname: {ip_str}")
+
+        reason = _is_ip_blocked(addr)
+        if reason:
+            raise ValueError(reason)
+        validated.append(ip_str)
+
+    if not validated:
+        raise ValueError(f"No addresses resolved for webhook hostname: {hostname}")
+
+    return validated
+
+
+def _validate_webhook_url(url: str) -> list[str]:
     """Validate webhook URL to prevent SSRF attacks.
 
     Blocks private, loopback, link-local, and reserved IP addresses as well as
     known cloud metadata hostnames.  Only HTTPS URLs are allowed.
+
+    Returns the list of validated public IPs so callers can log or pin them.
+
+    .. note::
+
+       This is a **client-side best-effort check**.  Because the SDK sends the
+       URL to the PolyForge API (which later delivers webhooks), the actual
+       HTTP connection is made server-side.  A DNS rebinding attack could cause
+       the server's DNS resolution to return a different IP than what was
+       validated here (CWE-367 TOCTOU).  For full protection, the server must
+       also validate destination IPs at connection time.
     """
     parsed = urlparse(url)
 
-    # --- scheme check ---
     if parsed.scheme != "https":
         raise ValueError("Webhook URL must use HTTPS")
 
@@ -184,38 +245,11 @@ def _validate_webhook_url(url: str) -> None:
     if not hostname:
         raise ValueError("Webhook URL must contain a valid hostname")
 
-    # --- blocked hostname check ---
     lower_hostname = hostname.lower()
     if lower_hostname in _BLOCKED_HOSTNAMES or lower_hostname.endswith(".local"):
         raise ValueError("Webhook URL cannot point to localhost or internal addresses")
 
-    # --- resolve hostname and validate each resulting IP ---
-    try:
-        addrinfos = socket.getaddrinfo(hostname, None)
-    except socket.gaierror:
-        raise ValueError(f"Could not resolve webhook hostname: {hostname}")
-
-    for family, _, _, _, sockaddr in addrinfos:
-        ip_str = sockaddr[0]
-        try:
-            addr = ipaddress.ip_address(ip_str)
-        except ValueError:
-            raise ValueError(f"Invalid IP resolved for webhook hostname: {ip_str}")
-
-        if addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_reserved:
-            raise ValueError(
-                "Webhook URL cannot point to private, loopback, link-local, "
-                f"or reserved addresses (resolved to {addr})"
-            )
-
-        # Block IPv4-mapped IPv6 addresses that wrap private IPv4 ranges
-        if isinstance(addr, ipaddress.IPv6Address) and addr.ipv4_mapped:
-            mapped = addr.ipv4_mapped
-            if mapped.is_private or mapped.is_loopback or mapped.is_link_local or mapped.is_reserved:
-                raise ValueError(
-                    "Webhook URL cannot point to private/loopback addresses "
-                    f"via IPv4-mapped IPv6 (resolved to {addr})"
-                )
+    return _resolve_and_validate_ips(hostname)
 
 
 # ---------------------------------------------------------------------------
@@ -683,7 +717,8 @@ class PolyforgeClient:
         return [_parse(Webhook, w) for w in items]
 
     def create_webhook(self, url: str, events: list[str]) -> Webhook:
-        _validate_webhook_url(url)
+        resolved_ips = _validate_webhook_url(url)
+        _log.debug("Webhook URL %s resolved to %s — registering", url, resolved_ips)
         return _parse(Webhook, self._post("/api/v1/webhooks", json={"url": url, "events": events}))
 
     # -- AI --
@@ -1226,7 +1261,8 @@ class AsyncPolyforgeClient:
         return [_parse(Webhook, w) for w in items]
 
     async def create_webhook(self, url: str, events: list[str]) -> Webhook:
-        _validate_webhook_url(url)
+        resolved_ips = _validate_webhook_url(url)
+        _log.debug("Webhook URL %s resolved to %s — registering", url, resolved_ips)
         return _parse(Webhook, await self._post("/api/v1/webhooks", json={"url": url, "events": events}))
 
     # -- AI --

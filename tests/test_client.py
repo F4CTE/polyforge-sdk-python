@@ -1,7 +1,13 @@
 """Basic smoke tests for PolyforgeClient."""
 
 import pytest
-from polyforge.client import PolyforgeClient, AsyncPolyforgeClient, _validate_webhook_url
+from polyforge.client import (
+    PolyforgeClient,
+    AsyncPolyforgeClient,
+    _validate_webhook_url,
+    _is_ip_blocked,
+    _resolve_and_validate_ips,
+)
 from polyforge.errors import (
     PolyforgeError,
     AuthenticationError,
@@ -288,6 +294,67 @@ class TestWebhookValidation:
         """Should reject localhost webhook URLs."""
         with pytest.raises(ValueError, match="internal addresses"):
             _validate_webhook_url("https://localhost/hook")
+
+    def test_returns_resolved_ips(self):
+        """Should return list of resolved IPs for valid webhook URLs."""
+        # Use a well-known public hostname that resolves to a public IP
+        result = _validate_webhook_url("https://example.com/hook")
+        assert isinstance(result, list)
+        assert len(result) > 0
+
+    def test_rejects_metadata_google_internal(self):
+        """Should reject cloud metadata hostnames."""
+        with pytest.raises(ValueError, match="internal addresses"):
+            _validate_webhook_url("https://metadata.google.internal/hook")
+
+
+class TestIpBlocked:
+    """Test _is_ip_blocked helper for IP address classification."""
+
+    def test_blocks_loopback_v4(self):
+        import ipaddress
+        assert _is_ip_blocked(ipaddress.ip_address("127.0.0.1")) is not None
+
+    def test_blocks_private_v4(self):
+        import ipaddress
+        assert _is_ip_blocked(ipaddress.ip_address("10.0.0.1")) is not None
+        assert _is_ip_blocked(ipaddress.ip_address("192.168.1.1")) is not None
+        assert _is_ip_blocked(ipaddress.ip_address("172.16.0.1")) is not None
+
+    def test_blocks_link_local(self):
+        import ipaddress
+        assert _is_ip_blocked(ipaddress.ip_address("169.254.169.254")) is not None
+
+    def test_allows_public_v4(self):
+        import ipaddress
+        assert _is_ip_blocked(ipaddress.ip_address("8.8.8.8")) is None
+        assert _is_ip_blocked(ipaddress.ip_address("1.1.1.1")) is None
+
+    def test_blocks_ipv4_mapped_v6_private(self):
+        import ipaddress
+        assert _is_ip_blocked(ipaddress.ip_address("::ffff:127.0.0.1")) is not None
+        assert _is_ip_blocked(ipaddress.ip_address("::ffff:10.0.0.1")) is not None
+
+    def test_allows_ipv4_mapped_v6_public(self):
+        import ipaddress
+        assert _is_ip_blocked(ipaddress.ip_address("::ffff:8.8.8.8")) is None
+
+
+class TestResolveAndValidateIps:
+    """Test _resolve_and_validate_ips DNS resolution with IP validation."""
+
+    def test_rejects_unresolvable_hostname(self):
+        with pytest.raises(ValueError, match="Could not resolve"):
+            _resolve_and_validate_ips("this-hostname-should-never-exist-2026.invalid")
+
+    def test_resolves_public_hostname(self):
+        ips = _resolve_and_validate_ips("example.com")
+        assert isinstance(ips, list)
+        assert len(ips) > 0
+
+    def test_rejects_localhost(self):
+        with pytest.raises(ValueError, match="private|loopback"):
+            _resolve_and_validate_ips("localhost")
 
 
 class TestContextManagers:
