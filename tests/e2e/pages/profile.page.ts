@@ -51,6 +51,9 @@ export class ProfilePage {
     }
 
     async getBio(): Promise<string> {
+        // Bio element only renders when user.bio is truthy — return '' if absent.
+        const visible = await this.bio.isVisible().catch(() => false);
+        if (!visible) return '';
         return (await this.bio.textContent()) ?? '';
     }
 

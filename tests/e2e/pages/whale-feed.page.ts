@@ -26,7 +26,7 @@ export class WhaleFeedPage {
     }
 
     async goto(): Promise<void> {
-        await this.page.goto('/whale-feed');
+        await this.page.goto('/whales');
         await expect(this.page.locator('h1', { hasText: 'Whale Tracker' })).toBeVisible({ timeout: 15_000 });
     }
 

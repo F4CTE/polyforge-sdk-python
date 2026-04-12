@@ -24,7 +24,7 @@ import {
  */
 
 const ALICE_EMAIL    = 'alice@dev.local';
-const ALICE_PASSWORD = process.env.CI === 'true' ? 'TestPass123!' : 'password123';
+const ALICE_PASSWORD = 'TestPass123!';
 
 let aliceToken = '';
 

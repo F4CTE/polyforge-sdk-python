@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { LoginPage }    from '../pages/login.page';
 
 const ALICE_EMAIL    = 'alice@dev.local';
-const ALICE_PASSWORD = process.env.CI === 'true' ? 'TestPass123!' : 'password123';
+const ALICE_PASSWORD = 'TestPass123!';
 
 test.describe('Copy Trading', () => {
 

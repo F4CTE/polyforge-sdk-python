@@ -16,13 +16,16 @@ export class CopyListPage {
 
     constructor(page: Page) {
         this.page = page;
-        this.newCopyButton = page.locator('button', { hasText: 'New Copy Config' });
+        // "New Copy Config" is rendered as an <a> link (href="/copy/new"), not a button.
+        this.newCopyButton = page.locator('a', { hasText: 'New Copy Config' });
         this.copyCards = page.locator('[data-testid="copy-config-card"]');
 
+        // Actual filter buttons: All, Active, Paused, Stopped
         this.statusFilter = {
-            Active: page.locator('button', { hasText: 'Active' }),
-            Inactive: page.locator('button', { hasText: 'Inactive' }),
             All: page.locator('button', { hasText: 'All' }),
+            Active: page.locator('button', { hasText: 'Active' }),
+            Paused: page.locator('button', { hasText: 'Paused' }),
+            Stopped: page.locator('button', { hasText: 'Stopped' }),
         };
 
         this.paginationPrev = page.locator('button[aria-label="Previous page"]');

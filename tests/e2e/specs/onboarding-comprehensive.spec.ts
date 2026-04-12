@@ -38,6 +38,14 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
     // ─────────────────────────────────────────────────────────────────────────
 
     test('@smoke new user sees onboarding checklist on first visit', async ({ page }) => {
+        // Clear onboarding flags so the checklist appears for fresh users
+        await page.addInitScript(() => {
+            localStorage.removeItem('polyforge:onboarding:dismissed');
+            localStorage.removeItem('polyforge:onboarding:completed');
+            localStorage.removeItem('pf-onboarding-complete');
+            localStorage.removeItem('pf-onboarding-dismissed');
+        });
+
         const registerPage = new RegisterPage(page);
         const loginPage = new LoginPage(page);
         const email = uniqueEmail('onboard');
@@ -62,6 +70,14 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
     });
 
     test('checklist shows 6 required items', async ({ page }) => {
+        // Clear onboarding flags so the checklist appears for fresh users
+        await page.addInitScript(() => {
+            localStorage.removeItem('polyforge:onboarding:dismissed');
+            localStorage.removeItem('polyforge:onboarding:completed');
+            localStorage.removeItem('pf-onboarding-complete');
+            localStorage.removeItem('pf-onboarding-dismissed');
+        });
+
         const registerPage = new RegisterPage(page);
         const loginPage = new LoginPage(page);
         const email = uniqueEmail('checkitems');
@@ -75,9 +91,6 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
         await expect(page.locator('h1', { hasText: /verified/i })).toBeVisible({ timeout: 15_000 });
 
         await loginPage.goto();
-
-        // Clear onboarding-complete flag so checklist appears for fresh user
-        await page.evaluate(() => localStorage.removeItem('pf-onboarding-complete'));
 
         await loginPage.loginAndRedirect(email, 'Password123!');
 
@@ -108,6 +121,14 @@ test.describe.serial('Onboarding — Full Workflow Coverage', () => {
     });
 
     test('completing a checklist item checks it off', async ({ page }) => {
+        // Clear onboarding flags so the checklist appears for fresh users
+        await page.addInitScript(() => {
+            localStorage.removeItem('polyforge:onboarding:dismissed');
+            localStorage.removeItem('polyforge:onboarding:completed');
+            localStorage.removeItem('pf-onboarding-complete');
+            localStorage.removeItem('pf-onboarding-dismissed');
+        });
+
         const registerPage = new RegisterPage(page);
         const loginPage = new LoginPage(page);
         const email = uniqueEmail('completeitem');

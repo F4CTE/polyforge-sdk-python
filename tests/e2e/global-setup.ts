@@ -43,7 +43,7 @@ export default async function globalSetup() {
     // Approve ALL seed users — safety net in case the seed's updateMany didn't run
     // or the approved column was reset by a migration/rebuild.
     execSync(
-      `docker exec polyforge-dev-postgres-1 psql -U poly -d polyforge -c "UPDATE \\"user\\" SET approved = true, \\"approvedAt\\" = NOW() WHERE approved = false AND suspended = false"`,
+      `docker exec polyforge-dev-postgres-1 psql -U poly -d polyforge -c "UPDATE users SET approved = true, \\"approvedAt\\" = NOW() WHERE approved = false AND suspended = false"`,
       { stdio: 'ignore', timeout: 5000 },
     );
 

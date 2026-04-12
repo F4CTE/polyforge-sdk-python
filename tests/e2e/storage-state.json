@@ -5,7 +5,9 @@
       "origin": "http://localhost",
       "localStorage": [
         { "name": "pf-onboarding-complete", "value": "true" },
-        { "name": "pf-onboarding-dismissed", "value": "true" }
+        { "name": "pf-onboarding-dismissed", "value": "true" },
+        { "name": "polyforge:onboarding:dismissed", "value": "true" },
+        { "name": "polyforge:onboarding:completed", "value": "{\"profile\":true,\"markets\":true,\"strategy\":true,\"backtest\":true,\"paper\":true,\"notifications\":true}" }
       ]
     }
   ]
