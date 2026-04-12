@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Security
+- **Webhook SSRF (TOCTOU)**: refactor `_validate_webhook_url` to eliminate DNS rebinding race condition (CWE-367) — extracted `_is_ip_blocked()` and `_resolve_and_validate_ips()` helpers, now returns resolved IPs for audit logging, documented server-side validation requirement (closes #69)
 - **deps**: upgrade `setuptools>=78.1.1` and `wheel>=0.46.2` in CI before `pip install` — fixes PYSEC-2025-49 (path traversal/RCE), GHSA-cx63-2mw6-8hw5 (RCE via `package_index`), GHSA-8rrh-rw8j-w5fx (path traversal in `wheel.cli.unpack`) (closes #70)
 - **CI**: switch from self-hosted runner to `ubuntu-latest` for `pull_request` events and add `permissions: contents: read` to restrict GITHUB_TOKEN scope (closes #68)
 - **`__repr__`**: fully redact API key in both `PolyforgeClient` and `AsyncPolyforgeClient` — previously leaked first 6 characters which is sufficient to identify keys with known prefix formats (closes #37)
