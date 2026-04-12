@@ -115,7 +115,7 @@ test.describe('Auth flow', () => {
     test('login with wrong password shows error', async ({ page }) => {
         const loginPage = new LoginPage(page);
         await loginPage.goto();
-        await loginPage.login('alice@dev.local', 'wrongpassword');
+        await loginPage.login('alice@e2e.dev.local', 'wrongpassword');
         const err = await loginPage.errorText();
         expect(err.toLowerCase()).toMatch(/invalid|incorrect|credentials/);
     });
@@ -139,7 +139,7 @@ test.describe('Auth flow', () => {
     test('logout redirects to login', async ({ page }) => {
         const loginPage = new LoginPage(page);
         await loginPage.goto();
-        await loginPage.loginAndRedirect('alice@dev.local', 'TestPass123!');
+        await loginPage.loginAndRedirect('alice@e2e.dev.local', 'TestPass123!');
 
         // Open user menu dropdown and click Sign out
         await page.locator('[data-testid="user-menu-btn"]').click();

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage }    from '../pages/login.page';
 
-const ALICE_EMAIL    = 'alice@dev.local';
+const ALICE_EMAIL    = 'alice@e2e.dev.local';
 const ALICE_PASSWORD = 'TestPass123!';
 
 test.describe('Whale Tracking', () => {

@@ -1850,7 +1850,7 @@ export function Component() {
           })()}
 
           {/* P&L Chart */}
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg">
+          <div data-testid="pnl-chart" className="bg-pf-elevated border border-pf-border rounded-pf-lg">
             <div className="flex items-center justify-between px-4 py-3 border-b border-pf-border-subtle">
               <span className="text-sm font-medium text-pf-text">P&L Over Time</span>
               <div className="flex gap-1">
@@ -1910,7 +1910,7 @@ export function Component() {
           </div>
 
           {/* Positions table */}
-          <div className="bg-pf-elevated border border-pf-border rounded-pf-lg">
+          <div data-testid="positions-table" className="bg-pf-elevated border border-pf-border rounded-pf-lg">
             <div className="px-4 py-3 border-b border-pf-border-subtle">
               <span className="text-sm font-medium text-pf-text">Open Positions</span>
             </div>

@@ -20,10 +20,10 @@ import {
  *   - Edit an existing strategy
  *   - Delete strategy via API (teardown)
  *
- * Uses alice@dev.local which is pre-seeded, verified, and connected.
+ * Uses alice@e2e.dev.local which is pre-seeded, verified, and connected.
  */
 
-const ALICE_EMAIL    = 'alice@dev.local';
+const ALICE_EMAIL    = 'alice@e2e.dev.local';
 const ALICE_PASSWORD = 'TestPass123!';
 
 let aliceToken = '';

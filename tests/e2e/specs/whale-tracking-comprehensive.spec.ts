@@ -19,7 +19,7 @@ test.describe('Whale Tracking — Full Workflow Coverage', () => {
             await whaleFeedPage.goto();
 
             expect(page.url()).toContain('/whale');
-            await expect(page.locator('h1', { hasText: /whale|tracking/ })).toBeVisible();
+            await expect(page.locator('h1', { hasText: /whale/i })).toBeVisible();
         });
 
         test('Shows whale transaction items', async ({ page }) => {

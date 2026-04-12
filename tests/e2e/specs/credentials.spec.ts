@@ -27,7 +27,7 @@ const FAKE_PASSPHRASE = 'test-passphrase';
 async function loginAsAlice(page: Parameters<typeof test>[1] extends { page: infer P } ? P : never): Promise<void> {
     const loginPage = new LoginPage(page as any);
     await loginPage.goto();
-    await loginPage.loginAndRedirect('alice@dev.local', 'TestPass123!');
+    await loginPage.loginAndRedirect('alice@e2e.dev.local', 'TestPass123!');
 }
 
 test.describe('Trading Account credentials', () => {
@@ -39,7 +39,7 @@ test.describe('Trading Account credentials', () => {
     test('trading account page is reachable', async ({ page }) => {
         const loginPage = new LoginPage(page);
         await loginPage.goto();
-        await loginPage.loginAndRedirect('alice@dev.local', 'TestPass123!');
+        await loginPage.loginAndRedirect('alice@e2e.dev.local', 'TestPass123!');
 
         const tradingPage = new TradingAccountPage(page);
         await tradingPage.goto();
@@ -50,7 +50,7 @@ test.describe('Trading Account credentials', () => {
     test('shows status badge indicating connection status', async ({ page }) => {
         const loginPage = new LoginPage(page);
         await loginPage.goto();
-        await loginPage.loginAndRedirect('alice@dev.local', 'TestPass123!');
+        await loginPage.loginAndRedirect('alice@e2e.dev.local', 'TestPass123!');
 
         const tradingPage = new TradingAccountPage(page);
         await tradingPage.goto();
@@ -60,7 +60,7 @@ test.describe('Trading Account credentials', () => {
     test('connect button is disabled until all required fields are filled', async ({ page }) => {
         const loginPage = new LoginPage(page);
         await loginPage.goto();
-        await loginPage.loginAndRedirect('alice@dev.local', 'TestPass123!');
+        await loginPage.loginAndRedirect('alice@e2e.dev.local', 'TestPass123!');
 
         const tradingPage = new TradingAccountPage(page);
         await tradingPage.goto();
@@ -137,7 +137,7 @@ test.describe('Trading Account credentials', () => {
         // Use alice who is pre-connected
         const loginPage = new LoginPage(page);
         await loginPage.goto();
-        await loginPage.loginAndRedirect('alice@dev.local', 'TestPass123!');
+        await loginPage.loginAndRedirect('alice@e2e.dev.local', 'TestPass123!');
 
         const tradingPage = new TradingAccountPage(page);
         await tradingPage.goto();

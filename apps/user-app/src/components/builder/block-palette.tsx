@@ -266,6 +266,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                   {meta.label}
                   {count > 0 && (
                     <span
+                      data-testid="block-count"
                       className="ml-1 px-1 py-px rounded-pf-full text-pf-micro font-semibold leading-none"
                       style={{
                         backgroundColor: isActive ? 'color-mix(in srgb, var(--color-pf-text) 25%, transparent)' : `color-mix(in srgb, ${meta.color} 19%, transparent)`,

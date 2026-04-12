@@ -10,11 +10,11 @@ import { apiLogin }     from '../helpers/api';
  * These tests verify that the app is reachable, the login flow works,
  * and key authenticated routes are accessible.
  *
- * They rely on the pre-seeded alice@dev.local user.
+ * They rely on the pre-seeded alice@e2e.dev.local user.
  * In CI (CI=true) the seed uses a fixed password; see prisma/seed.ts.
  */
 
-const ALICE_EMAIL    = 'alice@dev.local';
+const ALICE_EMAIL    = 'alice@e2e.dev.local';
 const ALICE_PASSWORD = 'TestPass123!';
 
 test.describe('Smoke', () => {
