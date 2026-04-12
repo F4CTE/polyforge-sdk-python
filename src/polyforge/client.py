@@ -530,7 +530,7 @@ class PolyforgeClient:
         outcome: str,
         total_size: float,
         slices: int | None = None,
-        interval_seconds: int | None = None,
+        interval_minutes: int | None = None,
         limit_price: float | None = None,
         entry_price: float | None = None,
         take_profit_price: float | None = None,
@@ -547,7 +547,7 @@ class PolyforgeClient:
             "totalSize": total_size,
         }
         if slices is not None: body["slices"] = slices
-        if interval_seconds is not None: body["intervalSeconds"] = interval_seconds
+        if interval_minutes is not None: body["intervalMinutes"] = interval_minutes
         if limit_price is not None: body["limitPrice"] = limit_price
         if entry_price is not None: body["entryPrice"] = entry_price
         if take_profit_price is not None: body["takeProfitPrice"] = take_profit_price
@@ -1076,7 +1076,7 @@ class AsyncPolyforgeClient:
         outcome: str,
         total_size: float,
         slices: int | None = None,
-        interval_seconds: int | None = None,
+        interval_minutes: int | None = None,
         limit_price: float | None = None,
         entry_price: float | None = None,
         take_profit_price: float | None = None,
@@ -1093,7 +1093,7 @@ class AsyncPolyforgeClient:
             "totalSize": total_size,
         }
         if slices is not None: body["slices"] = slices
-        if interval_seconds is not None: body["intervalSeconds"] = interval_seconds
+        if interval_minutes is not None: body["intervalMinutes"] = interval_minutes
         if limit_price is not None: body["limitPrice"] = limit_price
         if entry_price is not None: body["entryPrice"] = entry_price
         if take_profit_price is not None: body["takeProfitPrice"] = take_profit_price

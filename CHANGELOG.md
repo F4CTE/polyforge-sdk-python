@@ -10,6 +10,7 @@
 - **Webhook SSRF**: add `.local` mDNS hostname blocking to `_validate_webhook_url` (hardens existing #38 fix)
 
 ### Fixed
+- **BREAKING** `place_smart_order()`: revert `interval_seconds`/`intervalSeconds` back to `interval_minutes`/`intervalMinutes` — the #64 fix was based on incorrect platform contract info; platform DTO uses `intervalMinutes` (closes #79)
 - **#48** `ai_query()`: request body field renamed `query` → `question` to match platform `AiQueryDto` (affects both sync and async clients)
 - **#49** `run_backtest()`: request body fields renamed `startDate` → `dateRangeStart` and `endDate` → `dateRangeEnd`; removed non-whitelisted `initialBalance` field; added `quickMode`, `strategyBlocks`, `marketBindings` optional parameters (affects both sync and async clients)
 - **#42** `WebhookEvent` class: event value strings converted from `SCREAMING_SNAKE_CASE` to `dot.notation` (e.g. `ORDER_FILLED = "order.filled"`) to match platform webhook registration contract
