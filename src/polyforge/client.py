@@ -5,6 +5,7 @@ from __future__ import annotations
 import ipaddress
 import json as _json
 import logging as _log
+import re
 import socket
 from dataclasses import fields
 from typing import Any, AsyncIterator, Iterator, TypeVar, get_type_hints
@@ -77,16 +78,24 @@ _MODEL_REGISTRY: dict[str, type] = {
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _camel_to_snake(name: str) -> str:
+    """Convert camelCase to snake_case (e.g. 'baseToken' -> 'base_token')."""
+    return re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", name).lower()
+
+
 def _parse(cls: type[T], data: dict[str, Any]) -> T:
     """Recursively instantiate a dataclass from a JSON dict."""
     if not isinstance(data, dict):
         return data  # type: ignore[return-value]
 
+    # Build a snake_case lookup so camelCase API keys map to dataclass fields
+    snake_data = {_camel_to_snake(k): v for k, v in data.items()}
+
     hints = get_type_hints(cls)
     kwargs: dict[str, Any] = {}
 
     for f in fields(cls):  # type: ignore[arg-type]
-        raw = data.get(f.name)
+        raw = data.get(f.name) or snake_data.get(f.name)
         if raw is None:
             continue
 
@@ -272,6 +281,8 @@ class PolyforgeClient:
     def _delete(self, path: str) -> Any:
         resp = self._client.delete(path)
         _raise_for_status(resp)
+        if resp.status_code == 204:
+            return None
         return resp.json()
 
     # -- Markets --
@@ -519,7 +530,7 @@ class PolyforgeClient:
         outcome: str,
         total_size: float,
         slices: int | None = None,
-        interval_minutes: int | None = None,
+        interval_seconds: int | None = None,
         limit_price: float | None = None,
         entry_price: float | None = None,
         take_profit_price: float | None = None,
@@ -536,7 +547,7 @@ class PolyforgeClient:
             "totalSize": total_size,
         }
         if slices is not None: body["slices"] = slices
-        if interval_minutes is not None: body["intervalMinutes"] = interval_minutes
+        if interval_seconds is not None: body["intervalSeconds"] = interval_seconds
         if limit_price is not None: body["limitPrice"] = limit_price
         if entry_price is not None: body["entryPrice"] = entry_price
         if take_profit_price is not None: body["takeProfitPrice"] = take_profit_price
@@ -821,6 +832,8 @@ class AsyncPolyforgeClient:
     async def _delete(self, path: str) -> Any:
         resp = await self._client.delete(path)
         _raise_for_status(resp)
+        if resp.status_code == 204:
+            return None
         return resp.json()
 
     # -- Markets --
@@ -1064,7 +1077,7 @@ class AsyncPolyforgeClient:
         outcome: str,
         total_size: float,
         slices: int | None = None,
-        interval_minutes: int | None = None,
+        interval_seconds: int | None = None,
         limit_price: float | None = None,
         entry_price: float | None = None,
         take_profit_price: float | None = None,
@@ -1081,7 +1094,7 @@ class AsyncPolyforgeClient:
             "totalSize": total_size,
         }
         if slices is not None: body["slices"] = slices
-        if interval_minutes is not None: body["intervalMinutes"] = interval_minutes
+        if interval_seconds is not None: body["intervalSeconds"] = interval_seconds
         if limit_price is not None: body["limitPrice"] = limit_price
         if entry_price is not None: body["entryPrice"] = entry_price
         if take_profit_price is not None: body["takeProfitPrice"] = take_profit_price
