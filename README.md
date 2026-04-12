@@ -51,7 +51,7 @@ asyncio.run(main())
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `api_key` | *required* | Your Polyforge API key |
-| `api_url` | `http://localhost:3002` | Base URL of the Polyforge API |
+| `api_url` | `https://api.polyforge.app` | Base URL of the Polyforge API |
 | `timeout` | `15.0` | Request timeout in seconds |
 
 ## API Reference

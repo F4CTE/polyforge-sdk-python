@@ -185,7 +185,8 @@ def _validate_webhook_url(url: str) -> None:
         raise ValueError("Webhook URL must contain a valid hostname")
 
     # --- blocked hostname check ---
-    if hostname.lower() in _BLOCKED_HOSTNAMES:
+    lower_hostname = hostname.lower()
+    if lower_hostname in _BLOCKED_HOSTNAMES or lower_hostname.endswith(".local"):
         raise ValueError("Webhook URL cannot point to localhost or internal addresses")
 
     # --- resolve hostname and validate each resulting IP ---
@@ -235,7 +236,7 @@ class PolyforgeClient:
     def __init__(
         self,
         api_key: str,
-        api_url: str = "https://localhost:3002",
+        api_url: str = "https://api.polyforge.app",
         timeout: float = 15.0,
     ) -> None:
         self._api_key = api_key
@@ -258,8 +259,7 @@ class PolyforgeClient:
         )
 
     def __repr__(self) -> str:
-        masked = self._api_key[:6] + "***" if len(self._api_key) > 6 else "***"
-        return f"PolyforgeClient(api_key='{masked}', base_url='{self._api_url}')"
+        return f"PolyforgeClient(api_key='[REDACTED]', base_url='{self._api_url}')"
 
     # -- helpers --
 
@@ -786,7 +786,7 @@ class AsyncPolyforgeClient:
     def __init__(
         self,
         api_key: str,
-        api_url: str = "https://localhost:3002",
+        api_url: str = "https://api.polyforge.app",
         timeout: float = 15.0,
     ) -> None:
         self._api_key = api_key
@@ -809,8 +809,7 @@ class AsyncPolyforgeClient:
         )
 
     def __repr__(self) -> str:
-        masked = self._api_key[:6] + "***" if len(self._api_key) > 6 else "***"
-        return f"AsyncPolyforgeClient(api_key='{masked}', base_url='{self._api_url}')"
+        return f"AsyncPolyforgeClient(api_key='[REDACTED]', base_url='{self._api_url}')"
 
     # -- helpers --
 
