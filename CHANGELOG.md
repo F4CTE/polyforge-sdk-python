@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Security
+- **deps**: upgrade `setuptools>=78.1.1` and `wheel>=0.46.2` in CI before `pip install` — fixes PYSEC-2025-49 (path traversal/RCE), GHSA-cx63-2mw6-8hw5 (RCE via `package_index`), GHSA-8rrh-rw8j-w5fx (path traversal in `wheel.cli.unpack`) (closes #70)
 - **CI**: switch from self-hosted runner to `ubuntu-latest` for `pull_request` events and add `permissions: contents: read` to restrict GITHUB_TOKEN scope (closes #68)
 - **`__repr__`**: fully redact API key in both `PolyforgeClient` and `AsyncPolyforgeClient` — previously leaked first 6 characters which is sufficient to identify keys with known prefix formats (closes #37)
 - **Default URL**: change default `api_url` from `https://localhost:3002` to `https://api.polyforge.app` — localhost with HTTPS causes TLS failures that encourage insecure workarounds (closes #47)
