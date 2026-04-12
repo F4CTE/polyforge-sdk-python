@@ -4,6 +4,10 @@
 
 ### Security
 - **CI**: switch from self-hosted runner to `ubuntu-latest` for `pull_request` events and add `permissions: contents: read` to restrict GITHUB_TOKEN scope (closes #68)
+- **`__repr__`**: fully redact API key in both `PolyforgeClient` and `AsyncPolyforgeClient` — previously leaked first 6 characters which is sufficient to identify keys with known prefix formats (closes #37)
+- **Default URL**: change default `api_url` from `https://localhost:3002` to `https://api.polyforge.app` — localhost with HTTPS causes TLS failures that encourage insecure workarounds (closes #47)
+- **README**: fix documented default URL from `http://localhost:3002` to `https://api.polyforge.app` to match code (closes #78)
+- **Webhook SSRF**: add `.local` mDNS hostname blocking to `_validate_webhook_url` (hardens existing #38 fix)
 
 ### Fixed
 - **#48** `ai_query()`: request body field renamed `query` → `question` to match platform `AiQueryDto` (affects both sync and async clients)

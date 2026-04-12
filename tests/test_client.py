@@ -1,7 +1,7 @@
 """Basic smoke tests for PolyforgeClient."""
 
 import pytest
-from polyforge.client import PolyforgeClient, AsyncPolyforgeClient
+from polyforge.client import PolyforgeClient, AsyncPolyforgeClient, _validate_webhook_url
 from polyforge.errors import (
     PolyforgeError,
     AuthenticationError,
@@ -248,6 +248,46 @@ class TestModelParsing:
         assert strategy.pnl == 0.0
         assert strategy.win_rate == 0.0
         assert strategy.total_trades == 0
+
+
+class TestReprSecurity:
+    """Test that __repr__ does not leak API key material."""
+
+    def test_sync_client_repr_redacts_api_key(self):
+        """Should fully redact API key in sync client __repr__."""
+        client = PolyforgeClient(api_key="pf_live_supersecretkey123456")
+        repr_str = repr(client)
+        assert "supersecret" not in repr_str
+        assert "pf_live" not in repr_str
+        assert "[REDACTED]" in repr_str
+        client.close()
+
+    def test_async_client_repr_redacts_api_key(self):
+        """Should fully redact API key in async client __repr__."""
+        client = AsyncPolyforgeClient(api_key="pf_live_supersecretkey123456")
+        repr_str = repr(client)
+        assert "supersecret" not in repr_str
+        assert "pf_live" not in repr_str
+        assert "[REDACTED]" in repr_str
+
+
+class TestWebhookValidation:
+    """Test webhook URL SSRF validation."""
+
+    def test_rejects_dot_local_hostname(self):
+        """Should reject .local hostnames to prevent mDNS SSRF."""
+        with pytest.raises(ValueError, match="internal addresses"):
+            _validate_webhook_url("https://myservice.local/hook")
+
+    def test_rejects_http_scheme(self):
+        """Should reject non-HTTPS webhook URLs."""
+        with pytest.raises(ValueError, match="HTTPS"):
+            _validate_webhook_url("http://example.com/hook")
+
+    def test_rejects_localhost(self):
+        """Should reject localhost webhook URLs."""
+        with pytest.raises(ValueError, match="internal addresses"):
+            _validate_webhook_url("https://localhost/hook")
 
 
 class TestContextManagers:
