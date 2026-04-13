@@ -276,6 +276,7 @@ services:
       NEWS_RSS_FEEDS: ${NEWS_RSS_FEEDS:-}
       GEO_BLOCKED_COUNTRIES: ${GEO_BLOCKED_COUNTRIES:-US,AU,BE,BY,BI,CF,CG,CU,DE,ET,FR,GB,IR,IQ,IT,KP,LB,LY,MM,NI,NL,RU,SO,SS,SD,SY,VE,YE,ZW,UM}
       GEO_CLOSE_ONLY_COUNTRIES: ${GEO_CLOSE_ONLY_COUNTRIES:-PL,SG,TH,TW}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://polyforge-lab,http://polyforge-lab:8080}
       PORT: "3002"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
       NODE_OPTIONS: "--max-old-space-size=1024"
@@ -453,6 +454,7 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       INVITE_ONLY: ${INVITE_ONLY:-false}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://polyforge-lab,http://polyforge-lab:8080}
       AUTH_SERVICE_PORT: "3001"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
@@ -480,6 +482,7 @@ services:
       ADMIN_JWT_SECRET: "${ADMIN_JWT_SECRET:?ADMIN_JWT_SECRET is required}"
       TOTP_ENCRYPTION_KEY: "${TOTP_ENCRYPTION_KEY:?TOTP_ENCRYPTION_KEY is required}"
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://polyforge-lab,http://polyforge-lab:8080}
       ADMIN_AUTH_SERVICE_PORT: "3003"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
