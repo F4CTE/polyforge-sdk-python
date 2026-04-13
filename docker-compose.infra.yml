@@ -513,6 +513,8 @@ services:
     build:
       context: .
       dockerfile: apps/landing/Dockerfile
+    ports:
+      - "3000:3000"
     networks: [internal]
     restart: unless-stopped
 
@@ -526,7 +528,7 @@ services:
       - ./services/gateway/nginx.dev.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "80:80"
-      - "127.0.0.1:8080:8080"
+      - "8080:8080"
     networks: [internal, admin-only]
     depends_on:
       - user-app
