@@ -18,8 +18,8 @@ export default defineConfig({
     testDir:   './specs',
     fullyParallel: false,           // sequential within a file, but each file gets a fresh context
     forbidOnly: !!process.env.CI,
-    retries:   process.env.CI ? 2 : 0,
-    workers:   process.env.CI ? 2 : 1,  // 2 on CI (30GB RAM handles it), 1 local
+    retries:   process.env.CI ? 1 : 0,
+    workers:   1,  // Sequential: 2 workers cause resource contention on shared Docker backend
     reporter:  [['html', { open: 'never' }], ['list']],
 
     use: {
@@ -35,7 +35,7 @@ export default defineConfig({
         // Allow extra time for SPA loading through nginx proxy in Docker.
         // First cold-start navigation can take up to 25s on a dev machine.
         navigationTimeout: process.env.CI ? 15_000 : 30_000,
-        actionTimeout:     process.env.CI ? 8_000  : 15_000,
+        actionTimeout:     process.env.CI ? 12_000 : 15_000,
         // Larger viewport to avoid cookie banner overlapping form buttons
         viewport:      { width: 1280, height: 900 },
     },

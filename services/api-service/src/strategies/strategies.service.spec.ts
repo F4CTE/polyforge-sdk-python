@@ -617,7 +617,7 @@ describe("StrategiesService", () => {
   // ── start ─────────────────────────────────────────────────────────────────
 
   describe("start", () => {
-    it("calls engine and returns RUNNING status for paper mode", async () => {
+    it("calls engine and returns PAPER status for paper mode", async () => {
       const strategy = makeStrategy({
         userId: "user-1",
         status: StrategyStatus.IDLE,
@@ -629,7 +629,7 @@ describe("StrategiesService", () => {
         mode: "paper",
       } as StartStrategyDto);
 
-      expect(result.status).toBe("RUNNING");
+      expect(result.status).toBe("PAPER");
       expect(result.startedAt).toBeDefined();
     });
 

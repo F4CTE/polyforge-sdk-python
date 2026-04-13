@@ -88,10 +88,19 @@ export class PortfolioPage {
     }
 
     async getSummaryStats(): Promise<{ pnl: string; return: string; win_rate: string }> {
+        // Stats may not exist for a fresh user (still loading or no data).
+        // Use a short timeout and fallback to empty string.
+        const safeText = async (selector: string) => {
+            try {
+                return (await this.page.locator(selector).textContent({ timeout: 5_000 })) ?? '';
+            } catch {
+                return '';
+            }
+        };
         return {
-            pnl: (await this.page.locator('[data-testid="stat-pnl"]').textContent()) ?? '',
-            return: (await this.page.locator('[data-testid="stat-return"]').textContent()) ?? '',
-            win_rate: (await this.page.locator('[data-testid="stat-win-rate"]').textContent()) ?? '',
+            pnl: await safeText('[data-testid="stat-pnl"]'),
+            return: await safeText('[data-testid="stat-return"]'),
+            win_rate: await safeText('[data-testid="stat-win-rate"]'),
         };
     }
 }

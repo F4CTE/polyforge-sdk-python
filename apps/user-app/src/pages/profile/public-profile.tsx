@@ -416,9 +416,9 @@ export function Component() {
             </div>
           )}
           <div>
-            <div className="text-lg font-semibold text-pf-text">{profile.displayName ?? profile.username}</div>
+            <div data-testid="profile-display-name" className="text-lg font-semibold text-pf-text">{profile.displayName ?? profile.username}</div>
             {profile.displayName && (
-              <div className="text-sm text-pf-text-muted">@{profile.username}</div>
+              <div data-testid="profile-username" className="text-sm text-pf-text-muted">@{profile.username}</div>
             )}
             <div className="text-xs font-mono text-pf-text-muted mt-1">Joined {joinedDate}</div>
           </div>
@@ -426,7 +426,7 @@ export function Component() {
 
         {/* Bio */}
         {profile.bio && (
-          <p className="text-sm text-pf-text-secondary mb-4 leading-relaxed">{profile.bio}</p>
+          <p data-testid="profile-bio" className="text-sm text-pf-text-secondary mb-4 leading-relaxed">{profile.bio}</p>
         )}
 
         {/* Stats */}
@@ -448,7 +448,7 @@ export function Component() {
 
       {/* Score breakdown */}
       {scoreData?.score && (
-        <div data-testid="trader-stats" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
+        <div data-testid="edge-rating" className="bg-pf-elevated border border-pf-border rounded-pf-lg p-6">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="size-4 text-pf-cyan-400" />
             <h2 className="text-sm font-semibold text-pf-text">Edge Rating</h2>

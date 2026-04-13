@@ -23,6 +23,7 @@ export class TicketsService {
           userId,
           subject: dto.subject,
           category: (dto.category as any) ?? "GENERAL",
+          priority: (dto.priority as any) ?? "MEDIUM",
           status: "OPEN",
         },
       });

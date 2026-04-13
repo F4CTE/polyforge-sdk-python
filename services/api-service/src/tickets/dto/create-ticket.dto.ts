@@ -23,6 +23,10 @@ export class CreateTicketDto {
   ])
   category?: string = "GENERAL";
 
+  @IsOptional()
+  @IsIn(["LOW", "MEDIUM", "HIGH", "URGENT"])
+  priority?: string = "MEDIUM";
+
   @IsString()
   @MinLength(1)
   @MaxLength(5000)

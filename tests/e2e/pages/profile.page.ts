@@ -21,7 +21,7 @@ export class ProfilePage {
 
     constructor(page: Page) {
         this.page = page;
-        this.editProfileButton = page.locator('button', { hasText: 'Edit Profile' });
+        this.editProfileButton = page.locator('a, button', { hasText: 'Edit Profile' });
         this.displayName = page.locator('[data-testid="profile-display-name"]');
         this.username = page.locator('[data-testid="profile-username"]');
         this.bio = page.locator('[data-testid="profile-bio"]');
@@ -40,6 +40,7 @@ export class ProfilePage {
 
     async goToEditProfile(): Promise<void> {
         await this.editProfileButton.click();
+        await this.page.waitForURL('**/settings**', { timeout: 15_000 });
     }
 
     async getDisplayName(): Promise<string> {
@@ -58,6 +59,9 @@ export class ProfilePage {
     }
 
     async getEdgeRating(): Promise<string> {
+        // Edge rating section only renders when the user has trading stats.
+        const visible = await this.edgeRating.isVisible().catch(() => false);
+        if (!visible) return '';
         return (await this.edgeRating.textContent()) ?? '';
     }
 

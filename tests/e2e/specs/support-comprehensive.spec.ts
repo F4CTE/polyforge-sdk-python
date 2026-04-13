@@ -51,7 +51,7 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         await supportPage.gotoSupport();
 
         const ticketList = page.locator('[data-testid="ticket-list"], [class*="ticket"], [role="table"]');
-        const emptyState = page.locator('[data-testid="empty-state"], text=No tickets');
+        const emptyState = page.locator('[data-testid="empty-state"]').or(page.getByText('No tickets'));
 
         // Either should show tickets or empty state
         const ticketListVisible = await ticketList.isVisible();
@@ -69,7 +69,8 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
     test('ticket table has correct columns', async ({ page }) => {
         await supportPage.gotoSupport();
 
-        const headers = page.locator('[role="columnheader"]');
+        // Use thead th — the table uses <th scope="col">, not explicit role="columnheader"
+        const headers = page.locator('thead th[scope="col"]');
         const headerTexts = await headers.allTextContents();
         const headerString = headerTexts.join(',').toLowerCase();
 
@@ -141,12 +142,13 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         const count = await faqItems.count();
 
         if (count > 0) {
-            const firstItem = faqItems.first();
-            await firstItem.click();
+            // Target the button inside the FAQ item (aria-expanded lives on the button, not the wrapper div)
+            const firstBtn = faqItems.first().locator('button').first();
+            await firstBtn.click();
 
-            // Check if expanded (usually aria-expanded or visible content)
-            const expanded = await firstItem.getAttribute('aria-expanded');
-            expect(expanded).toBeDefined();
+            // Check if expanded
+            const expanded = await firstBtn.getAttribute('aria-expanded');
+            expect(expanded).toBe('true');
         }
     });
 
@@ -157,16 +159,16 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         const count = await faqItems.count();
 
         if (count > 0) {
-            const firstItem = faqItems.first();
+            // Target the button inside the FAQ item (aria-expanded lives on the button, not the wrapper div)
+            const firstBtn = faqItems.first().locator('button').first();
 
-            // Click to expand
-            await firstItem.click();
+            // Click to expand and wait for React to render the expanded state
+            await firstBtn.click();
+            await expect(firstBtn).toHaveAttribute('aria-expanded', 'true', { timeout: 5_000 });
 
-            // Click to collapse
-            await firstItem.click();
-
-            const expanded = await firstItem.getAttribute('aria-expanded');
-            expect(expanded === 'false' || expanded === undefined).toBe(true);
+            // Click to collapse and verify via auto-retry assertion
+            await firstBtn.click();
+            await expect(firstBtn).toHaveAttribute('aria-expanded', 'false', { timeout: 5_000 });
         }
     });
 
@@ -177,13 +179,22 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         const count = await faqItems.count();
 
         if (count >= 2) {
-            // Expand first two items
-            await faqItems.nth(0).click();
-            await faqItems.nth(1).click();
+            // Target inner buttons (aria-expanded lives on the Button, not the wrapper div)
+            const firstBtn = faqItems.nth(0).locator('button').first();
+            const secondBtn = faqItems.nth(1).locator('button').first();
 
-            const firstExpanded = await faqItems.nth(0).getAttribute('aria-expanded');
-            const secondExpanded = await faqItems.nth(1).getAttribute('aria-expanded');
+            // Expand first item and verify
+            await firstBtn.click();
+            await expect(firstBtn).toHaveAttribute('aria-expanded', 'true', { timeout: 5_000 });
 
+            // Expand second item
+            await secondBtn.click();
+            await expect(secondBtn).toHaveAttribute('aria-expanded', 'true', { timeout: 5_000 });
+
+            // The FAQ uses single-open accordion (openFaq state), so only the
+            // last clicked item stays expanded. Verify at least one is expanded.
+            const firstExpanded = await firstBtn.getAttribute('aria-expanded');
+            const secondExpanded = await secondBtn.getAttribute('aria-expanded');
             expect(firstExpanded === 'true' || secondExpanded === 'true').toBe(true);
         }
     });
@@ -195,7 +206,10 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         const count = await faqItems.count();
 
         if (count > 0) {
-            await faqItems.first().click();
+            // Click the inner button to expand (aria-expanded lives on the button)
+            const firstBtn = faqItems.first().locator('button').first();
+            await firstBtn.click();
+            await expect(firstBtn).toHaveAttribute('aria-expanded', 'true', { timeout: 5_000 });
 
             const content = page.locator('[data-testid="faq-content"], .faq-answer');
             const text = await content.textContent();
@@ -213,6 +227,7 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         await supportPage.gotoSupport();
 
         await supportPage.clickNewTicket();
+        await page.waitForURL(/\/support\/new/, { timeout: 10_000 });
 
         expect(page.url()).toContain('/support/new');
     });
@@ -229,12 +244,14 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
     test('create ticket form has all required fields', async ({ page }) => {
         await supportPage.gotoNewTicket();
 
-        // Check for required attributes or labels
-        const requiredFields = page.locator('[required]');
-        const requiredCount = await requiredFields.count();
+        // Verify form has subject and description fields (the two required inputs)
+        const subject = page.locator('#ticket-subject, input[placeholder*="issue"]').first();
+        const body = page.locator('#ticket-body, textarea[placeholder*="escri"]').first();
+        await expect(subject).toBeVisible({ timeout: 5_000 });
+        await expect(body).toBeVisible({ timeout: 5_000 });
 
-        // Should have at least 2-3 required fields (subject, category, description)
-        expect(requiredCount).toBeGreaterThanOrEqual(2);
+        // Also check for submit button
+        await expect(supportPage.submitButton).toBeVisible();
     });
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -248,17 +265,13 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         await supportPage.createTicket({
             subject: `General inquiry ${timestamp}`,
             category: 'GENERAL',
-            priority: 'MEDIUM',
+
             description: `Test general inquiry created at ${timestamp}`,
         });
 
-        // Should redirect to ticket or show success
-        await expect(page.locator('[role="alert"], .toast, [data-testid="success-message"]')).toBeVisible({
-            timeout: 5000,
-        });
-
-        // Should no longer be on /support/new
-        expect(page.url()).not.toContain('/support/new');
+        // On success the app navigates to /support/:ticketId
+        // Ticket creation involves a Prisma transaction + Redis stream event (~10s under Docker)
+        await expect(page).toHaveURL(/\/support\/[a-f0-9-]+$/, { timeout: 30_000 });
     });
 
     test('create BILLING category ticket succeeds', async ({ page }) => {
@@ -268,11 +281,13 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         await supportPage.createTicket({
             subject: `Billing issue ${timestamp}`,
             category: 'BILLING',
-            priority: 'MEDIUM',
+
             description: `Test billing inquiry created at ${timestamp}`,
         });
 
-        expect(page.url()).not.toContain('/support/new');
+        // Ticket creation involves a Prisma transaction + Redis stream (~10s under Docker).
+        // Wait for navigation to the ticket detail page instead of a synchronous URL check.
+        await expect(page).toHaveURL(/\/support\/[a-f0-9-]+$/, { timeout: 30_000 });
     });
 
     test('create TECHNICAL category ticket succeeds', async ({ page }) => {
@@ -282,11 +297,11 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         await supportPage.createTicket({
             subject: `Technical issue ${timestamp}`,
             category: 'TECHNICAL',
-            priority: 'MEDIUM',
+
             description: `Test technical inquiry created at ${timestamp}`,
         });
 
-        expect(page.url()).not.toContain('/support/new');
+        await expect(page).toHaveURL(/\/support\/[a-f0-9-]+$/, { timeout: 30_000 });
     });
 
     test('create ACCOUNT category ticket succeeds', async ({ page }) => {
@@ -296,11 +311,11 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         await supportPage.createTicket({
             subject: `Account issue ${timestamp}`,
             category: 'ACCOUNT',
-            priority: 'MEDIUM',
+
             description: `Test account inquiry created at ${timestamp}`,
         });
 
-        expect(page.url()).not.toContain('/support/new');
+        await expect(page).toHaveURL(/\/support\/[a-f0-9-]+$/, { timeout: 30_000 });
     });
 
     test('create BUG category ticket succeeds', async ({ page }) => {
@@ -310,11 +325,11 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         await supportPage.createTicket({
             subject: `Bug report ${timestamp}`,
             category: 'BUG',
-            priority: 'MEDIUM',
+
             description: `Test bug report created at ${timestamp}`,
         });
 
-        expect(page.url()).not.toContain('/support/new');
+        await expect(page).toHaveURL(/\/support\/[a-f0-9-]+$/, { timeout: 30_000 });
     });
 
     test('create FEATURE_REQUEST category ticket succeeds', async ({ page }) => {
@@ -324,11 +339,11 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
         await supportPage.createTicket({
             subject: `Feature request ${timestamp}`,
             category: 'FEATURE_REQUEST',
-            priority: 'MEDIUM',
+
             description: `Test feature request created at ${timestamp}`,
         });
 
-        expect(page.url()).not.toContain('/support/new');
+        await expect(page).toHaveURL(/\/support\/[a-f0-9-]+$/, { timeout: 30_000 });
     });
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -348,15 +363,18 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             description: 'Test low priority ticket',
         });
 
+        // Wait for ticket creation to complete (redirects to /support/:ticketId)
+        await expect(page).toHaveURL(/\/support\/[a-f0-9-]+$/, { timeout: 30_000 });
 
         // Navigate to ticket list to verify priority
         await supportPage.gotoTickets();
 
-        const ticketRow = page.locator(`text=${subject}`);
-        const priorityBadge = ticketRow.locator('[data-testid="priority-badge"]').or(ticketRow.locator('text=/LOW/i'));
-
-        const count = await priorityBadge.count();
-        expect(count).toBeGreaterThan(0);
+        // Use the <tr> row (not text= which matches the <a>) so we can
+        // reach the sibling priority-badge <td>.
+        const ticketRow = page.locator('[data-testid="ticket-row"]', { hasText: subject });
+        await expect(ticketRow).toBeVisible({ timeout: 10_000 });
+        const priorityBadge = ticketRow.locator('[data-testid="priority-badge"]');
+        await expect(priorityBadge).toHaveText('LOW');
     });
 
     test('create MEDIUM priority ticket shows correct priority badge', async ({ page }) => {
@@ -372,11 +390,15 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             description: 'Test medium priority ticket',
         });
 
+        // Wait for ticket creation to complete (redirects to /support/:ticketId)
+        await expect(page).toHaveURL(/\/support\/[a-f0-9-]+$/, { timeout: 30_000 });
+
         await supportPage.gotoTickets();
 
-        const ticketRow = page.locator(`text=${subject}`);
-        const count = await ticketRow.count();
-        expect(count).toBeGreaterThan(0);
+        const ticketRow = page.locator('[data-testid="ticket-row"]', { hasText: subject });
+        await expect(ticketRow).toBeVisible({ timeout: 10_000 });
+        const priorityBadge = ticketRow.locator('[data-testid="priority-badge"]');
+        await expect(priorityBadge).toHaveText('MEDIUM');
     });
 
     test('create HIGH priority ticket shows correct priority badge', async ({ page }) => {
@@ -392,11 +414,15 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             description: 'Test high priority ticket',
         });
 
+        // Wait for ticket creation to complete (redirects to /support/:ticketId)
+        await expect(page).toHaveURL(/\/support\/[a-f0-9-]+$/, { timeout: 30_000 });
+
         await supportPage.gotoTickets();
 
-        const ticketRow = page.locator(`text=${subject}`);
-        const count = await ticketRow.count();
-        expect(count).toBeGreaterThan(0);
+        const ticketRow = page.locator('[data-testid="ticket-row"]', { hasText: subject });
+        await expect(ticketRow).toBeVisible({ timeout: 10_000 });
+        const priorityBadge = ticketRow.locator('[data-testid="priority-badge"]');
+        await expect(priorityBadge).toHaveText('HIGH');
     });
 
     test('create URGENT priority ticket shows correct priority badge', async ({ page }) => {
@@ -412,11 +438,15 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
             description: 'Test urgent priority ticket',
         });
 
+        // Wait for ticket creation to complete (redirects to /support/:ticketId)
+        await expect(page).toHaveURL(/\/support\/[a-f0-9-]+$/, { timeout: 30_000 });
+
         await supportPage.gotoTickets();
 
-        const ticketRow = page.locator(`text=${subject}`);
-        const count = await ticketRow.count();
-        expect(count).toBeGreaterThan(0);
+        const ticketRow = page.locator('[data-testid="ticket-row"]', { hasText: subject });
+        await expect(ticketRow).toBeVisible({ timeout: 10_000 });
+        const priorityBadge = ticketRow.locator('[data-testid="priority-badge"]');
+        await expect(priorityBadge).toHaveText('URGENT');
     });
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -426,17 +456,16 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
     test('submit with empty subject shows validation error', async ({ page }) => {
         await supportPage.gotoNewTicket();
 
-        // Leave subject empty
-        await supportPage.categorySelect.click();
-        await page.locator('text=General').click();
+        // Fill description but leave subject empty
         await supportPage.descriptionTextarea.fill('Description without subject');
 
-        await supportPage.submitButton.click();
+        // Submit button should be disabled when subject is empty
+        await expect(supportPage.submitButton).toBeDisabled();
 
-        // Should show validation error
-        await expect(page.locator('[role="alert"], .error, [data-testid="error-message"]')).toBeVisible({
-            timeout: 5000,
-        });
+        // Blur the subject field to trigger inline validation
+        await supportPage.subjectInput.focus();
+        await supportPage.subjectInput.blur();
+        await expect(page.locator('text=Subject is required')).toBeVisible({ timeout: 5_000 });
     });
 
     test('submit with empty description shows validation error', async ({ page }) => {
@@ -444,30 +473,29 @@ test.describe.serial('Support — Full Workflow Coverage', () => {
 
         const timestamp = Date.now();
         await supportPage.subjectInput.fill(`Subject ${timestamp}`);
-        await supportPage.categorySelect.click();
-        await page.locator('text=General').click();
 
-        // Leave description empty
-        await supportPage.submitButton.click();
+        // Submit button should be disabled when description is empty
+        await expect(supportPage.submitButton).toBeDisabled();
 
-        await expect(page.locator('[role="alert"], .error, [data-testid="error-message"]')).toBeVisible({
-            timeout: 5000,
-        });
+        // Blur the description field to trigger inline validation
+        await supportPage.descriptionTextarea.focus();
+        await supportPage.descriptionTextarea.blur();
+        await expect(page.locator('text=Description is required')).toBeVisible({ timeout: 5_000 });
     });
 
-    test('submit with empty category shows validation error', async ({ page }) => {
+    test('submit button is disabled until required fields are filled', async ({ page }) => {
         await supportPage.gotoNewTicket();
 
-        const timestamp = Date.now();
-        await supportPage.subjectInput.fill(`Subject ${timestamp}`);
-        await supportPage.descriptionTextarea.fill('Description without category selected');
+        // Initially disabled (both fields empty)
+        await expect(supportPage.submitButton).toBeDisabled();
 
-        // Don't select category
-        await supportPage.submitButton.click();
+        // Fill subject only — still disabled
+        await supportPage.subjectInput.fill('Test subject');
+        await expect(supportPage.submitButton).toBeDisabled();
 
-        await expect(page.locator('[role="alert"], .error, [data-testid="error-message"]')).toBeVisible({
-            timeout: 5000,
-        });
+        // Fill description too — now enabled
+        await supportPage.descriptionTextarea.fill('Test description');
+        await expect(supportPage.submitButton).toBeEnabled();
     });
 
     test('description textarea accepts multi-line text', async ({ page }) => {
@@ -493,7 +521,7 @@ Line 4`;
         await supportPage.createTicket({
             subject: longSubject,
             category: 'GENERAL',
-            priority: 'MEDIUM',
+
             description: `Test with long subject at ${timestamp}`,
         });
 
@@ -508,11 +536,11 @@ Line 4`;
         await supportPage.createTicket({
             subject: specialSubject,
             category: 'GENERAL',
-            priority: 'MEDIUM',
+
             description: 'Test with special characters',
         });
 
-        expect(page.url()).not.toContain('/support/new');
+        await expect(page).toHaveURL(/\/support\/[a-f0-9-]+$/, { timeout: 30_000 });
     });
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -528,7 +556,7 @@ Line 4`;
         await supportPage.createTicket({
             subject,
             category: 'GENERAL',
-            priority: 'MEDIUM',
+
             description: 'Test ticket for detail view',
         });
 
@@ -651,7 +679,7 @@ Line 4`;
         await supportPage.createTicket({
             subject,
             category: 'GENERAL',
-            priority: 'MEDIUM',
+
             description: 'Test ticket lifecycle',
         });
 
@@ -659,12 +687,11 @@ Line 4`;
         // Navigate to tickets list
         await supportPage.gotoTickets();
 
-        // Find the newly created ticket
-        const ticketRow = page.locator(`text=${subject}`);
+        // Find the newly created ticket row (use <tr> so we can reach sibling cells)
+        const ticketRow = page.locator('[data-testid="ticket-row"]', { hasText: subject });
+        await expect(ticketRow).toBeVisible({ timeout: 10_000 });
         const statusBadge = ticketRow.locator('[data-testid="status-badge"]');
-        const statusText = await statusBadge.textContent();
-
-        expect(statusText?.toUpperCase()).toContain('OPEN');
+        await expect(statusBadge).toContainText(/OPEN/i);
     });
 
     test('ticket status appears in list view with correct formatting', async ({ page }) => {
@@ -721,7 +748,7 @@ Line 4`;
         await supportPage.createTicket({
             subject,
             category: 'GENERAL',
-            priority: 'MEDIUM',
+
             description: 'Integration test ticket',
         });
 
@@ -729,9 +756,10 @@ Line 4`;
         // Navigate to tickets list
         await supportPage.gotoTickets();
 
-        // Verify ticket appears in list
-        const ticketRow = page.locator(`text=${subject}`);
-        await expect(ticketRow).toBeVisible({ timeout: 5000 });
+        // Verify ticket appears in list — use data-testid for reliability
+        // and increase timeout to allow async ticket list to load
+        const ticketRow = page.locator('[data-testid="ticket-subject"]', { hasText: subject });
+        await expect(ticketRow).toBeVisible({ timeout: 15_000 });
     });
 
     test('ticket created with specific category shows correct category in list', async ({ page }) => {
@@ -742,17 +770,17 @@ Line 4`;
         await supportPage.createTicket({
             subject,
             category: 'BILLING',
-            priority: 'MEDIUM',
+
             description: 'Category test ticket',
         });
 
         await supportPage.gotoTickets();
 
-        const ticketRow = page.locator(`text=${subject}`);
-        const categoryCell = ticketRow.locator('[data-testid="category"]');
-
-        const categoryText = await categoryCell.textContent();
-        expect(categoryText?.toUpperCase()).toContain('BILL');
+        // Use the <tr> row so we can reach the category text in a sibling <td>.
+        // The category cell is the 4th <td> (no data-testid — it's plain text).
+        const ticketRow = page.locator('[data-testid="ticket-row"]', { hasText: subject });
+        await expect(ticketRow).toBeVisible({ timeout: 15_000 });
+        await expect(ticketRow).toContainText('BILLING');
     });
 
     test('navigate from ticket list to new ticket creation and back', async ({ page }) => {
@@ -760,8 +788,9 @@ Line 4`;
 
         const initialTicketCount = await supportPage.getTicketCount();
 
-        // Click new ticket button
+        // Click new ticket button and wait for navigation
         await supportPage.clickNewTicket();
+        await page.waitForURL('**/support/new**', { timeout: 10000 });
         expect(page.url()).toContain('/support/new');
 
         // Create a ticket
@@ -769,7 +798,7 @@ Line 4`;
         await supportPage.createTicket({
             subject: `Navigation test ${timestamp}`,
             category: 'GENERAL',
-            priority: 'MEDIUM',
+
             description: 'Navigation test',
         });
 

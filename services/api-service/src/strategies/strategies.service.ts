@@ -272,7 +272,7 @@ export class StrategiesService {
       });
     }
 
-    return { status: "RUNNING", startedAt: new Date().toISOString() };
+    return { status: newStatus, startedAt: new Date().toISOString() };
   }
 
   async stop(

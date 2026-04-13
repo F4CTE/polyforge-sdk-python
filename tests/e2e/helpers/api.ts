@@ -74,26 +74,37 @@ export async function apiRegister(
     username: string,
     password: string,
 ): Promise<LoginResponse> {
-    const res = await fetch(`${AUTH_URL}/auth/v1/register`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, username, password, tosAccepted: true }),
-    });
+    // Retry up to 3 times on 500 errors (intermittent under concurrent load)
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        const res = await fetch(`${AUTH_URL}/auth/v1/register`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ email, username, password, tosAccepted: true }),
+        });
 
-    if (!res.ok) {
+        if (res.ok) {
+            // Cookie-based auth: token is in Set-Cookie header, user object in body
+            const cookie = getSetCookieString(res.headers);
+            const tokenMatch = cookie.match(/pf_token=([^;]+)/);
+            const user = await res.json() as LoginResponse['user'];
+            return {
+                token: tokenMatch?.[1] ?? '',
+                user,
+                cookie,
+            };
+        }
+
+        if (res.status >= 500 && attempt < 3) {
+            // Wait before retrying on server errors
+            await new Promise(r => setTimeout(r, 1000 * attempt));
+            continue;
+        }
+
         const err = await res.json().catch(() => ({})) as Record<string, unknown>;
         throw new Error(`Register failed: ${res.status} ${JSON.stringify(err)}`);
     }
 
-    // Cookie-based auth: token is in Set-Cookie header, user object in body
-    const cookie = getSetCookieString(res.headers);
-    const tokenMatch = cookie.match(/pf_token=([^;]+)/);
-    const user = await res.json() as LoginResponse['user'];
-    return {
-        token: tokenMatch?.[1] ?? '',
-        user,
-        cookie,
-    };
+    throw new Error('Register failed: exhausted retries');
 }
 
 /**

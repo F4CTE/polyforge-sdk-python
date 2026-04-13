@@ -28,11 +28,11 @@ export class SupportPage {
         this.faqAccordion = page.locator('[data-testid="faq-accordion"]');
         this.faqItems = page.locator('[data-testid="faq-item"]');
 
-        // Create ticket form
-        this.subjectInput = page.locator('input[placeholder*="Subject"]');
-        this.categorySelect = page.locator('[data-testid="category-select"]');
-        this.prioritySelect = page.locator('[data-testid="priority-select"]');
-        this.descriptionTextarea = page.locator('textarea[placeholder*="Description"]');
+        // Create ticket form — use stable element IDs from create-ticket.tsx
+        this.subjectInput = page.locator('input#ticket-subject');
+        this.categorySelect = page.locator('select#ticket-category');
+        this.prioritySelect = page.locator('select#ticket-priority');
+        this.descriptionTextarea = page.locator('textarea#ticket-body');
         this.submitButton = page.locator('button', { hasText: 'Submit Ticket' });
         this.cancelButton = page.locator('button', { hasText: 'Cancel' });
     }
@@ -43,8 +43,10 @@ export class SupportPage {
     }
 
     async gotoTickets(): Promise<void> {
-        await this.page.goto('/support/tickets');
-        await expect(this.page.locator('h1')).toBeVisible({ timeout: 15_000 });
+        // The ticket list lives at /support (not /support/tickets — that
+        // would match the /support/:id detail route with id="tickets").
+        await this.page.goto('/support');
+        await expect(this.page.locator('h1', { hasText: 'Support' })).toBeVisible({ timeout: 15_000 });
     }
 
     async gotoNewTicket(): Promise<void> {
@@ -59,38 +61,31 @@ export class SupportPage {
     async createTicket(params: {
         subject: string;
         category: 'GENERAL' | 'BILLING' | 'TECHNICAL' | 'ACCOUNT' | 'BUG' | 'FEATURE_REQUEST';
-        priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+        priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
         description: string;
     }): Promise<void> {
         await this.subjectInput.fill(params.subject);
 
-        // Select category
-        await this.categorySelect.click();
-        const categoryMap: Record<string, string> = {
-            GENERAL: 'General',
-            BILLING: 'Billing',
-            TECHNICAL: 'Technical',
-            ACCOUNT: 'Account',
-            BUG: 'Bug Report',
-            FEATURE_REQUEST: 'Feature Request',
-        };
-        await this.page.locator('text=' + categoryMap[params.category]).click();
+        // Select category — native <select> element, use selectOption()
+        await this.categorySelect.selectOption(params.category);
 
-        // Select priority
-        await this.prioritySelect.click();
-        const priorityMap: Record<string, string> = {
-            LOW: 'Low',
-            MEDIUM: 'Medium',
-            HIGH: 'High',
-            URGENT: 'Urgent',
-        };
-        await this.page.locator('text=' + priorityMap[params.priority]).click();
+        // Select priority if specified (defaults to MEDIUM in UI)
+        if (params.priority) {
+            await this.prioritySelect.selectOption(params.priority);
+        }
 
         // Fill description
         await this.descriptionTextarea.fill(params.description);
 
-        // Submit
+        // Wait for React state to propagate and enable the submit button
+        await expect(this.submitButton).toBeEnabled({ timeout: 5_000 });
         await this.submitButton.click();
+
+        // Wait for form submission to complete — the handler navigates to
+        // /support/:id on success.  Without this wait, a caller that
+        // immediately navigates elsewhere (e.g. gotoTickets) would cancel
+        // the in-flight fetch and the ticket would never be persisted.
+        await this.page.waitForURL(/\/support\/(?!new)/, { timeout: 15_000 });
     }
 
     async getTicketCount(): Promise<number> {
@@ -98,7 +93,8 @@ export class SupportPage {
     }
 
     async openFaq(index: number): Promise<void> {
-        await this.faqItems.nth(index).click();
+        // aria-expanded lives on the inner <Button>, not the wrapper div
+        await this.faqItems.nth(index).locator('button').first().click();
     }
 
     async goToTicket(id: string): Promise<void> {

@@ -38,6 +38,12 @@ export class StrategiesListPage {
         return (await badge.textContent() ?? '').trim();
     }
 
+    /** Wait for a strategy's status badge to match a pattern (polls until timeout) */
+    async waitForStatus(name: string, pattern: RegExp, timeout = 15_000): Promise<void> {
+        const badge = this.cardByName(name).locator('[data-testid="status-badge"]');
+        await expect(badge).toHaveText(pattern, { timeout });
+    }
+
     async clickCard(name: string): Promise<void> {
         await this.cardByName(name).click();
     }
@@ -57,19 +63,19 @@ export class StrategiesListPage {
     /** Click the Pause button (icon-only, identified by title) on a specific strategy card */
     async pauseStrategy(name: string): Promise<void> {
         const card = this.cardByName(name);
-        await card.locator('button[title="Pause"]').click();
+        await card.locator('button[title="Pause strategy"]').click();
     }
 
     /** Click the Resume button (icon-only, identified by title) on a specific strategy card */
     async resumeStrategy(name: string): Promise<void> {
         const card = this.cardByName(name);
-        await card.locator('button[title="Resume"]').click();
+        await card.locator('button[title="Resume strategy"]').click();
     }
 
     /** Click the Stop button (icon-only, identified by title) on a specific strategy card */
     async stopStrategy(name: string): Promise<void> {
         const card = this.cardByName(name);
-        await card.locator('button[title="Stop"]').click();
+        await card.locator('button[title="Stop strategy"]').click();
     }
 
     async clickNew(): Promise<void> {

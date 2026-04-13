@@ -5,7 +5,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased] — 2026-04-10
+## [Unreleased] — 2026-04-13
+
+### Fixed (API)
+- **Ticket creation broken from UI** — `CreateTicketDto` was missing the `priority` field; NestJS `forbidNonWhitelisted` rejected every ticket creation request from the frontend which always sends priority. Added `priority` to DTO and service create call.
+
+### Fixed (E2E)
+- **News filter race condition** — Replaced `waitForTimeout(500)` with `waitForResponse()` for server-side sentiment/source filtering; previous approach failed in CI because API response took longer than 500ms
+- **News detail navigation assertions** — Added `await expect(page).toHaveURL()` waits before synchronous URL assertions on View Details links; SPA navigation hadn't completed when assertions ran
+- **Profile edge rating timeout** — Public profile used `data-testid="trader-stats"` but test expected `"edge-rating"`; section also doesn't render when user has no trading stats. Fixed testid and made `getEdgeRating()` handle missing element
+- **Settings change password disabled button** — Added `await expect(button).toBeEnabled()` before clicking; Playwright's `.click()` does not wait for buttons to become enabled, so React state wasn't ready when click fired. Increased toast timeout to 15s for bcrypt latency
+- **Support ticket creation failure** — Form submission was failing silently because API rejected the priority field; fixed via API DTO change above. Added `toBeEnabled()` wait before submit click and increased navigation timeout to 30s for slow Docker round-trip
+- **Support ticket form selectors** — `subjectInput`/`categorySelect`/`prioritySelect`/`descriptionTextarea` used placeholder-based selectors that didn't match actual UI; switched to stable element IDs (`#ticket-subject`, `select#ticket-category`, etc.) and native `selectOption()` for `<select>` elements
+- **Profile strategies link navigation** — added `waitForURL()` after clicking "My Strategies" link; SPA navigation is async so URL check ran before route change completed
+- **Settings display name save timing** — added `waitForResponse()` on PATCH /profile before `page.reload()` to ensure save persists before checking
+
+## [Previous] — 2026-04-12
+
+### Fixed (CI)
+- **Deploy-to-Dev checkout failure on PRs** — `github.sha` for `pull_request` events is a synthetic merge commit that doesn't exist in the local clone; switched to `github.head_ref` (the PR branch name) for PR events, passed via env vars to prevent command injection
 
 ### Fixed (CI)
 - **#517 Docker memory limits** — added `mem_limit` to all 23 Docker Compose services (total ceiling ~9.5GB vs ~22GB+ unbounded) and `NODE_OPTIONS --max-old-space-size` to all NestJS services to prevent OOM during CI E2E runs

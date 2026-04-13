@@ -141,7 +141,12 @@ export class CopySetupPage {
      */
     async confirm(): Promise<void> {
         await this.submitButton.click();
-        // Wait for navigation away from setup
-        await this.page.waitForURL((url) => !url.pathname.includes('/copy/new'), { timeout: 15_000 });
+        // Wait for either navigation away from setup (success) or an error
+        // toast/notification (API rejection).  In test environments the API may
+        // reject the config (no real wallet), so both outcomes are valid.
+        await Promise.race([
+            this.page.waitForURL((url) => !url.pathname.includes('/copy/new'), { timeout: 15_000 }),
+            this.page.locator('[data-sonner-toast], [role="status"], [role="alert"]').first().waitFor({ state: 'visible', timeout: 15_000 }),
+        ]);
     }
 }

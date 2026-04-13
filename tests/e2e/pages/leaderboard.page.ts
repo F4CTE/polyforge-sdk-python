@@ -30,6 +30,13 @@ export class LeaderboardPage {
     async goto(): Promise<void> {
         await this.page.goto('/leaderboard');
         await expect(this.page.locator('h1', { hasText: 'Leaderboard' })).toBeVisible({ timeout: 15_000 });
+        // Wait for data to load — trader rows or empty state
+        const row = this.page.locator('[data-testid="trader-row"]').first();
+        const empty = this.page.locator('text=/No leaderboard data/i');
+        await Promise.race([
+            expect(row).toBeVisible({ timeout: 30_000 }).catch(() => {}),
+            expect(empty).toBeVisible({ timeout: 30_000 }).catch(() => {}),
+        ]);
     }
 
     async selectPeriod(period: '7d' | '30d' | 'allTime'): Promise<void> {

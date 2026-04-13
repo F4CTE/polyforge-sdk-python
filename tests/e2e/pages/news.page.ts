@@ -43,18 +43,28 @@ export class NewsPage {
     async goto(): Promise<void> {
         await this.page.goto('/news');
         await expect(this.page.locator('h1', { hasText: 'News' })).toBeVisible({ timeout: 15_000 });
+        // Wait for initial data load — either cards appear or empty state shows
+        await this.page.locator('[data-testid="news-card"], text=Adjust filters').first()
+            .waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
     }
 
     async filterBySentiment(sentiment: 'All' | 'Positive' | 'Neutral' | 'Negative'): Promise<void> {
-        await this.sentimentFilters[sentiment].click();
-        // Wait for the news cards to update after filter change
-        await this.page.waitForTimeout(500);
+        // Filtering triggers a server-side fetch; wait for the /api/v1/news response
+        await Promise.all([
+            this.page.waitForResponse(
+                res => res.url().includes('/api/v1/news') && !res.url().includes('/signals') && res.status() === 200,
+                { timeout: 15_000 },
+            ),
+            this.sentimentFilters[sentiment].click(),
+        ]);
     }
 
     async filterBySource(source: string): Promise<void> {
-        await this.sourceSelect.selectOption(source);
-        // Wait for the news cards to update after filter change
-        await this.page.waitForTimeout(500);
+        // Filtering triggers a server-side fetch; wait for the /api/v1/news response
+        await Promise.all([
+            this.page.waitForResponse(res => res.url().includes('/api/v1/news') && res.status() === 200),
+            this.sourceSelect.selectOption(source),
+        ]);
     }
 
     async getNewsCount(): Promise<number> {

@@ -34,6 +34,7 @@ jobs:
   lint:
     name: Lint
     runs-on: [self-hosted, linux]
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -66,6 +67,7 @@ jobs:
   typecheck:
     name: Typecheck
     runs-on: [self-hosted, linux]
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -98,6 +100,7 @@ jobs:
   test:
     name: Test
     runs-on: [self-hosted, linux]
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -135,6 +138,7 @@ jobs:
     name: Build
     runs-on: [self-hosted, linux]
     needs: [lint, typecheck, test]
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -187,22 +191,35 @@ jobs:
     steps:
       - name: Deploy to polyforge-lab
         uses: appleboy/ssh-action@v1
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          COMMIT_SHA: ${{ github.sha }}
         with:
           host: ${{ secrets.LAB_HOST }}
           username: f4cte
           key: ${{ secrets.LAB_SSH_KEY }}
           command_timeout: 18m
+          envs: HEAD_REF,COMMIT_SHA
           script: |
             set -euo pipefail
             cd ~/PolyForge
 
             echo "=== 1. Pull latest code ==="
             git fetch origin
-            git checkout ${{ github.sha }} --force 2>/dev/null || {
-              echo "SHA not found — fetching full history..."
-              git fetch origin --unshallow 2>/dev/null || true
-              git checkout ${{ github.sha }} --force
-            }
+
+            # For pull_request events, COMMIT_SHA is a synthetic merge commit
+            # that only exists in GitHub's refs/pull/N/merge — not in any real
+            # branch. Use the PR branch name (HEAD_REF) instead.
+            # For push events, HEAD_REF is empty and COMMIT_SHA is a real
+            # commit on the pushed branch.
+            if [ -n "$HEAD_REF" ]; then
+              echo "PR detected — checking out branch: $HEAD_REF"
+              git checkout "$HEAD_REF" --force
+              git reset --hard "origin/$HEAD_REF"
+            else
+              echo "Push detected — checking out SHA: $COMMIT_SHA"
+              git checkout "$COMMIT_SHA" --force
+            fi
 
             # Source env vars for Prisma + Docker
             set -a; source .env 2>/dev/null || true; set +a
@@ -248,7 +265,7 @@ jobs:
     name: E2E
     runs-on: [self-hosted, linux]
     needs: [deploy-dev]
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Run E2E tests on polyforge-lab
         uses: appleboy/ssh-action@v1
@@ -256,7 +273,7 @@ jobs:
           host: ${{ secrets.LAB_HOST }}
           username: f4cte
           key: ${{ secrets.LAB_SSH_KEY }}
-          command_timeout: 28m
+          command_timeout: 55m
           script: |
             set -euo pipefail
             cd ~/PolyForge/tests/e2e

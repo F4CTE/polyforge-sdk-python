@@ -218,6 +218,8 @@ export class SettingsPage {
         await this.currentPasswordInput.fill(currentPassword);
         await this.newPasswordInput.fill(newPassword);
         await this.confirmPasswordInput.fill(newPassword);
+        // Wait for React to process all fills and enable the button
+        await expect(this.changePasswordButton).toBeEnabled({ timeout: 5_000 });
         await this.changePasswordButton.click();
     }
 

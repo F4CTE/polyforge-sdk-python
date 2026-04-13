@@ -33,6 +33,12 @@ export class StrategyBuilderPage {
         await blankBtn.click();
         // Wait for the BlockPalette name input to confirm the builder canvas is ready
         await expect(this.nameInput).toBeVisible({ timeout: 10_000 });
+        // Dismiss builder tutorial if visible (storage-state should suppress it,
+        // but dismiss as safety net to avoid click interception)
+        const tutorialDismiss = this.page.locator('button[aria-label="Dismiss tutorial"]');
+        if (await tutorialDismiss.isVisible({ timeout: 1_000 }).catch(() => false)) {
+            await tutorialDismiss.click();
+        }
     }
 
     async gotoEdit(strategyId: string): Promise<void> {
@@ -57,20 +63,27 @@ export class StrategyBuilderPage {
             await showBtn.click();
             await expect(this.nameInput).toBeVisible({ timeout: 5_000 });
         }
-        // Section tabs are buttons inside the "Blocks" section of the palette
-        await this.page.locator('button', { hasText: label }).click();
+        // Section tabs are inside the palette panel — scope to aria-pressed attribute
+        // which is unique to palette section tab buttons, avoiding ambiguity with
+        // other buttons on the page (e.g. builder tutorial dialog).
+        const tab = this.page.locator('button[aria-pressed]', { hasText: label });
+        // Scroll the tab into view in case the overflow-x-auto tab bar is scrolled
+        await tab.scrollIntoViewIfNeeded();
+        await tab.click();
     }
 
     /** Click a block item in the floating panel to add it to the canvas */
     async addBlock(blockLabel: string): Promise<void> {
-        // Ensure the panel is visible
-        const panel = this.page.locator('.absolute.top-3.right-3');
-        if (!(await panel.isVisible())) {
-            await this.page.locator('button[title="Open panel"]').click();
-            await expect(panel).toBeVisible({ timeout: 5_000 });
+        // Ensure the palette panel is visible — toggle it if collapsed
+        const showBtn = this.page.locator('button[title="Show blocks"]');
+        if (await showBtn.isVisible({ timeout: 1_000 }).catch(() => false)) {
+            await showBtn.click();
+            await expect(this.nameInput).toBeVisible({ timeout: 5_000 });
         }
         // Block items are draggable divs inside the palette with the block label text
-        await this.page.locator('[draggable="true"]', { hasText: blockLabel }).click();
+        const block = this.page.locator('[draggable="true"]', { hasText: blockLabel });
+        await expect(block).toBeVisible({ timeout: 5_000 });
+        await block.click();
     }
 
     /** Returns all block node elements on the React Flow canvas */
