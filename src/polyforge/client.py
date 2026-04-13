@@ -136,9 +136,10 @@ def _raise_for_status(response: httpx.Response) -> None:
 
     message = body.get("message") or body.get("error") or response.reason_phrase or "Unknown error"
     code = body.get("code", "")
-    request_id = response.headers.get("x-request-id", "")
+    request_id = body.get("requestId", "")
+    suggestion = body.get("suggestion") or None
 
-    kwargs = dict(status_code=response.status_code, code=code, request_id=request_id)
+    kwargs = dict(status_code=response.status_code, code=code, request_id=request_id, suggestion=suggestion)
 
     match response.status_code:
         case 401:

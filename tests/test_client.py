@@ -1,10 +1,14 @@
 """Basic smoke tests for PolyforgeClient."""
 
+import json
+
+import httpx
 import pytest
 from polyforge.client import (
     PolyforgeClient,
     AsyncPolyforgeClient,
     _parse,
+    _raise_for_status,
     _validate_financial_param,
     _validate_webhook_url,
     _is_ip_blocked,
@@ -193,6 +197,109 @@ class TestErrorClasses:
         assert "PolyforgeError" in repr_str
         assert "400" in repr_str
         assert "BAD_REQUEST" in repr_str
+
+    def test_error_suggestion_field(self):
+        """Should accept and store optional suggestion field."""
+        error = PolyforgeError(
+            "Bad request",
+            status_code=400,
+            code="INVALID_PARAM",
+            suggestion="Use a valid market ID instead.",
+        )
+        assert error.suggestion == "Use a valid market ID instead."
+
+    def test_error_suggestion_defaults_to_none(self):
+        """Suggestion should default to None when not provided."""
+        error = PolyforgeError("Oops", status_code=500)
+        assert error.suggestion is None
+
+    def test_error_repr_includes_suggestion(self):
+        """Repr should include the suggestion field."""
+        error = PolyforgeError(
+            "Bad request",
+            status_code=400,
+            code="BAD",
+            suggestion="Try again",
+        )
+        assert "suggestion='Try again'" in repr(error)
+
+
+def _make_error_response(
+    status_code: int,
+    body: dict,
+    headers: dict | None = None,
+) -> httpx.Response:
+    """Build a fake httpx.Response for _raise_for_status tests."""
+    resp = httpx.Response(
+        status_code=status_code,
+        content=json.dumps(body).encode(),
+        headers={"content-type": "application/json", **(headers or {})},
+        request=httpx.Request("GET", "https://api.polyforge.io/test"),
+    )
+    return resp
+
+
+class TestRaiseForStatus:
+    """Test _raise_for_status reads fields from the JSON body correctly."""
+
+    def test_reads_request_id_from_body(self):
+        """requestId should come from JSON body, not HTTP headers (#93)."""
+        resp = _make_error_response(
+            400,
+            {"message": "Invalid", "code": "BAD", "requestId": "req-abc-123"},
+            headers={"x-request-id": "wrong-header-value"},
+        )
+        with pytest.raises(PolyforgeError) as exc_info:
+            _raise_for_status(resp)
+        assert exc_info.value.request_id == "req-abc-123"
+
+    def test_reads_suggestion_from_body(self):
+        """suggestion should be extracted from the JSON body (#93)."""
+        resp = _make_error_response(
+            422,
+            {
+                "message": "Invalid parameter",
+                "code": "VALIDATION_ERROR",
+                "requestId": "req-1",
+                "suggestion": "Use ISO-8601 date format.",
+            },
+        )
+        with pytest.raises(PolyforgeError) as exc_info:
+            _raise_for_status(resp)
+        assert exc_info.value.suggestion == "Use ISO-8601 date format."
+
+    def test_suggestion_is_none_when_absent(self):
+        """suggestion should be None when the body does not include it."""
+        resp = _make_error_response(
+            400,
+            {"message": "Nope", "code": "BAD"},
+        )
+        with pytest.raises(PolyforgeError) as exc_info:
+            _raise_for_status(resp)
+        assert exc_info.value.suggestion is None
+
+    def test_request_id_empty_when_absent_from_body(self):
+        """request_id should be empty string when not in JSON body."""
+        resp = _make_error_response(
+            400,
+            {"message": "Nope"},
+            headers={"x-request-id": "header-only"},
+        )
+        with pytest.raises(PolyforgeError) as exc_info:
+            _raise_for_status(resp)
+        # Must NOT fall back to the header value
+        assert exc_info.value.request_id == ""
+
+    def test_correct_subclass_raised(self):
+        """Should still raise the right subclass per status code."""
+        resp = _make_error_response(
+            429,
+            {"message": "Slow down", "code": "RATE_LIMITED", "requestId": "r1", "suggestion": "Wait 60s."},
+        )
+        with pytest.raises(RateLimitError) as exc_info:
+            _raise_for_status(resp)
+        assert exc_info.value.request_id == "r1"
+        assert exc_info.value.suggestion == "Wait 60s."
 
 
 class TestModelParsing:
