@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed
+- **BREAKING**: `Strategy` model — replace `config: dict` with `blocks: list[StrategyBlock]` to match platform's block-based strategy structure; rename `total_trades` to `trade_count` (mapped from `tradeCount`); add new `StrategyBlock` dataclass with `id`, `type`, `label`, `config`, `connections` fields (closes #56)
+- **BREAKING**: `Portfolio` model — replace `total_pnl`/`total_pnl_percent` with `unrealized_pnl`/`realized_pnl` to match platform's separate PnL fields; `Position` model — replace `pnl`/`pnl_percent` with `unrealized_pnl`/`realized_pnl`, add `id` and `market_name` fields (closes #57)
+- **BREAKING**: `start_strategy()`/`stop_strategy()`/`pause_strategy()`/`resume_strategy()` — return `StrategyStatusResponse` instead of `Strategy`, matching the platform's minimal status response `{ status, startedAt?, stoppedAt? }` (closes #63)
+
 ### Removed
 - **deps**: remove unused `cryptography` and `requests` from runtime dependencies — neither is imported anywhere in the SDK; `httpx` is the sole HTTP client; removing them reduces attack surface and transitive dependency count (closes #46, closes #35)
 

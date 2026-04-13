@@ -65,6 +65,17 @@ class Market:
 # ---------------------------------------------------------------------------
 
 @dataclass
+class StrategyBlock:
+    """A single block in a block-based strategy."""
+
+    id: str = ""
+    type: str = ""
+    label: str = ""
+    config: dict[str, Any] = field(default_factory=dict)
+    connections: list[str] = field(default_factory=list)
+
+
+@dataclass
 class Strategy:
     """A trading strategy configuration and its runtime state."""
 
@@ -76,10 +87,19 @@ class Strategy:
     market_id: str = ""
     pnl: float = 0.0
     win_rate: float = 0.0
-    total_trades: int = 0
-    config: dict[str, Any] = field(default_factory=dict)
+    trade_count: int = 0
+    blocks: list[StrategyBlock] = field(default_factory=list)
     created_at: str = ""
     updated_at: str = ""
+
+
+@dataclass
+class StrategyStatusResponse:
+    """Minimal response from strategy start/stop/pause/resume endpoints."""
+
+    status: str = ""
+    started_at: str = ""
+    stopped_at: str = ""
 
 
 @dataclass
@@ -102,14 +122,16 @@ class StrategyTemplate:
 class Position:
     """An open position within a portfolio."""
 
+    id: str = ""
     market_id: str = ""
+    market_name: str = ""
     symbol: str = ""
     side: str = ""
     size: float = 0.0
     entry_price: float = 0.0
     current_price: float = 0.0
-    pnl: float = 0.0
-    pnl_percent: float = 0.0
+    unrealized_pnl: float = 0.0
+    realized_pnl: float = 0.0
     opened_at: str = ""
 
 
@@ -119,8 +141,8 @@ class Portfolio:
 
     total_value: float = 0.0
     available_balance: float = 0.0
-    total_pnl: float = 0.0
-    total_pnl_percent: float = 0.0
+    unrealized_pnl: float = 0.0
+    realized_pnl: float = 0.0
     positions: list[Position] = field(default_factory=list)
     updated_at: str = ""
 
