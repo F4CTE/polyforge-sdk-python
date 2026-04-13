@@ -6,9 +6,47 @@ Uses Python dataclasses for zero additional dependencies beyond httpx.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 T = TypeVar("T")
+
+
+# ---------------------------------------------------------------------------
+# Enums
+# ---------------------------------------------------------------------------
+
+class OrderStatus(str, Enum):
+    """Valid order status values as defined by the platform."""
+
+    PENDING = "PENDING"
+    SUBMITTED = "SUBMITTED"
+    LIVE = "LIVE"
+    MATCHED = "MATCHED"
+    DELAYED = "DELAYED"
+    MINED = "MINED"
+    CONFIRMED = "CONFIRMED"
+    PARTIAL = "PARTIAL"
+    CANCELLED = "CANCELLED"
+    UNMATCHED = "UNMATCHED"
+    FAILED = "FAILED"
+    ERROR = "ERROR"
+
+
+class StrategyVisibility(str, Enum):
+    """Strategy visibility options."""
+
+    PRIVATE = "PRIVATE"
+    PUBLIC = "PUBLIC"
+    UNLISTED = "UNLISTED"
+
+
+class StrategyExecMode(str, Enum):
+    """Strategy execution mode."""
+
+    TICK = "TICK"
+    EVENT = "EVENT"
+    HYBRID = "HYBRID"
 
 
 # ---------------------------------------------------------------------------
@@ -17,14 +55,24 @@ T = TypeVar("T")
 
 @dataclass
 class PaginatedResponse(Generic[T]):
-    """A page of results from a list endpoint."""
+    """A page of results from a list endpoint.
 
-    items: list[T]
+    The platform returns paginated results under the ``data`` key with a
+    ``hasNext`` boolean. For backward compatibility the ``items`` property
+    is an alias for ``data``.
+    """
+
+    data: list[T] = field(default_factory=list)
     total: int = 0
     page: int = 1
     limit: int = 10
     has_more: bool = False
     total_pages: int = 0
+
+    @property
+    def items(self) -> list[T]:
+        """Backward-compatible alias for :attr:`data`."""
+        return self.data
 
 
 # ---------------------------------------------------------------------------
@@ -83,11 +131,26 @@ class Strategy:
     name: str = ""
     description: str = ""
     status: str = ""
-    mode: str = ""
     market_id: str = ""
     pnl: float = 0.0
     win_rate: float = 0.0
     trade_count: int = 0
+    # Block categories (#31)
+    triggers: list[StrategyBlock] = field(default_factory=list)
+    conditions: list[StrategyBlock] = field(default_factory=list)
+    actions: list[StrategyBlock] = field(default_factory=list)
+    safety: list[StrategyBlock] = field(default_factory=list)
+    logic_blocks: list[dict[str, Any]] = field(default_factory=list)
+    calc_blocks: list[dict[str, Any]] = field(default_factory=list)
+    # Strategy metadata (#31)
+    visibility: str = "PRIVATE"
+    exec_mode: str = "TICK"
+    tick_ms: int | None = None
+    fork_count: int = 0
+    like_count: int = 0
+    tags: list[str] = field(default_factory=list)
+    version: int = 0
+    # Legacy field — kept for backward compat
     blocks: list[StrategyBlock] = field(default_factory=list)
     created_at: str = ""
     updated_at: str = ""
@@ -120,18 +183,21 @@ class StrategyTemplate:
 
 @dataclass
 class Position:
-    """An open position within a portfolio."""
+    """An open position within a portfolio.
+
+    Monetary fields are typed as ``str`` because the platform returns
+    decimal strings to preserve precision (#34).
+    """
 
     id: str = ""
     market_id: str = ""
     market_name: str = ""
-    symbol: str = ""
     side: str = ""
-    size: float = 0.0
-    entry_price: float = 0.0
-    current_price: float = 0.0
-    unrealized_pnl: float = 0.0
-    realized_pnl: float = 0.0
+    size: str = ""
+    entry_price: str = ""
+    current_price: str = ""
+    unrealized_pnl: str = ""
+    realized_pnl: str = ""
     opened_at: str = ""
 
 
@@ -149,18 +215,25 @@ class Portfolio:
 
 @dataclass
 class Order:
-    """A trade order."""
+    """A trade order.
+
+    Monetary fields (``price``, ``size``, ``filled_size``, ``filled_price``,
+    ``fee``) are typed as ``str`` because the platform returns decimal strings
+    to preserve precision (#34).  The ``status`` field uses the
+    :class:`OrderStatus` enum values (#30).
+    """
 
     id: str = ""
     market_id: str = ""
     strategy_id: str = ""
     side: str = ""
     order_type: str = ""
-    status: str = ""
-    price: float = 0.0
-    size: float = 0.0
-    filled_size: float = 0.0
-    filled_price: float = 0.0
+    status: str = ""  # One of OrderStatus values
+    price: str = ""
+    size: str = ""
+    fill_size: str | None = None
+    fill_price: str | None = None
+    fee: str | None = None
     created_at: str = ""
     updated_at: str = ""
 
@@ -177,10 +250,10 @@ class TraderScore:
     risk_management: float = 0.0
     consistency: float = 0.0
     profitability: float = 0.0
-    total_trades: int = 0
     win_rate: float = 0.0
-    sharpe_ratio: float = 0.0
-    max_drawdown: float = 0.0
+    volume: float = 0.0
+    rank: int = 0
+    percentile: float = 0.0
     updated_at: str = ""
 
 
@@ -194,10 +267,10 @@ class WhaleTrade:
 
     id: str = ""
     market_id: str = ""
-    symbol: str = ""
+    market_name: str = ""
     side: str = ""
     size: float = 0.0
-    price: float = 0.0
+    usd_value: float = 0.0
     wallet: str = ""
     timestamp: str = ""
 
@@ -236,13 +309,18 @@ class Alert:
 
 @dataclass
 class CopyConfig:
-    """A copy-trading configuration."""
+    """A copy-trading configuration.
+
+    Field names match the platform contract (#45):
+    ``sourceWallet``, ``maxPositionSize``, ``label``, ``totalCopiedTrades``.
+    """
 
     id: str = ""
-    source_strategy_id: str = ""
+    source_wallet: str = ""
+    label: str | None = None
+    max_position_size: float = 0.0
     enabled: bool = True
-    max_allocation: float = 0.0
-    scale_factor: float = 1.0
+    total_copied_trades: int = 0
     created_at: str = ""
 
 
@@ -299,7 +377,7 @@ class AiQueryResponse:
     answer: str = ""
     confidence: float = 0.0
     sources: list[str] = field(default_factory=list)
-    suggested_actions: list[dict[str, Any]] = field(default_factory=list)
+    suggested_actions: list[str] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -420,6 +498,8 @@ class MarketplaceListing:
     avg_rating: str | None = None
     rating_count: int = 0
     tags: list[str] = field(default_factory=list)
+    seller: MarketplaceSeller | None = None
+    strategy: MarketplaceStrategy | None = None
     created_at: str = ""
 
 

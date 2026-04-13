@@ -35,9 +35,12 @@ from polyforge.models import (
     Market,
     MarketplaceListing,
     MarketplacePurchaseResult,
+    MarketplaceSeller,
+    MarketplaceStrategy,
     MarketSentiment,
     NewsSignal,
     Order,
+    OrderStatus,
     PaginatedResponse,
     PlaceOrderResponse,
     PlaceSmartOrderResponse,
@@ -76,6 +79,9 @@ _MODEL_REGISTRY: dict[str, type] = {
     "CopyConfig": CopyConfig,
     "Webhook": Webhook,
     "AiQueryResponse": AiQueryResponse,
+    "MarketplaceSeller": MarketplaceSeller,
+    "MarketplaceStrategy": MarketplaceStrategy,
+    "MarketplaceListing": MarketplaceListing,
 }
 
 
@@ -86,6 +92,22 @@ _MODEL_REGISTRY: dict[str, type] = {
 def _camel_to_snake(name: str) -> str:
     """Convert camelCase to snake_case (e.g. 'baseToken' -> 'base_token')."""
     return re.sub(r"(?<=[a-z0-9])([A-Z])", r"_\1", name).lower()
+
+
+def _resolve_model_name(hint: Any) -> str:
+    """Extract the model class name from a type hint, handling Optional/Union."""
+    # Direct class name
+    name = getattr(hint, "__name__", "")
+    if name in _MODEL_REGISTRY:
+        return name
+    # Handle Optional[X] which is Union[X, None]
+    args = getattr(hint, "__args__", ())
+    if args:
+        for arg in args:
+            arg_name = getattr(arg, "__name__", "")
+            if arg_name in _MODEL_REGISTRY:
+                return arg_name
+    return ""
 
 
 def _parse(cls: type[T], data: dict[str, Any]) -> T:
@@ -105,11 +127,11 @@ def _parse(cls: type[T], data: dict[str, Any]) -> T:
             continue
 
         hint = hints.get(f.name)
-        # Resolve nested dataclass fields via registry
-        hint_name = getattr(hint, "__name__", "") if hint else ""
+        # Resolve nested dataclass fields via registry (handles Optional[X] too)
+        hint_name = _resolve_model_name(hint) if hint else ""
         origin = getattr(hint, "__origin__", None)
 
-        if hint_name in _MODEL_REGISTRY:
+        if hint_name in _MODEL_REGISTRY and isinstance(raw, dict):
             kwargs[f.name] = _parse(_MODEL_REGISTRY[hint_name], raw)
         elif origin is list and isinstance(raw, list) and raw:
             args = getattr(hint, "__args__", ())
@@ -372,19 +394,18 @@ class PolyforgeClient:
         limit: int = 10,
         page: int = 1,
     ) -> PaginatedResponse[Market]:
-        data = self._get(
+        raw = self._get(
             "/api/v1/markets",
             params={"search": search, "category": category, "limit": limit, "page": page},
         )
-        # Backend returns PaginatedResponse<Market> with 'data' field
-        items = [_parse(Market, m) for m in data["data"]]
+        parsed = [_parse(Market, m) for m in raw["data"]]
         return PaginatedResponse(
-            items=items,
-            total=data["total"],
-            page=data["page"],
-            limit=data["limit"],
-            has_more=data["hasNext"],
-            total_pages=data.get("totalPages", 0),
+            data=parsed,
+            total=raw["total"],
+            page=raw["page"],
+            limit=raw["limit"],
+            has_more=raw["hasNext"],
+            total_pages=raw.get("totalPages", 0),
         )
 
     def get_market(self, market_id: str) -> Market:
@@ -401,10 +422,73 @@ class PolyforgeClient:
     def get_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}"))
 
-    def create_strategy(self, name: str, description: str | None = None, market_id: str | None = None) -> Strategy:
-        body: dict[str, Any] = {"name": name, "description": description or ""}
+    def create_strategy(
+        self,
+        name: str,
+        *,
+        description: str | None = None,
+        market_id: str | None = None,
+        visibility: str | None = None,
+        exec_mode: str | None = None,
+        tick_ms: int | None = None,
+        triggers: list[dict[str, Any]] | None = None,
+        conditions: list[dict[str, Any]] | None = None,
+        actions: list[dict[str, Any]] | None = None,
+        safety: list[dict[str, Any]] | None = None,
+        logic_blocks: list[dict[str, Any]] | None = None,
+        calc_blocks: list[dict[str, Any]] | None = None,
+        tags: list[str] | None = None,
+        variables: list[dict[str, Any]] | None = None,
+        canvas: dict[str, Any] | None = None,
+    ) -> Strategy:
+        """Create a new strategy.
+
+        Args:
+            name: Strategy name (required).
+            description: Optional description (0-500 chars).
+            market_id: Optional market binding.
+            visibility: ``"PRIVATE"``, ``"PUBLIC"``, or ``"UNLISTED"`` (default ``PRIVATE``).
+            exec_mode: ``"TICK"``, ``"EVENT"``, or ``"HYBRID"`` (default ``TICK``).
+            tick_ms: Tick interval in milliseconds (for TICK/HYBRID modes).
+            triggers: Trigger block definitions.
+            conditions: Condition block definitions.
+            actions: Action block definitions.
+            safety: Safety block definitions.
+            logic_blocks: Logic block definitions.
+            calc_blocks: Calc block definitions.
+            tags: Strategy tags.
+            variables: Strategy variable definitions.
+            canvas: Canvas layout metadata.
+        """
+        body: dict[str, Any] = {"name": name}
+        if description is not None:
+            body["description"] = description
         if market_id is not None:
             body["marketId"] = market_id
+        if visibility is not None:
+            body["visibility"] = visibility
+        if exec_mode is not None:
+            body["execMode"] = exec_mode
+        if tick_ms is not None:
+            body["tickMs"] = tick_ms
+        if triggers is not None:
+            body["triggers"] = triggers
+        if conditions is not None:
+            body["conditions"] = conditions
+        if actions is not None:
+            body["actions"] = actions
+        if safety is not None:
+            body["safety"] = safety
+        if logic_blocks is not None:
+            body["logicBlocks"] = logic_blocks
+        if calc_blocks is not None:
+            body["calcBlocks"] = calc_blocks
+        if tags is not None:
+            body["tags"] = tags
+        if variables is not None:
+            body["variables"] = variables
+        if canvas is not None:
+            body["canvas"] = canvas
         return _parse(Strategy, self._post("/api/v1/strategies", json=body))
 
     def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
@@ -498,14 +582,23 @@ class PolyforgeClient:
         self,
         *,
         limit: int = 20,
-        status: str | None = None,
+        status: str | OrderStatus | None = None,
         strategy_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
     ) -> list[Order]:
+        """List orders with optional filters.
+
+        Args:
+            status: Filter by order status. Accepts an :class:`~polyforge.models.OrderStatus`
+                enum value or one of: ``PENDING``, ``SUBMITTED``, ``LIVE``, ``MATCHED``,
+                ``DELAYED``, ``MINED``, ``CONFIRMED``, ``PARTIAL``, ``CANCELLED``,
+                ``UNMATCHED``, ``FAILED``, ``ERROR``.
+        """
+        status_val = status.value if isinstance(status, OrderStatus) else status
         data = self._get("/api/v1/orders", params={
             "limit": limit,
-            "status": status,
+            "status": status_val,
             "strategyId": strategy_id,
             "from": from_date,
             "to": to_date,
@@ -985,19 +1078,18 @@ class AsyncPolyforgeClient:
         limit: int = 10,
         page: int = 1,
     ) -> PaginatedResponse[Market]:
-        data = await self._get(
+        raw = await self._get(
             "/api/v1/markets",
             params={"search": search, "category": category, "limit": limit, "page": page},
         )
-        # Backend returns PaginatedResponse<Market> with 'data' field
-        items = [_parse(Market, m) for m in data["data"]]
+        parsed = [_parse(Market, m) for m in raw["data"]]
         return PaginatedResponse(
-            items=items,
-            total=data["total"],
-            page=data["page"],
-            limit=data["limit"],
-            has_more=data["hasNext"],
-            total_pages=data.get("totalPages", 0),
+            data=parsed,
+            total=raw["total"],
+            page=raw["page"],
+            limit=raw["limit"],
+            has_more=raw["hasNext"],
+            total_pages=raw.get("totalPages", 0),
         )
 
     async def get_market(self, market_id: str) -> Market:
@@ -1014,10 +1106,55 @@ class AsyncPolyforgeClient:
     async def get_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}"))
 
-    async def create_strategy(self, name: str, description: str | None = None, market_id: str | None = None) -> Strategy:
-        body: dict[str, Any] = {"name": name, "description": description or ""}
+    async def create_strategy(
+        self,
+        name: str,
+        *,
+        description: str | None = None,
+        market_id: str | None = None,
+        visibility: str | None = None,
+        exec_mode: str | None = None,
+        tick_ms: int | None = None,
+        triggers: list[dict[str, Any]] | None = None,
+        conditions: list[dict[str, Any]] | None = None,
+        actions: list[dict[str, Any]] | None = None,
+        safety: list[dict[str, Any]] | None = None,
+        logic_blocks: list[dict[str, Any]] | None = None,
+        calc_blocks: list[dict[str, Any]] | None = None,
+        tags: list[str] | None = None,
+        variables: list[dict[str, Any]] | None = None,
+        canvas: dict[str, Any] | None = None,
+    ) -> Strategy:
+        """Create a new strategy (async version). See sync ``create_strategy`` for details."""
+        body: dict[str, Any] = {"name": name}
+        if description is not None:
+            body["description"] = description
         if market_id is not None:
             body["marketId"] = market_id
+        if visibility is not None:
+            body["visibility"] = visibility
+        if exec_mode is not None:
+            body["execMode"] = exec_mode
+        if tick_ms is not None:
+            body["tickMs"] = tick_ms
+        if triggers is not None:
+            body["triggers"] = triggers
+        if conditions is not None:
+            body["conditions"] = conditions
+        if actions is not None:
+            body["actions"] = actions
+        if safety is not None:
+            body["safety"] = safety
+        if logic_blocks is not None:
+            body["logicBlocks"] = logic_blocks
+        if calc_blocks is not None:
+            body["calcBlocks"] = calc_blocks
+        if tags is not None:
+            body["tags"] = tags
+        if variables is not None:
+            body["variables"] = variables
+        if canvas is not None:
+            body["canvas"] = canvas
         return _parse(Strategy, await self._post("/api/v1/strategies", json=body))
 
     async def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
@@ -1111,14 +1248,16 @@ class AsyncPolyforgeClient:
         self,
         *,
         limit: int = 20,
-        status: str | None = None,
+        status: str | OrderStatus | None = None,
         strategy_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
     ) -> list[Order]:
+        """List orders with optional filters (async version)."""
+        status_val = status.value if isinstance(status, OrderStatus) else status
         data = await self._get("/api/v1/orders", params={
             "limit": limit,
-            "status": status,
+            "status": status_val,
             "strategyId": strategy_id,
             "from": from_date,
             "to": to_date,

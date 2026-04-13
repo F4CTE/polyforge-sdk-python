@@ -22,7 +22,25 @@ from polyforge.errors import (
     RateLimitError,
     ServerError,
 )
-from polyforge.models import Market, Strategy, Portfolio, WebhookEvent
+from polyforge.models import (
+    AiQueryResponse,
+    CopyConfig,
+    Market,
+    MarketplaceListing,
+    MarketplaceSeller,
+    MarketplaceStrategy,
+    Order,
+    OrderStatus,
+    PaginatedResponse,
+    Portfolio,
+    Position,
+    Strategy,
+    StrategyExecMode,
+    StrategyVisibility,
+    TraderScore,
+    WebhookEvent,
+    WhaleTrade,
+)
 
 
 class TestClientInstantiation:
@@ -343,6 +361,14 @@ class TestModelParsing:
         assert strategy.id == "strat-123"
         assert strategy.name == "Test Strategy"
         assert strategy.pnl == 1000.0
+        assert strategy.visibility == "PRIVATE"
+        assert strategy.exec_mode == "TICK"
+        assert strategy.triggers == []
+        assert strategy.conditions == []
+        assert strategy.actions == []
+        assert strategy.safety == []
+        assert strategy.tags == []
+        assert strategy.version == 0
 
     def test_portfolio_model_instantiation(self):
         """Should instantiate Portfolio model."""
@@ -379,7 +405,19 @@ class TestModelParsing:
         assert strategy.pnl == 0.0
         assert strategy.win_rate == 0.0
         assert strategy.trade_count == 0
-        assert strategy.blocks == []
+        assert strategy.triggers == []
+        assert strategy.conditions == []
+        assert strategy.actions == []
+        assert strategy.safety == []
+        assert strategy.logic_blocks == []
+        assert strategy.calc_blocks == []
+        assert strategy.visibility == "PRIVATE"
+        assert strategy.exec_mode == "TICK"
+        assert strategy.tick_ms is None
+        assert strategy.fork_count == 0
+        assert strategy.like_count == 0
+        assert strategy.tags == []
+        assert strategy.version == 0
 
 
 class TestReprSecurity:
@@ -703,3 +741,364 @@ class TestAsyncPlaceOrderValidation:
         import inspect
         source = inspect.getsource(AsyncPolyforgeClient.provide_liquidity)
         assert '_validate_financial_param("amount_usdc"' in source
+
+
+class TestOrderStatusEnum:
+    """Tests for OrderStatus enum (#30)."""
+
+    def test_order_status_has_12_values(self):
+        """OrderStatus must define exactly 12 values matching the platform."""
+        assert len(OrderStatus) == 12
+
+    def test_order_status_values(self):
+        """Each OrderStatus value must match the platform enum."""
+        expected = {
+            "PENDING", "SUBMITTED", "LIVE", "MATCHED", "DELAYED", "MINED",
+            "CONFIRMED", "PARTIAL", "CANCELLED", "UNMATCHED", "FAILED", "ERROR",
+        }
+        actual = {s.value for s in OrderStatus}
+        assert actual == expected
+
+    def test_order_status_is_str_enum(self):
+        """OrderStatus values should be usable as plain strings."""
+        assert OrderStatus.PENDING == "PENDING"
+        assert isinstance(OrderStatus.LIVE, str)
+
+
+class TestStrategyBlockCategories:
+    """Tests for Strategy block categories (#31)."""
+
+    def test_strategy_parses_block_categories(self):
+        """Strategy should parse triggers, conditions, actions, safety from API response."""
+        api_response = {
+            "id": "s-1",
+            "name": "My Strategy",
+            "triggers": [{"id": "t1", "type": "PRICE_THRESHOLD", "label": "Price > 0.8", "config": {}}],
+            "conditions": [{"id": "c1", "type": "TIME_WINDOW", "label": "Before 5pm", "config": {}}],
+            "actions": [{"id": "a1", "type": "PLACE_ORDER", "label": "Buy YES", "config": {}}],
+            "safety": [{"id": "sf1", "type": "MAX_LOSS", "label": "Stop at -$50", "config": {}}],
+            "visibility": "PUBLIC",
+            "execMode": "HYBRID",
+            "tickMs": 5000,
+            "forkCount": 3,
+            "likeCount": 10,
+            "tags": ["crypto", "momentum"],
+            "version": 2,
+            "tradeCount": 42,
+        }
+        strategy = _parse(Strategy, api_response)
+        assert len(strategy.triggers) == 1
+        assert strategy.triggers[0].type == "PRICE_THRESHOLD"
+        assert len(strategy.conditions) == 1
+        assert len(strategy.actions) == 1
+        assert len(strategy.safety) == 1
+        assert strategy.visibility == "PUBLIC"
+        assert strategy.exec_mode == "HYBRID"
+        assert strategy.tick_ms == 5000
+        assert strategy.fork_count == 3
+        assert strategy.like_count == 10
+        assert strategy.tags == ["crypto", "momentum"]
+        assert strategy.version == 2
+        assert strategy.trade_count == 42
+
+
+class TestCreateStrategyParams:
+    """Tests for create_strategy expanded parameters (#32)."""
+
+    def test_create_strategy_accepts_block_params(self):
+        """create_strategy() must accept visibility, exec_mode, triggers, etc."""
+        import inspect
+        sig = inspect.signature(PolyforgeClient.create_strategy)
+        params = set(sig.parameters.keys())
+        assert "visibility" in params
+        assert "exec_mode" in params
+        assert "tick_ms" in params
+        assert "triggers" in params
+        assert "conditions" in params
+        assert "actions" in params
+        assert "safety" in params
+        assert "tags" in params
+        assert "variables" in params
+        assert "canvas" in params
+
+    def test_async_create_strategy_accepts_block_params(self):
+        """Async create_strategy() must also accept the expanded params."""
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.create_strategy)
+        params = set(sig.parameters.keys())
+        assert "visibility" in params
+        assert "exec_mode" in params
+        assert "triggers" in params
+        assert "actions" in params
+        assert "tags" in params
+
+    def test_create_strategy_sends_camel_case_fields(self):
+        """create_strategy() must send camelCase field names to the API."""
+        import inspect
+        source = inspect.getsource(PolyforgeClient.create_strategy)
+        assert '"visibility"' in source
+        assert '"execMode"' in source
+        assert '"tickMs"' in source
+        assert '"triggers"' in source
+        assert '"conditions"' in source
+        assert '"actions"' in source
+        assert '"safety"' in source
+        assert '"tags"' in source
+
+
+class TestPaginatedResponseDataField:
+    """Tests for PaginatedResponse using 'data' field (#33)."""
+
+    def test_paginated_response_uses_data_field(self):
+        """PaginatedResponse must have a 'data' field, not 'items'."""
+        pr = PaginatedResponse(data=["a", "b", "c"], total=3, page=1, limit=10)
+        assert pr.data == ["a", "b", "c"]
+
+    def test_paginated_response_items_is_alias(self):
+        """PaginatedResponse.items must be a backward-compat alias for data."""
+        pr = PaginatedResponse(data=["x", "y"], total=2, page=1, limit=10)
+        assert pr.items == ["x", "y"]
+        assert pr.items is pr.data
+
+    def test_paginated_response_default_empty(self):
+        """PaginatedResponse data should default to empty list."""
+        pr = PaginatedResponse()
+        assert pr.data == []
+        assert pr.items == []
+
+
+class TestOrderMonetaryFields:
+    """Tests for Order/Position monetary fields as str (#34)."""
+
+    def test_order_price_is_str(self):
+        """Order price field must be str, not float."""
+        order = Order(price="0.65", size="150.00")
+        assert order.price == "0.65"
+        assert order.size == "150.00"
+        assert isinstance(order.price, str)
+        assert isinstance(order.size, str)
+
+    def test_order_fill_fields_nullable(self):
+        """Order fill_size and fill_price should be str | None."""
+        order = Order()
+        assert order.fill_size is None
+        assert order.fill_price is None
+        assert order.fee is None
+
+    def test_order_parses_decimal_strings(self):
+        """_parse must correctly map string monetary values from API response."""
+        api_response = {
+            "id": "ord-1",
+            "price": "0.65",
+            "size": "150.00",
+            "fillSize": "100.00",
+            "fillPrice": "0.64",
+            "fee": "0.50",
+            "status": "CONFIRMED",
+        }
+        order = _parse(Order, api_response)
+        assert order.price == "0.65"
+        assert order.size == "150.00"
+        assert order.fill_size == "100.00"
+        assert order.fill_price == "0.64"
+        assert order.fee == "0.50"
+
+    def test_position_monetary_fields_are_str(self):
+        """Position monetary fields must be str."""
+        pos = Position(
+            size="100.00",
+            entry_price="0.55",
+            current_price="0.65",
+            unrealized_pnl="10.00",
+            realized_pnl="5.00",
+        )
+        assert isinstance(pos.size, str)
+        assert isinstance(pos.entry_price, str)
+        assert pos.unrealized_pnl == "10.00"
+
+
+class TestCopyConfigFields:
+    """Tests for CopyConfig field name alignment (#45)."""
+
+    def test_copy_config_has_correct_fields(self):
+        """CopyConfig must use platform field names."""
+        cc = CopyConfig(
+            id="cc-1",
+            source_wallet="0xabc",
+            label="My Copy",
+            max_position_size=500.0,
+            enabled=True,
+            total_copied_trades=42,
+        )
+        assert cc.source_wallet == "0xabc"
+        assert cc.label == "My Copy"
+        assert cc.max_position_size == 500.0
+        assert cc.total_copied_trades == 42
+
+    def test_copy_config_no_old_fields(self):
+        """CopyConfig must not have deprecated field names."""
+        import dataclasses
+        field_names = {f.name for f in dataclasses.fields(CopyConfig)}
+        assert "source_strategy_id" not in field_names
+        assert "max_allocation" not in field_names
+        assert "scale_factor" not in field_names
+
+    def test_copy_config_parses_from_api(self):
+        """_parse must map camelCase platform fields to CopyConfig."""
+        api_response = {
+            "id": "cc-1",
+            "sourceWallet": "0xdef",
+            "label": "Whale Copy",
+            "maxPositionSize": 1000.0,
+            "enabled": True,
+            "totalCopiedTrades": 15,
+            "createdAt": "2026-01-01T00:00:00Z",
+        }
+        cc = _parse(CopyConfig, api_response)
+        assert cc.source_wallet == "0xdef"
+        assert cc.max_position_size == 1000.0
+        assert cc.total_copied_trades == 15
+        assert cc.label == "Whale Copy"
+
+
+class TestBacktestNoInitialBalance:
+    """Tests for run_backtest not sending initial_balance (#65)."""
+
+    def test_run_backtest_no_initial_balance_param(self):
+        """run_backtest() must not accept initial_balance parameter."""
+        import inspect
+        sig = inspect.signature(PolyforgeClient.run_backtest)
+        assert "initial_balance" not in sig.parameters
+
+    def test_async_run_backtest_no_initial_balance_param(self):
+        """Async run_backtest() must not accept initial_balance parameter."""
+        import inspect
+        sig = inspect.signature(AsyncPolyforgeClient.run_backtest)
+        assert "initial_balance" not in sig.parameters
+
+    def test_run_backtest_no_initial_balance_in_body(self):
+        """run_backtest() must not send initialBalance in the request body."""
+        import inspect
+        source = inspect.getsource(PolyforgeClient.run_backtest)
+        assert "initialBalance" not in source
+        assert "initial_balance" not in source
+
+
+class TestTraderScoreFields:
+    """Tests for TraderScore field alignment (#23)."""
+
+    def test_trader_score_has_platform_fields(self):
+        """TraderScore must have volume, rank, percentile."""
+        ts = TraderScore(volume=50000.0, rank=5, percentile=95.0)
+        assert ts.volume == 50000.0
+        assert ts.rank == 5
+        assert ts.percentile == 95.0
+
+    def test_trader_score_no_deprecated_fields(self):
+        """TraderScore must not have total_trades, sharpe_ratio, max_drawdown."""
+        import dataclasses
+        field_names = {f.name for f in dataclasses.fields(TraderScore)}
+        assert "total_trades" not in field_names
+        assert "sharpe_ratio" not in field_names
+        assert "max_drawdown" not in field_names
+
+    def test_trader_score_parses_from_api(self):
+        """_parse must map camelCase platform fields to TraderScore."""
+        api_response = {
+            "overall": 85.0,
+            "riskManagement": 90.0,
+            "consistency": 80.0,
+            "profitability": 75.0,
+            "winRate": 0.65,
+            "volume": 100000.0,
+            "rank": 3,
+            "percentile": 97.5,
+        }
+        ts = _parse(TraderScore, api_response)
+        assert ts.volume == 100000.0
+        assert ts.rank == 3
+        assert ts.percentile == 97.5
+
+
+class TestWhaleTradeFields:
+    """Tests for WhaleTrade field alignment (#23)."""
+
+    def test_whale_trade_has_platform_fields(self):
+        """WhaleTrade must have market_name and usd_value."""
+        wt = WhaleTrade(market_name="Will BTC hit $100K?", usd_value=50000.0)
+        assert wt.market_name == "Will BTC hit $100K?"
+        assert wt.usd_value == 50000.0
+
+    def test_whale_trade_no_deprecated_fields(self):
+        """WhaleTrade must not have symbol or price."""
+        import dataclasses
+        field_names = {f.name for f in dataclasses.fields(WhaleTrade)}
+        assert "symbol" not in field_names
+        assert "price" not in field_names
+
+    def test_whale_trade_parses_from_api(self):
+        """_parse must map camelCase platform fields to WhaleTrade."""
+        api_response = {
+            "id": "wt-1",
+            "marketId": "m-1",
+            "marketName": "Election 2028",
+            "side": "BUY",
+            "size": 100000.0,
+            "usdValue": 65000.0,
+            "wallet": "0xabc",
+            "timestamp": "2026-04-13T00:00:00Z",
+        }
+        wt = _parse(WhaleTrade, api_response)
+        assert wt.market_name == "Election 2028"
+        assert wt.usd_value == 65000.0
+
+
+class TestAiQueryResponseFields:
+    """Tests for AiQueryResponse field types (#23)."""
+
+    def test_suggested_actions_is_list_of_str(self):
+        """AiQueryResponse.suggested_actions must be list[str] not list[dict]."""
+        resp = AiQueryResponse(suggested_actions=["Buy YES", "Set alert"])
+        assert resp.suggested_actions == ["Buy YES", "Set alert"]
+        assert all(isinstance(a, str) for a in resp.suggested_actions)
+
+
+class TestMarketplaceListingNestedObjects:
+    """Tests for MarketplaceListing seller/strategy nested objects (#23)."""
+
+    def test_listing_has_seller_and_strategy_fields(self):
+        """MarketplaceListing must have seller and strategy optional fields."""
+        import dataclasses
+        field_names = {f.name for f in dataclasses.fields(MarketplaceListing)}
+        assert "seller" in field_names
+        assert "strategy" in field_names
+
+    def test_listing_parses_nested_objects(self):
+        """_parse must handle nested seller and strategy objects."""
+        api_response = {
+            "id": "lst-1",
+            "strategyId": "s-1",
+            "sellerId": "u-1",
+            "title": "Alpha Strategy",
+            "priceUsdc": "29.99",
+            "status": "ACTIVE",
+            "seller": {"id": "u-1", "name": "TopTrader", "avatarUrl": "https://example.com/avatar.png"},
+            "strategy": {"id": "s-1", "name": "Alpha Strategy", "description": "A great strategy"},
+        }
+        listing = _parse(MarketplaceListing, api_response)
+        assert listing.seller is not None
+        assert listing.seller.id == "u-1"
+        assert listing.seller.name == "TopTrader"
+        assert listing.strategy is not None
+        assert listing.strategy.id == "s-1"
+        assert listing.strategy.name == "Alpha Strategy"
+
+
+class TestStrategyEnums:
+    """Tests for StrategyVisibility and StrategyExecMode enums (#31)."""
+
+    def test_strategy_visibility_values(self):
+        assert set(v.value for v in StrategyVisibility) == {"PRIVATE", "PUBLIC", "UNLISTED"}
+
+    def test_strategy_exec_mode_values(self):
+        assert set(v.value for v in StrategyExecMode) == {"TICK", "EVENT", "HYBRID"}

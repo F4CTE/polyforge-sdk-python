@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.6.14] — 2026-04-13
+
+### Fixed
+- **BREAKING** `Strategy` model: add block category arrays (`triggers`, `conditions`, `actions`, `safety`, `logic_blocks`, `calc_blocks`) and metadata fields (`visibility`, `exec_mode`, `tick_ms`, `fork_count`, `like_count`, `tags`, `version`) to match platform contract — strategies were losing all block configuration during deserialization (closes #31)
+- **BREAKING** `create_strategy()`: add optional parameters for `visibility`, `exec_mode`, `tick_ms`, `triggers`, `conditions`, `actions`, `safety`, `logic_blocks`, `calc_blocks`, `tags`, `variables`, `canvas` — strategies created via the SDK were empty with no blocks or configuration (closes #32)
+- **BREAKING** `PaginatedResponse`: rename primary field from `items` to `data` to match platform's `data` array key; add backward-compatible `items` property alias; `has_more` now maps from platform's `hasNext` (closes #33)
+- **BREAKING** `Order` model: change `price`, `size`, `fill_size`, `fill_price`, `fee` from `float` to `str` (or `str | None`) — platform returns decimal strings to preserve precision (closes #34)
+- **BREAKING** `Position` model: change `size`, `entry_price`, `current_price`, `unrealized_pnl`, `realized_pnl` from `float` to `str` — platform returns decimal strings (closes #34)
+- **BREAKING** `CopyConfig` model: rename `source_strategy_id` → `source_wallet`, `max_allocation` → `max_position_size`; remove `scale_factor`; add `label` and `total_copied_trades` — field names now match platform contract (closes #45)
+- **BREAKING** `TraderScore` model: replace `total_trades`, `sharpe_ratio`, `max_drawdown` with `volume`, `rank`, `percentile` to match platform response (closes #23)
+- **BREAKING** `WhaleTrade` model: rename `symbol` → `market_name`, `price` → `usd_value` to match platform field names (closes #23)
+- **BREAKING** `AiQueryResponse`: change `suggested_actions` type from `list[dict]` to `list[str]` to match platform response (closes #23)
+- `MarketplaceListing` model: add `seller: MarketplaceSeller | None` and `strategy: MarketplaceStrategy | None` nested objects to match platform response (closes #23)
+- `_parse()`: handle `Optional[X]` / `X | None` type hints for nested model resolution — previously nested optional models were returned as raw dicts
+- `Position` model: remove extra `symbol` field that does not exist in platform response (closes #23)
+- `Strategy` model: remove extra `mode` and `config` fields that do not exist in platform response (closes #23)
+
+### Added
+- `OrderStatus` enum with 12 platform-defined values: `PENDING`, `SUBMITTED`, `LIVE`, `MATCHED`, `DELAYED`, `MINED`, `CONFIRMED`, `PARTIAL`, `CANCELLED`, `UNMATCHED`, `FAILED`, `ERROR` — usable in `get_orders(status=OrderStatus.LIVE)` (closes #30)
+- `StrategyVisibility` enum: `PRIVATE`, `PUBLIC`, `UNLISTED` (closes #31)
+- `StrategyExecMode` enum: `TICK`, `EVENT`, `HYBRID` (closes #31)
+
 ## [1.6.13] — 2026-04-13
 
 ### Fixed
