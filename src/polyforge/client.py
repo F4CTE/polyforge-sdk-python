@@ -306,7 +306,7 @@ class PolyforgeClient:
         with PolyforgeClient(api_key="pk_...") as client:
             markets = client.list_markets(limit=5)
             for m in markets.items:
-                print(m.name, m.price)
+                print(m.title, m.price)
     """
 
     def __init__(
@@ -876,7 +876,7 @@ class AsyncPolyforgeClient:
         async with AsyncPolyforgeClient(api_key="pk_...") as client:
             markets = await client.list_markets(limit=5)
             for m in markets.items:
-                print(m.name, m.price)
+                print(m.title, m.price)
     """
 
     def __init__(

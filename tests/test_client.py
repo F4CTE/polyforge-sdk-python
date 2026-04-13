@@ -4,6 +4,7 @@ import pytest
 from polyforge.client import (
     PolyforgeClient,
     AsyncPolyforgeClient,
+    _parse,
     _validate_financial_param,
     _validate_webhook_url,
     _is_ip_blocked,
@@ -201,14 +202,27 @@ class TestModelParsing:
         """Should instantiate Market model."""
         market = Market(
             id="btc-usd",
-            name="Bitcoin / US Dollar",
+            title="Bitcoin / US Dollar",
             symbol="BTC/USD",
             category="crypto",
             price=45000.0,
         )
         assert market.id == "btc-usd"
-        assert market.name == "Bitcoin / US Dollar"
+        assert market.title == "Bitcoin / US Dollar"
         assert market.price == 45000.0
+
+    def test_market_parses_title_from_api_response(self):
+        """Platform returns 'title' not 'name' — _parse must map it correctly (#43)."""
+        api_response = {
+            "id": "0xabc",
+            "title": "Will BTC reach $100K by June?",
+            "symbol": "BTC-100K",
+            "category": "Crypto",
+            "price": 0.65,
+        }
+        market = _parse(Market, api_response)
+        assert market.title == "Will BTC reach $100K by June?"
+        assert market.id == "0xabc"
 
     def test_strategy_model_instantiation(self):
         """Should instantiate Strategy model."""

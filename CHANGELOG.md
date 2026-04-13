@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.10] — 2026-04-13
+
+### Fixed
+- **BREAKING** `Market` model: rename `name` field to `title` to match platform response — `list_markets()` and `get_market()` were returning empty titles because the platform sends `title`, not `name` (closes #43)
+
 ## [1.6.9] — 2026-04-13
 
 ### Security
