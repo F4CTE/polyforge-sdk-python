@@ -1102,3 +1102,66 @@ class TestStrategyEnums:
 
     def test_strategy_exec_mode_values(self):
         assert set(v.value for v in StrategyExecMode) == {"TICK", "EVENT", "HYBRID"}
+
+
+class TestListMarketsSortClosedParams:
+    """Tests for sort and closed params on list_markets (#74)."""
+
+    def test_list_markets_accepts_sort_and_closed_params(self):
+        """list_markets() signature must accept sort and closed keyword args."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.list_markets)
+        param_names = set(sig.parameters.keys())
+        assert "sort" in param_names, "list_markets() missing 'sort' parameter"
+        assert "closed" in param_names, "list_markets() missing 'closed' parameter"
+
+    def test_async_list_markets_accepts_sort_and_closed_params(self):
+        """AsyncPolyforgeClient.list_markets() must also accept sort and closed."""
+        import inspect
+
+        sig = inspect.signature(AsyncPolyforgeClient.list_markets)
+        param_names = set(sig.parameters.keys())
+        assert "sort" in param_names, "async list_markets() missing 'sort' parameter"
+        assert "closed" in param_names, "async list_markets() missing 'closed' parameter"
+
+    def test_list_markets_sort_and_closed_passed_in_params(self):
+        """list_markets() must pass sort and closed to the HTTP params dict."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.list_markets)
+        assert '"sort"' in source or "'sort'" in source
+        assert '"closed"' in source or "'closed'" in source
+
+
+class TestListStrategiesSortPageLimitParams:
+    """Tests for sort, page, limit params on list_strategies (#77)."""
+
+    def test_list_strategies_accepts_sort_page_limit(self):
+        """list_strategies() signature must accept sort, page, limit keyword args."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.list_strategies)
+        param_names = set(sig.parameters.keys())
+        assert "sort" in param_names, "list_strategies() missing 'sort' parameter"
+        assert "page" in param_names, "list_strategies() missing 'page' parameter"
+        assert "limit" in param_names, "list_strategies() missing 'limit' parameter"
+
+    def test_async_list_strategies_accepts_sort_page_limit(self):
+        """AsyncPolyforgeClient.list_strategies() must also accept sort, page, limit."""
+        import inspect
+
+        sig = inspect.signature(AsyncPolyforgeClient.list_strategies)
+        param_names = set(sig.parameters.keys())
+        assert "sort" in param_names, "async list_strategies() missing 'sort' parameter"
+        assert "page" in param_names, "async list_strategies() missing 'page' parameter"
+        assert "limit" in param_names, "async list_strategies() missing 'limit' parameter"
+
+    def test_list_strategies_params_passed_to_request(self):
+        """list_strategies() must pass sort, page, limit to the HTTP params dict."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.list_strategies)
+        assert '"sort"' in source or "'sort'" in source
+        assert '"page"' in source or "'page'" in source
+        assert '"limit"' in source or "'limit'" in source

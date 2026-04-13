@@ -391,12 +391,21 @@ class PolyforgeClient:
         *,
         search: str | None = None,
         category: str | None = None,
+        sort: str | None = None,
+        closed: bool | None = None,
         limit: int = 10,
         page: int = 1,
     ) -> PaginatedResponse[Market]:
         raw = self._get(
             "/api/v1/markets",
-            params={"search": search, "category": category, "limit": limit, "page": page},
+            params={
+                "search": search,
+                "category": category,
+                "sort": sort,
+                "closed": closed,
+                "limit": limit,
+                "page": page,
+            },
         )
         parsed = [_parse(Market, m) for m in raw["data"]]
         return PaginatedResponse(
@@ -413,8 +422,18 @@ class PolyforgeClient:
 
     # -- Strategies --
 
-    def list_strategies(self, *, status: str | None = None) -> list[Strategy]:
-        data = self._get("/api/v1/strategies", params={"status": status})
+    def list_strategies(
+        self,
+        *,
+        status: str | None = None,
+        sort: str | None = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> list[Strategy]:
+        data = self._get(
+            "/api/v1/strategies",
+            params={"status": status, "sort": sort, "page": page, "limit": limit},
+        )
         # Backend returns PaginatedResponse<Strategy> with 'data' field
         items = data["data"]
         return [_parse(Strategy, s) for s in items]
@@ -1075,12 +1094,21 @@ class AsyncPolyforgeClient:
         *,
         search: str | None = None,
         category: str | None = None,
+        sort: str | None = None,
+        closed: bool | None = None,
         limit: int = 10,
         page: int = 1,
     ) -> PaginatedResponse[Market]:
         raw = await self._get(
             "/api/v1/markets",
-            params={"search": search, "category": category, "limit": limit, "page": page},
+            params={
+                "search": search,
+                "category": category,
+                "sort": sort,
+                "closed": closed,
+                "limit": limit,
+                "page": page,
+            },
         )
         parsed = [_parse(Market, m) for m in raw["data"]]
         return PaginatedResponse(
@@ -1097,8 +1125,18 @@ class AsyncPolyforgeClient:
 
     # -- Strategies --
 
-    async def list_strategies(self, *, status: str | None = None) -> list[Strategy]:
-        data = await self._get("/api/v1/strategies", params={"status": status})
+    async def list_strategies(
+        self,
+        *,
+        status: str | None = None,
+        sort: str | None = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> list[Strategy]:
+        data = await self._get(
+            "/api/v1/strategies",
+            params={"status": status, "sort": sort, "page": page, "limit": limit},
+        )
         # Backend returns PaginatedResponse<Strategy> with 'data' field
         items = data["data"]
         return [_parse(Strategy, s) for s in items]
