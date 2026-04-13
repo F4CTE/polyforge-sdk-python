@@ -5,6 +5,7 @@ from __future__ import annotations
 import ipaddress
 import json as _json
 import logging as _log
+import math
 import re
 import socket
 from dataclasses import fields
@@ -162,6 +163,23 @@ def _strip_none(params: dict[str, Any]) -> dict[str, Any]:
 def _encode_path(segment: str) -> str:
     """URL-encode a path parameter to prevent path traversal attacks (CWE-22)."""
     return quote(str(segment), safe="")
+
+
+def _validate_financial_param(name: str, value: float) -> None:
+    """Reject NaN, Infinity, negative, and zero values for financial parameters.
+
+    Raises:
+        TypeError: if *value* is not a real number (int or float).
+        ValueError: if *value* is NaN, infinite, zero, or negative.
+    """
+    if not isinstance(value, (int, float)):
+        raise TypeError(f"{name} must be a number, got {type(value).__name__}")
+    if math.isnan(value):
+        raise ValueError(f"{name} must not be NaN")
+    if math.isinf(value):
+        raise ValueError(f"{name} must not be Infinity")
+    if value <= 0:
+        raise ValueError(f"{name} must be positive, got {value}")
 
 
 _BLOCKED_HOSTNAMES: set[str] = {
@@ -509,6 +527,8 @@ class PolyforgeClient:
         order_type: str = "GTC",
     ) -> PlaceOrderResponse:
         """Place a direct buy or sell order on a prediction market."""
+        _validate_financial_param("size", size)
+        _validate_financial_param("price", price)
         data = self._post("/api/v1/orders/place", json={
             "tokenId": token_id,
             "side": side,
@@ -545,6 +565,8 @@ class PolyforgeClient:
 
     def split_position(self, token_id: str, size: float, price: float) -> PlaceOrderResponse:
         """Split a position into smaller positions."""
+        _validate_financial_param("size", size)
+        _validate_financial_param("price", price)
         data = self._post("/api/v1/orders/split", json={"tokenId": token_id, "size": size, "price": price})
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
@@ -597,6 +619,19 @@ class PolyforgeClient:
         price_b: float | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
+        _validate_financial_param("total_size", total_size)
+        if limit_price is not None:
+            _validate_financial_param("limit_price", limit_price)
+        if entry_price is not None:
+            _validate_financial_param("entry_price", entry_price)
+        if take_profit_price is not None:
+            _validate_financial_param("take_profit_price", take_profit_price)
+        if stop_loss_price is not None:
+            _validate_financial_param("stop_loss_price", stop_loss_price)
+        if price_a is not None:
+            _validate_financial_param("price_a", price_a)
+        if price_b is not None:
+            _validate_financial_param("price_b", price_b)
         body: dict[str, Any] = {
             "type": type,
             "tokenId": token_id,
@@ -795,6 +830,8 @@ class PolyforgeClient:
         )
 
     def provide_liquidity(self, token_id: str, spread: float, size: float) -> LpPosition:
+        _validate_financial_param("spread", spread)
+        _validate_financial_param("size", size)
         data = self._post("/api/v1/lp/provide", json={"tokenId": token_id, "spread": spread, "size": size})
         return LpPosition(
             buy_order_id=data.get("buyOrderId", ""),
@@ -1060,6 +1097,8 @@ class AsyncPolyforgeClient:
         order_type: str = "GTC",
     ) -> PlaceOrderResponse:
         """Place a direct buy or sell order on a prediction market."""
+        _validate_financial_param("size", size)
+        _validate_financial_param("price", price)
         data = await self._post("/api/v1/orders/place", json={
             "tokenId": token_id,
             "side": side,
@@ -1096,6 +1135,8 @@ class AsyncPolyforgeClient:
 
     async def split_position(self, token_id: str, size: float, price: float) -> PlaceOrderResponse:
         """Split a position into smaller positions."""
+        _validate_financial_param("size", size)
+        _validate_financial_param("price", price)
         data = await self._post("/api/v1/orders/split", json={"tokenId": token_id, "size": size, "price": price})
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
@@ -1144,6 +1185,19 @@ class AsyncPolyforgeClient:
         price_b: float | None = None,
     ) -> PlaceSmartOrderResponse:
         """Place an advanced smart order (TWAP, DCA, BRACKET, or OCO)."""
+        _validate_financial_param("total_size", total_size)
+        if limit_price is not None:
+            _validate_financial_param("limit_price", limit_price)
+        if entry_price is not None:
+            _validate_financial_param("entry_price", entry_price)
+        if take_profit_price is not None:
+            _validate_financial_param("take_profit_price", take_profit_price)
+        if stop_loss_price is not None:
+            _validate_financial_param("stop_loss_price", stop_loss_price)
+        if price_a is not None:
+            _validate_financial_param("price_a", price_a)
+        if price_b is not None:
+            _validate_financial_param("price_b", price_b)
         body: dict[str, Any] = {
             "type": type,
             "tokenId": token_id,
@@ -1339,6 +1393,8 @@ class AsyncPolyforgeClient:
         )
 
     async def provide_liquidity(self, token_id: str, spread: float, size: float) -> LpPosition:
+        _validate_financial_param("spread", spread)
+        _validate_financial_param("size", size)
         data = await self._post("/api/v1/lp/provide", json={"tokenId": token_id, "spread": spread, "size": size})
         return LpPosition(
             buy_order_id=data.get("buyOrderId", ""),

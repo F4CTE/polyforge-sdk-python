@@ -4,6 +4,7 @@ import pytest
 from polyforge.client import (
     PolyforgeClient,
     AsyncPolyforgeClient,
+    _validate_financial_param,
     _validate_webhook_url,
     _is_ip_blocked,
     _resolve_and_validate_ips,
@@ -438,3 +439,124 @@ class TestPlatformContractCompliance:
 
         source = inspect.getsource(PolyforgeClient.start_strategy)
         assert ".upper()" not in source, "start_strategy() must not uppercase the mode value"
+
+
+class TestFinancialParamValidation:
+    """Test _validate_financial_param rejects dangerous values (#88)."""
+
+    def test_rejects_nan(self):
+        with pytest.raises(ValueError, match="must not be NaN"):
+            _validate_financial_param("size", float("nan"))
+
+    def test_rejects_positive_infinity(self):
+        with pytest.raises(ValueError, match="must not be Infinity"):
+            _validate_financial_param("price", float("inf"))
+
+    def test_rejects_negative_infinity(self):
+        with pytest.raises(ValueError, match="must not be Infinity"):
+            _validate_financial_param("price", float("-inf"))
+
+    def test_rejects_zero(self):
+        with pytest.raises(ValueError, match="must be positive"):
+            _validate_financial_param("size", 0)
+
+    def test_rejects_negative(self):
+        with pytest.raises(ValueError, match="must be positive"):
+            _validate_financial_param("size", -1.0)
+
+    def test_rejects_non_number(self):
+        with pytest.raises(TypeError, match="must be a number"):
+            _validate_financial_param("size", "10")  # type: ignore[arg-type]
+
+    def test_accepts_positive_float(self):
+        _validate_financial_param("size", 1.5)  # should not raise
+
+    def test_accepts_positive_int(self):
+        _validate_financial_param("size", 10)  # should not raise
+
+
+class TestPlaceOrderValidation:
+    """Ensure place_order rejects invalid financial params before HTTP call (#88)."""
+
+    def test_place_order_rejects_nan_size(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must not be NaN"):
+            client.place_order("tok", "BUY", "YES", float("nan"), 0.5)
+        client.close()
+
+    def test_place_order_rejects_negative_price(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be positive"):
+            client.place_order("tok", "BUY", "YES", 10.0, -0.5)
+        client.close()
+
+    def test_split_position_rejects_zero_size(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be positive"):
+            client.split_position("tok", 0, 0.5)
+        client.close()
+
+    def test_place_smart_order_rejects_inf_total_size(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must not be Infinity"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=float("inf"),
+            )
+        client.close()
+
+    def test_place_smart_order_rejects_nan_limit_price(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must not be NaN"):
+            client.place_smart_order(
+                type="TWAP", token_id="tok", side="BUY",
+                outcome="YES", total_size=10.0, limit_price=float("nan"),
+            )
+        client.close()
+
+    def test_provide_liquidity_rejects_negative_spread(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be positive"):
+            client.provide_liquidity("tok", -0.01, 100.0)
+        client.close()
+
+    def test_provide_liquidity_rejects_zero_size(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be positive"):
+            client.provide_liquidity("tok", 0.05, 0)
+        client.close()
+
+
+class TestAsyncPlaceOrderValidation:
+    """Ensure async client also validates financial params (#88).
+
+    The validation helper is a plain function called before any await,
+    so we use inspect.getsource to verify calls are present in each method.
+    """
+
+    def test_async_place_order_calls_validate(self):
+        """Async place_order must call _validate_financial_param for size and price."""
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.place_order)
+        assert '_validate_financial_param("size"' in source
+        assert '_validate_financial_param("price"' in source
+
+    def test_async_split_position_calls_validate(self):
+        """Async split_position must call _validate_financial_param for size and price."""
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.split_position)
+        assert '_validate_financial_param("size"' in source
+        assert '_validate_financial_param("price"' in source
+
+    def test_async_place_smart_order_calls_validate(self):
+        """Async place_smart_order must call _validate_financial_param for total_size."""
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.place_smart_order)
+        assert '_validate_financial_param("total_size"' in source
+
+    def test_async_provide_liquidity_calls_validate(self):
+        """Async provide_liquidity must call _validate_financial_param for spread and size."""
+        import inspect
+        source = inspect.getsource(AsyncPolyforgeClient.provide_liquidity)
+        assert '_validate_financial_param("spread"' in source
+        assert '_validate_financial_param("size"' in source

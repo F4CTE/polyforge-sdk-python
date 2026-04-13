@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.9] — 2026-04-13
+
+### Security
+- **Financial parameter validation**: add `_validate_financial_param()` helper that rejects NaN, Infinity, negative, and zero values — applied to `place_order`, `place_smart_order`, `provide_liquidity`, and `split_position` in both sync and async clients; prevents malformed orders from reaching the API (closes #88)
+
 ## [1.6.8] — 2026-04-13
 
 ### Fixed
