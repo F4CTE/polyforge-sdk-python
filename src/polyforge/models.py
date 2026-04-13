@@ -249,19 +249,24 @@ class CopyConfig:
 class WebhookEvent:
     """Constants for webhook event names (SCREAMING_SNAKE_CASE as expected by the platform).
 
+    These match the platform's ``CreateWebhookDto`` validation exactly::
+
+        @IsIn(['ORDER_FILLED','STRATEGY_ERROR','WHALE_TRADE','NEWS_SIGNAL',
+               'BACKTEST_COMPLETE','DAILY_LOSS_LIMIT','MARKET_RESOLVED','PRICE_ALERT'])
+
     Usage::
 
         client.create_webhook(url="https://...", events=[WebhookEvent.ORDER_FILLED])
     """
 
     ORDER_FILLED = "ORDER_FILLED"
-    ORDER_PLACED = "ORDER_PLACED"
-    ORDER_CANCELLED = "ORDER_CANCELLED"
-    STRATEGY_STARTED = "STRATEGY_STARTED"
-    STRATEGY_STOPPED = "STRATEGY_STOPPED"
     STRATEGY_ERROR = "STRATEGY_ERROR"
-    BACKTEST_COMPLETED = "BACKTEST_COMPLETED"
-    BACKTEST_FAILED = "BACKTEST_FAILED"
+    WHALE_TRADE = "WHALE_TRADE"
+    NEWS_SIGNAL = "NEWS_SIGNAL"
+    BACKTEST_COMPLETE = "BACKTEST_COMPLETE"
+    DAILY_LOSS_LIMIT = "DAILY_LOSS_LIMIT"
+    MARKET_RESOLVED = "MARKET_RESOLVED"
+    PRICE_ALERT = "PRICE_ALERT"
 
 
 @dataclass

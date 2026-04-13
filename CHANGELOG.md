@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.11] — 2026-04-13
+
+### Fixed
+- **BREAKING** `WebhookEvent`: replace 5 phantom events (`ORDER_PLACED`, `ORDER_CANCELLED`, `STRATEGY_STARTED`, `STRATEGY_STOPPED`, `BACKTEST_FAILED`) with the correct platform events (`WHALE_TRADE`, `NEWS_SIGNAL`, `DAILY_LOSS_LIMIT`, `MARKET_RESOLVED`, `PRICE_ALERT`); fix `BACKTEST_COMPLETED` → `BACKTEST_COMPLETE` — webhook creation was returning HTTP 400 for non-existent event names (closes #80)
+
 ## [1.6.10] — 2026-04-13
 
 ### Fixed

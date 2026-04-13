@@ -416,21 +416,39 @@ class TestContextManagers:
 class TestPlatformContractCompliance:
     """Regression tests for platform DTO field name compliance (#89-#92)."""
 
-    def test_webhook_event_values_are_screaming_snake_case(self):
-        """WebhookEvent values must use SCREAMING_SNAKE_CASE, not dot.notation (#91)."""
-        events = [
+    def test_webhook_event_values_match_platform_dto(self):
+        """WebhookEvent values must match platform CreateWebhookDto validation exactly (#80, #91)."""
+        # These are the exact 8 events accepted by the platform's @IsIn() validator
+        platform_events = {
+            "ORDER_FILLED", "STRATEGY_ERROR", "WHALE_TRADE", "NEWS_SIGNAL",
+            "BACKTEST_COMPLETE", "DAILY_LOSS_LIMIT", "MARKET_RESOLVED", "PRICE_ALERT",
+        }
+        sdk_events = {
             WebhookEvent.ORDER_FILLED,
-            WebhookEvent.ORDER_PLACED,
-            WebhookEvent.ORDER_CANCELLED,
-            WebhookEvent.STRATEGY_STARTED,
-            WebhookEvent.STRATEGY_STOPPED,
             WebhookEvent.STRATEGY_ERROR,
-            WebhookEvent.BACKTEST_COMPLETED,
-            WebhookEvent.BACKTEST_FAILED,
-        ]
-        for event in events:
-            assert "." not in event, f"WebhookEvent {event} uses dot.notation instead of SCREAMING_SNAKE_CASE"
+            WebhookEvent.WHALE_TRADE,
+            WebhookEvent.NEWS_SIGNAL,
+            WebhookEvent.BACKTEST_COMPLETE,
+            WebhookEvent.DAILY_LOSS_LIMIT,
+            WebhookEvent.MARKET_RESOLVED,
+            WebhookEvent.PRICE_ALERT,
+        }
+        assert sdk_events == platform_events, (
+            f"SDK events {sdk_events} don't match platform events {platform_events}"
+        )
+        for event in sdk_events:
+            assert "." not in event, f"WebhookEvent {event} uses dot.notation"
             assert event == event.upper(), f"WebhookEvent {event} is not SCREAMING_SNAKE_CASE"
+
+    def test_webhook_event_no_phantom_events(self):
+        """WebhookEvent must not define events that don't exist in the platform (#80)."""
+        # These were previously defined but don't exist in the platform's validation
+        assert not hasattr(WebhookEvent, "ORDER_PLACED"), "ORDER_PLACED is a phantom event"
+        assert not hasattr(WebhookEvent, "ORDER_CANCELLED"), "ORDER_CANCELLED is a phantom event"
+        assert not hasattr(WebhookEvent, "STRATEGY_STARTED"), "STRATEGY_STARTED is a phantom event"
+        assert not hasattr(WebhookEvent, "STRATEGY_STOPPED"), "STRATEGY_STOPPED is a phantom event"
+        assert not hasattr(WebhookEvent, "BACKTEST_FAILED"), "BACKTEST_FAILED is a phantom event"
+        assert not hasattr(WebhookEvent, "BACKTEST_COMPLETED"), "BACKTEST_COMPLETED is phantom (correct name is BACKTEST_COMPLETE)"
 
     def test_ai_query_body_uses_query_field(self):
         """ai_query() must send { query } not { question } (#89)."""
