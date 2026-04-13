@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.16] — 2026-04-13
+
+### Added
+- `WatchlistItem` model: `market_id`, `slug`, `title`, `current_price`, `volume24h`, `price_delta24h`, `watched` fields for watchlist API responses (closes #53)
+- `WebhookTestResult` model: `success` and `status_code` fields for webhook test responses (closes #55)
+- `get_watchlist()`: list all watched markets — both sync and async clients
+- `add_to_watchlist(market_id)`: add a market to the watchlist — both sync and async clients
+- `remove_from_watchlist(market_id)`: remove a market from the watchlist (204 No Content) — both sync and async clients
+- `get_watchlist_status(market_id)`: check if a market is watched — both sync and async clients
+- `delete_webhook(webhook_id)`: delete a webhook by ID (204 No Content) — both sync and async clients (closes #55)
+- `test_webhook(webhook_id)`: send a test payload to a webhook endpoint — both sync and async clients (closes #55)
+
 ## [1.6.15] — 2026-04-13
 
 ### Fixed

@@ -38,7 +38,9 @@ from polyforge.models import (
     StrategyExecMode,
     StrategyVisibility,
     TraderScore,
+    WatchlistItem,
     WebhookEvent,
+    WebhookTestResult,
     WhaleTrade,
 )
 
@@ -1165,3 +1167,213 @@ class TestListStrategiesSortPageLimitParams:
         assert '"sort"' in source or "'sort'" in source
         assert '"page"' in source or "'page'" in source
         assert '"limit"' in source or "'limit'" in source
+
+
+class TestWatchlistItem:
+    """Tests for WatchlistItem model (#53)."""
+
+    def test_watchlist_item_fields(self):
+        """WatchlistItem must have the expected fields."""
+        item = WatchlistItem(
+            market_id="mkt-1",
+            slug="will-x-happen",
+            title="Will X happen?",
+            current_price=0.65,
+            volume24h=12345.0,
+            price_delta24h=-0.03,
+            watched=True,
+        )
+        assert item.market_id == "mkt-1"
+        assert item.slug == "will-x-happen"
+        assert item.title == "Will X happen?"
+        assert item.current_price == 0.65
+        assert item.volume24h == 12345.0
+        assert item.price_delta24h == -0.03
+        assert item.watched is True
+
+    def test_watchlist_item_defaults(self):
+        """WatchlistItem defaults should be sensible."""
+        item = WatchlistItem()
+        assert item.market_id == ""
+        assert item.slug == ""
+        assert item.title == ""
+        assert item.current_price == 0.0
+        assert item.volume24h == 0.0
+        assert item.price_delta24h == 0.0
+        assert item.watched is True
+
+    def test_watchlist_item_parse(self):
+        """WatchlistItem should parse from camelCase API response."""
+        raw = {
+            "marketId": "mkt-1",
+            "slug": "test-slug",
+            "title": "Test Market",
+            "currentPrice": 0.72,
+            "volume24h": 5000.0,
+            "priceDelta24h": 0.05,
+            "watched": True,
+        }
+        item = _parse(WatchlistItem, raw)
+        assert item.market_id == "mkt-1"
+        assert item.current_price == 0.72
+        assert item.volume24h == 5000.0
+        assert item.price_delta24h == 0.05
+
+
+class TestWatchlistMethods:
+    """Tests for watchlist CRUD methods (#53)."""
+
+    def test_sync_get_watchlist_exists(self):
+        """PolyforgeClient must have get_watchlist method."""
+        assert hasattr(PolyforgeClient, "get_watchlist")
+        assert callable(getattr(PolyforgeClient, "get_watchlist"))
+
+    def test_sync_add_to_watchlist_exists(self):
+        """PolyforgeClient must have add_to_watchlist method."""
+        assert hasattr(PolyforgeClient, "add_to_watchlist")
+
+    def test_sync_remove_from_watchlist_exists(self):
+        """PolyforgeClient must have remove_from_watchlist method."""
+        assert hasattr(PolyforgeClient, "remove_from_watchlist")
+
+    def test_sync_get_watchlist_status_exists(self):
+        """PolyforgeClient must have get_watchlist_status method."""
+        assert hasattr(PolyforgeClient, "get_watchlist_status")
+
+    def test_async_get_watchlist_exists(self):
+        """AsyncPolyforgeClient must have get_watchlist method."""
+        assert hasattr(AsyncPolyforgeClient, "get_watchlist")
+
+    def test_async_add_to_watchlist_exists(self):
+        """AsyncPolyforgeClient must have add_to_watchlist method."""
+        assert hasattr(AsyncPolyforgeClient, "add_to_watchlist")
+
+    def test_async_remove_from_watchlist_exists(self):
+        """AsyncPolyforgeClient must have remove_from_watchlist method."""
+        assert hasattr(AsyncPolyforgeClient, "remove_from_watchlist")
+
+    def test_async_get_watchlist_status_exists(self):
+        """AsyncPolyforgeClient must have get_watchlist_status method."""
+        assert hasattr(AsyncPolyforgeClient, "get_watchlist_status")
+
+    def test_add_to_watchlist_accepts_market_id(self):
+        """add_to_watchlist() must accept market_id parameter."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.add_to_watchlist)
+        param_names = set(sig.parameters.keys())
+        assert "market_id" in param_names
+
+    def test_remove_from_watchlist_accepts_market_id(self):
+        """remove_from_watchlist() must accept market_id parameter."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.remove_from_watchlist)
+        param_names = set(sig.parameters.keys())
+        assert "market_id" in param_names
+
+    def test_get_watchlist_status_accepts_market_id(self):
+        """get_watchlist_status() must accept market_id parameter."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_watchlist_status)
+        param_names = set(sig.parameters.keys())
+        assert "market_id" in param_names
+
+    def test_add_to_watchlist_sends_market_id_in_body(self):
+        """add_to_watchlist() must send marketId in request body."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.add_to_watchlist)
+        assert '"marketId"' in source or "'marketId'" in source
+
+    def test_watchlist_endpoints_use_correct_paths(self):
+        """Watchlist methods must use /api/v1/watchlist paths."""
+        import inspect
+
+        for method_name in ("get_watchlist", "add_to_watchlist", "remove_from_watchlist", "get_watchlist_status"):
+            source = inspect.getsource(getattr(PolyforgeClient, method_name))
+            assert "/api/v1/watchlist" in source, f"{method_name} missing /api/v1/watchlist path"
+
+
+class TestWebhookTestResult:
+    """Tests for WebhookTestResult model (#55)."""
+
+    def test_webhook_test_result_fields(self):
+        """WebhookTestResult must have success and status_code fields."""
+        result = WebhookTestResult(success=True, status_code=200)
+        assert result.success is True
+        assert result.status_code == 200
+
+    def test_webhook_test_result_defaults(self):
+        """WebhookTestResult defaults should be sensible."""
+        result = WebhookTestResult()
+        assert result.success is False
+        assert result.status_code == 0
+
+
+class TestWebhookMutationMethods:
+    """Tests for webhook delete and test methods (#55)."""
+
+    def test_sync_delete_webhook_exists(self):
+        """PolyforgeClient must have delete_webhook method."""
+        assert hasattr(PolyforgeClient, "delete_webhook")
+        assert callable(getattr(PolyforgeClient, "delete_webhook"))
+
+    def test_sync_test_webhook_exists(self):
+        """PolyforgeClient must have test_webhook method."""
+        assert hasattr(PolyforgeClient, "test_webhook")
+        assert callable(getattr(PolyforgeClient, "test_webhook"))
+
+    def test_async_delete_webhook_exists(self):
+        """AsyncPolyforgeClient must have delete_webhook method."""
+        assert hasattr(AsyncPolyforgeClient, "delete_webhook")
+
+    def test_async_test_webhook_exists(self):
+        """AsyncPolyforgeClient must have test_webhook method."""
+        assert hasattr(AsyncPolyforgeClient, "test_webhook")
+
+    def test_delete_webhook_accepts_webhook_id(self):
+        """delete_webhook() must accept webhook_id parameter."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.delete_webhook)
+        param_names = set(sig.parameters.keys())
+        assert "webhook_id" in param_names
+
+    def test_test_webhook_accepts_webhook_id(self):
+        """test_webhook() must accept webhook_id parameter."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.test_webhook)
+        param_names = set(sig.parameters.keys())
+        assert "webhook_id" in param_names
+
+    def test_delete_webhook_uses_correct_path(self):
+        """delete_webhook() must use /api/v1/webhooks/{id} path."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.delete_webhook)
+        assert "/api/v1/webhooks/" in source
+
+    def test_test_webhook_uses_correct_path(self):
+        """test_webhook() must use /api/v1/webhooks/{id}/test path."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.test_webhook)
+        assert "/test" in source
+        assert "/api/v1/webhooks/" in source
+
+    def test_delete_webhook_uses_path_encoding(self):
+        """delete_webhook() must use _encode_path for the webhook ID."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.delete_webhook)
+        assert "_encode_path" in source
+
+    def test_test_webhook_uses_path_encoding(self):
+        """test_webhook() must use _encode_path for the webhook ID."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.test_webhook)
+        assert "_encode_path" in source
