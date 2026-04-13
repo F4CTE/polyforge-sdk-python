@@ -30,10 +30,14 @@ from polyforge.models import (
     MarketplaceSeller,
     MarketplaceStrategy,
     Order,
+    OrderBook,
+    OrderBookLevel,
     OrderStatus,
     PaginatedResponse,
+    PlaceOrderResponse,
     Portfolio,
     Position,
+    PriceHistoryEntry,
     Strategy,
     StrategyExecMode,
     StrategyVisibility,
@@ -1377,3 +1381,158 @@ class TestWebhookMutationMethods:
 
         source = inspect.getsource(PolyforgeClient.test_webhook)
         assert "_encode_path" in source
+
+
+class TestPriceHistoryEntryModel:
+    """Tests for PriceHistoryEntry model (#51)."""
+
+    def test_price_history_entry_fields(self):
+        """PriceHistoryEntry must have timestamp, price, volume fields."""
+        entry = PriceHistoryEntry(timestamp="2026-04-13T00:00:00Z", price=0.65, volume=1234.5)
+        assert entry.timestamp == "2026-04-13T00:00:00Z"
+        assert entry.price == 0.65
+        assert entry.volume == 1234.5
+
+    def test_price_history_entry_defaults(self):
+        """PriceHistoryEntry defaults should be sensible."""
+        entry = PriceHistoryEntry()
+        assert entry.timestamp == ""
+        assert entry.price == 0.0
+        assert entry.volume == 0.0
+
+
+class TestOrderBookModels:
+    """Tests for OrderBookLevel and OrderBook models (#51)."""
+
+    def test_order_book_level_fields(self):
+        """OrderBookLevel must have price and size fields."""
+        level = OrderBookLevel(price="0.65", size="100")
+        assert level.price == "0.65"
+        assert level.size == "100"
+
+    def test_order_book_level_defaults(self):
+        """OrderBookLevel defaults should be empty strings."""
+        level = OrderBookLevel()
+        assert level.price == ""
+        assert level.size == ""
+
+    def test_order_book_fields(self):
+        """OrderBook must have bids and asks lists."""
+        book = OrderBook(
+            bids=[OrderBookLevel(price="0.64", size="50")],
+            asks=[OrderBookLevel(price="0.66", size="75")],
+        )
+        assert len(book.bids) == 1
+        assert len(book.asks) == 1
+        assert book.bids[0].price == "0.64"
+        assert book.asks[0].price == "0.66"
+
+    def test_order_book_defaults(self):
+        """OrderBook defaults should be empty lists."""
+        book = OrderBook()
+        assert book.bids == []
+        assert book.asks == []
+
+
+class TestGetPriceHistory:
+    """Tests for get_price_history() method (#51)."""
+
+    def test_get_price_history_accepts_all_params(self):
+        """get_price_history() signature must accept token_id, resolution, from_date, to_date, limit."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_price_history)
+        param_names = set(sig.parameters.keys())
+        assert "token_id" in param_names, "get_price_history() missing 'token_id' parameter"
+        assert "resolution" in param_names, "get_price_history() missing 'resolution' parameter"
+        assert "from_date" in param_names, "get_price_history() missing 'from_date' parameter"
+        assert "to_date" in param_names, "get_price_history() missing 'to_date' parameter"
+        assert "limit" in param_names, "get_price_history() missing 'limit' parameter"
+
+    def test_async_get_price_history_accepts_all_params(self):
+        """AsyncPolyforgeClient.get_price_history() must also accept all params."""
+        import inspect
+
+        sig = inspect.signature(AsyncPolyforgeClient.get_price_history)
+        param_names = set(sig.parameters.keys())
+        assert "token_id" in param_names
+        assert "resolution" in param_names
+        assert "from_date" in param_names
+        assert "to_date" in param_names
+        assert "limit" in param_names
+
+    def test_get_price_history_uses_correct_path(self):
+        """get_price_history() must use /api/v1/markets/{tokenId}/price-history path."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.get_price_history)
+        assert "/price-history" in source
+        assert "/api/v1/markets/" in source
+
+    def test_get_price_history_passes_query_params(self):
+        """get_price_history() must pass resolution, from, to, limit as query params."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.get_price_history)
+        assert '"resolution"' in source or "'resolution'" in source
+        assert '"from"' in source or "'from'" in source
+        assert '"to"' in source or "'to'" in source
+        assert '"limit"' in source or "'limit'" in source
+
+    def test_get_price_history_uses_path_encoding(self):
+        """get_price_history() must use _encode_path for the token ID."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.get_price_history)
+        assert "_encode_path" in source
+
+    def test_get_price_history_return_type(self):
+        """get_price_history() must return list[PriceHistoryEntry]."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_price_history)
+        ret = sig.return_annotation
+        assert "PriceHistoryEntry" in str(ret)
+
+
+class TestGetOrderBook:
+    """Tests for get_order_book() method (#51)."""
+
+    def test_get_order_book_accepts_token_id(self):
+        """get_order_book() must accept token_id parameter."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_order_book)
+        param_names = set(sig.parameters.keys())
+        assert "token_id" in param_names, "get_order_book() missing 'token_id' parameter"
+
+    def test_async_get_order_book_accepts_token_id(self):
+        """AsyncPolyforgeClient.get_order_book() must also accept token_id."""
+        import inspect
+
+        sig = inspect.signature(AsyncPolyforgeClient.get_order_book)
+        param_names = set(sig.parameters.keys())
+        assert "token_id" in param_names
+
+    def test_get_order_book_uses_correct_path(self):
+        """get_order_book() must use /api/v1/markets/{tokenId}/book path."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.get_order_book)
+        assert "/book" in source
+        assert "/api/v1/markets/" in source
+
+    def test_get_order_book_uses_path_encoding(self):
+        """get_order_book() must use _encode_path for the token ID."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.get_order_book)
+        assert "_encode_path" in source
+
+    def test_get_order_book_return_type(self):
+        """get_order_book() must return OrderBook."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_order_book)
+        ret = sig.return_annotation
+        assert "OrderBook" in str(ret)

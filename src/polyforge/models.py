@@ -585,6 +585,31 @@ class MarketSentiment:
 
 
 @dataclass
+class PriceHistoryEntry:
+    """A single data point in a market's price history."""
+
+    timestamp: str = ""
+    price: float = 0.0
+    volume: float = 0.0
+
+
+@dataclass
+class OrderBookLevel:
+    """A single price level in an order book."""
+
+    price: str = ""
+    size: str = ""
+
+
+@dataclass
+class OrderBook:
+    """Order book snapshot for a market token."""
+
+    bids: List[OrderBookLevel] = field(default_factory=list)
+    asks: List[OrderBookLevel] = field(default_factory=list)
+
+
+@dataclass
 class LpPosition:
     buy_order_id: str = ""
     sell_order_id: str = ""

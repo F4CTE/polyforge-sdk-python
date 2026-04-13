@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.17] — 2026-04-13
+
+### Added
+- `PriceHistoryEntry` model: `timestamp`, `price`, `volume` fields for price history API responses (closes #51)
+- `OrderBookLevel` model: `price` and `size` fields for order book levels (closes #51)
+- `OrderBook` model: `bids` and `asks` lists of `OrderBookLevel` for order book snapshots (closes #51)
+- `get_price_history(token_id, resolution?, from_date?, to_date?, limit?)`: fetch price history for a market token — both sync and async clients (closes #51)
+- `get_order_book(token_id)`: fetch order book for a market token — both sync and async clients (closes #51)
+
 ## [1.6.16] — 2026-04-13
 
 ### Added

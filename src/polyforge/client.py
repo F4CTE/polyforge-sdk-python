@@ -40,6 +40,8 @@ from polyforge.models import (
     MarketSentiment,
     NewsSignal,
     Order,
+    OrderBook,
+    OrderBookLevel,
     OrderStatus,
     PaginatedResponse,
     PlaceOrderResponse,
@@ -47,6 +49,7 @@ from polyforge.models import (
     Portfolio,
     PortfolioReview,
     Position,
+    PriceHistoryEntry,
     SmartOrder,
     SmartOrderChildOrder,
     Strategy,
@@ -86,6 +89,9 @@ _MODEL_REGISTRY: dict[str, type] = {
     "MarketplaceSeller": MarketplaceSeller,
     "MarketplaceStrategy": MarketplaceStrategy,
     "MarketplaceListing": MarketplaceListing,
+    "PriceHistoryEntry": PriceHistoryEntry,
+    "OrderBookLevel": OrderBookLevel,
+    "OrderBook": OrderBook,
 }
 
 
@@ -423,6 +429,45 @@ class PolyforgeClient:
 
     def get_market(self, market_id: str) -> Market:
         return _parse(Market, self._get(f"/api/v1/markets/{_encode_path(market_id)}"))
+
+    def get_price_history(
+        self,
+        token_id: str,
+        *,
+        resolution: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        limit: int | None = None,
+    ) -> list[PriceHistoryEntry]:
+        """Fetch price history for a market token.
+
+        Args:
+            token_id: The token ID to fetch history for.
+            resolution: Candle resolution — ``"1m"``, ``"1h"``, or ``"1d"`` (default ``"1h"``).
+            from_date: Start time as ISO 8601 string.
+            to_date: End time as ISO 8601 string.
+            limit: Maximum number of entries (1–1000, default 200).
+        """
+        data = self._get(
+            f"/api/v1/markets/{_encode_path(token_id)}/price-history",
+            params={
+                "resolution": resolution,
+                "from": from_date,
+                "to": to_date,
+                "limit": limit,
+            },
+        )
+        items = data["data"] if isinstance(data, dict) and "data" in data else data
+        return [_parse(PriceHistoryEntry, e) for e in items]
+
+    def get_order_book(self, token_id: str) -> OrderBook:
+        """Fetch the order book for a market token.
+
+        Args:
+            token_id: The token ID to fetch the book for.
+        """
+        data = self._get(f"/api/v1/markets/{_encode_path(token_id)}/book")
+        return _parse(OrderBook, data)
 
     # -- Strategies --
 
@@ -1189,6 +1234,45 @@ class AsyncPolyforgeClient:
 
     async def get_market(self, market_id: str) -> Market:
         return _parse(Market, await self._get(f"/api/v1/markets/{_encode_path(market_id)}"))
+
+    async def get_price_history(
+        self,
+        token_id: str,
+        *,
+        resolution: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        limit: int | None = None,
+    ) -> list[PriceHistoryEntry]:
+        """Fetch price history for a market token.
+
+        Args:
+            token_id: The token ID to fetch history for.
+            resolution: Candle resolution — ``"1m"``, ``"1h"``, or ``"1d"`` (default ``"1h"``).
+            from_date: Start time as ISO 8601 string.
+            to_date: End time as ISO 8601 string.
+            limit: Maximum number of entries (1–1000, default 200).
+        """
+        data = await self._get(
+            f"/api/v1/markets/{_encode_path(token_id)}/price-history",
+            params={
+                "resolution": resolution,
+                "from": from_date,
+                "to": to_date,
+                "limit": limit,
+            },
+        )
+        items = data["data"] if isinstance(data, dict) and "data" in data else data
+        return [_parse(PriceHistoryEntry, e) for e in items]
+
+    async def get_order_book(self, token_id: str) -> OrderBook:
+        """Fetch the order book for a market token.
+
+        Args:
+            token_id: The token ID to fetch the book for.
+        """
+        data = await self._get(f"/api/v1/markets/{_encode_path(token_id)}/book")
+        return _parse(OrderBook, data)
 
     # -- Strategies --
 
