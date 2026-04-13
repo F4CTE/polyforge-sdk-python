@@ -30,6 +30,7 @@ from polyforge.models import (
     ArbitrageOpportunity,
     CalibrationBucket,
     CategoryAccuracy,
+    ConditionalOrder,
     CopyConfig,
     LpPosition,
     Market,
@@ -47,6 +48,7 @@ from polyforge.models import (
     PlaceOrderResponse,
     PlaceSmartOrderResponse,
     Portfolio,
+    PortfolioPnl,
     PortfolioReview,
     Position,
     PriceHistoryEntry,
@@ -81,7 +83,9 @@ _MODEL_REGISTRY: dict[str, type] = {
     "WhaleTrade": WhaleTrade,
     "NewsSignal": NewsSignal,
     "Alert": Alert,
+    "ConditionalOrder": ConditionalOrder,
     "CopyConfig": CopyConfig,
+    "PortfolioPnl": PortfolioPnl,
     "WatchlistItem": WatchlistItem,
     "Webhook": Webhook,
     "WebhookTestResult": WebhookTestResult,
@@ -951,6 +955,145 @@ class PolyforgeClient:
         items = data["data"]
         return [_parse(Alert, a) for a in items]
 
+    def create_alert(
+        self,
+        token_id: str,
+        direction: str,
+        price: float,
+        *,
+        persistent: bool = False,
+    ) -> Alert:
+        """Create a price alert.
+
+        Args:
+            token_id: The token to monitor.
+            direction: ``"ABOVE"`` or ``"BELOW"``.
+            price: The trigger price threshold.
+            persistent: If ``True`` the alert re-arms after firing.
+
+        Returns:
+            The created :class:`Alert`.
+        """
+        _validate_financial_param("price", price)
+        body: dict[str, Any] = {
+            "tokenId": token_id,
+            "direction": direction,
+            "price": price,
+            "persistent": persistent,
+        }
+        return _parse(Alert, self._post("/api/v1/alerts", json=body))
+
+    def delete_alert(self, alert_id: str) -> None:
+        """Delete an alert by ID.
+
+        Args:
+            alert_id: The alert ID to delete.
+        """
+        self._delete(f"/api/v1/alerts/{_encode_path(alert_id)}")
+
+    # -- Conditional Orders --
+
+    def list_conditional_orders(
+        self,
+        *,
+        status: str | None = None,
+        limit: int | None = None,
+    ) -> list[ConditionalOrder]:
+        """List conditional orders with optional filters.
+
+        Args:
+            status: Filter by status (e.g. ``"PENDING"``, ``"TRIGGERED"``).
+            limit: Maximum number of results.
+        """
+        params = _strip_none({"status": status, "limit": limit})
+        data = self._get("/api/v1/orders/conditional", params=params)
+        items = data["data"]
+        return [_parse(ConditionalOrder, o) for o in items]
+
+    def create_conditional_order(
+        self,
+        market_id: str,
+        token_id: str,
+        type: str,
+        side: str,
+        outcome: str,
+        size: float,
+        trigger_price: float,
+        *,
+        limit_price: float | None = None,
+    ) -> ConditionalOrder:
+        """Create a conditional order.
+
+        Args:
+            market_id: The market to trade on.
+            token_id: The token ID.
+            type: Order type (e.g. ``"STOP_LOSS"``, ``"TAKE_PROFIT"``).
+            side: ``"BUY"`` or ``"SELL"``.
+            outcome: ``"YES"`` or ``"NO"``.
+            size: Order size.
+            trigger_price: Price at which the order triggers.
+            limit_price: Optional limit price for the triggered order.
+
+        Returns:
+            The created :class:`ConditionalOrder`.
+        """
+        _validate_financial_param("size", size)
+        _validate_financial_param("trigger_price", trigger_price)
+        body: dict[str, Any] = {
+            "marketId": market_id,
+            "tokenId": token_id,
+            "type": type,
+            "side": side,
+            "outcome": outcome,
+            "size": size,
+            "triggerPrice": trigger_price,
+        }
+        if limit_price is not None:
+            _validate_financial_param("limit_price", limit_price)
+            body["limitPrice"] = limit_price
+        return _parse(ConditionalOrder, self._post("/api/v1/orders/conditional", json=body))
+
+    def get_conditional_order(self, order_id: str) -> ConditionalOrder:
+        """Get a conditional order by ID.
+
+        Args:
+            order_id: The conditional order ID.
+
+        Returns:
+            The :class:`ConditionalOrder`.
+        """
+        data = self._get(f"/api/v1/orders/conditional/{_encode_path(order_id)}")
+        return _parse(ConditionalOrder, data)
+
+    def cancel_conditional_order(self, order_id: str) -> None:
+        """Cancel a conditional order by ID.
+
+        Args:
+            order_id: The conditional order ID to cancel.
+        """
+        self._delete(f"/api/v1/orders/conditional/{_encode_path(order_id)}")
+
+    # -- Portfolio PnL --
+
+    def get_portfolio_pnl(
+        self,
+        *,
+        period: str = "30d",
+        strategy_id: str | None = None,
+    ) -> PortfolioPnl:
+        """Get portfolio profit-and-loss summary.
+
+        Args:
+            period: Time period (e.g. ``"7d"``, ``"30d"``, ``"90d"``).
+            strategy_id: Optional strategy ID to filter by.
+
+        Returns:
+            A :class:`PortfolioPnl` summary.
+        """
+        params = _strip_none({"period": period, "strategyId": strategy_id})
+        data = self._get("/api/v1/portfolio/pnl", params=params)
+        return _parse(PortfolioPnl, data)
+
     def list_copy_configs(self) -> list[CopyConfig]:
         data = self._get("/api/v1/copy")
         items = data["data"]
@@ -1723,6 +1866,145 @@ class AsyncPolyforgeClient:
         data = await self._get("/api/v1/alerts")
         items = data["data"]
         return [_parse(Alert, a) for a in items]
+
+    async def create_alert(
+        self,
+        token_id: str,
+        direction: str,
+        price: float,
+        *,
+        persistent: bool = False,
+    ) -> Alert:
+        """Create a price alert.
+
+        Args:
+            token_id: The token to monitor.
+            direction: ``"ABOVE"`` or ``"BELOW"``.
+            price: The trigger price threshold.
+            persistent: If ``True`` the alert re-arms after firing.
+
+        Returns:
+            The created :class:`Alert`.
+        """
+        _validate_financial_param("price", price)
+        body: dict[str, Any] = {
+            "tokenId": token_id,
+            "direction": direction,
+            "price": price,
+            "persistent": persistent,
+        }
+        return _parse(Alert, await self._post("/api/v1/alerts", json=body))
+
+    async def delete_alert(self, alert_id: str) -> None:
+        """Delete an alert by ID.
+
+        Args:
+            alert_id: The alert ID to delete.
+        """
+        await self._delete(f"/api/v1/alerts/{_encode_path(alert_id)}")
+
+    # -- Conditional Orders --
+
+    async def list_conditional_orders(
+        self,
+        *,
+        status: str | None = None,
+        limit: int | None = None,
+    ) -> list[ConditionalOrder]:
+        """List conditional orders with optional filters.
+
+        Args:
+            status: Filter by status (e.g. ``"PENDING"``, ``"TRIGGERED"``).
+            limit: Maximum number of results.
+        """
+        params = _strip_none({"status": status, "limit": limit})
+        data = await self._get("/api/v1/orders/conditional", params=params)
+        items = data["data"]
+        return [_parse(ConditionalOrder, o) for o in items]
+
+    async def create_conditional_order(
+        self,
+        market_id: str,
+        token_id: str,
+        type: str,
+        side: str,
+        outcome: str,
+        size: float,
+        trigger_price: float,
+        *,
+        limit_price: float | None = None,
+    ) -> ConditionalOrder:
+        """Create a conditional order.
+
+        Args:
+            market_id: The market to trade on.
+            token_id: The token ID.
+            type: Order type (e.g. ``"STOP_LOSS"``, ``"TAKE_PROFIT"``).
+            side: ``"BUY"`` or ``"SELL"``.
+            outcome: ``"YES"`` or ``"NO"``.
+            size: Order size.
+            trigger_price: Price at which the order triggers.
+            limit_price: Optional limit price for the triggered order.
+
+        Returns:
+            The created :class:`ConditionalOrder`.
+        """
+        _validate_financial_param("size", size)
+        _validate_financial_param("trigger_price", trigger_price)
+        body: dict[str, Any] = {
+            "marketId": market_id,
+            "tokenId": token_id,
+            "type": type,
+            "side": side,
+            "outcome": outcome,
+            "size": size,
+            "triggerPrice": trigger_price,
+        }
+        if limit_price is not None:
+            _validate_financial_param("limit_price", limit_price)
+            body["limitPrice"] = limit_price
+        return _parse(ConditionalOrder, await self._post("/api/v1/orders/conditional", json=body))
+
+    async def get_conditional_order(self, order_id: str) -> ConditionalOrder:
+        """Get a conditional order by ID.
+
+        Args:
+            order_id: The conditional order ID.
+
+        Returns:
+            The :class:`ConditionalOrder`.
+        """
+        data = await self._get(f"/api/v1/orders/conditional/{_encode_path(order_id)}")
+        return _parse(ConditionalOrder, data)
+
+    async def cancel_conditional_order(self, order_id: str) -> None:
+        """Cancel a conditional order by ID.
+
+        Args:
+            order_id: The conditional order ID to cancel.
+        """
+        await self._delete(f"/api/v1/orders/conditional/{_encode_path(order_id)}")
+
+    # -- Portfolio PnL --
+
+    async def get_portfolio_pnl(
+        self,
+        *,
+        period: str = "30d",
+        strategy_id: str | None = None,
+    ) -> PortfolioPnl:
+        """Get portfolio profit-and-loss summary.
+
+        Args:
+            period: Time period (e.g. ``"7d"``, ``"30d"``, ``"90d"``).
+            strategy_id: Optional strategy ID to filter by.
+
+        Returns:
+            A :class:`PortfolioPnl` summary.
+        """
+        params = _strip_none({"period": period, "strategyId": strategy_id})
+        data = await self._get("/api/v1/portfolio/pnl", params=params)
+        return _parse(PortfolioPnl, data)
 
     async def list_copy_configs(self) -> list[CopyConfig]:
         data = await self._get("/api/v1/copy")
