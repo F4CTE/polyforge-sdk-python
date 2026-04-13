@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.15] — 2026-04-13
+
+### Fixed
+- `list_markets()`: add `sort` and `closed` optional parameters to both sync and async clients — platform supports filtering by sort order and closed status but SDK did not expose them (closes #74)
+- `list_strategies()`: add `sort`, `page`, and `limit` optional parameters to both sync and async clients — platform supports pagination and sorting but SDK only exposed `status` filter (closes #77)
+
 ## [1.6.14] — 2026-04-13
 
 ### Fixed
