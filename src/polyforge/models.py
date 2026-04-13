@@ -247,21 +247,21 @@ class CopyConfig:
 
 
 class WebhookEvent:
-    """Constants for webhook event names (dot.notation as expected by the platform).
+    """Constants for webhook event names (SCREAMING_SNAKE_CASE as expected by the platform).
 
     Usage::
 
         client.create_webhook(url="https://...", events=[WebhookEvent.ORDER_FILLED])
     """
 
-    ORDER_FILLED = "order.filled"
-    ORDER_PLACED = "order.placed"
-    ORDER_CANCELLED = "order.cancelled"
-    STRATEGY_STARTED = "strategy.started"
-    STRATEGY_STOPPED = "strategy.stopped"
-    STRATEGY_ERROR = "strategy.error"
-    BACKTEST_COMPLETED = "backtest.completed"
-    BACKTEST_FAILED = "backtest.failed"
+    ORDER_FILLED = "ORDER_FILLED"
+    ORDER_PLACED = "ORDER_PLACED"
+    ORDER_CANCELLED = "ORDER_CANCELLED"
+    STRATEGY_STARTED = "STRATEGY_STARTED"
+    STRATEGY_STOPPED = "STRATEGY_STOPPED"
+    STRATEGY_ERROR = "STRATEGY_ERROR"
+    BACKTEST_COMPLETED = "BACKTEST_COMPLETED"
+    BACKTEST_FAILED = "BACKTEST_FAILED"
 
 
 @dataclass
