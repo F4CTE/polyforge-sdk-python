@@ -47,7 +47,7 @@ class Market:
     """A trading market / pair."""
 
     id: str = ""
-    name: str = ""
+    title: str = ""
     symbol: str = ""
     category: str = ""
     base_token: Token | None = None
