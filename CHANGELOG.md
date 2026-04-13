@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.6.13] — 2026-04-13
+
+### Fixed
+- **BREAKING** `split_position()`: send `{tokenId, amount}` (amount as NumberString) instead of `{tokenId, size, price}` — platform `SplitPositionDto` expects `tokenId` + `amount` string, not numeric size/price (closes #26)
+- **BREAKING** `merge_positions()`: send `{tokenId, amount}` (amount as NumberString) instead of `{tokenIds: [...]}` — platform `MergePositionDto` expects `tokenId` + `amount` string, not an array of token IDs (closes #26)
+- **BREAKING** `provide_liquidity()`: send `{marketId, tokenId, amountUsdc, targetSpread?}` instead of `{tokenId, spread, size}` — platform `ProvideLiquidityDto` requires `marketId` and uses `amountUsdc`/`targetSpread` field names (closes #26)
+- **BREAKING** `redeem_position()`: send `{positionId, marketId}` instead of `{tokenId, conditionId}` — platform `RedeemPositionDto` expects `positionId` and `marketId`, not `tokenId`/`conditionId` (closes #27)
+- **BREAKING** `import_strategy()`: send data dict at top level instead of wrapping in `{data: ...}` — platform `ImportStrategyDto` expects `{polyforge, strategy}` at root (closes #28)
+- `close_position()`: send `size` as a string (NumberString) instead of a number — platform `ClosePositionDto` validates `size` with `@IsNumberString()` (closes #29)
+
 ## [1.6.12] — 2026-04-13
 
 ### Fixed

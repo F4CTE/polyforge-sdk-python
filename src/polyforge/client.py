@@ -442,7 +442,7 @@ class PolyforgeClient:
         self._delete(f"/api/v1/strategies/{_encode_path(strategy_id)}")
 
     def import_strategy(self, data: dict) -> Strategy:
-        return _parse(Strategy, self._post("/api/v1/strategies/import", json={"data": data}))
+        return _parse(Strategy, self._post("/api/v1/strategies/import", json=data))
 
     def pause_strategy(self, strategy_id: str) -> StrategyStatusResponse:
         return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/pause"))
@@ -548,32 +548,57 @@ class PolyforgeClient:
         """Cancel a pending or live order."""
         return self._delete(f"/api/v1/orders/{_encode_path(order_id)}")
 
-    def close_position(self, token_id: str, size: float | None = None) -> PlaceOrderResponse:
+    def close_position(self, token_id: str, size: float | str | None = None) -> PlaceOrderResponse:
         """Close an open position (sell all shares at market price)."""
         body: dict[str, Any] = {"tokenId": token_id}
         if size is not None:
-            body["size"] = size
+            body["size"] = str(size)
         data = self._post("/api/v1/orders/close-position", json=body)
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
-    def redeem_position(self, token_id: str, condition_id: str | None = None) -> PlaceOrderResponse:
-        """Redeem winning shares after a market resolves."""
-        body: dict[str, Any] = {"tokenId": token_id}
-        if condition_id is not None:
-            body["conditionId"] = condition_id
+    def redeem_position(
+        self,
+        *,
+        position_id: str | None = None,
+        market_id: str | None = None,
+        # Deprecated aliases kept for backward compat — ignored by the platform.
+        token_id: str | None = None,
+        condition_id: str | None = None,
+    ) -> PlaceOrderResponse:
+        """Redeem winning shares after a market resolves.
+
+        Args:
+            position_id: The position to redeem.
+            market_id: The resolved market to redeem from.
+        """
+        body: dict[str, Any] = {}
+        if position_id is not None:
+            body["positionId"] = position_id
+        if market_id is not None:
+            body["marketId"] = market_id
         data = self._post("/api/v1/orders/redeem", json=body)
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
-    def split_position(self, token_id: str, size: float, price: float) -> PlaceOrderResponse:
-        """Split a position into smaller positions."""
-        _validate_financial_param("size", size)
-        _validate_financial_param("price", price)
-        data = self._post("/api/v1/orders/split", json={"tokenId": token_id, "size": size, "price": price})
+    def split_position(self, token_id: str, amount: float | str, **_kwargs: Any) -> PlaceOrderResponse:
+        """Split a position into smaller positions.
+
+        Args:
+            token_id: The token to split.
+            amount: The amount to split (sent as a NumberString).
+        """
+        amount_str = str(amount)
+        data = self._post("/api/v1/orders/split", json={"tokenId": token_id, "amount": amount_str})
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
-    def merge_positions(self, token_ids: list[str]) -> PlaceOrderResponse:
-        """Merge multiple positions into one."""
-        data = self._post("/api/v1/orders/merge", json={"tokenIds": token_ids})
+    def merge_positions(self, token_id: str, amount: float | str, **_kwargs: Any) -> PlaceOrderResponse:
+        """Merge positions.
+
+        Args:
+            token_id: The token to merge.
+            amount: The amount to merge (sent as a NumberString).
+        """
+        amount_str = str(amount)
+        data = self._post("/api/v1/orders/merge", json={"tokenId": token_id, "amount": amount_str})
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
     # -- Arbitrage --
@@ -830,10 +855,28 @@ class PolyforgeClient:
             last_updated=data.get("lastUpdated"),
         )
 
-    def provide_liquidity(self, token_id: str, spread: float, size: float) -> LpPosition:
-        _validate_financial_param("spread", spread)
-        _validate_financial_param("size", size)
-        data = self._post("/api/v1/lp/provide", json={"tokenId": token_id, "spread": spread, "size": size})
+    def provide_liquidity(
+        self,
+        market_id: str,
+        token_id: str,
+        amount_usdc: float,
+        *,
+        target_spread: float | None = None,
+    ) -> LpPosition:
+        """Provide liquidity to a market.
+
+        Args:
+            market_id: The market to provide liquidity for.
+            token_id: The YES token ID.
+            amount_usdc: USDC amount to deploy (1-50000).
+            target_spread: Optional spread target (0.001-0.5, default 0.02).
+        """
+        _validate_financial_param("amount_usdc", amount_usdc)
+        body: dict[str, Any] = {"marketId": market_id, "tokenId": token_id, "amountUsdc": amount_usdc}
+        if target_spread is not None:
+            _validate_financial_param("target_spread", target_spread)
+            body["targetSpread"] = target_spread
+        data = self._post("/api/v1/lp/provide", json=body)
         return LpPosition(
             buy_order_id=data.get("buyOrderId", ""),
             sell_order_id=data.get("sellOrderId", ""),
@@ -1012,7 +1055,7 @@ class AsyncPolyforgeClient:
         await self._delete(f"/api/v1/strategies/{_encode_path(strategy_id)}")
 
     async def import_strategy(self, data: dict) -> Strategy:
-        return _parse(Strategy, await self._post("/api/v1/strategies/import", json={"data": data}))
+        return _parse(Strategy, await self._post("/api/v1/strategies/import", json=data))
 
     async def pause_strategy(self, strategy_id: str) -> StrategyStatusResponse:
         return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/pause"))
@@ -1118,32 +1161,57 @@ class AsyncPolyforgeClient:
         """Cancel a pending or live order."""
         return await self._delete(f"/api/v1/orders/{_encode_path(order_id)}")
 
-    async def close_position(self, token_id: str, size: float | None = None) -> PlaceOrderResponse:
+    async def close_position(self, token_id: str, size: float | str | None = None) -> PlaceOrderResponse:
         """Close an open position (sell all shares at market price)."""
         body: dict[str, Any] = {"tokenId": token_id}
         if size is not None:
-            body["size"] = size
+            body["size"] = str(size)
         data = await self._post("/api/v1/orders/close-position", json=body)
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
-    async def redeem_position(self, token_id: str, condition_id: str | None = None) -> PlaceOrderResponse:
-        """Redeem winning shares after a market resolves."""
-        body: dict[str, Any] = {"tokenId": token_id}
-        if condition_id is not None:
-            body["conditionId"] = condition_id
+    async def redeem_position(
+        self,
+        *,
+        position_id: str | None = None,
+        market_id: str | None = None,
+        # Deprecated aliases kept for backward compat — ignored by the platform.
+        token_id: str | None = None,
+        condition_id: str | None = None,
+    ) -> PlaceOrderResponse:
+        """Redeem winning shares after a market resolves.
+
+        Args:
+            position_id: The position to redeem.
+            market_id: The resolved market to redeem from.
+        """
+        body: dict[str, Any] = {}
+        if position_id is not None:
+            body["positionId"] = position_id
+        if market_id is not None:
+            body["marketId"] = market_id
         data = await self._post("/api/v1/orders/redeem", json=body)
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
-    async def split_position(self, token_id: str, size: float, price: float) -> PlaceOrderResponse:
-        """Split a position into smaller positions."""
-        _validate_financial_param("size", size)
-        _validate_financial_param("price", price)
-        data = await self._post("/api/v1/orders/split", json={"tokenId": token_id, "size": size, "price": price})
+    async def split_position(self, token_id: str, amount: float | str, **_kwargs: Any) -> PlaceOrderResponse:
+        """Split a position into smaller positions.
+
+        Args:
+            token_id: The token to split.
+            amount: The amount to split (sent as a NumberString).
+        """
+        amount_str = str(amount)
+        data = await self._post("/api/v1/orders/split", json={"tokenId": token_id, "amount": amount_str})
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
-    async def merge_positions(self, token_ids: list[str]) -> PlaceOrderResponse:
-        """Merge multiple positions into one."""
-        data = await self._post("/api/v1/orders/merge", json={"tokenIds": token_ids})
+    async def merge_positions(self, token_id: str, amount: float | str, **_kwargs: Any) -> PlaceOrderResponse:
+        """Merge positions.
+
+        Args:
+            token_id: The token to merge.
+            amount: The amount to merge (sent as a NumberString).
+        """
+        amount_str = str(amount)
+        data = await self._post("/api/v1/orders/merge", json={"tokenId": token_id, "amount": amount_str})
         return PlaceOrderResponse(order_id=data["orderId"], intent_id=data["intentId"], status=data["status"])
 
     # -- Arbitrage --
@@ -1393,10 +1461,28 @@ class AsyncPolyforgeClient:
             last_updated=data.get("lastUpdated"),
         )
 
-    async def provide_liquidity(self, token_id: str, spread: float, size: float) -> LpPosition:
-        _validate_financial_param("spread", spread)
-        _validate_financial_param("size", size)
-        data = await self._post("/api/v1/lp/provide", json={"tokenId": token_id, "spread": spread, "size": size})
+    async def provide_liquidity(
+        self,
+        market_id: str,
+        token_id: str,
+        amount_usdc: float,
+        *,
+        target_spread: float | None = None,
+    ) -> LpPosition:
+        """Provide liquidity to a market.
+
+        Args:
+            market_id: The market to provide liquidity for.
+            token_id: The YES token ID.
+            amount_usdc: USDC amount to deploy (1-50000).
+            target_spread: Optional spread target (0.001-0.5, default 0.02).
+        """
+        _validate_financial_param("amount_usdc", amount_usdc)
+        body: dict[str, Any] = {"marketId": market_id, "tokenId": token_id, "amountUsdc": amount_usdc}
+        if target_spread is not None:
+            _validate_financial_param("target_spread", target_spread)
+            body["targetSpread"] = target_spread
+        data = await self._post("/api/v1/lp/provide", json=body)
         return LpPosition(
             buy_order_id=data.get("buyOrderId", ""),
             sell_order_id=data.get("sellOrderId", ""),
