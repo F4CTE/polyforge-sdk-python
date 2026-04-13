@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.12] — 2026-04-13
+
+### Fixed
+- **`PolyforgeError.suggestion`**: add optional `suggestion` field to `PolyforgeError` — platform error responses include a `suggestion` string but it was silently dropped (closes #93)
+- **`PolyforgeError.request_id`**: read `requestId` from the JSON body instead of the `x-request-id` HTTP header — the platform sends the request ID in the response body, so `request_id` was always empty (closes #93)
+
 ## [1.6.11] — 2026-04-13
 
 ### Fixed
