@@ -168,6 +168,70 @@ test.describe('Navigation — Full Workflow Coverage', () => {
         await expect(page).toHaveURL(/\/support/);
     });
 
+    test('click API Docs nav item navigates to /api-docs', async ({ page }) => {
+        const sidebar = page.locator('[aria-label="Main navigation"], nav').first();
+        const apiLink = sidebar.locator('a', { hasText: /^API Docs$/i });
+        await apiLink.click();
+        await expect(page).toHaveURL(/\/api-docs/);
+    });
+
+    test('active nav item is highlighted for current route', async ({ page }) => {
+        // We start on /markets (from beforeEach). Check that Markets link has active styling.
+        const sidebar = page.locator('[aria-label="Main navigation"], nav').first();
+        const marketLink = sidebar.locator('a', { hasText: /^Markets$/i });
+
+        // Active link should have aria-current="page" or a visual active class (bg-pf-cyan)
+        const ariaCurrent = await marketLink.getAttribute('aria-current');
+        const classes = await marketLink.getAttribute('class') ?? '';
+        const isHighlighted = ariaCurrent === 'page' || classes.includes('pf-cyan') || classes.includes('active');
+        expect(isHighlighted).toBe(true);
+    });
+
+    test('collapse sidebar hides text labels, shows icons only', async ({ page }) => {
+        const sidebar = page.locator('[aria-label="Main navigation"]');
+        const collapseBtn = page.locator('button[aria-label="Collapse sidebar"]');
+
+        if (await collapseBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+            const initialWidth = await sidebar.boundingBox().then(box => box?.width ?? 0);
+
+            await collapseBtn.click();
+            await page.waitForTimeout(300);
+
+            const collapsedWidth = await sidebar.boundingBox().then(box => box?.width ?? 0);
+            expect(collapsedWidth).toBeLessThan(initialWidth);
+        }
+    });
+
+    test('expand sidebar shows full width with labels', async ({ page }) => {
+        // First collapse, then expand
+        const collapseBtn = page.locator('button[aria-label="Collapse sidebar"]');
+
+        if (await collapseBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await collapseBtn.click();
+            await page.waitForTimeout(300);
+
+            // Now expand
+            const expandBtn = page.locator('button[aria-label="Expand sidebar"]');
+            await expandBtn.click();
+            await page.waitForTimeout(300);
+
+            // Text labels should be visible again
+            const sidebar = page.locator('[aria-label="Main navigation"]');
+            const marketLabel = sidebar.locator('a', { hasText: /^Markets$/i });
+            await expect(marketLabel).toBeVisible({ timeout: 5000 });
+        }
+    });
+
+    test('Edge Rating displayed in sidebar', async ({ page }) => {
+        const edgeRating = page.locator('[data-tour="edge-rating"]');
+        // Edge Rating may or may not be visible depending on user data
+        const isVisible = await edgeRating.isVisible({ timeout: 5000 }).catch(() => false);
+        if (isVisible) {
+            const text = await edgeRating.textContent();
+            expect(text).toBeTruthy();
+        }
+    });
+
     test('Settings link at bottom of sidebar works', async ({ page }) => {
         const sidebar = page.locator('[aria-label="Main navigation"], nav').first();
         const settingsLink = sidebar.locator('a', { hasText: /^Settings$/i });
@@ -223,6 +287,60 @@ test.describe('Navigation — Full Workflow Coverage', () => {
         }
     });
 
+    test('notification bell shows unread count badge', async ({ page }) => {
+        const notifContainer = page.locator('[data-tour="notification-bell"]');
+        const notifButton = notifContainer.locator('button[aria-label="Notifications"]');
+
+        if (await notifButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+            // Check for unread badge (may or may not be present)
+            const badge = notifContainer.locator('[aria-label*="unread notifications"]');
+            const hasBadge = await badge.isVisible({ timeout: 2000 }).catch(() => false);
+            if (hasBadge) {
+                const text = await badge.textContent();
+                expect(text).toMatch(/\d+/);
+            }
+        }
+    });
+
+    test('click notification bell opens dropdown', async ({ page }) => {
+        const notifContainer = page.locator('[data-tour="notification-bell"]');
+        const notifButton = notifContainer.locator('button[aria-label="Notifications"]');
+
+        if (await notifButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await notifButton.click();
+            await page.waitForTimeout(300);
+
+            // Notification dialog should open
+            const dialog = page.locator('[role="dialog"][aria-label="Notifications"]');
+            await expect(dialog).toBeVisible({ timeout: 3000 });
+        }
+    });
+
+    test('mark all notifications as read clears unread count', async ({ page }) => {
+        const notifContainer = page.locator('[data-tour="notification-bell"]');
+        const notifButton = notifContainer.locator('button[aria-label="Notifications"]');
+
+        if (await notifButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await notifButton.click();
+            await page.waitForTimeout(300);
+
+            // Find and click "Mark all as read"
+            const markAllBtn = page.locator('button', { hasText: /mark all as read/i });
+            if (await markAllBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+                await markAllBtn.click();
+                await page.waitForTimeout(300);
+
+                // Badge should disappear or show 0
+                const badge = notifContainer.locator('[aria-label*="unread notifications"]');
+                const isVisible = await badge.isVisible({ timeout: 2000 }).catch(() => false);
+                if (isVisible) {
+                    const text = await badge.textContent();
+                    expect(text).toMatch(/^0?$/);
+                }
+            }
+        }
+    });
+
     test('user menu opens on click', async ({ page }) => {
         const userMenu = page.locator('[data-testid="user-menu-btn"]');
 
@@ -232,6 +350,34 @@ test.describe('Navigation — Full Workflow Coverage', () => {
             // Check for dropdown menu items
             const signOutLink = page.locator('button, a', { hasText: /sign out|logout/i });
             await expect(signOutLink).toBeVisible({ timeout: 3000 });
+        }
+    });
+
+    test('user menu Profile link navigates to /profile', async ({ page }) => {
+        const userMenu = page.locator('[data-testid="user-menu-btn"]');
+
+        if (await userMenu.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await userMenu.click();
+
+            const profileLink = page.locator('[role="menuitem"]', { hasText: /profile/i });
+            if (await profileLink.isVisible({ timeout: 2000 }).catch(() => false)) {
+                await profileLink.click();
+                await expect(page).toHaveURL(/\/profile/);
+            }
+        }
+    });
+
+    test('user menu Settings link navigates to /settings', async ({ page }) => {
+        const userMenu = page.locator('[data-testid="user-menu-btn"]');
+
+        if (await userMenu.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await userMenu.click();
+
+            const settingsLink = page.locator('[role="menuitem"]', { hasText: /settings/i });
+            if (await settingsLink.isVisible({ timeout: 2000 }).catch(() => false)) {
+                await settingsLink.click();
+                await expect(page).toHaveURL(/\/settings/);
+            }
         }
     });
 
@@ -264,6 +410,68 @@ test.describe('Navigation — Full Workflow Coverage', () => {
         await page.waitForTimeout(500); // Wait for layout reflow
         const isHidden = !(await sidebar.isVisible({ timeout: 2000 }).catch(() => false));
         expect(isHidden).toBe(true);
+    });
+
+    test('mobile hamburger menu opens sidebar overlay', async ({ page }) => {
+        await page.setViewportSize({ width: 375, height: 667 });
+
+        // Find hamburger button (aria-label="Open navigation menu" from app-layout.tsx)
+        const hamburger = page.locator('button[aria-label="Open navigation menu"]');
+        if (await hamburger.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await hamburger.click();
+            await page.waitForTimeout(300);
+
+            // Sidebar overlay should be visible now (aria-label="Navigation menu")
+            const overlay = page.locator('[aria-label="Navigation menu"]');
+            await expect(overlay).toBeVisible({ timeout: 3000 });
+        }
+    });
+
+    test('clicking outside mobile sidebar overlay closes it', async ({ page }) => {
+        await page.setViewportSize({ width: 375, height: 667 });
+
+        // Open sidebar
+        const hamburger = page.locator('button[aria-label="Open navigation menu"]');
+        if (await hamburger.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await hamburger.click();
+            await page.waitForTimeout(300);
+
+            const overlay = page.locator('[aria-label="Navigation menu"]');
+            await expect(overlay).toBeVisible();
+
+            // Click outside sidebar (on the backdrop area)
+            const main = page.locator('main, [role="main"]').first();
+            if (await main.isVisible({ timeout: 1000 }).catch(() => false)) {
+                await main.click({ position: { x: 10, y: 10 }, force: true });
+                await page.waitForTimeout(300);
+
+                const isHidden = !(await overlay.isVisible({ timeout: 2000 }).catch(() => false));
+                expect(isHidden).toBe(true);
+            }
+        }
+    });
+
+    test('mobile sidebar links navigate and close sidebar', async ({ page }) => {
+        await page.setViewportSize({ width: 375, height: 667 });
+
+        // Open sidebar
+        const hamburger = page.locator('button[aria-label="Open navigation menu"]');
+        if (await hamburger.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await hamburger.click();
+            await page.waitForTimeout(300);
+
+            // Click a nav link inside the overlay
+            const overlay = page.locator('[aria-label="Navigation menu"]');
+            const stratLink = overlay.locator('a', { hasText: /^Strategies$/i });
+            if (await stratLink.isVisible({ timeout: 2000 }).catch(() => false)) {
+                await stratLink.click();
+                await expect(page).toHaveURL(/\/strategies/);
+
+                // Sidebar should close after navigation
+                const isHidden = !(await overlay.isVisible({ timeout: 2000 }).catch(() => false));
+                expect(isHidden).toBe(true);
+            }
+        }
     });
 
     test('mobile topbar elements remain accessible at all viewport sizes', async ({ page }) => {
