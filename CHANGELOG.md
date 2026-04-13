@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Security
+- **Webhook SSRF (CGNAT bypass)**: block CGNAT/shared address space (100.64.0.0/10, RFC 6598) in `_is_ip_blocked()` — Python's `ipaddress` module does not classify CGNAT as private/reserved, allowing SSRF bypass to internal infrastructure in cloud/ISP environments; also blocks CGNAT via IPv4-mapped IPv6 addresses (closes #24)
+
 ### Fixed
 - **BREAKING**: `Strategy` model — replace `config: dict` with `blocks: list[StrategyBlock]` to match platform's block-based strategy structure; rename `total_trades` to `trade_count` (mapped from `tradeCount`); add new `StrategyBlock` dataclass with `id`, `type`, `label`, `config`, `connections` fields (closes #56)
 - **BREAKING**: `Portfolio` model — replace `total_pnl`/`total_pnl_percent` with `unrealized_pnl`/`realized_pnl` to match platform's separate PnL fields; `Position` model — replace `pnl`/`pnl_percent` with `unrealized_pnl`/`realized_pnl`, add `id` and `market_name` fields (closes #57)

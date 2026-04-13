@@ -171,6 +171,16 @@ _BLOCKED_HOSTNAMES: set[str] = {
     "instance-data",
 }
 
+# RFC 6598 — Carrier-Grade NAT (CGNAT) shared address space.
+# Python's ipaddress module does NOT classify 100.64.0.0/10 as private,
+# loopback, link-local, or reserved, so we must block it explicitly.
+_CGNAT_NETWORK = ipaddress.ip_network("100.64.0.0/10")
+
+
+def _is_cgnat(addr: ipaddress.IPv4Address) -> bool:
+    """Return True if *addr* falls within the CGNAT shared address space."""
+    return addr in _CGNAT_NETWORK
+
 
 def _is_ip_blocked(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> str | None:
     """Return a human-readable reason if *addr* must be blocked, else ``None``."""
@@ -183,12 +193,22 @@ def _is_ip_blocked(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> str |
                 "Webhook URL cannot point to private/loopback addresses "
                 f"via IPv4-mapped IPv6 (resolved to {addr})"
             )
+        if _is_cgnat(mapped):
+            return (
+                "Webhook URL cannot point to CGNAT/shared address space "
+                f"(RFC 6598) via IPv4-mapped IPv6 (resolved to {addr})"
+            )
         return None
 
     if addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_reserved:
         return (
             "Webhook URL cannot point to private, loopback, link-local, "
             f"or reserved addresses (resolved to {addr})"
+        )
+    if isinstance(addr, ipaddress.IPv4Address) and _is_cgnat(addr):
+        return (
+            "Webhook URL cannot point to CGNAT/shared address space "
+            f"(RFC 6598, 100.64.0.0/10) (resolved to {addr})"
         )
     return None
 
