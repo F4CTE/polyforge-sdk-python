@@ -343,6 +343,24 @@ class TestIpBlocked:
         import ipaddress
         assert _is_ip_blocked(ipaddress.ip_address("::ffff:8.8.8.8")) is None
 
+    def test_blocks_cgnat_v4(self):
+        """CGNAT (100.64.0.0/10) must be blocked — Python ipaddress misses it."""
+        import ipaddress
+        assert _is_ip_blocked(ipaddress.ip_address("100.64.0.1")) is not None
+        assert _is_ip_blocked(ipaddress.ip_address("100.100.100.100")) is not None
+        assert _is_ip_blocked(ipaddress.ip_address("100.127.255.254")) is not None
+
+    def test_allows_non_cgnat_100_range(self):
+        """100.128.0.0+ is NOT CGNAT and should be allowed."""
+        import ipaddress
+        assert _is_ip_blocked(ipaddress.ip_address("100.128.0.1")) is None
+
+    def test_blocks_cgnat_via_ipv4_mapped_v6(self):
+        """CGNAT addresses via IPv4-mapped IPv6 must also be blocked."""
+        import ipaddress
+        assert _is_ip_blocked(ipaddress.ip_address("::ffff:100.64.0.1")) is not None
+        assert _is_ip_blocked(ipaddress.ip_address("::ffff:100.100.100.100")) is not None
+
 
 class TestResolveAndValidateIps:
     """Test _resolve_and_validate_ips DNS resolution with IP validation."""
