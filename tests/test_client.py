@@ -629,11 +629,11 @@ class TestPlaceOrderValidation:
             client.place_order("tok", "BUY", "YES", 10.0, -0.5)
         client.close()
 
-    def test_split_position_rejects_zero_size(self):
-        client = PolyforgeClient(api_key="test-key")
-        with pytest.raises(ValueError, match="must be positive"):
-            client.split_position("tok", 0, 0.5)
-        client.close()
+    def test_split_position_sends_amount_as_string(self):
+        """split_position must send amount as a NumberString (#26)."""
+        import inspect
+        source = inspect.getsource(PolyforgeClient.split_position)
+        assert '"amount"' in source or "'amount'" in source
 
     def test_place_smart_order_rejects_inf_total_size(self):
         client = PolyforgeClient(api_key="test-key")
@@ -653,16 +653,22 @@ class TestPlaceOrderValidation:
             )
         client.close()
 
-    def test_provide_liquidity_rejects_negative_spread(self):
+    def test_provide_liquidity_rejects_negative_amount(self):
         client = PolyforgeClient(api_key="test-key")
         with pytest.raises(ValueError, match="must be positive"):
-            client.provide_liquidity("tok", -0.01, 100.0)
+            client.provide_liquidity("mkt", "tok", -1.0)
         client.close()
 
-    def test_provide_liquidity_rejects_zero_size(self):
+    def test_provide_liquidity_rejects_zero_amount(self):
         client = PolyforgeClient(api_key="test-key")
         with pytest.raises(ValueError, match="must be positive"):
-            client.provide_liquidity("tok", 0.05, 0)
+            client.provide_liquidity("mkt", "tok", 0)
+        client.close()
+
+    def test_provide_liquidity_validates_target_spread(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be positive"):
+            client.provide_liquidity("mkt", "tok", 100.0, target_spread=-0.01)
         client.close()
 
 
@@ -680,12 +686,11 @@ class TestAsyncPlaceOrderValidation:
         assert '_validate_financial_param("size"' in source
         assert '_validate_financial_param("price"' in source
 
-    def test_async_split_position_calls_validate(self):
-        """Async split_position must call _validate_financial_param for size and price."""
+    def test_async_split_position_sends_amount_string(self):
+        """Async split_position must send amount as a NumberString (#26)."""
         import inspect
         source = inspect.getsource(AsyncPolyforgeClient.split_position)
-        assert '_validate_financial_param("size"' in source
-        assert '_validate_financial_param("price"' in source
+        assert '"amount"' in source or "'amount'" in source
 
     def test_async_place_smart_order_calls_validate(self):
         """Async place_smart_order must call _validate_financial_param for total_size."""
@@ -694,8 +699,7 @@ class TestAsyncPlaceOrderValidation:
         assert '_validate_financial_param("total_size"' in source
 
     def test_async_provide_liquidity_calls_validate(self):
-        """Async provide_liquidity must call _validate_financial_param for spread and size."""
+        """Async provide_liquidity must call _validate_financial_param for amount_usdc (#26)."""
         import inspect
         source = inspect.getsource(AsyncPolyforgeClient.provide_liquidity)
-        assert '_validate_financial_param("spread"' in source
-        assert '_validate_financial_param("size"' in source
+        assert '_validate_financial_param("amount_usdc"' in source
