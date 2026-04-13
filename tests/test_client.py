@@ -16,7 +16,7 @@ from polyforge.errors import (
     RateLimitError,
     ServerError,
 )
-from polyforge.models import Market, Strategy, Portfolio
+from polyforge.models import Market, Strategy, Portfolio, WebhookEvent
 
 
 class TestClientInstantiation:
@@ -396,3 +396,45 @@ class TestContextManagers:
                 assert client is not None
 
         asyncio.run(test())
+
+
+class TestPlatformContractCompliance:
+    """Regression tests for platform DTO field name compliance (#89-#92)."""
+
+    def test_webhook_event_values_are_screaming_snake_case(self):
+        """WebhookEvent values must use SCREAMING_SNAKE_CASE, not dot.notation (#91)."""
+        events = [
+            WebhookEvent.ORDER_FILLED,
+            WebhookEvent.ORDER_PLACED,
+            WebhookEvent.ORDER_CANCELLED,
+            WebhookEvent.STRATEGY_STARTED,
+            WebhookEvent.STRATEGY_STOPPED,
+            WebhookEvent.STRATEGY_ERROR,
+            WebhookEvent.BACKTEST_COMPLETED,
+            WebhookEvent.BACKTEST_FAILED,
+        ]
+        for event in events:
+            assert "." not in event, f"WebhookEvent {event} uses dot.notation instead of SCREAMING_SNAKE_CASE"
+            assert event == event.upper(), f"WebhookEvent {event} is not SCREAMING_SNAKE_CASE"
+
+    def test_ai_query_body_uses_query_field(self):
+        """ai_query() must send { query } not { question } (#89)."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.ai_query)
+        assert '"query"' in source or "'query'" in source
+        assert '"question"' not in source and "'question'" not in source
+
+    def test_create_strategy_from_description_body_uses_description_field(self):
+        """create_strategy_from_description() must send { description } not { query } (#90)."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.create_strategy_from_description)
+        assert '"description"' in source or "'description'" in source
+
+    def test_start_strategy_sends_lowercase_mode(self):
+        """start_strategy() must not call .upper() on mode (#92)."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.start_strategy)
+        assert ".upper()" not in source, "start_strategy() must not uppercase the mode value"

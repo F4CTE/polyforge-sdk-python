@@ -389,13 +389,13 @@ class PolyforgeClient:
         return _parse(Strategy, self._post("/api/v1/strategies", json=body))
 
     def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
-        body: dict[str, Any] = {"query": description}
+        body: dict[str, Any] = {"description": description}
         if market_id is not None:
             body["marketId"] = market_id
         return _parse(Strategy, self._post("/api/v1/strategies/from-description", json=body))
 
     def start_strategy(self, strategy_id: str, mode: str = "paper") -> StrategyStatusResponse:
-        return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode.upper()}))
+        return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode}))
 
     def stop_strategy(self, strategy_id: str) -> StrategyStatusResponse:
         return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
@@ -748,7 +748,7 @@ class PolyforgeClient:
     # -- AI --
 
     def ai_query(self, query: str) -> AiQueryResponse:
-        return _parse(AiQueryResponse, self._post("/api/v1/ai/query", json={"question": query}))
+        return _parse(AiQueryResponse, self._post("/api/v1/ai/query", json={"query": query}))
 
     # -- Accuracy & Portfolio Review --
 
@@ -940,13 +940,13 @@ class AsyncPolyforgeClient:
         return _parse(Strategy, await self._post("/api/v1/strategies", json=body))
 
     async def create_strategy_from_description(self, description: str, market_id: str | None = None) -> Strategy:
-        body: dict[str, Any] = {"query": description}
+        body: dict[str, Any] = {"description": description}
         if market_id is not None:
             body["marketId"] = market_id
         return _parse(Strategy, await self._post("/api/v1/strategies/from-description", json=body))
 
     async def start_strategy(self, strategy_id: str, mode: str = "paper") -> StrategyStatusResponse:
-        return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode.upper()}))
+        return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode}))
 
     async def stop_strategy(self, strategy_id: str) -> StrategyStatusResponse:
         return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
@@ -1292,7 +1292,7 @@ class AsyncPolyforgeClient:
     # -- AI --
 
     async def ai_query(self, query: str) -> AiQueryResponse:
-        return _parse(AiQueryResponse, await self._post("/api/v1/ai/query", json={"question": query}))
+        return _parse(AiQueryResponse, await self._post("/api/v1/ai/query", json={"query": query}))
 
     # -- Accuracy & Portfolio Review --
 
