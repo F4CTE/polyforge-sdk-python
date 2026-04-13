@@ -33,8 +33,10 @@ from polyforge.models import (
     StrategyVisibility,
     Token,
     TraderScore,
-    WhaleTrade,
+    WatchlistItem,
     Webhook,
+    WebhookTestResult,
+    WhaleTrade,
 )
 
 __all__ = [
@@ -73,8 +75,10 @@ __all__ = [
     "StrategyTemplate",
     "Token",
     "TraderScore",
-    "WhaleTrade",
+    "WatchlistItem",
     "Webhook",
+    "WebhookTestResult",
+    "WhaleTrade",
 ]
 
 __version__ = "1.0.0"

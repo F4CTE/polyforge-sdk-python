@@ -56,8 +56,10 @@ from polyforge.models import (
     StrategyTemplate,
     Token,
     TraderScore,
-    WhaleTrade,
+    WatchlistItem,
     Webhook,
+    WebhookTestResult,
+    WhaleTrade,
 )
 
 T = TypeVar("T")
@@ -77,7 +79,9 @@ _MODEL_REGISTRY: dict[str, type] = {
     "NewsSignal": NewsSignal,
     "Alert": Alert,
     "CopyConfig": CopyConfig,
+    "WatchlistItem": WatchlistItem,
     "Webhook": Webhook,
+    "WebhookTestResult": WebhookTestResult,
     "AiQueryResponse": AiQueryResponse,
     "MarketplaceSeller": MarketplaceSeller,
     "MarketplaceStrategy": MarketplaceStrategy,
@@ -918,6 +922,69 @@ class PolyforgeClient:
         _log.debug("Webhook URL %s resolved to %s — registering", url, resolved_ips)
         return _parse(Webhook, self._post("/api/v1/webhooks", json={"url": url, "events": events}))
 
+    def delete_webhook(self, webhook_id: str) -> None:
+        """Delete a webhook by ID.
+
+        Args:
+            webhook_id: The webhook ID to delete.
+        """
+        self._delete(f"/api/v1/webhooks/{_encode_path(webhook_id)}")
+
+    def test_webhook(self, webhook_id: str) -> WebhookTestResult:
+        """Send a test payload to a webhook endpoint.
+
+        Args:
+            webhook_id: The webhook ID to test.
+
+        Returns:
+            A :class:`WebhookTestResult` with ``success`` and ``status_code``.
+        """
+        data = self._post(f"/api/v1/webhooks/{_encode_path(webhook_id)}/test")
+        return WebhookTestResult(
+            success=data.get("success", False),
+            status_code=data.get("statusCode", 0),
+        )
+
+    # -- Watchlist --
+
+    def get_watchlist(self) -> list[WatchlistItem]:
+        """List all markets on the user's watchlist."""
+        data = self._get("/api/v1/watchlist")
+        items = data if isinstance(data, list) else data.get("data", data)
+        return [_parse(WatchlistItem, w) for w in items]
+
+    def add_to_watchlist(self, market_id: str) -> WatchlistItem:
+        """Add a market to the watchlist.
+
+        Args:
+            market_id: The market ID to watch.
+
+        Returns:
+            The created :class:`WatchlistItem`.
+        """
+        data = self._post("/api/v1/watchlist", json={"marketId": market_id})
+        return _parse(WatchlistItem, data)
+
+    def remove_from_watchlist(self, market_id: str) -> None:
+        """Remove a market from the watchlist.
+
+        Args:
+            market_id: The market ID to remove.
+        """
+        self._delete(f"/api/v1/watchlist/{_encode_path(market_id)}")
+
+    def get_watchlist_status(self, market_id: str) -> WatchlistItem:
+        """Check if a market is on the watchlist.
+
+        Args:
+            market_id: The market ID to check.
+
+        Returns:
+            A :class:`WatchlistItem` with at least ``market_id`` and ``watched``.
+        """
+        data = self._get(f"/api/v1/watchlist/status/{_encode_path(market_id)}")
+        return _parse(WatchlistItem, data)
+
     # -- AI --
 
     def ai_query(self, query: str) -> AiQueryResponse:
@@ -1588,6 +1655,69 @@ class AsyncPolyforgeClient:
         resolved_ips = _validate_webhook_url(url)
         _log.debug("Webhook URL %s resolved to %s — registering", url, resolved_ips)
         return _parse(Webhook, await self._post("/api/v1/webhooks", json={"url": url, "events": events}))
+
+    async def delete_webhook(self, webhook_id: str) -> None:
+        """Delete a webhook by ID.
+
+        Args:
+            webhook_id: The webhook ID to delete.
+        """
+        await self._delete(f"/api/v1/webhooks/{_encode_path(webhook_id)}")
+
+    async def test_webhook(self, webhook_id: str) -> WebhookTestResult:
+        """Send a test payload to a webhook endpoint.
+
+        Args:
+            webhook_id: The webhook ID to test.
+
+        Returns:
+            A :class:`WebhookTestResult` with ``success`` and ``status_code``.
+        """
+        data = await self._post(f"/api/v1/webhooks/{_encode_path(webhook_id)}/test")
+        return WebhookTestResult(
+            success=data.get("success", False),
+            status_code=data.get("statusCode", 0),
+        )
+
+    # -- Watchlist --
+
+    async def get_watchlist(self) -> list[WatchlistItem]:
+        """List all markets on the user's watchlist."""
+        data = await self._get("/api/v1/watchlist")
+        items = data if isinstance(data, list) else data.get("data", data)
+        return [_parse(WatchlistItem, w) for w in items]
+
+    async def add_to_watchlist(self, market_id: str) -> WatchlistItem:
+        """Add a market to the watchlist.
+
+        Args:
+            market_id: The market ID to watch.
+
+        Returns:
+            The created :class:`WatchlistItem`.
+        """
+        data = await self._post("/api/v1/watchlist", json={"marketId": market_id})
+        return _parse(WatchlistItem, data)
+
+    async def remove_from_watchlist(self, market_id: str) -> None:
+        """Remove a market from the watchlist.
+
+        Args:
+            market_id: The market ID to remove.
+        """
+        await self._delete(f"/api/v1/watchlist/{_encode_path(market_id)}")
+
+    async def get_watchlist_status(self, market_id: str) -> WatchlistItem:
+        """Check if a market is on the watchlist.
+
+        Args:
+            market_id: The market ID to check.
+
+        Returns:
+            A :class:`WatchlistItem` with at least ``market_id`` and ``watched``.
+        """
+        data = await self._get(f"/api/v1/watchlist/status/{_encode_path(market_id)}")
+        return _parse(WatchlistItem, data)
 
     # -- AI --
 

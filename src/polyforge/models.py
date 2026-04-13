@@ -324,6 +324,32 @@ class CopyConfig:
     created_at: str = ""
 
 
+@dataclass
+class WatchlistItem:
+    """A market on the user's watchlist.
+
+    Note: field names ``volume24h`` and ``price_delta24h`` match the API's
+    camelCase keys after ``_camel_to_snake`` conversion (digits do not
+    trigger an underscore insertion).
+    """
+
+    market_id: str = ""
+    slug: str = ""
+    title: str = ""
+    current_price: float = 0.0
+    volume24h: float = 0.0
+    price_delta24h: float = 0.0
+    watched: bool = True
+
+
+@dataclass
+class WebhookTestResult:
+    """Response from testing a webhook endpoint."""
+
+    success: bool = False
+    status_code: int = 0
+
+
 class WebhookEvent:
     """Constants for webhook event names (SCREAMING_SNAKE_CASE as expected by the platform).
 
