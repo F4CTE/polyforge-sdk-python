@@ -43,6 +43,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **#482 Hero leading-[1.15]** — replaced with `leading-pf-tight` token
 
 ### Fixed (Security)
+- **#547 LLM API keys cached in memory** — read Anthropic/OpenAI keys from ConfigService per-call instead of caching as class fields; reduces credential exposure window in V8 heap
 - **#498 Hardcoded devpass in DIRECT_DATABASE_URL** — parameterized with env var substitution
 - **#499 rejectPlaceholderSecrets missing in 5 services** — added guards to strategy-engine, market-data, notification, backtest, paper-order
 - **#500 Excessive rate limits** — lowered ThrottlerModule limits across financial services

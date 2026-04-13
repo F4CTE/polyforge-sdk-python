@@ -89,6 +89,45 @@ describe("LlmService", () => {
     });
   });
 
+  // ── Keys read per-call ──────────────────────────────────────────────
+
+  describe("credential handling", () => {
+    it("reads API keys from ConfigService on each analyze() call, not cached", async () => {
+      const configGet = vi.fn((key: string, defaultValue?: string) => {
+        if (key === "ANTHROPIC_API_KEY") return "sk-ant-test";
+        if (key === "OPENAI_API_KEY") return defaultValue ?? "";
+        return defaultValue;
+      });
+      const config = { get: configGet } as any;
+
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ content: [{ text: "ok" }] }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const service = new LlmService(config);
+
+      // Reset call count after constructor
+      configGet.mockClear();
+
+      await service.analyze("first call");
+      const callsAfterFirst = configGet.mock.calls.filter(
+        (c) =>
+          c[0] === "ANTHROPIC_API_KEY" || c[0] === "OPENAI_API_KEY",
+      ).length;
+
+      await service.analyze("second call");
+      const callsAfterSecond = configGet.mock.calls.filter(
+        (c) =>
+          c[0] === "ANTHROPIC_API_KEY" || c[0] === "OPENAI_API_KEY",
+      ).length;
+
+      // Each analyze() call should read keys from ConfigService
+      expect(callsAfterSecond).toBeGreaterThan(callsAfterFirst);
+    });
+  });
+
   // ── All providers fail ────────────────────────────────────────────────
 
   describe("all providers fail", () => {
