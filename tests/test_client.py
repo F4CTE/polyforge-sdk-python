@@ -227,11 +227,13 @@ class TestModelParsing:
         portfolio = Portfolio(
             total_value=10000.0,
             available_balance=5000.0,
-            total_pnl=500.0,
+            unrealized_pnl=300.0,
+            realized_pnl=200.0,
         )
         assert portfolio.total_value == 10000.0
         assert portfolio.available_balance == 5000.0
-        assert portfolio.total_pnl == 500.0
+        assert portfolio.unrealized_pnl == 300.0
+        assert portfolio.realized_pnl == 200.0
 
     def test_market_with_defaults(self):
         """Should use default values for Market fields."""
@@ -245,7 +247,8 @@ class TestModelParsing:
         portfolio = Portfolio()
         assert portfolio.total_value == 0.0
         assert portfolio.available_balance == 0.0
-        assert portfolio.total_pnl == 0.0
+        assert portfolio.unrealized_pnl == 0.0
+        assert portfolio.realized_pnl == 0.0
 
     def test_strategy_with_defaults(self):
         """Should use default values for Strategy fields."""
@@ -253,7 +256,8 @@ class TestModelParsing:
         assert strategy.id == ""
         assert strategy.pnl == 0.0
         assert strategy.win_rate == 0.0
-        assert strategy.total_trades == 0
+        assert strategy.trade_count == 0
+        assert strategy.blocks == []
 
 
 class TestReprSecurity:

@@ -46,7 +46,9 @@ from polyforge.models import (
     SmartOrder,
     SmartOrderChildOrder,
     Strategy,
+    StrategyBlock,
     StrategyEvent,
+    StrategyStatusResponse,
     StrategyTemplate,
     Token,
     TraderScore,
@@ -60,6 +62,8 @@ _MODEL_REGISTRY: dict[str, type] = {
     "Market": Market,
     "Token": Token,
     "Strategy": Strategy,
+    "StrategyBlock": StrategyBlock,
+    "StrategyStatusResponse": StrategyStatusResponse,
     "StrategyTemplate": StrategyTemplate,
     "Portfolio": Portfolio,
     "Position": Position,
@@ -370,11 +374,11 @@ class PolyforgeClient:
             body["marketId"] = market_id
         return _parse(Strategy, self._post("/api/v1/strategies/from-description", json=body))
 
-    def start_strategy(self, strategy_id: str, mode: str = "paper") -> Strategy:
-        return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode.upper()}))
+    def start_strategy(self, strategy_id: str, mode: str = "paper") -> StrategyStatusResponse:
+        return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode.upper()}))
 
-    def stop_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
+    def stop_strategy(self, strategy_id: str) -> StrategyStatusResponse:
+        return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
 
     def get_strategy_templates(self) -> list[StrategyTemplate]:
         data = self._get("/api/v1/strategies/templates")
@@ -401,11 +405,11 @@ class PolyforgeClient:
     def import_strategy(self, data: dict) -> Strategy:
         return _parse(Strategy, self._post("/api/v1/strategies/import", json={"data": data}))
 
-    def pause_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/pause"))
+    def pause_strategy(self, strategy_id: str) -> StrategyStatusResponse:
+        return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/pause"))
 
-    def resume_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/resume"))
+    def resume_strategy(self, strategy_id: str) -> StrategyStatusResponse:
+        return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/resume"))
 
     def fork_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/fork"))
@@ -921,11 +925,11 @@ class AsyncPolyforgeClient:
             body["marketId"] = market_id
         return _parse(Strategy, await self._post("/api/v1/strategies/from-description", json=body))
 
-    async def start_strategy(self, strategy_id: str, mode: str = "paper") -> Strategy:
-        return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode.upper()}))
+    async def start_strategy(self, strategy_id: str, mode: str = "paper") -> StrategyStatusResponse:
+        return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode.upper()}))
 
-    async def stop_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
+    async def stop_strategy(self, strategy_id: str) -> StrategyStatusResponse:
+        return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/stop"))
 
     async def get_strategy_templates(self) -> list[StrategyTemplate]:
         data = await self._get("/api/v1/strategies/templates")
@@ -952,11 +956,11 @@ class AsyncPolyforgeClient:
     async def import_strategy(self, data: dict) -> Strategy:
         return _parse(Strategy, await self._post("/api/v1/strategies/import", json={"data": data}))
 
-    async def pause_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/pause"))
+    async def pause_strategy(self, strategy_id: str) -> StrategyStatusResponse:
+        return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/pause"))
 
-    async def resume_strategy(self, strategy_id: str) -> Strategy:
-        return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/resume"))
+    async def resume_strategy(self, strategy_id: str) -> StrategyStatusResponse:
+        return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/resume"))
 
     async def fork_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/fork"))
