@@ -620,6 +620,48 @@ class LpPosition:
 
 
 # ---------------------------------------------------------------------------
+# Conditional Orders
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ConditionalOrder:
+    """A conditional order that triggers when a price condition is met."""
+
+    id: str = ""
+    market_id: str = ""
+    token_id: str = ""
+    type: str = ""
+    side: str = ""
+    outcome: str = ""
+    size: str = ""
+    trigger_price: str = ""
+    limit_price: str | None = None
+    status: str = ""
+    triggered_at: str | None = None
+    created_at: str = ""
+    updated_at: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Portfolio PnL
+# ---------------------------------------------------------------------------
+
+@dataclass
+class PortfolioPnl:
+    """Aggregated portfolio profit-and-loss over a time period."""
+
+    period: str = ""
+    total_pnl: float = 0.0
+    realized_pnl: float = 0.0
+    unrealized_pnl: float = 0.0
+    win_rate: float = 0.0
+    trade_count: int = 0
+    best_trade: float = 0.0
+    worst_trade: float = 0.0
+    data_points: list[dict[str, Any]] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
 # Strategy Execution Events (SSE)
 # ---------------------------------------------------------------------------
 

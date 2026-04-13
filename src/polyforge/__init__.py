@@ -12,6 +12,7 @@ from polyforge.errors import (
 from polyforge.models import (
     AiQueryResponse,
     Alert,
+    ConditionalOrder,
     CopyConfig,
     Market,
     MarketplaceListing,
@@ -25,6 +26,7 @@ from polyforge.models import (
     PaginatedResponse,
     PlaceOrderResponse,
     Portfolio,
+    PortfolioPnl,
     Position,
     PriceHistoryEntry,
     Strategy,
@@ -60,6 +62,7 @@ __all__ = [
     # Models
     "AiQueryResponse",
     "Alert",
+    "ConditionalOrder",
     "CopyConfig",
     "Market",
     "MarketplaceListing",
@@ -72,6 +75,7 @@ __all__ = [
     "PaginatedResponse",
     "PlaceOrderResponse",
     "Portfolio",
+    "PortfolioPnl",
     "Position",
     "PriceHistoryEntry",
     "Strategy",

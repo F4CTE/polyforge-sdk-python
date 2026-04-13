@@ -24,6 +24,7 @@ from polyforge.errors import (
 )
 from polyforge.models import (
     AiQueryResponse,
+    ConditionalOrder,
     CopyConfig,
     Market,
     MarketplaceListing,
@@ -36,6 +37,7 @@ from polyforge.models import (
     PaginatedResponse,
     PlaceOrderResponse,
     Portfolio,
+    PortfolioPnl,
     Position,
     PriceHistoryEntry,
     Strategy,
@@ -1536,3 +1538,324 @@ class TestGetOrderBook:
         sig = inspect.signature(PolyforgeClient.get_order_book)
         ret = sig.return_annotation
         assert "OrderBook" in str(ret)
+
+
+# ---------------------------------------------------------------------------
+# Alert CRUD (#50)
+# ---------------------------------------------------------------------------
+
+class TestAlertCrud:
+    """Tests for create_alert and delete_alert methods (#50)."""
+
+    def test_conditional_order_model_fields(self):
+        """ConditionalOrder must have all expected fields."""
+        order = ConditionalOrder(
+            id="co-1",
+            market_id="m-1",
+            token_id="t-1",
+            type="STOP_LOSS",
+            side="SELL",
+            outcome="YES",
+            size="10",
+            trigger_price="0.50",
+            status="PENDING",
+        )
+        assert order.id == "co-1"
+        assert order.market_id == "m-1"
+        assert order.trigger_price == "0.50"
+        assert order.limit_price is None
+
+    def test_conditional_order_defaults(self):
+        """ConditionalOrder defaults should be sensible."""
+        order = ConditionalOrder()
+        assert order.id == ""
+        assert order.status == ""
+        assert order.triggered_at is None
+        assert order.limit_price is None
+
+    def test_portfolio_pnl_model_fields(self):
+        """PortfolioPnl must have all expected fields."""
+        pnl = PortfolioPnl(
+            period="30d",
+            total_pnl=150.5,
+            realized_pnl=100.0,
+            unrealized_pnl=50.5,
+            win_rate=0.65,
+            trade_count=42,
+            best_trade=80.0,
+            worst_trade=-20.0,
+        )
+        assert pnl.period == "30d"
+        assert pnl.total_pnl == 150.5
+        assert pnl.trade_count == 42
+
+    def test_portfolio_pnl_defaults(self):
+        """PortfolioPnl defaults should be sensible."""
+        pnl = PortfolioPnl()
+        assert pnl.period == ""
+        assert pnl.total_pnl == 0.0
+        assert pnl.data_points == []
+
+    # -- Sync client: create_alert --
+
+    def test_sync_create_alert_exists(self):
+        """PolyforgeClient must have create_alert method."""
+        assert hasattr(PolyforgeClient, "create_alert")
+        assert callable(getattr(PolyforgeClient, "create_alert"))
+
+    def test_sync_create_alert_params(self):
+        """create_alert() must accept token_id, direction, price, persistent."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.create_alert)
+        param_names = set(sig.parameters.keys())
+        assert "token_id" in param_names
+        assert "direction" in param_names
+        assert "price" in param_names
+        assert "persistent" in param_names
+
+    def test_sync_create_alert_uses_correct_path(self):
+        """create_alert() must POST to /api/v1/alerts."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.create_alert)
+        assert "/api/v1/alerts" in source
+        assert "_post" in source
+
+    def test_sync_create_alert_validates_price(self):
+        """create_alert() must call _validate_financial_param for price."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.create_alert)
+        assert "_validate_financial_param" in source
+
+    # -- Sync client: delete_alert --
+
+    def test_sync_delete_alert_exists(self):
+        """PolyforgeClient must have delete_alert method."""
+        assert hasattr(PolyforgeClient, "delete_alert")
+        assert callable(getattr(PolyforgeClient, "delete_alert"))
+
+    def test_sync_delete_alert_params(self):
+        """delete_alert() must accept alert_id."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.delete_alert)
+        param_names = set(sig.parameters.keys())
+        assert "alert_id" in param_names
+
+    def test_sync_delete_alert_uses_correct_path(self):
+        """delete_alert() must DELETE to /api/v1/alerts/{id}."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.delete_alert)
+        assert "/api/v1/alerts/" in source
+        assert "_delete" in source
+        assert "_encode_path" in source
+
+    # -- Async client: create_alert / delete_alert --
+
+    def test_async_create_alert_exists(self):
+        """AsyncPolyforgeClient must have create_alert method."""
+        assert hasattr(AsyncPolyforgeClient, "create_alert")
+
+    def test_async_delete_alert_exists(self):
+        """AsyncPolyforgeClient must have delete_alert method."""
+        assert hasattr(AsyncPolyforgeClient, "delete_alert")
+
+    def test_async_create_alert_uses_correct_path(self):
+        """Async create_alert() must POST to /api/v1/alerts."""
+        import inspect
+
+        source = inspect.getsource(AsyncPolyforgeClient.create_alert)
+        assert "/api/v1/alerts" in source
+        assert "_post" in source
+
+    def test_async_delete_alert_uses_correct_path(self):
+        """Async delete_alert() must DELETE to /api/v1/alerts/{id}."""
+        import inspect
+
+        source = inspect.getsource(AsyncPolyforgeClient.delete_alert)
+        assert "/api/v1/alerts/" in source
+        assert "_delete" in source
+
+
+# ---------------------------------------------------------------------------
+# Conditional Orders (#50)
+# ---------------------------------------------------------------------------
+
+class TestConditionalOrders:
+    """Tests for conditional order methods (#50)."""
+
+    # -- list_conditional_orders --
+
+    def test_sync_list_conditional_orders_exists(self):
+        """PolyforgeClient must have list_conditional_orders."""
+        assert hasattr(PolyforgeClient, "list_conditional_orders")
+        assert callable(getattr(PolyforgeClient, "list_conditional_orders"))
+
+    def test_sync_list_conditional_orders_params(self):
+        """list_conditional_orders() must accept status and limit."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.list_conditional_orders)
+        param_names = set(sig.parameters.keys())
+        assert "status" in param_names
+        assert "limit" in param_names
+
+    def test_sync_list_conditional_orders_path(self):
+        """list_conditional_orders() must use /api/v1/orders/conditional."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.list_conditional_orders)
+        assert "/api/v1/orders/conditional" in source
+        assert "_get" in source
+
+    def test_async_list_conditional_orders_exists(self):
+        """AsyncPolyforgeClient must have list_conditional_orders."""
+        assert hasattr(AsyncPolyforgeClient, "list_conditional_orders")
+
+    # -- create_conditional_order --
+
+    def test_sync_create_conditional_order_exists(self):
+        """PolyforgeClient must have create_conditional_order."""
+        assert hasattr(PolyforgeClient, "create_conditional_order")
+
+    def test_sync_create_conditional_order_params(self):
+        """create_conditional_order() must accept all required params."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.create_conditional_order)
+        param_names = set(sig.parameters.keys())
+        for name in ("market_id", "token_id", "type", "side", "outcome", "size", "trigger_price"):
+            assert name in param_names, f"Missing param: {name}"
+        assert "limit_price" in param_names
+
+    def test_sync_create_conditional_order_path(self):
+        """create_conditional_order() must POST to /api/v1/orders/conditional."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.create_conditional_order)
+        assert "/api/v1/orders/conditional" in source
+        assert "_post" in source
+
+    def test_sync_create_conditional_order_validates_financials(self):
+        """create_conditional_order() must validate size and trigger_price."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.create_conditional_order)
+        assert "_validate_financial_param" in source
+
+    def test_async_create_conditional_order_exists(self):
+        """AsyncPolyforgeClient must have create_conditional_order."""
+        assert hasattr(AsyncPolyforgeClient, "create_conditional_order")
+
+    # -- get_conditional_order --
+
+    def test_sync_get_conditional_order_exists(self):
+        """PolyforgeClient must have get_conditional_order."""
+        assert hasattr(PolyforgeClient, "get_conditional_order")
+
+    def test_sync_get_conditional_order_params(self):
+        """get_conditional_order() must accept order_id."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_conditional_order)
+        param_names = set(sig.parameters.keys())
+        assert "order_id" in param_names
+
+    def test_sync_get_conditional_order_path(self):
+        """get_conditional_order() must GET /api/v1/orders/conditional/{id}."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.get_conditional_order)
+        assert "/api/v1/orders/conditional/" in source
+        assert "_encode_path" in source
+
+    def test_async_get_conditional_order_exists(self):
+        """AsyncPolyforgeClient must have get_conditional_order."""
+        assert hasattr(AsyncPolyforgeClient, "get_conditional_order")
+
+    # -- cancel_conditional_order --
+
+    def test_sync_cancel_conditional_order_exists(self):
+        """PolyforgeClient must have cancel_conditional_order."""
+        assert hasattr(PolyforgeClient, "cancel_conditional_order")
+
+    def test_sync_cancel_conditional_order_params(self):
+        """cancel_conditional_order() must accept order_id."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.cancel_conditional_order)
+        param_names = set(sig.parameters.keys())
+        assert "order_id" in param_names
+
+    def test_sync_cancel_conditional_order_path(self):
+        """cancel_conditional_order() must DELETE /api/v1/orders/conditional/{id}."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.cancel_conditional_order)
+        assert "/api/v1/orders/conditional/" in source
+        assert "_delete" in source
+        assert "_encode_path" in source
+
+    def test_async_cancel_conditional_order_exists(self):
+        """AsyncPolyforgeClient must have cancel_conditional_order."""
+        assert hasattr(AsyncPolyforgeClient, "cancel_conditional_order")
+
+
+# ---------------------------------------------------------------------------
+# Portfolio PnL (#50)
+# ---------------------------------------------------------------------------
+
+class TestPortfolioPnl:
+    """Tests for get_portfolio_pnl method (#50)."""
+
+    def test_sync_get_portfolio_pnl_exists(self):
+        """PolyforgeClient must have get_portfolio_pnl."""
+        assert hasattr(PolyforgeClient, "get_portfolio_pnl")
+        assert callable(getattr(PolyforgeClient, "get_portfolio_pnl"))
+
+    def test_sync_get_portfolio_pnl_params(self):
+        """get_portfolio_pnl() must accept period and strategy_id."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_portfolio_pnl)
+        param_names = set(sig.parameters.keys())
+        assert "period" in param_names
+        assert "strategy_id" in param_names
+
+    def test_sync_get_portfolio_pnl_path(self):
+        """get_portfolio_pnl() must GET /api/v1/portfolio/pnl."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.get_portfolio_pnl)
+        assert "/api/v1/portfolio/pnl" in source
+        assert "_get" in source
+
+    def test_sync_get_portfolio_pnl_default_period(self):
+        """get_portfolio_pnl() default period should be '30d'."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_portfolio_pnl)
+        assert sig.parameters["period"].default == "30d"
+
+    def test_async_get_portfolio_pnl_exists(self):
+        """AsyncPolyforgeClient must have get_portfolio_pnl."""
+        assert hasattr(AsyncPolyforgeClient, "get_portfolio_pnl")
+
+    def test_async_get_portfolio_pnl_path(self):
+        """Async get_portfolio_pnl() must GET /api/v1/portfolio/pnl."""
+        import inspect
+
+        source = inspect.getsource(AsyncPolyforgeClient.get_portfolio_pnl)
+        assert "/api/v1/portfolio/pnl" in source
+        assert "_get" in source
+
+    def test_sync_get_portfolio_pnl_return_type(self):
+        """get_portfolio_pnl() must return PortfolioPnl."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_portfolio_pnl)
+        ret = sig.return_annotation
+        assert "PortfolioPnl" in str(ret)

@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.18] — 2026-04-13
+
+### Added
+- `ConditionalOrder` model: `id`, `market_id`, `token_id`, `type`, `side`, `outcome`, `size`, `trigger_price`, `limit_price`, `status`, `triggered_at`, `created_at`, `updated_at` fields (closes #50)
+- `PortfolioPnl` model: `period`, `total_pnl`, `realized_pnl`, `unrealized_pnl`, `win_rate`, `trade_count`, `best_trade`, `worst_trade`, `data_points` fields (closes #50)
+- `create_alert(token_id, direction, price, persistent=False)`: create a price alert — both sync and async clients (closes #50)
+- `delete_alert(alert_id)`: delete an alert by ID — both sync and async clients (closes #50)
+- `list_conditional_orders(status?, limit?)`: list conditional orders with optional filters — both sync and async clients (closes #50)
+- `create_conditional_order(market_id, token_id, type, side, outcome, size, trigger_price, limit_price?)`: create a conditional order — both sync and async clients (closes #50)
+- `get_conditional_order(order_id)`: get a conditional order by ID — both sync and async clients (closes #50)
+- `cancel_conditional_order(order_id)`: cancel a conditional order by ID — both sync and async clients (closes #50)
+- `get_portfolio_pnl(period?, strategy_id?)`: get portfolio PnL summary — both sync and async clients (closes #50)
+
 ## [1.6.17] — 2026-04-13
 
 ### Added
