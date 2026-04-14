@@ -225,10 +225,12 @@ jobs:
               git checkout "$COMMIT_SHA" --force
             fi
 
-            # Source env vars for Prisma + Docker
+            # Source env vars for Prisma + Docker — credentials must come from .env,
+            # never hardcoded in the workflow file (see #559)
             set -a; source .env 2>/dev/null || true; set +a
-            export DIRECT_DATABASE_URL="${DIRECT_DATABASE_URL:-postgresql://poly:devpass@localhost:5432/polyforge}"
-            export ADMIN_DIRECT_DATABASE_URL="${ADMIN_DIRECT_DATABASE_URL:-postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin}"
+            export DIRECT_DATABASE_URL="${DIRECT_DATABASE_URL:?DIRECT_DATABASE_URL must be set in .env}"
+            export ADMIN_DIRECT_DATABASE_URL="${ADMIN_DIRECT_DATABASE_URL:?ADMIN_DIRECT_DATABASE_URL must be set in .env}"
+            export REDIS_PASSWORD="${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env}"
 
             echo "=== 2. Install dependencies ==="
             pnpm install --frozen-lockfile
@@ -254,13 +256,12 @@ jobs:
 
             echo "=== 7. Migrate + seed ==="
             npx ts-node prisma/seed.ts
-            ADMIN_DIRECT_DATABASE_URL="postgresql://poly_admin:devpass_admin@localhost:5434/polyforge_admin" \
-              npx ts-node prisma/seed.admin.ts
+            npx ts-node prisma/seed.admin.ts
 
             echo "=== 8. Flush throttle counters ==="
-            docker exec polyforge-dev-redis-1 redis-cli -a devredispass SET config:invite_only false
-            docker exec polyforge-dev-redis-1 redis-cli -a devredispass --scan --pattern "throttler:*" \
-              | xargs -r docker exec -i polyforge-dev-redis-1 redis-cli -a devredispass DEL || true
+            docker exec polyforge-dev-redis-1 redis-cli -a "$REDIS_PASSWORD" --no-auth-warning SET config:invite_only false
+            docker exec polyforge-dev-redis-1 redis-cli -a "$REDIS_PASSWORD" --no-auth-warning --scan --pattern "throttler:*" \
+              | xargs -r docker exec -i polyforge-dev-redis-1 redis-cli -a "$REDIS_PASSWORD" --no-auth-warning DEL || true
 
             echo "=== Dev environment deployed and healthy ==="
 
