@@ -16,6 +16,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
+import { throttleLimit } from '../common/throttle-limit';
 import { CredentialsService } from './credentials.service';
 import { ImportCredentialsDto } from './dto/import-credentials.dto';
 
@@ -28,7 +29,12 @@ export class CredentialsController {
 
   @Post()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Throttle({ default: { limit: 5, ttl: 3600000 } }) // 5 per hour
+  @Throttle({
+    default: {
+      limit: throttleLimit(5),
+      ttl: 3600000,
+    },
+  })
   @ApiOperation({
     summary:
       'Import Polymarket credentials — forwarded to signer-service for AES-256-GCM storage',

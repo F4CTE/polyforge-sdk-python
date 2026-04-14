@@ -26,7 +26,12 @@ export class LpController {
 
   @Post("provide")
   @HttpCode(HttpStatus.CREATED)
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 10 : 10000,
+      ttl: 60000,
+    },
+  })
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("TRADE")
   provideLiquidity(@CurrentUser() user: any, @Body() dto: ProvideLiquidityDto) {

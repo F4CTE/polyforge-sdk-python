@@ -21,6 +21,7 @@ import { Throttle } from '@nestjs/throttler';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
+import { throttleLimit } from '../common/throttle-limit';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -58,7 +59,7 @@ export class AuthController {
   @Post('register')
   @Throttle({
     default: {
-      limit: process.env.NODE_ENV === 'production' ? 5 : 500,
+      limit: throttleLimit(5),
       ttl: 3600000,
     },
   })
@@ -96,7 +97,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({
     default: {
-      limit: process.env.NODE_ENV === 'production' ? 10 : 1000,
+      limit: throttleLimit(10),
       ttl: 900000,
     },
   })
@@ -178,7 +179,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({
     default: {
-      limit: process.env.NODE_ENV === 'production' ? 30 : 3000,
+      limit: throttleLimit(30),
       ttl: 900000,
     },
   })
@@ -221,7 +222,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({
     default: {
-      limit: process.env.NODE_ENV === 'production' ? 10 : 1000,
+      limit: throttleLimit(10),
       ttl: 3600000,
     },
   })
@@ -239,7 +240,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({
     default: {
-      limit: process.env.NODE_ENV === 'production' ? 3 : 300,
+      limit: throttleLimit(3),
       ttl: 3600000,
     },
   })
@@ -259,7 +260,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({
     default: {
-      limit: process.env.NODE_ENV === 'production' ? 10 : 1000,
+      limit: throttleLimit(10),
       ttl: 3600000,
     },
   })
@@ -277,7 +278,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({
     default: {
-      limit: process.env.NODE_ENV === 'production' ? 3 : 300,
+      limit: throttleLimit(3),
       ttl: 3600000,
     },
   })

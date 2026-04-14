@@ -34,7 +34,12 @@ export class SmartOrderController {
   }
 
   @Post()
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 10 : 10000,
+      ttl: 60000,
+    },
+  })
   @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes("TRADE")

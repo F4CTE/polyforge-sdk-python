@@ -18,13 +18,23 @@ export class AiController {
   constructor(private readonly ai: AiService) {}
 
   @Post("query")
-  @Throttle({ default: { limit: 20, ttl: 60000 } }) // 20/min — prevent LLM cost amplification
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 20 : 10000,
+      ttl: 60000,
+    },
+  })
   query(@CurrentUser() user: any, @Body() dto: AiQueryDto) {
     return this.ai.query(user.sub, dto.query);
   }
 
   @Get("portfolio-review")
-  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5/min — LLM call per request; stricter limit
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 5 : 10000,
+      ttl: 60000,
+    },
+  })
   @UseGuards(ApiKeyScopeGuard)
   @RequireScopes("READ")
   portfolioReview(@CurrentUser() user: any) {

@@ -14,6 +14,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard, CurrentUser } from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
+import { throttleLimit } from '../common/throttle-limit';
 import { BotLinkService } from './bot-link.service';
 
 @ApiTags('Bot Link')
@@ -25,7 +26,12 @@ export class BotLinkController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 10, ttl: 3600000 } }) // 10 per hour
+  @Throttle({
+    default: {
+      limit: throttleLimit(10),
+      ttl: 3600000,
+    },
+  })
   @ApiOperation({
     summary: 'Generate a 6-digit bot link code (TTL 5 min)',
     description:

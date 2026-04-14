@@ -93,7 +93,12 @@ export class OrdersController {
   }
 
   @Post("close-position")
-  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
+      ttl: 60000,
+    },
+  })
   @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes("TRADE")
@@ -111,7 +116,12 @@ export class OrdersController {
 
   /** Split USDC.e into Yes + No outcome tokens */
   @Post("split")
-  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
+      ttl: 60000,
+    },
+  })
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes("TRADE")
@@ -121,7 +131,12 @@ export class OrdersController {
 
   /** Merge Yes + No outcome tokens back into USDC.e */
   @Post("merge")
-  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
+      ttl: 60000,
+    },
+  })
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyScopeGuard, GeoBlockGuard)
   @RequireScopes("TRADE")
@@ -131,7 +146,12 @@ export class OrdersController {
 
   @Post("place")
   @UseGuards(JwtAuthGuard)
-  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
+      ttl: 60000,
+    },
+  })
   async placeOrder(
     @Req() req: { user: { sub: string } },
     @Body() dto: PlaceOrderDto,

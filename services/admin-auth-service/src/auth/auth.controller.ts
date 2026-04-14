@@ -45,7 +45,12 @@ export class AuthController {
 
   @Post("login")
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 10, ttl: 900000 } }) // 10 per 15 min
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 10 : 10000,
+      ttl: 900000,
+    },
+  })
   @ApiOperation({
     summary: "Admin login — sets HttpOnly JWT cookie + returns admin profile",
   })

@@ -1,6 +1,7 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { throttleLimit } from '../common/throttle-limit';
 import { WaitlistService } from './waitlist.service';
 import { JoinWaitlistDto } from './dto/join-waitlist.dto';
 
@@ -11,7 +12,12 @@ export class WaitlistController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 3, ttl: 3600000 } })
+  @Throttle({
+    default: {
+      limit: throttleLimit(3),
+      ttl: 3600000,
+    },
+  })
   @ApiOperation({ summary: 'Join the early-access waitlist' })
   @ApiResponse({ status: 200, description: 'Added to waitlist.' })
   async join(@Body() dto: JoinWaitlistDto) {

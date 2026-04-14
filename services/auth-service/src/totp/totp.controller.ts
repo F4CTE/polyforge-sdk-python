@@ -17,6 +17,7 @@ import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '@polyforge/shared-auth';
 import { CurrentUser } from '@polyforge/shared-auth';
 import { JwtPayload } from '@polyforge/shared-types';
+import { throttleLimit } from '../common/throttle-limit';
 import { TotpService } from './totp.service';
 import { TotpConfirmDto, TotpDisableDto } from './dto/totp-setup.dto';
 
@@ -58,7 +59,12 @@ export class TotpController {
 
   @Delete()
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { ttl: 3600000, limit: 10 } })
+  @Throttle({
+    default: {
+      ttl: 3600000,
+      limit: throttleLimit(10),
+    },
+  })
   @ApiOperation({ summary: 'Disable 2FA — requires password confirmation' })
   @ApiResponse({ status: 200, description: '2FA disabled.' })
   @ApiResponse({

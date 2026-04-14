@@ -15,6 +15,7 @@ import { BotLinkModule } from './bot-link/bot-link.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { WaitlistModule } from './waitlist/waitlist.module';
 import { HealthController } from './common/health.controller';
+import { throttleLimit } from './common/throttle-limit';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { HealthController } from './common/health.controller';
         throttlers: [
           {
             ttl: 60000,
-            limit: process.env.NODE_ENV === 'production' ? 60 : 10000,
+            limit: throttleLimit(60),
           },
         ],
         storage: new ThrottlerStorageRedisService(redis.getClient()),

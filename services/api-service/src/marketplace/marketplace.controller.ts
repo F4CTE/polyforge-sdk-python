@@ -66,7 +66,12 @@ export class MarketplaceController {
   // ── Sell-side ─────────────────────────────────────────────────────────────
 
   @Post()
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 5 : 10000,
+      ttl: 60000,
+    },
+  })
   @HttpCode(HttpStatus.CREATED)
   createListing(@CurrentUser() user: any, @Body() dto: CreateListingDto) {
     return this.marketplace.createListing(user.sub, dto);
@@ -84,7 +89,12 @@ export class MarketplaceController {
   // ── Buy-side ──────────────────────────────────────────────────────────────
 
   @Post(":id/purchase")
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === "production" ? 5 : 10000,
+      ttl: 60000,
+    },
+  })
   @HttpCode(HttpStatus.CREATED)
   purchase(@CurrentUser() user: any, @Param("id", ParseUUIDPipe) id: string) {
     return this.marketplace.purchase(user.sub, id);

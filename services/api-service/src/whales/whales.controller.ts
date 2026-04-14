@@ -22,13 +22,23 @@ export class WhalesController {
   constructor(private readonly whales: WhalesService) {}
 
   @Get("feed")
-  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  @Throttle({
+    default: {
+      ttl: 60000,
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
+    },
+  })
   getFeed(@Query() query: WhaleFeedQueryDto) {
     return this.whales.getFeed(query);
   }
 
   @Get("top")
-  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  @Throttle({
+    default: {
+      ttl: 60000,
+      limit: process.env.NODE_ENV === "production" ? 30 : 10000,
+    },
+  })
   getTopWhales(@Query() query: WhaleTopQueryDto) {
     return this.whales.getTopWhales(query);
   }
