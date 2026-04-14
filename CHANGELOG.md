@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.0] — 2026-04-14
+
+### Added
+- Runtime validation for enum-like string parameters via `_validate_enum()` helper (closes #41)
+  - `start_strategy(mode=)` now rejects values other than `"live"` / `"paper"`
+  - `place_order(side=, outcome=, order_type=)` now rejects invalid values before HTTP call
+  - Applied to both `PolyforgeClient` and `AsyncPolyforgeClient`
+
 ## [1.8.0] — 2026-04-14
 
 ### Added

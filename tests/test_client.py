@@ -9,6 +9,7 @@ from polyforge.client import (
     AsyncPolyforgeClient,
     _parse,
     _raise_for_status,
+    _validate_enum,
     _validate_financial_param,
     _validate_webhook_url,
     _is_ip_blocked,
@@ -659,6 +660,42 @@ class TestFinancialParamValidation:
 
     def test_accepts_positive_int(self):
         _validate_financial_param("size", 10)  # should not raise
+
+
+class TestEnumValidation:
+    """Ensure _validate_enum rejects invalid enum values (#41)."""
+
+    def test_rejects_invalid_mode(self):
+        with pytest.raises(ValueError, match="must be one of"):
+            _validate_enum("mode", "turbo", frozenset({"live", "paper"}))
+
+    def test_accepts_valid_mode(self):
+        _validate_enum("mode", "paper", frozenset({"live", "paper"}))  # should not raise
+        _validate_enum("mode", "live", frozenset({"live", "paper"}))
+
+    def test_rejects_invalid_side(self):
+        with pytest.raises(ValueError, match="must be one of"):
+            _validate_enum("side", "HOLD", frozenset({"BUY", "SELL"}))
+
+    def test_start_strategy_rejects_invalid_mode(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.start_strategy("s-1", mode="turbo")
+
+    def test_place_order_rejects_invalid_side(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.place_order("tok", "HOLD", "YES", 10.0, 0.5)
+
+    def test_place_order_rejects_invalid_outcome(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.place_order("tok", "BUY", "MAYBE", 10.0, 0.5)
+
+    def test_place_order_rejects_invalid_order_type(self):
+        client = PolyforgeClient(api_key="test-key")
+        with pytest.raises(ValueError, match="must be one of"):
+            client.place_order("tok", "BUY", "YES", 10.0, 0.5, order_type="IOC")
 
 
 class TestPlaceOrderValidation:

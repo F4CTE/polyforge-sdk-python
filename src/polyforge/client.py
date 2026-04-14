@@ -202,6 +202,23 @@ def _encode_path(segment: str) -> str:
     return quote(str(segment), safe="")
 
 
+def _validate_enum(name: str, value: str, allowed: frozenset[str]) -> None:
+    """Reject values not in *allowed* for enum-like string parameters.
+
+    Raises:
+        ValueError: if *value* is not in *allowed*.
+    """
+    if value not in allowed:
+        sorted_opts = ", ".join(sorted(allowed))
+        raise ValueError(f"{name} must be one of {{{sorted_opts}}}, got {value!r}")
+
+
+_VALID_MODES = frozenset({"live", "paper"})
+_VALID_SIDES = frozenset({"BUY", "SELL"})
+_VALID_OUTCOMES = frozenset({"YES", "NO"})
+_VALID_ORDER_TYPES = frozenset({"GTC", "GTD", "FOK", "FAK"})
+
+
 def _validate_financial_param(name: str, value: float) -> None:
     """Reject NaN, Infinity, negative, and zero values for financial parameters.
 
@@ -575,6 +592,7 @@ class PolyforgeClient:
         return _parse(Strategy, self._post("/api/v1/strategies/from-description", json=body))
 
     def start_strategy(self, strategy_id: str, mode: str = "paper") -> StrategyStatusResponse:
+        _validate_enum("mode", mode, _VALID_MODES)
         return _parse(StrategyStatusResponse, self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode}))
 
     def stop_strategy(self, strategy_id: str) -> StrategyStatusResponse:
@@ -798,6 +816,9 @@ class PolyforgeClient:
         order_type: str = "GTC",
     ) -> PlaceOrderResponse:
         """Place a direct buy or sell order on a prediction market."""
+        _validate_enum("side", side, _VALID_SIDES)
+        _validate_enum("outcome", outcome, _VALID_OUTCOMES)
+        _validate_enum("order_type", order_type, _VALID_ORDER_TYPES)
         _validate_financial_param("size", size)
         _validate_financial_param("price", price)
         data = self._post("/api/v1/orders/place", json={
@@ -1619,6 +1640,7 @@ class AsyncPolyforgeClient:
         return _parse(Strategy, await self._post("/api/v1/strategies/from-description", json=body))
 
     async def start_strategy(self, strategy_id: str, mode: str = "paper") -> StrategyStatusResponse:
+        _validate_enum("mode", mode, _VALID_MODES)
         return _parse(StrategyStatusResponse, await self._post(f"/api/v1/strategies/{_encode_path(strategy_id)}/start", json={"mode": mode}))
 
     async def stop_strategy(self, strategy_id: str) -> StrategyStatusResponse:
@@ -1835,6 +1857,9 @@ class AsyncPolyforgeClient:
         order_type: str = "GTC",
     ) -> PlaceOrderResponse:
         """Place a direct buy or sell order on a prediction market."""
+        _validate_enum("side", side, _VALID_SIDES)
+        _validate_enum("outcome", outcome, _VALID_OUTCOMES)
+        _validate_enum("order_type", order_type, _VALID_ORDER_TYPES)
         _validate_financial_param("size", size)
         _validate_financial_param("price", price)
         data = await self._post("/api/v1/orders/place", json={
