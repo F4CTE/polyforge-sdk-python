@@ -439,14 +439,12 @@ test.describe('Navigation — Full Workflow Coverage', () => {
             const overlay = page.locator('[aria-label="Navigation menu"]');
             await expect(overlay).toBeVisible();
 
-            // Click outside sidebar (on the backdrop area)
-            const main = page.locator('main, [role="main"]').first();
-            if (await main.isVisible({ timeout: 1000 }).catch(() => false)) {
-                await main.click({ position: { x: 10, y: 10 }, force: true });
-                await page.waitForTimeout(300);
-
-                const isHidden = !(await overlay.isVisible({ timeout: 2000 }).catch(() => false));
-                expect(isHidden).toBe(true);
+            // Click the backdrop element (semi-transparent div behind the sidebar panel)
+            // The backdrop has onClick={() => setMobileOpen(false)} in app-layout.tsx
+            const backdrop = overlay.locator('.bg-pf-backdrop-light');
+            if (await backdrop.isVisible({ timeout: 1000 }).catch(() => false)) {
+                await backdrop.click({ position: { x: 250, y: 300 }, force: true });
+                await expect(overlay).toBeHidden({ timeout: 3000 });
             }
         }
     });
@@ -467,9 +465,8 @@ test.describe('Navigation — Full Workflow Coverage', () => {
                 await stratLink.click();
                 await expect(page).toHaveURL(/\/strategies/);
 
-                // Sidebar should close after navigation
-                const isHidden = !(await overlay.isVisible({ timeout: 2000 }).catch(() => false));
-                expect(isHidden).toBe(true);
+                // Sidebar should close after navigation (useLocation effect)
+                await expect(overlay).toBeHidden({ timeout: 3000 });
             }
         }
     });

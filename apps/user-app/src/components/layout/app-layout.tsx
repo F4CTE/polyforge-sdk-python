@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Outlet } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
@@ -26,6 +26,12 @@ export function AppLayout() {
   }, []);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
+
+  // Close mobile nav on route change
+  const location = useLocation();
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   // Close mobile nav on Escape
   useEffect(() => {

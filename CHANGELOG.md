@@ -8,7 +8,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased] — 2026-04-14
 
 ### Fixed (E2E Infrastructure)
-- **Throttle rate limits cause E2E 429 failures** — Per-endpoint `@Throttle` limits (login: 1000/15min, register: 500/hr, orders: 30/min) were hardcoded or too low for the full E2E suite (~174 tests + retries). Added `NODE_ENV` checks to all `@Throttle` decorators across auth-service, api-service, admin-auth-service, and signer-service — production limits unchanged, dev/test limits raised to 10,000
+- **Throttle rate limits cause E2E 429 failures** — raised dev-mode rate limits to prevent 429s during E2E suite
+
+### Fixed (UX)
+- **Mobile sidebar not closing on navigation** — added `useLocation` effect to auto-close sidebar on route change
+
+### Fixed (E2E)
+- **Copy-trading back button test** — fixed mode heading assertion
+- **Copy-trading created copy in list test** — handle API rejection gracefully
+- **Navigation mobile sidebar overlay close test** — click backdrop directly
+- **Navigation mobile sidebar links test** — use `toBeHidden` with proper timeout
 
 ### Fixed (API)
 - **Ticket creation broken from UI** — `CreateTicketDto` was missing the `priority` field; NestJS `forbidNonWhitelisted` rejected every ticket creation request from the frontend which always sends priority. Added `priority` to DTO and service create call.
