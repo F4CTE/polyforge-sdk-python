@@ -295,15 +295,19 @@ class NewsSignal:
 
 @dataclass
 class Alert:
-    """A price or event alert."""
+    """A price alert on a specific token.
+
+    Field names match the platform ``PriceAlert`` Prisma model:
+    ``tokenId``, ``direction``, ``price``, ``persistent``.
+    """
 
     id: str = ""
-    name: str = ""
-    condition: str = ""
-    market_id: str = ""
-    threshold: float = 0.0
-    enabled: bool = True
-    last_triggered: str = ""
+    token_id: str = ""
+    direction: str = ""  # "above" | "below"
+    price: str = ""  # decimal string
+    persistent: bool = False
+    triggered: bool = False
+    triggered_at: str | None = None
     created_at: str = ""
 
 
@@ -311,17 +315,24 @@ class Alert:
 class CopyConfig:
     """A copy-trading configuration.
 
-    Field names match the platform contract (#45):
-    ``sourceWallet``, ``maxPositionSize``, ``label``, ``totalCopiedTrades``.
+    Field names match the platform ``CopyConfig`` Prisma model:
+    ``targetWallet``, ``mode``, ``sizeValue``, ``maxExposure``,
+    ``maxDailyLoss``, ``priceOffset``, ``status``.
     """
 
     id: str = ""
-    source_wallet: str = ""
-    label: str | None = None
-    max_position_size: float = 0.0
-    enabled: bool = True
-    total_copied_trades: int = 0
+    target_wallet: str = ""
+    mode: str = ""  # "PERCENTAGE" | "FIXED" | "MIRROR"
+    size_value: str = ""  # decimal string
+    max_exposure: str = ""  # decimal string
+    max_daily_loss: str = ""  # decimal string
+    price_offset: str = ""  # decimal string
+    status: str = ""  # "ACTIVE" | "PAUSED" | "STOPPED" | "ERROR"
+    total_pnl: str = ""  # decimal string
+    total_copied: int = 0
     created_at: str = ""
+    updated_at: str = ""
+    stopped_at: str | None = None
 
 
 @dataclass

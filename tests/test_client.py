@@ -24,6 +24,7 @@ from polyforge.errors import (
 )
 from polyforge.models import (
     AiQueryResponse,
+    Alert,
     ConditionalOrder,
     CopyConfig,
     Market,
@@ -925,48 +926,113 @@ class TestOrderMonetaryFields:
         assert pos.unrealized_pnl == "10.00"
 
 
+class TestAlertFields:
+    """Tests for Alert field alignment with platform PriceAlert model (#107)."""
+
+    def test_alert_has_correct_fields(self):
+        """Alert must use platform PriceAlert field names."""
+        alert = Alert(
+            id="alert-1",
+            token_id="0xtoken",
+            direction="above",
+            price="0.65",
+            persistent=True,
+        )
+        assert alert.token_id == "0xtoken"
+        assert alert.direction == "above"
+        assert alert.price == "0.65"
+        assert alert.persistent is True
+
+    def test_alert_no_old_fields(self):
+        """Alert must not have legacy phantom field names."""
+        import dataclasses
+        field_names = {f.name for f in dataclasses.fields(Alert)}
+        assert "name" not in field_names
+        assert "condition" not in field_names
+        assert "market_id" not in field_names
+        assert "threshold" not in field_names
+        assert "enabled" not in field_names
+        assert "last_triggered" not in field_names
+
+    def test_alert_parses_from_api(self):
+        """_parse must map camelCase platform fields to Alert."""
+        api_response = {
+            "id": "alert-1",
+            "tokenId": "0xtoken123",
+            "direction": "below",
+            "price": "0.42",
+            "persistent": False,
+            "triggered": False,
+            "triggeredAt": None,
+            "createdAt": "2026-04-01T00:00:00Z",
+        }
+        alert = _parse(Alert, api_response)
+        assert alert.token_id == "0xtoken123"
+        assert alert.direction == "below"
+        assert alert.price == "0.42"
+        assert alert.persistent is False
+        assert alert.created_at == "2026-04-01T00:00:00Z"
+
+
 class TestCopyConfigFields:
-    """Tests for CopyConfig field name alignment (#45)."""
+    """Tests for CopyConfig field alignment with platform Prisma model (#108)."""
 
     def test_copy_config_has_correct_fields(self):
         """CopyConfig must use platform field names."""
         cc = CopyConfig(
             id="cc-1",
-            source_wallet="0xabc",
-            label="My Copy",
-            max_position_size=500.0,
-            enabled=True,
-            total_copied_trades=42,
+            target_wallet="0xabc",
+            mode="PERCENTAGE",
+            size_value="10",
+            max_exposure="500",
+            max_daily_loss="100",
+            price_offset="0.01",
+            status="ACTIVE",
+            total_copied=42,
         )
-        assert cc.source_wallet == "0xabc"
-        assert cc.label == "My Copy"
-        assert cc.max_position_size == 500.0
-        assert cc.total_copied_trades == 42
+        assert cc.target_wallet == "0xabc"
+        assert cc.mode == "PERCENTAGE"
+        assert cc.size_value == "10"
+        assert cc.max_exposure == "500"
+        assert cc.max_daily_loss == "100"
+        assert cc.total_copied == 42
 
     def test_copy_config_no_old_fields(self):
         """CopyConfig must not have deprecated field names."""
         import dataclasses
         field_names = {f.name for f in dataclasses.fields(CopyConfig)}
+        assert "source_wallet" not in field_names
         assert "source_strategy_id" not in field_names
         assert "max_allocation" not in field_names
         assert "scale_factor" not in field_names
+        assert "label" not in field_names
+        assert "max_position_size" not in field_names
+        assert "total_copied_trades" not in field_names
+        assert "enabled" not in field_names
 
     def test_copy_config_parses_from_api(self):
         """_parse must map camelCase platform fields to CopyConfig."""
         api_response = {
             "id": "cc-1",
-            "sourceWallet": "0xdef",
-            "label": "Whale Copy",
-            "maxPositionSize": 1000.0,
-            "enabled": True,
-            "totalCopiedTrades": 15,
+            "targetWallet": "0xdef",
+            "mode": "FIXED",
+            "sizeValue": "250.50",
+            "maxExposure": "5000",
+            "maxDailyLoss": "200",
+            "priceOffset": "0.005",
+            "status": "ACTIVE",
+            "totalPnl": "125.00",
+            "totalCopied": 15,
             "createdAt": "2026-01-01T00:00:00Z",
+            "updatedAt": "2026-04-01T00:00:00Z",
         }
         cc = _parse(CopyConfig, api_response)
-        assert cc.source_wallet == "0xdef"
-        assert cc.max_position_size == 1000.0
-        assert cc.total_copied_trades == 15
-        assert cc.label == "Whale Copy"
+        assert cc.target_wallet == "0xdef"
+        assert cc.mode == "FIXED"
+        assert cc.size_value == "250.50"
+        assert cc.max_exposure == "5000"
+        assert cc.total_copied == 15
+        assert cc.total_pnl == "125.00"
 
 
 class TestBacktestNoInitialBalance:

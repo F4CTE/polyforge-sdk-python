@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.19] — 2026-04-14
+
+### Fixed
+- **BREAKING:** `Alert` model: replaced phantom fields (`name`, `condition`, `market_id`, `threshold`, `enabled`) with correct platform fields (`token_id`, `direction`, `price`, `persistent`, `triggered`, `triggered_at`) to match `PriceAlert` Prisma model (closes #107)
+- **BREAKING:** `CopyConfig` model: replaced phantom fields (`source_wallet`, `label`, `max_position_size`, `enabled`, `total_copied_trades`) with correct platform fields (`target_wallet`, `mode`, `size_value`, `max_exposure`, `max_daily_loss`, `price_offset`, `status`, `total_pnl`, `total_copied`, `updated_at`, `stopped_at`) to match `CopyConfig` Prisma model (closes #108)
+- `list_alerts()`, `list_copy_configs()`, `list_webhooks()`: fixed response parsing for endpoints that return raw arrays instead of `PaginatedResponse` — previously would crash with `TypeError` when platform returns `[...]` instead of `{data: [...]}`
+
 ## [1.6.18] — 2026-04-13
 
 ### Added
