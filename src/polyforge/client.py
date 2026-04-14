@@ -952,7 +952,7 @@ class PolyforgeClient:
 
     def list_alerts(self) -> list[Alert]:
         data = self._get("/api/v1/alerts")
-        items = data["data"]
+        items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(Alert, a) for a in items]
 
     def create_alert(
@@ -1096,13 +1096,12 @@ class PolyforgeClient:
 
     def list_copy_configs(self) -> list[CopyConfig]:
         data = self._get("/api/v1/copy")
-        items = data["data"]
+        items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(CopyConfig, c) for c in items]
 
     def list_webhooks(self) -> list[Webhook]:
         data = self._get("/api/v1/webhooks")
-        # Backend returns PaginatedResponse<Webhook> with 'data' field
-        items = data["data"]
+        items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(Webhook, w) for w in items]
 
     def create_webhook(self, url: str, events: list[str]) -> Webhook:
@@ -1864,7 +1863,7 @@ class AsyncPolyforgeClient:
 
     async def list_alerts(self) -> list[Alert]:
         data = await self._get("/api/v1/alerts")
-        items = data["data"]
+        items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(Alert, a) for a in items]
 
     async def create_alert(
@@ -2008,13 +2007,12 @@ class AsyncPolyforgeClient:
 
     async def list_copy_configs(self) -> list[CopyConfig]:
         data = await self._get("/api/v1/copy")
-        items = data["data"]
+        items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(CopyConfig, c) for c in items]
 
     async def list_webhooks(self) -> list[Webhook]:
         data = await self._get("/api/v1/webhooks")
-        # Backend returns PaginatedResponse<Webhook> with 'data' field
-        items = data["data"]
+        items = data if isinstance(data, list) else data.get("data", [])
         return [_parse(Webhook, w) for w in items]
 
     async def create_webhook(self, url: str, events: list[str]) -> Webhook:
