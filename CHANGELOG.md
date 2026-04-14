@@ -7,9 +7,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-04-14
 
-### Fixed (Documentation)
-- **Design charter Angular/PrimeNG deprecation notices** — Added deprecation notices to sections 13, 14, 16, 17, 18, 20, 21, 27, 28 which still referenced Angular signals, PrimeIcons (`pi pi-*`), PrimeNG components (`p-dialog`, `p-button`, `pTooltip`), and Angular Router APIs. Updated implementation examples to current React + shadcn/ui + Lucide React equivalents while preserving design rules (closes #600)
-
 ### Fixed (E2E Infrastructure)
 - **Throttle rate limits cause E2E 429 failures** — raised dev-mode rate limits to prevent 429s during E2E suite
 
@@ -23,10 +20,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Navigation mobile sidebar links test** — use `toBeHidden` with proper timeout
 
 ### Fixed (Design System)
-- **Dead `.transition-smooth` CSS utility removed** — Unused class with hardcoded `0.2s` duration in `packages/ui/src/globals.css` (closes #597)
-- **Skip-to-content links use `focus-visible:`** — Both user-app and landing page skip links changed from `focus:` to `focus-visible:` per design charter §22 (closes #587)
-- **Disabled state opacity uses design token** — All 6 shared UI components (button, input, textarea, select, checkbox, label) changed from `disabled:opacity-50` to `disabled:opacity-pf-disabled` (0.6) (closes #599)
-- **Portfolio page numeric values use font-mono** — P&L values, day counts, and allocation percentages on portfolio page now use `font-mono` per design charter §3 (closes #586)
+- **Landing page layout broken — wrong Tailwind v4 `@theme` namespaces** — `text-pf-body-sm`, `max-w-pf-container-landing`, `duration-pf-fast` and other design token utilities were silently not generating CSS because the `@theme` variable names used wrong namespaces for Tailwind v4: `--font-size-*` → `--text-*`, `--width-*` → `--max-width-*`/`--min-width-*`, `--duration-*` → `--transition-duration-*`. This caused the landing page to lose layout constraints, font sizes, and transitions. Also affects user-app and admin-app design token utilities.
 
 ### Fixed (API)
 - **Ticket creation broken from UI** — `CreateTicketDto` was missing the `priority` field; NestJS `forbidNonWhitelisted` rejected every ticket creation request from the frontend which always sends priority. Added `priority` to DTO and service create call.
@@ -66,7 +60,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed (Security)
 - **#547 LLM API keys cached in memory** — read Anthropic/OpenAI keys from ConfigService per-call instead of caching as class fields; reduces credential exposure window in V8 heap
 - **#557 Dev compose port bindings on 0.0.0.0** — bound all NestJS service and mock-polymarket ports to `127.0.0.1` to prevent direct backend access bypassing the nginx gateway
-- **#559 CI deploy-dev hardcoded fallback passwords** — removed hardcoded DB and Redis passwords from workflow file; credentials now sourced exclusively from `.env` on lab server with `${VAR:?}` validation
 - **#498 Hardcoded devpass in DIRECT_DATABASE_URL** — parameterized with env var substitution
 - **#499 rejectPlaceholderSecrets missing in 5 services** — added guards to strategy-engine, market-data, notification, backtest, paper-order
 - **#500 Excessive rate limits** — lowered ThrottlerModule limits across financial services

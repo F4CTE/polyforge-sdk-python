@@ -13,7 +13,7 @@
   color: var(--color-pf-text);
   background: var(--color-pf-cyan-500);
   border-radius: 0 0 0.375rem 0.375rem;
-  transition: top var(--duration-pf-fast);
+  transition: top var(--transition-duration-pf-fast);
 }
 .skip-to-content:focus {
   top: 0;

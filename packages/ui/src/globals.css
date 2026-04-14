@@ -89,10 +89,11 @@
   --color-pf-status-error-bg: rgba(239, 68, 68, 0.1);
   --color-pf-status-info-bg: rgba(59, 130, 246, 0.1);
 
-  /* Animation duration tokens */
-  --duration-pf-fast: 100ms;
-  --duration-pf-normal: 200ms;
-  --duration-pf-slow: 300ms;
+  /* Transition duration tokens
+     Tailwind v4 maps --transition-duration-* to duration-* utilities */
+  --transition-duration-pf-fast: 100ms;
+  --transition-duration-pf-normal: 200ms;
+  --transition-duration-pf-slow: 300ms;
 
   /* Typography tokens */
   --tracking-pf-code: 0.3em;
@@ -118,13 +119,14 @@
   --radius-pf-lg: 12px;
   --radius-pf-full: 9999px;
 
-  /* Type scale — micro sizes used in badges, pills, labels */
-  --font-size-pf-micro: 0.5625rem;  /* 9px — smallest captions */
-  --font-size-pf-caption: 0.625rem; /* 10px — badges, pill counts */
-  --font-size-pf-label: 0.6875rem;  /* 11px — form labels, small UI text */
-  --font-size-pf-body-sm: 0.8125rem; /* 13px — compact body text */
-  --font-size-pf-body: 0.9375rem;   /* 15px — standard reading text */
-  --font-size-pf-subhead: 1.0625rem; /* 17px — sub-headings */
+  /* Type scale — micro sizes used in badges, pills, labels
+     Tailwind v4 maps --text-* to text-* utilities (NOT --font-size-*) */
+  --text-pf-micro: 0.5625rem;  /* 9px — smallest captions */
+  --text-pf-caption: 0.625rem; /* 10px — badges, pill counts */
+  --text-pf-label: 0.6875rem;  /* 11px — form labels, small UI text */
+  --text-pf-body-sm: 0.8125rem; /* 13px — compact body text */
+  --text-pf-body: 0.9375rem;   /* 15px — standard reading text */
+  --text-pf-subhead: 1.0625rem; /* 17px — sub-headings */
 
   /* Font families */
   --font-sans:
@@ -148,19 +150,21 @@
   --height-pf-chart-md: 240px;
   --height-pf-chart-lg: 260px;
 
-  /* Column width tokens — truncation breakpoints */
-  --width-pf-col-xs: 120px;
-  --width-pf-col-sm: 160px;
-  --width-pf-col-md: 200px;
-  --width-pf-col-lg: 260px;
+  /* Column width tokens — truncation breakpoints
+     Tailwind v4: --max-width-* → max-w-*, --min-width-* → min-w-* */
+  --max-width-pf-col-xs: 120px;
+  --max-width-pf-col-sm: 160px;
+  --max-width-pf-col-md: 200px;
+  --max-width-pf-col-lg: 260px;
+  --min-width-pf-col-xs: 120px;
 
   /* Input minimum width tokens */
-  --width-pf-input-min-sm: 180px;
-  --width-pf-input-min-md: 200px;
+  --min-width-pf-input-min-sm: 180px;
+  --min-width-pf-input-min-md: 200px;
 
   /* Landing page container widths */
-  --width-pf-container-landing: 1100px;
-  --width-pf-content-sm: 600px;
+  --max-width-pf-container-landing: 1100px;
+  --max-width-pf-content-sm: 600px;
 
   /* Opacity scale — gradient overlays and disabled states */
   --opacity-pf-subtle: 0.04;

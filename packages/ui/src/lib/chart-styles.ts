@@ -40,7 +40,7 @@ export const chartAxisTick = {
 
 /** Legend wrapper style — consistent font, color, and spacing across all chart legends. */
 export const chartLegendStyle: CSSProperties = {
-  fontSize: 'var(--font-size-pf-label)',
+  fontSize: 'var(--text-pf-label)',
   color: 'var(--color-pf-text-secondary)',
   paddingTop: 'var(--spacing-pf-2)',
 };

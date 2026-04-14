@@ -382,15 +382,17 @@ Grille interne       : 12 colonnes, gap 16px
 
 ## 9. Animations & transitions
 
-> ⚠️ **DEPRECATED (v3.0+):** Angular animation syntax not applicable. Use Tailwind CSS utilities with duration tokens `--duration-pf-fast` (100ms), `--duration-pf-normal` (200ms), `--duration-pf-slow` (300ms) from `globals.css`. See [`docs/legacy/design-charter-v2-angular.md`](legacy/design-charter-v2-angular.md#9-animations--transitions) for archived spec.
+> ⚠️ **DEPRECATED (v3.0+):** Angular animation syntax not applicable. Use Tailwind CSS utilities with duration tokens `--transition-duration-pf-fast` (100ms), `--transition-duration-pf-normal` (200ms), `--transition-duration-pf-slow` (300ms) from `globals.css`. See [`docs/legacy/design-charter-v2-angular.md`](legacy/design-charter-v2-angular.md#9-animations--transitions) for archived spec.
 
 ### Duration tokens (Tailwind v4)
 
+> **Namespace:** Tailwind v4 maps `--transition-duration-*` to `duration-*` utilities.
+
 | Token | Utility class | Value | Use case |
 |-------|--------------|-------|----------|
-| `--duration-pf-fast` | `duration-pf-fast` | 100ms | Hover states, micro-interactions |
-| `--duration-pf-normal` | `duration-pf-normal` | 200ms | Sidebar transitions, opacity fades |
-| `--duration-pf-slow` | `duration-pf-slow` | 300ms | Progress bars, layout shifts |
+| `--transition-duration-pf-fast` | `duration-pf-fast` | 100ms | Hover states, micro-interactions |
+| `--transition-duration-pf-normal` | `duration-pf-normal` | 200ms | Sidebar transitions, opacity fades |
+| `--transition-duration-pf-slow` | `duration-pf-slow` | 300ms | Progress bars, layout shifts |
 
 **Infinite animation exceptions:** `pf-pulse` (2s) and `shimmer` (2s) are accepted longer durations for decorative infinite animations.
 
@@ -444,8 +446,8 @@ All ambient animations are purely decorative (`aria-hidden="true"`, `pointer-eve
 
 | Token | Utility class | Value | Use case |
 |-------|--------------|-------|----------|
-| `--width-pf-container-landing` | `max-w-pf-container-landing` | 1100px | Landing page section containers |
-| `--width-pf-content-sm` | `max-w-pf-content-sm` | 600px | Narrow content blocks (intro text, centered descriptions) |
+| `--max-width-pf-container-landing` | `max-w-pf-container-landing` | 1100px | Landing page section containers |
+| `--max-width-pf-content-sm` | `max-w-pf-content-sm` | 600px | Narrow content blocks (intro text, centered descriptions) |
 
 **Rule:** Never hardcode `max-w-[1100px]` or `max-w-[600px]` in landing page components. Use `max-w-pf-container-landing` and `max-w-pf-content-sm`.
 
