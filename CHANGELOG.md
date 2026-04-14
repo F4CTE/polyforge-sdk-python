@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.7.0] — 2026-04-14
+
+### Changed
+- **BREAKING:** `list_strategies()` now returns `PaginatedResponse[Strategy]` instead of `list[Strategy]` — use `.data` to access the list (closes #105)
+- **BREAKING:** `get_orders()` now returns `PaginatedResponse[Order]` instead of `list[Order]` — use `.data` to access the list
+- **BREAKING:** `list_conditional_orders()` now returns `PaginatedResponse[ConditionalOrder]` instead of `list[ConditionalOrder]` — use `.data` to access the list
+
+### Added
+- `get_orders()`: added `page` and `market_id` parameters to match platform `OrderQueryDto`
+- `list_conditional_orders()`: added `type` and `page` parameters to match platform `ConditionalOrderQueryDto`
+
 ## [1.6.20] — 2026-04-14
 
 ### Fixed

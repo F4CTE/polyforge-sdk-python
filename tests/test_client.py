@@ -1998,3 +1998,82 @@ class TestPortfolioPnl:
         sig = inspect.signature(PolyforgeClient.get_portfolio_pnl)
         ret = sig.return_annotation
         assert "PortfolioPnl" in str(ret)
+
+
+class TestPaginatedResponses:
+    """Tests for #105 — list endpoints returning PaginatedResponse."""
+
+    def test_list_strategies_returns_paginated_response(self):
+        """list_strategies() must return PaginatedResponse[Strategy]."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.list_strategies)
+        ret = str(sig.return_annotation)
+        assert "PaginatedResponse" in ret, f"Expected PaginatedResponse, got {ret}"
+
+    def test_get_orders_returns_paginated_response(self):
+        """get_orders() must return PaginatedResponse[Order]."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_orders)
+        ret = str(sig.return_annotation)
+        assert "PaginatedResponse" in ret, f"Expected PaginatedResponse, got {ret}"
+
+    def test_list_conditional_orders_returns_paginated_response(self):
+        """list_conditional_orders() must return PaginatedResponse[ConditionalOrder]."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.list_conditional_orders)
+        ret = str(sig.return_annotation)
+        assert "PaginatedResponse" in ret, f"Expected PaginatedResponse, got {ret}"
+
+    def test_async_list_strategies_returns_paginated_response(self):
+        """Async list_strategies() must return PaginatedResponse[Strategy]."""
+        import inspect
+
+        sig = inspect.signature(AsyncPolyforgeClient.list_strategies)
+        ret = str(sig.return_annotation)
+        assert "PaginatedResponse" in ret, f"Expected PaginatedResponse, got {ret}"
+
+    def test_async_get_orders_returns_paginated_response(self):
+        """Async get_orders() must return PaginatedResponse[Order]."""
+        import inspect
+
+        sig = inspect.signature(AsyncPolyforgeClient.get_orders)
+        ret = str(sig.return_annotation)
+        assert "PaginatedResponse" in ret, f"Expected PaginatedResponse, got {ret}"
+
+    def test_async_list_conditional_orders_returns_paginated_response(self):
+        """Async list_conditional_orders() must return PaginatedResponse[ConditionalOrder]."""
+        import inspect
+
+        sig = inspect.signature(AsyncPolyforgeClient.list_conditional_orders)
+        ret = str(sig.return_annotation)
+        assert "PaginatedResponse" in ret, f"Expected PaginatedResponse, got {ret}"
+
+    def test_get_orders_accepts_page_and_market_id(self):
+        """get_orders() must accept page and market_id params."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_orders)
+        param_names = set(sig.parameters.keys())
+        assert "page" in param_names, "get_orders() missing 'page' parameter"
+        assert "market_id" in param_names, "get_orders() missing 'market_id' parameter"
+
+    def test_list_conditional_orders_accepts_type_and_page(self):
+        """list_conditional_orders() must accept type and page params."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.list_conditional_orders)
+        param_names = set(sig.parameters.keys())
+        assert "type" in param_names, "list_conditional_orders() missing 'type' parameter"
+        assert "page" in param_names, "list_conditional_orders() missing 'page' parameter"
+
+    def test_list_strategies_source_builds_paginated_response(self):
+        """list_strategies() must construct PaginatedResponse from raw API data."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.list_strategies)
+        assert "PaginatedResponse(" in source
+        assert 'raw["total"]' in source or "raw['total']" in source
+        assert 'raw["hasNext"]' in source or "raw['hasNext']" in source
