@@ -530,3 +530,224 @@ theme: {
   --warning-subtle: rgba(217, 119, 6, 0.10);
 }
 ```
+
+---
+
+## 13. Accessibility
+
+PolyForge targets WCAG 2.1 AA. Accessibility is not optional — a professional tool must work for all professionals.
+
+### Color Contrast
+
+All text/background combinations must meet AA minimum (4.5:1 for body text, 3:1 for large text):
+
+| Combination | Ratio | Pass |
+|-------------|-------|------|
+| `--text-primary` on `--bg-app` | 15.2:1 | AA |
+| `--text-secondary` on `--bg-app` | 5.8:1 | AA |
+| `--text-tertiary` on `--bg-app` | 3.2:1 | AA Large only |
+| `--accent-text` on `--bg-app` | 5.1:1 | AA |
+| `--gain-text` on `--bg-app` | 8.4:1 | AA |
+| `--loss-text` on `--bg-app` | 5.6:1 | AA |
+
+`--text-tertiary` is intentionally below AA for body text — it is used **only** for placeholders and disabled labels, never for actionable content.
+
+### Focus Management
+
+- All interactive elements must have a visible focus ring: `box-shadow: 0 0 0 3px var(--accent-subtle)`
+- Focus ring uses `accent-subtle` (not a solid outline) to maintain the clean aesthetic
+- `:focus-visible` only — no focus rings on mouse click, only keyboard navigation
+- Tab order must follow visual layout (no `tabindex` hacks)
+- Modals trap focus; Escape closes them
+
+### Keyboard Navigation
+
+| Context | Keys |
+|---------|------|
+| Tables | Arrow keys navigate cells, Enter opens row detail |
+| Sidebar | Arrow up/down between items, Enter activates |
+| Command menu (⌘K) | Arrow up/down to select, Enter to execute |
+| Dropdowns | Arrow up/down, Enter to select, Escape to close |
+| Modals | Tab cycles within modal, Escape closes |
+
+### Screen Readers
+
+- All images: `alt` text or `aria-hidden="true"` for decorative icons
+- Tables: use `<th scope="col">` for column headers
+- Status badges: include `aria-label` with the full status text
+- Live PnL updates: use `aria-live="polite"` on the value container
+- Charts: provide a `<table>` fallback or `aria-label` summary
+
+### Reduced Motion
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+---
+
+## 14. Dark / Light Mode
+
+### Switching Mechanism
+
+Theme is controlled by a `data-theme` attribute on the root `<html>` element:
+
+```html
+<html data-theme="dark">  <!-- or "light" -->
+```
+
+- Default: `dark` (trading terminals are dark by convention)
+- Persisted in `localStorage` key `polyforge:theme`
+- On load: check localStorage → fall back to `prefers-color-scheme` → fall back to dark
+- Toggle: settings page + topbar icon (Sun/Moon from Lucide)
+
+### Implementation Rules
+
+- **Never** use Tailwind's `dark:` prefix — all theming goes through CSS custom properties
+- Components must not contain any theme-aware logic — they consume tokens blindly
+- Test every component in both themes before shipping
+- Screenshots in PRs must include both dark and light if UI is changed
+
+### Transition
+
+When switching themes, apply a brief transition to prevent flash:
+```css
+html[data-theme] {
+  transition: background-color 200ms ease, color 200ms ease;
+}
+```
+
+---
+
+## 15. Landing Page vs App
+
+The landing page (`apps/landing/`) and the trading app (`apps/user-app/`) share the same token system but have different rules:
+
+| Rule | App (user-app) | Landing |
+|------|---------------|---------|
+| Max width | None — fluid | 1200px centered |
+| Decorative gradients | Forbidden | Allowed (hero section only) |
+| Scroll animations | Forbidden | Allowed (fade-in on scroll, subtle) |
+| Font sizes | 11–24px (type scale) | Up to 48px for hero headlines |
+| Border-radius | 4/6/8px strict | Up to 16px for hero cards |
+| Imagery | No stock photos | Allowed for social proof |
+| CTA style | Standard accent buttons | Can use gradient accent buttons |
+
+The landing page may break density rules for marketing impact, but must still use the same color tokens and font families.
+
+---
+
+## 16. Admin Panel
+
+The admin panel (`apps/admin-app/`) uses the same design system with minor adjustments:
+
+- **Accent override**: admin uses `--accent-default: #8B5CF6` (purple) to visually distinguish it from the user app
+- **Layout**: same inverted-L structure, sidebar may include admin-specific sections (Users, Tickets, Config Flags)
+- **Tables**: admin tables tend toward `data-density="compact"` (28px rows) since admins scan more data
+- **Danger zone**: destructive admin actions (delete user, reset credentials) use a confirmation modal with a typed-confirmation input, not just a button
+
+---
+
+## 17. Trading-Specific Patterns
+
+### PnL Display
+
+```tsx
+// Always show sign prefix
++$1,234.56   // gain: --gain-text
+-$456.78     // loss: --loss-text
+$0.00        // neutral: --text-secondary
+
+// Percentage changes
++12.4%       // gain
+-3.2%        // loss
+0.0%         // neutral
+```
+
+- Use `Intl.NumberFormat` for locale-aware formatting
+- Always `tabular-nums` for column alignment
+- Show currency symbol ($) prefix, never suffix
+- Percentage always shows 1 decimal place
+
+### Market Cards
+
+```
+┌──────────────────────────────────┐
+│ Will X happen by Y?        58¢  │
+│ Category · Volume · Expiry      │
+│ ████████████░░░░░ 58%           │
+└──────────────────────────────────┘
+```
+
+- Price in large `heading` size, right-aligned
+- Probability bar: `--accent-default` fill on `--bg-subtle` track
+- Category badge: `label` size, `--bg-elevated` background
+- Card: `--bg-surface`, `--border-subtle`, 8px radius
+
+### Strategy Builder (React Flow)
+
+- Canvas background: `--bg-app` with subtle dot grid (`--border-subtle` at 0.3 opacity)
+- Nodes: `--bg-surface` with `--border-default`, 8px radius
+- Selected node: `--accent-border` border, `--accent-subtle` background
+- Edges: `--text-tertiary` default, `--accent-default` when connected to selected node
+- Handles: 8px circles, `--border-strong` default, `--accent-default` on hover
+- Minimap: `--bg-elevated` background, nodes as `--accent-subtle` rectangles
+
+### Order Status
+
+| Status | Color | Badge variant |
+|--------|-------|--------------|
+| PENDING | `--warning` | warning |
+| CONFIRMED | `--accent-default` | accent |
+| FILLED | `--gain` | gain |
+| CANCELLED | `--text-secondary` | default |
+| FAILED | `--loss` | loss |
+| EXPIRED | `--text-tertiary` | default |
+
+---
+
+## 18. File Naming & Organization
+
+### CSS / Token Files
+
+```
+packages/ui/src/
+├── globals.css          ← CSS variable definitions (§12)
+├── themes/
+│   ├── dark.css         ← dark theme overrides (if split)
+│   └── light.css        ← light theme overrides
+└── components/
+    └── ui/              ← shadcn/ui components (already here)
+```
+
+### Component Conventions
+
+- One component per file, named in kebab-case (`market-card.tsx`)
+- Colocate component-specific styles if any (rare — prefer Tailwind)
+- Export from barrel `index.ts` in each directory
+- Storybook stories colocated as `market-card.stories.tsx` (when Storybook is added)
+
+---
+
+## 19. Design Review Checklist
+
+Before merging any UI PR, verify:
+
+- [ ] Uses CSS var tokens — no hardcoded hex colors
+- [ ] Text passes WCAG AA contrast on its background
+- [ ] Interactive elements have `:focus-visible` ring
+- [ ] Numbers use `tabular-nums` and are right-aligned in tables
+- [ ] Font weight ≤ 600
+- [ ] Border-radius matches component type (4/6/8px)
+- [ ] Works in both dark and light theme
+- [ ] Renders correctly at 1280px and 375px widths
+- [ ] No `!important` declarations
+- [ ] Empty/loading/error states handled
+- [ ] Respects `prefers-reduced-motion`
+- [ ] Screenshots of both themes included in PR
