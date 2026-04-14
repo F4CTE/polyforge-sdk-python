@@ -176,10 +176,10 @@ services:
       WS_PORT: "3098"
       CLOB_PORT: "3099"
     ports:
-      - "3096:3096"   # Gamma API
-      - "3097:3097"   # Data API
-      - "3098:3098"   # WebSocket feed
-      - "3099:3099"   # CLOB REST
+      - "127.0.0.1:3096:3096"   # Gamma API
+      - "127.0.0.1:3097:3097"   # Data API
+      - "127.0.0.1:3098:3098"   # WebSocket feed
+      - "127.0.0.1:3099:3099"   # CLOB REST
     networks: [internal]
     restart: unless-stopped
 
@@ -226,7 +226,7 @@ services:
       INTERNAL_JWT_SECRET: "${INTERNAL_JWT_SECRET:?INTERNAL_JWT_SECRET is required}"
       PORT: "3006"
     ports:
-      - "3006:3006"
+      - "127.0.0.1:3006:3006"
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
@@ -248,7 +248,7 @@ services:
       CLOB_API_URL: http://mock-polymarket:3099
       PORT: "3007"
     ports:
-      - "3007:3007"
+      - "127.0.0.1:3007:3007"
     networks: [internal, signer-only]
     depends_on:
       postgres: { condition: service_healthy }
@@ -281,7 +281,7 @@ services:
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
       NODE_OPTIONS: "--max-old-space-size=1024"
     ports:
-      - "3002:3002"
+      - "127.0.0.1:3002:3002"
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
@@ -303,7 +303,7 @@ services:
       PORT: "3008"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
-      - "3008:3008"
+      - "127.0.0.1:3008:3008"
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
@@ -324,7 +324,7 @@ services:
       PORT: "3009"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
-      - "3009:3009"
+      - "127.0.0.1:3009:3009"
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
@@ -356,7 +356,7 @@ services:
       PORT: "3010"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
-      - "3010:3010"
+      - "127.0.0.1:3010:3010"
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
@@ -391,7 +391,7 @@ services:
       PORT: "3011"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
-      - "3011:3011"
+      - "127.0.0.1:3011:3011"
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
@@ -421,7 +421,7 @@ services:
       PORT: "3004"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
-      - "3004:3004"
+      - "127.0.0.1:3004:3004"
     networks: [internal, admin-only]
     depends_on:
       postgres: { condition: service_healthy }
@@ -458,7 +458,7 @@ services:
       AUTH_SERVICE_PORT: "3001"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
-      - "3001:3001"
+      - "127.0.0.1:3001:3001"
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
@@ -486,7 +486,7 @@ services:
       ADMIN_AUTH_SERVICE_PORT: "3003"
       NODE_ENV: ${NODE_ENV:?NODE_ENV must be set}
     ports:
-      - "3003:3003"
+      - "127.0.0.1:3003:3003"
     networks: [internal, admin-only]
     depends_on:
       postgres: { condition: service_healthy }
@@ -558,7 +558,7 @@ services:
       GAMMA_API_URL: https://gamma-api.polymarket.com
       PORT: "3005"
     ports:
-      - "3005:3005"
+      - "127.0.0.1:3005:3005"
     networks: [internal]
     depends_on:
       postgres: { condition: service_healthy }
