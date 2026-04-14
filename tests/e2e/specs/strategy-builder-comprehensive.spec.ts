@@ -519,9 +519,12 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
             const configInput = node.locator('input').first();
 
             if (await configInput.isVisible()) {
-                await configInput.fill('test-config-value');
+                // Input may be type=number — use a numeric value
+                const inputType = await configInput.getAttribute('type') ?? 'text';
+                const testValue = inputType === 'number' ? '0.75' : 'test-config-value';
+                await configInput.fill(testValue);
                 const value = await configInput.inputValue();
-                expect(value).toBe('test-config-value');
+                expect(value).toBe(testValue);
             }
         }
     });

@@ -34,10 +34,10 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-    // Best-effort cleanup — wrapped in try/catch so expired tokens
-    // don't fail the entire test suite via afterAll timeout.
+    // Best-effort cleanup with a hard 30s timeout to prevent afterAll from
+    // exceeding the 60s hook limit and failing the last test.
     if (!aliceToken) return;
-    try {
+    const cleanup = async () => {
         const strategies = await apiGetStrategies(aliceToken);
         for (const s of strategies.filter(s => s.name.startsWith('E2E-'))) {
             try {
@@ -47,7 +47,9 @@ test.afterAll(async () => {
                 await apiDeleteStrategy(aliceToken, s.id);
             } catch { /* ignore individual cleanup errors */ }
         }
-    } catch { /* ignore — token may have expired */ }
+    };
+    const timeout = new Promise((_r, reject) => setTimeout(() => reject(new Error('cleanup timeout')), 30_000));
+    await Promise.race([cleanup(), timeout]).catch(() => { /* ignore */ });
 });
 
 test.describe('Strategy lifecycle', () => {
