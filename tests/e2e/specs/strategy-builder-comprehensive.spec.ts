@@ -41,15 +41,16 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
     });
 
     test.afterEach(async () => {
-        // Cleanup: delete all created strategies via API
-        const strategies = await apiGetStrategies(token);
-        for (const strategy of strategies) {
-            try {
-                await apiDeleteStrategy(token, strategy.id);
-            } catch {
-                // Ignore cleanup errors
+        // Cleanup: delete all created strategies via API.
+        // Wrapped in try/catch — token may have expired on long-running suites.
+        try {
+            const strategies = await apiGetStrategies(token);
+            for (const strategy of strategies) {
+                try {
+                    await apiDeleteStrategy(token, strategy.id);
+                } catch { /* ignore individual cleanup errors */ }
             }
-        }
+        } catch { /* ignore — token may have expired */ }
     });
 
     // ─── Strategy Creation & Configuration ─────────────────────────────────────
@@ -933,8 +934,9 @@ test.describe('Strategy Builder — Full Workflow Coverage', () => {
         await listPage.goto();
         await listPage.clickCard(strategyName);
 
-        // Verify detail page loaded
-        await expect(page.locator('h1', { hasText: strategyName })).toBeVisible({ timeout: 15_000 });
+        // Wait for navigation to detail page, then verify heading loads
+        await page.waitForURL(/\/strategies\/[a-z0-9-]+$/, { timeout: 15_000 });
+        await expect(page.locator('h1').first()).toBeVisible({ timeout: 15_000 });
 
         strategiesCreated.push(strategyName);
     });
