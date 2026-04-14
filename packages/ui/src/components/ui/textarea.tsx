@@ -13,7 +13,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           "placeholder:text-pf-text-tertiary resize-y min-h-pf-textarea-min",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40 focus-visible:border-pf-cyan-500",
           "disabled:opacity-pf-disabled disabled:cursor-not-allowed",
-          "transition-colors",
+          "transition-colors duration-pf-normal",
           className
         )}
         ref={ref}

@@ -342,9 +342,7 @@ export function Component() {
 
   const isLoading = loadingPnl || loadingAccuracy || loadingScore;
 
-  if (isLoading) return <PageSkeleton />;
-
-  /* ─── Derived values ──────────────────────────────────────────────── */
+  /* ─── Derived values (must be before any early return to satisfy Rules of Hooks) */
 
   const totalPnlVal = pnlData?.totalPnl ?? '0';
   const winRate = pnlData?.winRate ?? scoreData?.winRate ?? '0';
@@ -365,6 +363,8 @@ export function Component() {
     const n = parseFloat(val);
     return Number.isFinite(n) ? `${(n * 100).toFixed(1)}%` : `${val}%`;
   };
+
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div className="animate-fade-in p-6 max-w-6xl mx-auto space-y-6">

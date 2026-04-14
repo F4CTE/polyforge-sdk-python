@@ -22,6 +22,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed (Design System)
 - **Landing page layout broken — wrong Tailwind v4 `@theme` namespaces** — `text-pf-body-sm`, `max-w-pf-container-landing`, `duration-pf-fast` and other design token utilities were silently not generating CSS because the `@theme` variable names used wrong namespaces for Tailwind v4: `--font-size-*` → `--text-*`, `--width-*` → `--max-width-*`/`--min-width-*`, `--duration-*` → `--transition-duration-*`. This caused the landing page to lose layout constraints, font sizes, and transitions. Also affects user-app and admin-app design token utilities.
 
+### Fixed (Frontend)
+- **Analytics page crash (React error #310)** — `useMemo` for `chartData` was placed after an early return during loading state, violating React's Rules of Hooks. Moved all hooks and derived values above the conditional return so hook call order is stable across renders.
+- **Animations and transitions broken after design token fixes** — Added explicit `duration-pf-fast`/`duration-pf-normal` tokens to 8 shared UI components (button, table, dialog, badge, textarea, input, select, tabs) and 5 landing page components (hero, nav, footer, cta-banner, waitlist-form) that had `transition-colors` without an accompanying duration class.
+
 ### Fixed (API)
 - **Ticket creation broken from UI** — `CreateTicketDto` was missing the `priority` field; NestJS `forbidNonWhitelisted` rejected every ticket creation request from the frontend which always sends priority. Added `priority` to DTO and service create call.
 
