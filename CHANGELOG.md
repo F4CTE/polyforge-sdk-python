@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.8.0] — 2026-04-14
+
+### Added
+- `list_backtests(strategy_id, status, page, limit)` — list backtests with pagination and filters (closes #73)
+- `get_backtest(backtest_id)` — fetch a single backtest by ID (closes #73)
+- `run_quick_backtest(...)` — run a quick backtest via `/api/v1/backtests/quick` (closes #73)
+- `get_backtest_orders(backtest_id)` — fetch orders generated during a backtest (closes #73)
+- All four methods added to both `PolyforgeClient` and `AsyncPolyforgeClient`
+
 ## [1.7.0] — 2026-04-14
 
 ### Changed
