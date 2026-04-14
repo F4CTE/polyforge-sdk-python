@@ -577,7 +577,7 @@ class PolyforgeClient:
 
     def get_strategy_templates(self) -> list[StrategyTemplate]:
         data = self._get("/api/v1/strategies/templates")
-        # Backend returns PaginatedResponse<StrategyTemplate> with 'data' field
+        # Backend returns PaginatedResponse<Strategy> with 'data' field
         items = data["data"]
         return [_parse(StrategyTemplate, t) for t in items]
 
@@ -1502,7 +1502,7 @@ class AsyncPolyforgeClient:
 
     async def get_strategy_templates(self) -> list[StrategyTemplate]:
         data = await self._get("/api/v1/strategies/templates")
-        # Backend returns PaginatedResponse<StrategyTemplate> with 'data' field
+        # Backend returns PaginatedResponse<Strategy> with 'data' field
         items = data["data"]
         return [_parse(StrategyTemplate, t) for t in items]
 

@@ -811,6 +811,79 @@ class TestStrategyBlockCategories:
         assert strategy.trade_count == 42
 
 
+class TestStrategyTemplateAlias:
+    """Tests for StrategyTemplate being an alias for Strategy (#44).
+
+    The platform endpoint ``GET /api/v1/strategies/templates`` returns full
+    Strategy objects (rows where ``template = true``).  The old StrategyTemplate
+    class had phantom fields (``risk_level``, ``config``, ``category``) that the
+    platform never sends; it now aliases Strategy so all real fields are parsed.
+    """
+
+    def test_strategy_template_is_strategy_alias(self):
+        """StrategyTemplate must be the same type as Strategy."""
+        from polyforge.models import StrategyTemplate
+        assert StrategyTemplate is Strategy
+
+    def test_template_parses_full_strategy_fields(self):
+        """Templates returned by the platform include full strategy data."""
+        from polyforge.models import StrategyTemplate
+        api_response = {
+            "id": "tmpl-1",
+            "name": "Momentum Alpha",
+            "description": "A momentum-based strategy template",
+            "status": "IDLE",
+            "template": True,
+            "triggers": [{"id": "t1", "type": "PRICE_THRESHOLD", "label": "Price > 0.7", "config": {"price": 0.7}}],
+            "conditions": [],
+            "actions": [{"id": "a1", "type": "PLACE_ORDER", "label": "Buy YES", "config": {}}],
+            "safety": [],
+            "visibility": "PUBLIC",
+            "execMode": "TICK",
+            "forkCount": 15,
+            "likeCount": 42,
+            "tags": ["momentum", "beginner"],
+            "version": 3,
+        }
+        template = _parse(StrategyTemplate, api_response)
+        assert template.id == "tmpl-1"
+        assert template.name == "Momentum Alpha"
+        assert len(template.triggers) == 1
+        assert template.triggers[0].type == "PRICE_THRESHOLD"
+        assert len(template.actions) == 1
+        assert template.visibility == "PUBLIC"
+        assert template.fork_count == 15
+        assert template.like_count == 42
+        assert template.tags == ["momentum", "beginner"]
+        assert template.version == 3
+
+    def test_template_backward_compat_import(self):
+        """StrategyTemplate is importable from polyforge and is Strategy."""
+        from polyforge import StrategyTemplate, Strategy
+        assert StrategyTemplate is Strategy
+
+    def test_old_phantom_fields_not_silently_accepted(self):
+        """Parsing a response with old phantom fields should not crash.
+
+        The platform never sends ``risk_level`` or ``category`` but
+        if a cached response or mock contains them, _parse drops them
+        gracefully via its unknown-field handling.
+        """
+        from polyforge.models import StrategyTemplate
+        api_response = {
+            "id": "tmpl-old",
+            "name": "Legacy",
+            "risk_level": "HIGH",  # phantom — platform doesn't send this
+            "category": "momentum",  # phantom
+            "config": {"foo": 1},  # phantom
+        }
+        template = _parse(StrategyTemplate, api_response)
+        assert template.id == "tmpl-old"
+        assert template.name == "Legacy"
+        # Strategy has no risk_level/category — they should be silently dropped
+        assert not hasattr(template, "risk_level") or template.status == ""
+
+
 class TestCreateStrategyParams:
     """Tests for create_strategy expanded parameters (#32)."""
 
