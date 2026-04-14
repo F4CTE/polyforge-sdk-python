@@ -416,19 +416,19 @@ function HeatmapGrid({ data }: { data: DailyHeatmapEntry[] }) {
       {/* Summary row */}
       {data.length > 0 && (
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs">
-          <span className="text-pf-success">{profitDays} profit day{profitDays !== 1 ? 's' : ''}</span>
+          <span className="text-pf-success"><span className="font-mono">{profitDays}</span> profit day{profitDays !== 1 ? 's' : ''}</span>
           <span className="text-pf-text-muted">|</span>
-          <span className="text-pf-danger">{lossDays} loss day{lossDays !== 1 ? 's' : ''}</span>
+          <span className="text-pf-danger"><span className="font-mono">{lossDays}</span> loss day{lossDays !== 1 ? 's' : ''}</span>
           {hasBest && (
             <>
               <span className="text-pf-text-muted">|</span>
-              <span className="text-pf-success">Best: +${bestDay.toFixed(2)}</span>
+              <span className="text-pf-success">Best: <span className="font-mono">+${bestDay.toFixed(2)}</span></span>
             </>
           )}
           {hasWorst && (
             <>
               <span className="text-pf-text-muted">|</span>
-              <span className="text-pf-danger">Worst: -${Math.abs(worstDay).toFixed(2)}</span>
+              <span className="text-pf-danger">Worst: <span className="font-mono">-${Math.abs(worstDay).toFixed(2)}</span></span>
             </>
           )}
         </div>
@@ -2788,7 +2788,7 @@ export function Component() {
                         High concentration in{' '}
                         <span className="font-semibold capitalize">{c.category}</span>{' '}
                         <span className="font-semibold">{c.outcome}</span>{' '}
-                        ({pct}% of portfolio)
+                        (<span className="font-mono">{pct}%</span> of portfolio)
                       </p>
                     </div>
                   );

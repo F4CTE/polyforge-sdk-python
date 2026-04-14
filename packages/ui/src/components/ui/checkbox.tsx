@@ -29,7 +29,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             "transition-colors duration-pf-fast",
             "peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-pf-cyan-500/40",
             "peer-checked:bg-pf-cyan-500 peer-checked:border-pf-cyan-500",
-            "peer-disabled:opacity-50 peer-disabled:cursor-not-allowed",
+            "peer-disabled:opacity-pf-disabled peer-disabled:cursor-not-allowed",
             className
           )}
           aria-hidden="true"

@@ -367,11 +367,6 @@ body {
   animation-delay: 0.4s;
 }
 
-/* Transition utilities */
-.transition-smooth {
-  transition: all 0.2s ease;
-}
-
 /* ─── Reduced motion ─────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,

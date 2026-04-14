@@ -19,6 +19,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Navigation mobile sidebar overlay close test** — click backdrop directly
 - **Navigation mobile sidebar links test** — use `toBeHidden` with proper timeout
 
+### Fixed (Design System)
+- **Dead `.transition-smooth` CSS utility removed** — Unused class with hardcoded `0.2s` duration in `packages/ui/src/globals.css` (closes #597)
+- **Skip-to-content links use `focus-visible:`** — Both user-app and landing page skip links changed from `focus:` to `focus-visible:` per design charter §22 (closes #587)
+- **Disabled state opacity uses design token** — All 6 shared UI components (button, input, textarea, select, checkbox, label) changed from `disabled:opacity-50` to `disabled:opacity-pf-disabled` (0.6) (closes #599)
+- **Portfolio page numeric values use font-mono** — P&L values, day counts, and allocation percentages on portfolio page now use `font-mono` per design charter §3 (closes #586)
+
 ### Fixed (API)
 - **Ticket creation broken from UI** — `CreateTicketDto` was missing the `priority` field; NestJS `forbidNonWhitelisted` rejected every ticket creation request from the frontend which always sends priority. Added `priority` to DTO and service create call.
 

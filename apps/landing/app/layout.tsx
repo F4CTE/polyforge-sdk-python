@@ -136,7 +136,7 @@ export default function RootLayout({
       <body className="bg-pf-base text-pf-text font-sans antialiased min-h-screen">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-pf-cyan-500 focus:text-pf-text-contrast focus:rounded-pf-sm focus:text-sm focus:font-semibold"
+          className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-[100] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-pf-cyan-500 focus-visible:text-pf-text-contrast focus-visible:rounded-pf-sm focus-visible:text-sm focus-visible:font-semibold"
         >
           Skip to main content
         </a>
