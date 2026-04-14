@@ -1,1255 +1,532 @@
-# Polyforge — Charte Graphique
-
-> Direction artistique et design system pour le stack React 19 + shadcn/ui + Tailwind CSS v4.  
-> Ce document fait autorité sur toutes les décisions visuelles du projet. Sections Angular/PrimeNG archivées dans [`docs/legacy/design-charter-v2-angular.md`](legacy/design-charter-v2-angular.md).
+# PolyForge Design Charter
+> Inspired by Linear.app — adapted for a professional prediction market terminal
 
 ---
 
-## Table des matières
+## 0. Philosophy
 
-1. [Direction artistique](#1-direction-artistique)
-2. [Couleurs](#2-couleurs)
-3. [Typographie](#3-typographie)
-4. [Espacements & grille](#4-espacements--grille)
-5. [Composants PrimeNG — configuration](#5-composants-primeng--configuration)
-6. [Iconographie](#6-iconographie)
-7. [Data visualization](#7-data-visualization)
-8. [États & feedback](#8-états--feedback)
-9. [Animations & transitions](#9-animations--transitions)
-10. [Logo & identité](#10-logo--identité)
-11. [Application aux deux frontends](#11-application-aux-deux-frontends)
-12. [Fichiers de configuration](#12-fichiers-de-configuration)
-22. [Accessibility](#22-accessibility)
-23. [Typography Scale](#23-typography-scale)
-24. [Status / Semantic Colors](#24-status--semantic-colors)
-25. [Responsive Design](#25-responsive-design)
-26. [API Keys UI](#26-api-keys-ui)
-27. [Dark/Light Theme Toggle](#27-darklight-theme-toggle)
-28. [Admin Dialog Styling](#28-admin-dialog-styling)
-29. [Password Confirmation Pattern](#29-password-confirmation-pattern)
-30. [Strategy Builder — Connection Ports & Wires](#30-strategy-builder--connection-ports--wires)
-31. [Strategy Builder — Variable Blocks](#31-strategy-builder--variable-blocks)
-32. [v3.0 — React + shadcn/ui Migration](#32-v30--react--shadcnui-migration)
-33. [Custom Scrollbars](#33-custom-scrollbars)
-34. [Market Card Redesign — Polymarket-Style](#34-market-card-redesign--polymarket-style)
-35. [Inline Editable Titles](#35-inline-editable-titles)
-36. [Advanced Strategy Builder — Visual Design (v3.2)](#36-advanced-strategy-builder--visual-design-v32)
+PolyForge is a **tool for sophisticated operators**. The interface should feel like a Bloomberg terminal rebuilt for the modern web: precise, dense, fast, and effortlessly readable. Every pixel that doesn't carry information is a pixel wasted.
+
+Core principles (directly from Linear's method):
+- **Reduce visual noise** — remove chrome, decorations, and anything that doesn't serve function
+- **Hierarchy over decoration** — contrast and spacing communicate structure, not color or ornament
+- **Dark-first** — the primary experience is dark mode; light mode is derived from the same token system
+- **Information density** — pack content without clutter; distinguish compact from cramped
+- **Timeless over trendy** — no glassmorphism gimmicks, no gradient soup, no shadows for aesthetic reasons
 
 ---
 
-## 1. Direction artistique
+## 1. Color System
 
-### Concept : "Precision Instrument"
+### Philosophy
+Derived from Linear's approach: define **three core variables** per theme (base, accent, contrast) and generate all aliases algorithmically. We use the **LCH color space** for perceptual uniformity — a neutral at L=50 and an accent at L=50 will appear equally light to the human eye.
 
-Polyforge est un outil professionnel pour traders sérieux. L'interface doit inspirer **confiance, précision et contrôle** — comme un cockpit ou un terminal Bloomberg, pas comme une application grand public.
+### Base Palette (Dark Theme — Primary)
 
-**Principes directeurs :**
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--bg-app` | `#0E0F11` | App root background |
+| `--bg-surface` | `#141519` | Cards, panels, sidebar |
+| `--bg-elevated` | `#1C1E24` | Dropdowns, popovers, modals |
+| `--bg-overlay` | `#22252D` | Tooltips, context menus |
+| `--bg-subtle` | `#191B21` | Table row hover, subtle fills |
+| `--border-subtle` | `#22252D` | Default borders |
+| `--border-default` | `#2C2F3A` | Active/focused borders |
+| `--border-strong` | `#3D4152` | Emphasized separators |
 
-- **Dense mais lisible** — l'information financière est complexe. L'interface l'organise sans la cacher.
-- **Sombre et profond** — pas de noir pur. Des bleus-nuits profonds qui donnent de la profondeur sans fatiguer les yeux.
-- **Cyan comme signal** — l'accent cyan n'est pas décoratif. Il indique une action, une donnée live, un élément interactif.
-- **Mono pour les chiffres** — tous les prix, P&L, pourcentages, timestamps utilisent une police monospace. Les chiffres s'alignent, toujours.
-- **Zéro décoration gratuite** — chaque pixel a une fonction. Pas d'illustrations, pas de gradients tapageurs, pas d'animations sans raison.
+### Text
 
-### Ce que l'interface ne doit PAS être
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--text-primary` | `#F0F1F5` | Body text, labels |
+| `--text-secondary` | `#8B8FA8` | Muted text, meta info |
+| `--text-tertiary` | `#545770` | Placeholders, disabled |
+| `--text-disabled` | `#3A3D50` | Truly disabled states |
+| `--text-inverse` | `#0E0F11` | Text on accent backgrounds |
 
-- Un dashboard générique avec des cartes arrondies sur fond blanc
-- Un clone de Binance ou Coinbase (trop crypto, pas assez pro)
-- Un outil qui ressemble à une maquette Figma non finalisée
-- Coloré ou festif — Polyforge est un outil de travail
+### Accent — PolyForge Electric Blue
 
----
+PolyForge's identity color. Not purple (that's Linear). Not navy (that's fintech cliché). A sharp, electric periwinkle blue that reads as "precision intelligence."
 
-## 2. Couleurs
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--accent-default` | `#4F6EF7` | Primary CTAs, active states, focus rings |
+| `--accent-hover` | `#6B85F9` | Hover on accent elements |
+| `--accent-subtle` | `rgba(79,110,247,0.12)` | Accent backgrounds, selected rows |
+| `--accent-border` | `rgba(79,110,247,0.35)` | Accent-tinted borders |
+| `--accent-text` | `#7B96FF` | Accent-colored text on dark bg |
 
-### Palette principale
+### Semantic Colors (Trading Context)
 
-> **Note (v3.0+):** Le projet utilise Tailwind v4 avec un bloc `@theme` dans `packages/ui/src/globals.css`. Les noms de variables CSS ont changé : préfixe `--color-pf-*` (au lieu de `--pf-bg-*`). La palette de base est désormais **shadcn/slate** (Tailwind slate-950/900/800) — voir section §32.
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--gain` | `#22C55E` | Positive PnL, winning positions |
+| `--gain-subtle` | `rgba(34,197,94,0.12)` | Gain row backgrounds |
+| `--gain-text` | `#4ADE80` | Gain values in tables |
+| `--loss` | `#EF4444` | Negative PnL, losing positions |
+| `--loss-subtle` | `rgba(239,68,68,0.12)` | Loss row backgrounds |
+| `--loss-text` | `#F87171` | Loss values in tables |
+| `--neutral-market` | `#8B8FA8` | Flat / no change |
+| `--warning` | `#F59E0B` | Caution states, margin warnings |
+| `--warning-subtle` | `rgba(245,158,11,0.12)` | Warning backgrounds |
+| `--info` | `#0EA5E9` | Informational states |
+| `--info-subtle` | `rgba(14,165,233,0.12)` | Info backgrounds |
 
-```
-─────────────────────────────────────────────────────────────
-BACKGROUNDS  (implémentation réelle — shadcn slate)
-─────────────────────────────────────────────────────────────
---color-pf-base       #020817    Fond principal (slate-950)
---color-pf-surface    #0f172a    Cartes, panneaux, sidebar (slate-900)
---color-pf-elevated   #0f172a    Modals, dropdowns (slate-900, distincts par border)
---color-pf-overlay    #1e293b    Hover state sur les surfaces (slate-800)
---color-pf-bg         #020817    Alias de pf-base
+### Light Theme (Derived)
+Light mode follows the same token structure. Backgrounds invert along the elevation scale:
 
-─────────────────────────────────────────────────────────────
-BORDERS  (shadcn slate)
-─────────────────────────────────────────────────────────────
---color-pf-border-subtle  #1e293b   Séparateurs discrets (slate-800)
---color-pf-border         #1e293b   Bordures standard
---color-pf-border-strong  #334155   Bordures actives ou focus (slate-700)
+| Token | Value |
+|-------|-------|
+| `--bg-app` | `#FAFAFA` |
+| `--bg-surface` | `#FFFFFF` |
+| `--bg-elevated` | `#F4F5F7` |
+| `--text-primary` | `#111216` |
+| `--text-secondary` | `#5A5E72` |
+| `--border-subtle` | `#E4E5EC` |
+| `--border-default` | `#D0D2E0` |
 
-─────────────────────────────────────────────────────────────
-TEXTE  (shadcn slate)
-─────────────────────────────────────────────────────────────
---color-pf-text           #f8fafc   Titres, labels principaux (slate-50)
---color-pf-text-secondary #94a3b8   Labels secondaires (slate-400)
---color-pf-text-muted     #64748b   Placeholders, métadonnées (slate-500)
---color-pf-text-tertiary  #64748b   Identique à muted
---color-pf-text-disabled  #475569   Contenu désactivé (slate-600)
-
-─────────────────────────────────────────────────────────────
-ACCENT — CYAN (couleur signature Polyforge)
-─────────────────────────────────────────────────────────────
---color-pf-cyan-50        #ecfeff
---color-pf-cyan-100       #cffafe
---color-pf-cyan-200       #a5f3fc
---color-pf-cyan-300       #67e8f9
---color-pf-cyan-400       #22d3ee
---color-pf-cyan-500       #06b6d4   ← Accent principal (dark mode)
---color-pf-cyan-600       #0891b2   ← Hover / pressed
---color-pf-cyan-700       #0e7490   ← Active states / light mode accent
---color-pf-cyan-glow      rgba(6,182,212,0.15)  ← Halos, glows subtils
-
-Light mode : --color-pf-cyan-400 → #0891b2 (cyan-600, 4.6:1 AA ✓)
-             --color-pf-cyan-500 → #0e7490 (cyan-700, 6.4:1 AA ✓)
-
-─────────────────────────────────────────────────────────────
-ACCENT — GOLD (financial data, trust, premium)
-─────────────────────────────────────────────────────────────
---color-pf-gold-300       #FCD34D
---color-pf-gold-400       #FBBF24
---color-pf-gold-500       #F59E0B   ← Accent financier
---color-pf-gold-600       #D97706
---color-pf-gold-glow      rgba(245,158,11,0.15)
-
-─────────────────────────────────────────────────────────────
-ACCENT — PURPLE (premium features, tech, AI)
-─────────────────────────────────────────────────────────────
---color-pf-purple-300     #C4B5FD
---color-pf-purple-400     #A78BFA
---color-pf-purple-500     #8B5CF6   ← Premium / AI accent
---color-pf-purple-600     #7C3AED
---color-pf-purple-glow    rgba(139,92,246,0.15)
-
-─────────────────────────────────────────────────────────────
-SÉMANTIQUE
-─────────────────────────────────────────────────────────────
---color-pf-success        #10b981   Profit, confirmer, connecté
---color-pf-success-bg     rgba(16,185,129,0.1)
---color-pf-danger         #ef4444   Perte, erreur, déconnecter
---color-pf-danger-bg      rgba(239,68,68,0.1)
---color-pf-warning        #f59e0b   Alerte, attention, en attente
---color-pf-warning-bg     rgba(245,158,11,0.1)
---color-pf-info           #3b82f6   Information neutre
---color-pf-info-bg        rgba(59,130,246,0.1)
-
-Light mode : les couleurs sémantiques passent sur des variantes plus sombres
-pour respecter WCAG AA (4.5:1) sur fond clair :
-  success → #059669 (5.1:1), danger → #dc2626 (5.6:1)
-  warning → #d97706 (4.5:1), info   → #2563eb (6.0:1)
-
-─────────────────────────────────────────────────────────────
-STATUS
-─────────────────────────────────────────────────────────────
---color-pf-status-active    #22c55e
---color-pf-status-active-bg rgba(34,197,94,0.1)
-
-─────────────────────────────────────────────────────────────
-DONNÉES FINANCIÈRES (P&L)
-─────────────────────────────────────────────────────────────
---color-pf-pnl-positive   #10b981   P&L positif (vert)
---color-pf-pnl-negative   #ef4444   P&L négatif (rouge)
---color-pf-pnl-neutral    #64748b   P&L à zéro / non calculé
-```
-
-### Règles d'utilisation des couleurs
-
-- `--pf-cyan-500` **uniquement** pour : boutons primaires, liens actifs, données live, badge "RUNNING", indicateurs de focus
-- Ne jamais utiliser le cyan sur du texte courant — réservé aux éléments interactifs et aux signaux
-- Les fonds ne sont **jamais** `#000000` pur — toujours une teinte de bleu-nuit
-- Le rouge et le vert sont **exclusivement sémantiques** — jamais utilisés pour décorer
-- `--pf-gold-500` pour les indicateurs financiers, signaux de confiance, features premium
-- `--pf-purple-500` pour les features AI, éléments tech, badges premium
-
-### Elevation (shadow scale)
-
-4 niveaux de profondeur + un glow pour les accents :
-
-```
---shadow-pf-xs              0 1px 2px rgba(0,0,0,0.3)                  Éléments plats
---shadow-pf-sm              0 1px 3px rgba(0,0,0,0.3)                  Sidebar, cartes légèrement élevées
---shadow-pf-md              0 4px 6px rgba(0,0,0,0.3)                  Cartes en hover, panneaux flottants
---shadow-pf-lg              0 10px 15px rgba(0,0,0,0.3)                Dialogs, modals
---shadow-pf-ring-cyan       0 0 0 2px color-mix(…cyan 20%)             Selection ring (compare mode)
---shadow-pf-glow-cyan       0 0 12px color-mix(…cyan 8%)               Subtle highlight glow
---shadow-pf-glow-cyan-strong 0 0 20px color-mix(…cyan 30%)             Button hover glow
-```
-
-Light mode : opacités réduites (0.05 à 0.12) — voir `globals.css` `.light` block.
-
-En light theme, les ombres utilisent des opacités réduites (0.05 à 0.12).
-
-### Button hierarchy
-
-```
-Primary     — bg-pf-cyan-500 text-black font-semibold, hover:bg-pf-cyan-400 + glow
-Secondary   — transparent border border-pf-border-subtle text-pf-text-secondary, hover:bg-pf-elevated
-Ghost/Text  — transparent, pas de bordure, text-pf-text-secondary
-Danger      — bg-pf-danger/10 text-pf-danger, hover:bg-pf-danger/20
-Success     — bg-pf-success/10 text-pf-success, hover:bg-pf-success/20
-```
-
-Tous les boutons incluent `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40` pour l'accessibilité clavier.
-
-Tous les boutons utilisent `font-family: 'Inter'`, `border-radius: 8px`, `transition: all 0.15s ease`.
+Accent and semantic colors remain the same in light mode (with adjusted `--accent-subtle` opacity).
 
 ---
 
-## 3. Typographie
+## 2. Typography
 
-### Familles de polices
+Linear uses **Inter Display** for headings and **Inter** for body. PolyForge follows this but uses **Geist** instead — a typeface built by Vercel for developer tooling that has more character at small sizes and in dense numeric contexts.
 
 ```
-Display / UI         : Inter (Google Fonts)
-                       weights: 300, 400, 500, 600, 700
-                       usage: titres, labels, navigation, boutons, corps de texte
-
-Données / Chiffres   : JetBrains Mono (Google Fonts)
-                       weights: 400, 500, 600, 700
-                       usage: TOUS les prix, P&L, pourcentages,
-                              timestamps, order IDs, hashes
-
-Fallback système     : 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif
-                       'JetBrains Mono', 'Fira Code', monospace
+font-family body:    'Geist', 'Geist Fallback', system-ui, sans-serif
+font-family mono:    'Geist Mono', 'Fira Code', monospace
 ```
 
-### Utility classes
+Numeric values (prices, PnL, percentages) always use `font-variant-numeric: tabular-nums` to ensure column alignment.
 
+### Type Scale
+
+| Role | Size | Weight | Line-height | Usage |
+|------|------|--------|-------------|-------|
+| `display-lg` | 24px | 600 | 1.25 | Page titles |
+| `display-sm` | 18px | 600 | 1.3 | Section headers |
+| `heading` | 14px | 600 | 1.4 | Card titles, panel headers |
+| `body-md` | 14px | 400 | 1.5 | Default body text |
+| `body-sm` | 13px | 400 | 1.5 | Secondary body, table cells |
+| `label` | 12px | 500 | 1.4 | Badges, tags, status labels |
+| `caption` | 11px | 400 | 1.4 | Meta info, timestamps |
+| `mono-md` | 13px | 400 | 1.5 | Code, market IDs, addresses |
+| `mono-sm` | 12px | 400 | 1.4 | Compact data, API keys |
+
+**Rule**: Avoid font sizes below 11px. Avoid font weights above 600 (except display contexts). Never use `font-weight: 700` or `800` — it breaks the precision aesthetic.
+
+---
+
+## 3. Spacing & Layout
+
+### Spacing Scale (4px base unit)
+
+```
+2px   — xs    (tight gaps, icon padding)
+4px   — sm    (inline spacing)
+6px   — md-xs (compact row padding)
+8px   — md    (default component padding)
+12px  — lg    (section gaps)
+16px  — xl    (card padding)
+24px  — 2xl   (panel padding)
+32px  — 3xl   (section spacing)
+48px  — 4xl   (major section breaks)
+```
+
+### Layout Structure (Linear's Inverted-L)
+
+```
+┌─────────────────────────────────────────────┐
+│  Topbar (48px)                               │
+├──────────┬──────────────────────────────────┤
+│          │  View Header (40px)              │
+│ Sidebar  ├──────────────────────────────────┤
+│ (220px)  │                                  │
+│          │  Main Content                    │
+│          │                                  │
+│          │                                  │
+└──────────┴──────────────────────────────────┘
+```
+
+- **Sidebar**: 220px fixed, collapses to 48px (icon-only mode)
+- **Topbar**: 48px, contains workspace switcher, global search, user menu
+- **View header**: 40px, contains view title, filters, display options
+- **Content area**: fluid, no max-width cap (unlike marketing pages)
+
+### Sidebar Structure
+
+```
+[Logo / Workspace]
+─────────────────
+[Dashboard]
+[Markets]
+[Positions]
+[Strategies]
+[Automations]
+─────────────────
+[Activity]
+[Analytics]
+─────────────────
+[Settings]
+[Docs]
+```
+
+Sidebar items: 32px height, 8px vertical padding, 12px horizontal padding, 4px border-radius. Active state: `--accent-subtle` background + `--accent-text` color.
+
+---
+
+## 4. Elevation System
+
+Linear uses elevation to communicate layer depth without heavy shadows. PolyForge does the same:
+
+| Level | Background Token | Usage | Border |
+|-------|-----------------|-------|--------|
+| 0 | `--bg-app` | Root app background | none |
+| 1 | `--bg-surface` | Cards, sidebar, panels | `--border-subtle` |
+| 2 | `--bg-elevated` | Dropdowns, sheet panels | `--border-default` |
+| 3 | `--bg-overlay` | Modals, command menu | `--border-strong` |
+
+**Shadow**: Use `box-shadow` only at elevation 2+, and only as a subtle depth signal:
 ```css
-.font-mono    { font-family: 'JetBrains Mono', monospace; }
-.font-heading { font-family: 'Inter', sans-serif; font-weight: 600; }
+/* Elevation 2 */
+box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+
+/* Elevation 3 (modals) */
+box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.3);
 ```
 
-### Échelle typographique
-
-#### Micro sizes (badges, pills, labels) — Tailwind: `text-pf-*`
-
-```
-text-pf-micro      9px  (0.5625rem)  — smallest captions
-text-pf-caption   10px  (0.625rem)   — badges, pill counts
-text-pf-label     11px  (0.6875rem)  — form labels, small UI text
-text-pf-body-sm   13px  (0.8125rem)  — compact body text
-text-pf-body      15px  (0.9375rem)  — standard reading text
-text-pf-subhead   17px  (1.0625rem)  — sub-headings
-```
-
-> **Rule:** Never use arbitrary font sizes like `text-[10px]`. Use the tokens above or standard Tailwind sizes (`text-xs`, `text-sm`, `text-base`, `text-lg`, etc.).
-
-#### Standard scale (headings, body) — design reference
-
-```
---pf-text-xs      11px / line-height: 1.4  / letter-spacing: 0.04em
---pf-text-sm      12px / line-height: 1.5  / letter-spacing: 0.02em
---pf-text-base    14px / line-height: 1.5  / letter-spacing: 0
---pf-text-md      15px / line-height: 1.5  / letter-spacing: 0
---pf-text-lg      18px / line-height: 1.4  / letter-spacing: -0.01em
---pf-text-xl      22px / line-height: 1.3  / letter-spacing: -0.02em
---pf-text-2xl     28px / line-height: 1.2  / letter-spacing: -0.02em
---pf-text-3xl     36px / line-height: 1.1  / letter-spacing: -0.03em
-```
-
-### Règles typographiques
-
-- La taille de base du corps de texte est **14px** — dense mais lisible sur des interfaces data-heavy
-- Tous les **prix** utilisent `JetBrains Mono` — sans exception
-- Les **labels de catégorie** (statuts, badges, colonnes de tableau) utilisent `letter-spacing: 0.08em` + `text-transform: uppercase` + `font-size: 11px`
-- Les **titres de page** utilisent `Inter 600`, pas 700 — éviter le trop gras
-- Les **nombres de P&L** utilisent `JetBrains Mono 500` avec coloration sémantique
-
-### Exemples d'usage
-
-```css
-/* Titre de page */
-.page-title {
-  font-family: 'Inter', sans-serif;
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--pf-text-primary);
-  letter-spacing: -0.01em;
-}
-
-/* Prix d'un token */
-.token-price {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--pf-cyan-500);
-}
-
-/* P&L positif */
-.pnl-positive {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--pf-pnl-positive);
-}
-
-/* Label de colonne */
-.column-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--pf-text-muted);
-}
-```
+Never use colored shadows or glow effects on UI chrome.
 
 ---
 
-## 4. Espacements & grille
-
-### Unité de base : 4px
-
-> **Note (v3.0+):** Les tokens de spacing utilisent désormais le préfixe `--spacing-pf-*` (Tailwind v4). `--spacing-pf-5` vaut **24px** (aligné sur la grille 4px × 6), pas 20px.
-
-Tous les spacings sont des multiples de 4px. Les valeurs `.5` de Tailwind (`0.5`, `1.5`, `2.5`, `3.5`) sont **interdites** — utiliser le multiple de 4px le plus proche (`1`, `2`, `3`, `4`).
-
-> **Enforcement (v6.35.16):** Toutes les 1 691 occurrences de spacing `.5` ont été remplacées par des équivalents 4px-grid.
-
-```
---spacing-pf-1    4px
---spacing-pf-2    8px
---spacing-pf-3   12px
---spacing-pf-4   16px
---spacing-pf-5   24px   ← 6 × 4px (pas 20px)
---spacing-pf-6   32px
---spacing-pf-7   40px
---spacing-pf-8   48px
---spacing-pf-9   56px
---spacing-pf-10  64px
-```
-
-### Border radius
-
-```
---radius-pf-sm    6px     Badges, tags, inputs
---radius-pf       8px     Boutons standard
---radius-pf-md   10px     Cartes légères
---radius-pf-lg   12px     Cartes, panneaux, modals
---radius-pf-full 9999px   Avatars, indicateurs ronds
-```
-
-### Layout
-
-```
-Sidebar largeur      : 240px (collapsée: 64px)
-Topbar hauteur       : 56px
-Content max-width    : 1440px
-Content padding      : 24px
-Grille interne       : 12 colonnes, gap 16px
-```
-
-### Ombres
-
-```css
---pf-shadow-sm  : 0 1px 3px rgba(0,0,0,0.4);
---pf-shadow-md  : 0 4px 12px rgba(0,0,0,0.5);
---pf-shadow-lg  : 0 8px 24px rgba(0,0,0,0.6);
---pf-shadow-cyan: 0 0 16px rgba(6,182,212,0.2);  /* glow sur éléments actifs */
-```
-
----
-
-## 5. Composants PrimeNG — configuration
-
-> ⚠️ **DEPRECATED (v3.0+):** This section has been archived. See [`docs/legacy/design-charter-v2-angular.md`](legacy/design-charter-v2-angular.md#5-composants-primeng--configuration) for the legacy Angular/PrimeNG specification. The current stack uses React 19 + shadcn/ui + Tailwind CSS v4 — see §32.
-
----
-
-## 6. Iconographie
-
-> ⚠️ **DEPRECATED (v3.0+):** PrimeIcons (`pi pi-*`) have been replaced by **Lucide React**. Import icons as named React components: `import { Loader2, ChevronDown } from 'lucide-react'`. See [`docs/legacy/design-charter-v2-angular.md`](legacy/design-charter-v2-angular.md#6-iconographie) for archived spec.
-
----
-
-## 7. Data visualization
-
-> ⚠️ **DEPRECATED (v3.0+):** Chart.js/PrimeNG Charts have been replaced by **Recharts**. Use `resolveChartTheme()` from `packages/ui/src/lib/chart-colors.ts`. See [`docs/legacy/design-charter-v2-angular.md`](legacy/design-charter-v2-angular.md#7-data-visualization) for archived spec.
-
----
-
-## 8. États & feedback
-
-> ⚠️ **DEPRECATED (v3.0+):** `p-toast`/`p-badge` replaced by Sonner (toasts) and shared `Badge` from `packages/ui`. Token names changed from `--pf-*` to `--color-pf-*`. See §24 for current semantic colors and §32 for migration notes. See [`docs/legacy/design-charter-v2-angular.md`](legacy/design-charter-v2-angular.md#8-états--feedback) for archived spec.
-
----
-
-## 9. Animations & transitions
-
-> ⚠️ **DEPRECATED (v3.0+):** Angular animation syntax not applicable. Use Tailwind CSS utilities with duration tokens `--transition-duration-pf-fast` (100ms), `--transition-duration-pf-normal` (200ms), `--transition-duration-pf-slow` (300ms) from `globals.css`. See [`docs/legacy/design-charter-v2-angular.md`](legacy/design-charter-v2-angular.md#9-animations--transitions) for archived spec.
-
-### Duration tokens (Tailwind v4)
-
-> **Namespace:** Tailwind v4 maps `--transition-duration-*` to `duration-*` utilities.
-
-| Token | Utility class | Value | Use case |
-|-------|--------------|-------|----------|
-| `--transition-duration-pf-fast` | `duration-pf-fast` | 100ms | Hover states, micro-interactions |
-| `--transition-duration-pf-normal` | `duration-pf-normal` | 200ms | Sidebar transitions, opacity fades |
-| `--transition-duration-pf-slow` | `duration-pf-slow` | 300ms | Progress bars, layout shifts |
-
-**Infinite animation exceptions:** `pf-pulse` (2s) and `shimmer` (2s) are accepted longer durations for decorative infinite animations.
-
-**SVG animations:** SVG `<animate>` elements used for decorative loops (stroke-dashoffset, opacity pulses) must also use `dur="2s"` to match the `pf-pulse` standard. Do not use arbitrary durations like 1.5s, 2.3s, or 2.5s.
-
-**Ambient background exceptions (>5s):** Decorative background animations (auth-background floats, landing hero particles) use long durations that are imperceptible as interactions. These are exempt from the 100–300ms token range and defined as CSS custom properties:
-
-| Token | Value | Location |
-|-------|-------|----------|
-| `--duration-pf-ambient-slow` | 15s | Auth-background floats |
-| `--duration-pf-ambient-medium` | 18s | Auth-background floats |
-| `--duration-pf-ambient-fast` | 21s | Auth-background floats |
-| `--duration-pf-ambient-drift` | 25s | Auth-background floats |
-| `--particle-dur` (7s–12s) | per-instance | Landing hero particles |
-
-All ambient animations are purely decorative (`aria-hidden="true"`, `pointer-events-none`) and honor `prefers-reduced-motion`.
-
-**Strategy builder duration exceptions:** The builder canvas uses section-specific pulse rhythms to convey different operational states. These are documented as CSS custom properties:
-
-| Token | Value | Section |
-|-------|-------|---------|
-| `--duration-pf-builder-triggers` | 1.4s | Trigger blocks — fast scanning rhythm |
-| `--duration-pf-builder-actions` | 1.8s | Action blocks |
-| `--duration-pf-builder-conditions` | 2.4s | Condition blocks |
-| `--duration-pf-builder-logic` | 2s | Logic/calc blocks |
-| `--duration-pf-builder-calc` | 2s | Calc blocks |
-| `--duration-pf-builder-safety` | 3.6s | Safety blocks — slow heartbeat rhythm |
-| `--duration-pf-builder-fired` | 0.9s | Block-fired flash |
-
-**Rule:** Never use raw `duration-100`, `duration-200`, `duration-300` — always use `duration-pf-fast`, `duration-pf-normal`, `duration-pf-slow`.
-
-### Opacity tokens
-
-| Token | Utility class | Value | Use case |
-|-------|--------------|-------|----------|
-| `--opacity-pf-subtle` | `opacity-pf-subtle` | 0.04 | Gradient overlay backgrounds on cards |
-| `--opacity-pf-muted` | `opacity-pf-muted` | 0.06 | Hover highlight backgrounds |
-| `--opacity-pf-disabled` | `opacity-pf-disabled` | 0.6 | Disabled button/input states |
-
-**Rule:** Never use arbitrary opacity bracket values like `/[0.03]` or `/[0.04]`. Use `var(--opacity-pf-subtle)` for gradient color stops and `var(--opacity-pf-muted)` for hover states. For disabled states use `disabled:opacity-[var(--opacity-pf-disabled)]`.
-
-### Line-height tokens
-
-| Token | Utility class | Value | Use case |
-|-------|--------------|-------|----------|
-| `--leading-pf-tight` | `leading-pf-tight` | 1.15 | Hero and large display headings |
-
-**Rule:** Never use arbitrary `leading-[1.15]`. Use `leading-pf-tight`.
-
-### Container width tokens
-
-| Token | Utility class | Value | Use case |
-|-------|--------------|-------|----------|
-| `--max-width-pf-container-landing` | `max-w-pf-container-landing` | 1100px | Landing page section containers |
-| `--max-width-pf-content-sm` | `max-w-pf-content-sm` | 600px | Narrow content blocks (intro text, centered descriptions) |
-
-**Rule:** Never hardcode `max-w-[1100px]` or `max-w-[600px]` in landing page components. Use `max-w-pf-container-landing` and `max-w-pf-content-sm`.
-
-### Chart Legend style
-
-Use the shared `chartLegendStyle` from `@polyforge/ui/lib/chart-styles` for all Recharts `<Legend>` `wrapperStyle` props. Do not hardcode `fontSize`, `color`, or `paddingTop` inline.
-
----
-
-## 10. Logo & identité
-
-### Concept logotypique
-
-Le nom **Polyforge** évoque la forge (création, précision, chaleur) et les marchés prédictifs (poly = multiple, probabilités). Le logo doit être **lisible à petite taille** (favicon, sidebar réduite).
-
-### Logo actuel (v2.4.0)
-
-Le logomark est un **polygone (hexagone outline) + bolt** rendu en SVG. Il est disponible en tant que composant partagé `<PolyforgeLogomark>` exporté depuis `@polyforge/ui` (`packages/ui/src/components/polyforge-logomark.tsx`). Ce composant accepte les props `size` (défaut 24) et `className` pour la couleur via `currentColor`. Il est utilisé dans toutes les applications (user-app, admin-app, landing) ainsi que sur l'ecran de chargement anime.
-
-```
-Logomark   : hexagone outline + bolt SVG
-Logotype   : "Polyforge" en Inter 600
-Couleur    : #06B6D4 (cyan) sur fond sombre
-Favicon    : logomark seul sur fond #080C14
-Loading    : logomark anime (pulse/rotation) sur l'ecran de chargement
-```
-
-### Règles d'utilisation
-
-- Le logo n'est **jamais** affiché sur fond blanc (Polyforge est dark-only)
-- Espace minimum autour du logo : 1x la hauteur du logomark
-- Ne jamais étirer, tourner, ou recolorer le logo
-- Version sidebar réduite : logomark seul (pas le texte)
-- L'ecran de chargement affiche le logomark avec une animation subtile pendant le chargement initial de l'application
-
----
-
-## 11. Application aux deux frontends
-
-> ⚠️ **DEPRECATED (v3.0+):** Angular/PrimeNG bootstrap config (`angular.json`, `providePrimeNG`) does not apply. Current bootstrap is in `apps/user-app/src/main.tsx` and `apps/admin-app/src/main.tsx`. See [`docs/legacy/design-charter-v2-angular.md`](legacy/design-charter-v2-angular.md#11-application-aux-deux-frontends) for archived spec.
-
----
-
-## 12. Fichiers de configuration
-
-> ⚠️ **DEPRECATED (v3.0+):** `tokens.css`, `--pf-bg-*`/`--pf-text-*` variable names, and Angular file structure are obsolete. Current tokens use `--color-pf-*` in `packages/ui/src/globals.css` under `@theme`. See [`docs/legacy/design-charter-v2-angular.md`](legacy/design-charter-v2-angular.md#12-fichiers-de-configuration) for archived spec.
-
----
-
-## 13. Form Inputs — Dark Theme Tokens
-
-> ⚠️ **DEPRECATED (v3.0+):** The PrimeNG component references (`p-inputtext`, `p-select`, `p-textarea`, `p-datepicker`) and `styles.scss` override pattern below are from the Angular era. The current stack uses shadcn/ui `<Input>`, `<Select>`, `<Textarea>` from `@polyforge/ui` styled via Tailwind CSS v4 `@theme` tokens. The **design intent** (dark inputs, cyan focus glow) remains valid — see §32 for current implementation.
-
-Tous les champs de saisie (inputs, selects, textareas, datepickers) utilisent un fond sombre cohérent avec le thème global. Jamais de fond blanc.
-
-**Current tokens** are defined in `packages/ui/src/globals.css` under `@theme`. The legacy `--pf-input-*` names below have been replaced by semantic tokens (`--color-pf-base`, `--color-pf-border`, `--color-pf-cyan-500`, etc.):
-
-```
-─────────────────────────────────────────────────────────────
-LEGACY INPUT TOKENS (replaced by @theme tokens in globals.css)
-─────────────────────────────────────────────────────────────
---pf-input-bg             → --color-pf-base
---pf-input-border         → --color-pf-border
---pf-input-border-focus   → --color-pf-cyan-500
---pf-input-text           → --color-pf-text
---pf-input-placeholder    → --color-pf-text-tertiary
---pf-input-focus-glow     → ring-pf-cyan-500/40 (Tailwind utility)
-```
-
-### Règles d'application
-
-- ~~**Global override** : tous les composants PrimeNG (`p-inputtext`, `p-select`, `p-textarea`, `p-datepicker`) reçoivent ces tokens via `styles.scss`.~~ → Now handled by shadcn/ui component styling in `@polyforge/ui`.
-- **Auth pages** : la card utilise `--pf-bg-elevated` avec un subtle cyan glow shadow. Le titre "Welcome back" utilise un gradient cyan.
-- **Select dropdowns** : fond `--pf-bg-elevated`, options avec hover `--pf-bg-overlay`, sélection active avec `--pf-cyan-glow`.
-- **DatePicker** : remplace les inputs natifs `type="date"` pour un rendu cohérent cross-browser. Panel sombre.
-
----
-
-## 14. Interactivity & Micro-Interactions
-
-> ⚠️ **DEPRECATED (v3.0+):** Angular/PrimeNG references in this section (`.p-datatable`, `pTooltip`, `p-dialog`, `pi pi-bell`, `p-badge`, `@angular/cdk DragDrop`) are from the v2 implementation. The current stack uses: shadcn/ui `<Dialog>`, `<Tooltip>`, `<Badge>` from `@polyforge/ui`; Lucide React icons (e.g., `<Bell />`); React Flow for the strategy builder canvas. The **design intent** (animations, interactions, UX patterns) remains valid.
-
-### Page & Component Animations
-
-```css
-/* Page fade-in — all route components */
-@keyframes pf-page-fade {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.pf-page { animation: pf-page-fade 300ms ease forwards; }
-
-/* Card hover — lift + cyan glow */
-.pf-card-interactive:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 16px rgba(6,182,212,0.15);
-  transition: transform 200ms ease, box-shadow 200ms ease;
-}
-
-/* Table row hover */
-.p-datatable .p-datatable-tbody > tr:hover {
-  background: var(--pf-bg-overlay);
-  transition: background var(--pf-duration-fast) ease;
-}
-```
-
-### Live Status Dot — Pulsing Glow
-
-The RUNNING status dot uses a pulsing glow animation to indicate live activity:
-
-```css
-.status-dot-running {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: #06B6D4;
-  box-shadow: 0 0 6px rgba(6,182,212,0.8);
-  animation: pf-pulse 2s ease-in-out infinite;
-}
-```
-
-### Tooltips
-
-All column headers, status badges, portfolio cards, and admin dashboard stat cards use PrimeNG `pTooltip` for contextual help. Icons without text labels must always have a tooltip for accessibility.
-
-### Order Detail Dialog
-
-Clicking any order row in the Orders table opens a `p-dialog` with full order details: market, side, outcome, size, price, fill details, fees, timestamps, and CLOB order ID. Provides an at-a-glance view without navigating away.
-
-### Notification Bell
-
-The user-app topbar includes a notification bell (`pi pi-bell`) with:
-- Unread count badge (PrimeNG `p-badge`)
-- Dropdown panel listing recent notifications
-- Marks notifications as read on open
-
-### Sparkline Mini-Charts
-
-Market list rows include sparkline mini-charts showing the 24h price trend. Rendered as inline `<canvas>` elements using Chart.js with zero-config (no axes, no labels, no tooltips) — line color follows `--pf-cyan-500`.
-
-### Canvas Strategy Builder (v2.4.0)
-
-The strategy builder uses an SVG-based 2D canvas for visual block composition, replacing the previous tab-based list approach.
-
-**Canvas features:**
-
-- **Free-form positioning** — blocks can be dragged anywhere on the canvas
-- **Pan & zoom** — scroll to pan, pinch/wheel to zoom the canvas viewport
-- **Auto-layout** — blocks auto-arrange in section columns (Safety | Triggers | Conditions | Actions) on initial load or via layout button
-- **Bezier connection lines** — SVG bezier curves connect blocks to show evaluation flow
-- **Color-coded blocks** — each block category has a distinct color: Safety (red), Triggers (amber), Conditions (blue), Actions (green)
-- **FAB add button** — floating action button opens a block picker to add new blocks to the canvas
-- **Block config** — clicking a block opens its configuration panel
-
-**Visual rules:**
-
-- Block rectangles use `--pf-bg-surface` with a colored left border indicating category
-- Selected block has a `--pf-cyan-500` border highlight
-- Connection lines use `stroke: var(--pf-border-default)` with category-colored endpoints
-- The canvas background uses `--pf-bg-base` with a subtle dot grid pattern
-
-### Drag & Drop Block Positioning
-
-Blocks on the strategy builder canvas can be freely dragged to any position. The drag interaction uses native pointer events on the SVG canvas (not `@angular/cdk` `DragDrop`). Block positions are persisted as part of the strategy layout metadata.
-
-### Cross-App Live Updates
-
-- **Orders**: Order list auto-refreshes when `ORDER_FILLED`, `ORDER_CANCELLED`, or `ORDER_FAILED` WebSocket events arrive
-- **Ticket detail**: Polls for new messages every 15 seconds while the detail view is open
-- **Admin sidebar**: Badge on "Tickets" nav item shows the count of open tickets; toast notification on new ticket creation
-
----
-
-## 15. Support Ticket System — UI Patterns
-
-### User-side (user-app)
-
-- **Ticket list** : utilise les mêmes patterns que les autres pages de liste (table-panel, pagination).
-- **Status badges** : `OPEN` (cyan), `AWAITING_USER` (warning/orange), `AWAITING_ADMIN` (cyan clair), `CLOSED` (muted gris).
-- **Category badge** : fond `--pf-bg-elevated`, monospace, uppercase, petit.
-- **Ticket detail** : messages admin identifiés par un `border-left: 3px solid cyan` et un fond légèrement teinté cyan.
-- **Reply form** : textarea dark + bouton "Send Reply".
-
-### Admin-side (admin-app)
-
-- **Dashboard stat cards** : 4 cartes (Users, Strategies, Orders, Tickets) avec icône colorée, label, et valeur numérique. Cliquables vers la page correspondante.
-- **Ticket assignment** : avatar circulaire avec initiale colorée (palette déterministe par hash du nom). "Unassigned" en gris italic quand non assigné.
-
----
-
-## 16. Clickable Elements
-
-> ⚠️ **DEPRECATED (v3.0+):** Angular-specific implementation details below (`[routerLink]`, `$event.stopPropagation()`) are from the v2 era. The current stack uses React Router `<Link>` or `useNavigate()` for navigation, and `e.stopPropagation()` on React `onClick` handlers. The **design rules** (clickable rows, hover highlights, action button isolation) remain valid.
-
-All table rows that represent a data entity should be clickable to navigate to that entity's detail view.
-
-**Implementation rules:**
-
-- ~~Add `[routerLink]` on the `<tr>` element~~ → Use React Router `<Link>` wrapper or `onClick` with `useNavigate()` on table rows
-- The hover rule provides background highlight (`var(--pf-bg-overlay)`) with `cursor: pointer`
-- Strategy cards in Discover/Leaderboard are also clickable, navigating to strategy detail
-- Action buttons (Stop, Delete, Replay, etc.) inside clickable rows must use `e.stopPropagation()` on their `onClick` handler to prevent row navigation
-- Links inside clickable rows (e.g., user name links) remain functional; the row-level click serves as a fallback target
-
----
-
-## 17. Empty States
-
-> ⚠️ **DEPRECATED (v3.0+):** The PrimeNG markup (`pi pi-*` icons, `<p-button>`) below is from the Angular era. The current stack uses Lucide React icons and shadcn/ui `<Button>` from `@polyforge/ui`. The **design rules** (structure, spacing, icon usage) remain valid.
-
-Every list, table, or data container must display an empty state when there is no data. Never show a blank component.
-
-**Structure (current React equivalent):**
+## 5. Component Patterns
+
+### Tables (Primary UI Element for Trading)
+
+Tables are the core component of PolyForge. They must be:
+- **Dense**: 36px default row height, 28px compact mode
+- **Scannable**: alternating subtle row backgrounds every other row (optional, prefer hover-only)
+- **Numeric-aligned**: all numeric columns right-aligned with tabular-nums
+- **Sortable**: column headers show sort indicator on hover, active sort always visible
+- **Color-coded PnL**: gain/loss coloring on the value cell only, not the full row (unless specifically a position row)
 
 ```tsx
-<div className="flex flex-col items-center gap-3 py-12 px-6">
-  <Users className="size-12 opacity-30 text-pf-text-tertiary" />  {/* Lucide icon */}
-  <p className="text-pf-lg font-semibold text-pf-text">No items yet</p>
-  <p className="text-pf-sm text-pf-text-tertiary max-w-[360px] text-center">What to do next</p>
-  <Button variant="default" className="mt-2">Add Item</Button>  {/* optional CTA */}
-</div>
+// Row height variants
+data-density="default"   // 36px rows
+data-density="compact"   // 28px rows  
+data-density="comfortable" // 44px rows
 ```
 
-**Rules:**
+### Badges / Status Labels
 
-- The icon should be contextually relevant: `<Users />` for users, `<Code />` for strategies, `<List />` for orders, `<MessageSquare />` for tickets, `<History />` for backtests (all from `lucide-react`)
-- The CTA button is optional — include it when there is a clear next action the user can take
-- Legacy `.pf-empty-state` / `.pf-empty-icon` / `.pf-empty-title` / `.pf-empty-desc` classes are deprecated
+```
+Variant: default   bg: --bg-elevated    text: --text-secondary
+Variant: accent    bg: --accent-subtle  text: --accent-text
+Variant: gain      bg: --gain-subtle    text: --gain-text
+Variant: loss      bg: --loss-subtle    text: --loss-text
+Variant: warning   bg: --warning-subtle text: --warning (amber)
+```
 
----
+Size: 12px text, 4px vertical padding, 8px horizontal padding, 4px radius. No icons inside badges unless strictly necessary.
 
-## 18. Sidebar Collapse
+### Buttons
 
-> ⚠️ **DEPRECATED (v3.0+):** Angular-specific implementation details below (`signal<boolean>`, `LayoutComponent`, `@if (!collapsed())`) are from the v2 era. The current stack uses a Zustand store for sidebar state and conditional React rendering. The **design rules** (collapse behavior, widths, tooltips) remain valid.
+```
+Primary:   bg --accent-default, text white, hover --accent-hover
+Secondary: bg --bg-elevated, text --text-primary, border --border-default
+Ghost:     bg transparent, text --text-secondary, hover bg --bg-subtle
+Danger:    bg --loss-subtle, text --loss-text, hover bg rgba(239,68,68,0.2)
+```
 
-The admin sidebar collapses to a 64px icon-only mode via the hamburger toggle button in the topbar.
+Height: 32px default, 28px small, 36px large. Border-radius: 6px. No rounded pills for action buttons (only for tags/badges).
 
-**Design rules:**
-
-- Collapsed state hides nav labels and section titles, showing only icons.
-- The sidebar brand shows only the bolt icon when collapsed.
-- Nav items show a tooltip (native HTML `title` attribute) when collapsed for accessibility.
-- Width transitions from 240px to 64px using CSS transition on the sidebar element.
-
----
-
-## 19. Leaderboard
-
-The Leaderboard page ranks users by performance.
-
-**Visual rules:**
-
-- Top 3 ranks display medal icons instead of plain numbers: gold (`#FFD700`), silver (`#C0C0C0`), bronze (`#CD7F32`)
-- All rank numbers use `font-family: 'JetBrains Mono', monospace` (the `.pf-mono` class)
-- The leaderboard table follows all standard table conventions (hover, clickable rows, column labels)
-
----
-
-## 20. Count Badges
-
-All admin page headers display the total item count next to the page title using a `.page-count` pill badge.
-
-**Format:** `<span class="page-count pf-mono">{{ total }} total</span>`
-
-- The `.page-count` class renders a small rounded pill with muted background and monospace text
-- Examples: "27 total" next to Users, "3 tickets" next to Tickets
-- The badge is hidden while the data is still loading (conditional render)
-- The admin sidebar shows the open ticket count as a `.nav-badge` next to the Tickets nav item, updated via polling every 30 seconds
-
----
-
-## 21. Topbar Breadcrumb
-
-> ⚠️ **DEPRECATED (v3.0+):** Angular-specific implementation (`Router.events`, `NavigationEnd`, `LayoutComponent`) is from the v2 era. The current stack uses React Router's `useLocation()` hook to derive the current page name. The **design rule** remains valid.
-
-The admin topbar displays the current page name dynamically instead of static text.
-
-**Design rule:**
-
-- Extract the first URL segment from the current route, title-case it, and display in the topbar (e.g., "Dashboard", "Users", "Tickets")
-- This provides immediate visual context for which section the admin is viewing
-
----
-
----
-
-## 22. Accessibility
-
-All interactive elements must meet baseline accessibility requirements.
-
-**Rules:**
-
-- All interactive elements must have `focus-visible` outlines: `2px solid cyan`, `2px offset`
-- Icon-only buttons require an `aria-label` attribute describing the action
-- Color-only indicators must have text alternatives (e.g., status badges show text alongside color)
-- Destructive actions (delete, reset, close position) require confirmation dialogs before execution
-
----
-
-## 23. Typography Scale
-
-The typography scale is defined as CSS custom properties in `tokens.css`. All font sizes must reference these tokens.
-
-| Token             | Size  | Usage                        |
-| ----------------- | ----- | ---------------------------- |
-| `--pf-font-xs`    | 11px  | Badges, captions, metadata   |
-| `--pf-font-sm`    | 13px  | Secondary text, labels       |
-| `--pf-font-base`  | 14px  | Body text                    |
-| `--pf-font-md`    | 15px  | Emphasis text                |
-| `--pf-font-lg`    | 18px  | Section titles               |
-| `--pf-font-xl`    | 22px  | Page titles                  |
-| `--pf-font-2xl`   | 28px  | Hero text                    |
-
-Utility classes `.text-xs` through `.text-2xl` are available in both apps' global stylesheets.
-
----
-
-## 24. Status / Semantic Colors
-
-Status tokens are defined in `tokens.css` for consistent status indication across both apps.
-
-| Token                        | Value                        | Usage                          |
-| ---------------------------- | ---------------------------- | ------------------------------ |
-| `--pf-status-active-color`   | `#22C55E`                    | Active / running / connected   |
-| `--pf-status-active-bg`      | `rgba(34, 197, 94, 0.12)`   | Active badge background        |
-| `--pf-status-warning-color`  | `#F59E0B`                    | Degraded / pending / caution   |
-| `--pf-status-warning-bg`     | `rgba(245, 158, 11, 0.12)`  | Warning badge background       |
-| `--pf-status-error-color`    | `#EF4444`                    | Error / failed / danger        |
-| `--pf-status-error-bg`       | `rgba(239, 68, 68, 0.12)`   | Error badge background         |
-| `--pf-status-info-color`     | `#3B82F6`                    | Informational                  |
-| `--pf-status-info-bg`        | `rgba(59, 130, 246, 0.12)`  | Info badge background          |
-
-Additionally, the semantic tokens `--pf-success`, `--pf-danger`, `--pf-warning`, and `--pf-info` (with their `-bg` variants) are used for P&L colors, toast messages, and general feedback.
-
----
-
-## 25. Responsive Design
-
-The UI adapts to smaller viewports with targeted responsive rules.
-
-**Breakpoints:**
-
-- `768px` — tablet threshold
-- `480px` — mobile threshold
-
-**Rules:**
-
-- Tables hide non-essential columns below 768px (e.g., admin users table hides 2FA and Connected columns; tickets table hides Category and Priority)
-- Dashboard stat grids collapse from 4-column to 2-column at 768px, then to 1-column at 480px
-- Summary cards (portfolio, paper trading) stack vertically on mobile
-- Page titles shrink to 18px (`var(--pf-font-lg)`) on mobile viewports
-
----
-
-## 26. API Keys UI
-
-### Key Display Pattern
-
-- The full API key is displayed **only once** at creation, in a monospace read-only field
-- A **"Copy" button** (icon: `<Copy />` from Lucide React) copies the key to the clipboard with a brief success toast
-- A **warning banner** below the key reads: "This key will not be shown again. Store it securely."
-- After dismissal, only the `prefix` (e.g., `pf_abc123`) is shown in the key list
-
-### Scope Badges
-
-| Scope | Color | Token |
-|---|---|---|
-| READ | Blue (`--pf-info` / `#3B82F6`) | `--pf-info-bg` background |
-| WRITE | Amber (`--pf-warning` / `#F59E0B`) | `--pf-warning-bg` background |
-| TRADE | Green (`--pf-success` / `#10B981`) | `--pf-success-bg` background |
-
-Badges use `letter-spacing: 0.08em`, `text-transform: uppercase`, `font-size: 11px` — consistent with existing category badges.
-
-### Status Badges
-
-| Status | Color | Token |
-|---|---|---|
-| ACTIVE | Green (`--pf-success` / `#10B981`) | `--pf-success-bg` background |
-| REVOKED | Red (`--pf-danger` / `#EF4444`) | `--pf-danger-bg` background |
-
----
-
-## 27. Dark/Light Theme Toggle
-
-> ⚠️ **DEPRECATED (v3.0+):** Angular-specific implementation (`pi pi-sun`/`pi pi-moon` PrimeIcons, `ThemeService` Angular injectable with signals) is from the v2 era. The current stack uses Lucide React icons (`<Sun />`, `<Moon />`) and a Zustand store for theme state. The **design rules** (persistence, DOM attribute, default theme) remain valid.
-
-Both user-app and admin-app support a dark/light theme toggle.
-
-### Implementation
-
-- **Toggle control:** Sun/moon icon button in the topbar. Uses `<Sun />` (dark mode active) and `<Moon />` (light mode active) from Lucide React.
-- **State:** Theme state managed via Zustand store, exposing `isDark` and a `toggle()` action.
-- **Persistence:** Theme preference is stored in `localStorage` under the key `pf-theme` (`'dark'` or `'light'`). On init, the store reads the saved value and applies it.
-- **DOM attribute:** The active theme is set via `document.documentElement.setAttribute('data-theme', 'dark' | 'light')`. CSS rules use `[data-theme="light"]` selectors for light overrides.
-- **Default:** Dark mode. The app loads dark unless `localStorage` contains `pf-theme: 'light'`.
-
-### CSS Pattern
+### Cards / Panels
 
 ```css
-/* Default (dark) styles use standard design tokens */
-.my-component {
-  background: var(--pf-bg-surface);
-  color: var(--pf-text-primary);
-}
-
-/* Light overrides */
-[data-theme="light"] .my-component {
-  background: #f8f9fa;
-  color: #1a1a2e;
-}
+background: var(--bg-surface);
+border: 1px solid var(--border-subtle);
+border-radius: 8px;
+padding: 16px;
 ```
 
----
+No box-shadow at elevation 1. Cards are differentiated from the background purely by the subtle border.
 
-## 28. Admin Dialog Styling
-
-> ⚠️ **DEPRECATED (v3.0+):** PrimeNG references (`p-dialog`, `polyforge.theme.ts` preset) are from the Angular era. The current stack uses shadcn/ui `<Dialog>` from `@polyforge/ui`. The **design rules** (dark backgrounds, token usage, backdrop) remain valid.
-
-All dialogs in admin-app must use dark theme styling to match the application's dark design language.
-
-### Requirements
-
-- Every dialog must render with dark background (`--pf-bg-elevated`), light text (`--pf-text-primary`), and dark borders (`--pf-border-default`).
-- Form inputs inside dialogs inherit the standard dark input tokens from `@polyforge/ui` components.
-- Dialog backdrop uses `rgba(0, 0, 0, 0.7)`.
-
----
-
-## 29. Password Confirmation Pattern
-
-When editing an admin account, the password change flow uses a confirmation field.
-
-### Behavior
-
-- The "Confirm Password" field is shown **only when** the "New Password" field has a value (conditional rendering).
-- A `passwordsMatch` getter compares `editPassword` and `editConfirmPassword` and returns a boolean.
-- The "Save" button is disabled when `editPassword` is non-empty and `passwordsMatch` is `false`.
-- The `submitEdit()` method returns early if passwords do not match.
-- If the password field is left empty, no password change is sent to the API.
-
-### Implementation Reference
-
-```typescript
-// admins.component.ts
-editPassword = '';
-editConfirmPassword = '';
-
-get passwordsMatch(): boolean {
-  return this.editPassword === this.editConfirmPassword;
-}
-```
-
-This pattern should be reused wherever password changes are offered in admin dialogs.
-
----
-
-## 30. Strategy Builder — Connection Ports & Wires
-
-### Connection Ports
-
-Each canvas block displays two circular ports for wiring:
-
-- **Output port** (right edge): 6px diameter circle, centered vertically on the block's right side (`x + 280`, `y + 100`).
-- **Input port** (left edge): 6px diameter circle, centered vertically on the block's left side (`x`, `y + 100`).
-- **Color**: `--pf-cyan-500` (`#06B6D4`) fill with `--pf-cyan-glow` outline on hover.
-- **Visibility**: Ports appear on hover over the block (opacity transition `150ms ease`). Always visible when a wire is being drawn.
-
-### Wire Styles
-
-Connections between blocks are rendered as SVG `<path>` elements using cubic Bezier curves.
-
-- **Default wire**: `stroke: var(--pf-text-muted)` (`#445E7A`), `stroke-width: 2`, `stroke-dasharray: 6 4`, `fill: none`.
-- **Selected wire**: `stroke: var(--pf-cyan-500)` (`#06B6D4`), `stroke-width: 2.5`, `filter: drop-shadow(0 0 6px var(--pf-cyan-glow))`.
-- **Temporary wire** (during drag): `stroke: var(--pf-cyan-400)` (`#22D3EE`), `stroke-width: 2`, `stroke-dasharray: 4 4`, `opacity: 0.7`.
-- **Bezier control points**: horizontal midpoint between source and target (`cx = (x1 + x2) / 2`), producing smooth S-curves.
-
-### Interaction
-
-- Drag from output port to input port to create a connection.
-- Click a wire to select it (toggles `selectedConnectionId`).
-- Press `Delete` or `Backspace` to remove the selected wire.
-- No self-connections or duplicate connections are allowed.
-
----
-
-## 31. Strategy Builder — Variable Blocks
-
-### Section Color
-
-Variable blocks use section color `#A855F7` (purple / `--pf-purple-500`), distinct from the four execution sections:
-
-| Section    | Color     |
-|------------|-----------|
-| Safety     | `#EF4444` |
-| Triggers   | `#F59E0B` |
-| Conditions | `#3B82F6` |
-| Actions    | `#22C55E` |
-| Variables  | `#A855F7` |
-
-### Block Appearance
-
-- Variables section header uses the purple accent with `pi-calculator` icon.
-- Each variable block displays the variable name in `JetBrains Mono 500` and the expression in `--pf-text-secondary`.
-- Variable blocks are rendered at the top of the canvas, above the safety column.
-
----
-
----
-
-## 32. v3.0 — React + shadcn/ui Migration
-
-> Starting with v3.0, Polyforge frontends are migrating from Angular + PrimeNG to React + shadcn/ui + Tailwind CSS. This section documents the new design stack. The Angular sections above remain valid for the legacy apps during the transition period.
-
-### Component Library — shadcn/ui
-
-The v3.0 frontend uses **shadcn/ui** as its component library. shadcn/ui is not a traditional npm dependency — components are copied into the project source (`packages/ui/`) and owned by the team. They are built on **Radix UI** primitives, which provide unstyled, accessible, composable building blocks.
-
-**Key characteristics:**
-
-- **Copy-paste ownership** — components live in `packages/ui/src/components/` and can be freely modified to match Polyforge's design needs. No version lock-in.
-- **Radix primitives** — Dialog, Popover, Select, Tabs, Tooltip, and other interactive patterns use `@radix-ui/react-*` for accessibility and keyboard handling.
-- **Composable API** — components expose compound patterns (e.g., `<Card>`, `<CardHeader>`, `<CardContent>`) rather than monolithic prop-heavy APIs.
-
-**Shared component inventory (25 components):** Button, Badge, Input, Textarea, Select, Card, Table, Tabs, Dialog, Skeleton, CardSkeleton, SkeletonLine, SkeletonCircle, SkeletonBadge, Spinner, Progress, DropdownMenu, Tooltip, Chip, StatusBadge, Checkbox, Switch, Label, Separator, Toaster.
-
-### Styling — Tailwind CSS v4
-
-All styling uses **Tailwind CSS v4** with the `@theme` directive for design token configuration.
+### Input / Form Fields
 
 ```css
-/* packages/ui/src/theme.css */
-@theme {
-  --color-pf-bg-base:      #080C14;
-  --color-pf-bg-surface:   #0D1421;
-  --color-pf-bg-elevated:  #111D2E;
-  --color-pf-cyan-500:     #06B6D4;
-  --color-pf-gold-500:     #F59E0B;
-  /* ... full Polyforge palette mapped to Tailwind tokens */
-}
+background: var(--bg-app);
+border: 1px solid var(--border-default);
+border-radius: 6px;
+padding: 6px 10px;
+font-size: 14px;
+color: var(--text-primary);
+
+/* Focus */
+border-color: var(--accent-default);
+box-shadow: 0 0 0 3px var(--accent-subtle);
 ```
 
-- **Utility-first** — layout, spacing, typography, and color are applied via Tailwind utility classes directly in JSX.
-- **No separate CSS files** — component styles live inline via `className`. Global styles are limited to the theme configuration and base resets.
-- **Design tokens** — all Polyforge palette colors, spacing, and typography from sections 2-4 above are mapped to Tailwind custom theme tokens via `@theme`.
+### Charts (Recharts / D3)
 
-### Design Aesthetic
+- Background: transparent (inherits `--bg-surface`)
+- Grid lines: `--border-subtle`, 1px, dashed
+- Axis text: `--text-tertiary`, 11px
+- Tooltip: elevation 3, dark background `--bg-overlay`
+- Gain line/area: `--gain` (`#22C55E`)
+- Loss line/area: `--loss` (`#EF4444`)
+- Neutral line: `--accent-default` (`#4F6EF7`)
+- No chart legends inside the chart area — use a header instead
 
-The v3.0 UI combines **shadcn's clean, minimal style** with the existing **Polyforge dark theme identity**:
+### Command Menu (⌘K)
 
-- shadcn's default neutral palette is replaced with the Polyforge deep blue-night backgrounds and cyan accent system.
-- Component borders, hover states, and focus rings use Polyforge's `--pf-border-*` and `--pf-cyan-*` tokens.
-- Typography retains the Polyforge convention: Inter for UI text, JetBrains Mono for financial data.
-- The overall feel remains "Precision Instrument" — dense, professional, data-focused.
-
-### Icon Library — Lucide React
-
-**Lucide React** replaces PrimeIcons (`pi pi-*`) as the icon library.
-
-- Tree-shakeable SVG icons imported individually: `import { TrendingUp, Settings, Bell } from 'lucide-react'`
-- Consistent 24x24 base size with `strokeWidth={1.5}` for the Polyforge visual weight.
-- Same icon concepts apply (action icons for buttons, status icons for badges), just different import paths.
-
-### Charts — Recharts
-
-**Recharts** replaces Chart.js for all data visualization.
-
-- Declarative React component API: `<LineChart>`, `<BarChart>`, `<AreaChart>`, etc.
-- Responsive container support via `<ResponsiveContainer>`.
-- Polyforge chart theming: cyan for primary series, gold for secondary, dark backgrounds matching `--pf-bg-surface`.
-- Tooltip and legend styling uses Polyforge text colors and border tokens.
-- **Chart color tokens** (`globals.css`): `--color-pf-chart-1` through `--color-pf-chart-6`, `--color-pf-chart-muted`, `--color-pf-chart-grid`, `--color-pf-chart-tooltip-bg`, `--color-pf-chart-tooltip-border`. Both dark and light theme overrides provided.
-- **Never hardcode hex colors in Recharts `fill`/`stroke` attributes** — use `var(--color-pf-*)` CSS custom properties or the resolved `chartColors` utility from `@polyforge/ui/lib/chart-colors`.
-- **Never hardcode tooltip or axis styles inline** — use `chartTooltipContentStyle`, `chartTooltipLabelStyle`, and `chartAxisTick` from `@polyforge/ui/lib/chart-styles` for consistent tooltip appearance and axis font across all charts.
-- Categorical palette order: cyan → purple → gold → success → info → danger.
-
-### Strategy Builder — React Flow
-
-The strategy builder canvas migrates from the custom SVG implementation to **React Flow** (`@xyflow/react`).
-
-- **Node-based graph** — blocks are custom React Flow nodes with category-colored headers (Safety=red, Triggers=amber, Conditions=blue, Actions=green, Variables=purple).
-- **Edge connections** — Bezier connection lines rendered by React Flow's built-in edge system, replacing the custom SVG path rendering.
-- **Pan/zoom** — React Flow's built-in viewport controls replace the custom pan/zoom implementation.
-- **Minimap** — optional minimap component for large strategies.
-- **Same interaction model** — drag-to-wire from output to input ports, click-to-select, Delete to remove connections.
-
-### State Management — Zustand
-
-**Zustand** replaces Angular signals and service-based state management.
-
-- Lightweight stores with simple hook-based API: `const user = useAuthStore(s => s.user)`
-- No boilerplate — stores are plain functions, not classes or modules.
-- Devtools support via `zustand/middleware` for state inspection.
-- Stores: `authStore`, `themeStore`, `notificationStore`, `websocketStore`, `builderStore`.
-
-### Dark Mode — Tailwind dark: variant
-
-Dark/light mode theming uses **Tailwind's `dark:` variant** with the `class` strategy.
-
-- The `<html>` element receives a `dark` class based on user preference (stored in localStorage).
-- Components use `dark:` prefixed utilities: `bg-white dark:bg-pf-bg-surface`, `text-gray-900 dark:text-pf-text-primary`.
-- The theme toggle (sun/moon icon, now from Lucide React) toggles the `dark` class and persists the choice.
-- Default mode is dark, consistent with the Polyforge "Precision Instrument" identity.
-
-### shadcn Slate Palette Alignment (v3.1)
-
-As of v3.1, all shadcn/ui CSS variables are aligned with the **shadcn slate palette** for consistency with the broader shadcn ecosystem. The dark theme CSS custom properties (`--background`, `--foreground`, `--card`, `--popover`, `--muted`, `--accent`, `--border`, `--input`, `--ring`, `--primary`, `--secondary`, `--destructive`) now use slate-based values instead of the previous custom values. This ensures that shadcn components render correctly out of the box while still matching the Polyforge deep blue-night aesthetic through the Tailwind `@theme` overrides.
-
-**Light theme accessibility (v3.1):** Comprehensive contrast fixes were applied across all pages for the light theme:
-- Muted text (`text-muted-foreground`) upgraded to secondary contrast levels for readability
-- Button text on cyan backgrounds changed from white to black for WCAG AA compliance
-- Table headers and form labels upgraded to stronger contrast values
-- Canvas empty state text made visible in light mode
+Full-width centered modal at elevation 3. Input at top, filtered results list below. Keyboard navigation required. Inspired by Linear's command menu: instant, no loading states visible.
 
 ---
 
-## 33. Custom Scrollbars
+## 6. Iconography
 
-All apps use thin, dark-themed custom scrollbars for visual consistency. The scrollbar styling is applied globally and adapts to both dark and light themes.
+Use **Lucide Icons** exclusively (already in shadcn/ui ecosystem).
 
-**Specification:**
-
-- **Width:** 6px (thin profile to minimize visual clutter)
-- **Track:** transparent background
-- **Thumb (dark mode):** `rgba(255, 255, 255, 0.15)` at rest, `rgba(255, 255, 255, 0.3)` on hover
-- **Thumb (light mode):** `rgba(0, 0, 0, 0.15)` at rest, `rgba(0, 0, 0, 0.3)` on hover
-- **Border radius:** `3px` (rounded ends)
-
-Applied via `scrollbar-width: thin` for Firefox and `::-webkit-scrollbar` pseudo-elements for Chromium browsers. Consistent across user-app, admin-app, and landing page.
+- **Size**: 16px default in UI, 14px inline with text, 20px for empty states
+- **Stroke width**: 1.5px (Lucide default — never change this)
+- **Color**: always inherit from parent text color token, never hardcode icon colors
+- **No filled icons** in the UI chrome — outline only
 
 ---
 
-## 34. Market Card Redesign — Polymarket-Style
+## 7. Motion & Animation
 
-The market page was redesigned in v3.1 to match the Polymarket visual language more closely.
+Linear's philosophy: **purposeful, fast, invisible**. Animation should serve comprehension, not delight.
 
-**Card anatomy:**
+```css
+/* Micro-interactions (hover, active states) */
+transition: 120ms ease;
 
-- **Event image** — full-width image at the top of each card, sourced from market metadata. Fallback placeholder icon displayed when no image is available.
-- **Title** — market question text below the image
-- **Probability bars** — horizontal bar segments showing outcome probabilities with percentage labels. Color-coded per outcome.
-- **Multi-outcome support** — cards expand to show all outcomes for markets with more than two options (not just Yes/No)
-- **Social stats** — volume, liquidity, and strategy count displayed as compact metadata
+/* Panel/sidebar transitions */
+transition: 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
-**Layout:**
-- Responsive card grid (auto-fill, minimum 300px card width)
-- Cards use `--pf-bg-surface` background with `--pf-border-subtle` borders
-- Hover state lifts the card with `--pf-shadow-md`
+/* Modal open/close */
+transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
 
----
+/* Never exceed 300ms for any UI transition */
+```
 
-## 35. Inline Editable Titles
+**Allowed animations:**
+- Sidebar collapse/expand
+- Dropdown/popover fade + slight translateY (4px)
+- Modal scale-in (from 0.97 to 1.0) + fade
+- Row selection highlight
+- Number value changes (count-up animation for PnL updates)
 
-The strategy builder topbar uses an inline editable title pattern for the strategy name.
+**Forbidden animations:**
+- Page transitions / route changes (instant navigation only)
+- Loading skeletons with shimmer on every element
+- Scroll-triggered animations in the app (landing page only)
+- Bounce, elastic, or spring easing on UI chrome
 
-**Behavior:**
-
-- Displays as static text by default (styled as a page heading)
-- Clicking the title switches to an inline text input
-- Input auto-focuses and selects all text on activation
-- Pressing Enter or blurring the input saves the new name
-- Pressing Escape reverts to the previous value
-- Empty submissions are rejected (previous name is restored)
-
-**Styling:**
-
-- Static mode: `Inter 600`, `--pf-text-primary`, no visible border
-- Edit mode: `Inter 600`, same font size, subtle `--pf-border-default` border, `--pf-bg-elevated` background
-- Transition between modes is instant (no animation) to feel like native OS rename behavior
+**Reduced motion**: always respect `prefers-reduced-motion: reduce`.
 
 ---
 
-## 36. Advanced Strategy Builder — Visual Design (v3.2)
+## 8. Data States
 
-### Logic Block Visual Design
+Every data surface must handle all five states:
 
-Logic blocks have a distinct visual treatment to communicate their control-flow nature.
-
-**IF/THEN/ELSE block:**
-
-- Two output ports instead of one:
-  - **True port** (top-right): `#10B981` (green / `--pf-success`) filled circle
-  - **False port** (bottom-right): `#EF4444` (red / `--pf-danger`) filled circle
-- Block header displays `IF` label in `Inter 600`
-- Block body shows the condition expression in `JetBrains Mono 400`, `--pf-text-secondary`
-- Connection wires from the true port use `stroke: #10B981`; wires from the false port use `stroke: #EF4444`
-
-**AND/OR/NOT gate blocks:**
-
-- Single output port (standard placement)
-- Block header displays the gate icon:
-  - AND: `&` symbol in `JetBrains Mono 700`
-  - OR: `|` symbol in `JetBrains Mono 700`
-  - NOT: `!` symbol in `JetBrains Mono 700`
-- Gate blocks use a compact square aspect ratio (120x80px) instead of the standard block rectangle
-
-**Delay block:**
-
-- Single input, single output
-- Block body displays the delay value in `JetBrains Mono 500` with unit label (e.g., "5s", "10 ticks")
-- A subtle clock icon (`Lucide: Timer`) in the block header
-
-### Variable Block Purple Color
-
-Variable blocks use `#A855F7` as their section color, consistent with section 31 of this charter.
-
-- Section header: `#A855F7` background with white text
-- Block left border: `3px solid #A855F7`
-- `$varName` references in block configs are rendered with `color: #A855F7` and `font-family: 'JetBrains Mono'`
-- The Variables panel in the builder sidebar uses a purple accent dot next to each variable name
-
-### Calculation Block Visual Design
-
-Calculation blocks display their mathematical nature prominently.
-
-- Block body shows the expression or operation type in `JetBrains Mono 400`
-- Input ports are labeled with their expected type:
-  - Number inputs: `--pf-cyan-500` port color
-  - Boolean inputs: `--pf-warning` port color (amber)
-- Output port color matches the output type (number = cyan, boolean = amber)
-- Math block displays the expression (e.g., `$price * $size`) centered in the block body
-- Aggregation block shows the function name and window (e.g., `AVG(10)`)
-- Comparison block shows the operator (e.g., `> 0.5`)
-
-### Builder Node CSS Utilities
-
-All builder nodes (block, calc, logic, variable) share common CSS utility classes defined in `apps/user-app/src/globals.css`. These replace inline `style={{...}}` objects with class-based styling driven by a `--node-color` CSS custom property:
-
-| Class | Purpose |
+| State | Pattern |
 |-------|---------|
-| `.builder-node-card` | Base card: elevated bg, 1px border using `--node-color` at 38% opacity |
-| `.builder-node-card--executing` | 1.5px border during live/backtest execution |
-| `.builder-node-card--dashed` | Dashed border for inactive (unwired) blocks |
-| `.builder-node-card--setup-needed` | Danger glow when required fields are empty |
-| `.builder-node-header` | Header bar with `--node-color` at 9% bg + 2px bottom border |
-| `.builder-node-header--solid` | Solid `--node-color` background header (calc, logic, variable) |
-| `.builder-handle` | Handle border color from `--node-color` |
-| `.builder-handle--top` | Handle positioned at 35% (dual-input top) |
-| `.builder-handle--bottom` | Handle positioned at 65% (dual-input bottom) |
-| `.builder-badge` | Status badge (Global, Not wired, Setup needed) — uses `--badge-color` |
-| `.builder-preview-chip` | Variable preview chip with `--node-color` tint |
+| **Loading** | Single skeleton at container level, not per-row |
+| **Empty** | Centered icon (20px) + short message + optional CTA |
+| **Error** | `--loss-subtle` background, error message, retry action |
+| **Partial** | Show available data, surface error inline for failed parts |
+| **Stale** | Subtle indicator (timestamp + refresh icon), no blocking overlay |
 
-**Usage pattern:** Set `--node-color` on the element via a minimal `style` prop, then apply the utility class:
+Empty state copy: short, functional, no humor, no "Wow, so empty!" — this is a professional tool.
 
-```tsx
-<div
-  className="builder-node-card w-[200px] rounded-pf-md shadow-pf-md overflow-hidden"
-  style={{ '--node-color': VARIABLE_COLOR } as React.CSSProperties}
->
+---
+
+## 9. Responsive Behavior
+
+PolyForge is a **desktop-first** application. Mobile is not a priority for the trading terminal, but the landing page / marketing site is responsive.
+
+| Breakpoint | Behavior |
+|-----------|---------|
+| `< 768px` | Sidebar hidden, hamburger menu |
+| `768px–1024px` | Sidebar collapsed (icon-only, 48px) |
+| `1024px–1280px` | Sidebar normal (220px) |
+| `> 1280px` | Sidebar normal + optional right panel |
+
+---
+
+## 10. Do / Don't
+
+### Do
+- Use `--border-subtle` to separate surfaces of the same elevation
+- Right-align all numeric values in tables
+- Keep all labels lowercase (sidebar items, filter chips, badge text)
+- Use `font-variant-numeric: tabular-nums` on all price/pnl displays
+- Prefer `opacity` and `color` transitions over layout changes
+- Use Radix UI primitives via shadcn/ui for all interactive components
+
+### Don't
+- Use `font-weight: 700+` anywhere in the app UI
+- Use colored backgrounds for cards (only neutral elevation tokens)
+- Mix border-radius values (pick 4px, 6px, or 8px — stick to it per component type)
+- Add decorative gradients to UI chrome (landing page only)
+- Show modals for confirmations that could be undone inline
+- Use loading spinners that block the whole view
+- Hardcode colors — always use CSS custom properties
+- Use `!important` anywhere
+
+---
+
+## 11. Tailwind / shadcn Configuration Reference
+
+```js
+// tailwind.config.ts — extend with CSS var tokens
+theme: {
+  extend: {
+    colors: {
+      bg: {
+        app:      'var(--bg-app)',
+        surface:  'var(--bg-surface)',
+        elevated: 'var(--bg-elevated)',
+        overlay:  'var(--bg-overlay)',
+        subtle:   'var(--bg-subtle)',
+      },
+      text: {
+        primary:   'var(--text-primary)',
+        secondary: 'var(--text-secondary)',
+        tertiary:  'var(--text-tertiary)',
+        disabled:  'var(--text-disabled)',
+      },
+      border: {
+        subtle:  'var(--border-subtle)',
+        default: 'var(--border-default)',
+        strong:  'var(--border-strong)',
+      },
+      accent: {
+        DEFAULT: 'var(--accent-default)',
+        hover:   'var(--accent-hover)',
+        subtle:  'var(--accent-subtle)',
+        text:    'var(--accent-text)',
+      },
+      gain: {
+        DEFAULT: 'var(--gain)',
+        subtle:  'var(--gain-subtle)',
+        text:    'var(--gain-text)',
+      },
+      loss: {
+        DEFAULT: 'var(--loss)',
+        subtle:  'var(--loss-subtle)',
+        text:    'var(--loss-text)',
+      },
+    },
+    fontFamily: {
+      sans: ['Geist', 'Geist Fallback', 'system-ui', 'sans-serif'],
+      mono: ['Geist Mono', 'Fira Code', 'monospace'],
+    },
+    fontSize: {
+      'display-lg': ['24px', { lineHeight: '1.25', fontWeight: '600' }],
+      'display-sm': ['18px', { lineHeight: '1.3',  fontWeight: '600' }],
+      'heading':    ['14px', { lineHeight: '1.4',  fontWeight: '600' }],
+      'body-md':    ['14px', { lineHeight: '1.5',  fontWeight: '400' }],
+      'body-sm':    ['13px', { lineHeight: '1.5',  fontWeight: '400' }],
+      'label':      ['12px', { lineHeight: '1.4',  fontWeight: '500' }],
+      'caption':    ['11px', { lineHeight: '1.4',  fontWeight: '400' }],
+    },
+    borderRadius: {
+      sm: '4px',
+      md: '6px',
+      lg: '8px',
+      xl: '12px',
+    },
+    transitionDuration: {
+      micro:  '120ms',
+      panel:  '200ms',
+      modal:  '180ms',
+    },
+  },
+}
 ```
 
-Only truly dynamic values (per-instance colors, computed animation strings, field-specific handle `top` offsets) remain as inline styles.
-
-### Import/Export UI Patterns
-
-**Export:**
-
-- Download button in the strategy builder topbar (icon: `Lucide: Download`)
-- Button label: "Export"
-- Clicking triggers a browser download of the `.polyforge` JSON file
-- Filename format: `{strategy-name}.polyforge`
-
-**Import:**
-
-- Import button in the strategy list page header (icon: `Lucide: Upload`)
-- Two import methods:
-  1. **File upload** — clicking the import button opens a file picker filtered to `.polyforge` files
-  2. **Drag-and-drop** — a dashed-border drop zone appears on the strategy builder canvas when a file is dragged over the window
-- Drop zone styling:
-  - Border: `2px dashed var(--pf-cyan-500)` with `border-radius: 12px`
-  - Background: `var(--pf-cyan-glow)` (semi-transparent cyan)
-  - Center text: "Drop .polyforge file to import" in `Inter 500`, `--pf-text-secondary`
-  - Icon: `Lucide: FileUp` at 48px, `--pf-cyan-400`
-- On successful import, a success toast displays the imported strategy name
-- On error (invalid file, schema mismatch), an error toast displays the reason
-
 ---
 
-## §37 — Social Meta Images
+## 12. CSS Variables Bootstrap
 
-### OG Image (1200×630)
-- Background: `--color-pf-base` (`#020817`)
-- Subtle radial cyan glow at centre
-- PolyForge hexagon + lightning bolt logo centred
-- Title: "POLYFORGE" in bold, `--color-pf-text` (`#e2e8f0`)
-- Subtitle: "Algorithmic Trading for Prediction Markets" in `--color-pf-text-secondary`
-- Feature chips: "Strategy Builder", "Copy Trading", "Whale Tracking", "AI Signals" in cyan
-- Cyan accent bar at top (2px)
+```css
+:root[data-theme="dark"] {
+  /* Backgrounds */
+  --bg-app:      #0E0F11;
+  --bg-surface:  #141519;
+  --bg-elevated: #1C1E24;
+  --bg-overlay:  #22252D;
+  --bg-subtle:   #191B21;
 
-### Apple Touch Icon (180×180)
-- Background: `--color-pf-base`
-- Hexagon outline + lightning bolt in `--color-pf-cyan-500`
-- "PF" text in cyan below icon
+  /* Borders */
+  --border-subtle:  #22252D;
+  --border-default: #2C2F3A;
+  --border-strong:  #3D4152;
 
-### Chart Color Fallbacks
-- All Recharts components that use `getComputedStyle()` to read `--color-pf-*` tokens must provide **theme-aware** fallbacks
-- Fallback values must match the exact hex from `globals.css` for both dark and light themes
-- Pattern: `get('--color-pf-X') || (isDark ? '#dark' : '#light')`
-- Never hardcode a single dark-mode hex as the only fallback
+  /* Text */
+  --text-primary:   #F0F1F5;
+  --text-secondary: #8B8FA8;
+  --text-tertiary:  #545770;
+  --text-disabled:  #3A3D50;
+  --text-inverse:   #0E0F11;
 
-### Hero Particle Animation
-- Particle position/size: inline `style` props (data-driven per instance)
-- Particle animation: `.hero-particle` CSS class with `--particle-dur` and `--particle-delay` custom properties
-- Never construct full `animation` strings inline — use CSS classes with CSS custom properties
+  /* Accent */
+  --accent-default: #4F6EF7;
+  --accent-hover:   #6B85F9;
+  --accent-subtle:  rgba(79, 110, 247, 0.12);
+  --accent-border:  rgba(79, 110, 247, 0.35);
+  --accent-text:    #7B96FF;
 
----
+  /* Semantic */
+  --gain:         #22C55E;
+  --gain-subtle:  rgba(34, 197, 94, 0.12);
+  --gain-text:    #4ADE80;
+  --loss:         #EF4444;
+  --loss-subtle:  rgba(239, 68, 68, 0.12);
+  --loss-text:    #F87171;
+  --warning:      #F59E0B;
+  --warning-subtle: rgba(245, 158, 11, 0.12);
+  --info:         #0EA5E9;
+  --info-subtle:  rgba(14, 165, 233, 0.12);
+}
 
-*Ce document doit être relu a chaque ajout de composant majeur pour s'assurer de la coherence visuelle.*
+:root[data-theme="light"] {
+  --bg-app:      #FAFAFA;
+  --bg-surface:  #FFFFFF;
+  --bg-elevated: #F4F5F7;
+  --bg-overlay:  #ECEDF2;
+  --bg-subtle:   #F7F7FA;
+
+  --border-subtle:  #E4E5EC;
+  --border-default: #D0D2E0;
+  --border-strong:  #B8BAC8;
+
+  --text-primary:   #111216;
+  --text-secondary: #5A5E72;
+  --text-tertiary:  #9094AA;
+  --text-disabled:  #BBBDCC;
+  --text-inverse:   #FFFFFF;
+
+  /* Accent same as dark */
+  --accent-default: #4F6EF7;
+  --accent-hover:   #3B5BDB;
+  --accent-subtle:  rgba(79, 110, 247, 0.10);
+  --accent-border:  rgba(79, 110, 247, 0.30);
+  --accent-text:    #3B5BDB;
+
+  /* Semantic — adjusted for light */
+  --gain:        #16A34A;
+  --gain-subtle: rgba(22, 163, 74, 0.10);
+  --gain-text:   #16A34A;
+  --loss:        #DC2626;
+  --loss-subtle: rgba(220, 38, 38, 0.10);
+  --loss-text:   #DC2626;
+  --warning:     #D97706;
+  --warning-subtle: rgba(217, 119, 6, 0.10);
+}
+```

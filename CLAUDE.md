@@ -126,10 +126,16 @@ docker compose -f docker-compose.infra.yml logs --tail=50 api-service
 docker compose -f docker-compose.infra.yml logs --tail=50 order-service
 ```
 
-### Design System
-- Tokens: `pf-cyan-500`, `pf-success`, `pf-danger`, `pf-warning`,
-          `pf-text`, `pf-elevated`, `pf-surface`, `pf-border`
-- Icons: Lucide · Charts: Recharts · Toasts: Sonner
+### Design System (Linear-inspired — see docs/13-design-charter.md)
+- **Tokens**: CSS custom properties (`--bg-app`, `--bg-surface`, `--bg-elevated`,
+  `--accent-default`, `--gain`, `--loss`, `--text-primary`, `--border-subtle`)
+- **Font**: Geist (body) + Geist Mono (code/numbers)
+- **Accent**: Electric Blue `#4F6EF7` (not cyan — updated from v1)
+- **Tailwind classes**: `bg-app`, `bg-surface`, `bg-elevated`, `text-primary`,
+  `text-secondary`, `border-subtle`, `accent`, `gain`, `loss`
+- Icons: Lucide (16px, 1.5px stroke) · Charts: Recharts · Toasts: Sonner
+- **Elevation**: bg-app (L0) → bg-surface (L1) → bg-elevated (L2) → bg-overlay (L3)
+- **No**: font-weight 700+, colored card backgrounds, decorative gradients, !important
 - Auth: session cookie (`credentials: 'include'`) · Router: React Router v7
 
 ### Release Gate (non-negotiable before any deploy)
