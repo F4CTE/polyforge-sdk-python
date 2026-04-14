@@ -2077,3 +2077,128 @@ class TestPaginatedResponses:
         assert "PaginatedResponse(" in source
         assert 'raw["total"]' in source or "raw['total']" in source
         assert 'raw["hasNext"]' in source or "raw['hasNext']" in source
+
+
+class TestBacktestMethods:
+    """Tests for backtest list/get/quick/orders methods (#73)."""
+
+    # -- Signature tests (sync) --
+
+    def test_list_backtests_signature(self):
+        """list_backtests() must accept strategy_id, status, page, limit."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.list_backtests)
+        param_names = set(sig.parameters.keys())
+        assert "strategy_id" in param_names
+        assert "status" in param_names
+        assert "page" in param_names
+        assert "limit" in param_names
+
+    def test_get_backtest_signature(self):
+        """get_backtest() must accept backtest_id."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_backtest)
+        param_names = set(sig.parameters.keys())
+        assert "backtest_id" in param_names
+
+    def test_run_quick_backtest_signature(self):
+        """run_quick_backtest() must accept same params as run_backtest."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.run_quick_backtest)
+        param_names = set(sig.parameters.keys())
+        assert "strategy_id" in param_names
+        assert "date_range_start" in param_names
+        assert "date_range_end" in param_names
+
+    def test_get_backtest_orders_signature(self):
+        """get_backtest_orders() must accept backtest_id."""
+        import inspect
+
+        sig = inspect.signature(PolyforgeClient.get_backtest_orders)
+        param_names = set(sig.parameters.keys())
+        assert "backtest_id" in param_names
+
+    # -- Signature tests (async) --
+
+    def test_async_list_backtests_signature(self):
+        """AsyncPolyforgeClient.list_backtests() must accept strategy_id, status, page, limit."""
+        import inspect
+
+        sig = inspect.signature(AsyncPolyforgeClient.list_backtests)
+        param_names = set(sig.parameters.keys())
+        assert "strategy_id" in param_names
+        assert "status" in param_names
+        assert "page" in param_names
+        assert "limit" in param_names
+
+    def test_async_get_backtest_signature(self):
+        """AsyncPolyforgeClient.get_backtest() must accept backtest_id."""
+        import inspect
+
+        sig = inspect.signature(AsyncPolyforgeClient.get_backtest)
+        param_names = set(sig.parameters.keys())
+        assert "backtest_id" in param_names
+
+    def test_async_run_quick_backtest_signature(self):
+        """AsyncPolyforgeClient.run_quick_backtest() must accept same params as run_backtest."""
+        import inspect
+
+        sig = inspect.signature(AsyncPolyforgeClient.run_quick_backtest)
+        param_names = set(sig.parameters.keys())
+        assert "strategy_id" in param_names
+        assert "date_range_start" in param_names
+        assert "date_range_end" in param_names
+
+    def test_async_get_backtest_orders_signature(self):
+        """AsyncPolyforgeClient.get_backtest_orders() must accept backtest_id."""
+        import inspect
+
+        sig = inspect.signature(AsyncPolyforgeClient.get_backtest_orders)
+        param_names = set(sig.parameters.keys())
+        assert "backtest_id" in param_names
+
+    # -- Source inspection tests --
+
+    def test_list_backtests_builds_paginated_response(self):
+        """list_backtests() must construct PaginatedResponse from raw API data."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.list_backtests)
+        assert "PaginatedResponse(" in source
+        assert 'raw["total"]' in source or "raw['total']" in source
+        assert 'raw["hasNext"]' in source or "raw['hasNext']" in source
+
+    def test_list_backtests_passes_query_params(self):
+        """list_backtests() must pass strategyId and status to the HTTP params."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.list_backtests)
+        assert '"strategyId"' in source or "'strategyId'" in source
+        assert '"status"' in source or "'status'" in source
+        assert '"page"' in source or "'page'" in source
+        assert '"limit"' in source or "'limit'" in source
+
+    def test_run_quick_backtest_posts_to_quick_endpoint(self):
+        """run_quick_backtest() must POST to /api/v1/backtests/quick."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.run_quick_backtest)
+        assert "/api/v1/backtests/quick" in source
+
+    def test_get_backtest_uses_encode_path(self):
+        """get_backtest() must use _encode_path for the backtest_id."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.get_backtest)
+        assert "_encode_path" in source
+
+    def test_get_backtest_orders_uses_encode_path(self):
+        """get_backtest_orders() must use _encode_path for the backtest_id."""
+        import inspect
+
+        source = inspect.getsource(PolyforgeClient.get_backtest_orders)
+        assert "_encode_path" in source
+        assert "/orders" in source

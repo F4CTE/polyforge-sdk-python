@@ -650,6 +650,96 @@ class PolyforgeClient:
             body["marketBindings"] = market_bindings
         return self._post("/api/v1/backtests", json=body)
 
+    def list_backtests(
+        self,
+        *,
+        strategy_id: str | None = None,
+        status: str | None = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """List backtests with optional filters.
+
+        Args:
+            strategy_id: Filter by strategy ID.
+            status: Filter by backtest status.
+            page: Page number (default 1).
+            limit: Items per page (default 20, max 100).
+
+        Returns:
+            Paginated list of backtest dicts.
+        """
+        raw = self._get(
+            "/api/v1/backtests",
+            params={"strategyId": strategy_id, "status": status, "page": page, "limit": limit},
+        )
+        return PaginatedResponse(
+            data=raw["data"],
+            total=raw["total"],
+            page=raw["page"],
+            limit=raw["limit"],
+            has_more=raw["hasNext"],
+            total_pages=raw.get("totalPages", 0),
+        )
+
+    def get_backtest(self, backtest_id: str) -> dict[str, Any]:
+        """Get a single backtest by ID.
+
+        Args:
+            backtest_id: The backtest ID.
+
+        Returns:
+            Raw backtest dict from the platform.
+        """
+        return self._get(f"/api/v1/backtests/{_encode_path(backtest_id)}")
+
+    def run_quick_backtest(
+        self,
+        strategy_id: str,
+        *,
+        date_range_start: str | None = None,
+        date_range_end: str | None = None,
+        quick_mode: bool | None = None,
+        strategy_blocks: dict[str, Any] | None = None,
+        market_bindings: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        """Run a quick backtest for a strategy.
+
+        Args:
+            strategy_id: ID of the strategy to backtest.
+            date_range_start: ISO 8601 start of the date range.
+            date_range_end: ISO 8601 end of the date range.
+            quick_mode: If True, run a fast approximate backtest.
+            strategy_blocks: Optional override for strategy block config.
+            market_bindings: Optional market binding overrides.
+
+        Returns:
+            Raw backtest result dict from the platform.
+        """
+        body: dict[str, Any] = {"strategyId": strategy_id}
+        if date_range_start is not None:
+            body["dateRangeStart"] = date_range_start
+        if date_range_end is not None:
+            body["dateRangeEnd"] = date_range_end
+        if quick_mode is not None:
+            body["quickMode"] = quick_mode
+        if strategy_blocks is not None:
+            body["strategyBlocks"] = strategy_blocks
+        if market_bindings is not None:
+            body["marketBindings"] = market_bindings
+        return self._post("/api/v1/backtests/quick", json=body)
+
+    def get_backtest_orders(self, backtest_id: str) -> list[dict[str, Any]]:
+        """Get orders generated during a backtest.
+
+        Args:
+            backtest_id: The backtest ID.
+
+        Returns:
+            List of order dicts from the backtest.
+        """
+        return self._get(f"/api/v1/backtests/{_encode_path(backtest_id)}/orders")
+
     # -- Portfolio & Orders --
 
     def get_portfolio(self) -> Portfolio:
@@ -1603,6 +1693,96 @@ class AsyncPolyforgeClient:
         if market_bindings is not None:
             body["marketBindings"] = market_bindings
         return await self._post("/api/v1/backtests", json=body)
+
+    async def list_backtests(
+        self,
+        *,
+        strategy_id: str | None = None,
+        status: str | None = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> PaginatedResponse[dict[str, Any]]:
+        """List backtests with optional filters (async version).
+
+        Args:
+            strategy_id: Filter by strategy ID.
+            status: Filter by backtest status.
+            page: Page number (default 1).
+            limit: Items per page (default 20, max 100).
+
+        Returns:
+            Paginated list of backtest dicts.
+        """
+        raw = await self._get(
+            "/api/v1/backtests",
+            params={"strategyId": strategy_id, "status": status, "page": page, "limit": limit},
+        )
+        return PaginatedResponse(
+            data=raw["data"],
+            total=raw["total"],
+            page=raw["page"],
+            limit=raw["limit"],
+            has_more=raw["hasNext"],
+            total_pages=raw.get("totalPages", 0),
+        )
+
+    async def get_backtest(self, backtest_id: str) -> dict[str, Any]:
+        """Get a single backtest by ID (async version).
+
+        Args:
+            backtest_id: The backtest ID.
+
+        Returns:
+            Raw backtest dict from the platform.
+        """
+        return await self._get(f"/api/v1/backtests/{_encode_path(backtest_id)}")
+
+    async def run_quick_backtest(
+        self,
+        strategy_id: str,
+        *,
+        date_range_start: str | None = None,
+        date_range_end: str | None = None,
+        quick_mode: bool | None = None,
+        strategy_blocks: dict[str, Any] | None = None,
+        market_bindings: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        """Run a quick backtest for a strategy (async version).
+
+        Args:
+            strategy_id: ID of the strategy to backtest.
+            date_range_start: ISO 8601 start of the date range.
+            date_range_end: ISO 8601 end of the date range.
+            quick_mode: If True, run a fast approximate backtest.
+            strategy_blocks: Optional override for strategy block config.
+            market_bindings: Optional market binding overrides.
+
+        Returns:
+            Raw backtest result dict from the platform.
+        """
+        body: dict[str, Any] = {"strategyId": strategy_id}
+        if date_range_start is not None:
+            body["dateRangeStart"] = date_range_start
+        if date_range_end is not None:
+            body["dateRangeEnd"] = date_range_end
+        if quick_mode is not None:
+            body["quickMode"] = quick_mode
+        if strategy_blocks is not None:
+            body["strategyBlocks"] = strategy_blocks
+        if market_bindings is not None:
+            body["marketBindings"] = market_bindings
+        return await self._post("/api/v1/backtests/quick", json=body)
+
+    async def get_backtest_orders(self, backtest_id: str) -> list[dict[str, Any]]:
+        """Get orders generated during a backtest (async version).
+
+        Args:
+            backtest_id: The backtest ID.
+
+        Returns:
+            List of order dicts from the backtest.
+        """
+        return await self._get(f"/api/v1/backtests/{_encode_path(backtest_id)}/orders")
 
     # -- Portfolio & Orders --
 
