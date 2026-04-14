@@ -94,7 +94,7 @@ export function WaitlistForm({ className = "" }: WaitlistFormProps) {
           required
           aria-invalid={status === "error"}
           aria-describedby={status === "error" ? "waitlist-error" : undefined}
-          className="flex-1 min-w-[180px] min-h-[44px] bg-pf-elevated border border-pf-border-subtle rounded-pf-md text-pf-text font-sans text-pf-body px-4 py-3 outline-none transition-colors focus:border-pf-cyan-400 focus:ring-2 focus:ring-pf-cyan-400/50 focus-visible:ring-2 focus-visible:ring-pf-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base placeholder:text-pf-text-muted"
+          className="flex-1 min-w-[180px] min-h-[44px] bg-pf-elevated border border-pf-border-subtle rounded-pf-md text-pf-text font-sans text-pf-body px-4 py-3 outline-none transition-colors focus-visible:border-pf-cyan-400 focus-visible:ring-2 focus-visible:ring-pf-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base placeholder:text-pf-text-muted"
         />
         <button
           type="submit"

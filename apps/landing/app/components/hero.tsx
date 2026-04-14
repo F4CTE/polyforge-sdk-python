@@ -45,7 +45,7 @@ export function Hero() {
       <div className="relative z-10 max-w-[1100px] mx-auto px-6">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 text-pf-body-sm font-medium text-pf-cyan-400 bg-pf-cyan-500/8 border border-pf-cyan-500/20 rounded-pf-full px-4 py-1 mb-7">
-          <span className="w-2 h-2 rounded-pf-full bg-pf-cyan-400 animate-[pulse-dot_300ms_ease-in-out_infinite]" />
+          <span className="w-2 h-2 rounded-pf-full bg-pf-cyan-400 animate-[pulse-dot_var(--duration-pf-slow)_ease-in-out_infinite]" />
           Early Access &mdash; Limited Invites
         </div>
 
@@ -84,19 +84,19 @@ export function Hero() {
         {/* Stat badges */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
           {[
-            "12,400+ Active Traders",
-            "$2.3M+ Volume This Month",
-            "94% Uptime",
+            { number: "12,400+", label: "Active Traders" },
+            { number: "$2.3M+", label: "Volume This Month" },
+            { number: "94%", label: "Uptime" },
           ].map((badge) => (
             <span
-              key={badge}
+              key={badge.number}
               className="inline-flex items-center gap-2 text-pf-body-sm font-medium text-pf-text-secondary bg-pf-surface border border-pf-border-subtle rounded-pf-full px-4 py-2"
             >
               <span
                 className="w-2 h-2 rounded-pf-full bg-pf-cyan-400"
                 aria-hidden="true"
               />
-              {badge}
+              <span className="font-mono">{badge.number}</span> {badge.label}
             </span>
           ))}
         </div>

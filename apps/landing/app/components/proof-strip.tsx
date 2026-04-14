@@ -26,7 +26,7 @@ export function ProofStrip() {
                 <dt className="order-2 text-xs sm:text-pf-body-sm text-pf-text-muted">
                   {stat.label}
                 </dt>
-                <dd className="order-1 m-0 text-xl sm:text-2xl font-extrabold text-pf-cyan-400 tracking-tight">
+                <dd className="order-1 m-0 text-xl sm:text-2xl font-extrabold font-mono text-pf-cyan-400 tracking-tight">
                   {stat.number}
                 </dd>
               </div>
