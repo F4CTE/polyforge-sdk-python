@@ -28,6 +28,18 @@ function validateEnv() {
     "WHATSAPP_APP_SECRET",
     "WHATSAPP_VERIFY_TOKEN",
   ]);
+
+  // Fail fast: if WhatsApp integration is enabled, the app secret
+  // must be set — otherwise HMAC verification is silently disabled.
+  const whatsappToken = process.env.WHATSAPP_TOKEN ?? "";
+  const whatsappEnabled =
+    whatsappToken !== "" && whatsappToken !== "dev-disabled";
+  if (whatsappEnabled && !process.env.WHATSAPP_APP_SECRET) {
+    process.stderr.write(
+      "[bot-service] WHATSAPP_APP_SECRET is required when WhatsApp integration is enabled (WHATSAPP_TOKEN is set)\n",
+    );
+    process.exit(1);
+  }
 }
 
 async function bootstrap() {
