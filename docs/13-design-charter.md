@@ -497,24 +497,27 @@ Loading    : logomark anime (pulse/rotation) sur l'ecran de chargement
 
 ## 13. Form Inputs — Dark Theme Tokens
 
+> ⚠️ **DEPRECATED (v3.0+):** The PrimeNG component references (`p-inputtext`, `p-select`, `p-textarea`, `p-datepicker`) and `styles.scss` override pattern below are from the Angular era. The current stack uses shadcn/ui `<Input>`, `<Select>`, `<Textarea>` from `@polyforge/ui` styled via Tailwind CSS v4 `@theme` tokens. The **design intent** (dark inputs, cyan focus glow) remains valid — see §32 for current implementation.
+
 Tous les champs de saisie (inputs, selects, textareas, datepickers) utilisent un fond sombre cohérent avec le thème global. Jamais de fond blanc.
+
+**Current tokens** are defined in `packages/ui/src/globals.css` under `@theme`. The legacy `--pf-input-*` names below have been replaced by semantic tokens (`--color-pf-base`, `--color-pf-border`, `--color-pf-cyan-500`, etc.):
 
 ```
 ─────────────────────────────────────────────────────────────
-INPUT TOKENS (tokens.css)
+LEGACY INPUT TOKENS (replaced by @theme tokens in globals.css)
 ─────────────────────────────────────────────────────────────
---pf-input-bg             #0D1421   Fond des inputs
---pf-input-border         #1E3350   Bordure par défaut
---pf-input-border-hover   #264060   Bordure au survol
---pf-input-border-focus   #06B6D4   Bordure au focus (cyan)
---pf-input-text           #E8EDF5   Couleur du texte
---pf-input-placeholder    #445E7A   Couleur du placeholder
---pf-input-focus-glow     0 0 0 2px rgba(6,182,212,0.15)   Halo cyan au focus
+--pf-input-bg             → --color-pf-base
+--pf-input-border         → --color-pf-border
+--pf-input-border-focus   → --color-pf-cyan-500
+--pf-input-text           → --color-pf-text
+--pf-input-placeholder    → --color-pf-text-tertiary
+--pf-input-focus-glow     → ring-pf-cyan-500/40 (Tailwind utility)
 ```
 
 ### Règles d'application
 
-- **Global override** : tous les composants PrimeNG (`p-inputtext`, `p-select`, `p-textarea`, `p-datepicker`) reçoivent ces tokens via `styles.scss` avec `!important` pour garantir la cohérence.
+- ~~**Global override** : tous les composants PrimeNG (`p-inputtext`, `p-select`, `p-textarea`, `p-datepicker`) reçoivent ces tokens via `styles.scss`.~~ → Now handled by shadcn/ui component styling in `@polyforge/ui`.
 - **Auth pages** : la card utilise `--pf-bg-elevated` avec un subtle cyan glow shadow. Le titre "Welcome back" utilise un gradient cyan.
 - **Select dropdowns** : fond `--pf-bg-elevated`, options avec hover `--pf-bg-overlay`, sélection active avec `--pf-cyan-glow`.
 - **DatePicker** : remplace les inputs natifs `type="date"` pour un rendu cohérent cross-browser. Panel sombre.
@@ -522,6 +525,8 @@ INPUT TOKENS (tokens.css)
 ---
 
 ## 14. Interactivity & Micro-Interactions
+
+> ⚠️ **DEPRECATED (v3.0+):** Angular/PrimeNG references in this section (`.p-datatable`, `pTooltip`, `p-dialog`, `pi pi-bell`, `p-badge`, `@angular/cdk DragDrop`) are from the v2 implementation. The current stack uses: shadcn/ui `<Dialog>`, `<Tooltip>`, `<Badge>` from `@polyforge/ui`; Lucide React icons (e.g., `<Bell />`); React Flow for the strategy builder canvas. The **design intent** (animations, interactions, UX patterns) remains valid.
 
 ### Page & Component Animations
 
@@ -631,62 +636,57 @@ Blocks on the strategy builder canvas can be freely dragged to any position. The
 
 ## 16. Clickable Elements
 
+> ⚠️ **DEPRECATED (v3.0+):** Angular-specific implementation details below (`[routerLink]`, `$event.stopPropagation()`) are from the v2 era. The current stack uses React Router `<Link>` or `useNavigate()` for navigation, and `e.stopPropagation()` on React `onClick` handlers. The **design rules** (clickable rows, hover highlights, action button isolation) remain valid.
+
 All table rows that represent a data entity should be clickable to navigate to that entity's detail view.
 
 **Implementation rules:**
 
-- Add `[routerLink]` on the `<tr>` element — not just on a cell or link inside it
-- The `.admin-table-row` class provides `cursor: pointer` and the `.table-row:hover` rule provides background highlight (`var(--pf-bg-overlay)`)
+- ~~Add `[routerLink]` on the `<tr>` element~~ → Use React Router `<Link>` wrapper or `onClick` with `useNavigate()` on table rows
+- The hover rule provides background highlight (`var(--pf-bg-overlay)`) with `cursor: pointer`
 - Strategy cards in Discover/Leaderboard are also clickable, navigating to strategy detail
-- Action buttons (Stop, Delete, Replay, etc.) inside clickable rows must use `$event.stopPropagation()` on their `(click)` handler to prevent row navigation
-- Links inside clickable rows (e.g., user name links) remain functional; the row-level routerLink serves as a fallback click target
+- Action buttons (Stop, Delete, Replay, etc.) inside clickable rows must use `e.stopPropagation()` on their `onClick` handler to prevent row navigation
+- Links inside clickable rows (e.g., user name links) remain functional; the row-level click serves as a fallback target
 
 ---
 
 ## 17. Empty States
 
+> ⚠️ **DEPRECATED (v3.0+):** The PrimeNG markup (`pi pi-*` icons, `<p-button>`) below is from the Angular era. The current stack uses Lucide React icons and shadcn/ui `<Button>` from `@polyforge/ui`. The **design rules** (structure, spacing, icon usage) remain valid.
+
 Every list, table, or data container must display an empty state when there is no data. Never show a blank component.
 
-**Structure (standardized):**
+**Structure (current React equivalent):**
 
-```html
-<div class="empty-state">
-  <i class="pi pi-[relevant-icon] empty-state-icon"></i>
-  <p class="empty-state-title">No [items] yet</p>
-  <p class="empty-state-desc">[What to do next]</p>
-  <div class="empty-state-action">                            <!-- optional -->
-    <p-button label="[CTA]" icon="pi pi-plus" />
-  </div>
+```tsx
+<div className="flex flex-col items-center gap-3 py-12 px-6">
+  <Users className="size-12 opacity-30 text-pf-text-tertiary" />  {/* Lucide icon */}
+  <p className="text-pf-lg font-semibold text-pf-text">No items yet</p>
+  <p className="text-pf-sm text-pf-text-tertiary max-w-[360px] text-center">What to do next</p>
+  <Button variant="default" className="mt-2">Add Item</Button>  {/* optional CTA */}
 </div>
 ```
 
-**Class specifications:**
-
-- `.empty-state` — flex column, centered, `padding: 48px 24px`, `gap: 12px`
-- `.empty-state-icon` — `font-size: 48px`, `opacity: 0.3`, `color: var(--pf-text-muted)`
-- `.empty-state-title` — `font-size: 18px` (`var(--pf-font-lg)`), `font-weight: 600`, `color: var(--pf-text-primary)`
-- `.empty-state-desc` — `font-size: 13px` (`var(--pf-font-sm)`), `color: var(--pf-text-muted)`, `max-width: 360px`
-- `.empty-state-action` — `margin-top: 8px`, wraps the optional CTA button
-
 **Rules:**
 
-- The icon should be contextually relevant: `pi-users` for users, `pi-code` for strategies, `pi-list` for orders, `pi-comments` for tickets, `pi-history` for backtests
+- The icon should be contextually relevant: `<Users />` for users, `<Code />` for strategies, `<List />` for orders, `<MessageSquare />` for tickets, `<History />` for backtests (all from `lucide-react`)
 - The CTA button is optional — include it when there is a clear next action the user can take
-- Legacy `.pf-empty-state` / `.pf-empty-icon` / `.pf-empty-title` / `.pf-empty-desc` classes are deprecated; migrate to the standardized `.empty-state` classes
+- Legacy `.pf-empty-state` / `.pf-empty-icon` / `.pf-empty-title` / `.pf-empty-desc` classes are deprecated
 
 ---
 
 ## 18. Sidebar Collapse
 
+> ⚠️ **DEPRECATED (v3.0+):** Angular-specific implementation details below (`signal<boolean>`, `LayoutComponent`, `@if (!collapsed())`) are from the v2 era. The current stack uses a Zustand store for sidebar state and conditional React rendering. The **design rules** (collapse behavior, widths, tooltips) remain valid.
+
 The admin sidebar collapses to a 64px icon-only mode via the hamburger toggle button in the topbar.
 
-**Implementation:**
+**Design rules:**
 
-- The `collapsed` state is a plain `signal<boolean>(false)` on the `LayoutComponent` — not a signal factory or computed. Plain boolean ensures reliable change detection with Angular's template binding.
-- When collapsed, nav labels and section titles are hidden via `@if (!collapsed())` blocks.
+- Collapsed state hides nav labels and section titles, showing only icons.
 - The sidebar brand shows only the bolt icon when collapsed.
-- Nav items show a `[title]` tooltip (native HTML) when collapsed for accessibility.
-- Width transitions from 240px to 64px using CSS transition on the `.admin-sidebar` element.
+- Nav items show a tooltip (native HTML `title` attribute) when collapsed for accessibility.
+- Width transitions from 240px to 64px using CSS transition on the sidebar element.
 
 ---
 
@@ -710,19 +710,20 @@ All admin page headers display the total item count next to the page title using
 
 - The `.page-count` class renders a small rounded pill with muted background and monospace text
 - Examples: "27 total" next to Users, "3 tickets" next to Tickets
-- The badge is hidden while the data is still loading (wrapped in `@if (!loading())`)
-- The admin sidebar shows the open ticket count as a `.nav-badge` next to the Tickets nav item, updated via `AdminPollingService` every 30 seconds
+- The badge is hidden while the data is still loading (conditional render)
+- The admin sidebar shows the open ticket count as a `.nav-badge` next to the Tickets nav item, updated via polling every 30 seconds
 
 ---
 
 ## 21. Topbar Breadcrumb
 
+> ⚠️ **DEPRECATED (v3.0+):** Angular-specific implementation (`Router.events`, `NavigationEnd`, `LayoutComponent`) is from the v2 era. The current stack uses React Router's `useLocation()` hook to derive the current page name. The **design rule** remains valid.
+
 The admin topbar displays the current page name dynamically instead of static text.
 
-**Implementation:**
+**Design rule:**
 
-- The `LayoutComponent` listens to `Router.events` for `NavigationEnd` and extracts the first URL segment
-- The segment is title-cased and displayed in the `.topbar-title` element (e.g., "Dashboard", "Users", "Tickets")
+- Extract the first URL segment from the current route, title-case it, and display in the topbar (e.g., "Dashboard", "Users", "Tickets")
 - This provides immediate visual context for which section the admin is viewing
 
 ---
@@ -802,7 +803,7 @@ The UI adapts to smaller viewports with targeted responsive rules.
 ### Key Display Pattern
 
 - The full API key is displayed **only once** at creation, in a monospace read-only field
-- A **"Copy" button** (icon: `pi pi-copy`) copies the key to the clipboard with a brief success toast
+- A **"Copy" button** (icon: `<Copy />` from Lucide React) copies the key to the clipboard with a brief success toast
 - A **warning banner** below the key reads: "This key will not be shown again. Store it securely."
 - After dismissal, only the `prefix` (e.g., `pf_abc123`) is shown in the key list
 
@@ -827,13 +828,15 @@ Badges use `letter-spacing: 0.08em`, `text-transform: uppercase`, `font-size: 11
 
 ## 27. Dark/Light Theme Toggle
 
+> ⚠️ **DEPRECATED (v3.0+):** Angular-specific implementation (`pi pi-sun`/`pi pi-moon` PrimeIcons, `ThemeService` Angular injectable with signals) is from the v2 era. The current stack uses Lucide React icons (`<Sun />`, `<Moon />`) and a Zustand store for theme state. The **design rules** (persistence, DOM attribute, default theme) remain valid.
+
 Both user-app and admin-app support a dark/light theme toggle.
 
 ### Implementation
 
-- **Toggle control:** Sun/moon icon button in the topbar. Uses `pi pi-sun` (dark mode active) and `pi pi-moon` (light mode active).
-- **Service:** `ThemeService` (injectable, `providedIn: 'root'`). Exposes an `isDark` signal (default: `true`) and a `toggle()` method.
-- **Persistence:** Theme preference is stored in `localStorage` under the key `pf-theme` (`'dark'` or `'light'`). On init, the service reads the saved value and applies it.
+- **Toggle control:** Sun/moon icon button in the topbar. Uses `<Sun />` (dark mode active) and `<Moon />` (light mode active) from Lucide React.
+- **State:** Theme state managed via Zustand store, exposing `isDark` and a `toggle()` action.
+- **Persistence:** Theme preference is stored in `localStorage` under the key `pf-theme` (`'dark'` or `'light'`). On init, the store reads the saved value and applies it.
 - **DOM attribute:** The active theme is set via `document.documentElement.setAttribute('data-theme', 'dark' | 'light')`. CSS rules use `[data-theme="light"]` selectors for light overrides.
 - **Default:** Dark mode. The app loads dark unless `localStorage` contains `pf-theme: 'light'`.
 
@@ -857,14 +860,15 @@ Both user-app and admin-app support a dark/light theme toggle.
 
 ## 28. Admin Dialog Styling
 
-All PrimeNG dialogs in admin-app must use dark theme overrides to match the application's dark design language.
+> ⚠️ **DEPRECATED (v3.0+):** PrimeNG references (`p-dialog`, `polyforge.theme.ts` preset) are from the Angular era. The current stack uses shadcn/ui `<Dialog>` from `@polyforge/ui`. The **design rules** (dark backgrounds, token usage, backdrop) remain valid.
+
+All dialogs in admin-app must use dark theme styling to match the application's dark design language.
 
 ### Requirements
 
-- Every `p-dialog` must render with dark background (`--pf-bg-elevated`), light text (`--pf-text-primary`), and dark borders (`--pf-border-default`).
-- Form inputs inside dialogs inherit dark input tokens (`--pf-input-bg`, `--pf-input-border`, etc.).
+- Every dialog must render with dark background (`--pf-bg-elevated`), light text (`--pf-text-primary`), and dark borders (`--pf-border-default`).
+- Form inputs inside dialogs inherit the standard dark input tokens from `@polyforge/ui` components.
 - Dialog backdrop uses `rgba(0, 0, 0, 0.7)`.
-- The PrimeNG theme preset (`polyforge.theme.ts`) defines dialog component overrides under `components.dialog.colorScheme.dark` — these apply globally and should not be overridden per-dialog.
 
 ---
 

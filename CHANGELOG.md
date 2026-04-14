@@ -7,6 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-04-14
 
+### Fixed (Documentation)
+- **Design charter Angular/PrimeNG deprecation notices** — Added deprecation notices to sections 13, 14, 16, 17, 18, 20, 21, 27, 28 which still referenced Angular signals, PrimeIcons (`pi pi-*`), PrimeNG components (`p-dialog`, `p-button`, `pTooltip`), and Angular Router APIs. Updated implementation examples to current React + shadcn/ui + Lucide React equivalents while preserving design rules (closes #600)
+
 ### Fixed (E2E Infrastructure)
 - **Throttle rate limits cause E2E 429 failures** — raised dev-mode rate limits to prevent 429s during E2E suite
 
