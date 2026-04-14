@@ -482,14 +482,19 @@ class PolyforgeClient:
         sort: str | None = None,
         page: int = 1,
         limit: int = 20,
-    ) -> list[Strategy]:
-        data = self._get(
+    ) -> PaginatedResponse[Strategy]:
+        raw = self._get(
             "/api/v1/strategies",
             params={"status": status, "sort": sort, "page": page, "limit": limit},
         )
-        # Backend returns PaginatedResponse<Strategy> with 'data' field
-        items = data["data"]
-        return [_parse(Strategy, s) for s in items]
+        return PaginatedResponse(
+            data=[_parse(Strategy, s) for s in raw["data"]],
+            total=raw["total"],
+            page=raw["page"],
+            limit=raw["limit"],
+            has_more=raw["hasNext"],
+            total_pages=raw.get("totalPages", 0),
+        )
 
     def get_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}"))
@@ -654,11 +659,13 @@ class PolyforgeClient:
         self,
         *,
         limit: int = 20,
+        page: int = 1,
         status: str | OrderStatus | None = None,
         strategy_id: str | None = None,
+        market_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
-    ) -> list[Order]:
+    ) -> PaginatedResponse[Order]:
         """List orders with optional filters.
 
         Args:
@@ -668,15 +675,23 @@ class PolyforgeClient:
                 ``UNMATCHED``, ``FAILED``, ``ERROR``.
         """
         status_val = status.value if isinstance(status, OrderStatus) else status
-        data = self._get("/api/v1/orders", params={
+        raw = self._get("/api/v1/orders", params={
             "limit": limit,
+            "page": page,
             "status": status_val,
             "strategyId": strategy_id,
+            "marketId": market_id,
             "from": from_date,
             "to": to_date,
         })
-        items = data["data"]
-        return [_parse(Order, o) for o in items]
+        return PaginatedResponse(
+            data=[_parse(Order, o) for o in raw["data"]],
+            total=raw["total"],
+            page=raw["page"],
+            limit=raw["limit"],
+            has_more=raw["hasNext"],
+            total_pages=raw.get("totalPages", 0),
+        )
 
     def get_score(self) -> TraderScore:
         return _parse(TraderScore, self._get("/api/v1/scores/me"))
@@ -997,18 +1012,32 @@ class PolyforgeClient:
         self,
         *,
         status: str | None = None,
-        limit: int | None = None,
-    ) -> list[ConditionalOrder]:
+        type: str | None = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> PaginatedResponse[ConditionalOrder]:
         """List conditional orders with optional filters.
 
         Args:
             status: Filter by status (e.g. ``"PENDING"``, ``"TRIGGERED"``).
-            limit: Maximum number of results.
+            type: Filter by type (e.g. ``"TAKE_PROFIT"``, ``"STOP_LOSS"``).
+            page: Page number (default 1).
+            limit: Maximum number of results per page (default 20).
         """
-        params = _strip_none({"status": status, "limit": limit})
-        data = self._get("/api/v1/orders/conditional", params=params)
-        items = data["data"]
-        return [_parse(ConditionalOrder, o) for o in items]
+        raw = self._get("/api/v1/orders/conditional", params={
+            "status": status,
+            "type": type,
+            "page": page,
+            "limit": limit,
+        })
+        return PaginatedResponse(
+            data=[_parse(ConditionalOrder, o) for o in raw["data"]],
+            total=raw["total"],
+            page=raw["page"],
+            limit=raw["limit"],
+            has_more=raw["hasNext"],
+            total_pages=raw.get("totalPages", 0),
+        )
 
     def create_conditional_order(
         self,
@@ -1425,14 +1454,19 @@ class AsyncPolyforgeClient:
         sort: str | None = None,
         page: int = 1,
         limit: int = 20,
-    ) -> list[Strategy]:
-        data = await self._get(
+    ) -> PaginatedResponse[Strategy]:
+        raw = await self._get(
             "/api/v1/strategies",
             params={"status": status, "sort": sort, "page": page, "limit": limit},
         )
-        # Backend returns PaginatedResponse<Strategy> with 'data' field
-        items = data["data"]
-        return [_parse(Strategy, s) for s in items]
+        return PaginatedResponse(
+            data=[_parse(Strategy, s) for s in raw["data"]],
+            total=raw["total"],
+            page=raw["page"],
+            limit=raw["limit"],
+            has_more=raw["hasNext"],
+            total_pages=raw.get("totalPages", 0),
+        )
 
     async def get_strategy(self, strategy_id: str) -> Strategy:
         return _parse(Strategy, await self._get(f"/api/v1/strategies/{_encode_path(strategy_id)}"))
@@ -1579,22 +1613,32 @@ class AsyncPolyforgeClient:
         self,
         *,
         limit: int = 20,
+        page: int = 1,
         status: str | OrderStatus | None = None,
         strategy_id: str | None = None,
+        market_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
-    ) -> list[Order]:
+    ) -> PaginatedResponse[Order]:
         """List orders with optional filters (async version)."""
         status_val = status.value if isinstance(status, OrderStatus) else status
-        data = await self._get("/api/v1/orders", params={
+        raw = await self._get("/api/v1/orders", params={
             "limit": limit,
+            "page": page,
             "status": status_val,
             "strategyId": strategy_id,
+            "marketId": market_id,
             "from": from_date,
             "to": to_date,
         })
-        items = data["data"]
-        return [_parse(Order, o) for o in items]
+        return PaginatedResponse(
+            data=[_parse(Order, o) for o in raw["data"]],
+            total=raw["total"],
+            page=raw["page"],
+            limit=raw["limit"],
+            has_more=raw["hasNext"],
+            total_pages=raw.get("totalPages", 0),
+        )
 
     async def get_score(self) -> TraderScore:
         return _parse(TraderScore, await self._get("/api/v1/scores/me"))
@@ -1908,18 +1952,32 @@ class AsyncPolyforgeClient:
         self,
         *,
         status: str | None = None,
-        limit: int | None = None,
-    ) -> list[ConditionalOrder]:
+        type: str | None = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> PaginatedResponse[ConditionalOrder]:
         """List conditional orders with optional filters.
 
         Args:
             status: Filter by status (e.g. ``"PENDING"``, ``"TRIGGERED"``).
-            limit: Maximum number of results.
+            type: Filter by type (e.g. ``"TAKE_PROFIT"``, ``"STOP_LOSS"``).
+            page: Page number (default 1).
+            limit: Maximum number of results per page (default 20).
         """
-        params = _strip_none({"status": status, "limit": limit})
-        data = await self._get("/api/v1/orders/conditional", params=params)
-        items = data["data"]
-        return [_parse(ConditionalOrder, o) for o in items]
+        raw = await self._get("/api/v1/orders/conditional", params={
+            "status": status,
+            "type": type,
+            "page": page,
+            "limit": limit,
+        })
+        return PaginatedResponse(
+            data=[_parse(ConditionalOrder, o) for o in raw["data"]],
+            total=raw["total"],
+            page=raw["page"],
+            limit=raw["limit"],
+            has_more=raw["hasNext"],
+            total_pages=raw.get("totalPages", 0),
+        )
 
     async def create_conditional_order(
         self,
