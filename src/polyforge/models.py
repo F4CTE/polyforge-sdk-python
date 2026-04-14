@@ -165,16 +165,10 @@ class StrategyStatusResponse:
     stopped_at: str = ""
 
 
-@dataclass
-class StrategyTemplate:
-    """A pre-built strategy template."""
-
-    id: str = ""
-    name: str = ""
-    description: str = ""
-    category: str = ""
-    risk_level: str = ""
-    config: dict[str, Any] = field(default_factory=dict)
+# StrategyTemplate is an alias for Strategy — the platform endpoint
+# ``GET /api/v1/strategies/templates`` returns full Strategy objects
+# (rows where ``template = true``).  Kept as an alias for backward compat.
+StrategyTemplate = Strategy
 
 
 # ---------------------------------------------------------------------------

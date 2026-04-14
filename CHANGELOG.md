@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.20] — 2026-04-14
+
+### Fixed
+- **BREAKING:** `StrategyTemplate` model: replaced phantom fields (`risk_level`, `category`, `config`) with full `Strategy` fields — `StrategyTemplate` is now an alias for `Strategy` since the platform returns full strategy objects from `GET /api/v1/strategies/templates` (closes #44)
+
 ## [1.6.19] — 2026-04-14
 
 ### Fixed
