@@ -12,13 +12,12 @@ on:
 permissions:
   contents: read
 
-# All 3 self-hosted runners share one physical host (polyforge-lab, 30 GB RAM).
-# Per-ref concurrency (ci-${{ github.ref }}) allowed 3+ branches to run in
-# parallel, exhausting memory and crashing Docker services mid-E2E (#517).
-# A single global group ensures only one pipeline occupies the runners at a time.
-# cancel-in-progress: true so the newest push always wins.
+# Per-branch concurrency: a new push to the SAME branch cancels its previous run,
+# but different branches queue independently instead of killing each other.
+# The heavy jobs (deploy-dev + E2E) that share Docker services use a separate
+# job-level concurrency group to serialize access — see those jobs below.
 concurrency:
-  group: ci-polyforge
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -188,6 +187,11 @@ jobs:
     runs-on: [self-hosted, linux]
     needs: [build]
     timeout-minutes: 20
+    # Serialize deploy across all branches — only one branch can deploy at a time.
+    # Other branches wait (no cancel) so their pipeline resumes after the current one finishes.
+    concurrency:
+      group: deploy-polyforge-lab
+      cancel-in-progress: false
     steps:
       - name: Deploy to polyforge-lab
         uses: appleboy/ssh-action@v1
@@ -266,6 +270,11 @@ jobs:
     runs-on: [self-hosted, linux]
     needs: [deploy-dev]
     timeout-minutes: 60
+    # Same serialization group as deploy — E2E runs against Docker services
+    # that only serve one branch at a time.
+    concurrency:
+      group: deploy-polyforge-lab
+      cancel-in-progress: false
     steps:
       - name: Run E2E tests on polyforge-lab
         uses: appleboy/ssh-action@v1
