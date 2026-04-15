@@ -55,21 +55,21 @@ export function Component() {
             <Award size={16} className="text-warning" aria-hidden="true" />
             <span className="text-xs text-tertiary">Current Tier</span>
           </div>
-          <div className="text-2xl font-bold text-primary capitalize">{stats.tier ?? 'N/A'}</div>
+          <div className="text-2xl font-semibold text-primary capitalize">{stats.tier ?? 'N/A'}</div>
         </div>
         <div className="bg-elevated border border-default rounded-pf-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign size={16} className="text-gain" aria-hidden="true" />
             <span className="text-xs text-tertiary">Weekly Reward</span>
           </div>
-          <div className="text-2xl font-bold text-primary">${stats.weeklyRewardUsdc ?? '0'}</div>
+          <div className="text-2xl font-semibold text-primary">${stats.weeklyRewardUsdc ?? '0'}</div>
         </div>
         <div className="bg-elevated border border-default rounded-pf-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp size={16} className="text-info" aria-hidden="true" />
             <span className="text-xs text-tertiary">Attributed Volume</span>
           </div>
-          <div className="text-2xl font-bold text-primary">${Number(stats.attributedVolume ?? 0).toLocaleString()}</div>
+          <div className="text-2xl font-semibold text-primary">${Number(stats.attributedVolume ?? 0).toLocaleString()}</div>
         </div>
       </div>
 

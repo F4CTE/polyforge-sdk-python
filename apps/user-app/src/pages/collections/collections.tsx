@@ -99,7 +99,7 @@ export function Component() {
                 <span className="text-3xl leading-none" role="img" aria-label={col.title}>
                   {col.emoji}
                 </span>
-                <div className="text-base font-bold text-primary truncate">{col.title}</div>
+                <div className="text-base font-semibold text-primary truncate">{col.title}</div>
               </div>
 
               {/* Description */}

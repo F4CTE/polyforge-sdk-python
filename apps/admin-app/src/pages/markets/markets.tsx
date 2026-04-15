@@ -248,25 +248,25 @@ export function Component() {
           <div className="text-pf-label font-semibold uppercase tracking-wider text-tertiary mb-1">
             Active Markets
           </div>
-          <div className="text-2xl font-bold text-primary">{activeCount}</div>
+          <div className="text-2xl font-semibold text-primary">{activeCount}</div>
         </div>
         <div className="rounded-pf border border-default bg-surface p-4">
           <div className="text-pf-label font-semibold uppercase tracking-wider text-tertiary mb-1">
             Resolved (page)
           </div>
-          <div className="text-2xl font-bold text-primary">{resolvedCount}</div>
+          <div className="text-2xl font-semibold text-primary">{resolvedCount}</div>
         </div>
         <div className="rounded-pf border border-default bg-surface p-4">
           <div className="text-pf-label font-semibold uppercase tracking-wider text-tertiary mb-1">
             Total Volume
           </div>
-          <div className="text-2xl font-bold text-primary">{formatVolume(String(totalVolume))}</div>
+          <div className="text-2xl font-semibold text-primary">{formatVolume(String(totalVolume))}</div>
         </div>
         <div className="rounded-pf border border-default bg-surface p-4">
           <div className="text-pf-label font-semibold uppercase tracking-wider text-tertiary mb-1">
             Avg Participants
           </div>
-          <div className="text-2xl font-bold text-primary">{avgParticipants.toLocaleString()}</div>
+          <div className="text-2xl font-semibold text-primary">{avgParticipants.toLocaleString()}</div>
         </div>
       </div>
 

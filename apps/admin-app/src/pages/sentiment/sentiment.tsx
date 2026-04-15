@@ -123,7 +123,7 @@ function StatCard({
       {loading ? (
         <div className="h-7 w-24 bg-surface rounded animate-pulse mt-1" />
       ) : (
-        <span className={`text-2xl font-bold ${colorClass ?? 'text-primary'}`}>{value}</span>
+        <span className={`text-2xl font-semibold ${colorClass ?? 'text-primary'}`}>{value}</span>
       )}
       {sub && !loading && (
         <span className="text-xs text-tertiary">{sub}</span>

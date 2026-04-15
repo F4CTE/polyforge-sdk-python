@@ -245,7 +245,7 @@ function CohortCard({ definition, stats, onViewUsers, onBroadcast }: CohortCardP
 
       {/* User Count */}
       <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold text-primary tabular-nums">
+        <span className="text-2xl font-semibold text-primary tabular-nums">
           {stats.userCount.toLocaleString()}
         </span>
         <span className="text-xs text-tertiary">
@@ -400,7 +400,7 @@ function DrillDown({ cohortId, onBack }: DrillDownProps) {
           ].map((item) => (
             <div key={item.label} className="rounded-pf-lg bg-elevated border border-default px-4 py-3">
               <div className="text-pf-label text-tertiary uppercase tracking-wide">{item.label}</div>
-              <div className="text-lg font-bold text-primary mt-1 tabular-nums">{item.value}</div>
+              <div className="text-lg font-semibold text-primary mt-1 tabular-nums">{item.value}</div>
             </div>
           ))}
         </div>
@@ -621,7 +621,7 @@ export function Component() {
       <div className="flex items-start gap-3">
         <PieChart size={24} className="text-accent-text shrink-0 mt-1" aria-hidden="true" />
         <div>
-          <h1 className="text-xl font-bold text-primary">User Segmentation</h1>
+          <h1 className="text-xl font-semibold text-primary">User Segmentation</h1>
           <p className="text-sm text-secondary mt-1">
             Understand and act on user cohorts
           </p>

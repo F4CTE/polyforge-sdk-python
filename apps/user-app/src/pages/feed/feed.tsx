@@ -123,7 +123,7 @@ function toEnhanced(item: FeedItem): FeedItemEnhanced {
 function Initials({ actor }: { actor: FeedActor }) {
   const label = (actor.displayName ?? actor.username).slice(0, 2).toUpperCase();
   return (
-    <div className="size-9 rounded-pf-full bg-surface flex items-center justify-center text-sm font-bold text-accent-text shrink-0">
+    <div className="size-9 rounded-pf-full bg-surface flex items-center justify-center text-sm font-semibold text-accent-text shrink-0">
       {label}
     </div>
   );
@@ -131,7 +131,7 @@ function Initials({ actor }: { actor: FeedActor }) {
 
 function CommentAvatar({ initials }: { initials: string }) {
   return (
-    <div className="size-7 rounded-pf-full bg-elevated border border-default flex items-center justify-center text-pf-caption font-bold text-secondary shrink-0">
+    <div className="size-7 rounded-pf-full bg-elevated border border-default flex items-center justify-center text-pf-caption font-semibold text-secondary shrink-0">
       {initials.slice(0, 2).toUpperCase()}
     </div>
   );

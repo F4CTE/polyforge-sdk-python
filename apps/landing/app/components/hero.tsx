@@ -51,7 +51,7 @@ export function Hero() {
 
         <h1
           id="hero-heading"
-          className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-pf-tight tracking-tight text-pf-text mb-6"
+          className="text-4xl sm:text-5xl lg:text-7xl font-semibold leading-pf-tight tracking-tight text-pf-text mb-6"
         >
           Trade Smarter. Copy the Best.
           <br />

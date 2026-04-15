@@ -373,7 +373,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
           </div>
           {data.map((t) => (
             <div key={t.userId} className="flex flex-col items-center gap-2 text-center">
-              <div className="size-12 rounded-pf-full bg-accent/20 text-accent-text flex items-center justify-center text-base font-bold select-none">
+              <div className="size-12 rounded-pf-full bg-accent/20 text-accent-text flex items-center justify-center text-base font-semibold select-none">
                 {t.avatarInitials}
               </div>
               <div>
@@ -466,7 +466,7 @@ function ComparisonPanel({ data, loading, onBack }: ComparisonPanelProps) {
                     className="flex items-center gap-2 bg-overlay rounded-pf px-3 py-2"
                   >
                     <span
-                      className={`text-pf-caption font-bold px-2 py-1 rounded shrink-0 ${
+                      className={`text-pf-caption font-semibold px-2 py-1 rounded shrink-0 ${
                         trade.result === 'win'
                           ? 'bg-gain/15 text-gain'
                           : 'bg-loss/15 text-loss'
@@ -602,7 +602,7 @@ function TraderCardItem({
         <div className="flex items-center gap-2">
           <TrendingUp className="size-4 text-tertiary" aria-hidden="true" />
           <span className="text-xs text-secondary">Edge Score</span>
-          <span className={`text-xs font-mono font-bold ${scoreColor(trader.score)}`}>
+          <span className={`text-xs font-mono font-semibold ${scoreColor(trader.score)}`}>
             {trader.score}
           </span>
         </div>

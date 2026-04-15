@@ -133,7 +133,7 @@ export function Component() {
                     <td className="px-4 py-3">
                       {t.assignedTo ? (
                         <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 rounded-pf-full bg-accent/20 flex items-center justify-center text-pf-micro font-bold text-accent">
+                          <div className="w-5 h-5 rounded-pf-full bg-accent/20 flex items-center justify-center text-pf-micro font-semibold text-accent">
                             {t.assignedToName?.[0]?.toUpperCase() ?? 'A'}
                           </div>
                           <span className="text-secondary text-xs">

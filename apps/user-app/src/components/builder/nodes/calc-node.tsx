@@ -211,7 +211,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
           {icon}
-          <span className="text-pf-label font-bold flex-1 truncate">{displaySymbol}</span>
+          <span className="text-pf-label font-semibold flex-1 truncate">{displaySymbol}</span>
           <span className="text-pf-micro opacity-70">{d.label}</span>
           <button
             type="button"

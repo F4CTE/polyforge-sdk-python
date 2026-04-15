@@ -20,7 +20,7 @@ function PublicHeader() {
   return (
     <header className="shrink-0 flex items-center justify-between px-5 h-[57px] border-b border-default bg-surface">
       <Link to="/" className="flex items-center gap-3">
-        <span className="text-sm font-bold tracking-tight text-primary">
+        <span className="text-sm font-semibold tracking-tight text-primary">
           <span className="text-accent-text">Poly</span>forge
         </span>
         <span className="text-strong text-sm font-light select-none">/</span>

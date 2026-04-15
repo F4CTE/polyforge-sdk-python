@@ -206,7 +206,7 @@ export function Component() {
                     : 'border-default text-tertiary'
               }`}
             >
-              <span className="size-5 rounded-pf-full bg-overlay flex items-center justify-center text-pf-caption font-bold">
+              <span className="size-5 rounded-pf-full bg-overlay flex items-center justify-center text-pf-caption font-semibold">
                 {i + 1}
               </span>
               {label}

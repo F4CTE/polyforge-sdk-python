@@ -52,7 +52,7 @@ function StatCard({
         <Icon size={15} className="shrink-0" aria-hidden="true" />
         <span>{label}</span>
       </div>
-      <div className={`text-2xl font-bold font-mono ${valueClass ?? 'text-primary'}`}>
+      <div className={`text-2xl font-semibold font-mono ${valueClass ?? 'text-primary'}`}>
         {value}
       </div>
     </div>
@@ -343,7 +343,7 @@ export function Component() {
         <h2 className="text-sm font-semibold text-primary">How Referrals Work</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-7 h-7 rounded-pf-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-bold">
+            <div className="flex-shrink-0 w-7 h-7 rounded-pf-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-semibold">
               1
             </div>
             <div>
@@ -354,7 +354,7 @@ export function Component() {
             </div>
           </div>
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-7 h-7 rounded-pf-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-bold">
+            <div className="flex-shrink-0 w-7 h-7 rounded-pf-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-semibold">
               2
             </div>
             <div>
@@ -365,7 +365,7 @@ export function Component() {
             </div>
           </div>
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-7 h-7 rounded-pf-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-bold">
+            <div className="flex-shrink-0 w-7 h-7 rounded-pf-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-semibold">
               3
             </div>
             <div>

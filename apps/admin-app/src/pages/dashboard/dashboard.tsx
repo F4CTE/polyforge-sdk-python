@@ -194,7 +194,7 @@ export function Component() {
                   <span className={card.color}>{card.icon}</span>
                 </div>
               </div>
-              <div className="text-2xl font-bold text-primary font-mono">
+              <div className="text-2xl font-semibold text-primary font-mono">
                 {card.value.toLocaleString()}
               </div>
             </div>
@@ -227,7 +227,7 @@ export function Component() {
                     <span className={card.color}>{card.icon}</span>
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-primary font-mono">
+                <div className="text-2xl font-semibold text-primary font-mono">
                   {card.value.toLocaleString()}
                 </div>
               </div>
@@ -387,17 +387,17 @@ export function Component() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-app border border-default rounded-pf-sm p-3">
                 <span className="text-pf-label text-tertiary uppercase">Tracked Keys</span>
-                <span className="block text-lg font-bold text-primary">{rateLimits.totalTrackedKeys}</span>
+                <span className="block text-lg font-semibold text-primary">{rateLimits.totalTrackedKeys}</span>
               </div>
               <div className="bg-app border border-default rounded-pf-sm p-3">
                 <span className="text-pf-label text-tertiary uppercase">Recent 429s</span>
-                <span className={`block text-lg font-bold ${rateLimits.recent429Count > 0 ? 'text-warning' : 'text-primary'}`}>
+                <span className={`block text-lg font-semibold ${rateLimits.recent429Count > 0 ? 'text-warning' : 'text-primary'}`}>
                   {rateLimits.recent429Count}
                 </span>
               </div>
               <div className="bg-app border border-default rounded-pf-sm p-3">
                 <span className="text-pf-label text-tertiary uppercase">Top Offenders</span>
-                <span className="block text-lg font-bold text-primary">{rateLimits.topOffenders?.length ?? 0}</span>
+                <span className="block text-lg font-semibold text-primary">{rateLimits.topOffenders?.length ?? 0}</span>
               </div>
             </div>
             {rateLimits.totalTrackedKeys === 0 && rateLimits.recent429Count === 0 && (rateLimits.topOffenders?.length ?? 0) === 0 && (

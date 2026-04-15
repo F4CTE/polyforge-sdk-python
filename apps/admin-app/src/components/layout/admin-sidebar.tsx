@@ -171,7 +171,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                   <span className="shrink-0 relative">
                     {item.icon}
                     {collapsed && item.label === 'Tickets' && openTickets > 0 && (
-                      <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-4 h-4 px-1 rounded-pf-full bg-accent text-pf-micro font-bold text-inverse" aria-label={`${openTickets} open tickets`}>
+                      <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-4 h-4 px-1 rounded-pf-full bg-accent text-pf-micro font-semibold text-inverse" aria-label={`${openTickets} open tickets`}>
                         {openTickets}
                       </span>
                     )}
@@ -180,7 +180,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
                     <>
                       <span className="truncate">{item.label}</span>
                       {item.label === 'Tickets' && openTickets > 0 && (
-                        <span className="ml-auto flex items-center justify-center min-w-5 h-5 px-2 rounded-pf-full bg-accent text-pf-caption font-bold text-inverse" aria-label={`${openTickets} open tickets`}>
+                        <span className="ml-auto flex items-center justify-center min-w-5 h-5 px-2 rounded-pf-full bg-accent text-pf-caption font-semibold text-inverse" aria-label={`${openTickets} open tickets`}>
                           {openTickets}
                         </span>
                       )}
@@ -196,7 +196,7 @@ export function AdminSidebar({ collapsed, onToggle, onNavigate }: Props) {
       {/* Footer */}
       <div className="border-t border-default px-3 py-4 shrink-0">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-pf-full bg-elevated text-accent text-pf-label font-bold shrink-0">
+          <div className="flex items-center justify-center w-8 h-8 rounded-pf-full bg-elevated text-accent text-pf-label font-semibold shrink-0">
             {initials}
           </div>
           {!collapsed && (

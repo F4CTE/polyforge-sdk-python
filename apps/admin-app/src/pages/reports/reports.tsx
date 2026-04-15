@@ -423,7 +423,7 @@ function StatTile({ label, value, accent, danger }: StatTileProps) {
       <p className="text-pf-label font-semibold uppercase tracking-wider text-tertiary">
         {label}
       </p>
-      <p className={['text-2xl font-bold tabular-nums', valueClass].join(' ')}>{value}</p>
+      <p className={['text-2xl font-semibold tabular-nums', valueClass].join(' ')}>{value}</p>
     </div>
   );
 }
@@ -743,7 +743,7 @@ export function Component() {
             <MessageSquare className="h-5 w-5 text-accent-text" aria-hidden />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-primary leading-tight">
+            <h1 className="text-xl font-semibold text-primary leading-tight">
               Content Moderation
             </h1>
             <p className="text-xs text-tertiary mt-1">

@@ -111,7 +111,7 @@ export function Component() {
           {user.avatarUrl ? (
             <img data-testid="profile-avatar" src={user.avatarUrl} alt={`${user.displayName ?? user.username} avatar`} className="size-20 rounded-pf-full object-cover" />
           ) : (
-            <div data-testid="profile-avatar" className="size-20 rounded-pf-full bg-surface flex items-center justify-center text-2xl font-bold text-accent-text">
+            <div data-testid="profile-avatar" className="size-20 rounded-pf-full bg-surface flex items-center justify-center text-2xl font-semibold text-accent-text">
               {initials}
             </div>
           )}
@@ -170,7 +170,7 @@ export function Component() {
             {/* Score circle + value */}
             <div className="flex items-center gap-6 mb-4">
               <div className={`size-16 rounded-pf-full border-2 flex items-center justify-center ${scoreBg(scoreData.score.score)}`}>
-                <span className={`text-2xl font-bold font-mono ${scoreColor(scoreData.score.score)}`}>
+                <span className={`text-2xl font-semibold font-mono ${scoreColor(scoreData.score.score)}`}>
                   {scoreData.score.score}
                 </span>
               </div>

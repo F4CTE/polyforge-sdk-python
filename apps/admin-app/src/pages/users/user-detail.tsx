@@ -706,7 +706,7 @@ export function Component() {
           {/* Avatar + identity */}
           <div className="flex items-start gap-4">
             <div
-              className="w-16 h-16 rounded-pf-full bg-accent/20 text-accent-text flex items-center justify-center text-xl font-bold shrink-0 select-none"
+              className="w-16 h-16 rounded-pf-full bg-accent/20 text-accent-text flex items-center justify-center text-xl font-semibold shrink-0 select-none"
               aria-hidden="true"
             >
               {getInitials(user.displayName, user.username)}
@@ -783,14 +783,14 @@ export function Component() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-5 border-t border-default">
           <div className="bg-app border border-default rounded-pf-sm px-4 py-3 text-center">
             <div className="text-xs text-tertiary mb-1">Trades</div>
-            <div className="text-lg font-bold text-primary">
+            <div className="text-lg font-semibold text-primary">
               {(user.tradeCount ?? 0).toLocaleString()}
             </div>
           </div>
           <div className="bg-app border border-default rounded-pf-sm px-4 py-3 text-center">
             <div className="text-xs text-tertiary mb-1">Total P&amp;L</div>
             <div
-              className={`text-lg font-bold ${
+              className={`text-lg font-semibold ${
                 typeof user.totalPnl === 'number' && user.totalPnl < 0
                   ? 'text-loss'
                   : 'text-gain'
@@ -801,11 +801,11 @@ export function Component() {
           </div>
           <div className="bg-app border border-default rounded-pf-sm px-4 py-3 text-center">
             <div className="text-xs text-tertiary mb-1">Win Rate</div>
-            <div className="text-lg font-bold text-primary">{fmtWinRate(user.winRate)}</div>
+            <div className="text-lg font-semibold text-primary">{fmtWinRate(user.winRate)}</div>
           </div>
           <div className="bg-app border border-default rounded-pf-sm px-4 py-3 text-center">
             <div className="text-xs text-tertiary mb-1">Followers</div>
-            <div className="text-lg font-bold text-primary">
+            <div className="text-lg font-semibold text-primary">
               {(user.followerCount ?? 0).toLocaleString()}
             </div>
           </div>

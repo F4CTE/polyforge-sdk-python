@@ -950,7 +950,7 @@ export function Features() {
         <div className="text-center max-w-pf-content-sm mx-auto mb-14">
           <h2
             id="features-heading"
-            className="text-2xl sm:text-3xl font-bold text-pf-text mb-4"
+            className="text-2xl sm:text-3xl font-semibold text-pf-text mb-4"
           >
             Everything you need to trade smarter
           </h2>

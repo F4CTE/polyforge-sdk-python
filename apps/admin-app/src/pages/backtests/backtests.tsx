@@ -282,7 +282,7 @@ export function Component() {
           >
             <p className="text-xs text-tertiary mb-1">{label}</p>
             <p
-              className={`text-2xl font-bold ${
+              className={`text-2xl font-semibold ${
                 danger
                   ? 'text-loss'
                   : highlight

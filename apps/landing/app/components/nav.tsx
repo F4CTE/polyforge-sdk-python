@@ -121,7 +121,7 @@ export function Nav() {
       <div className="flex items-center gap-4 md:gap-8 h-16 max-w-pf-container-landing mx-auto px-6">
         <a
           href="/"
-          className="flex items-center gap-2 text-pf-subhead font-bold text-pf-text shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-pf-sm"
+          className="flex items-center gap-2 text-pf-subhead font-semibold text-pf-text shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-pf-sm"
           aria-label="Polyforge home"
         >
           <PolyforgeLogomark size={26} className="text-pf-cyan-400" />

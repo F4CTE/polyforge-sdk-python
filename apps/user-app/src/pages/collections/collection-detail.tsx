@@ -107,7 +107,7 @@ export function Component() {
             {collection.emoji}
           </span>
           <div>
-            <h1 className="text-2xl font-bold text-primary">{collection.title}</h1>
+            <h1 className="text-2xl font-semibold text-primary">{collection.title}</h1>
             <p className="text-sm text-tertiary mt-1 max-w-prose">{collection.description}</p>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary mt-3">
               <span className="flex items-center gap-1">
@@ -149,7 +149,7 @@ export function Component() {
                 >
                   {/* Seller */}
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="size-6 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center text-pf-caption font-bold text-accent-text">
+                    <div className="size-6 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center text-pf-caption font-semibold text-accent-text">
                       {(listing.seller.displayName ?? listing.seller.username).slice(0, 2).toUpperCase()}
                     </div>
                     <span className="text-xs text-secondary truncate">

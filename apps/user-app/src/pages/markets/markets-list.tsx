@@ -269,7 +269,7 @@ const MarketCard = memo(function MarketCard({
         <div
           className={`w-[52px] h-[52px] rounded-pf-md flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-overlay'}`}
         >
-          <span className={`text-lg font-bold ${catColor?.text ?? 'text-tertiary'}`}>
+          <span className={`text-lg font-semibold ${catColor?.text ?? 'text-tertiary'}`}>
             {market.title.charAt(0).toUpperCase()}
           </span>
         </div>
@@ -408,7 +408,7 @@ function TrendingCard({ market }: { market: Market }) {
 
       {/* YES price */}
       {yesP !== null && (
-        <div className="text-2xl font-bold text-accent-text">{yesP}¢</div>
+        <div className="text-2xl font-semibold text-accent-text">{yesP}¢</div>
       )}
 
       {/* Footer badges */}
@@ -843,7 +843,7 @@ function AdvancedSearchModal({
                         className="w-full flex items-center gap-3 px-4 py-3 bg-surface hover:bg-elevated transition-colors text-left group"
                       >
                         <div className={`w-8 h-8 rounded-pf-sm flex items-center justify-center shrink-0 ${catColor?.bg ?? 'bg-overlay'}`}>
-                          <span className={`text-xs font-bold ${catColor?.text ?? 'text-tertiary'}`}>
+                          <span className={`text-xs font-semibold ${catColor?.text ?? 'text-tertiary'}`}>
                             {market.title.charAt(0).toUpperCase()}
                           </span>
                         </div>
@@ -1110,7 +1110,7 @@ export function Component() {
           <SlidersHorizontal className="size-4" aria-hidden="true" />
           <span>Advanced</span>
           {countActiveFilters(advancedFilters) > 0 && (
-            <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-accent text-app text-pf-caption font-bold -mr-1">
+            <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-accent text-app text-pf-caption font-semibold -mr-1">
               {countActiveFilters(advancedFilters)}
             </span>
           )}

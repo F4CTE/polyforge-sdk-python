@@ -198,7 +198,7 @@ export function Component() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold text-primary">Price Alerts</h1>
+            <h1 className="text-xl font-semibold text-primary">Price Alerts</h1>
             <p className="text-sm text-secondary mt-1">
               {loading ? '...' : `${alerts.length} alert${alerts.length !== 1 ? 's' : ''}`}
             </p>

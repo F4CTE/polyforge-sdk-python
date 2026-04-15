@@ -1616,7 +1616,7 @@ export function Component() {
 
                       {/* Earned / target */}
                       <div className="mb-2">
-                        <span className={`text-2xl font-mono font-bold ${earned >= 0 ? 'text-gain' : 'text-loss'}`}>
+                        <span className={`text-2xl font-mono font-semibold ${earned >= 0 ? 'text-gain' : 'text-loss'}`}>
                           {earned >= 0 ? '+' : ''}{earned.toFixed(2)}
                         </span>
                         <span className="text-sm text-tertiary font-mono ml-1">
@@ -1695,7 +1695,7 @@ export function Component() {
                       className="text-accent/20"
                     />
                   </svg>
-                  <span className="text-sm font-bold text-primary tracking-wide">PolyForge</span>
+                  <span className="text-sm font-semibold text-primary tracking-wide">PolyForge</span>
                 </div>
                 {username && (
                   <span className="text-xs font-mono text-tertiary">@{username}</span>
@@ -1706,19 +1706,19 @@ export function Component() {
               <div className="grid grid-cols-3 gap-4 mb-5">
                 <div className="text-center">
                   <p className="text-pf-caption text-tertiary uppercase tracking-wider mb-1">Total P&L</p>
-                  <p className={`text-lg font-mono font-bold ${pnlColor(pnl?.totalPnl ?? '0')}`}>
+                  <p className={`text-lg font-mono font-semibold ${pnlColor(pnl?.totalPnl ?? '0')}`}>
                     {formatPnl(pnl?.totalPnl ?? '0')}
                   </p>
                 </div>
                 <div className="text-center border-x border-subtle">
                   <p className="text-pf-caption text-tertiary uppercase tracking-wider mb-1">Win Rate</p>
-                  <p className="text-lg font-mono font-bold text-accent-text">
+                  <p className="text-lg font-mono font-semibold text-accent-text">
                     {winRatePct(pnl?.winRate ?? '0')}
                   </p>
                 </div>
                 <div className="text-center">
                   <p className="text-pf-caption text-tertiary uppercase tracking-wider mb-1">Edge Score</p>
-                  <p className="text-lg font-mono font-bold text-primary">
+                  <p className="text-lg font-mono font-semibold text-primary">
                     {edgeScore != null ? edgeScore : '—'}
                   </p>
                 </div>
@@ -2314,7 +2314,7 @@ export function Component() {
                                     {/* P&L prominent display */}
                                     <div className="flex flex-col">
                                       <span className="text-pf-caption text-tertiary uppercase tracking-wider mb-1">Unrealized P&L</span>
-                                      <span className={`text-2xl font-mono font-bold ${pnlNum >= 0 ? 'text-gain' : 'text-loss'}`}>
+                                      <span className={`text-2xl font-mono font-semibold ${pnlNum >= 0 ? 'text-gain' : 'text-loss'}`}>
                                         {formatPnl(pos.unrealizedPnl)}
                                       </span>
                                       <span className="text-pf-caption text-tertiary mt-1 italic">Unrealized P&L updates are estimated</span>
@@ -2657,7 +2657,7 @@ export function Component() {
                           <span className="ml-1 text-tertiary cursor-help" title={item.tooltip}>ⓘ</span>
                         )}
                       </p>
-                      <div className="text-lg font-mono font-bold leading-tight">{item.value}</div>
+                      <div className="text-lg font-mono font-semibold leading-tight">{item.value}</div>
                     </div>
                   ))}
                 </div>

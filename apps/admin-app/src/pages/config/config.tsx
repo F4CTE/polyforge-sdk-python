@@ -484,7 +484,7 @@ export function Component() {
               <Settings2 className="h-5 w-5 text-accent-text" aria-hidden />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-primary leading-tight">Platform Config</h1>
+              <h1 className="text-xl font-semibold text-primary leading-tight">Platform Config</h1>
               <p className="text-xs text-tertiary mt-1">
                 Last saved:{' '}
                 <span className="text-secondary">{lastSavedDisplay}</span>

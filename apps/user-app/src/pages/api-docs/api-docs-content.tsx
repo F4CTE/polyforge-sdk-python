@@ -149,7 +149,7 @@ export function renderContent({
           },
         ].map(({ step, title, body }) => (
           <div key={step} className="flex gap-4 p-4 bg-elevated border border-default rounded-pf-lg">
-            <span className="shrink-0 w-6 h-6 rounded-pf-full bg-accent/20 text-accent-text text-xs font-bold flex items-center justify-center">{step}</span>
+            <span className="shrink-0 w-6 h-6 rounded-pf-full bg-accent/20 text-accent-text text-xs font-semibold flex items-center justify-center">{step}</span>
             <div className="flex-1 space-y-3">
               <p className="text-sm font-medium text-primary">{title}</p>
               {body}

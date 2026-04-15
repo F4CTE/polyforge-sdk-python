@@ -432,7 +432,7 @@ export function Component() {
                   <div className={`p-2 rounded-pf-sm ${card.bg} ${card.color}`}>{card.icon}</div>
                   <span className="text-xs text-tertiary font-medium uppercase tracking-wide">{card.label}</span>
                 </div>
-                <div className="text-2xl font-bold text-primary font-mono">{card.value}</div>
+                <div className="text-2xl font-semibold text-primary font-mono">{card.value}</div>
                 {card.sub && <div className="mt-1">{card.sub}</div>}
               </div>
             ))}
@@ -472,7 +472,7 @@ export function Component() {
                     )}
                     <span className="text-xs text-tertiary truncate">{card.label}</span>
                   </div>
-                  <div className={`text-xl font-bold font-mono ${idx === 0 ? 'text-gain' : 'text-primary'}`}>
+                  <div className={`text-xl font-semibold font-mono ${idx === 0 ? 'text-gain' : 'text-primary'}`}>
                     {card.value}
                   </div>
                   <div className="mt-1">
@@ -521,7 +521,7 @@ export function Component() {
                 {/* Center label overlay using absolute positioning trick */}
                 <div className="relative -mt-30 mb-15 flex flex-col items-center justify-center pointer-events-none select-none">
                   <span className="text-xs text-tertiary">Total</span>
-                  <span className="text-base font-bold font-mono text-primary">
+                  <span className="text-base font-semibold font-mono text-primary">
                     {fmtDollar(breakdown?.totalRevenue ?? 0)}
                   </span>
                 </div>

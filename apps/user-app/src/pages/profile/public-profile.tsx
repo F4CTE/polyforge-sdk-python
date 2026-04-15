@@ -357,7 +357,7 @@ export function Component() {
           <h1 className="text-2xl font-semibold text-primary">{profile.displayName ?? profile.username}</h1>
           {/* Inline score badge */}
           {scoreData?.score && (
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-pf-full border text-xs font-mono font-bold ${scoreBg(scoreData.score.score)} ${scoreColor(scoreData.score.score)}`}>
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-pf-full border text-xs font-mono font-semibold ${scoreBg(scoreData.score.score)} ${scoreColor(scoreData.score.score)}`}>
               <TrendingUp className="size-3" />
               {scoreData.score.score}
             </div>
@@ -411,7 +411,7 @@ export function Component() {
           {profile.avatarUrl ? (
             <img src={profile.avatarUrl} alt={`${profile.displayName ?? profile.username} avatar`} className="size-20 rounded-pf-full object-cover" />
           ) : (
-            <div className="size-20 rounded-pf-full bg-surface flex items-center justify-center text-2xl font-bold text-accent-text">
+            <div className="size-20 rounded-pf-full bg-surface flex items-center justify-center text-2xl font-semibold text-accent-text">
               {initials}
             </div>
           )}
@@ -455,7 +455,7 @@ export function Component() {
           </div>
           <div className="flex items-center gap-6">
             <div className={`size-16 rounded-pf-full border-2 flex items-center justify-center ${scoreBg(scoreData.score.score)}`}>
-              <span className={`text-2xl font-bold font-mono ${scoreColor(scoreData.score.score)}`}>
+              <span className={`text-2xl font-semibold font-mono ${scoreColor(scoreData.score.score)}`}>
                 {scoreData.score.score}
               </span>
             </div>

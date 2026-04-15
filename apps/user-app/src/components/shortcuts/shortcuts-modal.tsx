@@ -99,7 +99,7 @@ export function ShortcutsModal({ open, onClose }: ShortcutsModalProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
           {SHORTCUT_GROUPS.map((group) => (
             <div key={group.title}>
-              <h3 className="text-xs font-bold text-tertiary uppercase tracking-wide mb-3">
+              <h3 className="text-xs font-semibold text-tertiary uppercase tracking-wide mb-3">
                 {group.title}
               </h3>
               <ul className="space-y-2">

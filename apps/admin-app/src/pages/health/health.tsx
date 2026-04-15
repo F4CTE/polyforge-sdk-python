@@ -200,7 +200,7 @@ function DbCard({ db }: { db: DbHealth }) {
           <span className="text-tertiary">Migrations Pending</span>
           <div className="mt-1">
             {db.pendingMigrations > 0 ? (
-              <span className="inline-flex items-center px-2 py-1 rounded text-pf-caption font-bold bg-loss/15 text-loss">
+              <span className="inline-flex items-center px-2 py-1 rounded text-pf-caption font-semibold bg-loss/15 text-loss">
                 {db.pendingMigrations}
               </span>
             ) : (

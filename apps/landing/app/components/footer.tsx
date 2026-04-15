@@ -98,7 +98,7 @@ export function Footer() {
           <div className="shrink-0 min-w-[220px]">
             <a
               href="/"
-              className="inline-flex items-center gap-2 text-pf-subhead font-bold text-pf-text mb-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-pf-sm"
+              className="inline-flex items-center gap-2 text-pf-subhead font-semibold text-pf-text mb-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-pf-sm"
               aria-label="Polyforge home"
             >
               <PolyforgeLogomark size={24} className="text-pf-cyan-400" />

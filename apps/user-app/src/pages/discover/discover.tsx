@@ -325,7 +325,7 @@ export function Component() {
               >
                 {/* FEATURED badge + seller */}
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="bg-warning/15 text-warning text-pf-caption font-bold px-2 py-1 rounded">
+                  <span className="bg-warning/15 text-warning text-pf-caption font-semibold px-2 py-1 rounded">
                     FEATURED
                   </span>
                   <span className="text-xs text-secondary ml-auto truncate">
@@ -507,7 +507,7 @@ export function Component() {
                   {s.author.avatarUrl ? (
                     <img src={s.author.avatarUrl} alt={`${s.author.displayName ?? s.author.username} avatar`} className="size-7 rounded-pf-full object-cover" width={28} height={28} loading="lazy" />
                   ) : (
-                    <div className="size-7 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center text-pf-caption font-bold text-accent-text">
+                    <div className="size-7 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center text-pf-caption font-semibold text-accent-text">
                       {authorInitials(s)}
                     </div>
                   )}
@@ -520,7 +520,7 @@ export function Component() {
                     {s.author.displayName ?? s.author.username}
                   </a>
                   {s.author.score != null && s.author.score > 0 && (
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-caption font-mono font-bold border ${
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-caption font-mono font-semibold border ${
                       s.author.score >= 70 ? 'text-gain bg-gain/10 border-gain/20' :
                       s.author.score >= 40 ? 'text-warning bg-warning/10 border-warning/20' :
                       'text-loss bg-loss/10 border-loss/20'

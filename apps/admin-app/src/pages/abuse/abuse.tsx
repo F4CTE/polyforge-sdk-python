@@ -135,7 +135,7 @@ function SummaryCard({ label, value, icon, accent }: SummaryCardProps) {
         {icon}
       </div>
       <div>
-        <div className={`text-xl font-bold ${accent ? 'text-loss' : 'text-primary'}`}>{value}</div>
+        <div className={`text-xl font-semibold ${accent ? 'text-loss' : 'text-primary'}`}>{value}</div>
         <div className="text-xs text-tertiary">{label}</div>
       </div>
     </div>
@@ -419,11 +419,11 @@ export function Component() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <ShieldAlert size={22} className="text-loss" aria-hidden="true" />
-          <h1 className="text-xl font-bold text-primary">Abuse Detection</h1>
+          <h1 className="text-xl font-semibold text-primary">Abuse Detection</h1>
         </div>
         {pendingCount > 0 && (
           <span
-            className="inline-flex items-center justify-center min-w-6 h-5 px-2 rounded-pf-full bg-loss text-pf-caption font-bold text-primary"
+            className="inline-flex items-center justify-center min-w-6 h-5 px-2 rounded-pf-full bg-loss text-pf-caption font-semibold text-primary"
             aria-label={`${pendingCount} pending flagged strategies`}
           >
             {pendingCount}
@@ -477,7 +477,7 @@ export function Component() {
           >
             {tab.label}
             {tab.key === 'pending' && pendingCount > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center min-w-5 h-4 px-1 rounded-pf-full bg-loss text-pf-micro font-bold text-primary">
+              <span className="ml-2 inline-flex items-center justify-center min-w-5 h-4 px-1 rounded-pf-full bg-loss text-pf-micro font-semibold text-primary">
                 {pendingCount}
               </span>
             )}

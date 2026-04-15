@@ -299,7 +299,7 @@ export function Component() {
                     </td>
                     <td data-testid="trader-score" className="px-4 py-3 text-right hidden sm:table-cell">
                       {entry.score != null ? (
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono font-bold ${
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono font-semibold ${
                           entry.score >= 80 ? 'text-gain bg-gain/10' :
                           entry.score >= 60 ? 'text-accent-text bg-accent/10' :
                           entry.score >= 40 ? 'text-warning bg-warning/10' :

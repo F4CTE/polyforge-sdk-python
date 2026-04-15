@@ -29,7 +29,7 @@ export function Testimonials() {
         <div className="text-center max-w-pf-content-sm mx-auto mb-14">
           <h2
             id="testimonials-heading"
-            className="text-2xl sm:text-3xl font-bold text-pf-text mb-4"
+            className="text-2xl sm:text-3xl font-semibold text-pf-text mb-4"
           >
             Trusted by traders
           </h2>
@@ -45,7 +45,7 @@ export function Testimonials() {
               className="animate-fade-in bg-pf-base border border-pf-border-subtle rounded-pf-lg p-6 sm:p-8 transition-all duration-pf-normal hover:border-pf-cyan-500/20"
             >
               <div
-                className="text-5xl font-extrabold leading-none text-pf-cyan-500/15 -mb-2 font-sans"
+                className="text-5xl font-semibold leading-none text-pf-cyan-500/15 -mb-2 font-sans"
                 aria-hidden="true"
               >
                 &ldquo;

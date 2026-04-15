@@ -188,7 +188,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             {!collapsed && (
               <span className="flex items-center gap-2">
                 <span>Edge Rating</span>
-                <span className={`font-mono font-bold text-xs ${
+                <span className={`font-mono font-semibold text-xs ${
                   myScore >= 80 ? 'text-gain' :
                   myScore >= 60 ? 'text-accent-text' :
                   myScore >= 40 ? 'text-warning' :

@@ -139,19 +139,19 @@ export function Component() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-elevated border border-default rounded-pf-lg p-4">
                 <div className="text-xs text-tertiary mb-1">Hit Rate</div>
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-2xl font-semibold text-primary">
                   {((stats.hitRate ?? 0) * 100).toFixed(1)}%
                 </div>
               </div>
               <div className="bg-elevated border border-default rounded-pf-lg p-4">
                 <div className="text-xs text-tertiary mb-1">Total Keys</div>
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-2xl font-semibold text-primary">
                   {(stats.keyCount ?? 0).toLocaleString()}
                 </div>
               </div>
               <div className="bg-elevated border border-default rounded-pf-lg p-4">
                 <div className="text-xs text-tertiary mb-1">Memory Usage</div>
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-2xl font-semibold text-primary">
                   {(stats.memoryUsageMb ?? 0).toFixed(1)} MB
                 </div>
               </div>

@@ -1269,7 +1269,7 @@ export function Component() {
               {/* Step 1: QR Code */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-accent text-inverse text-xs font-bold">1</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-accent text-inverse text-xs font-semibold">1</span>
                   <h3 className="text-sm font-semibold text-primary">Scan QR Code</h3>
                 </div>
                 <p className="text-xs text-secondary ml-7">
@@ -1298,7 +1298,7 @@ export function Component() {
               {/* Step 2: Verify */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-accent text-inverse text-xs font-bold">2</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-pf-full bg-accent text-inverse text-xs font-semibold">2</span>
                   <h3 className="text-sm font-semibold text-primary">Enter verification code</h3>
                 </div>
                 <div className="ml-7 space-y-3">
@@ -2160,7 +2160,7 @@ export function Component() {
                             <History className="size-4" />
                             Deliveries
                             {recentFailures > 0 && (
-                              <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-pf-full bg-loss text-primary text-pf-micro font-bold leading-none">
+                              <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-pf-full bg-loss text-primary text-pf-micro font-semibold leading-none">
                                 {recentFailures}
                               </span>
                             )}

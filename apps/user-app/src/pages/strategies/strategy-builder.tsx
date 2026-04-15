@@ -1139,7 +1139,7 @@ export function Component() {
   if (wizardStep === 'template' && isNewStrategy) {
     return (
       <div className="max-w-2xl mx-auto py-8 px-4">
-        <h1 className="text-xl font-bold text-primary mb-1">New Strategy</h1>
+        <h1 className="text-xl font-semibold text-primary mb-1">New Strategy</h1>
         <p className="text-sm text-secondary mb-6">Choose a starting point</p>
         <div className="grid grid-cols-1 gap-3">
           {TEMPLATES.map(t => (

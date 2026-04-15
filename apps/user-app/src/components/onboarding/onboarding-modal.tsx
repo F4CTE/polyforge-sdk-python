@@ -362,7 +362,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
         {/* Heading */}
         <h2
           id="onboarding-heading"
-          className="text-primary text-xl font-bold mb-2 leading-tight"
+          className="text-primary text-xl font-semibold mb-2 leading-tight"
         >
           {step.heading}
         </h2>

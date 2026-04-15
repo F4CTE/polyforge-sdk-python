@@ -1064,7 +1064,7 @@ export function Component() {
               >
                 <Bell className="size-4" />
                 {strategyAlerts.length > 0 && (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-pf-full bg-warning text-inverse text-pf-micro font-bold leading-none">
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-pf-full bg-warning text-inverse text-pf-micro font-semibold leading-none">
                     {strategyAlerts.length > 9 ? '9+' : strategyAlerts.length}
                   </span>
                 )}
@@ -1229,7 +1229,7 @@ export function Component() {
                   }}
                   className="flex items-center gap-2 px-3 py-2 rounded-pf bg-surface border border-default text-xs text-secondary hover:border-strong hover:text-primary disabled:opacity-40 transition-colors"
                 >
-                  <span className="font-bold text-sm leading-none">𝕏</span>
+                  <span className="font-semibold text-sm leading-none">𝕏</span>
                   Twitter
                 </Button>
                 <Button
@@ -2008,7 +2008,7 @@ export function Component() {
                         <div className="flex-1 min-w-0 space-y-2">
                           {/* Top row: badge + date + current pill */}
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-sm text-xs font-bold tabular-nums ${isCurrent ? 'bg-accent/15 text-accent-text' : 'bg-overlay text-tertiary'}`}>
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-sm text-xs font-semibold tabular-nums ${isCurrent ? 'bg-accent/15 text-accent-text' : 'bg-overlay text-tertiary'}`}>
                               {v.label}
                             </span>
                             {isCurrent && (
@@ -2176,7 +2176,7 @@ export function Component() {
                         <Icon className={`size-4 flex-shrink-0 mt-1 ${color}`} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className={`text-xs font-bold ${color}`}>{ev.type.replace(/_/g, ' ')}</span>
+                            <span className={`text-xs font-semibold ${color}`}>{ev.type.replace(/_/g, ' ')}</span>
                             <span className="text-pf-caption text-tertiary flex-shrink-0">{relativeDate(ev.timestamp)}</span>
                           </div>
                           {ev.type === 'STRATEGY_ERROR' ? (
@@ -2377,7 +2377,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
         <div className="flex flex-col sm:flex-row gap-6">
           {/* Average */}
           <div className="flex flex-col items-center justify-center min-w-[100px]">
-            <span className="text-4xl font-bold text-primary font-mono">
+            <span className="text-4xl font-semibold text-primary font-mono">
               {avgRating.toFixed(1)}
             </span>
             <StarRow rating={Math.round(avgRating)} />
@@ -2496,7 +2496,7 @@ function ReviewsSection({ listingId }: { listingId: string }) {
                     loading="lazy"
                   />
                 ) : (
-                  <div className="size-8 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center text-pf-caption font-bold text-accent-text shrink-0">
+                  <div className="size-8 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center text-pf-caption font-semibold text-accent-text shrink-0">
                     {initials}
                   </div>
                 )}

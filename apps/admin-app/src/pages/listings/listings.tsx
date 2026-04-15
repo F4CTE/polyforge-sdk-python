@@ -340,7 +340,7 @@ export function Component() {
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-primary">Marketplace Listings</h2>
           {pendingCount > 0 && (
-            <span className="flex items-center justify-center min-w-6 h-5 px-2 rounded-pf-full bg-warning text-pf-caption font-bold text-inverse" aria-label={`${pendingCount} pending listings`}>
+            <span className="flex items-center justify-center min-w-6 h-5 px-2 rounded-pf-full bg-warning text-pf-caption font-semibold text-inverse" aria-label={`${pendingCount} pending listings`}>
               {pendingCount}
             </span>
           )}
@@ -375,7 +375,7 @@ export function Component() {
           >
             {tab.label}
             {tab.value === 'PENDING' && pendingCount > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-pf-full bg-warning text-pf-micro font-bold text-inverse">
+              <span className="ml-2 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-pf-full bg-warning text-pf-micro font-semibold text-inverse">
                 {pendingCount}
               </span>
             )}

@@ -7,9 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] — 2026-04-15
 
-### Security
-- **Fail-fast secrets in docker-compose** — replaced `${VAR:-weakdefault}` with `${VAR:?error}` for all credential env vars (POSTGRES_PASSWORD, POSTGRES_ADMIN_PASSWORD, REDIS_PASSWORD, POLY_BUILDER_*) so Docker Compose fails immediately if .env is missing instead of silently using weak defaults (#614)
-- **Added `.env.dev` template** — convenience file with pre-filled dev passwords that developers can `cp .env.dev .env` for quick local setup
+### Fixed (Design System)
+- **Max font-weight 600 enforcement** — replaced all `font-bold` (700) and `font-extrabold` (800) with `font-semibold` (600) across user-app, admin-app, and landing (109 occurrences in 50 files) per charter §2 max-weight rule (closes #616)
+- **Landing page Geist migration** — replaced `next/font/google` Inter + JetBrains Mono with `geist` package's GeistSans + GeistMono to match charter-required fonts (closes #617)
 
 ### Changed (Design System)
 - **Linear-inspired token system** — rewrote `globals.css` with new CSS custom properties (`--bg-app`, `--bg-surface`, `--text-primary`, `--accent-default`, `--gain`, `--loss`) per design charter §12; old `--color-pf-*` tokens aliased for backwards compat (#604)

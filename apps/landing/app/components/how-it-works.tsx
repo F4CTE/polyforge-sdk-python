@@ -171,7 +171,7 @@ export function HowItWorks() {
         <div className="text-center max-w-pf-content-sm mx-auto mb-14">
           <h2
             id="hiw-heading"
-            className="text-2xl sm:text-3xl font-bold text-pf-text mb-4"
+            className="text-2xl sm:text-3xl font-semibold text-pf-text mb-4"
           >
             Get started in three steps
           </h2>
@@ -190,7 +190,7 @@ export function HowItWorks() {
                 className="flex flex-col items-center gap-3 mb-5"
                 aria-hidden="true"
               >
-                <div className="w-14 h-14 bg-gradient-to-br from-pf-cyan-500/20 to-pf-elevated border border-pf-cyan-500/35 rounded-pf-full flex items-center justify-center text-pf-body font-bold font-mono text-pf-cyan-400 shadow-pf-md">
+                <div className="w-14 h-14 bg-gradient-to-br from-pf-cyan-500/20 to-pf-elevated border border-pf-cyan-500/35 rounded-pf-full flex items-center justify-center text-pf-body font-semibold font-mono text-pf-cyan-400 shadow-pf-md">
                   {step.number}
                 </div>
                 {step.visual}
