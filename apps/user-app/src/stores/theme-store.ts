@@ -5,15 +5,24 @@ interface ThemeState {
   toggle: () => void;
 }
 
+const STORAGE_KEY = 'polyforge:theme';
+
 function applyTheme(isDark: boolean) {
   if (typeof document === 'undefined') return;
-  document.documentElement.classList.toggle('dark', isDark);
-  document.documentElement.classList.toggle('light', !isDark);
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+}
+
+function getInitialTheme(): boolean {
+  if (typeof window === 'undefined') return true;
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === 'light') return false;
+  if (saved === 'dark') return true;
+  // Fallback: check prefers-color-scheme
+  return !window.matchMedia('(prefers-color-scheme: light)').matches;
 }
 
 export const useThemeStore = create<ThemeState>((set, get) => {
-  const saved = typeof window !== 'undefined' ? localStorage.getItem('pf-theme') : null;
-  const isDark = saved === 'dark' || (saved === null && true); // Default to dark if not set
+  const isDark = getInitialTheme();
 
   applyTheme(isDark);
 
@@ -23,7 +32,7 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       const next = !get().isDark;
       set({ isDark: next });
       applyTheme(next);
-      localStorage.setItem('pf-theme', next ? 'dark' : 'light');
+      localStorage.setItem(STORAGE_KEY, next ? 'dark' : 'light');
     },
   };
 });

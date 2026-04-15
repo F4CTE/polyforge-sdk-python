@@ -24,6 +24,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **User-app token migration** — migrated 83 files (4,169 replacements) from `pf-*` Tailwind classes to new Linear-inspired tokens: `bg-pf-base` → `bg-app`, `text-pf-text` → `text-primary`, `border-pf-border` → `border-default`, `text-pf-cyan-500` → `text-accent`, `text-pf-success` → `text-gain`, etc. (closes #607)
 - **Admin-app token migration** — migrated 34 files (1,531 replacements) with same mappings as user-app; admin sidebar aliased to `bg-app` (closes #608)
 
+- **Theme mechanism: `data-theme` attribute** — switched all 3 apps from `.dark`/`.light` CSS classes to `data-theme="dark"/"light"` HTML attribute per charter §14; migrated CSS selectors, theme stores, index.html files, and inline flash-prevention scripts; added `prefers-color-scheme` fallback; localStorage key changed from `pf-theme` to `polyforge:theme` (closes #609)
+
 ### Fixed (Design System)
 - **Builder focus-visible rings** — added `focus-visible:shadow-focus-ring` to 4 custom buttons (Add Variable, Backtest tab, Live tab, Run Backtest) per charter §13 keyboard accessibility requirement (closes #618)
 - **Landing nav/footer `rounded-sm` → `rounded-pf-sm`** — replaced 15 bare Tailwind `rounded-sm` usages with design token `rounded-pf-sm` in nav.tsx and footer.tsx (closes #589)

@@ -172,7 +172,7 @@ export function StrategyCanvas() {
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="w-16 h-16 rounded-pf-full bg-surface border border-default flex items-center justify-center">
               <svg
-                className="size-8 text-tertiary dark:opacity-40 opacity-60"
+                className="size-8 text-tertiary opacity-50"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

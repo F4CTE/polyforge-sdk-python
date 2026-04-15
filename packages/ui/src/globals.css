@@ -359,15 +359,15 @@ body {
 }
 
 /* Light theme scrollbars */
-.light ::-webkit-scrollbar-thumb {
+[data-theme="light"] ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.15);
 }
 
-.light ::-webkit-scrollbar-thumb:hover {
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
 }
 
-.light * {
+[data-theme="light"] * {
   scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
 }
 
@@ -526,7 +526,7 @@ body {
 }
 
 /* ─── Light theme overrides ──────────────────────────────────────────── */
-.light {
+:root[data-theme="light"] {
   /* New token overrides (charter §12 — light theme) */
   --bg-app: #FAFAFA;
   --bg-surface: #FFFFFF;

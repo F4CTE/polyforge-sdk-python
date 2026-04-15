@@ -2,7 +2,7 @@
 @import "@xyflow/react/dist/style.css";
 
 /* ─── React Flow CSS variable theming (must come AFTER react-flow styles) ─ */
-.dark .react-flow {
+[data-theme="dark"] .react-flow {
   --xy-background-color: var(--bg-app);
   --xy-node-background-color: var(--bg-elevated);
   --xy-node-border-color: var(--border-subtle);
@@ -15,7 +15,7 @@
   --xy-controls-button-color: var(--text-primary);
 }
 
-.light .react-flow {
+[data-theme="light"] .react-flow {
   --xy-background-color: var(--bg-elevated);
   --xy-node-background-color: var(--bg-elevated);
   --xy-node-border-color: var(--border-subtle);
@@ -61,10 +61,10 @@
 .react-flow__minimap:hover {
   opacity: 1;
 }
-.dark .react-flow__minimap {
+[data-theme="dark"] .react-flow__minimap {
   background: color-mix(in srgb, var(--bg-app) 80%, transparent) !important;
 }
-.light .react-flow__minimap {
+[data-theme="light"] .react-flow__minimap {
   background: color-mix(in srgb, var(--bg-app) 85%, transparent) !important;
   box-shadow: 0 4px 16px color-mix(in srgb, black 8%, transparent), 0 0 0 1px color-mix(in srgb, black 5%, transparent) !important;
 }
@@ -94,10 +94,10 @@
 .react-flow__controls-button:last-child {
   border-bottom: none !important;
 }
-.dark .react-flow__controls-button:hover {
+[data-theme="dark"] .react-flow__controls-button:hover {
   background: var(--bg-surface) !important;
 }
-.light .react-flow__controls-button:hover {
+[data-theme="light"] .react-flow__controls-button:hover {
   background: var(--bg-surface) !important;
 }
 .react-flow__controls-button:focus-visible {

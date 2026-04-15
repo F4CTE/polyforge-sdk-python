@@ -17,21 +17,14 @@ function ThemeToggle() {
   const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
-    setIsLight(document.documentElement.classList.contains("light"));
+    setIsLight(document.documentElement.getAttribute("data-theme") === "light");
   }, []);
 
   function toggle() {
     const next = !isLight;
     setIsLight(next);
-    if (next) {
-      document.documentElement.classList.add("light");
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("pf-theme", "light");
-    } else {
-      document.documentElement.classList.remove("light");
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("pf-theme", "dark");
-    }
+    document.documentElement.setAttribute("data-theme", next ? "light" : "dark");
+    localStorage.setItem("polyforge:theme", next ? "light" : "dark");
   }
 
   return (

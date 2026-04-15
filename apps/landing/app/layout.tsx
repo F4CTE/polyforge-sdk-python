@@ -102,16 +102,17 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${GeistSans.variable} ${GeistMono.variable} dark`}
+      data-theme="dark"
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
     >
       <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
   try {
-    if (localStorage.getItem('pf-theme') === 'light') {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.classList.add('light');
+    var t = localStorage.getItem('polyforge:theme');
+    if (t === 'light' || (!t && matchMedia('(prefers-color-scheme:light)').matches)) {
+      document.documentElement.setAttribute('data-theme', 'light');
     }
   } catch(e) {}
 `,
