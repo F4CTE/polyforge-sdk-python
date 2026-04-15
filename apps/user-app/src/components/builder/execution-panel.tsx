@@ -423,7 +423,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onTabChange('backtest'); if (!expanded) onToggle(); }}
-              className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
+              className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                 activeTab === 'backtest'
                   ? 'bg-accent/10 text-accent-text'
                   : 'text-tertiary hover:text-secondary'
@@ -438,7 +438,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onTabChange('live'); if (!expanded) onToggle(); }}
-              className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
+              className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                 activeTab === 'live'
                   ? 'bg-accent/10 text-accent-text'
                   : 'text-tertiary hover:text-secondary'
@@ -580,7 +580,7 @@ function BacktestTab({
             type="button"
             onClick={onSubmit}
             disabled={submitting || !strategyId || !dateStart || !dateEnd}
-            className="h-8 px-4 rounded-pf-sm bg-accent text-inverse text-xs font-medium hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shrink-0"
+            className="h-8 px-4 rounded-pf-sm bg-accent text-inverse text-xs font-medium hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shrink-0 focus-visible:outline-none focus-visible:shadow-focus-ring"
           >
             {submitting ? <Loader2 className="size-3 animate-spin" /> : <Play className="size-3" />}
             Run Backtest

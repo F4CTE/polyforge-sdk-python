@@ -25,6 +25,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Admin-app token migration** — migrated 34 files (1,531 replacements) with same mappings as user-app; admin sidebar aliased to `bg-app` (closes #608)
 
 ### Fixed (Design System)
+- **Builder focus-visible rings** — added `focus-visible:shadow-focus-ring` to 4 custom buttons (Add Variable, Backtest tab, Live tab, Run Backtest) per charter §13 keyboard accessibility requirement (closes #618)
 - **Landing nav/footer `rounded-sm` → `rounded-pf-sm`** — replaced 15 bare Tailwind `rounded-sm` usages with design token `rounded-pf-sm` in nav.tsx and footer.tsx (closes #589)
 - **Mobile nav missing theme toggle** — added `<ThemeToggle />` to mobile slide-down menu so mobile users can switch dark/light themes (closes #590)
 - **Landing nav inline SVGs → Lucide React** — replaced ~50 lines of inline SVG markup (sun, moon, hamburger, close) with tree-shakeable Lucide React imports (closes #591)

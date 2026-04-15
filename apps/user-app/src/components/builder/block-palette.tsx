@@ -295,7 +295,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               <button
                 type="button"
                 onClick={addVariable}
-                className="flex items-center gap-2 w-full px-3 py-2 rounded-pf-sm text-xs font-medium text-primary transition-colors hover:opacity-90 bg-pf-purple-500"
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-pf-sm text-xs font-medium text-primary transition-colors hover:opacity-90 bg-pf-purple-500 focus-visible:outline-none focus-visible:shadow-focus-ring"
               >
                 <Plus className="size-4" />
                 Add Variable
