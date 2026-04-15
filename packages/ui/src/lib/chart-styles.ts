@@ -17,8 +17,8 @@ import type { CSSProperties } from 'react';
 
 /** Tooltip content (outer box) — background, border, radius, font. */
 export const chartTooltipContentStyle: CSSProperties = {
-  background: 'var(--color-pf-chart-tooltip-bg)',
-  border: '1px solid var(--color-pf-chart-tooltip-border)',
+  background: 'var(--bg-overlay)',
+  border: '1px solid var(--border-default)',
   borderRadius: 6,
   fontSize: 12,
   fontFamily: "'JetBrains Mono', monospace",
@@ -27,7 +27,7 @@ export const chartTooltipContentStyle: CSSProperties = {
 
 /** Tooltip label row styling. */
 export const chartTooltipLabelStyle: CSSProperties = {
-  color: 'var(--color-pf-text-secondary)',
+  color: 'var(--text-secondary)',
   marginBottom: 2,
 };
 
@@ -35,12 +35,12 @@ export const chartTooltipLabelStyle: CSSProperties = {
 export const chartAxisTick = {
   fontSize: 10,
   fontFamily: "'JetBrains Mono', monospace",
-  fill: 'var(--color-pf-text-muted)',
+  fill: 'var(--text-tertiary)',
 } as const;
 
 /** Legend wrapper style — consistent font, color, and spacing across all chart legends. */
 export const chartLegendStyle: CSSProperties = {
-  fontSize: 'var(--text-pf-label)',
-  color: 'var(--color-pf-text-secondary)',
-  paddingTop: 'var(--spacing-pf-2)',
+  fontSize: 'var(--text-label)',
+  color: 'var(--text-secondary)',
+  paddingTop: '8px',
 };

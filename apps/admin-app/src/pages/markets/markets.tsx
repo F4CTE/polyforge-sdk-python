@@ -53,7 +53,7 @@ const CATEGORIES = [
 const LIMIT = 25;
 
 function statusBadge(status: AdminMarket['status']) {
-  const base = 'inline-flex items-center px-2 py-1 rounded-pf-sm text-pf-label font-semibold uppercase tracking-wide';
+  const base = 'inline-flex items-center px-2 py-1 rounded-sm text-label font-semibold uppercase tracking-wide';
   switch (status) {
     case 'ACTIVE':
       return <span className={`${base} bg-gain/15 text-gain`}>Active</span>;
@@ -70,7 +70,7 @@ function statusBadge(status: AdminMarket['status']) {
 
 function categoryBadge(category: string) {
   return (
-    <span className="inline-flex items-center px-2 py-1 rounded-pf-sm text-pf-label font-medium bg-accent/10 text-accent">
+    <span className="inline-flex items-center px-2 py-1 rounded-sm text-label font-medium bg-accent/10 text-accent">
       {category}
     </span>
   );
@@ -226,7 +226,7 @@ export function Component() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold text-primary">Markets</h1>
-          <span className="inline-flex items-center px-3 py-1 rounded-pf-full text-xs font-semibold bg-elevated text-secondary border border-default">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-elevated text-secondary border border-default">
             {total.toLocaleString()}
           </span>
         </div>
@@ -235,7 +235,7 @@ export function Component() {
           variant="ghost"
           onClick={fetchMarkets}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-default text-sm text-secondary hover:text-primary hover:bg-elevated transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 rounded-sm border border-default text-sm text-secondary hover:text-primary hover:bg-elevated transition-colors disabled:opacity-50"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           Refresh
@@ -245,25 +245,25 @@ export function Component() {
       {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="rounded-pf border border-default bg-surface p-4">
-          <div className="text-pf-label font-semibold uppercase tracking-wider text-tertiary mb-1">
+          <div className="text-label font-semibold uppercase tracking-wider text-tertiary mb-1">
             Active Markets
           </div>
           <div className="text-2xl font-semibold text-primary">{activeCount}</div>
         </div>
         <div className="rounded-pf border border-default bg-surface p-4">
-          <div className="text-pf-label font-semibold uppercase tracking-wider text-tertiary mb-1">
+          <div className="text-label font-semibold uppercase tracking-wider text-tertiary mb-1">
             Resolved (page)
           </div>
           <div className="text-2xl font-semibold text-primary">{resolvedCount}</div>
         </div>
         <div className="rounded-pf border border-default bg-surface p-4">
-          <div className="text-pf-label font-semibold uppercase tracking-wider text-tertiary mb-1">
+          <div className="text-label font-semibold uppercase tracking-wider text-tertiary mb-1">
             Total Volume
           </div>
           <div className="text-2xl font-semibold text-primary">{formatVolume(String(totalVolume))}</div>
         </div>
         <div className="rounded-pf border border-default bg-surface p-4">
-          <div className="text-pf-label font-semibold uppercase tracking-wider text-tertiary mb-1">
+          <div className="text-label font-semibold uppercase tracking-wider text-tertiary mb-1">
             Avg Participants
           </div>
           <div className="text-2xl font-semibold text-primary">{avgParticipants.toLocaleString()}</div>
@@ -278,19 +278,19 @@ export function Component() {
           placeholder="Search markets..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="w-full max-w-sm px-3 py-2 rounded-pf-sm border border-default bg-elevated text-primary text-sm placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="w-full max-w-sm px-3 py-2 rounded-sm border border-default bg-elevated text-primary text-sm placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         />
 
         {/* Status tabs + Category */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1 bg-elevated rounded-pf-sm border border-default p-1">
+          <div className="flex items-center gap-1 bg-elevated rounded-sm border border-default p-1">
             {STATUS_TABS.map((tab) => (
               <Button
                 key={tab}
                 type="button"
                 variant="ghost"
                 onClick={() => { setStatusTab(tab); setPage(1); }}
-                className={`px-3 py-1 rounded-pf-sm text-sm font-medium transition-colors ${
+                className={`px-3 py-1 rounded-sm text-sm font-medium transition-colors ${
                   statusTab === tab
                     ? 'bg-accent text-inverse'
                     : 'text-secondary hover:text-primary'
@@ -304,7 +304,7 @@ export function Component() {
           <Select
             value={category}
             onChange={(e) => { setCategory(e.target.value); setPage(1); }}
-            className="px-3 py-2 rounded-pf-sm border border-default bg-elevated text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="px-3 py-2 rounded-sm border border-default bg-elevated text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>{c}</option>
@@ -318,28 +318,28 @@ export function Component() {
         <table className="w-full text-sm" aria-label="Markets list">
           <thead>
             <tr className="border-b border-default">
-              <th className="px-4 py-3 text-left text-pf-label font-semibold uppercase tracking-wider text-tertiary">
+              <th className="px-4 py-3 text-left text-label font-semibold uppercase tracking-wider text-tertiary">
                 Question
               </th>
-              <th className="px-4 py-3 text-left text-pf-label font-semibold uppercase tracking-wider text-tertiary">
+              <th className="px-4 py-3 text-left text-label font-semibold uppercase tracking-wider text-tertiary">
                 Category
               </th>
-              <th className="px-4 py-3 text-left text-pf-label font-semibold uppercase tracking-wider text-tertiary">
+              <th className="px-4 py-3 text-left text-label font-semibold uppercase tracking-wider text-tertiary">
                 Status
               </th>
-              <th className="px-4 py-3 text-right text-pf-label font-semibold uppercase tracking-wider text-tertiary">
+              <th className="px-4 py-3 text-right text-label font-semibold uppercase tracking-wider text-tertiary">
                 Volume
               </th>
-              <th className="px-4 py-3 text-right text-pf-label font-semibold uppercase tracking-wider text-tertiary">
+              <th className="px-4 py-3 text-right text-label font-semibold uppercase tracking-wider text-tertiary">
                 Participants
               </th>
-              <th className="px-4 py-3 text-right text-pf-label font-semibold uppercase tracking-wider text-tertiary">
+              <th className="px-4 py-3 text-right text-label font-semibold uppercase tracking-wider text-tertiary">
                 YES / NO
               </th>
-              <th className="px-4 py-3 text-left text-pf-label font-semibold uppercase tracking-wider text-tertiary">
+              <th className="px-4 py-3 text-left text-label font-semibold uppercase tracking-wider text-tertiary">
                 End Date
               </th>
-              <th className="px-4 py-3 text-right text-pf-label font-semibold uppercase tracking-wider text-tertiary">
+              <th className="px-4 py-3 text-right text-label font-semibold uppercase tracking-wider text-tertiary">
                 Actions
               </th>
             </tr>
@@ -398,7 +398,7 @@ export function Component() {
                     {/* Volume */}
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <div className="text-primary font-mono font-medium">{formatVolume(market.volume24h)}</div>
-                      <div className="text-pf-label text-tertiary font-mono">{formatVolume(market.totalVolume)} total</div>
+                      <div className="text-label text-tertiary font-mono">{formatVolume(market.totalVolume)} total</div>
                     </td>
 
                     {/* Participants */}
@@ -435,7 +435,7 @@ export function Component() {
                           disabled={isUpdating}
                           aria-label={market.featured ? 'Remove from featured' : 'Mark as featured'}
                           title={market.featured ? 'Remove from featured' : 'Mark as featured'}
-                          className={`p-2 rounded-pf-sm transition-colors disabled:opacity-40 ${
+                          className={`p-2 rounded-sm transition-colors disabled:opacity-40 ${
                             market.featured
                               ? 'text-warning hover:text-warning/80'
                               : 'text-tertiary hover:text-warning'
@@ -453,7 +453,7 @@ export function Component() {
                                 variant="danger"
                                 onClick={() => handleDelist(market)}
                                 disabled={isUpdating}
-                                className="px-2 py-1 rounded-pf-sm text-pf-label font-semibold bg-loss/20 text-loss hover:bg-loss/30 transition-colors disabled:opacity-40"
+                                className="px-2 py-1 rounded-sm text-label font-semibold bg-loss/20 text-loss hover:bg-loss/30 transition-colors disabled:opacity-40"
                               >
                                 Confirm
                               </Button>
@@ -461,7 +461,7 @@ export function Component() {
                                 type="button"
                                 variant="secondary"
                                 onClick={() => setConfirmDelist(null)}
-                                className="px-2 py-1 rounded-pf-sm text-pf-label text-secondary hover:text-primary transition-colors"
+                                className="px-2 py-1 rounded-sm text-label text-secondary hover:text-primary transition-colors"
                               >
                                 Cancel
                               </Button>
@@ -473,7 +473,7 @@ export function Component() {
                               onClick={() => setConfirmDelist(market.id)}
                               disabled={isUpdating}
                               title="Delist market"
-                              className="flex items-center gap-1 px-2 py-1 rounded-pf-sm text-pf-label font-medium text-tertiary hover:text-loss hover:bg-loss/10 transition-colors disabled:opacity-40"
+                              className="flex items-center gap-1 px-2 py-1 rounded-sm text-label font-medium text-tertiary hover:text-loss hover:bg-loss/10 transition-colors disabled:opacity-40"
                             >
                               <Ban size={12} />
                               Delist
@@ -488,7 +488,7 @@ export function Component() {
                             variant="ghost"
                             onClick={() => handleRestore(market)}
                             disabled={isUpdating}
-                            className="flex items-center gap-1 px-2 py-1 rounded-pf-sm text-pf-label font-medium text-tertiary hover:text-gain hover:bg-gain/10 transition-colors disabled:opacity-40"
+                            className="flex items-center gap-1 px-2 py-1 rounded-sm text-label font-medium text-tertiary hover:text-gain hover:bg-gain/10 transition-colors disabled:opacity-40"
                           >
                             Restore
                           </Button>
@@ -515,7 +515,7 @@ export function Component() {
               variant="ghost"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1 || loading}
-              className="flex items-center gap-1 px-3 py-2 rounded-pf-sm border border-default text-sm text-secondary hover:text-primary hover:bg-elevated transition-colors disabled:opacity-40"
+              className="flex items-center gap-1 px-3 py-2 rounded-sm border border-default text-sm text-secondary hover:text-primary hover:bg-elevated transition-colors disabled:opacity-40"
             >
               <ChevronLeft size={14} />
               Prev
@@ -525,7 +525,7 @@ export function Component() {
               variant="ghost"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || loading}
-              className="flex items-center gap-1 px-3 py-2 rounded-pf-sm border border-default text-sm text-secondary hover:text-primary hover:bg-elevated transition-colors disabled:opacity-40"
+              className="flex items-center gap-1 px-3 py-2 rounded-sm border border-default text-sm text-secondary hover:text-primary hover:bg-elevated transition-colors disabled:opacity-40"
             >
               Next
               <ChevronRight size={14} />

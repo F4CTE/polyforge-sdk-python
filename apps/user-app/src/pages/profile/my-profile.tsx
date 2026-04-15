@@ -75,9 +75,9 @@ export function Component() {
 
   if (!user) return (
     <div className="animate-fade-in p-6 max-w-4xl mx-auto space-y-6">
-      <div className="bg-elevated border border-default rounded-pf-lg p-6">
+      <div className="bg-elevated border border-default rounded-xl p-6">
         <div className="flex items-center gap-4 mb-4">
-          <div className="size-20 rounded-pf-full bg-surface animate-pulse" />
+          <div className="size-20 rounded-full bg-surface animate-pulse" />
           <div className="space-y-2 flex-1">
             <div className="h-5 bg-surface rounded w-32 animate-pulse" />
             <div className="h-3 bg-surface rounded w-24 animate-pulse" />
@@ -105,13 +105,13 @@ export function Component() {
       </div>
 
       {/* Profile card */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6">
+      <div className="bg-elevated border border-default rounded-xl p-6">
         {/* Identity */}
         <div className="flex items-center gap-4 mb-4">
           {user.avatarUrl ? (
-            <img data-testid="profile-avatar" src={user.avatarUrl} alt={`${user.displayName ?? user.username} avatar`} className="size-20 rounded-pf-full object-cover" />
+            <img data-testid="profile-avatar" src={user.avatarUrl} alt={`${user.displayName ?? user.username} avatar`} className="size-20 rounded-full object-cover" />
           ) : (
-            <div data-testid="profile-avatar" className="size-20 rounded-pf-full bg-surface flex items-center justify-center text-2xl font-semibold text-accent-text">
+            <div data-testid="profile-avatar" className="size-20 rounded-full bg-surface flex items-center justify-center text-2xl font-semibold text-accent-text">
               {initials}
             </div>
           )}
@@ -131,7 +131,7 @@ export function Component() {
 
         {/* Status chips */}
         <div className="flex flex-wrap gap-2">
-          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
+          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${
             user.emailVerified
               ? 'bg-gain/10 text-gain border-gain/20'
               : 'bg-overlay text-tertiary border-default'
@@ -139,7 +139,7 @@ export function Component() {
             <Mail className="size-3" />
             {user.emailVerified ? 'Email Verified' : 'Email Unverified'}
           </span>
-          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
+          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${
             user.polymarketConnected
               ? 'bg-gain/10 text-gain border-gain/20'
               : 'bg-overlay text-tertiary border-default'
@@ -147,7 +147,7 @@ export function Component() {
             <Link2 className="size-3" />
             {user.polymarketConnected ? 'Polymarket Connected' : 'Not Connected'}
           </span>
-          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-pf-full text-xs font-medium border ${
+          <span data-testid="status-chip" className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${
             user.totpEnabled
               ? 'bg-gain/10 text-gain border-gain/20'
               : 'bg-overlay text-tertiary border-default'
@@ -159,7 +159,7 @@ export function Component() {
       </div>
 
       {/* Edge Rating card */}
-      <div data-testid="edge-rating" className="bg-elevated border border-default rounded-pf-lg p-6">
+      <div data-testid="edge-rating" className="bg-elevated border border-default rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="size-4 text-accent-text" />
           <h2 className="text-sm font-semibold text-primary">Edge Rating</h2>
@@ -169,7 +169,7 @@ export function Component() {
           <>
             {/* Score circle + value */}
             <div className="flex items-center gap-6 mb-4">
-              <div className={`size-16 rounded-pf-full border-2 flex items-center justify-center ${scoreBg(scoreData.score.score)}`}>
+              <div className={`size-16 rounded-full border-2 flex items-center justify-center ${scoreBg(scoreData.score.score)}`}>
                 <span className={`text-2xl font-semibold font-mono ${scoreColor(scoreData.score.score)}`}>
                   {scoreData.score.score}
                 </span>
@@ -210,7 +210,7 @@ export function Component() {
       </div>
 
       {/* Badges card */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6">
+      <div className="bg-elevated border border-default rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <Award className="size-4 text-accent-text" />
           <h2 className="text-sm font-semibold text-primary">Badges</h2>
@@ -229,7 +229,7 @@ export function Component() {
                 <span data-testid="badge-icon" className="text-lg">{BADGE_ICONS[badge.type] ?? <Target className="size-4" />}</span>
                 <div className="min-w-0">
                   <div data-testid="badge-name" className="text-xs font-medium text-primary truncate">{badge.name}</div>
-                  <div data-testid="earned-date" className="text-pf-caption text-tertiary">
+                  <div data-testid="earned-date" className="text-caption text-tertiary">
                     {new Date(badge.earnedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </div>
                 </div>
@@ -253,7 +253,7 @@ export function Component() {
           <Link
             key={link.to}
             to={link.to}
-            className="flex items-center gap-3 px-4 py-3 bg-elevated border border-default rounded-pf-lg hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 bg-elevated border border-default rounded-xl hover:border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
           >
             <span className="text-tertiary">{link.icon}</span>
             <span className="text-sm font-medium text-primary flex-1">{link.label}</span>

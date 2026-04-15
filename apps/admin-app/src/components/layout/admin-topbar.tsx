@@ -51,7 +51,7 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
           <button
             type="button"
             onClick={onMenuClick}
-            className="p-2 rounded-pf-sm text-secondary hover:bg-elevated transition-colors md:hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="p-2 rounded-sm text-secondary hover:bg-elevated transition-colors md:hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             aria-label="Open menu"
           >
             <Menu size={20} />
@@ -66,21 +66,21 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
         <button
           type="button"
           onClick={toggle}
-          className="p-2 rounded-pf-sm hover:bg-elevated text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="p-2 rounded-sm hover:bg-elevated text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-7 h-7 rounded-pf-full bg-accent text-inverse text-pf-label font-semibold" role="img" aria-label={`Avatar for ${admin?.displayName ?? 'admin'}`}>
+          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-accent text-inverse text-label font-semibold" role="img" aria-label={`Avatar for ${admin?.displayName ?? 'admin'}`}>
             {initials}
           </div>
           <div className="hidden sm:block">
             <div className="text-sm font-medium text-primary leading-tight">
               {admin?.displayName}
             </div>
-            <div className="text-pf-caption text-tertiary leading-tight">
+            <div className="text-caption text-tertiary leading-tight">
               {roleLabel}
             </div>
           </div>
@@ -89,7 +89,7 @@ export function AdminTopbar({ onMenuClick }: TopbarProps) {
         <button
           type="button"
           onClick={logout}
-          className="p-2 rounded-pf-sm hover:bg-elevated text-secondary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loss"
+          className="p-2 rounded-sm hover:bg-elevated text-secondary hover:text-loss transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loss"
           aria-label="Logout"
         >
           <LogOut size={16} />

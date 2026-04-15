@@ -94,7 +94,7 @@ function StatusBadge({ status }: { status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN
   if (status === 'UP') {
     return (
       <span className="flex items-center gap-2 text-gain text-xs font-medium">
-        <span className="animate-pulse bg-gain rounded-pf-full w-2 h-2 shrink-0" />
+        <span className="animate-pulse bg-gain rounded-full w-2 h-2 shrink-0" />
         UP
       </span>
     );
@@ -117,7 +117,7 @@ function StatusBadge({ status }: { status: 'UP' | 'DOWN' | 'DEGRADED' | 'UNKNOWN
   }
   return (
     <span className="flex items-center gap-2 text-tertiary text-xs font-medium">
-      <span className="bg-tertiary rounded-pf-full w-2 h-2 shrink-0" />
+      <span className="bg-tertiary rounded-full w-2 h-2 shrink-0" />
       UNKNOWN
     </span>
   );
@@ -161,11 +161,11 @@ function ServiceCard({ service }: { service: ServiceHealth }) {
       </div>
 
       {service.version && (
-        <div className="text-pf-caption text-tertiary">v{service.version}</div>
+        <div className="text-caption text-tertiary">v{service.version}</div>
       )}
 
       {(service.status === 'DOWN' || service.status === 'DEGRADED') && service.errorMessage && (
-        <div className="text-pf-label text-loss leading-snug">{service.errorMessage}</div>
+        <div className="text-label text-loss leading-snug">{service.errorMessage}</div>
       )}
     </div>
   );
@@ -200,7 +200,7 @@ function DbCard({ db }: { db: DbHealth }) {
           <span className="text-tertiary">Migrations Pending</span>
           <div className="mt-1">
             {db.pendingMigrations > 0 ? (
-              <span className="inline-flex items-center px-2 py-1 rounded text-pf-caption font-semibold bg-loss/15 text-loss">
+              <span className="inline-flex items-center px-2 py-1 rounded text-caption font-semibold bg-loss/15 text-loss">
                 {db.pendingMigrations}
               </span>
             ) : (
@@ -217,13 +217,13 @@ function DbCard({ db }: { db: DbHealth }) {
             {db.activeConnections} / {db.maxConnections}
           </span>
         </div>
-        <div className="h-2 bg-elevated rounded-pf-full overflow-hidden">
+        <div className="h-2 bg-elevated rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-pf-full transition-all duration-pf-slow ${connBarColor}`}
+            className={`h-full rounded-full transition-all duration-slow ${connBarColor}`}
             style={{ width: `${connPct}%` }}
           />
         </div>
-        <div className="text-pf-caption text-tertiary mt-1">{connPct}% utilized</div>
+        <div className="text-caption text-tertiary mt-1">{connPct}% utilized</div>
       </div>
     </div>
   );
@@ -328,7 +328,7 @@ export function Component() {
           variant="default"
           onClick={() => fetchHealth(true)}
           disabled={refreshing}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-default bg-surface text-sm text-primary hover:bg-elevated transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-3 py-2 rounded-sm border border-default bg-surface text-sm text-primary hover:bg-elevated transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
           Refresh Now
@@ -471,7 +471,7 @@ export function Component() {
                   >
                     <div className="flex items-center gap-2">
                       <span
-                        className={`w-2 h-2 rounded-pf-full shrink-0 ${
+                        className={`w-2 h-2 rounded-full shrink-0 ${
                           service.status === 'UP'
                             ? 'bg-gain'
                             : service.status === 'DOWN'

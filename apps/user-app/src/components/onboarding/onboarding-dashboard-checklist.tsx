@@ -220,7 +220,7 @@ export function OnboardingDashboardChecklist() {
     <div
       role="region"
       aria-label="Getting started checklist"
-      className="bg-elevated border border-default rounded-pf-lg p-4 animate-fade-in"
+      className="bg-elevated border border-default rounded-xl p-4 animate-fade-in"
     >
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -243,7 +243,7 @@ export function OnboardingDashboardChecklist() {
 
       {/* ── Progress bar ───────────────────────────────────────────── */}
       <div
-        className="w-full h-2 bg-surface rounded-pf-full overflow-hidden mb-4"
+        className="w-full h-2 bg-surface rounded-full overflow-hidden mb-4"
         role="progressbar"
         aria-valuenow={completedCount}
         aria-valuemin={0}
@@ -251,7 +251,7 @@ export function OnboardingDashboardChecklist() {
         aria-label={`${completedCount} of ${STEPS.length} steps completed`}
       >
         <div
-          className="h-full bg-accent rounded-pf-full transition-all duration-pf-slow"
+          className="h-full bg-accent rounded-full transition-all duration-slow"
           style={{ width: `${(completedCount / STEPS.length) * 100}%` }}
         />
       </div>

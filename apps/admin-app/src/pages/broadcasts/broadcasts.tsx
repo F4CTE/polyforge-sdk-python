@@ -233,7 +233,7 @@ export function Component() {
             type="button"
             variant="default"
             onClick={openCompose}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-accent text-inverse hover:bg-accent-text transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text transition-colors"
           >
             <Megaphone size={15} aria-hidden="true" />
             New Broadcast
@@ -243,7 +243,7 @@ export function Component() {
 
       {/* Compose Panel */}
       {composeOpen && (
-        <div className="bg-elevated border border-default rounded-pf-lg p-5 space-y-4">
+        <div className="bg-elevated border border-default rounded-xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Send size={15} className="text-accent" aria-hidden="true" />
@@ -272,7 +272,7 @@ export function Component() {
               value={draft.title}
               onChange={(e) => handleDraftChange('title', e.target.value)}
               placeholder="e.g. Scheduled maintenance this Sunday"
-              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
             />
           </div>
 
@@ -287,7 +287,7 @@ export function Component() {
               value={draft.message}
               onChange={(e) => handleDraftChange('message', e.target.value)}
               placeholder="Write your broadcast message here..."
-              className="w-full px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent resize-none"
+              className="w-full px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent resize-none"
             />
           </div>
 
@@ -301,7 +301,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => handleDraftChange('type', opt.value)}
-                  className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-pf-full transition-colors ${typePillClass(opt.value, draft.type === opt.value)}`}
+                  className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-full transition-colors ${typePillClass(opt.value, draft.type === opt.value)}`}
                   aria-pressed={draft.type === opt.value}
                 >
                   <TypeIcon type={opt.value} size={12} />
@@ -321,7 +321,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => handleDraftChange('targetAudience', opt.value)}
-                  className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-pf-full transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-full transition-colors ${
                     draft.targetAudience === opt.value
                       ? 'border border-accent/40 bg-accent/10 text-accent-text'
                       : 'border border-default bg-app text-secondary hover:text-primary hover:border-secondary'
@@ -334,7 +334,7 @@ export function Component() {
               ))}
             </div>
             {selectedAudience && (
-              <p className="mt-2 text-pf-label text-tertiary">{selectedAudience.description}</p>
+              <p className="mt-2 text-label text-tertiary">{selectedAudience.description}</p>
             )}
           </div>
 
@@ -346,7 +346,7 @@ export function Component() {
 
           {/* Confirmation warning */}
           {confirmSend && (
-            <div className="rounded-pf-sm border border-warning/30 bg-warning/5 p-4">
+            <div className="rounded-sm border border-warning/30 bg-warning/5 p-4">
               <div className="flex items-start gap-2 mb-3">
                 <AlertTriangle size={16} className="text-warning shrink-0 mt-1" aria-hidden="true" />
                 <div>
@@ -362,7 +362,7 @@ export function Component() {
                   variant="default"
                   onClick={handleConfirmSend}
                   disabled={sending}
-                  className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-pf-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text disabled:opacity-50 transition-colors"
                 >
                   <Send size={12} aria-hidden="true" />
                   {sending ? 'Sending...' : 'Confirm Send'}
@@ -372,7 +372,7 @@ export function Component() {
                   variant="secondary"
                   onClick={() => setConfirmSend(false)}
                   disabled={sending}
-                  className="px-4 py-2 text-xs font-medium rounded-pf-sm border border-default bg-app text-secondary hover:text-primary hover:border-secondary transition-colors"
+                  className="px-4 py-2 text-xs font-medium rounded-sm border border-default bg-app text-secondary hover:text-primary hover:border-secondary transition-colors"
                 >
                   Cancel
                 </Button>
@@ -387,7 +387,7 @@ export function Component() {
                 type="button"
                 variant="default"
                 onClick={handleSendClick}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-pf-sm bg-accent text-inverse hover:bg-accent-text transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-sm bg-accent text-inverse hover:bg-accent-text transition-colors"
               >
                 <Send size={14} aria-hidden="true" />
                 Send Broadcast
@@ -396,7 +396,7 @@ export function Component() {
                 type="button"
                 variant="secondary"
                 onClick={closeCompose}
-                className="px-4 py-2 text-sm font-medium rounded-pf-sm border border-default bg-app text-secondary hover:text-primary hover:border-secondary transition-colors"
+                className="px-4 py-2 text-sm font-medium rounded-sm border border-default bg-app text-secondary hover:text-primary hover:border-secondary transition-colors"
               >
                 Cancel
               </Button>
@@ -406,7 +406,7 @@ export function Component() {
       )}
 
       {/* Broadcast History */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-5">
+      <div className="bg-elevated border border-default rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <Megaphone size={15} className="text-accent" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-primary">Broadcast History</h3>
@@ -442,11 +442,11 @@ export function Component() {
               <tbody>
                 {broadcasts.map((b) => (
                   <tr key={b.id} className="border-b border-default last:border-0 hover:bg-app/40 transition-colors">
-                    <td className="px-3 py-3 text-primary font-medium max-w-pf-col-md">
+                    <td className="px-3 py-3 text-primary font-medium max-w-col-md">
                       <span className="truncate block" title={b.title}>{b.title}</span>
                     </td>
                     <td className="px-3 py-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-label font-semibold ${typeBadgeClass(b.type)}`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-label font-semibold ${typeBadgeClass(b.type)}`}>
                         <TypeIcon type={b.type} size={10} />
                         {b.type}
                       </span>

@@ -45,7 +45,7 @@ function PublicHeader() {
         </Link>
         <Link
           to="/register"
-          className="text-sm font-semibold px-4 py-2 rounded-pf bg-accent text-inverse hover:bg-accent-text transition-colors duration-pf-fast"
+          className="text-sm font-semibold px-4 py-2 rounded-pf bg-accent text-inverse hover:bg-accent-text transition-colors duration-micro"
         >
           Sign up free
         </Link>
@@ -66,7 +66,7 @@ function OnThisPage({ sectionId, onSelect }: TocProps) {
   if (!section) return null;
   return (
     <div className="hidden xl:flex flex-col w-48 shrink-0 pl-6 pt-6 gap-1">
-      <p className="text-pf-caption font-semibold text-tertiary uppercase tracking-wider mb-2">
+      <p className="text-caption font-semibold text-tertiary uppercase tracking-wider mb-2">
         On this page
       </p>
       {section.eps.map(ep => (
@@ -186,7 +186,7 @@ export function Component() {
     return (
       <div className="flex h-screen bg-app text-primary overflow-hidden animate-fade-in">
         {/* App sidebar */}
-        <div className={`hidden md:block overflow-hidden transition-[width,min-width] duration-pf-normal ${sidebarCollapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
+        <div className={`hidden md:block overflow-hidden transition-[width,min-width] duration-panel ${sidebarCollapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
           <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
         </div>
         {/* Mobile app sidebar overlay */}
@@ -205,7 +205,7 @@ export function Component() {
               variant="ghost"
               size="icon"
               onClick={() => setMobileOpen(true)}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center ml-2 rounded-pf-sm text-tertiary hover:bg-elevated hover:text-primary transition-colors md:hidden"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center ml-2 rounded-sm text-tertiary hover:bg-elevated hover:text-primary transition-colors md:hidden"
               aria-label="Open navigation menu"
             >
               <Menu size={20} />

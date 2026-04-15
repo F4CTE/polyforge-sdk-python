@@ -43,13 +43,13 @@ function formatTimestamp(iso: string): string {
 
 function StatusDot({ ok }: { ok: boolean }) {
   return (
-    <span className={`inline-flex size-2 rounded-pf-full shrink-0 ${ok ? 'bg-gain' : 'bg-loss'}`} />
+    <span className={`inline-flex size-2 rounded-full shrink-0 ${ok ? 'bg-gain' : 'bg-loss'}`} />
   );
 }
 
 function ServiceCard({ svc }: { svc: ServiceEntry }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-elevated border border-default rounded-pf-lg hover:border-strong transition-colors">
+    <div className="flex items-center justify-between px-4 py-3 bg-elevated border border-default rounded-xl hover:border-strong transition-colors">
       <div className="flex items-center gap-3">
         <StatusDot ok={svc.ok} />
         <span className="text-sm text-primary">{svc.label}</span>
@@ -112,7 +112,7 @@ export function StatusSection() {
 
       {/* Overall banner */}
       {!loading && !error && data && (
-        <div className={`flex items-center justify-between px-4 py-3 rounded-pf-lg border ${
+        <div className={`flex items-center justify-between px-4 py-3 rounded-xl border ${
           allOk
             ? 'bg-gain/5 border-gain/20'
             : 'bg-loss/5 border-loss/20'
@@ -144,7 +144,7 @@ export function StatusSection() {
       )}
 
       {!loading && error && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-loss/5 border border-loss/20 rounded-pf-lg">
+        <div className="flex items-center gap-2 px-4 py-3 bg-loss/5 border border-loss/20 rounded-xl">
           <XCircle className="size-4 text-loss shrink-0" />
           <span className="text-sm text-loss">{error}</span>
         </div>

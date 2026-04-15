@@ -65,7 +65,7 @@ export function Component() {
             setPage(1);
           }}
           aria-label="Filter by ticket status"
-          className="px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+          className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
         >
           <option value="">All statuses</option>
           <option value="OPEN">Open</option>
@@ -75,7 +75,7 @@ export function Component() {
         </Select>
       </div>
 
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <caption className="sr-only">Support tickets</caption>
@@ -121,19 +121,19 @@ export function Component() {
                     <td className="px-4 py-3 font-medium text-primary">{t.subject}</td>
                     <td className="px-4 py-3 text-secondary">{t.username ?? (t.userId ? t.userId.slice(0, 8) : '')}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(t.status)}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(t.status)}`}>
                         {t.status}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${priorityColor[t.priority] ?? ''}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColor[t.priority] ?? ''}`}>
                         {t.priority}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       {t.assignedTo ? (
                         <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 rounded-pf-full bg-accent/20 flex items-center justify-center text-pf-micro font-semibold text-accent">
+                          <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center text-caption font-semibold text-accent">
                             {t.assignedToName?.[0]?.toUpperCase() ?? 'A'}
                           </div>
                           <span className="text-secondary text-xs">

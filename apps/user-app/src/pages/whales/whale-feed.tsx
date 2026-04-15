@@ -218,7 +218,7 @@ export function Component() {
               variant="ghost"
               key={s.value}
               onClick={() => changeMinSize(s.value)}
-              className={`px-3 py-2 rounded-pf-full text-xs font-medium whitespace-nowrap border transition-colors ${
+              className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
                 minSize === s.value
                   ? 'bg-accent/15 text-accent-text border-accent/30'
                   : 'bg-elevated text-secondary border-default hover:border-strong'
@@ -234,7 +234,7 @@ export function Component() {
           value={category}
           onChange={e => changeCategory(e.target.value)}
           aria-label="Filter by category"
-          className="px-3 py-2 rounded-pf-sm text-xs bg-elevated text-secondary border border-default hover:border-strong transition-colors"
+          className="px-3 py-2 rounded-sm text-xs bg-elevated text-secondary border border-default hover:border-strong transition-colors"
         >
           <option value="">All Categories</option>
           <option value="crypto">Crypto</option>
@@ -253,7 +253,7 @@ export function Component() {
             aria-label="Search wallet address"
             value={walletSearch}
             onChange={e => { setWalletSearch(e.target.value); setPage(1); }}
-            className="w-full pl-8 pr-3 py-2 rounded-pf-sm text-xs bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary"
+            className="w-full pl-8 pr-3 py-2 rounded-sm text-xs bg-elevated text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary"
           />
         </div>
       </div>
@@ -277,7 +277,7 @@ export function Component() {
             <div
               key={trade.id}
               data-testid="whale-feed-item"
-              className="bg-elevated border border-default rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-strong hover:shadow-pf-sm"
+              className="bg-elevated border border-default rounded-xl p-4 transition-all duration-panel hover:border-strong hover:shadow-sm"
             >
               {/* Top row: wallet + time */}
               <div className="flex items-center justify-between mb-3">
@@ -300,27 +300,27 @@ export function Component() {
                     <Copy className="size-4" />
                   </Button>
                 </div>
-                <span data-testid="transaction-timestamp" className="text-pf-label text-tertiary">{timeAgo(trade.timestamp)}</span>
+                <span data-testid="transaction-timestamp" className="text-label text-tertiary">{timeAgo(trade.timestamp)}</span>
               </div>
 
               {/* Market name + category */}
               <div className="flex items-center gap-2 mb-3">
                 <span data-testid="transaction-market" className="text-sm text-primary font-medium truncate">{trade.marketName}</span>
-                <span className="px-2 py-1 rounded-pf-full text-pf-caption bg-overlay text-tertiary shrink-0">
+                <span className="px-2 py-1 rounded-full text-caption bg-overlay text-tertiary shrink-0">
                   {trade.marketCategory}
                 </span>
               </div>
 
               {/* Side + Outcome badges */}
               <div className="flex items-center gap-2 mb-3">
-                <span data-testid="transaction-side" className={`px-2 py-1 rounded text-pf-label font-semibold ${
+                <span data-testid="transaction-side" className={`px-2 py-1 rounded text-label font-semibold ${
                   trade.side === 'BUY'
                     ? 'bg-gain/15 text-gain'
                     : 'bg-loss/15 text-loss'
                 }`}>
                   {trade.side}
                 </span>
-                <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
+                <span className={`px-2 py-1 rounded text-label font-semibold ${
                   trade.outcome === 'YES'
                     ? 'bg-gain/15 text-gain'
                     : 'bg-loss/15 text-loss'
@@ -346,7 +346,7 @@ export function Component() {
                   variant="ghost"
                   data-testid={followingSet.has(trade.walletAddress) ? `unfollow-${trade.walletAddress}` : `follow-${trade.walletAddress}`}
                   onClick={() => toggleFollow(trade.walletAddress)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border cursor-pointer transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-medium border cursor-pointer transition-colors ${
                     followingSet.has(trade.walletAddress)
                       ? 'bg-accent/15 text-accent-text border-accent/30'
                       : 'text-accent-text border-accent/30 hover:bg-accent/10'
@@ -360,7 +360,7 @@ export function Component() {
                 </Button>
                 <Link
                   to={`/copy/new?wallet=${trade.walletAddress}`}
-                  className="flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border border-gain/30 text-gain hover:bg-gain/10 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-medium border border-gain/30 text-gain hover:bg-gain/10 transition-colors"
                 >
                   <Copy className="size-4" /> Copy
                 </Link>

@@ -101,7 +101,7 @@ export function Component() {
           </Link>
           <h1 className="text-2xl font-semibold text-primary">Trading Account</h1>
         </div>
-        <span data-testid="trading-status" className={`flex items-center gap-2 px-3 py-2 rounded-pf-full text-xs font-medium border ${
+        <span data-testid="trading-status" className={`flex items-center gap-2 px-3 py-2 rounded-full text-xs font-medium border ${
           isConnected
             ? 'bg-gain/10 text-gain border-gain/20'
             : 'bg-overlay text-tertiary border-default'
@@ -112,7 +112,7 @@ export function Component() {
       </div>
 
       {/* Credentials panel */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-5">
+      <div className="bg-elevated border border-default rounded-xl p-6 space-y-5">
         {isConnected ? (
           <>
             <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Polymarket Credentials</h2>
@@ -171,7 +171,7 @@ export function Component() {
             </div>
             <div>
               <label htmlFor="trading-safe-address" className="text-xs text-secondary mb-2 block">
-                Safe Address <span className="text-tertiary text-pf-caption">(optional)</span>
+                Safe Address <span className="text-tertiary text-caption">(optional)</span>
               </label>
               <Input id="trading-safe-address" type="text" value={safeAddress} onChange={e => setSafeAddress(e.target.value)} placeholder="0x..." className="w-full font-mono" />
             </div>
@@ -184,7 +184,7 @@ export function Component() {
       </div>
 
       {/* Bot link code */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
+      <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
         <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Bot Link Code</h2>
         <p className="text-sm text-secondary">
           Generate a one-time code to link the PolyForge Telegram bot to your account. The code expires after 10 minutes.

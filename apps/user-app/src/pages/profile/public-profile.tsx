@@ -121,7 +121,7 @@ function rarityCircleStyle(rarity: Badge['rarity']): string {
   switch (rarity) {
     case 'common':    return 'bg-elevated border-default';
     case 'rare':      return 'bg-accent/10 border-accent/30';
-    case 'epic':      return 'bg-pf-purple-500/10 border-pf-purple-500/30';
+    case 'epic':      return 'bg-purple-500/10 border-purple-500/30';
     case 'legendary': return 'bg-warning/10 border-warning/30';
   }
 }
@@ -159,7 +159,7 @@ function PerfTooltip({ active, payload, label }: PerfTooltipProps) {
   const val = payload[0].value as number;
   const isPos = val >= 0;
   return (
-    <div className="bg-elevated border border-default rounded-pf px-3 py-2 text-xs shadow-pf-lg">
+    <div className="bg-elevated border border-default rounded-pf px-3 py-2 text-xs shadow-lg">
       <div className="text-tertiary mb-1">{label}</div>
       <div className={`font-mono font-semibold ${isPos ? 'text-gain' : 'text-loss'}`}>
         {fmtPnl(val)}
@@ -312,9 +312,9 @@ export function Component() {
   if (loading) {
     return (
       <div className="p-6 max-w-2xl mx-auto">
-        <div className="bg-elevated border border-default rounded-pf-lg p-6">
+        <div className="bg-elevated border border-default rounded-xl p-6">
           <div className="flex items-center gap-4">
-            <div className="size-20 rounded-pf-full bg-overlay animate-pulse" />
+            <div className="size-20 rounded-full bg-overlay animate-pulse" />
             <div className="flex-1 space-y-2">
               <div className="h-5 w-40 bg-overlay rounded animate-pulse" />
               <div className="h-3 w-24 bg-overlay rounded animate-pulse" />
@@ -357,7 +357,7 @@ export function Component() {
           <h1 className="text-2xl font-semibold text-primary">{profile.displayName ?? profile.username}</h1>
           {/* Inline score badge */}
           {scoreData?.score && (
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-pf-full border text-xs font-mono font-semibold ${scoreBg(scoreData.score.score)} ${scoreColor(scoreData.score.score)}`}>
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-mono font-semibold ${scoreBg(scoreData.score.score)} ${scoreColor(scoreData.score.score)}`}>
               <TrendingUp className="size-3" />
               {scoreData.score.score}
             </div>
@@ -405,13 +405,13 @@ export function Component() {
       </div>
 
       {/* Profile card */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6">
+      <div className="bg-elevated border border-default rounded-xl p-6">
         {/* Identity */}
         <div className="flex items-center gap-4 mb-4">
           {profile.avatarUrl ? (
-            <img src={profile.avatarUrl} alt={`${profile.displayName ?? profile.username} avatar`} className="size-20 rounded-pf-full object-cover" />
+            <img src={profile.avatarUrl} alt={`${profile.displayName ?? profile.username} avatar`} className="size-20 rounded-full object-cover" />
           ) : (
-            <div className="size-20 rounded-pf-full bg-surface flex items-center justify-center text-2xl font-semibold text-accent-text">
+            <div className="size-20 rounded-full bg-surface flex items-center justify-center text-2xl font-semibold text-accent-text">
               {initials}
             </div>
           )}
@@ -448,13 +448,13 @@ export function Component() {
 
       {/* Score breakdown */}
       {scoreData?.score && (
-        <div data-testid="edge-rating" className="bg-elevated border border-default rounded-pf-lg p-6">
+        <div data-testid="edge-rating" className="bg-elevated border border-default rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="size-4 text-accent-text" />
             <h2 className="text-sm font-semibold text-primary">Edge Rating</h2>
           </div>
           <div className="flex items-center gap-6">
-            <div className={`size-16 rounded-pf-full border-2 flex items-center justify-center ${scoreBg(scoreData.score.score)}`}>
+            <div className={`size-16 rounded-full border-2 flex items-center justify-center ${scoreBg(scoreData.score.score)}`}>
               <span className={`text-2xl font-semibold font-mono ${scoreColor(scoreData.score.score)}`}>
                 {scoreData.score.score}
               </span>
@@ -501,7 +501,7 @@ export function Component() {
         }));
 
         return (
-          <div className="bg-elevated border border-default rounded-pf-lg p-6">
+          <div className="bg-elevated border border-default rounded-xl p-6">
             {/* Header row */}
             <div className="flex items-center gap-2 mb-4">
               <Award className="size-4 text-accent-text" />
@@ -532,7 +532,7 @@ export function Component() {
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div
                     key={i}
-                    className="size-11 rounded-pf-full bg-overlay border border-default animate-pulse"
+                    className="size-11 rounded-full bg-overlay border border-default animate-pulse"
                   />
                 ))}
               </div>
@@ -554,7 +554,7 @@ export function Component() {
                     <div
                       key={badge.id}
                       title={tooltipText}
-                      className={`size-11 rounded-pf-full border flex items-center justify-center text-xl shrink-0 cursor-default ${rarityCircleStyle(badge.rarity)}`}
+                      className={`size-11 rounded-full border flex items-center justify-center text-xl shrink-0 cursor-default ${rarityCircleStyle(badge.rarity)}`}
                       aria-label={`${badge.name}: ${badge.description}`}
                     >
                       {badge.emoji}
@@ -566,7 +566,7 @@ export function Component() {
                   <div
                     key={badge.id}
                     title={`${badge.name} — ${badge.description}\nNot yet unlocked`}
-                    className="size-11 rounded-pf-full border border-default bg-overlay flex items-center justify-center shrink-0 opacity-50 cursor-default"
+                    className="size-11 rounded-full border border-default bg-overlay flex items-center justify-center shrink-0 opacity-50 cursor-default"
                     aria-label={`${badge.name} (locked): ${badge.description}`}
                   >
                     <Lock className="size-4 text-tertiary" />
@@ -579,7 +579,7 @@ export function Component() {
             {!loadingBadges && unlockedBadges.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
                 {rarityCounts.map(({ rarity, count }) => (
-                  <span key={rarity} className="text-pf-caption text-tertiary">
+                  <span key={rarity} className="text-caption text-tertiary">
                     {rarityLabel(rarity)}: {count}
                   </span>
                 ))}
@@ -590,7 +590,7 @@ export function Component() {
       })()}
 
       {/* ── A. Performance (30d) Sparkline ─────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6">
+      <div className="bg-elevated border border-default rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <BarChart2 className="size-4 text-accent-text" />
           <h2 className="text-sm font-semibold text-primary">Performance (30d)</h2>
@@ -640,7 +640,7 @@ export function Component() {
       </div>
 
       {/* ── B. Public Strategies ────────────────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6">
+      <div className="bg-elevated border border-default rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="size-4 text-accent-text" />
           <h2 className="text-sm font-semibold text-primary">Strategies</h2>
@@ -653,8 +653,8 @@ export function Component() {
                 <div className="h-4 w-3/4 bg-overlay rounded animate-pulse" />
                 <div className="h-3 w-full bg-overlay rounded animate-pulse" />
                 <div className="flex gap-2 mt-2">
-                  <div className="h-5 w-16 bg-overlay rounded-pf-full animate-pulse" />
-                  <div className="h-5 w-12 bg-overlay rounded-pf-full animate-pulse" />
+                  <div className="h-5 w-16 bg-overlay rounded-full animate-pulse" />
+                  <div className="h-5 w-12 bg-overlay rounded-full animate-pulse" />
                 </div>
               </div>
             ))}
@@ -672,20 +672,20 @@ export function Component() {
               >
                 <div className="min-w-0">
                   <div className="text-xs font-semibold text-primary truncate">{s.name}</div>
-                  <div className="text-pf-label text-tertiary truncate mt-1">{s.description}</div>
+                  <div className="text-label text-tertiary truncate mt-1">{s.description}</div>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2 py-1 rounded-pf-full bg-accent/10 border border-accent/20 text-pf-caption font-mono text-accent-text">
+                  <span className="px-2 py-1 rounded-full bg-accent/10 border border-accent/20 text-caption font-mono text-accent-text">
                     {s.winRate.toFixed(0)}% WR
                   </span>
-                  <span className="px-2 py-1 rounded-pf-full bg-overlay border border-subtle text-pf-caption font-mono text-tertiary">
+                  <span className="px-2 py-1 rounded-full bg-overlay border border-subtle text-caption font-mono text-tertiary">
                     {s.tradeCount} trades
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between mt-auto">
-                  <div className="flex items-center gap-3 text-pf-caption text-tertiary">
+                  <div className="flex items-center gap-3 text-caption text-tertiary">
                     <span className="flex items-center gap-1">
                       <GitFork className="size-3" />
                       {s.forkCount}
@@ -700,7 +700,7 @@ export function Component() {
                   </div>
                   <Link
                     to={`/marketplace/${s.id}`}
-                    className="px-2 py-1 rounded-pf bg-accent/15 border border-accent/25 text-pf-caption font-medium text-accent-text hover:bg-accent/25 transition-colors"
+                    className="px-2 py-1 rounded-pf bg-accent/15 border border-accent/25 text-caption font-medium text-accent-text hover:bg-accent/25 transition-colors"
                   >
                     View
                   </Link>
@@ -712,7 +712,7 @@ export function Component() {
       </div>
 
       {/* ── C. Recent Activity ──────────────────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6">
+      <div className="bg-elevated border border-default rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="size-4 text-accent-text" />
           <h2 className="text-sm font-semibold text-primary">Recent Activity</h2>
@@ -743,21 +743,21 @@ export function Component() {
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-primary truncate">{item.marketQuestion}</div>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`px-2 py-px rounded-pf-full text-pf-caption font-semibold ${
+                      <span className={`px-2 py-px rounded-full text-caption font-semibold ${
                         item.outcome === 'YES'
                           ? 'bg-gain/15 text-gain border border-gain/20'
                           : 'bg-loss/15 text-loss border border-loss/20'
                       }`}>
                         {item.outcome}
                       </span>
-                      <span className="text-pf-caption text-tertiary">{item.side}</span>
+                      <span className="text-caption text-tertiary">{item.side}</span>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
                     <div className={`text-xs font-mono font-semibold ${isPos ? 'text-gain' : 'text-loss'}`}>
                       {fmtPnl(item.pnl)}
                     </div>
-                    <div className="text-pf-caption text-tertiary mt-1">{relativeTime(item.resolvedAt)}</div>
+                    <div className="text-caption text-tertiary mt-1">{relativeTime(item.resolvedAt)}</div>
                   </div>
                 </div>
               );

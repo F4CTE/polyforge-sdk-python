@@ -91,20 +91,20 @@ const footerLinks = [
 
 export function Footer() {
   return (
-    <footer className="bg-pf-surface border-t border-pf-border-subtle pt-14 pb-8">
-      <div className="max-w-pf-container-landing mx-auto px-6">
+    <footer className="bg-surface border-t border-subtle pt-14 pb-8">
+      <div className="max-w-container-landing mx-auto px-6">
         <div className="flex flex-col md:flex-row gap-8 md:gap-16 mb-10">
           {/* Brand */}
           <div className="shrink-0 min-w-[220px]">
             <a
               href="/"
-              className="inline-flex items-center gap-2 text-pf-subhead font-semibold text-pf-text mb-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-pf-sm"
+              className="inline-flex items-center gap-2 text-display-sm font-semibold text-primary mb-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm"
               aria-label="Polyforge home"
             >
-              <PolyforgeLogomark size={24} className="text-pf-cyan-400" />
+              <PolyforgeLogomark size={24} className="text-accent-text" />
               <span>Polyforge</span>
             </a>
-            <p className="text-sm text-pf-text-muted mt-2">
+            <p className="text-sm text-tertiary mt-2">
               Algorithmic trading for prediction markets.
             </p>
             <div className="flex gap-3 mt-5">
@@ -116,7 +116,7 @@ export function Footer() {
                   rel="noopener noreferrer"
                   aria-label={link.label}
                   title={link.label}
-                  className="w-10 h-10 rounded-pf-sm border border-pf-border-subtle flex items-center justify-center text-pf-text-muted hover:text-pf-cyan-400 hover:border-pf-cyan-500/30 hover:bg-pf-cyan-500/[var(--opacity-pf-muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 transition-colors duration-pf-fast cursor-pointer"
+                  className="w-10 h-10 rounded-sm border border-subtle flex items-center justify-center text-tertiary hover:text-accent-text hover:border-accent/30 hover:bg-accent/[var(--opacity-muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text transition-colors duration-micro cursor-pointer"
                 >
                   {link.icon}
                 </a>
@@ -131,7 +131,7 @@ export function Footer() {
           >
             {footerLinks.map((col) => (
               <div key={col.title} className="min-w-[120px]">
-                <p className="text-xs font-semibold uppercase tracking-wider text-pf-text-muted mb-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-tertiary mb-4">
                   {col.title}
                 </p>
                 <ul className="flex flex-col gap-3">
@@ -145,7 +145,7 @@ export function Footer() {
                             target: "_blank",
                             rel: "noopener noreferrer",
                           })}
-                          className="text-sm text-pf-text-secondary hover:text-pf-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pf-cyan-400 rounded-pf-sm transition-colors duration-pf-fast"
+                          className="text-sm text-secondary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text rounded-sm transition-colors duration-micro"
                         >
                           {link.label}
                           {isExternal && (
@@ -165,7 +165,7 @@ export function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="pt-6 border-t border-pf-border-subtle text-pf-body-sm text-pf-text-muted">
+        <div className="pt-6 border-t border-subtle text-body-sm text-tertiary">
           &copy; 2026 Polyforge. All rights reserved.
         </div>
       </div>

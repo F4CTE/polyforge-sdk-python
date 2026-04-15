@@ -19,8 +19,8 @@
 
 /* ─── New Design Token System (Linear-inspired) ─────────────────────────
    CSS custom properties per docs/13-design-charter.md §12.
-   These are the canonical token names. Old --color-pf-* aliases below
-   point here for backwards compatibility during migration.
+   These are the canonical token names. Extended palette (cyan shades,
+   purple, gold) is defined in the @theme block below.
    ─────────────────────────────────────────────────────────────────────── */
 
 :root {
@@ -115,139 +115,84 @@
   --divide-color-subtle: var(--border-subtle);
   --divide-color-default: var(--border-default);
 
-  /* ─── Legacy pf-* tokens (aliases to new system) ────────────────────
-     Kept during migration. Components still reference these.
-     Will be removed by issue #610 after full migration.
+  /* ─── Extended palette (decorative / chart colors) ───────────────────
+     Unique values that don't alias to the semantic token system.
+     Cyan shades are the Electric Blue accent palette extensions.
      ─────────────────────────────────────────────────────────────────── */
 
-  /* Backgrounds — aliased to new tokens */
-  --color-pf-base: var(--bg-app);
-  --color-pf-surface: var(--bg-surface);
-  --color-pf-elevated: var(--bg-elevated);
-  --color-pf-overlay: var(--bg-overlay);
-  --color-pf-backdrop: rgba(0, 0, 0, 0.6);
-  --color-pf-backdrop-light: rgba(0, 0, 0, 0.5);
-  --color-pf-backdrop-subtle: rgba(0, 0, 0, 0.4);
+  /* Backdrop overlays */
+  --color-backdrop: rgba(0, 0, 0, 0.6);
+  --color-backdrop-light: rgba(0, 0, 0, 0.5);
+  --color-backdrop-subtle: rgba(0, 0, 0, 0.4);
 
   /* Admin sidebar */
-  --color-pf-admin-sidebar: #0a0e18;
+  --color-admin-sidebar: #0a0e18;
 
-  /* Borders — aliased to new tokens */
-  --color-pf-border-subtle: var(--border-subtle);
-  --color-pf-border: var(--border-subtle);
-  --color-pf-border-strong: var(--border-strong);
+  /* Extended accent shades (Electric Blue) */
+  --color-cyan-50: #eff3ff;
+  --color-cyan-100: #dbe4fe;
+  --color-cyan-200: #bfcdfe;
+  --color-cyan-300: #93a8fc;
+  --color-cyan-600: #3B5BDB;
 
-  /* Text — aliased to new tokens */
-  --color-pf-text: var(--text-primary);
-  --color-pf-text-secondary: var(--text-secondary);
-  --color-pf-text-muted: var(--text-tertiary);
-  --color-pf-text-tertiary: var(--text-tertiary);
-  --color-pf-text-contrast: #000000;
-  --color-pf-text-disabled: var(--text-disabled);
+  /* Gold palette (charts, badges) */
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #fbbf24;
+  --color-gold-500: #f59e0b;
+  --color-gold-600: #d97706;
+  --color-gold-glow: rgba(245, 158, 11, 0.15);
 
-  /* Background aliases */
-  --color-pf-bg: var(--bg-app);
-
-  /* Accent — mapped to new Electric Blue system (was cyan) */
-  --color-pf-cyan-50: #eff3ff;
-  --color-pf-cyan-100: #dbe4fe;
-  --color-pf-cyan-200: #bfcdfe;
-  --color-pf-cyan-300: #93a8fc;
-  --color-pf-cyan-400: var(--accent-text);
-  --color-pf-cyan-500: var(--accent-default);
-  --color-pf-cyan-600: #3B5BDB;
-  --color-pf-cyan-glow: var(--accent-subtle);
-
-  /* Gold accent */
-  --color-pf-gold-300: #fcd34d;
-  --color-pf-gold-400: #fbbf24;
-  --color-pf-gold-500: #f59e0b;
-  --color-pf-gold-600: #d97706;
-  --color-pf-gold-glow: rgba(245, 158, 11, 0.15);
-
-  /* Purple accent */
-  --color-pf-purple-300: #c4b5fd;
-  --color-pf-purple-400: #a78bfa;
-  --color-pf-purple-500: #8b5cf6;
-  --color-pf-purple-600: #7c3aed;
-  --color-pf-purple-glow: rgba(139, 92, 246, 0.15);
-
-  /* Semantic — aliased to new tokens */
-  --color-pf-success: var(--gain);
-  --color-pf-danger: var(--loss);
-  --color-pf-warning: var(--warning);
-  --color-pf-info: var(--info);
-
-  /* Semantic backgrounds */
-  --color-pf-success-bg: var(--gain-subtle);
-  --color-pf-danger-bg: var(--loss-subtle);
-  --color-pf-warning-bg: var(--warning-subtle);
-  --color-pf-info-bg: var(--info-subtle);
-
-  /* P&L semantic colors — aliased to gain/loss */
-  --color-pf-pnl-positive: var(--gain);
-  --color-pf-pnl-negative: var(--loss);
-  --color-pf-pnl-neutral: var(--text-tertiary);
+  /* Purple palette (charts, categories) */
+  --color-purple-300: #c4b5fd;
+  --color-purple-400: #a78bfa;
+  --color-purple-500: #8b5cf6;
+  --color-purple-600: #7c3aed;
+  --color-purple-glow: rgba(139, 92, 246, 0.15);
 
   /* Chart palette */
-  --color-pf-chart-1: var(--accent-default);
-  --color-pf-chart-2: var(--color-pf-purple-500);
-  --color-pf-chart-3: var(--color-pf-gold-500);
-  --color-pf-chart-4: var(--gain);
-  --color-pf-chart-5: var(--info);
-  --color-pf-chart-6: var(--loss);
-  --color-pf-chart-muted: var(--text-tertiary);
-  --color-pf-chart-grid: rgba(148, 163, 184, 0.15);
-  --color-pf-chart-tooltip-bg: var(--bg-overlay);
-  --color-pf-chart-tooltip-border: var(--border-default);
+  --color-chart-1: var(--accent-default);
+  --color-chart-2: var(--color-purple-500);
+  --color-chart-3: var(--color-gold-500);
+  --color-chart-4: var(--gain);
+  --color-chart-5: var(--info);
+  --color-chart-6: var(--loss);
+  --color-chart-muted: var(--text-tertiary);
+  --color-chart-grid: rgba(148, 163, 184, 0.15);
+  --color-chart-tooltip-bg: var(--bg-overlay);
+  --color-chart-tooltip-border: var(--border-default);
 
-  /* Status colors — aliased to semantic tokens */
-  --color-pf-status-active: var(--gain);
-  --color-pf-status-active-bg: var(--gain-subtle);
-  --color-pf-status-warning-bg: var(--warning-subtle);
-  --color-pf-status-error-bg: var(--loss-subtle);
-  --color-pf-status-info-bg: var(--info-subtle);
-
-  /* Transition duration tokens */
-  --transition-duration-pf-fast: 100ms;
-  --transition-duration-pf-normal: 200ms;
-  --transition-duration-pf-slow: 300ms;
-
-  /* New transition tokens (charter §7) */
+  /* Transition duration tokens (charter §7) */
   --transition-duration-micro: 120ms;
   --transition-duration-panel: 200ms;
   --transition-duration-modal: 180ms;
-
-  /* Typography tokens */
-  --tracking-pf-code: 0.3em;
+  --transition-duration-slow: 300ms;
 
   /* Shadows — charter §4 elevation system */
-  --shadow-pf-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-pf-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-pf-md: 0 4px 6px rgba(0, 0, 0, 0.3);
-  --shadow-pf-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
-  --shadow-pf-xl: 0 20px 25px rgba(0, 0, 0, 0.35);
-  --shadow-pf-2xl: 0 25px 50px rgba(0, 0, 0, 0.4);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.35);
+  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.4);
 
   /* Elevation shadows (charter §4) */
   --shadow-elevation-2: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-elevation-3: 0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.3);
 
-  /* Glow / ring shadows — updated for Electric Blue accent */
-  --shadow-pf-ring-cyan: 0 0 0 2px color-mix(in srgb, var(--accent-default) 20%, transparent);
-  --shadow-pf-glow-cyan: 0 0 12px color-mix(in srgb, var(--accent-default) 8%, transparent);
-  --shadow-pf-glow-cyan-strong: 0 0 20px color-mix(in srgb, var(--accent-default) 30%, transparent);
+  /* Glow / ring shadows — Electric Blue accent */
+  --shadow-ring-accent: 0 0 0 2px color-mix(in srgb, var(--accent-default) 20%, transparent);
+  --shadow-glow-accent: 0 0 12px color-mix(in srgb, var(--accent-default) 8%, transparent);
+  --shadow-glow-accent-strong: 0 0 20px color-mix(in srgb, var(--accent-default) 30%, transparent);
 
   /* Focus ring — charter §13 */
   --shadow-focus-ring: 0 0 0 3px var(--accent-subtle);
 
-  /* Radius — charter §5 */
-  --radius-pf-xs: 4px;
-  --radius-pf-sm: 6px;
-  --radius-pf: 8px;
-  --radius-pf-md: 10px;
-  --radius-pf-lg: 12px;
-  --radius-pf-full: 9999px;
+  /* Radius — charter §5 (4/6/8/10/12px) */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
 
   /* Type scale — charter §2 */
   --text-display-lg: 1.5rem;
@@ -258,61 +203,38 @@
   --text-label: 0.75rem;
   --text-caption: 0.6875rem;
 
-  /* Legacy micro sizes */
-  --text-pf-micro: 0.5625rem;
-  --text-pf-caption: 0.625rem;
-  --text-pf-label: 0.6875rem;
-  --text-pf-body-sm: 0.8125rem;
-  --text-pf-body: 0.9375rem;
-  --text-pf-subhead: 1.0625rem;
-
   /* Font families — Geist (charter §2) */
   --font-sans: "Geist", "Geist Fallback", system-ui, sans-serif;
   --font-mono: "Geist Mono", "Fira Code", monospace;
 
-  /* Spacing scale */
-  --spacing-pf-1: 4px;
-  --spacing-pf-2: 8px;
-  --spacing-pf-3: 12px;
-  --spacing-pf-4: 16px;
-  --spacing-pf-5: 24px;
-  --spacing-pf-6: 32px;
-  --spacing-pf-7: 40px;
-  --spacing-pf-8: 48px;
-  --spacing-pf-9: 56px;
-  --spacing-pf-10: 64px;
-
   /* Chart height tokens */
-  --height-pf-chart-sm: 220px;
-  --height-pf-chart-md: 240px;
-  --height-pf-chart-lg: 260px;
+  --height-chart-sm: 220px;
+  --height-chart-md: 240px;
+  --height-chart-lg: 260px;
 
   /* Column width tokens */
-  --max-width-pf-col-xs: 120px;
-  --max-width-pf-col-sm: 160px;
-  --max-width-pf-col-md: 200px;
-  --max-width-pf-col-lg: 260px;
-  --min-width-pf-col-xs: 120px;
+  --max-width-col-xs: 120px;
+  --max-width-col-sm: 160px;
+  --max-width-col-md: 200px;
+  --max-width-col-lg: 260px;
+  --min-width-col-xs: 120px;
 
   /* Input minimum width tokens */
-  --min-width-pf-input-min-sm: 180px;
-  --min-width-pf-input-min-md: 200px;
+  --min-width-input-min-sm: 180px;
+  --min-width-input-min-md: 200px;
 
   /* Landing page container widths */
-  --max-width-pf-container-landing: 1100px;
-  --max-width-pf-content-sm: 600px;
+  --max-width-container-landing: 1100px;
+  --max-width-content-sm: 600px;
 
   /* Component minimum dimensions */
-  --min-width-pf-dropdown-min: 160px;
-  --min-height-pf-textarea-min: 80px;
+  --min-width-dropdown-min: 160px;
+  --min-height-textarea-min: 80px;
 
   /* Opacity scale */
-  --opacity-pf-subtle: 0.04;
-  --opacity-pf-muted: 0.06;
-  --opacity-pf-disabled: 0.6;
-
-  /* Line-height tokens */
-  --leading-pf-tight: 1.15;
+  --opacity-subtle: 0.04;
+  --opacity-muted: 0.06;
+  --opacity-disabled: 0.6;
 }
 
 /* Base styles */
@@ -564,47 +486,45 @@ body {
   --info-subtle: rgba(37, 99, 235, 0.10);
   --neutral-market: #5A5E72;
 
-  /* Legacy pf-* overrides (point to new light values) */
-  --color-pf-backdrop: rgba(0, 0, 0, 0.5);
-  --color-pf-backdrop-light: rgba(0, 0, 0, 0.4);
-  --color-pf-backdrop-subtle: rgba(0, 0, 0, 0.3);
+  /* Backdrop overrides — lighter for light mode */
+  --color-backdrop: rgba(0, 0, 0, 0.5);
+  --color-backdrop-light: rgba(0, 0, 0, 0.4);
+  --color-backdrop-subtle: rgba(0, 0, 0, 0.3);
 
-  /* Legacy cyan overrides — mapped to accent light values */
-  --color-pf-cyan-300: #93a8fc;
-  --color-pf-cyan-400: #3B5BDB;
-  --color-pf-cyan-500: #4F6EF7;
-  --color-pf-cyan-600: #3B5BDB;
+  /* Extended accent shades — adjusted for AA on white */
+  --color-cyan-300: #93a8fc;
+  --color-cyan-600: #3B5BDB;
 
   /* Gold overrides — darker for AA on white */
-  --color-pf-gold-300: #f59e0b;
-  --color-pf-gold-400: #d97706;
-  --color-pf-gold-500: #b45309;
-  --color-pf-gold-600: #92400e;
+  --color-gold-300: #f59e0b;
+  --color-gold-400: #d97706;
+  --color-gold-500: #b45309;
+  --color-gold-600: #92400e;
 
   /* Purple overrides — darker for AA on white */
-  --color-pf-purple-300: #a78bfa;
-  --color-pf-purple-400: #7c3aed;
-  --color-pf-purple-500: #6d28d9;
-  --color-pf-purple-600: #5b21b6;
+  --color-purple-300: #a78bfa;
+  --color-purple-400: #7c3aed;
+  --color-purple-500: #6d28d9;
+  --color-purple-600: #5b21b6;
 
   /* Chart palette */
-  --color-pf-chart-tooltip-bg: #ffffff;
-  --color-pf-chart-tooltip-border: #e2e8f0;
-  --color-pf-chart-grid: rgba(100, 116, 139, 0.15);
+  --color-chart-tooltip-bg: #ffffff;
+  --color-chart-tooltip-border: #e2e8f0;
+  --color-chart-grid: rgba(100, 116, 139, 0.15);
 
   /* Shadows — lighter for light mode */
-  --shadow-pf-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-pf-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
-  --shadow-pf-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-pf-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --shadow-pf-xl: 0 16px 40px rgba(0, 0, 0, 0.15);
-  --shadow-pf-2xl: 0 24px 60px rgba(0, 0, 0, 0.2);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.15);
+  --shadow-2xl: 0 24px 60px rgba(0, 0, 0, 0.2);
   --shadow-elevation-2: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow-elevation-3: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
 
   /* Glow — reduced intensity for light mode */
-  --shadow-pf-ring-cyan: 0 0 0 2px color-mix(in srgb, var(--accent-default) 15%, transparent);
-  --shadow-pf-glow-cyan: 0 0 12px color-mix(in srgb, var(--accent-default) 5%, transparent);
-  --shadow-pf-glow-cyan-strong: 0 0 20px color-mix(in srgb, var(--accent-default) 20%, transparent);
+  --shadow-ring-accent: 0 0 0 2px color-mix(in srgb, var(--accent-default) 15%, transparent);
+  --shadow-glow-accent: 0 0 12px color-mix(in srgb, var(--accent-default) 5%, transparent);
+  --shadow-glow-accent-strong: 0 0 20px color-mix(in srgb, var(--accent-default) 20%, transparent);
   --shadow-focus-ring: 0 0 0 3px var(--accent-subtle);
 }

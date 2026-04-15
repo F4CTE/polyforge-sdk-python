@@ -812,7 +812,7 @@ export function Component() {
       {/* Back */}
       <Link
         to="/markets"
-        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
+        className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
       >
         <ArrowLeft className="size-4" aria-hidden="true" /> Markets
       </Link>
@@ -841,11 +841,11 @@ export function Component() {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 flex-wrap">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-1 rounded-pf-full bg-accent/15 text-accent-text text-xs font-medium">
+                <span className="px-2 py-1 rounded-full bg-accent/15 text-accent-text text-xs font-medium">
                   {market.category}
                 </span>
                 {days >= 0 && days <= 7 && (
-                  <span className="px-2 py-1 rounded-pf-full bg-warning/15 text-warning text-xs font-medium">
+                  <span className="px-2 py-1 rounded-full bg-warning/15 text-warning text-xs font-medium">
                     Closing soon
                   </span>
                 )}
@@ -864,8 +864,8 @@ export function Component() {
             {/* Price pills + TP/SL + Run Strategy */}
             <div className="flex items-center gap-3 flex-wrap sm:flex-shrink-0">
               <div className="flex gap-2">
-                <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-gain/10 border border-gain/20">
-                  <span className="text-pf-caption uppercase tracking-wide text-gain/70">YES</span>
+                <div className="flex flex-col items-center px-4 py-2 rounded-lg bg-gain/10 border border-gain/20">
+                  <span className="text-caption uppercase tracking-wide text-gain/70">YES</span>
                   <span className="text-lg font-mono font-semibold text-gain">
                     {yesPrice ?? '\u2014'}
                   </span>
@@ -875,7 +875,7 @@ export function Component() {
                       variant="ghost"
                       onClick={() => openConditional('TAKE_PROFIT', 'YES')}
                       aria-label="Set take profit for YES"
-                      className="px-2 py-1 rounded text-pf-micro font-medium bg-gain/20 text-gain hover:bg-gain/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                      className="px-2 py-1 rounded text-caption font-medium bg-gain/20 text-gain hover:bg-gain/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       TP
                     </Button>
@@ -884,14 +884,14 @@ export function Component() {
                       variant="ghost"
                       onClick={() => openConditional('STOP_LOSS', 'YES')}
                       aria-label="Set stop loss for YES"
-                      className="px-2 py-1 rounded text-pf-micro font-medium bg-loss/20 text-loss hover:bg-loss/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                      className="px-2 py-1 rounded text-caption font-medium bg-loss/20 text-loss hover:bg-loss/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       SL
                     </Button>
                   </div>
                 </div>
-                <div className="flex flex-col items-center px-4 py-2 rounded-pf-md bg-loss/10 border border-loss/20">
-                  <span className="text-pf-caption uppercase tracking-wide text-loss/70">NO</span>
+                <div className="flex flex-col items-center px-4 py-2 rounded-lg bg-loss/10 border border-loss/20">
+                  <span className="text-caption uppercase tracking-wide text-loss/70">NO</span>
                   <span className="text-lg font-mono font-semibold text-loss">
                     {noPrice ?? '\u2014'}
                   </span>
@@ -901,7 +901,7 @@ export function Component() {
                       variant="ghost"
                       onClick={() => openConditional('TAKE_PROFIT', 'NO')}
                       aria-label="Set take profit for NO"
-                      className="px-2 py-1 rounded text-pf-micro font-medium bg-gain/20 text-gain hover:bg-gain/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                      className="px-2 py-1 rounded text-caption font-medium bg-gain/20 text-gain hover:bg-gain/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       TP
                     </Button>
@@ -910,7 +910,7 @@ export function Component() {
                       variant="ghost"
                       onClick={() => openConditional('STOP_LOSS', 'NO')}
                       aria-label="Set stop loss for NO"
-                      className="px-2 py-1 rounded text-pf-micro font-medium bg-loss/20 text-loss hover:bg-loss/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                      className="px-2 py-1 rounded text-caption font-medium bg-loss/20 text-loss hover:bg-loss/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       SL
                     </Button>
@@ -921,7 +921,7 @@ export function Component() {
                 type="button"
                 variant="success"
                 onClick={() => setShowRunStrategy(true)}
-                className="flex items-center gap-2 px-4 py-3 rounded-pf bg-gain text-primary text-sm font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gain/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-base"
+                className="flex items-center gap-2 px-4 py-3 rounded-pf bg-gain text-primary text-sm font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gain/50 focus-visible:ring-offset-2 focus-visible:ring-offset-app"
               >
                 <Play className="size-4" /> Run Strategy
               </Button>
@@ -935,7 +935,7 @@ export function Component() {
               { icon: <Droplets className="size-4 text-tertiary" />, label: 'Liquidity', value: totalLiquidity(market.tokens) },
               { icon: <Clock className="size-4 text-tertiary" />, label: 'End Date', value: formatDate(market.endDate) },
             ].map((stat) => (
-              <div key={stat.label} className="bg-elevated border border-default rounded-pf-lg p-4">
+              <div key={stat.label} className="bg-elevated border border-default rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-1">
                   {stat.icon}
                   <span className="text-xs text-tertiary">{stat.label}</span>
@@ -946,18 +946,18 @@ export function Component() {
           </div>
 
           {/* Price History Chart */}
-          <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+          <div className="bg-elevated border border-default rounded-xl overflow-hidden">
             {/* Header row */}
             <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-default">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-primary">Price History</span>
                 {yesPrice && (
-                  <span className="px-2 py-1 rounded-pf-full bg-gain/10 border border-gain/20 text-pf-label font-mono text-gain">
+                  <span className="px-2 py-1 rounded-full bg-gain/10 border border-gain/20 text-label font-mono text-gain">
                     YES {yesPrice}
                   </span>
                 )}
                 {noPrice && (
-                  <span className="px-2 py-1 rounded-pf-full bg-loss/10 border border-loss/20 text-pf-label font-mono text-loss">
+                  <span className="px-2 py-1 rounded-full bg-loss/10 border border-loss/20 text-label font-mono text-loss">
                     NO {noPrice}
                   </span>
                 )}
@@ -971,7 +971,7 @@ export function Component() {
                     key={p}
                     onClick={() => setHistoryPeriod(p)}
                     aria-pressed={historyPeriod === p}
-                    className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
+                    className={`px-3 py-1 rounded-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                       historyPeriod === p
                         ? 'bg-accent/15 text-accent-text'
                         : 'bg-elevated text-tertiary hover:text-secondary'
@@ -1087,7 +1087,7 @@ export function Component() {
           {/* Chart + Order Book */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Chart */}
-            <div className="lg:col-span-2 bg-elevated border border-default rounded-pf-lg p-4">
+            <div className="lg:col-span-2 bg-elevated border border-default rounded-xl p-4">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-medium text-primary">Price History &mdash; YES</span>
                 <div className="flex gap-1">
@@ -1098,7 +1098,7 @@ export function Component() {
                       key={r}
                       onClick={() => onResolutionChange(r)}
                       aria-pressed={resolution === r}
-                      className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
+                      className={`px-3 py-1 rounded-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                         resolution === r
                           ? 'bg-accent/15 text-accent-text'
                           : 'text-tertiary hover:text-secondary'
@@ -1177,23 +1177,23 @@ export function Component() {
             {/* Right column: Order Book + Trade Panel */}
             <div className="space-y-4">
             {/* Order Book */}
-            <div className="bg-elevated border border-default rounded-pf-lg p-4">
+            <div className="bg-elevated border border-default rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-primary">Order Book</span>
                 <div className="flex items-center gap-2">
                   {orderBook && (
-                    <span className="font-mono text-pf-label text-tertiary">
+                    <span className="font-mono text-label text-tertiary">
                       spread {orderBook.spread}
                     </span>
                   )}
                   {/* Table / Chart toggle */}
-                  <div className="flex rounded-pf-sm overflow-hidden border border-default" role="group" aria-label="Order book view">
+                  <div className="flex rounded-sm overflow-hidden border border-default" role="group" aria-label="Order book view">
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={() => setOrderBookView('table')}
                       aria-pressed={orderBookView === 'table'}
-                      className={`px-2 py-1 text-pf-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
+                      className={`px-2 py-1 text-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                         orderBookView === 'table'
                           ? 'bg-accent/15 text-accent-text'
                           : 'bg-transparent text-tertiary hover:text-secondary'
@@ -1206,7 +1206,7 @@ export function Component() {
                       variant="ghost"
                       onClick={() => setOrderBookView('chart')}
                       aria-pressed={orderBookView === 'chart'}
-                      className={`px-2 py-1 text-pf-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 border-l border-default ${
+                      className={`px-2 py-1 text-label font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 border-l border-default ${
                         orderBookView === 'chart'
                           ? 'bg-accent/15 text-accent-text'
                           : 'bg-transparent text-tertiary hover:text-secondary'
@@ -1241,11 +1241,11 @@ export function Component() {
                 const askPct = 100 - bidPct;
                 return (
                   <div className="mb-3">
-                    <div className="flex h-2 rounded-pf-full overflow-hidden">
+                    <div className="flex h-2 rounded-full overflow-hidden">
                       <div className="bg-gain/50" style={{ width: `${bidPct}%` }} title={`Bids: ${bidPct.toFixed(0)}%`} />
                       <div className="bg-loss/50 flex-1" title={`Asks: ${askPct.toFixed(0)}%`} />
                     </div>
-                    <div className="flex justify-between text-pf-caption text-tertiary mt-1">
+                    <div className="flex justify-between text-caption text-tertiary mt-1">
                       <span>Bid {bidPct.toFixed(0)}%</span>
                       <span>Ask {askPct.toFixed(0)}%</span>
                     </div>
@@ -1283,7 +1283,7 @@ export function Component() {
                     {/* Midpoint */}
                     <div className="flex items-center gap-2 px-2 py-2 border-y border-subtle my-1">
                       <span className="font-mono text-sm text-primary font-medium">{orderBook.midpoint}</span>
-                      <span className="text-pf-label text-tertiary">mid</span>
+                      <span className="text-label text-tertiary">mid</span>
                     </div>
 
                     {/* Bids */}
@@ -1359,7 +1359,7 @@ export function Component() {
                                   ? (bestAskPrice - bestBidPrice).toFixed(4)
                                   : null;
                                 return (
-                                  <div className="bg-surface border border-default rounded px-3 py-2 text-xs shadow-pf-md">
+                                  <div className="bg-surface border border-default rounded px-3 py-2 text-xs shadow-md">
                                     <p className="text-secondary mb-1 font-mono">
                                       Price: {d.price.toFixed(4)}
                                     </p>
@@ -1426,16 +1426,16 @@ export function Component() {
                         {/* Legend */}
                         <div className="flex items-center justify-center gap-4 mt-1">
                           <div className="flex items-center gap-1">
-                            <span className="inline-block size-2 rounded-pf-full bg-gain" aria-hidden="true" />
-                            <span className="text-pf-caption text-tertiary">Bids</span>
+                            <span className="inline-block size-2 rounded-full bg-gain" aria-hidden="true" />
+                            <span className="text-caption text-tertiary">Bids</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="inline-block size-2 rounded-pf-full bg-loss" aria-hidden="true" />
-                            <span className="text-pf-caption text-tertiary">Asks</span>
+                            <span className="inline-block size-2 rounded-full bg-loss" aria-hidden="true" />
+                            <span className="text-caption text-tertiary">Asks</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <span className="inline-block w-3 border-t border-dashed border-secondary" aria-hidden="true" />
-                            <span className="text-pf-caption text-tertiary">Mid</span>
+                            <span className="text-caption text-tertiary">Mid</span>
                           </div>
                         </div>
                       </div>
@@ -1448,7 +1448,7 @@ export function Component() {
             </div>
 
             {/* Trade Panel */}
-            <div className="bg-elevated border border-default rounded-pf-lg p-4">
+            <div className="bg-elevated border border-default rounded-xl p-4">
               <span className="text-sm font-medium text-primary">Trade</span>
 
               {/* Wallet not connected — prompt user */}
@@ -1481,7 +1481,7 @@ export function Component() {
                       const token = (market?.tokens ?? []).find((t) => t.outcome?.toUpperCase() === o);
                       if (token?.price) setTradePrice(token.price);
                     }}
-                    className={`flex-1 py-2 rounded-pf-sm text-xs font-semibold transition-colors ${
+                    className={`flex-1 py-2 rounded-sm text-xs font-semibold transition-colors ${
                       tradeOutcome === o
                         ? o === 'YES'
                           ? 'bg-gain/10 text-gain border border-gain/30'
@@ -1502,7 +1502,7 @@ export function Component() {
                     variant="ghost"
                     key={s}
                     onClick={() => setTradeSide(s)}
-                    className={`flex-1 py-2 rounded-pf-sm text-xs font-semibold transition-colors ${
+                    className={`flex-1 py-2 rounded-sm text-xs font-semibold transition-colors ${
                       tradeSide === s
                         ? s === 'BUY'
                           ? 'bg-accent/10 text-accent-text border border-accent/30'
@@ -1569,11 +1569,11 @@ export function Component() {
                       const suggested = Math.round(f * (portfolioBalance || 1000));
                       setTradeAmount(String(Math.min(suggested, portfolioBalance || 1000)));
                     }}
-                    className="flex-1 h-2 rounded-pf-full bg-default accent-accent"
+                    className="flex-1 h-2 rounded-full bg-default accent-accent"
                   />
                   <span className="text-xs font-mono text-accent-text w-8 text-right">{kellyConfidence}%</span>
                 </div>
-                <p className="text-pf-caption text-tertiary mt-1">
+                <p className="text-caption text-tertiary mt-1">
                   Drag to set your confidence &rarr; Kelly suggests a size
                 </p>
               </div>
@@ -1597,7 +1597,7 @@ export function Component() {
 
               {/* Estimated values */}
               {parseFloat(tradeAmount || '0') > 0 && estPrice > 0 && (
-                <div className="mt-3 space-y-1 bg-surface rounded-pf-sm p-3 border border-subtle">
+                <div className="mt-3 space-y-1 bg-surface rounded-sm p-3 border border-subtle">
                   <div className="flex justify-between text-xs">
                     <span className="text-tertiary">Est. Shares</span>
                     <span className="font-mono text-primary">{estShares.toFixed(2)}</span>
@@ -1651,7 +1651,7 @@ export function Component() {
                     {myOrders.map((order) => (
                       <div
                         key={order.id}
-                        className="flex items-center justify-between gap-2 px-2 py-2 rounded-pf-sm bg-surface border border-subtle text-xs"
+                        className="flex items-center justify-between gap-2 px-2 py-2 rounded-sm bg-surface border border-subtle text-xs"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span className={`font-semibold ${order.side === 'BUY' ? 'text-accent-text' : 'text-loss'}`}>
@@ -1685,7 +1685,7 @@ export function Component() {
             </div>
 
             {/* Provide Liquidity */}
-            <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+            <div className="bg-elevated border border-default rounded-xl overflow-hidden">
               <Button
                 type="button"
                 variant="ghost"
@@ -1707,7 +1707,7 @@ export function Component() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className={`text-tertiary transition-transform duration-pf-normal ${lpExpanded ? 'rotate-180' : ''}`}
+                  className={`text-tertiary transition-transform duration-panel ${lpExpanded ? 'rotate-180' : ''}`}
                   aria-hidden="true"
                 >
                   <polyline points="6 9 12 15 18 9" />
@@ -1787,7 +1787,7 @@ export function Component() {
             </div>
 
             {/* Community Sentiment */}
-            <div className="bg-elevated border border-default rounded-pf-lg p-4">
+            <div className="bg-elevated border border-default rounded-xl p-4">
               {/* Header */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -1795,14 +1795,14 @@ export function Component() {
                   <span className="text-sm font-medium text-primary">Community Sentiment</span>
                 </div>
                 {sentiment && sentiment.totalVotes > 0 && (
-                  <span className="text-pf-label text-tertiary">{sentiment.totalVotes} votes</span>
+                  <span className="text-label text-tertiary">{sentiment.totalVotes} votes</span>
                 )}
               </div>
 
               {/* Loading skeleton */}
               {loadingSentiment ? (
                 <div className="space-y-3">
-                  <div className="h-4 bg-overlay rounded-pf-full animate-pulse" />
+                  <div className="h-4 bg-overlay rounded-full animate-pulse" />
                   <div className="flex gap-2">
                     <div className="flex-1 h-10 bg-overlay rounded-pf animate-pulse" />
                     <div className="flex-1 h-10 bg-overlay rounded-pf animate-pulse" />
@@ -1818,18 +1818,18 @@ export function Component() {
                         <span className="font-semibold text-gain">YES {sentiment.yesPercent}%</span>
                         <span className="font-semibold text-loss">{sentiment.noPercent}% NO</span>
                       </div>
-                      <div className="h-4 rounded-pf-full overflow-hidden flex">
+                      <div className="h-4 rounded-full overflow-hidden flex">
                         <div
-                          className="bg-gain transition-all duration-pf-slow ease-out"
+                          className="bg-gain transition-all duration-slow ease-out"
                           style={{ width: `${sentiment.yesPercent}%` }}
                           title={`YES ${sentiment.yesPercent}%`}
                         />
                         <div
-                          className="bg-loss flex-1 transition-all duration-pf-slow ease-out"
+                          className="bg-loss flex-1 transition-all duration-slow ease-out"
                           title={`NO ${sentiment.noPercent}%`}
                         />
                       </div>
-                      <p className="text-pf-label text-tertiary mt-2 text-center">
+                      <p className="text-label text-tertiary mt-2 text-center">
                         {sentiment.yesPercent > 55
                           ? 'Community leans YES'
                           : sentiment.noPercent > 55
@@ -1867,7 +1867,7 @@ export function Component() {
                           setConfidence(sentiment.userVote!.confidence);
                           setEditingVote(true);
                         }}
-                        className="flex items-center gap-1 text-pf-label text-tertiary hover:text-accent-text transition-colors"
+                        className="flex items-center gap-1 text-label text-tertiary hover:text-accent-text transition-colors"
                       >
                         <Edit2 className="size-3" /> Edit
                       </Button>
@@ -1919,9 +1919,9 @@ export function Component() {
                             step={1}
                             value={confidence}
                             onChange={(e) => setConfidence(parseInt(e.target.value))}
-                            className="w-full h-2 rounded-pf-full bg-default accent-accent"
+                            className="w-full h-2 rounded-full bg-default accent-accent"
                           />
-                          <p className="text-pf-caption text-tertiary mt-1">
+                          <p className="text-caption text-tertiary mt-1">
                             {confidence <= 64 ? 'Just a guess' : confidence <= 79 ? 'Fairly confident' : 'Very confident'}
                           </p>
                         </div>
@@ -1943,7 +1943,7 @@ export function Component() {
             </div>
 
             {/* Price Alerts Widget */}
-            <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+            <div className="bg-elevated border border-default rounded-xl overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-default">
                 <div className="flex items-center gap-2">
@@ -1956,7 +1956,7 @@ export function Component() {
                   onClick={() => setShowAlertForm((v) => !v)}
                   aria-expanded={showAlertForm}
                   aria-label={showAlertForm ? 'Cancel new alert' : 'Add price alert'}
-                  className="flex items-center gap-1 px-3 py-1 rounded-pf-sm text-xs font-medium bg-accent/10 border border-accent/25 text-accent-text hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                  className="flex items-center gap-1 px-3 py-1 rounded-sm text-xs font-medium bg-accent/10 border border-accent/25 text-accent-text hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                 >
                   {showAlertForm ? (
                     <X className="size-3" />
@@ -1979,7 +1979,7 @@ export function Component() {
                           variant="ghost"
                           key={o}
                           onClick={() => setAlertOutcome(o)}
-                          className={`flex-1 py-2 rounded-pf-sm text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                          className={`flex-1 py-2 rounded-sm text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                             alertOutcome === o
                               ? o === 'YES'
                                 ? 'bg-gain/10 text-gain border border-gain/30'
@@ -2003,7 +2003,7 @@ export function Component() {
                           variant="ghost"
                           key={c}
                           onClick={() => setAlertCondition(c)}
-                          className={`flex-1 py-2 rounded-pf-sm text-xs font-semibold capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+                          className={`flex-1 py-2 rounded-sm text-xs font-semibold capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                             alertCondition === c
                               ? 'bg-accent/10 text-accent-text border border-accent/30'
                               : 'bg-surface text-tertiary border border-default hover:border-strong'
@@ -2029,9 +2029,9 @@ export function Component() {
                       value={alertThreshold}
                       onChange={(e) => setAlertThreshold(parseFloat(e.target.value))}
                       aria-label="Alert threshold"
-                      className="w-full h-2 rounded-pf-full bg-default accent-accent"
+                      className="w-full h-2 rounded-full bg-default accent-accent"
                     />
-                    <div className="flex justify-between text-pf-caption text-tertiary mt-1">
+                    <div className="flex justify-between text-caption text-tertiary mt-1">
                       <span>0.01</span>
                       <span>0.99</span>
                     </div>
@@ -2043,7 +2043,7 @@ export function Component() {
                       type="button"
                       variant="secondary"
                       onClick={() => setShowAlertForm(false)}
-                      className="flex-1 py-2 rounded-pf-sm text-xs text-secondary hover:text-primary border border-default hover:border-strong transition-colors"
+                      className="flex-1 py-2 rounded-sm text-xs text-secondary hover:text-primary border border-default hover:border-strong transition-colors"
                     >
                       Cancel
                     </Button>
@@ -2080,7 +2080,7 @@ export function Component() {
                           setSavingAlert(false);
                         }
                       }}
-                      className="flex-1 py-2 rounded-pf-sm text-xs font-semibold bg-accent/15 border border-accent/30 text-accent-text hover:bg-accent/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                      className="flex-1 py-2 rounded-sm text-xs font-semibold bg-accent/15 border border-accent/30 text-accent-text hover:bg-accent/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                     >
                       {savingAlert ? 'Saving...' : 'Save Alert'}
                     </Button>
@@ -2093,7 +2093,7 @@ export function Component() {
                 {loadingAlerts ? (
                   <div className="space-y-2">
                     {Array.from({ length: 2 }, (_, i) => (
-                      <div key={i} className="h-8 bg-overlay rounded-pf-sm animate-pulse" />
+                      <div key={i} className="h-8 bg-overlay rounded-sm animate-pulse" />
                     ))}
                   </div>
                 ) : alerts.length === 0 ? (
@@ -2104,7 +2104,7 @@ export function Component() {
                       type="button"
                       variant="ghost"
                       onClick={() => setShowAlertForm(true)}
-                      className="mt-2 text-pf-label text-accent-text hover:text-accent-text transition-colors"
+                      className="mt-2 text-label text-accent-text hover:text-accent-text transition-colors"
                     >
                       Add your first alert
                     </Button>
@@ -2114,19 +2114,19 @@ export function Component() {
                     {alerts.map((alert) => (
                       <li
                         key={alert.id}
-                        className="flex items-center justify-between gap-2 px-3 py-2 rounded-pf-sm bg-surface border border-subtle text-xs"
+                        className="flex items-center justify-between gap-2 px-3 py-2 rounded-sm bg-surface border border-subtle text-xs"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           {/* Outcome dot */}
                           <span
-                            className={`size-2 rounded-pf-full shrink-0 ${alert.outcome === 'YES' ? 'bg-gain' : 'bg-loss'}`}
+                            className={`size-2 rounded-full shrink-0 ${alert.outcome === 'YES' ? 'bg-gain' : 'bg-loss'}`}
                             aria-hidden="true"
                           />
                           <span className="font-mono text-primary truncate">
                             {alert.outcome} {alert.condition} {alert.threshold.toFixed(2)}
                           </span>
                           {alert.triggered && (
-                            <span className="shrink-0 px-2 py-1 rounded-pf-full text-pf-caption font-medium bg-warning/15 text-warning border border-warning/20">
+                            <span className="shrink-0 px-2 py-1 rounded-full text-caption font-medium bg-warning/15 text-warning border border-warning/20">
                               Triggered
                             </span>
                           )}
@@ -2166,7 +2166,7 @@ export function Component() {
           </div>
 
           {/* Strategies on this market */}
-          <div className="bg-elevated border border-default rounded-pf-lg p-6">
+          <div className="bg-elevated border border-default rounded-xl p-6">
             <h2 className="text-sm font-medium text-primary mb-4">Strategies on This Market</h2>
             <div className="flex flex-col items-center py-6 text-center">
               <Zap className="size-6 text-tertiary mb-2" />
@@ -2183,7 +2183,7 @@ export function Component() {
           </div>
 
           {/* Related News */}
-          <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+          <div className="bg-elevated border border-default rounded-xl overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4">
               <div className="flex items-center gap-2">
                 <Newspaper className="size-4 text-tertiary" aria-hidden="true" />
@@ -2191,7 +2191,7 @@ export function Component() {
               </div>
               <Link
                 to={`/news?market=${id}`}
-                className="text-pf-label text-tertiary hover:text-accent-text transition-colors"
+                className="text-label text-tertiary hover:text-accent-text transition-colors"
               >
                 See all &rarr;
               </Link>
@@ -2201,7 +2201,7 @@ export function Component() {
               <div className="divide-y divide-default">
                 {Array.from({ length: 3 }, (_, i) => (
                   <div key={i} className="flex items-center gap-3 px-6 py-3 animate-pulse">
-                    <div className="size-2 rounded-pf-full bg-overlay shrink-0" />
+                    <div className="size-2 rounded-full bg-overlay shrink-0" />
                     <div className="flex-1 space-y-2">
                       <div className="h-3 bg-overlay rounded w-[80%]" />
                       <div className="h-3 bg-overlay rounded w-[50%]" />
@@ -2223,7 +2223,7 @@ export function Component() {
                   >
                     {/* Sentiment dot */}
                     <span
-                      className={`size-2 rounded-pf-full shrink-0 ${
+                      className={`size-2 rounded-full shrink-0 ${
                         article.sentiment === 'POSITIVE'
                           ? 'bg-gain'
                           : article.sentiment === 'NEGATIVE'
@@ -2236,14 +2236,14 @@ export function Component() {
                     {/* Title + meta */}
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-primary truncate leading-snug">{article.title}</p>
-                      <p className="text-pf-label text-tertiary mt-1">
+                      <p className="text-label text-tertiary mt-1">
                         {article.source} &middot; {new Date(article.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </p>
                     </div>
 
                     {/* Signal count badge */}
                     {(article.signals?.length ?? 0) > 0 && (
-                      <span className="shrink-0 px-2 py-1 rounded-pf-full text-pf-caption font-medium bg-accent/15 text-accent-text">
+                      <span className="shrink-0 px-2 py-1 rounded-full text-caption font-medium bg-accent/15 text-accent-text">
                         {article.signals!.length} signal{article.signals!.length !== 1 ? 's' : ''}
                       </span>
                     )}
@@ -2257,7 +2257,7 @@ export function Component() {
 
           {/* Description */}
           {market.description && (
-            <div className="bg-elevated border border-default rounded-pf-lg p-6">
+            <div className="bg-elevated border border-default rounded-xl p-6">
               <h2 className="text-sm font-medium text-primary mb-2">About</h2>
               <p className="text-sm text-secondary leading-relaxed">{market.description}</p>
             </div>
@@ -2266,7 +2266,7 @@ export function Component() {
           {/* Conditional Order Dialog (TP/SL) */}
           {showConditional && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Set Conditional Order">
-              <div className="animate-scale-in bg-elevated border border-default rounded-pf-lg w-full max-w-sm p-6 shadow-pf-lg">
+              <div className="animate-scale-in bg-elevated border border-default rounded-xl w-full max-w-sm p-6 shadow-lg">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-semibold text-primary">
                     {condType === 'TAKE_PROFIT' ? 'Set Take Profit' : 'Set Stop Loss'} &mdash; {condOutcome}
@@ -2339,7 +2339,7 @@ export function Component() {
           {/* Run Strategy Dialog */}
           {showRunStrategy && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Run Strategy">
-              <div className="animate-scale-in bg-elevated border border-default rounded-pf-lg w-full max-w-md p-6 shadow-pf-lg">
+              <div className="animate-scale-in bg-elevated border border-default rounded-xl w-full max-w-md p-6 shadow-lg">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-semibold text-primary">Run Strategy on This Market</h2>
                   <Button

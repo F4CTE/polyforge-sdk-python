@@ -36,7 +36,7 @@ interface Listing {
 
 function ListingSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-4 space-y-3 animate-shimmer">
+    <div className="bg-elevated border border-default rounded-xl p-4 space-y-3 animate-shimmer">
       <div className="h-4 bg-overlay rounded w-[60%]" />
       <div className="h-3 bg-overlay rounded w-[90%]" />
       <div className="h-3 bg-overlay rounded w-[75%]" />
@@ -145,11 +145,11 @@ export function Component() {
               {listings.map(listing => (
                 <div
                   key={listing.id}
-                  className="bg-elevated border border-default rounded-pf-lg p-4 hover:border-strong hover:shadow-pf-sm hover:-translate-y-1 transition-all duration-pf-normal flex flex-col"
+                  className="bg-elevated border border-default rounded-xl p-4 hover:border-strong hover:shadow-sm hover:-translate-y-1 transition-all duration-panel flex flex-col"
                 >
                   {/* Seller */}
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="size-6 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center text-pf-caption font-semibold text-accent-text">
+                    <div className="size-6 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center text-caption font-semibold text-accent-text">
                       {(listing.seller.displayName ?? listing.seller.username).slice(0, 2).toUpperCase()}
                     </div>
                     <span className="text-xs text-secondary truncate">
@@ -169,7 +169,7 @@ export function Component() {
                   )}
 
                   {/* Stats */}
-                  <div className="flex flex-wrap gap-2 text-pf-label text-secondary mb-3">
+                  <div className="flex flex-wrap gap-2 text-label text-secondary mb-3">
                     {listing.winRate != null && <span>{listing.winRate}% win</span>}
                     {listing.tradeCount != null && <span>{listing.tradeCount} trades</span>}
                     <span className="flex items-center gap-1 ml-auto">
@@ -184,13 +184,13 @@ export function Component() {
                   <div className="flex gap-2 mt-auto">
                     <Link
                       to={`/marketplace/${listing.id}`}
-                      className="flex-1 text-center py-2 rounded-pf-sm text-xs font-medium border border-default text-secondary hover:border-strong hover:text-primary transition-colors"
+                      className="flex-1 text-center py-2 rounded-sm text-xs font-medium border border-default text-secondary hover:border-strong hover:text-primary transition-colors"
                     >
                       View
                     </Link>
                     <Link
                       to={`/marketplace/${listing.id}?action=fork`}
-                      className="flex-1 text-center py-2 rounded-pf-sm text-xs font-medium border border-accent/40 text-accent-text hover:bg-accent/10 transition-colors flex items-center justify-center gap-1"
+                      className="flex-1 text-center py-2 rounded-sm text-xs font-medium border border-accent/40 text-accent-text hover:bg-accent/10 transition-colors flex items-center justify-center gap-1"
                     >
                       <GitFork className="size-3" aria-hidden="true" /> Fork
                     </Link>

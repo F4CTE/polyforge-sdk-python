@@ -50,10 +50,10 @@ function ReviewSkeleton() {
   return (
     <div className="animate-fade-in space-y-6">
       {/* Score skeleton */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-3">
+      <div className="bg-elevated border border-default rounded-xl p-6 space-y-3">
         <div className="flex items-center justify-between">
           <div className="h-4 bg-overlay rounded w-28 animate-pulse" />
-          <div className="h-7 bg-overlay rounded-pf-full w-16 animate-pulse" />
+          <div className="h-7 bg-overlay rounded-full w-16 animate-pulse" />
         </div>
         <div className="space-y-2">
           <div className="h-3 bg-overlay rounded w-full animate-pulse" />
@@ -63,11 +63,11 @@ function ReviewSkeleton() {
         </div>
       </div>
       {/* Suggestions skeleton */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-2">
+      <div className="bg-elevated border border-default rounded-xl p-6 space-y-2">
         <div className="h-4 bg-overlay rounded w-28 animate-pulse mb-4" />
         {[0, 1, 2].map((i) => (
           <div key={i} className="flex items-start gap-2">
-            <div className="h-3 w-3 bg-overlay rounded-pf-full mt-1 shrink-0 animate-pulse" />
+            <div className="h-3 w-3 bg-overlay rounded-full mt-1 shrink-0 animate-pulse" />
             <div className="h-3 bg-overlay rounded flex-1 animate-pulse" />
           </div>
         ))}
@@ -129,7 +129,7 @@ export function Component() {
       {loading && <ReviewSkeleton />}
 
       {!loading && error && (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-elevated border border-default rounded-pf-lg">
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-elevated border border-default rounded-xl">
           <Sparkles className="size-10 text-tertiary mb-4 opacity-40" aria-hidden="true" />
           <p className="text-primary font-medium">Failed to load review</p>
           <p className="text-sm text-tertiary mt-1">{error}</p>
@@ -146,12 +146,12 @@ export function Component() {
       {!loading && data && (
         <>
           {/* Review card */}
-          <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
+          <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <h2 className="text-sm font-medium text-primary uppercase tracking-wide">Portfolio Review</h2>
               <div className="flex items-center gap-2">
                 <span
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-pf-full text-xs font-semibold uppercase tracking-wide ${riskPillClass(data.riskLevel)}`}
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${riskPillClass(data.riskLevel)}`}
                   aria-label={`Risk level: ${data.riskLevel}`}
                 >
                   {data.riskLevel} risk
@@ -162,7 +162,7 @@ export function Component() {
               {data.summary}
             </p>
             {data.generatedAt && (
-              <p className="text-pf-label text-tertiary pt-1 border-t border-subtle">
+              <p className="text-label text-tertiary pt-1 border-t border-subtle">
                 Generated {formatGeneratedAt(data.generatedAt)}
               </p>
             )}
@@ -170,13 +170,13 @@ export function Component() {
 
           {/* Suggestions */}
           {data.suggestions.length > 0 && (
-            <div className="bg-elevated border border-default rounded-pf-lg p-6">
+            <div className="bg-elevated border border-default rounded-xl p-6">
               <h2 className="text-sm font-medium text-primary uppercase tracking-wide mb-4">Suggestions</h2>
               <ul className="space-y-3" aria-label="Portfolio suggestions">
                 {data.suggestions.map((suggestion, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-secondary">
                     <span
-                      className="mt-2 size-2 rounded-pf-full bg-accent shrink-0"
+                      className="mt-2 size-2 rounded-full bg-accent shrink-0"
                       aria-hidden="true"
                     />
                     <span className="leading-relaxed">{suggestionText(suggestion)}</span>

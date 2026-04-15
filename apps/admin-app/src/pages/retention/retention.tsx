@@ -69,7 +69,7 @@ function fmtPct(n: number): string {
 
 function CardSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-4 animate-pulse">
+    <div className="bg-elevated border border-default rounded-xl p-4 animate-pulse">
       <div className="h-3 bg-app rounded w-24 mb-3" />
       <div className="h-7 bg-app rounded w-16" />
     </div>
@@ -78,16 +78,16 @@ function CardSkeleton() {
 
 function ChartSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-5 animate-pulse">
+    <div className="bg-elevated border border-default rounded-xl p-5 animate-pulse">
       <div className="h-4 bg-app rounded w-32 mb-4" />
-      <div className="h-pf-chart-sm bg-app rounded" />
+      <div className="h-chart-sm bg-app rounded" />
     </div>
   );
 }
 
 function TableSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-5 animate-pulse">
+    <div className="bg-elevated border border-default rounded-xl p-5 animate-pulse">
       <div className="h-4 bg-app rounded w-40 mb-4" />
       <div className="space-y-2">
         {[1, 2, 3, 4].map((i) => (
@@ -115,18 +115,18 @@ interface CustomTooltipProps {
 // Map series names back to design token classes (Recharts resolves CSS vars to hex)
 const SERIES_BG_CLASS: Record<string, string> = {
   'New Users': 'bg-accent',
-  'Returning Users': 'bg-pf-purple-500',
+  'Returning Users': 'bg-purple-500',
   'DAU': 'bg-warning',
 };
 
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-elevated border border-default rounded-pf-sm p-3 text-xs shadow-pf-lg">
+    <div className="bg-elevated border border-default rounded-sm p-3 text-xs shadow-lg">
       <p className="font-semibold text-primary mb-2">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2 mb-1">
-          <span className={`w-2 h-2 rounded-pf-full shrink-0 ${SERIES_BG_CLASS[entry.name] ?? 'bg-tertiary'}`} />
+          <span className={`w-2 h-2 rounded-full shrink-0 ${SERIES_BG_CLASS[entry.name] ?? 'bg-tertiary'}`} />
           <span className="text-secondary">{entry.name}:</span>
           <span className="text-primary font-medium">{fmt(entry.value)}</span>
         </div>
@@ -251,8 +251,8 @@ export function Component() {
     {
       label: 'WAU',
       value: fmt(overview?.wau ?? 0),
-      color: 'text-pf-purple-500',
-      bg: 'bg-pf-purple-500/10',
+      color: 'text-purple-500',
+      bg: 'bg-purple-500/10',
     },
     {
       label: 'MAU',
@@ -294,7 +294,7 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-pf-sm bg-accent/10">
+          <div className="p-2 rounded-sm bg-accent/10">
             <Users size={20} className="text-accent" aria-hidden="true" />
           </div>
           <div>
@@ -306,7 +306,7 @@ export function Component() {
           type="button"
           variant="ghost"
           onClick={handleRefresh}
-          className="flex items-center gap-2 px-3 py-2 rounded-pf-sm border border-default text-sm text-secondary hover:text-primary hover:bg-elevated transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-sm border border-default text-sm text-secondary hover:text-primary hover:bg-elevated transition-colors"
           aria-label="Refresh retention data"
         >
           <RefreshCw size={14} aria-hidden="true" />
@@ -325,7 +325,7 @@ export function Component() {
           </div>
         </div>
       ) : overviewError ? (
-        <div className="bg-elevated border border-default rounded-pf-lg p-6 text-center">
+        <div className="bg-elevated border border-default rounded-xl p-6 text-center">
           <p className="text-sm text-secondary">Overview data unavailable</p>
           <Button
             type="button"
@@ -341,10 +341,10 @@ export function Component() {
           {/* Row 1: DAU | WAU | MAU */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger-children">
             {row1.map((card) => (
-              <div key={card.label} className="bg-elevated border border-default rounded-pf-lg p-4">
+              <div key={card.label} className="bg-elevated border border-default rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-medium text-secondary">{card.label}</span>
-                  <div className={`p-2 rounded-pf-sm ${card.bg}`}>
+                  <div className={`p-2 rounded-sm ${card.bg}`}>
                     <TrendingUp size={16} className={card.color} aria-hidden="true" />
                   </div>
                 </div>
@@ -355,10 +355,10 @@ export function Component() {
           {/* Row 2: DAU/WAU Ratio | New Users (7d) | Churn Rate */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger-children">
             {row2.map((card) => (
-              <div key={card.label} className="bg-elevated border border-default rounded-pf-lg p-4">
+              <div key={card.label} className="bg-elevated border border-default rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-medium text-secondary">{card.label}</span>
-                  <div className={`p-2 rounded-pf-sm ${card.bg}`}>
+                  <div className={`p-2 rounded-sm ${card.bg}`}>
                     <TrendingUp size={16} className={card.color} aria-hidden="true" />
                   </div>
                 </div>
@@ -375,7 +375,7 @@ export function Component() {
       {loadingTrend ? (
         <ChartSkeleton />
       ) : trendError ? (
-        <div className="bg-elevated border border-default rounded-pf-lg p-5">
+        <div className="bg-elevated border border-default rounded-xl p-5">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={16} className="text-tertiary" aria-hidden="true" />
             <h2 className="text-sm font-semibold text-primary">DAU Trend</h2>
@@ -393,7 +393,7 @@ export function Component() {
           </div>
         </div>
       ) : (
-        <div className="bg-elevated border border-default rounded-pf-lg p-5">
+        <div className="bg-elevated border border-default rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <TrendingUp size={16} className="text-accent" aria-hidden="true" />
@@ -407,7 +407,7 @@ export function Component() {
                   type="button"
                   variant="ghost"
                   onClick={() => setTrendDays(opt.value)}
-                  className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-sm text-xs font-medium transition-colors ${
                     trendDays === opt.value
                       ? 'bg-accent/20 text-accent border border-accent/40'
                       : 'border border-default text-secondary hover:text-primary hover:bg-app'
@@ -452,7 +452,7 @@ export function Component() {
                 dataKey="returningUsers"
                 name="Returning Users"
                 stackId="dau"
-                fill="var(--color-pf-purple-500)"
+                fill="var(--color-purple-500)"
                 radius={[2, 2, 0, 0]}
               />
               <Line
@@ -472,7 +472,7 @@ export function Component() {
       {loadingCohorts ? (
         <TableSkeleton />
       ) : cohortsError ? (
-        <div className="bg-elevated border border-default rounded-pf-lg p-5">
+        <div className="bg-elevated border border-default rounded-xl p-5">
           <div className="flex items-center gap-2 mb-4">
             <Users size={16} className="text-tertiary" aria-hidden="true" />
             <h2 className="text-sm font-semibold text-primary">Cohort Retention</h2>
@@ -490,7 +490,7 @@ export function Component() {
           </div>
         </div>
       ) : (
-        <div className="bg-elevated border border-default rounded-pf-lg p-5">
+        <div className="bg-elevated border border-default rounded-xl p-5">
           <div className="flex items-center gap-2 mb-4">
             <Users size={16} className="text-accent" aria-hidden="true" />
             <h2 className="text-sm font-semibold text-primary">Cohort Retention</h2>
@@ -523,14 +523,14 @@ export function Component() {
                     <tr key={row.cohort}>
                       <td className="py-2 pr-4 whitespace-nowrap">
                         <div className="font-medium text-primary">{row.cohort}</div>
-                        <div className="text-pf-label text-tertiary">{fmt(row.size)} users</div>
+                        <div className="text-label text-tertiary">{fmt(row.size)} users</div>
                       </td>
                       {COHORT_WEEKS.map((_, colIdx) => {
                         const pct = row.retention[colIdx] ?? 0;
                         return (
                           <td key={colIdx} className="py-2 px-1">
                             <div
-                              className={`flex items-center justify-center rounded-pf-sm h-7 w-14 mx-auto font-medium text-pf-label transition-opacity cursor-default ${retentionColor(pct)}`}
+                              className={`flex items-center justify-center rounded-sm h-7 w-14 mx-auto font-medium text-label transition-opacity cursor-default ${retentionColor(pct)}`}
                               title={`${row.cohort} — ${COHORT_WEEKS[colIdx]}: ${pct}%`}
                               aria-label={`${row.cohort} ${COHORT_WEEKS[colIdx]} retention: ${pct}%`}
                             >

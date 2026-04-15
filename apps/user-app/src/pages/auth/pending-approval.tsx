@@ -18,8 +18,8 @@ export function Component() {
           </div>
         </div>
 
-        <div className="bg-elevated border border-default rounded-pf-lg p-8 shadow-pf-lg text-center" role="status" aria-labelledby="pending-heading">
-          <div className="size-16 rounded-pf-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-elevated border border-default rounded-xl p-8 shadow-lg text-center" role="status" aria-labelledby="pending-heading">
+          <div className="size-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
             <Clock className="size-8 text-warning" />
           </div>
 
@@ -39,7 +39,7 @@ export function Component() {
 
           <Link
             to="/login"
-            className="text-accent-text text-sm hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors"
+            className="text-accent-text text-sm hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
           >
             Back to login
           </Link>

@@ -26,7 +26,7 @@ export function Component() {
       <a href="#main-content" className="skip-to-content">Skip to content</a>
 
       {/* Desktop sidebar */}
-      <div className={`hidden md:block overflow-hidden transition-all duration-pf-normal ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
+      <div className={`hidden md:block overflow-hidden transition-all duration-panel ${collapsed ? 'w-16 min-w-16' : 'w-60 min-w-60'}`}>
         <AdminSidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
       </div>
 

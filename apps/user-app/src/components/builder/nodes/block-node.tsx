@@ -132,18 +132,18 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   // Pulse animation speed varies by section to convey different "rhythms":
   // triggers scan rapidly, safety beats slowly like a heartbeat
   const PULSE_DURATION: Record<string, string> = {
-    triggers:   'var(--duration-pf-builder-triggers)',
-    actions:    'var(--duration-pf-builder-actions)',
-    conditions: 'var(--duration-pf-builder-conditions)',
-    logic:      'var(--duration-pf-builder-logic)',
-    calc:       'var(--duration-pf-builder-calc)',
-    safety:     'var(--duration-pf-builder-safety)',
+    triggers:   'var(--duration-builder-triggers)',
+    actions:    'var(--duration-builder-actions)',
+    conditions: 'var(--duration-builder-conditions)',
+    logic:      'var(--duration-builder-logic)',
+    calc:       'var(--duration-builder-calc)',
+    safety:     'var(--duration-builder-safety)',
   };
   const pulseKeyframe = d.section === 'safety' ? 'safetyPulse' : 'blockPulse';
-  const pulseDuration = PULSE_DURATION[d.section] ?? 'var(--duration-pf-builder-logic)';
+  const pulseDuration = PULSE_DURATION[d.section] ?? 'var(--duration-builder-logic)';
 
   const cardAnimation = hasFired
-    ? 'blockFired var(--duration-pf-builder-fired) ease-out forwards'
+    ? 'blockFired var(--duration-builder-fired) ease-out forwards'
     : isExecuting && !isInactive
     ? `${pulseKeyframe} ${pulseDuration} ease-in-out infinite`
     : undefined;
@@ -151,7 +151,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
   /** Render a select field for strategy picker or mode picker */
   function renderSelectField(field: { key: string; label: string; placeholder: string; options?: string[] }) {
     const isEmpty = emptyFieldKeys.has(field.key);
-    const selectClass = `w-full px-2 py-1 text-xs bg-surface border rounded-pf-sm text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors ${
+    const selectClass = `w-full px-2 py-1 text-xs bg-surface border rounded-sm text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors ${
       isEmpty ? 'border-loss/40 bg-loss/5' : 'border-subtle'
     }`;
 
@@ -197,7 +197,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         <Handle
           type="target"
           position={Position.Left}
-          className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle"
+          className="!w-3 !h-3 !bg-elevated !border-2 !rounded-full builder-handle"
           style={{ '--node-color': d.color } as React.CSSProperties}
         />
       )}
@@ -206,7 +206,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {/* "Global" badge — safety/conditions when unwired: active globally */}
         {isGlobal && (
           <div
-            className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-micro font-semibold whitespace-nowrap z-10 pointer-events-none"
+            className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded-full text-caption font-semibold whitespace-nowrap z-10 pointer-events-none"
             style={{ '--badge-color': 'var(--accent-default)' } as React.CSSProperties}
             title={isSafety ? 'Safety block — always enforced globally on every tick' : 'Condition block — no connections, acts as a global gate for all execution paths. Wire it to scope it to a specific path.'}
           >
@@ -218,8 +218,8 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {/* "Not wired" badge — triggers/actions with no edges: inactive */}
         {isInactive && (
           <div
-            className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-micro font-semibold whitespace-nowrap z-10 pointer-events-none"
-            style={{ '--badge-color': 'var(--color-pf-gold-500)' } as React.CSSProperties}
+            className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded-full text-caption font-semibold whitespace-nowrap z-10 pointer-events-none"
+            style={{ '--badge-color': 'var(--color-gold-500)' } as React.CSSProperties}
             title={isTrigger ? 'Trigger has no outgoing connection — wire it to a condition or action to activate it' : 'Action has no incoming connection — wire a trigger or condition to it to activate it'}
           >
             <Unlink className="size-3" />
@@ -230,7 +230,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         {/* "Setup needed" badge — active block with one or more empty required fields */}
         {showSetupBadge && (
           <div
-            className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded-pf-full text-pf-micro font-semibold whitespace-nowrap z-10 pointer-events-none"
+            className="builder-badge absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1 rounded-full text-caption font-semibold whitespace-nowrap z-10 pointer-events-none"
             style={{ '--badge-color': 'var(--loss)' } as React.CSSProperties}
             title={`${emptyFieldKeys.size} required field${emptyFieldKeys.size !== 1 ? 's' : ''} not filled in`}
           >
@@ -240,7 +240,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         )}
 
         <div
-          className={`builder-node-card w-[260px] rounded-pf-md shadow-pf-md overflow-hidden ${isInactive ? 'opacity-45 builder-node-card--dashed' : ''} ${(isExecuting || hasFired) ? 'builder-node-card--executing' : ''} ${showSetupBadge && !isExecuting && !hasFired ? 'builder-node-card--setup-needed' : ''}`}
+          className={`builder-node-card w-[260px] rounded-lg shadow-md overflow-hidden ${isInactive ? 'opacity-45 builder-node-card--dashed' : ''} ${(isExecuting || hasFired) ? 'builder-node-card--executing' : ''} ${showSetupBadge && !isExecuting && !hasFired ? 'builder-node-card--setup-needed' : ''}`}
           style={{
             '--node-color': borderColor,
             borderColor,
@@ -294,17 +294,17 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                         type="target"
                         position={Position.Left}
                         id={field.key}
-                        className="!w-2 !h-2 !bg-elevated !border-2 !rounded-pf-full builder-handle"
+                        className="!w-2 !h-2 !bg-elevated !border-2 !rounded-full builder-handle"
                         style={{
-                          '--node-color': 'var(--color-pf-purple-500)',
+                          '--node-color': 'var(--color-purple-500)',
                           top: `${handleTop}px`,
                         } as React.CSSProperties}
                       />
                     )}
-                    <label className={`flex items-center gap-1 text-pf-caption font-medium mb-1 uppercase tracking-wider ${isEmpty ? 'text-loss/80' : 'text-tertiary'}`}>
+                    <label className={`flex items-center gap-1 text-caption font-medium mb-1 uppercase tracking-wider ${isEmpty ? 'text-loss/80' : 'text-tertiary'}`}>
                       {field.wireable && (
                         <Link2
-                          className={`size-3 shrink-0 ${isWired ? 'text-pf-purple-500 opacity-100' : 'text-tertiary opacity-50'}`}
+                          className={`size-3 shrink-0 ${isWired ? 'text-purple-500 opacity-100' : 'text-tertiary opacity-50'}`}
                           aria-label="This field can receive a value from a Variable or Calc node"
                         />
                       )}
@@ -333,9 +333,9 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                       renderSelectField(field)
                     ) : isWired ? (
                       // Field is driven by a connected Variable/Calc node — show chip instead of input
-                      <div className="flex items-center gap-2 px-2 py-1 rounded-pf-sm bg-pf-purple-500/10 border border-pf-purple-500/30">
-                        <Link2 className="size-3 shrink-0 text-pf-purple-500" />
-                        <span className="text-xs text-pf-purple-500 font-mono truncate">
+                      <div className="flex items-center gap-2 px-2 py-1 rounded-sm bg-purple-500/10 border border-purple-500/30">
+                        <Link2 className="size-3 shrink-0 text-purple-500" />
+                        <span className="text-xs text-purple-500 font-mono truncate">
                           {wireableConnections.get(field.key)}
                         </span>
                       </div>
@@ -347,19 +347,19 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
                           value={d.config[field.key] ?? ''}
                           onChange={(e) => onFieldChange(field.key, e.target.value)}
                           aria-label={field.label}
-                          className={`w-full px-2 py-1 text-xs bg-surface border rounded-pf-sm placeholder:text-tertiary/50 focus-visible:outline-none transition-colors ${
+                          className={`w-full px-2 py-1 text-xs bg-surface border rounded-sm placeholder:text-tertiary/50 focus-visible:outline-none transition-colors ${
                             isEmpty
                               ? 'border-loss/40 bg-loss/5 focus-visible:border-loss/60'
                               : 'border-subtle focus-visible:border-accent/50'
                           } ${
                             (d.config[field.key] ?? '').startsWith('$')
-                              ? 'text-pf-purple-500 font-mono'
+                              ? 'text-purple-500 font-mono'
                               : 'text-primary'
                           }`}
                         />
                         {(d.config[field.key] ?? '').startsWith('$') && (
                           <span
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-pf-micro text-pf-purple-500/70 pointer-events-none"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-caption text-purple-500/70 pointer-events-none"
                             title={`Variable: ${d.config[field.key]}`}
                           >
                             var
@@ -376,7 +376,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
           {/* No fields message */}
           {d.fields.length === 0 && (
             <div className="px-3 py-2">
-              <span className="text-pf-caption text-tertiary italic">No configuration needed</span>
+              <span className="text-caption text-tertiary italic">No configuration needed</span>
             </div>
           )}
         </div>
@@ -387,7 +387,7 @@ function BlockNodeInner({ id, data }: NodeProps<BlockNode>) {
         <Handle
           type="source"
           position={Position.Right}
-          className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle"
+          className="!w-3 !h-3 !bg-elevated !border-2 !rounded-full builder-handle"
           style={{ '--node-color': d.color } as React.CSSProperties}
         />
       )}

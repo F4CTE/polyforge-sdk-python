@@ -47,7 +47,7 @@ function StatCard({
   valueClass?: string;
 }) {
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-4 flex flex-col gap-2">
+    <div className="bg-elevated border border-default rounded-xl p-4 flex flex-col gap-2">
       <div className="flex items-center gap-2 text-secondary text-sm">
         <Icon size={15} className="shrink-0" aria-hidden="true" />
         <span>{label}</span>
@@ -182,14 +182,14 @@ export function Component() {
       </div>
 
       {/* Section 1: Referral Link card */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
+      <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Gift size={16} className="text-accent-text shrink-0" aria-hidden="true" />
           <h2 className="text-sm font-semibold text-primary">Your Referral Link</h2>
         </div>
 
         {/* Monospace link display */}
-        <div className="bg-surface border border-default rounded-pf-sm px-4 py-3 font-mono text-sm text-primary break-all select-all">
+        <div className="bg-surface border border-default rounded-sm px-4 py-3 font-mono text-sm text-primary break-all select-all">
           {loading ? (
             <span className="animate-pulse text-secondary">Loading...</span>
           ) : (
@@ -203,7 +203,7 @@ export function Component() {
             type="button"
             onClick={handleCopyLink}
             disabled={loading || !data}
-            className="flex items-center gap-2 px-3 py-2 bg-accent/10 text-accent-text border border-accent/20 rounded-pf-sm text-sm font-medium hover:bg-accent/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-3 py-2 bg-accent/10 text-accent-text border border-accent/20 rounded-sm text-sm font-medium hover:bg-accent/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {copiedLink ? (
               <Check size={14} aria-hidden="true" />
@@ -218,7 +218,7 @@ export function Component() {
             type="button"
             onClick={handleCopyCode}
             disabled={loading || !data}
-            className="flex items-center gap-2 px-3 py-2 bg-surface border border-default rounded-pf-sm text-sm font-medium text-secondary hover:text-primary hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-3 py-2 bg-surface border border-default rounded-sm text-sm font-medium text-secondary hover:text-primary hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {copiedCode ? (
               <Check size={14} aria-hidden="true" />
@@ -239,7 +239,7 @@ export function Component() {
             type="button"
             onClick={handleShareTwitter}
             disabled={loading || !data}
-            className="flex items-center gap-2 px-3 py-2 bg-surface border border-default rounded-pf-sm text-sm font-medium text-secondary hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-3 py-2 bg-surface border border-default rounded-sm text-sm font-medium text-secondary hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <ExternalLink size={14} aria-hidden="true" />
             Share on X
@@ -249,7 +249,7 @@ export function Component() {
             type="button"
             onClick={handleShare}
             disabled={loading || !data}
-            className="flex items-center gap-2 px-3 py-2 bg-surface border border-default rounded-pf-sm text-sm font-medium text-secondary hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-3 py-2 bg-surface border border-default rounded-sm text-sm font-medium text-secondary hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Share2 size={14} aria-hidden="true" />
             Share
@@ -290,7 +290,7 @@ export function Component() {
       </div>
 
       {/* Section 3: Referrals table */}
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-default flex items-center gap-2">
           <Users size={15} className="text-secondary shrink-0" aria-hidden="true" />
           <h2 className="text-sm font-semibold text-primary">Your Referrals</h2>
@@ -339,11 +339,11 @@ export function Component() {
       </div>
 
       {/* Section 4: How Referrals Work */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
+      <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
         <h2 className="text-sm font-semibold text-primary">How Referrals Work</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-7 h-7 rounded-pf-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-semibold">
+            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-semibold">
               1
             </div>
             <div>
@@ -354,7 +354,7 @@ export function Component() {
             </div>
           </div>
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-7 h-7 rounded-pf-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-semibold">
+            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-semibold">
               2
             </div>
             <div>
@@ -365,7 +365,7 @@ export function Component() {
             </div>
           </div>
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-7 h-7 rounded-pf-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-semibold">
+            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent-text text-xs font-semibold">
               3
             </div>
             <div>

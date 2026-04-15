@@ -190,7 +190,7 @@ export function Component() {
                     type="button"
                     variant="ghost"
                     onClick={() => setSort(s)}
-                    className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
+                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                       sort === s
                         ? 'bg-accent/15 text-accent-text border-accent/30'
                         : 'bg-elevated text-secondary border-default hover:border-strong'
@@ -211,7 +211,7 @@ export function Component() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-52 bg-elevated border border-default rounded-pf-lg animate-pulse" />
+                <div key={i} className="h-52 bg-elevated border border-default rounded-xl animate-pulse" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
@@ -252,7 +252,7 @@ function ListingCard({
   onPurchase: () => void;
 }) {
   return (
-    <div className="flex flex-col bg-elevated border border-default rounded-pf-lg p-4 hover:border-strong transition-colors">
+    <div className="flex flex-col bg-elevated border border-default rounded-xl p-4 hover:border-strong transition-colors">
       {/* Title + seller */}
       <div className="flex-1 space-y-2 min-w-0">
         <p className="text-sm font-semibold text-primary line-clamp-2">{listing.title}</p>
@@ -272,7 +272,7 @@ function ListingCard({
           {listing.tags.slice(0, 4).map((t) => (
             <span
               key={t}
-              className="px-2 py-1 bg-surface border border-default rounded text-pf-caption text-tertiary"
+              className="px-2 py-1 bg-surface border border-default rounded text-caption text-tertiary"
             >
               {t}
             </span>
@@ -346,7 +346,7 @@ function MyPurchases() {
     return (
       <div className="space-y-2">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 bg-elevated border border-default rounded-pf-lg animate-pulse" />
+          <div key={i} className="h-16 bg-elevated border border-default rounded-xl animate-pulse" />
         ))}
       </div>
     );
@@ -367,7 +367,7 @@ function MyPurchases() {
       {purchases.map((p) => (
         <div
           key={p.id}
-          className="flex items-center justify-between px-4 py-3 bg-elevated border border-default rounded-pf-lg"
+          className="flex items-center justify-between px-4 py-3 bg-elevated border border-default rounded-xl"
         >
           <div>
             <p className="text-sm text-primary font-medium">{p.listing.title}</p>

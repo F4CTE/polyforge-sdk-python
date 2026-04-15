@@ -5,7 +5,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased] — 2026-04-15
+## [Unreleased] — 2026-04-16
+
+### Removed (Design System)
+- **Deprecated `pf-*` token aliases** — removed all 2,000+ legacy `pf-*` CSS custom properties and Tailwind utility classes across 141 files; all components now use the canonical Linear-inspired token names (`bg-app`, `text-primary`, `text-accent`, `rounded-sm`, `shadow-lg`, etc.); legacy `--color-pf-*`, `--shadow-pf-*`, `--radius-pf-*`, `--text-pf-*`, `--spacing-pf-*`, `--opacity-pf-*` definitions removed from `@theme` block (closes #610)
 
 ### Fixed (Design System)
 - **Max font-weight 600 enforcement** — replaced all `font-bold` (700) and `font-extrabold` (800) with `font-semibold` (600) across user-app, admin-app, and landing (109 occurrences in 50 files) per charter §2 max-weight rule (closes #616)

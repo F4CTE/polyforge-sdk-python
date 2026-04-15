@@ -143,7 +143,7 @@ function StatCard({
   valueClass?: string;
 }) {
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-5">
+    <div className="bg-elevated border border-default rounded-xl p-5">
       <span className="text-xs font-medium uppercase tracking-wider text-secondary block mb-2">
         {label}
       </span>
@@ -167,9 +167,9 @@ function ScoreRow({ label, value, max }: { label: string; value: string; max: nu
         <span className="text-secondary">{label}</span>
         <span className="font-mono text-primary">{value}</span>
       </div>
-      <div className="h-2 bg-overlay rounded-pf-full overflow-hidden">
+      <div className="h-2 bg-overlay rounded-full overflow-hidden">
         <div
-          className="h-full bg-accent-text rounded-pf-full transition-all duration-pf-slow"
+          className="h-full bg-accent-text rounded-full transition-all duration-slow"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -392,7 +392,7 @@ export function Component() {
 
           {/* Period selector */}
           <div
-            className="flex items-center gap-1 bg-elevated border border-default rounded-pf-sm p-1"
+            className="flex items-center gap-1 bg-elevated border border-default rounded-sm p-1"
             role="group"
             aria-label="Select period"
           >
@@ -441,7 +441,7 @@ export function Component() {
       </div>
 
       {/* Row 2: P&L equity curve */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6">
+      <div className="bg-elevated border border-default rounded-xl p-6">
         <h2 className="text-sm font-medium text-primary mb-1">P&L Equity Curve</h2>
         <p className="text-xs text-tertiary mb-4">Cumulative profit and loss over the selected period.</p>
         {loadingPnl ? (
@@ -501,7 +501,7 @@ export function Component() {
       {/* Row 3: Category table + Score breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Category Performance */}
-        <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+        <div className="bg-elevated border border-default rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-default">
             <h2 className="text-sm font-medium text-primary">Category Performance</h2>
             <p className="text-xs text-tertiary mt-1">Brier score by category — lower is better.</p>
@@ -550,7 +550,7 @@ export function Component() {
         </div>
 
         {/* Score Breakdown */}
-        <div className="bg-elevated border border-default rounded-pf-lg p-6">
+        <div className="bg-elevated border border-default rounded-xl p-6">
           <h2 className="text-sm font-medium text-primary mb-1">Score Breakdown</h2>
           <p className="text-xs text-tertiary mb-6">Key trading performance metrics.</p>
           {loadingScore ? (
@@ -587,7 +587,7 @@ export function Component() {
       </div>
 
       {/* ─── AI Portfolio Review ────────────────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         {/* Card header */}
         <div className="px-6 py-4 border-b border-default flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -663,7 +663,7 @@ export function Component() {
                   <ul className="space-y-2">
                     {aiReview.keyInsights.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-secondary">
-                        <span className="mt-2 size-2 rounded-pf-full bg-accent-text shrink-0" aria-hidden="true" />
+                        <span className="mt-2 size-2 rounded-full bg-accent-text shrink-0" aria-hidden="true" />
                         {item}
                       </li>
                     ))}
@@ -681,7 +681,7 @@ export function Component() {
                   <ul className="space-y-2">
                     {aiReview.riskFactors.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-secondary">
-                        <span className="mt-2 size-2 rounded-pf-full bg-loss shrink-0" aria-hidden="true" />
+                        <span className="mt-2 size-2 rounded-full bg-loss shrink-0" aria-hidden="true" />
                         {item}
                       </li>
                     ))}
@@ -699,7 +699,7 @@ export function Component() {
                   <ul className="space-y-2">
                     {aiReview.opportunities.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-secondary">
-                        <span className="mt-2 size-2 rounded-pf-full bg-gain shrink-0" aria-hidden="true" />
+                        <span className="mt-2 size-2 rounded-full bg-gain shrink-0" aria-hidden="true" />
                         {item}
                       </li>
                     ))}
@@ -712,7 +712,7 @@ export function Component() {
       </div>
 
       {/* ─── Ask AI ─────────────────────────────────────────────────────── */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-4">
+      <div className="bg-elevated border border-default rounded-xl p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Bot className="size-4 text-accent-text" aria-hidden="true" />
           <h2 className="text-sm font-medium text-primary">Ask AI</h2>
@@ -729,7 +729,7 @@ export function Component() {
               if (e.key === 'Enter' && !loadingAiQuery) submitAiQuery();
             }}
             placeholder="Ask about your portfolio..."
-            className="flex-1 bg-surface border border-default rounded-pf-sm px-3 py-2 text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/40 transition"
+            className="flex-1 bg-surface border border-default rounded-sm px-3 py-2 text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text/40 transition"
             disabled={loadingAiQuery}
             aria-label="Ask AI a question about your portfolio"
           />
@@ -737,7 +737,7 @@ export function Component() {
             type="button"
             onClick={submitAiQuery}
             disabled={loadingAiQuery || !aiQuery.trim()}
-            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium bg-accent-text/15 text-accent-text border border-accent-text/30 hover:bg-accent-text/25 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-medium bg-accent-text/15 text-accent-text border border-accent-text/30 hover:bg-accent-text/25 transition-colors disabled:opacity-50"
             aria-label="Send question to AI"
           >
             {loadingAiQuery ? (
@@ -751,7 +751,7 @@ export function Component() {
 
         {/* AI response */}
         {aiAnswer && (
-          <div className="bg-surface border border-default rounded-pf-sm p-4 flex items-start gap-3">
+          <div className="bg-surface border border-default rounded-sm p-4 flex items-start gap-3">
             <Bot className="size-4 text-accent-text mt-1 shrink-0" aria-hidden="true" />
             <p className="text-sm text-secondary leading-relaxed">{aiAnswer.response}</p>
           </div>

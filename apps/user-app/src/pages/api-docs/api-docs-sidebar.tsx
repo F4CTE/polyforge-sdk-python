@@ -61,7 +61,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
           API Reference
         </span>
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-pf-full bg-gain shrink-0" aria-hidden="true" />
+          <span className="w-2 h-2 rounded-full bg-gain shrink-0" aria-hidden="true" />
           <Badge text="v1" cls="bg-accent/10 text-accent-text" />
         </div>
       </div>
@@ -74,7 +74,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search docs..."
-          className="w-full bg-app border border-default rounded-pf-sm px-3 py-2 text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent/50 pr-8"
+          className="w-full bg-app border border-default rounded-sm px-3 py-2 text-sm text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent/50 pr-8"
         />
         {searchQuery && (
           <Button
@@ -98,7 +98,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
         {filteredGroups.map(g => (
           <div key={g.group ?? 'overview'}>
             {g.group && (
-              <p className="text-pf-caption font-semibold text-tertiary uppercase tracking-wider mb-1 px-2 pt-1">
+              <p className="text-caption font-semibold text-tertiary uppercase tracking-wider mb-1 px-2 pt-1">
                 {g.group}
               </p>
             )}
@@ -109,7 +109,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
                   variant="ghost"
                   key={item.id}
                   onClick={() => onNavigate(item.id)}
-                  className={`w-full text-left px-3 py-2 rounded-pf-sm text-sm transition-colors duration-pf-fast cursor-pointer ${
+                  className={`w-full text-left px-3 py-2 rounded-sm text-sm transition-colors duration-micro cursor-pointer ${
                     activeId === item.id
                       ? 'bg-accent/10 text-accent-text font-medium'
                       : 'text-secondary hover:text-primary hover:bg-elevated'
@@ -125,7 +125,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
         {/* Endpoint search results */}
         {matchingEndpoints.length > 0 && (
           <div>
-            <p className="text-pf-caption font-semibold text-tertiary uppercase tracking-wider mb-1 px-2 pt-1">
+            <p className="text-caption font-semibold text-tertiary uppercase tracking-wider mb-1 px-2 pt-1">
               Endpoints
             </p>
             <div className="space-y-px">
@@ -135,7 +135,7 @@ export function DocsSidebar({ activeId, onNavigate }: DocsSidebarProps) {
                   variant="ghost"
                   key={`${ep.method}-${ep.path}`}
                   onClick={() => onNavigate(sectionId)}
-                  className="w-full text-left px-3 py-2 rounded-pf-sm text-xs transition-colors duration-pf-fast cursor-pointer text-secondary hover:text-primary hover:bg-elevated"
+                  className="w-full text-left px-3 py-2 rounded-sm text-xs transition-colors duration-micro cursor-pointer text-secondary hover:text-primary hover:bg-elevated"
                 >
                   <span className="font-mono text-accent-text mr-1">{ep.method}</span>
                   {ep.summary}

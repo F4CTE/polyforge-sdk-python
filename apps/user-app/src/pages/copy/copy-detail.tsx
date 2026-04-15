@@ -70,7 +70,7 @@ const STATUS_STYLES: Record<CopyStatus, { dot: string; bg: string; text: string 
 
 const MODE_STYLES: Record<CopyMode, { bg: string; text: string }> = {
   PERCENTAGE: { bg: 'bg-accent/10', text: 'text-accent-text' },
-  FIXED:      { bg: 'bg-pf-purple-500/10',  text: 'text-pf-purple-500' },
+  FIXED:      { bg: 'bg-purple-500/10',  text: 'text-purple-500' },
   MIRROR:     { bg: 'bg-gain/10', text: 'text-gain' },
 };
 
@@ -124,13 +124,13 @@ function DetailSkeleton() {
       <div className="h-6 bg-overlay rounded w-[300px] animate-pulse" />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="bg-elevated border border-default rounded-pf-lg p-4 space-y-2 animate-shimmer">
+          <div key={i} className="bg-elevated border border-default rounded-xl p-4 space-y-2 animate-shimmer">
             <div className="h-3 bg-overlay rounded w-[60%]" />
             <div className="h-5 bg-overlay rounded w-[80%]" />
           </div>
         ))}
       </div>
-      <div className="bg-elevated border border-default rounded-pf-lg p-4 animate-shimmer">
+      <div className="bg-elevated border border-default rounded-xl p-4 animate-shimmer">
         {Array.from({ length: 5 }, (_, i) => (
           <div key={i} className="h-3 bg-overlay rounded w-full mb-3" />
         ))}
@@ -181,7 +181,7 @@ function EditDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="edit-config-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
-      <div className="bg-elevated border border-default rounded-pf-lg p-6 w-full max-w-md space-y-5 animate-fade-in">
+      <div className="bg-elevated border border-default rounded-xl p-6 w-full max-w-md space-y-5 animate-fade-in">
         <div className="flex items-center justify-between">
           <h2 id="edit-config-title" className="text-sm font-medium text-primary">Edit Config</h2>
           <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Close edit config" className="text-tertiary hover:text-primary transition-colors">
@@ -200,7 +200,7 @@ function EditDialog({
               min={0}
               value={sizeValue}
               onChange={(e) => setSizeValue(Number(e.target.value))}
-              className="w-full px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
+              className="w-full px-3 py-2 rounded-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
             />
           </div>
         )}
@@ -213,7 +213,7 @@ function EditDialog({
             min={0}
             value={maxExposure}
             onChange={(e) => setMaxExposure(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
+            className="w-full px-3 py-2 rounded-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
           />
         </div>
 
@@ -225,7 +225,7 @@ function EditDialog({
             min={0}
             value={maxDailyLoss}
             onChange={(e) => setMaxDailyLoss(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
+            className="w-full px-3 py-2 rounded-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
           />
         </div>
 
@@ -239,7 +239,7 @@ function EditDialog({
             step={0.1}
             value={priceOffset}
             onChange={(e) => setPriceOffset(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
+            className="w-full px-3 py-2 rounded-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
           />
         </div>
 
@@ -248,7 +248,7 @@ function EditDialog({
             type="button"
             variant="secondary"
             onClick={onClose}
-            className="px-4 py-2 rounded-pf-sm text-sm text-secondary hover:text-primary border border-default hover:border-strong transition-colors"
+            className="px-4 py-2 rounded-sm text-sm text-secondary hover:text-primary border border-default hover:border-strong transition-colors"
           >
             Cancel
           </Button>
@@ -256,7 +256,7 @@ function EditDialog({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm bg-accent text-inverse font-medium hover:bg-accent-text disabled:opacity-40 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-sm text-sm bg-accent text-inverse font-medium hover:bg-accent-text disabled:opacity-40 transition-colors"
           >
             <Check className="size-4" />
             {saving ? 'Saving...' : 'Save'}
@@ -372,7 +372,7 @@ export function Component() {
           <AlertCircle className="size-10 text-loss mb-4" />
           <p className="text-primary font-medium">Something went wrong</p>
           <p className="text-sm text-tertiary mt-1">Failed to load copy config. Please try again.</p>
-          <Button type="button" onClick={loadConfig} className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-elevated border border-default text-primary hover:border-strong transition-colors">
+          <Button type="button" onClick={loadConfig} className="mt-4 px-4 py-2 rounded-sm text-sm bg-elevated border border-default text-primary hover:border-strong transition-colors">
             Retry
           </Button>
         </div>
@@ -393,7 +393,7 @@ export function Component() {
       {/* Config header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="size-10 rounded-pf-full bg-accent/15 border border-accent/25 flex items-center justify-center">
+          <div className="size-10 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center">
             <Copy className="size-5 text-accent-text" />
           </div>
           <div>
@@ -412,11 +412,11 @@ export function Component() {
               </Button>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`inline-flex items-center gap-2 px-2 py-1 rounded-pf-full text-pf-label font-medium ${statusStyle.bg} ${statusStyle.text}`}>
-                <span className={`w-3 h-3 rounded-pf-full ${statusStyle.dot} ${config.status === 'ACTIVE' ? 'animate-pulse-dot' : ''}`} />
+              <span className={`inline-flex items-center gap-2 px-2 py-1 rounded-full text-label font-medium ${statusStyle.bg} ${statusStyle.text}`}>
+                <span className={`w-3 h-3 rounded-full ${statusStyle.dot} ${config.status === 'ACTIVE' ? 'animate-pulse-dot' : ''}`} />
                 {config.status}
               </span>
-              <span className={`inline-flex items-center px-2 py-1 rounded-pf-full text-pf-label font-medium ${modeStyle.bg} ${modeStyle.text}`}>
+              <span className={`inline-flex items-center px-2 py-1 rounded-full text-label font-medium ${modeStyle.bg} ${modeStyle.text}`}>
                 {config.mode}
               </span>
             </div>
@@ -429,7 +429,7 @@ export function Component() {
             type="button"
             variant="secondary"
             onClick={() => setShowEdit(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-default text-secondary hover:border-strong hover:text-primary transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-medium border border-default text-secondary hover:border-strong hover:text-primary transition-colors"
           >
             <Pencil className="size-4" /> Edit
           </Button>
@@ -439,7 +439,7 @@ export function Component() {
               variant="ghost"
               onClick={() => doAction('pause')}
               disabled={actionLoading}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-warning/30 text-warning hover:bg-warning/10 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-medium border border-warning/30 text-warning hover:bg-warning/10 disabled:opacity-40 transition-colors"
             >
               <Pause className="size-4" /> Pause
             </Button>
@@ -450,7 +450,7 @@ export function Component() {
               variant="ghost"
               onClick={() => doAction('resume')}
               disabled={actionLoading}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-accent/30 text-accent-text hover:bg-accent/10 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-medium border border-accent/30 text-accent-text hover:bg-accent/10 disabled:opacity-40 transition-colors"
             >
               <Play className="size-4" /> Resume
             </Button>
@@ -461,7 +461,7 @@ export function Component() {
               variant="danger"
               onClick={() => doAction('stop')}
               disabled={actionLoading}
-              className="flex items-center gap-2 px-4 py-2 rounded-pf-sm text-sm font-medium border border-loss/30 text-loss hover:bg-loss/10 disabled:opacity-40 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-medium border border-loss/30 text-loss hover:bg-loss/10 disabled:opacity-40 transition-colors"
             >
               <Square className="size-4" /> Stop
             </Button>
@@ -471,28 +471,28 @@ export function Component() {
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+        <div className="bg-elevated border border-default rounded-xl p-4">
           <div className="text-xs text-secondary mb-1">Total P&L</div>
           <div className={`text-lg font-mono font-semibold ${config.totalPnl >= 0 ? 'text-gain' : 'text-loss'}`}>
             {formatPnl(config.totalPnl)}
           </div>
         </div>
-        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+        <div className="bg-elevated border border-default rounded-xl p-4">
           <div className="text-xs text-secondary mb-1">Total Trades</div>
           <div className="text-lg font-mono font-semibold text-primary">{config.totalCopiedTrades}</div>
         </div>
-        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+        <div className="bg-elevated border border-default rounded-xl p-4">
           <div className="text-xs text-secondary mb-1">Win Rate</div>
           <div className="text-lg font-mono font-semibold text-primary">{config.winRate}%</div>
         </div>
-        <div className="bg-elevated border border-default rounded-pf-lg p-4">
+        <div className="bg-elevated border border-default rounded-xl p-4">
           <div className="text-xs text-secondary mb-1">Avg Size</div>
           <div className="text-lg font-mono font-semibold text-primary">${config.avgSize.toFixed(2)}</div>
         </div>
       </div>
 
       {/* Risk settings */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-4">
+      <div className="bg-elevated border border-default rounded-xl p-4">
         <div className="text-xs text-secondary mb-3 uppercase tracking-wider font-medium">Risk Settings</div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
@@ -511,7 +511,7 @@ export function Component() {
       </div>
 
       {/* Trade history table */}
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-default">
           <h2 className="text-sm font-medium text-primary">Trade History</h2>
         </div>
@@ -551,14 +551,14 @@ export function Component() {
                     <tr key={trade.id} className="hover:bg-surface/50 transition-colors">
                       <td className="px-4 py-3 text-primary max-w-[180px] truncate">{trade.market}</td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
+                        <span className={`px-2 py-1 rounded text-label font-semibold ${
                           trade.side === 'BUY' ? 'bg-gain/15 text-gain' : 'bg-loss/15 text-loss'
                         }`}>
                           {trade.side}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded text-pf-label font-semibold ${
+                        <span className={`px-2 py-1 rounded text-label font-semibold ${
                           trade.outcome === 'YES' ? 'bg-gain/15 text-gain' : 'bg-loss/15 text-loss'
                         }`}>
                           {trade.outcome}
@@ -573,7 +573,7 @@ export function Component() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded text-pf-label font-semibold ${TRADE_STATUS_STYLES[trade.status]}`}>
+                        <span className={`px-2 py-1 rounded text-label font-semibold ${TRADE_STATUS_STYLES[trade.status]}`}>
                           {trade.status}
                         </span>
                       </td>

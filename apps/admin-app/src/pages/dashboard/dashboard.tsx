@@ -139,7 +139,7 @@ export function Component() {
       <div className="space-y-6" role="status" aria-label="Loading dashboard">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-elevated border border-default rounded-pf-lg p-4 animate-pulse">
+            <div key={i} className="bg-elevated border border-default rounded-xl p-4 animate-pulse">
               <div className="h-3 bg-app rounded w-24 mb-3" />
               <div className="h-7 bg-app rounded w-16" />
             </div>
@@ -147,7 +147,7 @@ export function Component() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-elevated border border-default rounded-pf-lg p-4 animate-pulse">
+            <div key={i} className="bg-elevated border border-default rounded-xl p-4 animate-pulse">
               <div className="h-3 bg-app rounded w-24 mb-3" />
               <div className="h-7 bg-app rounded w-16" />
             </div>
@@ -160,14 +160,14 @@ export function Component() {
   const statCards = [
     { label: 'Total Users', value: stats.totalUsers, icon: <Users size={20} aria-hidden="true" />, color: 'text-info', bg: 'bg-info/10' },
     { label: 'Active Strategies', value: stats.activeStrategies, icon: <Blocks size={20} aria-hidden="true" />, color: 'text-gain', bg: 'bg-gain/10' },
-    { label: 'Total Orders', value: stats.totalOrders, icon: <ShoppingCart size={20} aria-hidden="true" />, color: 'text-pf-purple-500', bg: 'bg-pf-purple-500/10' },
+    { label: 'Total Orders', value: stats.totalOrders, icon: <ShoppingCart size={20} aria-hidden="true" />, color: 'text-purple-500', bg: 'bg-purple-500/10' },
     { label: 'Open Tickets', value: stats.openTickets, icon: <TicketCheck size={20} aria-hidden="true" />, color: 'text-warning', bg: 'bg-warning/10' },
   ];
 
   const platformStatCards = [
     { label: 'News Signals (30d)', value: platformStats?.totalNewsSignals ?? 0, icon: <Newspaper size={20} aria-hidden="true" />, color: 'text-accent', bg: 'bg-accent/10' },
     { label: 'Markets w/ Sentiment', value: platformStats?.marketsWithSentiment ?? 0, icon: <BarChart2 size={20} aria-hidden="true" />, color: 'text-info', bg: 'bg-info/10' },
-    { label: 'LP Orders', value: platformStats?.totalLpOrders ?? 0, icon: <Layers size={20} aria-hidden="true" />, color: 'text-pf-purple-500', bg: 'bg-pf-purple-500/10' },
+    { label: 'LP Orders', value: platformStats?.totalLpOrders ?? 0, icon: <Layers size={20} aria-hidden="true" />, color: 'text-purple-500', bg: 'bg-purple-500/10' },
     { label: 'Resolved Positions', value: platformStats?.resolvedPositions ?? 0, icon: <CheckSquare size={20} aria-hidden="true" />, color: 'text-gain', bg: 'bg-gain/10' },
   ];
 
@@ -175,7 +175,7 @@ export function Component() {
     <div className="animate-fade-in space-y-6">
       {/* Stat Cards */}
       {statsError ? (
-        <div className="bg-elevated border border-default rounded-pf-lg p-6 text-center">
+        <div className="bg-elevated border border-default rounded-xl p-6 text-center">
           <AlertCircle className="mx-auto mb-2 text-tertiary" size={24} aria-hidden="true" />
           <p className="text-sm text-secondary">Stats unavailable</p>
         </div>
@@ -184,13 +184,13 @@ export function Component() {
           {statCards.map((card) => (
             <div
               key={card.label}
-              className="bg-elevated border border-default rounded-pf-lg p-4"
+              className="bg-elevated border border-default rounded-xl p-4"
             >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-medium text-secondary">
                   {card.label}
                 </span>
-                <div className={`p-2 rounded-pf-sm ${card.bg}`}>
+                <div className={`p-2 rounded-sm ${card.bg}`}>
                   <span className={card.color}>{card.icon}</span>
                 </div>
               </div>
@@ -208,7 +208,7 @@ export function Component() {
           Platform Activity
         </h2>
         {platformStatsError ? (
-          <div className="bg-elevated border border-default rounded-pf-lg p-6 text-center">
+          <div className="bg-elevated border border-default rounded-xl p-6 text-center">
             <AlertCircle className="mx-auto mb-2 text-tertiary" size={24} aria-hidden="true" />
             <p className="text-sm text-secondary">Platform stats unavailable</p>
           </div>
@@ -217,13 +217,13 @@ export function Component() {
             {platformStatCards.map((card) => (
               <div
                 key={card.label}
-                className="bg-elevated border border-default rounded-pf-lg p-4"
+                className="bg-elevated border border-default rounded-xl p-4"
               >
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-medium text-secondary">
                     {card.label}
                   </span>
-                  <div className={`p-2 rounded-pf-sm ${card.bg}`}>
+                  <div className={`p-2 rounded-sm ${card.bg}`}>
                     <span className={card.color}>{card.icon}</span>
                   </div>
                 </div>
@@ -239,7 +239,7 @@ export function Component() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* System Health */}
         {healthError ? (
-          <div className="bg-elevated border border-default rounded-pf-lg p-5">
+          <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <Activity size={16} className="text-tertiary" aria-hidden="true" />
               <h2 className="text-sm font-semibold text-primary">
@@ -255,14 +255,14 @@ export function Component() {
             </div>
           </div>
         ) : health ? (
-          <div className="bg-elevated border border-default rounded-pf-lg p-5">
+          <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <Activity size={16} className="text-accent" aria-hidden="true" />
               <h2 className="text-sm font-semibold text-primary">
                 System Health
               </h2>
               <span
-                className={`ml-auto px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(health.status)}`}
+                className={`ml-auto px-2 py-1 rounded-full text-xs font-medium ${statusColor(health.status)}`}
               >
                 {health.status}
               </span>
@@ -271,18 +271,18 @@ export function Component() {
               {Object.entries(health.services ?? {}).map(([name, svc]) => (
                 <div
                   key={name}
-                  className="flex items-center justify-between p-3 rounded-pf-sm bg-app border border-default"
+                  className="flex items-center justify-between p-3 rounded-sm bg-app border border-default"
                 >
                   <div>
                     <div className="text-xs font-medium text-primary capitalize">
                       {name}
                     </div>
-                    <div className="text-pf-label text-tertiary">
+                    <div className="text-label text-tertiary">
                       {svc?.latencyMs ?? 0}ms
                     </div>
                   </div>
                   <span
-                    className={`w-2 h-2 rounded-pf-full ${
+                    className={`w-2 h-2 rounded-full ${
                       svc?.status === 'healthy'
                         ? 'bg-gain'
                         : svc?.status === 'degraded'
@@ -301,14 +301,14 @@ export function Component() {
         {/* Infrastructure + Launch Control */}
         <div className="space-y-4">
           {health?.db && (
-          <div className="bg-elevated border border-default rounded-pf-lg p-5">
+          <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center gap-2 mb-3">
               <Database size={16} className="text-accent" aria-hidden="true" />
               <h2 className="text-sm font-semibold text-primary">
                 Database
               </h2>
               <span
-                className={`ml-auto px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(health.db?.status)}`}
+                className={`ml-auto px-2 py-1 rounded-full text-xs font-medium ${statusColor(health.db?.status)}`}
               >
                 {health.db?.status ?? 'UNKNOWN'}
               </span>
@@ -320,14 +320,14 @@ export function Component() {
           )}
 
           {health?.redis && (
-          <div className="bg-elevated border border-default rounded-pf-lg p-5">
+          <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center gap-2 mb-3">
               <Server size={16} className="text-accent" aria-hidden="true" />
               <h2 className="text-sm font-semibold text-primary">
                 Redis
               </h2>
               <span
-                className={`ml-auto px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(health.redis?.status)}`}
+                className={`ml-auto px-2 py-1 rounded-full text-xs font-medium ${statusColor(health.redis?.status)}`}
               >
                 {health.redis?.status ?? 'UNKNOWN'}
               </span>
@@ -339,7 +339,7 @@ export function Component() {
           )}
 
           {/* Launch Control */}
-          <div className="bg-elevated border border-default rounded-pf-lg p-5">
+          <div className="bg-elevated border border-default rounded-xl p-5">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-primary">
@@ -370,7 +370,7 @@ export function Component() {
       </div>
 
       {/* Rate Limiting */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-5">
+      <div className="bg-elevated border border-default rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <ShieldAlert size={16} className="text-accent" aria-hidden="true" />
           <h2 className="text-sm font-semibold text-primary">
@@ -385,18 +385,18 @@ export function Component() {
         ) : rateLimits ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="bg-app border border-default rounded-pf-sm p-3">
-                <span className="text-pf-label text-tertiary uppercase">Tracked Keys</span>
+              <div className="bg-app border border-default rounded-sm p-3">
+                <span className="text-label text-tertiary uppercase">Tracked Keys</span>
                 <span className="block text-lg font-semibold text-primary">{rateLimits.totalTrackedKeys}</span>
               </div>
-              <div className="bg-app border border-default rounded-pf-sm p-3">
-                <span className="text-pf-label text-tertiary uppercase">Recent 429s</span>
+              <div className="bg-app border border-default rounded-sm p-3">
+                <span className="text-label text-tertiary uppercase">Recent 429s</span>
                 <span className={`block text-lg font-semibold ${rateLimits.recent429Count > 0 ? 'text-warning' : 'text-primary'}`}>
                   {rateLimits.recent429Count}
                 </span>
               </div>
-              <div className="bg-app border border-default rounded-pf-sm p-3">
-                <span className="text-pf-label text-tertiary uppercase">Top Offenders</span>
+              <div className="bg-app border border-default rounded-sm p-3">
+                <span className="text-label text-tertiary uppercase">Top Offenders</span>
                 <span className="block text-lg font-semibold text-primary">{rateLimits.topOffenders?.length ?? 0}</span>
               </div>
             </div>
@@ -417,7 +417,7 @@ export function Component() {
                   <tbody className="divide-y divide-default">
                     {rateLimits.topOffenders.slice(0, 10).map((entry) => (
                       <tr key={entry.key}>
-                        <td className="py-2 font-mono text-secondary truncate max-w-pf-col-md">{entry.key}</td>
+                        <td className="py-2 font-mono text-secondary truncate max-w-col-md">{entry.key}</td>
                         <td className={`py-2 text-right font-mono ${entry.hits > 50 ? 'text-loss' : 'text-primary'}`}>{entry.hits}</td>
                         <td className="py-2 text-right font-mono text-secondary">{entry.ttl}</td>
                       </tr>
@@ -433,7 +433,7 @@ export function Component() {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-5">
+      <div className="bg-elevated border border-default rounded-xl p-5">
         <h2 className="text-sm font-semibold text-primary mb-4">
           Recent Activity
         </h2>
@@ -459,7 +459,7 @@ export function Component() {
                 className="flex items-center justify-between py-2 border-b border-default last:border-0"
               >
                 <div className="flex items-center gap-3">
-                  <span className="px-2 py-1 rounded text-pf-label font-medium bg-app text-accent border border-default">
+                  <span className="px-2 py-1 rounded text-label font-medium bg-app text-accent border border-default">
                     {log.action}
                   </span>
                   <span className="text-sm text-secondary">

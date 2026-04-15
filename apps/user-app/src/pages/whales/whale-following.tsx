@@ -89,7 +89,7 @@ export function Component() {
   return (
     <div className="animate-fade-in p-6 max-w-5xl mx-auto space-y-6">
       {/* Back link */}
-      <Link to="/whales" className="flex items-center gap-2 text-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors">
+      <Link to="/whales" className="flex items-center gap-2 text-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
         <ArrowLeft className="size-4" aria-hidden="true" /> Back to feed
       </Link>
 
@@ -112,7 +112,7 @@ export function Component() {
           <p className="text-sm text-tertiary mt-1">Follow whales from the feed to track their trades.</p>
           <Link
             to="/whales"
-            className="mt-4 px-4 py-2 rounded-pf-sm text-sm bg-elevated border border-default text-primary hover:border-strong transition-colors"
+            className="mt-4 px-4 py-2 rounded-sm text-sm bg-elevated border border-default text-primary hover:border-strong transition-colors"
           >
             Go to Whale Feed
           </Link>
@@ -123,7 +123,7 @@ export function Component() {
             <div
               key={wallet.walletAddress}
               data-testid="whale-feed-item"
-              className="bg-elevated border border-default rounded-pf-lg p-4 transition-all duration-pf-normal hover:border-strong hover:shadow-pf-sm"
+              className="bg-elevated border border-default rounded-xl p-4 transition-all duration-panel hover:border-strong hover:shadow-sm"
             >
               <div className="flex items-center justify-between mb-3">
                 <Link
@@ -137,7 +137,7 @@ export function Component() {
                   variant="danger"
                   onClick={() => unfollow(wallet.walletAddress)}
                   data-testid={`unfollow-${wallet.walletAddress}`}
-                  className="flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-medium border border-loss/30 text-loss hover:bg-loss/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loss/40 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-medium border border-loss/30 text-loss hover:bg-loss/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loss/40 transition-colors"
                   aria-label={`Unfollow wallet ${truncateAddress(wallet.walletAddress)}`}
                 >
                   <UserMinus className="size-4" /> Unfollow

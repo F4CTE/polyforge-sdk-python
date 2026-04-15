@@ -13,14 +13,14 @@ export function McpSection() {
       />
 
       {/* Protocol info */}
-      <div className="bg-elevated border border-default rounded-pf-lg px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-elevated border border-default rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs text-tertiary uppercase tracking-wider mb-1">Transport</p>
           <code className="text-sm font-mono text-accent-text">stdio (MCP 1.0)</code>
         </div>
         <div className="flex flex-wrap gap-2">
           {['Claude Desktop','Claude Code','Cursor','Windsurf','Zed','Continue'].map(c => (
-            <span key={c} className="inline-flex items-center text-pf-label font-medium px-2 py-1 rounded-pf-full bg-overlay text-secondary">{c}</span>
+            <span key={c} className="inline-flex items-center text-label font-medium px-2 py-1 rounded-full bg-overlay text-secondary">{c}</span>
           ))}
         </div>
       </div>
@@ -82,7 +82,7 @@ export function McpSection() {
             '"Show me whale trades over $50,000 from the last hour"',
             '"What\'s my portfolio P&L this week?"',
           ].map(p => (
-            <p key={p} className="text-xs text-secondary bg-elevated border border-default rounded-pf px-4 py-3 font-mono hover:border-strong transition-all duration-pf-normal">{p}</p>
+            <p key={p} className="text-xs text-secondary bg-elevated border border-default rounded-pf px-4 py-3 font-mono hover:border-strong transition-all duration-panel">{p}</p>
           ))}
         </div>
       </Sub>

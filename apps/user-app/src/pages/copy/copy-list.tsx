@@ -86,7 +86,7 @@ const STATUS_STYLES: Record<CopyStatus, { dot: string; bg: string; text: string 
 
 const MODE_STYLES: Record<CopyMode, { bg: string; text: string }> = {
   PERCENTAGE: { bg: 'bg-accent/10', text: 'text-accent-text' },
-  FIXED:      { bg: 'bg-pf-purple-500/10',  text: 'text-pf-purple-500' },
+  FIXED:      { bg: 'bg-purple-500/10',  text: 'text-purple-500' },
   MIRROR:     { bg: 'bg-gain/10', text: 'text-gain' },
 };
 
@@ -192,7 +192,7 @@ function MaxLossEditor({
   if (editing) {
     return (
       <span className="inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-        <span className="text-tertiary text-pf-label">$</span>
+        <span className="text-tertiary text-label">$</span>
         <Input
           ref={inputRef}
           type="number"
@@ -206,7 +206,7 @@ function MaxLossEditor({
             if (e.key === 'Escape') { e.stopPropagation(); setEditing(false); }
           }}
           disabled={saving}
-          className="w-20 px-2 py-1 rounded bg-surface border border-accent/40 text-primary text-pf-label font-mono focus-visible:outline-none"
+          className="w-20 px-2 py-1 rounded bg-surface border border-accent/40 text-primary text-label font-mono focus-visible:outline-none"
         />
         <Button
           type="button"
@@ -241,7 +241,7 @@ function MaxLossEditor({
       title="Click to set max loss limit"
       className="inline-flex items-center gap-1 text-secondary hover:text-primary transition-colors"
     >
-      <span className="text-pf-label">
+      <span className="text-label">
         {value != null ? `$${Number(value).toFixed(2)}` : 'No limit'}
       </span>
       <Pencil className="size-3 text-tertiary" />
@@ -284,9 +284,9 @@ function CorrelationBar({ value }: { value: number }) {
       className="inline-flex items-center gap-2 group/corr cursor-default"
       title="How closely your fills match the source trader"
     >
-      <span className="w-16 h-2 bg-surface rounded-pf-full overflow-hidden">
+      <span className="w-16 h-2 bg-surface rounded-full overflow-hidden">
         <span
-          className={`block h-full rounded-pf-full ${color}`}
+          className={`block h-full rounded-full ${color}`}
           style={{ width: `${pct}%` }}
         />
       </span>
@@ -336,7 +336,7 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
     : false;
 
   return (
-    <div className="rounded-pf-lg border border-default bg-elevated overflow-hidden">
+    <div className="rounded-xl border border-default bg-elevated overflow-hidden">
       {/* Summary bar — always visible */}
       <Button
         type="button"
@@ -453,7 +453,7 @@ function AnalyticsPanel({ analytics, loading, expanded, onToggle }: AnalyticsPan
                             className="inline-flex items-center gap-2 group/trader"
                           >
                             <span
-                              className="size-7 rounded-pf-full bg-accent/20 text-accent-text text-pf-label font-semibold flex items-center justify-center shrink-0 uppercase"
+                              className="size-7 rounded-full bg-accent/20 text-accent-text text-label font-semibold flex items-center justify-center shrink-0 uppercase"
                               aria-hidden="true"
                             >
                               {(t.displayName ?? t.username).slice(0, 2)}
@@ -677,7 +677,7 @@ export function Component() {
             variant="ghost"
             key={f.value}
             onClick={() => onFilterChange(f.value)}
-            className={`px-3 py-2 text-sm rounded-pf-full border transition-colors cursor-pointer ${
+            className={`px-3 py-2 text-sm rounded-full border transition-colors cursor-pointer ${
               filter === f.value
                 ? 'bg-accent/10 border-accent/30 text-accent-text'
                 : 'border-default text-secondary hover:text-primary'
@@ -700,7 +700,7 @@ export function Component() {
         }, 0);
         const pnlPositive = totalPnl >= 0;
         return (
-          <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-pf-lg bg-elevated border border-default text-sm">
+          <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-xl bg-elevated border border-default text-sm">
             <span className="flex items-center gap-2 text-secondary">
               <TrendingUp className="size-4 text-accent-text" aria-hidden="true" />
               <span className="font-medium text-primary">{configs.length}</span>
@@ -772,7 +772,7 @@ export function Component() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/copy/${config.id}`); }
                 }}
-                className="group bg-elevated border border-default rounded-pf-lg p-5 cursor-pointer transition-all duration-pf-normal hover:border-strong hover:shadow-pf-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="group bg-elevated border border-default rounded-xl p-5 cursor-pointer transition-all duration-panel hover:border-strong hover:shadow-sm hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {/* Wallet + Status */}
                 <div className="flex items-start justify-between gap-3 mb-3">
@@ -797,10 +797,10 @@ export function Component() {
                   </div>
                   <span
                     data-testid="status-badge"
-                    className={`inline-flex items-center gap-2 px-2 py-1 rounded-pf-full text-pf-label font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}
+                    className={`inline-flex items-center gap-2 px-2 py-1 rounded-full text-label font-medium shrink-0 ${statusStyle.bg} ${statusStyle.text}`}
                   >
                     <span
-                      className={`w-3 h-3 rounded-pf-full ${statusStyle.dot} ${
+                      className={`w-3 h-3 rounded-full ${statusStyle.dot} ${
                         config.status === 'ACTIVE' ? 'animate-pulse-dot' : ''
                       }`}
                     />
@@ -811,11 +811,11 @@ export function Component() {
                 {/* Mode + Size badges */}
                 <div className="flex flex-wrap gap-2 mb-3">
                   <span
-                    className={`inline-flex items-center px-2 py-1 rounded-pf-full text-pf-label font-medium ${modeStyle.bg} ${modeStyle.text}`}
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-label font-medium ${modeStyle.bg} ${modeStyle.text}`}
                   >
                     {config.mode}
                   </span>
-                  <span className="inline-flex items-center px-2 py-1 rounded-pf-full bg-overlay text-tertiary text-pf-label font-medium">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-overlay text-tertiary text-label font-medium">
                     {sizeLabel(config.mode, config.sizeValue)}
                   </span>
                 </div>
@@ -848,7 +848,7 @@ export function Component() {
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-secondary">Copying since</span>
-                    <span className="font-mono text-primary text-pf-label">
+                    <span className="font-mono text-primary text-label">
                       {config.copyingSince ? relativeDate(config.copyingSince) : relativeDate(config.createdAt)}
                     </span>
                   </div>
@@ -881,7 +881,7 @@ export function Component() {
                         variant="ghost"
                         onClick={() => doAction(config.id, 'pause')}
                         disabled={busy}
-                        className="flex items-center gap-1 px-3 py-2 rounded-pf-sm text-xs font-medium text-warning bg-warning/10 hover:bg-warning/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+                        className="flex items-center gap-1 px-3 py-2 rounded-sm text-xs font-medium text-warning bg-warning/10 hover:bg-warning/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
                         aria-label="Pause config"
                       >
                         <Pause className="size-3" /> Pause
@@ -893,7 +893,7 @@ export function Component() {
                         variant="success"
                         onClick={() => doAction(config.id, 'resume')}
                         disabled={busy}
-                        className="flex items-center gap-1 px-3 py-2 rounded-pf-sm text-xs font-medium text-gain bg-gain/10 hover:bg-gain/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+                        className="flex items-center gap-1 px-3 py-2 rounded-sm text-xs font-medium text-gain bg-gain/10 hover:bg-gain/20 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
                         aria-label="Resume config"
                       >
                         <Play className="size-3" /> Resume
@@ -905,7 +905,7 @@ export function Component() {
                         variant="danger"
                         onClick={() => doAction(config.id, 'stop')}
                         disabled={busy}
-                        className="px-3 py-2 rounded-pf-sm text-loss hover:bg-loss/10 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
+                        className="px-3 py-2 rounded-sm text-loss hover:bg-loss/10 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
                         aria-label="Stop config"
                         title="Stop"
                       >
@@ -916,7 +916,7 @@ export function Component() {
                   <Link
                     to={`/copy/${config.id}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="p-2 rounded-pf-sm text-secondary hover:text-primary hover:bg-overlay transition-colors"
+                    className="p-2 rounded-sm text-secondary hover:text-primary hover:bg-overlay transition-colors"
                     aria-label="View config details"
                     title="View details"
                   >

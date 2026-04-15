@@ -52,7 +52,7 @@ export function statusColor(status: string | undefined | null): string {
     IN_PROGRESS: 'text-info bg-info/10',
     PENDING: 'text-warning bg-warning/10',
     QUEUED: 'text-warning bg-warning/10',
-    PAPER: 'text-pf-purple-500 bg-pf-purple-500/10',
+    PAPER: 'text-purple-500 bg-purple-500/10',
     PAUSED: 'text-warning bg-warning/10',
     IDLE: 'text-secondary bg-elevated',
     DEGRADED: 'text-warning bg-warning/10',
@@ -75,6 +75,6 @@ export function statusColor(status: string | undefined | null): string {
 export const priorityColor: Record<string, string> = {
   LOW: 'text-secondary bg-elevated',
   MEDIUM: 'text-warning bg-warning/10',
-  HIGH: 'text-pf-gold-500 bg-pf-gold-500/10',
+  HIGH: 'text-gold-500 bg-gold-500/10',
   URGENT: 'text-loss bg-loss/10',
 };

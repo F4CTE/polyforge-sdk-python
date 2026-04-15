@@ -149,7 +149,7 @@ function ToggleSwitch({ checked, onChange, danger, disabled, label }: ToggleSwit
       disabled={disabled}
       onClick={() => !disabled && onChange(!checked)}
       className={[
-        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-pf-full transition-colors duration-pf-normal',
+        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-panel',
         trackClass,
         disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
@@ -157,7 +157,7 @@ function ToggleSwitch({ checked, onChange, danger, disabled, label }: ToggleSwit
     >
       <span
         className={[
-          'inline-block h-4 w-4 rounded-pf-full bg-primary shadow transition-transform duration-pf-normal',
+          'inline-block h-4 w-4 rounded-full bg-primary shadow transition-transform duration-panel',
           checked ? 'translate-x-6' : 'translate-x-1',
         ].join(' ')}
       />
@@ -184,7 +184,7 @@ function SliderInput({ value, min, max, onChange, label, unit }: SliderInputProp
         value={value}
         aria-label={label}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="flex-1 h-2 rounded-pf-full accent-accent cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+        className="flex-1 h-2 rounded-full accent-accent cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
       />
       <span className="w-14 text-right text-sm font-medium text-primary tabular-nums">
         {value}
@@ -218,7 +218,7 @@ function NumberField({ value, min, max, step = 1, onChange, label, prefix, suffi
         aria-label={label}
         onChange={(e) => onChange(Number(e.target.value))}
         className={[
-          'w-28 rounded-pf-sm border border-default bg-surface px-3 py-2',
+          'w-28 rounded-sm border border-default bg-surface px-3 py-2',
           'text-sm text-primary tabular-nums',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
           'placeholder:text-tertiary',
@@ -236,7 +236,7 @@ interface SectionCardProps {
 
 function SectionCard({ title, children }: SectionCardProps) {
   return (
-    <section className="rounded-pf-lg border border-default bg-elevated p-6 space-y-5">
+    <section className="rounded-xl border border-default bg-elevated p-6 space-y-5">
       <h2 className="text-base font-semibold text-primary">{title}</h2>
       {children}
     </section>
@@ -269,12 +269,12 @@ function FieldRow({ label, description, children }: FieldRowProps) {
 
 function ConfigSkeleton() {
   const shimmerCard = (rows: number) => (
-    <div className="rounded-pf-lg border border-default bg-elevated p-6 space-y-5 animate-shimmer">
-      <div className="h-4 w-40 rounded-pf-sm bg-default" />
+    <div className="rounded-xl border border-default bg-elevated p-6 space-y-5 animate-shimmer">
+      <div className="h-4 w-40 rounded-sm bg-default" />
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex items-center justify-between gap-4">
-          <div className="h-3 w-48 rounded-pf-sm bg-default" />
-          <div className="h-6 w-20 rounded-pf-sm bg-default" />
+          <div className="h-3 w-48 rounded-sm bg-default" />
+          <div className="h-6 w-20 rounded-sm bg-default" />
         </div>
       ))}
     </div>
@@ -305,7 +305,7 @@ function MaintenanceConfirmBox({ onConfirm, onCancel }: MaintenanceConfirmProps)
     <div
       role="alertdialog"
       aria-labelledby="maintenance-confirm-heading"
-      className="mt-3 rounded-pf-lg border border-warning/40 bg-warning/10 p-4 space-y-3"
+      className="mt-3 rounded-xl border border-warning/40 bg-warning/10 p-4 space-y-3"
     >
       <div className="flex items-start gap-2">
         <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-warning" aria-hidden />
@@ -324,7 +324,7 @@ function MaintenanceConfirmBox({ onConfirm, onCancel }: MaintenanceConfirmProps)
           type="button"
           variant="secondary"
           onClick={onCancel}
-          className="rounded-pf-sm px-3 py-2 text-xs font-medium text-secondary border border-default hover:border-strong transition-colors"
+          className="rounded-sm px-3 py-2 text-xs font-medium text-secondary border border-default hover:border-strong transition-colors"
         >
           Cancel
         </Button>
@@ -480,7 +480,7 @@ export function Component() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-pf-lg bg-elevated border border-default">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-elevated border border-default">
               <Settings2 className="h-5 w-5 text-accent-text" aria-hidden />
             </div>
             <div>
@@ -500,7 +500,7 @@ export function Component() {
             className={[
               'inline-flex items-center gap-2 rounded-pf px-4 py-2 text-sm font-semibold transition-all',
               dirty && !saving
-                ? 'bg-accent text-inverse hover:bg-accent-text transition-colors duration-pf-fast cursor-pointer'
+                ? 'bg-accent text-inverse hover:bg-accent-text transition-colors duration-micro cursor-pointer'
                 : 'bg-elevated border border-default text-tertiary cursor-not-allowed opacity-50',
             ].join(' ')}
           >
@@ -513,7 +513,7 @@ export function Component() {
         {dirty && (
           <div
             role="status"
-            className="flex items-center gap-2 rounded-pf-sm border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning"
+            className="flex items-center gap-2 rounded-sm border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning"
           >
             <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
             <span>
@@ -683,7 +683,7 @@ export function Component() {
 
                 {/* Maintenance active warning */}
                 {config.riskControls.maintenanceMode && !showMaintenanceConfirm && (
-                  <div className="mt-3 flex items-center gap-2 rounded-pf-sm border border-loss/40 bg-loss/10 px-3 py-2 text-sm text-loss">
+                  <div className="mt-3 flex items-center gap-2 rounded-sm border border-loss/40 bg-loss/10 px-3 py-2 text-sm text-loss">
                     <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
                     <span>Platform is in maintenance mode — all trading is paused.</span>
                   </div>
@@ -751,7 +751,7 @@ export function Component() {
                       key={key}
                       role="listitem"
                       className={[
-                        'relative flex items-center justify-between gap-3 rounded-pf-lg border px-4 py-3 transition-colors',
+                        'relative flex items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-colors',
                         enabled
                           ? 'border-default bg-surface'
                           : 'border-subtle bg-surface/50',
@@ -770,7 +770,7 @@ export function Component() {
                       <div className="flex items-center gap-2 shrink-0">
                         <span
                           className={[
-                            'inline-flex items-center gap-1 rounded-pf-full px-2 py-1 text-xs font-medium',
+                            'inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium',
                             enabled
                               ? 'bg-gain/15 text-gain'
                               : 'bg-default/30 text-tertiary',

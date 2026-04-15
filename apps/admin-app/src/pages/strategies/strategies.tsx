@@ -94,7 +94,7 @@ export function Component() {
         </div>
       )}
 
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <caption className="sr-only">Trading strategies</caption>
@@ -135,7 +135,7 @@ export function Component() {
                     <td className="px-4 py-3 font-medium text-primary">{s.name}</td>
                     <td className="px-4 py-3 text-secondary">{(s as any).user?.username ?? s.username ?? ''}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(s.status)}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(s.status)}`}>
                         {s.status}
                       </span>
                     </td>

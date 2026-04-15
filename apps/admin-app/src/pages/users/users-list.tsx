@@ -158,7 +158,7 @@ export function Component() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-pf-input-min-md max-w-xs">
+        <div className="relative flex-1 min-w-input-min-md max-w-xs">
           <Search
             size={14}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary"
@@ -170,7 +170,7 @@ export function Component() {
             aria-label="Search users"
             defaultValue={search}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="w-full pl-9 pr-3 py-2 text-sm rounded-sm border border-default bg-app text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           />
         </div>
         <Select
@@ -180,7 +180,7 @@ export function Component() {
             setPage(1);
           }}
           aria-label="Filter by status"
-          className="px-3 py-2 text-sm rounded-pf-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+          className="px-3 py-2 text-sm rounded-sm border border-default bg-app text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
         >
           <option value="">All statuses</option>
           <option value="PENDING">Pending approval</option>
@@ -206,14 +206,14 @@ export function Component() {
         <div className="text-center py-12">
           <AlertCircle className="mx-auto mb-3 text-tertiary" size={40} aria-hidden="true" />
           <p className="text-secondary mb-4">Failed to load data</p>
-          <Button type="button" variant="ghost" onClick={load} className="text-accent-text hover:text-accent-text text-sm rounded-pf-sm px-2 py-1">
+          <Button type="button" variant="ghost" onClick={load} className="text-accent-text hover:text-accent-text text-sm rounded-sm px-2 py-1">
             Try again
           </Button>
         </div>
       )}
 
       {/* Table */}
-      <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <caption className="sr-only">User accounts list</caption>
@@ -266,14 +266,14 @@ export function Component() {
                         {user.username ?? ''}
                       </Link>
                       {user.suspended && (
-                        <span className="ml-2 px-2 py-1 rounded text-pf-caption font-medium text-loss bg-loss/10">
+                        <span className="ml-2 px-2 py-1 rounded text-caption font-medium text-loss bg-loss/10">
                           SUSPENDED
                         </span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-secondary">{user.email ?? ''}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-pf-full text-xs font-medium ${statusColor(computeUserStatus(user))}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(computeUserStatus(user))}`}>
                         {computeUserStatus(user)}
                       </span>
                     </td>

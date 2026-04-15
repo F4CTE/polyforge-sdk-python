@@ -139,7 +139,7 @@ export function Component() {
       </div>
 
       {/* How it works */}
-      <div className="flex items-start gap-3 p-4 rounded-pf-lg bg-surface border border-default">
+      <div className="flex items-start gap-3 p-4 rounded-xl bg-surface border border-default">
         <Info className="size-4 text-accent-text shrink-0 mt-1" />
         <p className="text-xs text-secondary leading-relaxed">
           <span className="text-primary font-medium">How merge arbitrage works: </span>
@@ -159,7 +159,7 @@ export function Component() {
             type="button"
             variant="ghost"
             onClick={() => setMinMargin(v)}
-            className={`px-3 py-1 rounded-pf-full text-xs font-medium border transition-colors ${
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
               minMargin === v
                 ? 'bg-accent/15 text-accent-text border-accent/30'
                 : 'bg-elevated text-secondary border-default hover:border-strong'
@@ -177,7 +177,7 @@ export function Component() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="h-16 bg-elevated border border-default rounded-pf-lg animate-pulse" />
+            <div key={i} className="h-16 bg-elevated border border-default rounded-xl animate-pulse" />
           ))}
         </div>
       ) : opportunities.length === 0 ? (
@@ -187,15 +187,15 @@ export function Component() {
           <p className="text-tertiary text-xs mt-1">Markets are efficiently priced. Lower the threshold or check back shortly.</p>
         </div>
       ) : (
-        <div className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+        <div className="bg-elevated border border-default rounded-xl overflow-hidden">
           {/* Header row */}
           <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2 border-b border-default bg-surface">
-            <span className="text-pf-caption font-medium text-tertiary uppercase tracking-wider">Market</span>
-            <span className="text-pf-caption font-medium text-tertiary uppercase tracking-wider text-right">YES</span>
-            <span className="text-pf-caption font-medium text-tertiary uppercase tracking-wider text-right">NO</span>
-            <span className="text-pf-caption font-medium text-tertiary uppercase tracking-wider text-right">Sum</span>
-            <span className="text-pf-caption font-medium text-tertiary uppercase tracking-wider text-right">Margin</span>
-            <span className="text-pf-caption font-medium text-tertiary uppercase tracking-wider text-right">Action</span>
+            <span className="text-caption font-medium text-tertiary uppercase tracking-wider">Market</span>
+            <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">YES</span>
+            <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">NO</span>
+            <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Sum</span>
+            <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Margin</span>
+            <span className="text-caption font-medium text-tertiary uppercase tracking-wider text-right">Action</span>
           </div>
 
           {opportunities.map((opp) => (
@@ -213,10 +213,10 @@ export function Component() {
                 </Link>
                 <div className="flex items-center gap-2 mt-1">
                   {opp.category && (
-                    <span className="text-pf-caption text-tertiary">{opp.category}</span>
+                    <span className="text-caption text-tertiary">{opp.category}</span>
                   )}
                   {opp.endDate && (
-                    <span className="text-pf-caption text-tertiary">· Closes {formatDate(opp.endDate)}</span>
+                    <span className="text-caption text-tertiary">· Closes {formatDate(opp.endDate)}</span>
                   )}
                 </div>
               </div>
@@ -254,7 +254,7 @@ export function Component() {
         </div>
       )}
 
-      <p className="text-pf-caption text-tertiary text-center">
+      <p className="text-caption text-tertiary text-center">
         Prices from live Redis cache (10 s TTL). Always verify on-chain before executing large positions.
         Arbitrage profit is not guaranteed if prices move between quote and fill.
       </p>

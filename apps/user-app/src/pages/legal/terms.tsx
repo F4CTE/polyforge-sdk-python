@@ -9,7 +9,7 @@ export function Component() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <Link to="/" className="flex items-center gap-2 text-sm text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-pf-sm">
+          <Link to="/" className="flex items-center gap-2 text-sm text-tertiary hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">
             <ArrowLeft className="size-4" /> Back
           </Link>
           <div className="flex items-center gap-2 text-primary">
@@ -117,11 +117,11 @@ export function Component() {
 
         {/* Footer */}
         <nav aria-label="Legal pages" className="flex items-center gap-3 mt-12 pt-6 border-t border-subtle text-sm text-tertiary">
-          <Link to="/privacy" className="hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-pf-sm">Privacy Policy</Link>
+          <Link to="/privacy" className="hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">Privacy Policy</Link>
           <span aria-hidden="true">&middot;</span>
-          <Link to="/login" className="hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-pf-sm">Sign in</Link>
+          <Link to="/login" className="hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">Sign in</Link>
           <span aria-hidden="true">&middot;</span>
-          <Link to="/register" className="hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-pf-sm">Register</Link>
+          <Link to="/register" className="hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">Register</Link>
         </nav>
       </main>
     </div>

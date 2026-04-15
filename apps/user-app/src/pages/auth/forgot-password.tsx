@@ -52,7 +52,7 @@ export function Component() {
         </div>
 
         {/* Card */}
-        <div className="bg-elevated border border-default rounded-pf-lg p-8 shadow-pf-lg">
+        <div className="bg-elevated border border-default rounded-xl p-8 shadow-lg">
           {!sent ? (
             <>
               <h1 className="text-xl font-semibold text-primary mb-1">Reset password</h1>
@@ -83,7 +83,7 @@ export function Component() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-pf-elevated"
+                  className="w-full py-3 bg-accent text-inverse font-semibold rounded-pf hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
                 >
                   {loading ? 'Sending...' : 'Send reset link'}
                 </Button>
@@ -91,7 +91,7 @@ export function Component() {
             </>
           ) : (
             <div className="text-center">
-              <div className="size-16 rounded-pf-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+              <div className="size-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
                 <Check className="size-8 text-accent" />
               </div>
               <h1 className="text-xl font-semibold text-primary mb-2">Check your inbox</h1>
@@ -102,7 +102,7 @@ export function Component() {
           )}
 
           <div className="border-t border-default mt-6 pt-4 text-center text-sm">
-            <Link to="/login" className="inline-flex items-center gap-2 text-accent hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-pf-sm">
+            <Link to="/login" className="inline-flex items-center gap-2 text-accent hover:text-accent-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded-sm">
               <ArrowLeft className="size-4" />
               Back to login
             </Link>

@@ -122,12 +122,12 @@ export function OnboardingChecklist() {
   }
 
   return (
-    <div data-testid="onboarding-checklist" role="region" aria-label="Getting started checklist" className="fixed bottom-4 right-4 z-50 w-80 bg-elevated border border-default rounded-pf-lg shadow-pf-2xl animate-fade-in">
+    <div data-testid="onboarding-checklist" role="region" aria-label="Getting started checklist" className="fixed bottom-4 right-4 z-50 w-80 bg-elevated border border-default rounded-xl shadow-2xl animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-primary">Getting Started</span>
-          <span className="text-pf-caption px-2 py-1 rounded-pf-full bg-accent/15 text-accent-text font-medium">
+          <span className="text-caption px-2 py-1 rounded-full bg-accent/15 text-accent-text font-medium">
             {completedCount}/{CHECKLIST_ITEMS.length}
           </span>
         </div>
@@ -153,9 +153,9 @@ export function OnboardingChecklist() {
 
       {/* Progress bar */}
       <div className="px-4 pt-2">
-        <div className="w-full h-2 bg-overlay rounded-pf-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed`}>
+        <div className="w-full h-2 bg-overlay rounded-full overflow-hidden" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={CHECKLIST_ITEMS.length} aria-label={`${completedCount} of ${CHECKLIST_ITEMS.length} steps completed`}>
           <div
-            className="h-full bg-accent rounded-pf-full transition-all duration-pf-slow"
+            className="h-full bg-accent rounded-full transition-all duration-slow"
             style={{ width: `${(completedCount / CHECKLIST_ITEMS.length) * 100}%` }}
           />
         </div>
@@ -173,7 +173,7 @@ export function OnboardingChecklist() {
               <button
                 type="button"
                 onClick={() => toggleItem(item.key)}
-                className="mt-1 shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-full"
+                className="mt-1 shrink-0 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-full"
                 aria-label={`Mark "${item.label}" as ${completed[item.key] ? 'incomplete' : 'complete'}`}
               >
                 {completed[item.key] ? (
@@ -186,7 +186,7 @@ export function OnboardingChecklist() {
                 <button
                   type="button"
                   onClick={() => handleNavigate(item.route)}
-                  className={`text-sm text-left font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm ${
+                  className={`text-sm text-left font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm ${
                     completed[item.key]
                       ? 'text-tertiary line-through'
                       : 'text-primary hover:text-accent-text'
@@ -212,7 +212,7 @@ export function OnboardingChecklist() {
               const event = new CustomEvent('polyforge:start-tour');
               window.dispatchEvent(event);
             }}
-            className="text-xs text-accent-text hover:text-accent-text cursor-pointer transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm"
+            className="text-xs text-accent-text hover:text-accent-text cursor-pointer transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
           >
             Take a tour of the platform
           </button>

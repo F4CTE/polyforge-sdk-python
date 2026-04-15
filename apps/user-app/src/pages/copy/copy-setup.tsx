@@ -178,7 +178,7 @@ export function Component() {
       {/* Back link */}
       <Link
         to="/copy"
-        className="flex items-center gap-2 text-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors"
+        className="flex items-center gap-2 text-sm text-secondary hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors"
       >
         <ArrowLeft className="size-4" /> Back to Copy Trading
       </Link>
@@ -198,7 +198,7 @@ export function Component() {
               variant="ghost"
               onClick={() => i < step && setStep(i)}
               disabled={i > step}
-              className={`flex items-center gap-2 px-3 py-2 rounded-pf-full text-xs font-medium border transition-colors ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-full text-xs font-medium border transition-colors ${
                 i === step
                   ? 'bg-accent/10 border-accent/30 text-accent-text'
                   : i < step
@@ -206,7 +206,7 @@ export function Component() {
                     : 'border-default text-tertiary'
               }`}
             >
-              <span className="size-5 rounded-pf-full bg-overlay flex items-center justify-center text-pf-caption font-semibold">
+              <span className="size-5 rounded-full bg-overlay flex items-center justify-center text-caption font-semibold">
                 {i + 1}
               </span>
               {label}
@@ -219,7 +219,7 @@ export function Component() {
       </div>
 
       {/* Step content */}
-      <div className="bg-elevated border border-default rounded-pf-lg p-6 space-y-5">
+      <div className="bg-elevated border border-default rounded-xl p-6 space-y-5">
         {/* Step 1: Target Wallet */}
         {step === 0 && (
           <>
@@ -231,14 +231,14 @@ export function Component() {
               aria-label="Target wallet address"
               value={targetWallet}
               onChange={(e) => setTargetWallet(e.target.value)}
-              className="w-full px-4 py-3 rounded-pf-sm text-sm bg-surface text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary font-mono"
+              className="w-full px-4 py-3 rounded-sm text-sm bg-surface text-primary border border-default hover:border-strong focus-visible:border-accent/50 focus-visible:outline-none transition-colors placeholder:text-tertiary font-mono"
             />
             {followedWhales.length > 0 && (
               <div>
                 <p className="text-xs text-secondary mb-2">Or select from followed whales:</p>
                 <div className="flex flex-wrap gap-2">
                   {loadingWhales ? (
-                    <div className="h-8 w-32 bg-overlay rounded-pf-sm animate-pulse" />
+                    <div className="h-8 w-32 bg-overlay rounded-sm animate-pulse" />
                   ) : (
                     followedWhales.map((w) => (
                       <Button
@@ -246,7 +246,7 @@ export function Component() {
                         variant="ghost"
                         key={w.walletAddress}
                         onClick={() => setTargetWallet(w.walletAddress)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-pf-sm text-xs font-mono border transition-colors ${
+                        className={`flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-mono border transition-colors ${
                           targetWallet === w.walletAddress
                             ? 'bg-accent/10 border-accent/30 text-accent-text'
                             : 'border-default text-secondary hover:border-strong hover:text-primary'
@@ -276,9 +276,9 @@ export function Component() {
                     variant="ghost"
                     key={opt.value}
                     onClick={() => setMode(opt.value)}
-                    className={`flex flex-col items-start gap-2 p-4 rounded-pf-lg border text-left transition-all duration-pf-fast ${
+                    className={`flex flex-col items-start gap-2 p-4 rounded-xl border text-left transition-all duration-micro ${
                       selected
-                        ? 'bg-accent/10 border-accent/30 shadow-pf-sm'
+                        ? 'bg-accent/10 border-accent/30 shadow-sm'
                         : 'border-default hover:border-strong'
                     }`}
                   >
@@ -292,7 +292,7 @@ export function Component() {
                     >
                       {opt.label}
                     </span>
-                    <span className="text-pf-label text-secondary leading-snug">
+                    <span className="text-label text-secondary leading-snug">
                       {opt.description}
                     </span>
                   </Button>
@@ -346,11 +346,11 @@ export function Component() {
                         value={sizePercent}
                         onChange={(e) => setSizePercent(parseInt(e.target.value))}
                         aria-label="Copy percentage of whale trade size"
-                        className="flex-1 h-2 rounded-pf-full bg-default accent-accent"
+                        className="flex-1 h-2 rounded-full bg-default accent-accent"
                       />
                       <span className="text-sm font-mono text-accent-text w-12 text-right">{sizePercent}%</span>
                     </div>
-                    <p className="text-pf-caption text-tertiary mt-1">
+                    <p className="text-caption text-tertiary mt-1">
                       Copy {sizePercent}% of each whale trade size
                     </p>
                   </div>
@@ -372,7 +372,7 @@ export function Component() {
                         min={0}
                         value={sizeValue}
                         onChange={(e) => setSizeValue(Number(e.target.value))}
-                        className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
+                        className="w-32 px-3 py-2 rounded-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
                       />
                       <span className="text-sm text-secondary">
                         {mode === 'PERCENTAGE' ? '%' : 'USD'}
@@ -395,7 +395,7 @@ export function Component() {
                     placeholder="500"
                     className="w-full h-10 px-3 rounded-pf bg-surface border border-default text-sm font-mono text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50"
                   />
-                  <p className="text-pf-caption text-tertiary mt-1">Never copy more than this per single trade</p>
+                  <p className="text-caption text-tertiary mt-1">Never copy more than this per single trade</p>
                 </div>
               </div>
             )}
@@ -427,7 +427,7 @@ export function Component() {
                     min={0}
                     value={maxExposure}
                     onChange={(e) => setMaxExposure(Number(e.target.value))}
-                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
+                    className="w-32 px-3 py-2 rounded-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
                   />
                   <span className="text-sm text-secondary">USD</span>
                 </div>
@@ -453,7 +453,7 @@ export function Component() {
                     min={0}
                     value={maxDailyLoss}
                     onChange={(e) => setMaxDailyLoss(Number(e.target.value))}
-                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
+                    className="w-32 px-3 py-2 rounded-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
                   />
                   <span className="text-sm text-secondary">USD</span>
                 </div>
@@ -481,7 +481,7 @@ export function Component() {
                     step={0.1}
                     value={priceOffset}
                     onChange={(e) => setPriceOffset(Number(e.target.value))}
-                    className="w-32 px-3 py-2 rounded-pf-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
+                    className="w-32 px-3 py-2 rounded-sm text-sm bg-surface text-primary border border-default focus-visible:border-accent/50 focus-visible:outline-none font-mono"
                   />
                   <span className="text-sm text-secondary">%</span>
                 </div>

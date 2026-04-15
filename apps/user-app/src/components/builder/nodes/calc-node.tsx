@@ -178,7 +178,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           type="target"
           position={Position.Left}
           id="input"
-          className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle"
+          className="!w-3 !h-3 !bg-elevated !border-2 !rounded-full builder-handle"
           style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
         />
       )}
@@ -188,21 +188,21 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
             type="target"
             position={Position.Left}
             id="input-a"
-            className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle builder-handle--top"
+            className="!w-3 !h-3 !bg-elevated !border-2 !rounded-full builder-handle builder-handle--top"
             style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
           />
           <Handle
             type="target"
             position={Position.Left}
             id="input-b"
-            className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle builder-handle--bottom"
+            className="!w-3 !h-3 !bg-elevated !border-2 !rounded-full builder-handle builder-handle--bottom"
             style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
           />
         </>
       )}
 
       <div
-        className="builder-node-card w-[180px] rounded-pf-md shadow-pf-md overflow-hidden"
+        className="builder-node-card w-[180px] rounded-lg shadow-md overflow-hidden"
         style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
       >
         {/* Header bar */}
@@ -211,8 +211,8 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         >
           <GripVertical className="size-3 opacity-70 cursor-grab" />
           {icon}
-          <span className="text-pf-label font-semibold flex-1 truncate">{displaySymbol}</span>
-          <span className="text-pf-micro opacity-70">{d.label}</span>
+          <span className="text-label font-semibold flex-1 truncate">{displaySymbol}</span>
+          <span className="text-caption opacity-70">{d.label}</span>
           <button
             type="button"
             onClick={onDelete}
@@ -228,7 +228,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         <div className="px-3 py-2 space-y-2">
           {dropdownOptions && (
             <div>
-              <label htmlFor={`${id}-${dropdownOptions.key}`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
+              <label htmlFor={`${id}-${dropdownOptions.key}`} className="block text-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
                 {d.type === 'MATH' ? 'Operation' : d.type === 'COMPARISON' ? 'Operator' : 'Function'}
               </label>
               <select
@@ -236,7 +236,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 value={d.config[dropdownOptions.key] ?? dropdownOptions.options[0]?.value ?? ''}
                 onChange={(e) => onFieldChange(dropdownOptions.key, e.target.value)}
                 aria-label={d.type === 'MATH' ? 'Operation' : d.type === 'COMPARISON' ? 'Operator' : 'Function'}
-                className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-pf-sm text-primary focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
+                className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-sm text-primary focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
               >
                 {dropdownOptions.options.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -250,7 +250,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {/* Window size for aggregation */}
           {showWindowField && (
             <div>
-              <label htmlFor={`${id}-windowSize`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
+              <label htmlFor={`${id}-windowSize`} className="block text-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
                 Window (N ticks)
               </label>
               <input
@@ -260,7 +260,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 value={d.config.windowSize ?? ''}
                 onChange={(e) => onFieldChange('windowSize', e.target.value)}
                 aria-label="Window size"
-                className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
+                className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
               />
             </div>
           )}
@@ -269,7 +269,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {showBetweenFields && (
             <>
               <div>
-                <label htmlFor={`${id}-min`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
+                <label htmlFor={`${id}-min`} className="block text-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
                   Min
                 </label>
                 <input
@@ -279,11 +279,11 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                   value={d.config.min ?? ''}
                   onChange={(e) => onFieldChange('min', e.target.value)}
                   aria-label="Minimum value"
-                  className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
+                  className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
                 />
               </div>
               <div>
-                <label htmlFor={`${id}-max`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
+                <label htmlFor={`${id}-max`} className="block text-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
                   Max
                 </label>
                 <input
@@ -293,7 +293,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                   value={d.config.max ?? ''}
                   onChange={(e) => onFieldChange('max', e.target.value)}
                   aria-label="Maximum value"
-                  className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
+                  className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
                 />
               </div>
             </>
@@ -302,7 +302,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
           {/* Decimals field for abs/round */}
           {showDecimalsField && (
             <div>
-              <label htmlFor={`${id}-decimals`} className="block text-pf-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
+              <label htmlFor={`${id}-decimals`} className="block text-caption font-medium text-tertiary mb-1 uppercase tracking-wider">
                 Decimals
               </label>
               <input
@@ -312,19 +312,19 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
                 value={d.config.decimals ?? ''}
                 onChange={(e) => onFieldChange('decimals', e.target.value)}
                 aria-label="Decimal places"
-                className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
+                className="w-full px-2 py-1 text-xs bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-gain/50 transition-colors"
               />
             </div>
           )}
 
           {/* Input handle labels */}
           {inputCount === 2 && (
-            <div className="flex items-center gap-2 text-pf-caption text-tertiary">
-              <span className="px-2 py-1 rounded-pf-full bg-gain/20 text-gain font-medium">
+            <div className="flex items-center gap-2 text-caption text-tertiary">
+              <span className="px-2 py-1 rounded-full bg-gain/20 text-gain font-medium">
                 A
               </span>
               <span>/</span>
-              <span className="px-2 py-1 rounded-pf-full bg-gain/20 text-gain font-medium">
+              <span className="px-2 py-1 rounded-full bg-gain/20 text-gain font-medium">
                 B
               </span>
             </div>
@@ -337,7 +337,7 @@ function CalcNodeInner({ id, data }: NodeProps<CalcNode>) {
         type="source"
         position={Position.Right}
         id="output"
-        className="!w-3 !h-3 !bg-elevated !border-2 !rounded-pf-full builder-handle"
+        className="!w-3 !h-3 !bg-elevated !border-2 !rounded-full builder-handle"
         style={{ '--node-color': CALC_COLOR } as React.CSSProperties}
       />
     </>

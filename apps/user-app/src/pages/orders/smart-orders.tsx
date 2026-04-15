@@ -145,9 +145,9 @@ export function Component() {
       {/* Order types info */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {(Object.keys(TYPE_DESC) as SmartOrderType[]).map((t) => (
-          <div key={t} className="p-3 bg-surface border border-default rounded-pf-lg">
+          <div key={t} className="p-3 bg-surface border border-default rounded-xl">
             <p className="text-xs font-semibold text-primary mb-1">{TYPE_LABEL[t]}</p>
-            <p className="text-pf-label text-tertiary leading-relaxed">{TYPE_DESC[t]}</p>
+            <p className="text-label text-tertiary leading-relaxed">{TYPE_DESC[t]}</p>
           </div>
         ))}
       </div>
@@ -156,7 +156,7 @@ export function Component() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 bg-elevated border border-default rounded-pf-lg animate-pulse" />
+            <div key={i} className="h-20 bg-elevated border border-default rounded-xl animate-pulse" />
           ))}
         </div>
       ) : orders.length === 0 ? (
@@ -172,7 +172,7 @@ export function Component() {
       ) : (
         <div className="space-y-2">
           {orders.map((so) => (
-            <div key={so.id} className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+            <div key={so.id} className="bg-elevated border border-default rounded-xl overflow-hidden">
               {/* Row */}
               <div className="flex items-center gap-4 px-4 py-3">
                 <Button
@@ -232,7 +232,7 @@ export function Component() {
               {/* Expanded: child orders */}
               {expanded === so.id && so.orders.length > 0 && (
                 <div className="border-t border-default/50 px-4 py-3 bg-surface/50">
-                  <p className="text-pf-label font-medium text-tertiary uppercase tracking-wider mb-2">
+                  <p className="text-label font-medium text-tertiary uppercase tracking-wider mb-2">
                     Child Orders ({so.orders.length})
                   </p>
                   <div className="space-y-1">

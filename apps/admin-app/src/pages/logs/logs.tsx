@@ -67,7 +67,7 @@ export function Component() {
       <h2 className="text-lg font-semibold text-primary">Logs</h2>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-elevated border border-default rounded-pf-lg p-1 w-fit" role="tablist" aria-label="Log type">
+      <div className="flex gap-1 bg-elevated border border-default rounded-xl p-1 w-fit" role="tablist" aria-label="Log type">
         {tabs.map((t) => (
           <Button type="button"
             key={t.key}
@@ -77,7 +77,7 @@ export function Component() {
             role="tab"
             aria-selected={tab === t.key}
             aria-controls={`tabpanel-${t.key}`}
-            className={`px-4 py-2 text-sm rounded-pf-sm transition-colors ${
+            className={`px-4 py-2 text-sm rounded-sm transition-colors ${
               tab === t.key
                 ? 'bg-accent/10 text-accent font-medium'
                 : 'text-secondary hover:text-primary'
@@ -89,7 +89,7 @@ export function Component() {
       </div>
 
       {/* Log Table */}
-      <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`} className="bg-elevated border border-default rounded-pf-lg overflow-hidden">
+      <div role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`} className="bg-elevated border border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <caption className="sr-only">System logs</caption>
@@ -147,7 +147,7 @@ export function Component() {
                     {tab === 'audit' && (
                       <>
                         <td className="px-4 py-3">
-                          <span className="px-2 py-1 rounded text-pf-label font-medium bg-app text-accent border border-default">
+                          <span className="px-2 py-1 rounded text-label font-medium bg-app text-accent border border-default">
                             {log.action}
                           </span>
                         </td>
@@ -161,14 +161,14 @@ export function Component() {
                     {tab === 'events' && (
                       <>
                         <td className="px-4 py-3">
-                          <span className="px-2 py-1 rounded text-pf-label font-medium bg-pf-purple-500/10 text-pf-purple-500">
+                          <span className="px-2 py-1 rounded text-label font-medium bg-purple-500/10 text-purple-500">
                             {log.type}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-secondary max-w-xs font-mono text-xs">
                           <details className="cursor-pointer">
                             <summary className="truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">{JSON.stringify(log.payload)}</summary>
-                            <pre className="mt-2 p-2 bg-app rounded text-pf-caption whitespace-pre-wrap break-all max-h-40 overflow-y-auto">{JSON.stringify(log.payload, null, 2)}</pre>
+                            <pre className="mt-2 p-2 bg-app rounded text-caption whitespace-pre-wrap break-all max-h-40 overflow-y-auto">{JSON.stringify(log.payload, null, 2)}</pre>
                           </details>
                         </td>
                       </>

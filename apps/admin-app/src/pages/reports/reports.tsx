@@ -106,7 +106,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
   return (
     <span
       className={[
-        'inline-flex items-center rounded-pf-full px-2 py-1 text-xs font-medium',
+        'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium',
         className,
       ].join(' ')}
     >
@@ -186,7 +186,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
   return (
     <article
       className={[
-        'rounded-pf-lg border bg-elevated p-5 space-y-3 transition-opacity',
+        'rounded-xl border bg-elevated p-5 space-y-3 transition-opacity',
         CARD_BORDER[review.status],
         busy ? 'opacity-70 pointer-events-none' : '',
       ].join(' ')}
@@ -212,14 +212,14 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
         <StatusBadge status={review.status} />
 
         {review.verifiedPurchase && (
-          <span className="inline-flex items-center gap-1 rounded-pf-full border border-gain/30 bg-gain/10 px-2 py-1 text-xs font-medium text-gain">
+          <span className="inline-flex items-center gap-1 rounded-full border border-gain/30 bg-gain/10 px-2 py-1 text-xs font-medium text-gain">
             <Check className="h-3 w-3" aria-hidden />
             Verified Purchase
           </span>
         )}
 
         {review.reportCount > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-pf-full border border-loss/30 bg-loss/10 px-2 py-1 text-xs font-medium text-loss">
+          <span className="inline-flex items-center gap-1 rounded-full border border-loss/30 bg-loss/10 px-2 py-1 text-xs font-medium text-loss">
             <AlertTriangle className="h-3 w-3" aria-hidden />
             {review.reportCount} {review.reportCount === 1 ? 'report' : 'reports'}
           </span>
@@ -248,7 +248,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           onClick={handleApprove}
           disabled={busy}
           className={[
-            'inline-flex items-center gap-2 rounded-pf-sm border px-3 py-2 text-xs font-medium transition-colors',
+            'inline-flex items-center gap-2 rounded-sm border px-3 py-2 text-xs font-medium transition-colors',
             review.status === 'approved'
               ? 'border-gain/40 bg-gain/10 text-gain'
               : 'border-default bg-surface text-secondary hover:border-gain/40 hover:text-gain',
@@ -265,7 +265,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           onClick={handleReject}
           disabled={busy}
           className={[
-            'inline-flex items-center gap-2 rounded-pf-sm border px-3 py-2 text-xs font-medium transition-colors',
+            'inline-flex items-center gap-2 rounded-sm border px-3 py-2 text-xs font-medium transition-colors',
             review.status === 'rejected'
               ? 'border-default/60 bg-default/10 text-tertiary'
               : 'border-default bg-surface text-secondary hover:border-loss/40 hover:text-loss',
@@ -282,7 +282,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           onClick={handleFlagToggle}
           disabled={busy}
           className={[
-            'inline-flex items-center gap-2 rounded-pf-sm border px-3 py-2 text-xs font-medium transition-colors',
+            'inline-flex items-center gap-2 rounded-sm border px-3 py-2 text-xs font-medium transition-colors',
             review.status === 'flagged' || flagging
               ? 'border-loss/40 bg-loss/10 text-loss'
               : 'border-default bg-surface text-secondary hover:border-loss/40 hover:text-loss',
@@ -299,7 +299,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
           target="_blank"
           rel="noopener noreferrer"
           className={[
-            'ml-auto inline-flex items-center gap-2 rounded-pf-sm border border-default px-3 py-2 text-xs font-medium text-secondary',
+            'ml-auto inline-flex items-center gap-2 rounded-sm border border-default px-3 py-2 text-xs font-medium text-secondary',
             'hover:text-accent-text hover:border-accent-text/40 transition-colors',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
           ].join(' ')}
@@ -311,7 +311,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
 
       {/* Inline flag reason textarea */}
       {flagging && (
-        <div className="space-y-2 rounded-pf-sm border border-loss/30 bg-loss/5 p-3">
+        <div className="space-y-2 rounded-sm border border-loss/30 bg-loss/5 p-3">
           <label
             htmlFor={`flag-reason-${review.id}`}
             className="block text-xs font-medium text-loss"
@@ -326,7 +326,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
             rows={3}
             placeholder="Describe the policy violation or reason for flagging…"
             className={[
-              'w-full resize-y rounded-pf-sm border border-default bg-surface px-3 py-2',
+              'w-full resize-y rounded-sm border border-default bg-surface px-3 py-2',
               'text-xs text-primary placeholder:text-tertiary',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
             ].join(' ')}
@@ -336,7 +336,7 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
               type="button"
               variant="secondary"
               onClick={() => { setFlagging(false); setFlagReason(''); }}
-              className="rounded-pf-sm border border-default px-3 py-2 text-xs font-medium text-secondary hover:border-strong transition-colors"
+              className="rounded-sm border border-default px-3 py-2 text-xs font-medium text-secondary hover:border-strong transition-colors"
             >
               Cancel
             </Button>
@@ -368,26 +368,26 @@ function ReviewCard({ review, onAction }: ReviewCardProps) {
 
 function ReviewCardSkeleton() {
   return (
-    <div className="rounded-pf-lg border border-default bg-elevated p-5 space-y-3 animate-shimmer">
+    <div className="rounded-xl border border-default bg-elevated p-5 space-y-3 animate-shimmer">
       <div className="flex items-center gap-3">
-        <div className="h-4 w-24 rounded-pf-sm bg-default" />
-        <div className="h-4 w-40 rounded-pf-sm bg-default" />
-        <div className="ml-auto h-3 w-16 rounded-pf-sm bg-default" />
+        <div className="h-4 w-24 rounded-sm bg-default" />
+        <div className="h-4 w-40 rounded-sm bg-default" />
+        <div className="ml-auto h-3 w-16 rounded-sm bg-default" />
       </div>
       <div className="flex gap-2">
-        <div className="h-5 w-16 rounded-pf-full bg-default" />
-        <div className="h-5 w-24 rounded-pf-full bg-default" />
+        <div className="h-5 w-16 rounded-full bg-default" />
+        <div className="h-5 w-24 rounded-full bg-default" />
       </div>
       <div className="space-y-2">
-        <div className="h-4 w-3/4 rounded-pf-sm bg-default" />
-        <div className="h-3 w-full rounded-pf-sm bg-default" />
-        <div className="h-3 w-5/6 rounded-pf-sm bg-default" />
+        <div className="h-4 w-3/4 rounded-sm bg-default" />
+        <div className="h-3 w-full rounded-sm bg-default" />
+        <div className="h-3 w-5/6 rounded-sm bg-default" />
       </div>
       <div className="flex gap-2 pt-1">
-        <div className="h-7 w-20 rounded-pf-sm bg-default" />
-        <div className="h-7 w-20 rounded-pf-sm bg-default" />
-        <div className="h-7 w-16 rounded-pf-sm bg-default" />
-        <div className="ml-auto h-7 w-28 rounded-pf-sm bg-default" />
+        <div className="h-7 w-20 rounded-sm bg-default" />
+        <div className="h-7 w-20 rounded-sm bg-default" />
+        <div className="h-7 w-16 rounded-sm bg-default" />
+        <div className="ml-auto h-7 w-28 rounded-sm bg-default" />
       </div>
     </div>
   );
@@ -419,8 +419,8 @@ function StatTile({ label, value, accent, danger }: StatTileProps) {
       : 'text-primary';
 
   return (
-    <div className="rounded-pf-lg border border-default bg-elevated px-4 py-3 space-y-1">
-      <p className="text-pf-label font-semibold uppercase tracking-wider text-tertiary">
+    <div className="rounded-xl border border-default bg-elevated px-4 py-3 space-y-1">
+      <p className="text-label font-semibold uppercase tracking-wider text-tertiary">
         {label}
       </p>
       <p className={['text-2xl font-semibold tabular-nums', valueClass].join(' ')}>{value}</p>
@@ -434,7 +434,7 @@ function StatTile({ label, value, accent, danger }: StatTileProps) {
 
 function EmptyState({ status }: { status: ReviewStatus }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-pf-lg border border-default bg-elevated py-16 text-center">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-default bg-elevated py-16 text-center">
       <MessageSquare className="h-10 w-10 text-tertiary" aria-hidden />
       <p className="text-sm font-medium text-secondary">
         No {status} reviews
@@ -611,7 +611,7 @@ function ReviewsTab() {
               variant="ghost"
               onClick={() => setStatus(tab.value)}
               className={[
-                'rounded-pf-sm px-3 py-2 text-xs font-medium transition-colors',
+                'rounded-sm px-3 py-2 text-xs font-medium transition-colors',
                 status === tab.value
                   ? 'bg-elevated border border-default text-primary'
                   : 'text-secondary hover:text-primary hover:bg-elevated/50',
@@ -630,7 +630,7 @@ function ReviewsTab() {
             onChange={(e) => setMinReports(Number(e.target.value) as MinReports)}
             aria-label="Minimum report count filter"
             className={[
-              'rounded-pf-sm border border-default bg-surface px-3 py-2 text-xs text-primary',
+              'rounded-sm border border-default bg-surface px-3 py-2 text-xs text-primary',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
             ].join(' ')}
           >
@@ -642,7 +642,7 @@ function ReviewsTab() {
           </Select>
 
           {/* Search */}
-          <div className="relative flex-1 min-w-pf-input-min-sm max-w-xs">
+          <div className="relative flex-1 min-w-input-min-sm max-w-xs">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-tertiary"
               aria-hidden
@@ -654,7 +654,7 @@ function ReviewsTab() {
               placeholder="Search strategy or author…"
               aria-label="Search reviews by strategy name or author"
               className={[
-                'w-full rounded-pf-sm border border-default bg-surface py-2 pl-8 pr-3 text-xs text-primary',
+                'w-full rounded-sm border border-default bg-surface py-2 pl-8 pr-3 text-xs text-primary',
                 'placeholder:text-tertiary',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
               ].join(' ')}
@@ -739,7 +739,7 @@ export function Component() {
 
         {/* Page header */}
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-pf-lg bg-elevated border border-default">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-elevated border border-default">
             <MessageSquare className="h-5 w-5 text-accent-text" aria-hidden />
           </div>
           <div>
@@ -769,7 +769,7 @@ export function Component() {
               variant="ghost"
               onClick={() => setActiveTab(tab.id)}
               className={[
-                'inline-flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors -mb-px border-b-2 rounded-t-pf-sm',
+                'inline-flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors -mb-px border-b-2 rounded-t-sm',
                 activeTab === tab.id
                   ? 'border-accent-text text-primary'
                   : 'border-transparent text-secondary hover:text-primary hover:border-default',

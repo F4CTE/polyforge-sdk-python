@@ -36,7 +36,7 @@ const SECTIONS: { key: PaletteTab; icon: React.ReactNode }[] = [
   { key: 'actions', icon: <Play className="size-3" /> },
 ];
 
-const VARIABLE_TAB_META = { label: 'Variables', color: 'var(--color-pf-purple-500)' };
+const VARIABLE_TAB_META = { label: 'Variables', color: 'var(--color-purple-500)' };
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -113,7 +113,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
   );
 
   return (
-    <div className="w-80 shrink-0 bg-elevated border-l border-default shadow-pf-lg flex flex-col overflow-x-hidden overflow-y-auto h-full">
+    <div className="w-80 shrink-0 bg-elevated border-l border-default shadow-lg flex flex-col overflow-x-hidden overflow-y-auto h-full">
       {/* Panel header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-subtle">
         <div className="flex items-center gap-2">
@@ -135,7 +135,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
         {/* Metadata form */}
         <div className="px-4 py-3 space-y-3 border-b border-subtle">
           <div>
-            <label htmlFor="bp-strategy-name" className="block text-pf-label font-medium text-tertiary mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-strategy-name" className="block text-label font-medium text-tertiary mb-1 uppercase tracking-wider">
               Strategy Name *
             </label>
             <input
@@ -146,12 +146,12 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onBlur={(e) => setName(e.target.value)}
               placeholder="My Strategy"
               aria-required="true"
-              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
             />
           </div>
 
           <div>
-            <label htmlFor="bp-strategy-description" className="block text-pf-label font-medium text-tertiary mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-strategy-description" className="block text-label font-medium text-tertiary mb-1 uppercase tracking-wider">
               Description
             </label>
             <textarea
@@ -162,12 +162,12 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onBlur={(e) => setDescription(e.target.value)}
               placeholder="What does this strategy do?"
               aria-label="Strategy description"
-              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors resize-none"
+              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors resize-none"
             />
           </div>
 
           <div>
-            <label htmlFor="bp-exec-mode" className="block text-pf-label font-medium text-tertiary mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-exec-mode" className="block text-label font-medium text-tertiary mb-1 uppercase tracking-wider">
               Exec Mode
             </label>
             <select
@@ -175,7 +175,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               value={execMode}
               onChange={(e) => setExecMode(e.target.value)}
               aria-label="Execution mode"
-              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-pf-sm text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-sm text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
             >
               <option value="TICK">Tick - evaluate on timer</option>
               <option value="EVENT">Event - evaluate on price change</option>
@@ -185,7 +185,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
 
           {execMode !== 'EVENT' && (
             <div>
-              <label htmlFor="bp-tick-interval" className="block text-pf-label font-medium text-tertiary mb-1 uppercase tracking-wider">
+              <label htmlFor="bp-tick-interval" className="block text-label font-medium text-tertiary mb-1 uppercase tracking-wider">
                 Tick Interval (ms)
               </label>
               <input
@@ -197,13 +197,13 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 placeholder="1000"
                 min={200}
                 aria-label="Tick interval in milliseconds"
-                className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
+                className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
               />
             </div>
           )}
 
           <div>
-            <label htmlFor="bp-visibility" className="block text-pf-label font-medium text-tertiary mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-visibility" className="block text-label font-medium text-tertiary mb-1 uppercase tracking-wider">
               Visibility
             </label>
             <select
@@ -211,7 +211,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               value={visibility}
               onChange={(e) => setVisibility(e.target.value)}
               aria-label="Strategy visibility"
-              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-pf-sm text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-sm text-primary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
             >
               <option value="PRIVATE">Private</option>
               <option value="UNLISTED">Unlisted</option>
@@ -220,7 +220,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           </div>
 
           <div>
-            <label htmlFor="bp-strategy-tags" className="block text-pf-label font-medium text-tertiary mb-1 uppercase tracking-wider">
+            <label htmlFor="bp-strategy-tags" className="block text-label font-medium text-tertiary mb-1 uppercase tracking-wider">
               Tags <span className="font-normal opacity-60">(comma separated)</span>
             </label>
             <input
@@ -231,7 +231,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
               onBlur={(e) => setTags(e.target.value)}
               placeholder="momentum, politics"
               aria-label="Strategy tags, comma-separated"
-              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-pf-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
+              className="w-full px-3 py-2 text-sm bg-surface border border-subtle rounded-sm text-primary placeholder:text-tertiary/50 focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
             />
           </div>
         </div>
@@ -255,9 +255,9 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                   key={key}
                   onClick={() => setActiveSection(key)}
                   aria-pressed={isActive}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-pf-sm text-pf-label font-medium transition-all shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
+                  className={`flex items-center gap-1 px-2 py-1 rounded-sm text-label font-medium transition-all shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                     isActive
-                      ? 'text-primary shadow-pf-xs'
+                      ? 'text-primary shadow-xs'
                       : 'text-tertiary hover:text-secondary bg-transparent hover:bg-overlay'
                   }`}
                   style={isActive ? { backgroundColor: `color-mix(in srgb, ${meta.color} 80%, transparent)` } : undefined}
@@ -267,7 +267,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                   {count > 0 && (
                     <span
                       data-testid="block-count"
-                      className="ml-1 px-1 py-px rounded-pf-full text-pf-micro font-semibold leading-none"
+                      className="ml-1 px-1 py-px rounded-full text-caption font-semibold leading-none"
                       style={{
                         backgroundColor: isActive ? 'color-mix(in srgb, var(--text-primary) 25%, transparent)' : `color-mix(in srgb, ${meta.color} 19%, transparent)`,
                         color: isActive ? 'white' : meta.color,
@@ -288,20 +288,20 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
           {/* Block list or Variables panel */}
           {activeSection === 'variables' ? (
             <div className="space-y-3">
-              <p className="text-pf-caption text-tertiary leading-snug">
+              <p className="text-caption text-tertiary leading-snug">
                 Variables let you define reusable expressions. Reference them
-                in block fields with <code className="text-pf-purple-500 font-mono">$varName</code>.
+                in block fields with <code className="text-purple-500 font-mono">$varName</code>.
               </p>
               <button
                 type="button"
                 onClick={addVariable}
-                className="flex items-center gap-2 w-full px-3 py-2 rounded-pf-sm text-xs font-medium text-primary transition-colors hover:opacity-90 bg-pf-purple-500 focus-visible:outline-none focus-visible:shadow-focus-ring"
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-sm text-xs font-medium text-primary transition-colors hover:opacity-90 bg-purple-500 focus-visible:outline-none focus-visible:shadow-focus-ring"
               >
                 <Plus className="size-4" />
                 Add Variable
               </button>
               {sectionCount('variables') > 0 && (
-                <p className="text-pf-caption text-tertiary">
+                <p className="text-caption text-tertiary">
                   {sectionCount('variables')} variable{sectionCount('variables') !== 1 ? 's' : ''} on canvas
                 </p>
               )}
@@ -331,7 +331,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                 );
                 if (filtered.length === 0) {
                   return (
-                    <p className="text-pf-label text-tertiary px-1 py-2">No blocks match</p>
+                    <p className="text-label text-tertiary px-1 py-2">No blocks match</p>
                   );
                 }
                 return filtered.map((def) => (
@@ -344,7 +344,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                     onDragStart={(e) => onDragStart(e, def, activeSection as BlockSection)}
                     onClick={() => onBlockClick(def)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onBlockClick(def); } }}
-                    className="group flex items-start gap-2 px-3 py-2 rounded-pf-sm cursor-pointer hover:bg-overlay/60 transition-colors border border-transparent hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                    className="group flex items-start gap-2 px-3 py-2 rounded-sm cursor-pointer hover:bg-overlay/60 transition-colors border border-transparent hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                   >
                     <GripVertical className="size-3 text-tertiary/40 mt-1 shrink-0 cursor-grab group-hover:text-tertiary" />
                     <div className="flex-1 min-w-0">
@@ -352,7 +352,7 @@ export function BlockPalette({ open, onClose }: BlockPaletteProps) {
                         <span className="text-xs font-medium text-primary">{def.label}</span>
                         <ChevronRight className="size-3 text-tertiary/0 group-hover:text-tertiary/60 transition-all" />
                       </div>
-                      <p className="text-pf-caption text-tertiary leading-snug mt-1">
+                      <p className="text-caption text-tertiary leading-snug mt-1">
                         {def.description}
                       </p>
                     </div>

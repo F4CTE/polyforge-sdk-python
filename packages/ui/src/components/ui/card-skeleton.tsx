@@ -19,7 +19,7 @@ function CardSkeleton({
   return (
     <div
       className={cn(
-        "bg-elevated border border-default rounded-pf-lg animate-shimmer",
+        "bg-elevated border border-default rounded-xl animate-shimmer",
         padding,
         children ? "space-y-3" : "",
         className,
@@ -64,14 +64,14 @@ function SkeletonLine({
 interface SkeletonCircleProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Size class, e.g. "size-10", "w-12 h-12". Default "size-10". */
   size?: string;
-  /** Border-radius override. Default "rounded-pf-full". */
+  /** Border-radius override. Default "rounded-full". */
   rounded?: string;
 }
 
 function SkeletonCircle({
   className,
   size = "size-10",
-  rounded = "rounded-pf-full",
+  rounded = "rounded-full",
   ...props
 }: SkeletonCircleProps) {
   return (
@@ -101,7 +101,7 @@ function SkeletonBadge({
 }: SkeletonBadgeProps) {
   return (
     <div
-      className={cn("bg-overlay rounded-pf-full", h, w, className)}
+      className={cn("bg-overlay rounded-full", h, w, className)}
       {...props}
     />
   );

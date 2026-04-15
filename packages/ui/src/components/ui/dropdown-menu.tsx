@@ -127,8 +127,8 @@ function DropdownMenuContent({ children, className, align = "start" }: DropdownM
       ref={contentRef}
       role="menu"
       className={cn(
-        "absolute z-50 mt-1 min-w-pf-dropdown-min p-1",
-        "bg-elevated border border-default rounded-pf shadow-pf-lg",
+        "absolute z-50 mt-1 min-w-dropdown-min p-1",
+        "bg-elevated border border-default rounded-pf shadow-lg",
         align === "end" ? "right-0" : "left-0",
         className
       )}
@@ -160,7 +160,7 @@ function DropdownMenuItem({ children, onSelect, disabled, className, ...props }:
       tabIndex={disabled ? -1 : 0}
       aria-disabled={disabled || undefined}
       className={cn(
-        "px-2 py-1 text-sm rounded-pf-xs cursor-pointer select-none outline-none",
+        "px-2 py-1 text-sm rounded-xs cursor-pointer select-none outline-none",
         "hover:bg-overlay focus-visible:bg-overlay",
         disabled && "opacity-50 cursor-not-allowed pointer-events-none",
         className

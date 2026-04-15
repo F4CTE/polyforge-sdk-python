@@ -179,7 +179,7 @@ function ProgressDots({ current }: { current: number }) {
             aria-selected={isCurrent}
             aria-label={`Step ${step.id} of ${TOTAL_STEPS}`}
             className={[
-              'rounded-pf-full transition-all duration-pf-slow',
+              'rounded-full transition-all duration-slow',
               isComplete || isCurrent
                 ? 'w-6 h-2 bg-accent'
                 : 'w-2 h-2 bg-default',
@@ -202,7 +202,7 @@ function FeatureCardRow({ feature, asBullet }: { feature: FeatureCard; asBullet?
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-pf-lg border border-default bg-surface p-4 flex-1 min-w-0">
+    <div className="flex flex-col gap-2 rounded-xl border border-default bg-surface p-4 flex-1 min-w-0">
       <div className="flex items-center gap-2">
         {feature.icon}
         <span className="text-primary text-sm font-semibold">{feature.title}</span>
@@ -316,7 +316,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
       className={[
         'fixed inset-0 z-50 flex items-center justify-center p-4',
         'backdrop-blur-sm bg-black/60',
-        'transition-opacity duration-pf-normal',
+        'transition-opacity duration-panel',
         overlayOpacity,
       ].join(' ')}
       role="dialog"
@@ -330,7 +330,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
         className={[
           'relative w-full max-w-lg',
           'bg-elevated border border-default rounded-2xl p-8',
-          'transition-all duration-pf-slow',
+          'transition-all duration-slow',
           cardTransform,
         ].join(' ')}
         onClick={(e) => e.stopPropagation()}
@@ -344,7 +344,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
           {showSkip && (
             <button
               onClick={handleSkip}
-              className="text-tertiary text-xs hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm px-1"
+              className="text-tertiary text-xs hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm px-1"
               aria-label="Skip onboarding"
             >
               Skip for now
@@ -417,7 +417,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
                 className={[
                   'text-accent-text text-sm font-medium',
                   'hover:text-accent transition-colors',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm px-1',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm px-1',
                 ].join(' ')}
               >
                 {step.secondaryLabel}

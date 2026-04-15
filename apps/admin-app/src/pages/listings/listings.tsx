@@ -52,10 +52,10 @@ function statusColor(status: string): string {
 
 function SkeletonCard() {
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-4 space-y-3 animate-pulse">
+    <div className="bg-elevated border border-default rounded-xl p-4 space-y-3 animate-pulse">
       <div className="flex items-start justify-between gap-3">
         <div className="h-5 w-2/3 bg-surface rounded" />
-        <div className="h-5 w-20 bg-surface rounded-pf-full" />
+        <div className="h-5 w-20 bg-surface rounded-full" />
       </div>
       <div className="h-4 w-full bg-surface rounded" />
       <div className="h-4 w-4/5 bg-surface rounded" />
@@ -95,7 +95,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
   }
 
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-4 space-y-3">
+    <div className="bg-elevated border border-default rounded-xl p-4 space-y-3">
       {/* Title row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
@@ -117,7 +117,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
           </Button>
           <span className="font-semibold text-primary truncate">{listing.title}</span>
         </div>
-        <span className="shrink-0 text-xs font-medium bg-accent/10 text-accent-text px-2 py-1 rounded-pf-full whitespace-nowrap">
+        <span className="shrink-0 text-xs font-medium bg-accent/10 text-accent-text px-2 py-1 rounded-full whitespace-nowrap">
           ${price} USDC
         </span>
       </div>
@@ -145,7 +145,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
 
       {/* Status + date */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <span className={`text-xs font-medium px-2 py-1 rounded-pf-full ${statusColor(listing.status)}`}>
+        <span className={`text-xs font-medium px-2 py-1 rounded-full ${statusColor(listing.status)}`}>
           {listing.status}
         </span>
         <span className="text-xs text-tertiary">{formatDate(listing.createdAt)}</span>
@@ -165,7 +165,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
               variant="success"
               disabled={isBusy}
               onClick={() => onApprove(listing.id)}
-              className="flex items-center gap-2 px-3 py-2 text-xs rounded-pf-sm bg-gain/10 text-gain hover:bg-gain/20 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-2 text-xs rounded-sm bg-gain/10 text-gain hover:bg-gain/20 transition-colors disabled:opacity-50"
             >
               <Check size={13} aria-hidden="true" />
               Approve
@@ -175,7 +175,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
               variant="danger"
               disabled={isBusy}
               onClick={() => setRejectOpen((o) => !o)}
-              className="flex items-center gap-2 px-3 py-2 text-xs rounded-pf-sm border border-loss/40 text-loss hover:bg-loss/10 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-2 text-xs rounded-sm border border-loss/40 text-loss hover:bg-loss/10 transition-colors disabled:opacity-50"
             >
               <X size={13} aria-hidden="true" />
               Reject
@@ -188,7 +188,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
                 onChange={(e) => setAdminNote(e.target.value)}
                 placeholder="Reason for rejection (optional)"
                 rows={2}
-                className="w-full text-xs bg-app border border-default rounded-pf-sm px-2 py-2 text-primary placeholder:text-tertiary resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-loss/40"
+                className="w-full text-xs bg-app border border-default rounded-sm px-2 py-2 text-primary placeholder:text-tertiary resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-loss/40"
               />
               <div className="flex gap-2">
                 <Button
@@ -204,7 +204,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
                   type="button"
                   variant="secondary"
                   onClick={() => { setRejectOpen(false); setAdminNote(''); }}
-                  className="px-3 py-1 text-xs rounded-pf-sm border border-default text-secondary hover:bg-app transition-colors"
+                  className="px-3 py-1 text-xs rounded-sm border border-default text-secondary hover:bg-app transition-colors"
                 >
                   Cancel
                 </Button>
@@ -221,7 +221,7 @@ function ListingCard({ listing, onApprove, onReject, onDelist, onToggleFeatured,
             variant="danger"
             disabled={isBusy}
             onClick={() => onDelist(listing.id)}
-            className="flex items-center gap-2 px-3 py-2 text-xs rounded-pf-sm border border-loss/40 text-loss hover:bg-loss/10 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 text-xs rounded-sm border border-loss/40 text-loss hover:bg-loss/10 transition-colors disabled:opacity-50"
           >
             <X size={13} aria-hidden="true" />
             Delist
@@ -340,7 +340,7 @@ export function Component() {
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-primary">Marketplace Listings</h2>
           {pendingCount > 0 && (
-            <span className="flex items-center justify-center min-w-6 h-5 px-2 rounded-pf-full bg-warning text-pf-caption font-semibold text-inverse" aria-label={`${pendingCount} pending listings`}>
+            <span className="flex items-center justify-center min-w-6 h-5 px-2 rounded-full bg-warning text-caption font-semibold text-inverse" aria-label={`${pendingCount} pending listings`}>
               {pendingCount}
             </span>
           )}
@@ -350,7 +350,7 @@ export function Component() {
           variant="ghost"
           onClick={() => load(true)}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 text-xs rounded-pf-sm border border-default text-secondary hover:bg-elevated hover:text-primary transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 text-xs rounded-sm border border-default text-secondary hover:bg-elevated hover:text-primary transition-colors disabled:opacity-50"
         >
           <RefreshCw size={13} aria-hidden="true" className={loading ? 'animate-spin' : ''} />
           Refresh
@@ -375,7 +375,7 @@ export function Component() {
           >
             {tab.label}
             {tab.value === 'PENDING' && pendingCount > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-pf-full bg-warning text-pf-micro font-semibold text-inverse">
+              <span className="ml-2 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-warning text-caption font-semibold text-inverse">
                 {pendingCount}
               </span>
             )}

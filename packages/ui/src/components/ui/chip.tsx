@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 const chipVariants = cva(
-  "inline-flex items-center gap-1 px-2 py-1 text-xs rounded-pf-full font-medium",
+  "inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full font-medium",
   {
     variants: {
       variant: {
@@ -35,7 +35,7 @@ function Chip({ children, onRemove, variant, className, ...props }: ChipProps) {
           type="button"
           aria-label="Remove"
           onClick={onRemove}
-          className="hover:opacity-70 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-full"
+          className="hover:opacity-70 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-full"
         >
           <X size={12} />
         </button>

@@ -21,7 +21,7 @@ interface Collection {
 
 function CollectionSkeleton() {
   return (
-    <div className="bg-elevated border border-default rounded-pf-lg p-5 space-y-3 animate-shimmer">
+    <div className="bg-elevated border border-default rounded-xl p-5 space-y-3 animate-shimmer">
       <div className="flex items-center gap-3 mb-2">
         <div className="size-10 bg-overlay rounded-lg" />
         <div className="h-4 bg-overlay rounded w-[45%]" />
@@ -30,9 +30,9 @@ function CollectionSkeleton() {
       <div className="h-3 bg-overlay rounded w-[70%]" />
       <div className="h-3 bg-overlay rounded w-[80%] mt-1" />
       <div className="flex gap-2 mt-2">
-        <div className="h-5 w-20 bg-overlay rounded-pf-full" />
-        <div className="h-5 w-20 bg-overlay rounded-pf-full" />
-        <div className="h-5 w-20 bg-overlay rounded-pf-full" />
+        <div className="h-5 w-20 bg-overlay rounded-full" />
+        <div className="h-5 w-20 bg-overlay rounded-full" />
+        <div className="h-5 w-20 bg-overlay rounded-full" />
       </div>
       <div className="h-8 bg-overlay rounded mt-2" />
     </div>
@@ -92,7 +92,7 @@ export function Component() {
           {collections.map(col => (
             <div
               key={col.id}
-              className="bg-elevated border border-default rounded-pf-lg p-5 hover:border-strong transition-all duration-pf-normal hover:shadow-pf-sm flex flex-col"
+              className="bg-elevated border border-default rounded-xl p-5 hover:border-strong transition-all duration-panel hover:shadow-sm flex flex-col"
             >
               {/* Emoji + Title */}
               <div className="flex items-center gap-3 mb-2">
@@ -120,7 +120,7 @@ export function Component() {
                   {col.coverListings.slice(0, 3).map(listing => (
                     <span
                       key={listing.id}
-                      className="px-2 py-1 rounded-pf-full text-pf-label bg-overlay text-secondary border border-default truncate max-w-[140px]"
+                      className="px-2 py-1 rounded-full text-label bg-overlay text-secondary border border-default truncate max-w-[140px]"
                       title={listing.title}
                     >
                       {listing.title}
@@ -133,7 +133,7 @@ export function Component() {
               <Button
                 type="button"
                 onClick={() => navigate(`/collections/${col.id}`)}
-                className="mt-auto flex items-center justify-center gap-2 w-full py-2 rounded-pf-sm text-sm font-medium border border-accent/40 text-accent-text hover:bg-accent/10 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
+                className="mt-auto flex items-center justify-center gap-2 w-full py-2 rounded-sm text-sm font-medium border border-accent/40 text-accent-text hover:bg-accent/10 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-text"
               >
                 Browse Collection
                 <ChevronRight className="size-4" aria-hidden="true" />

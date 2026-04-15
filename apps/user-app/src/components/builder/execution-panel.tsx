@@ -423,7 +423,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onTabChange('backtest'); if (!expanded) onToggle(); }}
-              className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
+              className={`px-3 py-1 rounded-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                 activeTab === 'backtest'
                   ? 'bg-accent/10 text-accent-text'
                   : 'text-tertiary hover:text-secondary'
@@ -432,13 +432,13 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
               <FlaskConical className="size-3 inline mr-1" />
               Backtest
               {isBacktestActive && (
-                <span className="ml-2 inline-flex size-2 rounded-pf-full bg-accent-text animate-pulse" />
+                <span className="ml-2 inline-flex size-2 rounded-full bg-accent-text animate-pulse" />
               )}
             </button>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onTabChange('live'); if (!expanded) onToggle(); }}
-              className={`px-3 py-1 rounded-pf-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
+              className={`px-3 py-1 rounded-sm text-xs font-medium transition-colors focus-visible:outline-none focus-visible:shadow-focus-ring ${
                 activeTab === 'live'
                   ? 'bg-accent/10 text-accent-text'
                   : 'text-tertiary hover:text-secondary'
@@ -447,7 +447,7 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
               <Radio className="size-3 inline mr-1" />
               Live
               {isLiveActive && (
-                <span className={`ml-2 inline-flex size-2 rounded-pf-full animate-pulse ${
+                <span className={`ml-2 inline-flex size-2 rounded-full animate-pulse ${
                   live.status === 'PAUSED' ? 'bg-warning' : 'bg-gain'
                 }`} />
               )}
@@ -456,17 +456,17 @@ export function ExecutionPanel({ strategyId, expanded, onToggle, activeTab, onTa
 
           {/* Mini status in header */}
           {!expanded && bt.status === 'RUNNING' && (
-            <span className="text-pf-label font-mono text-accent-text">
+            <span className="text-label font-mono text-accent-text">
               Backtest {bt.progress}%
             </span>
           )}
           {!expanded && bt.status === 'COMPLETED' && (
-            <span className={`text-pf-label font-mono ${pnlColor(bt.totalPnl)}`}>
+            <span className={`text-label font-mono ${pnlColor(bt.totalPnl)}`}>
               P&L: {pnlSign(bt.totalPnl)}
             </span>
           )}
           {!expanded && isLiveActive && (
-            <span className={`text-pf-label font-mono ${live.status === 'RUNNING' ? 'text-gain' : 'text-warning'}`}>
+            <span className={`text-label font-mono ${live.status === 'RUNNING' ? 'text-gain' : 'text-warning'}`}>
               {live.mode} {live.status}
             </span>
           )}
@@ -553,7 +553,7 @@ function BacktestTab({
         {/* Form row */}
         <div className="flex items-end gap-3 flex-wrap">
           <div className="flex-1 min-w-[140px]">
-            <label htmlFor="ep-start-date" className="text-pf-caption text-secondary uppercase tracking-wider mb-1 block">Start Date</label>
+            <label htmlFor="ep-start-date" className="text-caption text-secondary uppercase tracking-wider mb-1 block">Start Date</label>
             <input
               id="ep-start-date"
               type="date"
@@ -561,11 +561,11 @@ function BacktestTab({
               value={dateStart}
               onChange={e => setDateStart(e.target.value)}
               aria-label="Start date"
-              className="w-full h-8 px-3 rounded-pf-sm bg-surface border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent/50"
+              className="w-full h-8 px-3 rounded-sm bg-surface border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent/50"
             />
           </div>
           <div className="flex-1 min-w-[140px]">
-            <label htmlFor="ep-end-date" className="text-pf-caption text-secondary uppercase tracking-wider mb-1 block">End Date</label>
+            <label htmlFor="ep-end-date" className="text-caption text-secondary uppercase tracking-wider mb-1 block">End Date</label>
             <input
               id="ep-end-date"
               type="date"
@@ -573,14 +573,14 @@ function BacktestTab({
               value={dateEnd}
               onChange={e => setDateEnd(e.target.value)}
               aria-label="End date"
-              className="w-full h-8 px-3 rounded-pf-sm bg-surface border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent/50"
+              className="w-full h-8 px-3 rounded-sm bg-surface border border-default text-xs text-primary focus-visible:outline-none focus-visible:border-accent/50"
             />
           </div>
           <button
             type="button"
             onClick={onSubmit}
             disabled={submitting || !strategyId || !dateStart || !dateEnd}
-            className="h-8 px-4 rounded-pf-sm bg-accent text-inverse text-xs font-medium hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shrink-0 focus-visible:outline-none focus-visible:shadow-focus-ring"
+            className="h-8 px-4 rounded-sm bg-accent text-inverse text-xs font-medium hover:bg-accent-text disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shrink-0 focus-visible:outline-none focus-visible:shadow-focus-ring"
           >
             {submitting ? <Loader2 className="size-3 animate-spin" /> : <Play className="size-3" />}
             Run Backtest
@@ -616,9 +616,9 @@ function BacktestTab({
           </div>
           <span className="text-xs font-mono text-accent-text">{bt.progress}%</span>
         </div>
-        <div className="h-2 bg-surface rounded-pf-full overflow-hidden" role="progressbar" aria-valuenow={bt.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Backtest progress">
+        <div className="h-2 bg-surface rounded-full overflow-hidden" role="progressbar" aria-valuenow={bt.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Backtest progress">
           <div
-            className="h-full bg-gradient-to-r from-accent to-accent-text rounded-pf-full transition-all duration-pf-slow ease-out"
+            className="h-full bg-gradient-to-r from-accent to-accent-text rounded-full transition-all duration-slow ease-out"
             style={{ width: `${bt.progress}%` }}
           />
         </div>
@@ -636,7 +636,7 @@ function BacktestTab({
           <button
             type="button"
             onClick={onReset}
-            className="text-pf-caption text-tertiary hover:text-secondary flex items-center gap-1 transition-colors"
+            className="text-caption text-tertiary hover:text-secondary flex items-center gap-1 transition-colors"
           >
             <RotateCcw className="size-3" /> New Run
           </button>
@@ -678,7 +678,7 @@ function BacktestTab({
         </div>
 
         {bt.hasDataGaps && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm bg-warning/10 text-warning text-pf-label">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-sm bg-warning/10 text-warning text-label">
             <AlertTriangle className="size-3 shrink-0" />
             Results may be affected by data gaps in the selected date range.
           </div>
@@ -701,14 +701,14 @@ function BacktestTab({
   // FAILED
   return (
     <div className="pt-2 space-y-3">
-      <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm bg-loss/10 text-loss text-xs">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-sm bg-loss/10 text-loss text-xs">
         <XCircle className="size-4 shrink-0" />
         {bt.error ?? 'Backtest failed'}
       </div>
       <button
         type="button"
         onClick={onReset}
-        className="text-pf-caption text-tertiary hover:text-secondary flex items-center gap-1 transition-colors"
+        className="text-caption text-tertiary hover:text-secondary flex items-center gap-1 transition-colors"
       >
         <RotateCcw className="size-3" /> Try Again
       </button>
@@ -762,7 +762,7 @@ function LiveTab({
             type="button"
             onClick={() => onStart('PAPER')}
             disabled={!strategyId}
-            className="flex-1 h-8 rounded-pf-sm bg-elevated border border-default text-xs font-medium text-primary hover:border-accent/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 h-8 rounded-sm bg-elevated border border-default text-xs font-medium text-primary hover:border-accent/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             <Play className="size-3" />
             Paper Trade
@@ -771,14 +771,14 @@ function LiveTab({
             type="button"
             onClick={() => onStart('LIVE')}
             disabled={!strategyId}
-            className="flex-1 h-8 rounded-pf-sm bg-gain/10 border border-gain/30 text-xs font-medium text-gain hover:bg-gain/20 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 h-8 rounded-sm bg-gain/10 border border-gain/30 text-xs font-medium text-gain hover:bg-gain/20 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             <Play className="size-3" />
             Live Trade
           </button>
         </div>
 
-        <p className="text-pf-caption text-tertiary leading-relaxed">
+        <p className="text-caption text-tertiary leading-relaxed">
           Paper mode simulates trades without real funds. Live mode places real orders on Polymarket.
         </p>
       </div>
@@ -802,7 +802,7 @@ function LiveTab({
       {/* Status bar + controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className={`inline-flex size-2 rounded-pf-full ${
+          <span className={`inline-flex size-2 rounded-full ${
             live.status === 'RUNNING' ? 'bg-gain animate-pulse' :
             live.status === 'PAUSED' ? 'bg-warning' : 'bg-loss'
           }`} />
@@ -810,7 +810,7 @@ function LiveTab({
             {live.mode === 'PAPER' ? 'Paper' : 'Live'} — {live.status}
           </span>
           {live.lastTick && (
-            <span className="text-pf-caption text-tertiary flex items-center gap-1">
+            <span className="text-caption text-tertiary flex items-center gap-1">
               <Clock className="size-3" />
               {new Date(live.lastTick).toLocaleTimeString()}
             </span>
@@ -821,7 +821,7 @@ function LiveTab({
             <button
               type="button"
               onClick={onPause}
-              className="p-2 rounded-pf-sm text-tertiary hover:text-warning hover:bg-warning/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="p-2 rounded-sm text-tertiary hover:text-warning hover:bg-warning/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               title="Pause"
               aria-label="Pause execution"
             >
@@ -832,7 +832,7 @@ function LiveTab({
             <button
               type="button"
               onClick={onResume}
-              className="p-2 rounded-pf-sm text-tertiary hover:text-gain hover:bg-gain/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="p-2 rounded-sm text-tertiary hover:text-gain hover:bg-gain/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               title="Resume"
               aria-label="Resume execution"
             >
@@ -842,7 +842,7 @@ function LiveTab({
           <button
             type="button"
             onClick={onStop}
-            className="p-2 rounded-pf-sm text-tertiary hover:text-loss hover:bg-loss/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="p-2 rounded-sm text-tertiary hover:text-loss hover:bg-loss/10 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             title="Stop"
             aria-label="Stop execution"
           >
@@ -852,7 +852,7 @@ function LiveTab({
       </div>
 
       {live.error && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-pf-sm bg-loss/10 text-loss text-pf-label">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-sm bg-loss/10 text-loss text-label">
           <XCircle className="size-3 shrink-0" />
           {live.error}
         </div>
@@ -879,9 +879,9 @@ function LiveTab({
       {/* Recent trades */}
       {live.recentTrades.length > 0 && (
         <div>
-          <span className="text-pf-caption text-secondary uppercase tracking-wider mb-2 block">Recent Trades</span>
-          <div className="bg-surface rounded-pf-sm overflow-hidden max-h-[120px] overflow-y-auto">
-            <table className="w-full text-pf-label" aria-label="Trade history">
+          <span className="text-caption text-secondary uppercase tracking-wider mb-2 block">Recent Trades</span>
+          <div className="bg-surface rounded-sm overflow-hidden max-h-[120px] overflow-y-auto">
+            <table className="w-full text-label" aria-label="Trade history">
               <thead>
                 <tr className="text-tertiary text-left">
                   <th scope="col" className="px-2 py-1 font-medium">Time</th>
@@ -920,8 +920,8 @@ function LiveTab({
 
 function MetricCard({ label, value, color, icon }: { label: string; value: string; color: string; icon: React.ReactNode }) {
   return (
-    <div className="bg-surface rounded-pf-sm p-2">
-      <span className="text-pf-caption text-tertiary flex items-center gap-1">{icon}{label}</span>
+    <div className="bg-surface rounded-sm p-2">
+      <span className="text-caption text-tertiary flex items-center gap-1">{icon}{label}</span>
       <span className={`text-sm font-mono font-semibold ${color} block mt-1`}>{value}</span>
     </div>
   );
@@ -942,13 +942,13 @@ function MarketBindingsSection({
 }) {
   return (
     <div className="space-y-2">
-      <span className="text-pf-caption text-secondary uppercase tracking-wider flex items-center gap-1">
+      <span className="text-caption text-secondary uppercase tracking-wider flex items-center gap-1">
         <Search className="size-3" /> Market Bindings
       </span>
       <div className="flex flex-wrap gap-2">
         {marketSlots.map(slot => (
           <div key={slot.slot} className="flex-1 min-w-[200px] relative">
-            <label htmlFor={`ep-market-${slot.slot}`} className="text-pf-caption text-tertiary mb-1 block">{slot.label || slot.slot}</label>
+            <label htmlFor={`ep-market-${slot.slot}`} className="text-caption text-tertiary mb-1 block">{slot.label || slot.slot}</label>
             <input
               id={`ep-market-${slot.slot}`}
               type="text"
@@ -958,13 +958,13 @@ function MarketBindingsSection({
                 searchMarkets(slot.slot, e.target.value);
               }}
               placeholder="Search markets..."
-              className="w-full h-7 px-2 rounded-pf-sm bg-surface border border-default text-pf-label text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
+              className="w-full h-7 px-2 rounded-sm bg-surface border border-default text-label text-primary placeholder:text-tertiary focus-visible:outline-none focus-visible:border-accent/50 transition-colors"
             />
             {marketBindings[slot.slot] && (
-              <span className="absolute right-2 top-[22px] text-pf-micro text-accent-text font-mono">bound</span>
+              <span className="absolute right-2 top-[22px] text-caption text-accent-text font-mono">bound</span>
             )}
             {(marketResults[slot.slot] ?? []).length > 0 && (
-              <div className="absolute z-50 w-full mt-1 bg-elevated border border-default rounded-pf-sm max-h-32 overflow-y-auto shadow-pf-lg">
+              <div className="absolute z-50 w-full mt-1 bg-elevated border border-default rounded-sm max-h-32 overflow-y-auto shadow-lg">
                 {marketResults[slot.slot].map((m) => (
                   <button
                     type="button"
@@ -974,7 +974,7 @@ function MarketBindingsSection({
                       setMarketSearch(prev => ({ ...prev, [slot.slot]: (m.title ?? m.question) as string }));
                       setMarketResults(prev => ({ ...prev, [slot.slot]: [] }));
                     }}
-                    className="w-full text-left px-2 py-2 text-pf-label text-primary hover:bg-surface transition-colors border-b border-subtle last:border-b-0"
+                    className="w-full text-left px-2 py-2 text-label text-primary hover:bg-surface transition-colors border-b border-subtle last:border-b-0"
                   >
                     {(m.title ?? m.question) as string}
                   </button>

@@ -132,7 +132,7 @@ export function Component() {
         </div>
 
         {/* Card */}
-        <div className="bg-elevated border border-default rounded-pf-lg p-8 shadow-pf-lg">
+        <div className="bg-elevated border border-default rounded-xl p-8 shadow-lg">
 
           {error && (
             <div role="alert" className="flex items-center gap-2 bg-loss/10 border border-loss/20 text-loss rounded-pf px-4 py-3 mb-4 text-sm">
@@ -272,11 +272,11 @@ export function Component() {
               />
               <label htmlFor="tos" className="text-sm text-primary leading-relaxed cursor-pointer">
                 I agree to the{' '}
-                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors">
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
                   Terms of Service
                 </a>{' '}
                 and{' '}
-                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors">
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
                   Privacy Policy
                 </a>
               </label>
@@ -297,7 +297,7 @@ export function Component() {
         {/* Links below card */}
         <p className="text-center text-sm text-tertiary mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-accent-text hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-pf-sm transition-colors">
+          <Link to="/login" className="text-accent-text hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm transition-colors">
             Sign in
           </Link>
         </p>
