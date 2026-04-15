@@ -166,6 +166,10 @@
   --max-width-pf-container-landing: 1100px;
   --max-width-pf-content-sm: 600px;
 
+  /* Component minimum dimensions */
+  --min-width-pf-dropdown-min: 160px;
+  --min-height-pf-textarea-min: 80px;
+
   /* Opacity scale — gradient overlays and disabled states */
   --opacity-pf-subtle: 0.04;
   --opacity-pf-muted: 0.06;

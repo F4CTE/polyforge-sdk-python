@@ -16,14 +16,14 @@ function Progress({ value = 0, indeterminate = false, className, ...props }: Pro
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label={props["aria-label"] ?? "Progress"}
-      className={cn("h-1 w-full overflow-hidden rounded-full bg-pf-overlay", className)}
+      className={cn("h-1 w-full overflow-hidden rounded-pf-full bg-pf-overlay", className)}
       {...props}
     >
       {indeterminate ? (
-        <div className="h-full w-1/3 rounded-full bg-pf-cyan-500 animate-pulse" />
+        <div className="h-full w-1/3 rounded-pf-full bg-pf-cyan-500 animate-pulse" />
       ) : (
         <div
-          className="h-full rounded-full bg-pf-cyan-500 transition-all duration-pf-slow"
+          className="h-full rounded-pf-full bg-pf-cyan-500 transition-all duration-pf-slow"
           style={{ width: `${clamped}%` }}
         />
       )}

@@ -49,7 +49,7 @@ function DropdownMenuTrigger({ children, className, ...props }: DropdownMenuTrig
       type="button"
       aria-expanded={open}
       aria-haspopup="menu"
-      className={cn("focus:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40", className)}
+      className={cn("focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pf-cyan-500/40", className)}
       onClick={() => setOpen(!open)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -161,7 +161,7 @@ function DropdownMenuItem({ children, onSelect, disabled, className, ...props }:
       aria-disabled={disabled || undefined}
       className={cn(
         "px-2 py-1 text-sm rounded-pf-xs cursor-pointer select-none outline-none",
-        "hover:bg-pf-overlay focus:bg-pf-overlay",
+        "hover:bg-pf-overlay focus-visible:bg-pf-overlay",
         disabled && "opacity-50 cursor-not-allowed pointer-events-none",
         className
       )}
